@@ -1,6 +1,7 @@
 import type { GraphicsObject, Line } from "graphics-debug"
 import { combineVisualizations } from "../utils/combineVisualizations"
 import type {
+  CapacityMeshEdge,
   CapacityMeshNode,
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -43,6 +44,7 @@ import {
   HighDensityRoute,
 } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "./CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { DeadEndSolver } from "./DeadEndSolver/DeadEndSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -95,6 +97,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   multiSimplifiedPathSolver?: MultiSimplifiedPathSolver
+  deadEndSolver?: DeadEndSolver
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -104,6 +107,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   connMap: ConnectivityMap
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
+  capacityEdges: CapacityMeshEdge[] | null = null
 
   pipelineDef = [
     definePipelineStep(
@@ -170,12 +174,34 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       "edgeSolver",
       CapacityMeshEdgeSolver2_NodeTreeOptimization,
       (cms) => [cms.capacityNodes!],
+      {
+        onSolved: (cms) => {
+          cms.capacityEdges = cms.edgeSolver?.edges!
+        },
+      },
+    ),
+    definePipelineStep(
+      "deadEndSolver",
+      DeadEndSolver,
+      (cms) => [{ nodes: cms.capacityNodes!, edges: cms.capacityEdges! }],
+      {
+        onSolved: (cms) => {
+          const removedNodeIds = cms.deadEndSolver?.removedNodeIds!
+
+          cms.capacityNodes = cms.capacityNodes!.filter(
+            (n) => !removedNodeIds.has(n.capacityMeshNodeId),
+          )
+          cms.capacityEdges = cms.capacityEdges!.filter((e) =>
+            e.nodeIds.every((nodeId) => !removedNodeIds.has(nodeId)),
+          )
+        },
+      },
     ),
     definePipelineStep("pathingSolver", CapacityPathingSolver5, (cms) => [
       {
         simpleRouteJson: cms.srjWithPointPairs!,
         nodes: cms.capacityNodes!,
-        edges: cms.edgeSolver?.edges || [],
+        edges: cms.capacityEdges || [],
         colorMap: cms.colorMap,
         hyperParameters: {
           MAX_CAPACITY_FACTOR: 1,
@@ -188,7 +214,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       (cms) => [
         {
           nodes: cms.capacityNodes!,
-          edges: cms.edgeSolver?.edges || [],
+          edges: cms.capacityEdges || [],
           capacityPaths: cms.pathingSolver?.getCapacityPaths() || [],
           colorMap: cms.colorMap,
         },
@@ -352,6 +378,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
+    const deadEndViz = this.deadEndSolver?.visualize()
     const pathingViz = this.pathingSolver?.visualize()
     const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize()
     const segmentToPointViz = this.segmentToPointSolver?.visualize()
@@ -409,6 +436,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       singleLayerNodeMergerViz,
       strawSolverViz,
       edgeViz,
+      deadEndViz,
       pathingViz,
       edgeToPortSegmentViz,
       segmentToPointViz,
