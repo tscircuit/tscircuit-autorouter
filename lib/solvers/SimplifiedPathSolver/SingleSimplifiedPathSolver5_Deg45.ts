@@ -151,7 +151,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         return segments
       },
     )
-    this.segmentTree = new SegmentTree(this.filteredObstaclePathSegments)
+    this.segmentTree = new SegmentTree(this.filteredObstaclePathSegments, {
+      implementation: "rbush",
+    })
 
     this.filteredVias = this.otherHdRoutes.flatMap((hdRoute) => {
       if (
