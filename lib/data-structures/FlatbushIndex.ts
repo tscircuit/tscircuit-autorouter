@@ -7,6 +7,7 @@ export class FlatbushIndex<T> implements ISpatialIndex<T> {
   private currentIndex = 0
 
   constructor(numItems: number) {
+    if (numItems <= 0) throw new Error("Flatbush requires numItems > 0")
     this.index = new Flatbush(numItems)
   }
 
