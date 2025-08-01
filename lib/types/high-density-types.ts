@@ -1,18 +1,21 @@
 export type PortPoint = {
-  connectionName: string
-  x: number
-  y: number
-  z: number
-}
+  connectionName: string;
+  x: number;
+  y: number;
+  z: number;
+  // Optional trace properties - will be populated from SimpleRouteConnection
+  traceThickness?: number;
+  viaDiameter?: number;
+};
 
 export type NodeWithPortPoints = {
-  capacityMeshNodeId: string
-  center: { x: number; y: number }
-  width: number
-  height: number
-  portPoints: PortPoint[]
-  availableZ?: number[]
-}
+  capacityMeshNodeId: string;
+  center: { x: number; y: number };
+  width: number;
+  height: number;
+  portPoints: PortPoint[];
+  availableZ?: number[];
+};
 
 /**
  * A path for a wire in high-density intra-node routing.
@@ -29,11 +32,11 @@ export type NodeWithPortPoints = {
  * z must be an integer
  */
 export type HighDensityIntraNodeRoute = {
-  connectionName: string
-  traceThickness: number
-  viaDiameter: number
-  route: Array<{ x: number; y: number; z: number }>
-  vias: Array<{ x: number; y: number }>
-}
+  connectionName: string;
+  traceThickness: number;
+  viaDiameter: number;
+  route: Array<{ x: number; y: number; z: number }>;
+  vias: Array<{ x: number; y: number }>;
+};
 
-export type HighDensityRoute = HighDensityIntraNodeRoute
+export type HighDensityRoute = HighDensityIntraNodeRoute;

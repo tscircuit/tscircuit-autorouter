@@ -1,81 +1,93 @@
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject } from "graphics-debug";
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "../../types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
-import { safeTransparentize } from "../colors"
-import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+} from "../../types/high-density-types";
+import { BaseSolver } from "../BaseSolver";
+import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver";
+import { safeTransparentize } from "../colors";
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost";
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters";
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints";
+import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints";
+import {
+  getTraceThicknessFromPortPoints,
+  getViaDiameterFromPortPoints,
+} from "lib/utils/getTraceThicknessFromPortPoint";
+import {
+  getTraceThicknessFromConnection,
+  getViaDiameterFromConnection,
+} from "lib/utils/getTraceThicknessFromConnection";
+import type { SimpleRouteJson } from "lib/types";
 
 export class IntraNodeRouteSolver extends BaseSolver {
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap: Record<string, string>
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap: Record<string, string>;
   unsolvedConnections: {
-    connectionName: string
-    points: { x: number; y: number; z: number }[]
-  }[]
+    connectionName: string;
+    points: { x: number; y: number; z: number }[];
+  }[];
 
-  totalConnections: number
-  solvedRoutes: HighDensityIntraNodeRoute[]
-  failedSubSolvers: SingleHighDensityRouteSolver[]
-  hyperParameters: Partial<HighDensityHyperParameters>
-  minDistBetweenEnteringPoints: number
+  totalConnections: number;
+  solvedRoutes: HighDensityIntraNodeRoute[];
+  failedSubSolvers: SingleHighDensityRouteSolver[];
+  hyperParameters: Partial<HighDensityHyperParameters>;
+  minDistBetweenEnteringPoints: number;
 
-  activeSubSolver: SingleHighDensityRouteSolver | null = null
-  connMap?: ConnectivityMap
+  activeSubSolver: SingleHighDensityRouteSolver | null = null;
+  connMap?: ConnectivityMap;
+  simpleRouteJson?: SimpleRouteJson;
 
   // Legacy compat
   get failedSolvers() {
-    return this.failedSubSolvers
+    return this.failedSubSolvers;
   }
 
   // Legacy compat
   get activeSolver() {
-    return this.activeSubSolver
+    return this.activeSubSolver;
   }
 
   constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints
-    colorMap?: Record<string, string>
-    hyperParameters?: Partial<HighDensityHyperParameters>
-    connMap?: ConnectivityMap
+    nodeWithPortPoints: NodeWithPortPoints;
+    colorMap?: Record<string, string>;
+    hyperParameters?: Partial<HighDensityHyperParameters>;
+    connMap?: ConnectivityMap;
+    simpleRouteJson?: SimpleRouteJson;
   }) {
-    const { nodeWithPortPoints, colorMap } = params
-    super()
-    this.nodeWithPortPoints = nodeWithPortPoints
-    this.colorMap = colorMap ?? {}
-    this.solvedRoutes = []
-    this.hyperParameters = params.hyperParameters ?? {}
-    this.failedSubSolvers = []
-    this.connMap = params.connMap
+    const { nodeWithPortPoints, colorMap } = params;
+    super();
+    this.nodeWithPortPoints = nodeWithPortPoints;
+    this.colorMap = colorMap ?? {};
+    this.solvedRoutes = [];
+    this.hyperParameters = params.hyperParameters ?? {};
+    this.failedSubSolvers = [];
+    this.connMap = params.connMap;
+    this.simpleRouteJson = params.simpleRouteJson;
     const unsolvedConnectionsMap: Map<
       string,
       { x: number; y: number; z: number }[]
-    > = new Map()
+    > = new Map();
     for (const { connectionName, x, y, z } of nodeWithPortPoints.portPoints) {
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
         { x, y, z: z ?? 0 },
-      ])
+      ]);
     }
     this.unsolvedConnections = Array.from(
       unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
         connectionName,
         points,
-      })),
-    )
+      }))
+    );
 
     if (this.hyperParameters.SHUFFLE_SEED) {
       this.unsolvedConnections = cloneAndShuffleArray(
         this.unsolvedConnections,
-        this.hyperParameters.SHUFFLE_SEED ?? 0,
-      )
+        this.hyperParameters.SHUFFLE_SEED ?? 0
+      );
 
       // Shuffle the starting and ending points of each connection (some
       // algorithms are biased towards the start or end of a trace)
@@ -84,18 +96,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
           ...rest,
           points: cloneAndShuffleArray(
             points,
-            i * 7117 + (this.hyperParameters.SHUFFLE_SEED ?? 0),
+            i * 7117 + (this.hyperParameters.SHUFFLE_SEED ?? 0)
           ),
-        }),
-      )
+        })
+      );
     }
 
-    this.totalConnections = this.unsolvedConnections.length
-    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
+    this.totalConnections = this.unsolvedConnections.length;
+    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5;
 
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
-      this.nodeWithPortPoints,
-    )
+      this.nodeWithPortPoints
+    );
 
     // const {
     //   numEntryExitLayerChanges,
@@ -136,41 +148,64 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return (
       (this.solvedRoutes.length + (this.activeSubSolver?.progress || 0)) /
       this.totalConnections
-    )
+    );
   }
 
   _step() {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      this.progress = this.computeProgress()
+      this.activeSubSolver.step();
+      this.progress = this.computeProgress();
       if (this.activeSubSolver.solved) {
-        this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
-        this.activeSubSolver = null
+        this.solvedRoutes.push(this.activeSubSolver.solvedPath!);
+        this.activeSubSolver = null;
       } else if (this.activeSubSolver.failed) {
-        this.failedSubSolvers.push(this.activeSubSolver)
-        this.activeSubSolver = null
-        this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
-        this.failed = true
+        this.failedSubSolvers.push(this.activeSubSolver);
+        this.activeSubSolver = null;
+        this.error = this.failedSubSolvers.map((s) => s.error).join("\n");
+        this.failed = true;
       }
-      return
+      return;
     }
 
-    const unsolvedConnection = this.unsolvedConnections.pop()
-    this.progress = this.computeProgress()
+    const unsolvedConnection = this.unsolvedConnections.pop();
+    this.progress = this.computeProgress();
     if (!unsolvedConnection) {
-      this.solved = this.failedSubSolvers.length === 0
-      return
+      this.solved = this.failedSubSolvers.length === 0;
+      return;
     }
     if (unsolvedConnection.points.length === 1) {
-      return
+      return;
     }
     if (unsolvedConnection.points.length === 2) {
-      const [A, B] = unsolvedConnection.points
+      const [A, B] = unsolvedConnection.points;
       if (A.x === B.x && A.y === B.y && A.z === B.z) {
-        return
+        return;
       }
     }
-    const { connectionName, points } = unsolvedConnection
+    const { connectionName, points } = unsolvedConnection;
+
+    // Get trace thickness and via diameter for this specific connection
+    let traceThickness = getTraceThicknessFromPortPoints(
+      this.nodeWithPortPoints.portPoints,
+      connectionName
+    );
+    let viaDiameter = getViaDiameterFromPortPoints(
+      this.nodeWithPortPoints.portPoints,
+      connectionName
+    );
+
+    // If port points don't have trace thickness info, fall back to SimpleRouteJson
+    if (traceThickness === 0.15 && this.simpleRouteJson) {
+      // 0.15 is the default, indicating no specific thickness was set
+      const connection = this.simpleRouteJson.connections.find(
+        (c) => c.name === connectionName
+      );
+      if (connection) {
+        traceThickness = getTraceThicknessFromConnection(connection);
+        viaDiameter = getViaDiameterFromConnection(connection);
+      }
+    }
+
     this.activeSubSolver =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
         connectionName,
@@ -182,20 +217,22 @@ export class IntraNodeRouteSolver extends BaseSolver {
           y: points[points.length - 1].y,
           z: points[points.length - 1].z,
         },
+        traceThickness,
+        viaDiameter,
         obstacleRoutes: this.connMap
           ? this.solvedRoutes.filter(
               (sr) =>
                 !this.connMap!.areIdsConnected(
                   sr.connectionName,
-                  connectionName,
-                ),
+                  connectionName
+                )
             )
           : this.solvedRoutes,
         futureConnections: this.unsolvedConnections,
         layerCount: 2,
         hyperParameters: this.hyperParameters,
         connMap: this.connMap,
-      })
+      });
   }
 
   visualize(): GraphicsObject {
@@ -204,7 +241,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       points: [],
       rects: [],
       circles: [],
-    }
+    };
 
     // Draw node bounds
     // graphics.rects!.push({
@@ -225,7 +262,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         y: pt.y,
         label: [pt.connectionName, `layer: ${pt.z}`].join("\n"),
         color: this.colorMap[pt.connectionName] ?? "blue",
-      })
+      });
     }
 
     // Visualize solvedRoutes
@@ -234,14 +271,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
       routeIndex < this.solvedRoutes.length;
       routeIndex++
     ) {
-      const route = this.solvedRoutes[routeIndex]
+      const route = this.solvedRoutes[routeIndex];
       if (route.route.length > 0) {
-        const routeColor = this.colorMap[route.connectionName] ?? "blue"
+        const routeColor = this.colorMap[route.connectionName] ?? "blue";
 
         // Draw route segments between points
         for (let i = 0; i < route.route.length - 1; i++) {
-          const p1 = route.route[i]
-          const p2 = route.route[i + 1]
+          const p1 = route.route[i];
+          const p2 = route.route[i + 1];
 
           graphics.lines!.push({
             points: [p1, p2],
@@ -252,7 +289,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
             layer: `route-layer-${p1.z}`,
             step: routeIndex,
             strokeWidth: route.traceThickness,
-          })
+          });
         }
 
         // Draw vias
@@ -263,14 +300,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
             fill: safeTransparentize(routeColor, 0.5),
             layer: "via",
             step: routeIndex,
-          })
+          });
         }
       }
     }
 
     // Draw border around the node
-    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)
-    const { minX, minY, maxX, maxY } = bounds
+    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints);
+    const { minX, minY, maxX, maxY } = bounds;
 
     // Draw the four sides of the border with thin red lines
     graphics.lines!.push({
@@ -284,8 +321,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       strokeColor: "rgba(255, 0, 0, 0.25)",
       strokeDash: "4 4",
       layer: "border",
-    })
+    });
 
-    return graphics
+    return graphics;
   }
 }

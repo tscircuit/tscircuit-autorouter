@@ -1,46 +1,51 @@
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "../../types/high-density-types"
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../BaseSolver"
-import { safeTransparentize } from "../colors"
-import { IntraNodeRouteSolver } from "./IntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+} from "../../types/high-density-types";
+import type { SimpleRouteJson } from "../../types";
+import type { GraphicsObject } from "graphics-debug";
+import { BaseSolver } from "../BaseSolver";
+import { safeTransparentize } from "../colors";
+import { IntraNodeRouteSolver } from "./IntraNodeSolver";
+import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver";
+import { combineVisualizations } from "lib/utils/combineVisualizations";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { mergeRouteSegments } from "lib/utils/mergeRouteSegments";
 
 export class HighDensitySolver extends BaseSolver {
-  unsolvedNodePortPoints: NodeWithPortPoints[]
-  routes: HighDensityIntraNodeRoute[]
-  colorMap: Record<string, string>
+  unsolvedNodePortPoints: NodeWithPortPoints[];
+  routes: HighDensityIntraNodeRoute[];
+  colorMap: Record<string, string>;
+  simpleRouteJson?: SimpleRouteJson;
 
   // Defaults as specified: viaDiameter of 0.6 and traceThickness of 0.15
-  readonly defaultViaDiameter = 0.6
-  readonly defaultTraceThickness = 0.15
+  readonly defaultViaDiameter = 0.6;
+  readonly defaultTraceThickness = 0.15;
 
-  failedSolvers: (IntraNodeRouteSolver | HyperSingleIntraNodeSolver)[]
+  failedSolvers: (IntraNodeRouteSolver | HyperSingleIntraNodeSolver)[];
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
-    null
-  connMap?: ConnectivityMap
+    null;
+  connMap?: ConnectivityMap;
 
   constructor({
     nodePortPoints,
     colorMap,
     connMap,
+    simpleRouteJson,
   }: {
-    nodePortPoints: NodeWithPortPoints[]
-    colorMap?: Record<string, string>
-    connMap?: ConnectivityMap
+    nodePortPoints: NodeWithPortPoints[];
+    colorMap?: Record<string, string>;
+    connMap?: ConnectivityMap;
+    simpleRouteJson?: SimpleRouteJson;
   }) {
-    super()
-    this.unsolvedNodePortPoints = nodePortPoints
-    this.colorMap = colorMap ?? {}
-    this.connMap = connMap
-    this.routes = []
-    this.failedSolvers = []
-    this.MAX_ITERATIONS = 1e6
+    super();
+    this.unsolvedNodePortPoints = nodePortPoints;
+    this.colorMap = colorMap ?? {};
+    this.connMap = connMap;
+    this.simpleRouteJson = simpleRouteJson;
+    this.routes = [];
+    this.failedSolvers = [];
+    this.MAX_ITERATIONS = 1e6;
   }
 
   /**
@@ -49,35 +54,42 @@ export class HighDensitySolver extends BaseSolver {
    */
   _step() {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
       if (this.activeSubSolver.solved) {
-        this.routes.push(...this.activeSubSolver.solvedRoutes)
-        this.activeSubSolver = null
+        this.routes.push(...this.activeSubSolver.solvedRoutes);
+        this.activeSubSolver = null;
       } else if (this.activeSubSolver.failed) {
-        this.failedSolvers.push(this.activeSubSolver)
-        this.activeSubSolver = null
+        this.failedSolvers.push(this.activeSubSolver);
+        this.activeSubSolver = null;
       }
-      return
+      return;
     }
     if (this.unsolvedNodePortPoints.length === 0) {
       if (this.failedSolvers.length > 0) {
-        this.solved = false
-        this.failed = true
+        this.solved = false;
+        this.failed = true;
         // debugger
-        this.error = `Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0, 5).map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`
-        return
+        this.error = `Failed to solve ${
+          this.failedSolvers.length
+        } nodes, ${this.failedSolvers
+          .slice(0, 5)
+          .map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${
+          this.failedSolvers[0].error
+        }.`;
+        return;
       }
 
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
-    const node = this.unsolvedNodePortPoints.pop()!
+    const node = this.unsolvedNodePortPoints.pop()!;
 
     this.activeSubSolver = new HyperSingleIntraNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
-    })
+      simpleRouteJson: this.simpleRouteJson,
+    });
   }
 
   visualize(): GraphicsObject {
@@ -86,14 +98,14 @@ export class HighDensitySolver extends BaseSolver {
       points: [],
       rects: [],
       circles: [],
-    }
+    };
     for (const route of this.routes) {
       // Merge segments based on z-coordinate
       const mergedSegments = mergeRouteSegments(
         route.route,
         route.connectionName,
-        this.colorMap[route.connectionName],
-      )
+        this.colorMap[route.connectionName]
+      );
 
       // Add merged segments to graphics
       for (const segment of mergedSegments) {
@@ -107,7 +119,7 @@ export class HighDensitySolver extends BaseSolver {
           layer: `z${segment.z}`,
           strokeWidth: route.traceThickness,
           strokeDash: segment.z !== 0 ? "10, 5" : undefined,
-        })
+        });
       }
       for (const via of route.vias) {
         graphics.circles!.push({
@@ -116,15 +128,15 @@ export class HighDensitySolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: this.colorMap[route.connectionName],
           label: `${route.connectionName} via`,
-        })
+        });
       }
     }
     for (const solver of this.failedSolvers) {
-      const node = solver.nodeWithPortPoints
+      const node = solver.nodeWithPortPoints;
 
       // Add a small rectangle in the center for failed nodes
-      const rectWidth = node.width * 0.1
-      const rectHeight = node.height * 0.1
+      const rectWidth = node.width * 0.1;
+      const rectHeight = node.height * 0.1;
       graphics.rects!.push({
         center: {
           x: node.center.x - rectWidth / 2,
@@ -135,39 +147,39 @@ export class HighDensitySolver extends BaseSolver {
         height: rectHeight,
         fill: "red",
         label: `Failed: ${node.capacityMeshNodeId}`,
-      })
+      });
 
       // Group port points by connectionName
       const connectionGroups: Record<
         string,
         { x: number; y: number; z: number }[]
-      > = {}
+      > = {};
       for (const pt of node.portPoints) {
         if (!connectionGroups[pt.connectionName]) {
-          connectionGroups[pt.connectionName] = []
+          connectionGroups[pt.connectionName] = [];
         }
-        connectionGroups[pt.connectionName].push({ x: pt.x, y: pt.y, z: pt.z })
+        connectionGroups[pt.connectionName].push({ x: pt.x, y: pt.y, z: pt.z });
       }
 
       for (const [connectionName, points] of Object.entries(connectionGroups)) {
         for (let i = 0; i < points.length - 1; i++) {
-          const start = points[i]
-          const end = points[i + 1]
+          const start = points[i];
+          const end = points[i + 1];
           graphics.lines!.push({
             points: [start, end],
             strokeColor: "red",
             strokeDash: "10, 5",
             layer: "did_not_connect",
-          })
+          });
         }
       }
     }
     if (this.activeSubSolver) {
       graphics = combineVisualizations(
         graphics,
-        this.activeSubSolver.visualize(),
-      )
+        this.activeSubSolver.visualize()
+      );
     }
-    return graphics
+    return graphics;
   }
 }

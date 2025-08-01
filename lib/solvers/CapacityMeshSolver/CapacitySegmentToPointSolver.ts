@@ -1,14 +1,22 @@
-import { BaseSolver } from "../BaseSolver"
-import type { NodePortSegment } from "../../types/capacity-edges-to-port-segments-types"
-import type { GraphicsObject, Line } from "graphics-debug"
-import type { NodeWithPortPoints } from "../../types/high-density-types"
-import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import { BaseSolver } from "../BaseSolver";
+import type { NodePortSegment } from "../../types/capacity-edges-to-port-segments-types";
+import type { GraphicsObject, Line } from "graphics-debug";
+import type { NodeWithPortPoints } from "../../types/high-density-types";
+import type {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+  SimpleRouteJson,
+} from "lib/types";
+import {
+  getTraceThicknessFromConnection,
+  getViaDiameterFromConnection,
+} from "lib/utils/getTraceThicknessFromConnection";
 
 export interface SegmentWithAssignedPoints extends NodePortSegment {
   assignedPoints?: {
-    connectionName: string
-    point: { x: number; y: number; z: number }
-  }[]
+    connectionName: string;
+    point: { x: number; y: number; z: number };
+  }[];
 }
 
 /**
@@ -26,15 +34,16 @@ export interface SegmentWithAssignedPoints extends NodePortSegment {
  * ordering them alphabetically.
  */
 export class CapacitySegmentToPointSolver extends BaseSolver {
-  unsolvedSegments: SegmentWithAssignedPoints[]
+  unsolvedSegments: SegmentWithAssignedPoints[];
   solvedSegments: (NodePortSegment & {
     assignedPoints: {
-      connectionName: string
-      point: { x: number; y: number; z: number }
-    }[]
-  })[]
-  nodeMap: Record<string, CapacityMeshNode>
-  colorMap: Record<string, string>
+      connectionName: string;
+      point: { x: number; y: number; z: number };
+    }[];
+  })[];
+  nodeMap: Record<string, CapacityMeshNode>;
+  colorMap: Record<string, string>;
+  simpleRouteJson?: SimpleRouteJson;
 
   // We use an extra property on segments to remember assigned points.
   // Each segment will get an added property "assignedPoints" which is an array of:
@@ -44,38 +53,41 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     segments,
     colorMap,
     nodes,
+    simpleRouteJson,
   }: {
-    segments: NodePortSegment[]
-    colorMap?: Record<string, string>
+    segments: NodePortSegment[];
+    colorMap?: Record<string, string>;
     /**
      * This isn't used by the algorithm, but allows associating metadata
      * for the result datatype (the center, width, height of the node)
      */
-    nodes: CapacityMeshNode[]
+    nodes: CapacityMeshNode[];
+    simpleRouteJson?: SimpleRouteJson;
   }) {
-    super()
-    this.MAX_ITERATIONS = 100_000
-    this.unsolvedSegments = segments
-    this.solvedSegments = []
-    this.colorMap = colorMap ?? {}
+    super();
+    this.MAX_ITERATIONS = 100_000;
+    this.unsolvedSegments = segments;
+    this.solvedSegments = [];
+    this.colorMap = colorMap ?? {};
+    this.simpleRouteJson = simpleRouteJson;
     this.nodeMap = Object.fromEntries(
-      nodes.map((node) => [node.capacityMeshNodeId, node]),
-    )
+      nodes.map((node) => [node.capacityMeshNodeId, node])
+    );
   }
 
   /**
    * Perform one iteration step.
    */
   _step() {
-    let updated = false
+    let updated = false;
     // unsolved segments: segments without complete assignments.
-    const unsolved = [...this.unsolvedSegments]
+    const unsolved = [...this.unsolvedSegments];
 
     // Iterate over unsolved segments.
     for (const seg of unsolved) {
-      const n = seg.connectionNames.length
+      const n = seg.connectionNames.length;
       // Already processed? Skip if assignedPoints exists for all connections.
-      if ("assignedPoints" in seg && seg.assignedPoints?.length === n) continue
+      if ("assignedPoints" in seg && seg.assignedPoints?.length === n) continue;
 
       if (n === 1) {
         // For a single connection, assign the center of the segment.
@@ -83,57 +95,57 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           x: (seg.start.x + seg.end.x) / 2,
           y: (seg.start.y + seg.end.y) / 2,
           z: seg.availableZ[0],
-        }
-        ;(seg as any).assignedPoints = [
+        };
+        (seg as any).assignedPoints = [
           { connectionName: seg.connectionNames[0], point: center },
-        ]
+        ];
         // Move seg from unsolvedSegments to solvedSegments.
-        this.unsolvedSegments.splice(this.unsolvedSegments.indexOf(seg), 1)
-        this.solvedSegments.push(seg as any)
-        updated = true
+        this.unsolvedSegments.splice(this.unsolvedSegments.indexOf(seg), 1);
+        this.solvedSegments.push(seg as any);
+        updated = true;
       }
     }
 
     // If no segments were updated in this iteration, perform a fallback.
     if (!updated && unsolved.length > 0) {
       // Choose the unsolved segment with the fewest connections.
-      let candidate = unsolved[0]
+      let candidate = unsolved[0];
       for (const seg of unsolved) {
         if (seg.connectionNames.length < candidate.connectionNames.length) {
-          candidate = seg
+          candidate = seg;
         }
       }
       // Fallback: assign points evenly spaced along the segment,
       // after sorting connection names alphabetically.
-      const sortedConnections = [...candidate.connectionNames].sort()
-      const dx = candidate.end.x - candidate.start.x
-      const dy = candidate.end.y - candidate.start.y
-      const n = sortedConnections.length
-      const points: { x: number; y: number; z: number }[] = []
+      const sortedConnections = [...candidate.connectionNames].sort();
+      const dx = candidate.end.x - candidate.start.x;
+      const dy = candidate.end.y - candidate.start.y;
+      const n = sortedConnections.length;
+      const points: { x: number; y: number; z: number }[] = [];
       // Evenly space positions using fractions of the segment distance.
       for (let i = 1; i <= n; i++) {
-        const fraction = i / (n + 1)
+        const fraction = i / (n + 1);
         points.push({
           x: candidate.start.x + dx * fraction,
           y: candidate.start.y + dy * fraction,
           z: candidate.availableZ[0],
-        })
+        });
       }
-      ;(candidate as any).assignedPoints = sortedConnections.map(
+      (candidate as any).assignedPoints = sortedConnections.map(
         (conn, idx) => ({
           connectionName: conn,
           point: points[idx],
-        }),
-      )
+        })
+      );
       // Move candidate from unsolvedSegments to solvedSegments.
-      this.unsolvedSegments.splice(this.unsolvedSegments.indexOf(candidate), 1)
-      this.solvedSegments.push(candidate as any)
-      updated = true
+      this.unsolvedSegments.splice(this.unsolvedSegments.indexOf(candidate), 1);
+      this.solvedSegments.push(candidate as any);
+      updated = true;
     }
 
     // If all segments have been assigned points, mark solved.
     if (this.unsolvedSegments.length === 0) {
-      this.solved = true
+      this.solved = true;
     }
   }
 
@@ -143,13 +155,13 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
   getNodesWithPortPoints(): NodeWithPortPoints[] {
     if (!this.solved) {
       throw new Error(
-        "CapacitySegmentToPointSolver not solved, can't give port points yet",
-      )
+        "CapacitySegmentToPointSolver not solved, can't give port points yet"
+      );
     }
-    const map = new Map<string, NodeWithPortPoints>()
+    const map = new Map<string, NodeWithPortPoints>();
     for (const seg of this.solvedSegments) {
-      const nodeId = seg.capacityMeshNodeId
-      const node = this.nodeMap[nodeId]
+      const nodeId = seg.capacityMeshNodeId;
+      const node = this.nodeMap[nodeId];
       if (!map.has(nodeId)) {
         map.set(nodeId, {
           capacityMeshNodeId: nodeId,
@@ -157,16 +169,29 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           center: node.center,
           width: node.width,
           height: node.height,
-        })
+        });
       }
       map.get(nodeId)!.portPoints.push(
-        ...seg.assignedPoints.map((ap) => ({
-          ...ap.point,
-          connectionName: ap.connectionName,
-        })),
-      )
+        ...seg.assignedPoints.map((ap) => {
+          // Find the connection in SimpleRouteJson to get trace thickness
+          const connection = this.simpleRouteJson?.connections.find(
+            (c) => c.name === ap.connectionName
+          );
+
+          return {
+            ...ap.point,
+            connectionName: ap.connectionName,
+            traceThickness: connection
+              ? getTraceThicknessFromConnection(connection)
+              : undefined,
+            viaDiameter: connection
+              ? getViaDiameterFromConnection(connection)
+              : undefined,
+          };
+        })
+      );
     }
-    return Array.from(map.values())
+    return Array.from(map.values());
   }
 
   /**
@@ -183,24 +208,24 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       circles: [],
       coordinateSystem: "cartesian",
       title: "Capacity Segment to Point Solver",
-    }
+    };
 
     // Add points for each assigned point on solved segments
     for (let i = 0; i < this.solvedSegments.length; i++) {
-      const seg = this.solvedSegments[i]
+      const seg = this.solvedSegments[i];
       for (let j = 0; j < seg.assignedPoints.length; j++) {
-        const ap = seg.assignedPoints[j]
+        const ap = seg.assignedPoints[j];
 
         // Calculate the true position and the offset position (if z != 0)
         const truePoint = {
           x: ap.point.x,
           y: ap.point.y,
-        }
+        };
 
         const offsetPoint = {
           x: ap.point.x + ap.point.z * 0.05,
           y: ap.point.y + ap.point.z * 0.05,
-        }
+        };
 
         // Add a dashed line to show the true position if there's an offset
         if (ap.point.z !== 0) {
@@ -209,7 +234,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
             strokeColor: "rgba(0, 0, 0, 0.25)",
             strokeDash: "5 5",
             step: 4,
-          })
+          });
         }
 
         // Add the point with label
@@ -223,47 +248,47 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           ].join("\n"),
           color: this.colorMap[ap.connectionName],
           step: 4,
-        })
+        });
       }
     }
 
     // Add a dashed line connecting the assignment points with the same
     // connection name within the same node
-    const dashedLines: Line[] = []
+    const dashedLines: Line[] = [];
     const nodeConnections: Record<
       CapacityMeshNodeId,
       Record<string, { x: number; y: number }[]>
-    > = {}
+    > = {};
     for (const seg of this.solvedSegments) {
-      const nodeId = seg.capacityMeshNodeId
+      const nodeId = seg.capacityMeshNodeId;
       if (!nodeConnections[nodeId]) {
-        nodeConnections[nodeId] = {}
+        nodeConnections[nodeId] = {};
       }
       for (const ap of seg.assignedPoints) {
         if (!nodeConnections[nodeId][ap.connectionName]) {
-          nodeConnections[nodeId][ap.connectionName] = []
+          nodeConnections[nodeId][ap.connectionName] = [];
         }
         nodeConnections[nodeId][ap.connectionName].push({
           x: ap.point.x,
           y: ap.point.y,
-        })
+        });
       }
     }
     for (const nodeId in nodeConnections) {
       for (const conn in nodeConnections[nodeId]) {
-        const points = nodeConnections[nodeId][conn]
+        const points = nodeConnections[nodeId][conn];
         if (points.length > 1) {
           dashedLines.push({
             points,
             step: 4,
             strokeDash: "5 5",
             strokeColor: this.colorMap[conn] || "#000",
-          } as Line)
+          } as Line);
         }
       }
     }
-    graphics.lines.push(...(dashedLines as any))
+    graphics.lines.push(...(dashedLines as any));
 
-    return graphics
+    return graphics;
   }
 }
