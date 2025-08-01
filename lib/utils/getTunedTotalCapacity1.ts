@@ -1,8 +1,8 @@
-import { CapacityMeshNode } from "lib/types/capacity-mesh-types";
+import { CapacityMeshNode } from "lib/types/capacity-mesh-types"
 import {
   STANDARD_TRACE_THICKNESS,
   STANDARD_VIA_DIAMETER,
-} from "./getTraceThicknessFromConnection";
+} from "./getTraceThicknessFromConnection"
 
 /**
  * Calculate the capacity of a node based on its width
@@ -20,32 +20,32 @@ export const getTunedTotalCapacity1 = (
   nodeOrWidth: CapacityMeshNode | { width: number; availableZ?: number[] },
   maxCapacityFactor = 1,
   traceThickness = STANDARD_TRACE_THICKNESS,
-  viaDiameter = STANDARD_VIA_DIAMETER
+  viaDiameter = STANDARD_VIA_DIAMETER,
 ) => {
-  const obstacleMargin = 0.2;
+  const obstacleMargin = 0.2
 
-  const width = "width" in nodeOrWidth ? nodeOrWidth.width : nodeOrWidth;
+  const width = "width" in nodeOrWidth ? nodeOrWidth.width : nodeOrWidth
 
   // Calculate how many vias can fit across the width
   // Each via needs its radius plus obstacle margin on each side
-  const viaLengthAcross = width / (viaDiameter / 2 + obstacleMargin);
+  const viaLengthAcross = width / (viaDiameter / 2 + obstacleMargin)
 
   // Base capacity calculation - tuned empirically for good routing
-  let tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor;
+  let tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor
 
   // Adjust capacity based on trace thickness
   // Thicker traces need more space, reducing effective capacity
-  const thicknessRatio = traceThickness / STANDARD_TRACE_THICKNESS;
-  const thicknessPenalty = Math.sqrt(thicknessRatio); // Square root to moderate the penalty
-  tunedTotalCapacity = tunedTotalCapacity / thicknessPenalty;
+  const thicknessRatio = traceThickness / STANDARD_TRACE_THICKNESS
+  const thicknessPenalty = Math.sqrt(thicknessRatio) // Square root to moderate the penalty
+  tunedTotalCapacity = tunedTotalCapacity / thicknessPenalty
 
   // Single layer nodes can only contain one trace safely
   if (nodeOrWidth.availableZ?.length === 1 && tunedTotalCapacity > 1) {
-    return 1;
+    return 1
   }
 
-  return tunedTotalCapacity;
-};
+  return tunedTotalCapacity
+}
 
 /**
  * Calculate the optimal subdivision depth to reach a target minimum capacity
@@ -61,10 +61,10 @@ export const calculateOptimalCapacityDepth = (
   targetMinCapacity = 0.5,
   maxDepth = 16,
   maxTraceThickness = STANDARD_TRACE_THICKNESS,
-  maxViaDiameter = STANDARD_VIA_DIAMETER
+  maxViaDiameter = STANDARD_VIA_DIAMETER,
 ): number => {
-  let depth = 0;
-  let width = initialWidth;
+  let depth = 0
+  let width = initialWidth
 
   // Calculate capacity at each subdivision level until we reach target or max depth
   // Use the thickest trace to ensure capacity is adequate for all connections
@@ -73,20 +73,20 @@ export const calculateOptimalCapacityDepth = (
       { width },
       1,
       maxTraceThickness,
-      maxViaDiameter
-    );
+      maxViaDiameter,
+    )
 
     // If capacity is below target, we've gone far enough
     if (capacity <= targetMinCapacity) {
-      break;
+      break
     }
 
     // Move to next subdivision level (each level divides width by 2)
-    width /= 2;
-    depth++;
+    width /= 2
+    depth++
   }
 
   // Return depth + 1 to account for the fact that we want to subdivide
   // until the smallest nodes have capacity <= targetMinCapacity
-  return Math.max(1, depth);
-};
+  return Math.max(1, depth)
+}

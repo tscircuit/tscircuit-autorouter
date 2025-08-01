@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
-import { CapacityMeshAutorouterCoreBinding } from "./fixtures/CapacityMeshAutorouterCoreBinding";
-import type { SimpleRouteJson } from "../lib/types";
+import { describe, test, expect } from "bun:test"
+import { CapacityMeshAutorouterCoreBinding } from "./fixtures/CapacityMeshAutorouterCoreBinding"
+import type { SimpleRouteJson } from "../lib/types"
 
 describe("Basic Trace Thickness Tests", () => {
   test("simple route with explicit trace thickness", async () => {
@@ -28,29 +28,29 @@ describe("Basic Trace Thickness Tests", () => {
         },
       ],
       bounds: { minX: -5, maxX: 5, minY: -2, maxY: 2 },
-    };
+    }
 
-    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson);
-    const traces = solver.solveSync();
+    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson)
+    const traces = solver.solveSync()
 
-    expect(traces).toBeDefined();
-    expect(traces.length).toBe(1);
+    expect(traces).toBeDefined()
+    expect(traces.length).toBe(1)
 
-    const trace = traces[0];
-    expect(trace.pcb_trace_id).toContain("thick_trace");
+    const trace = traces[0]
+    expect(trace.pcb_trace_id).toContain("thick_trace")
 
     // Check that all wire segments have the correct width
-    const wires = trace.route.filter((r: any) => r.route_type === "wire");
-    expect(wires.length).toBeGreaterThan(0);
+    const wires = trace.route.filter((r: any) => r.route_type === "wire")
+    expect(wires.length).toBeGreaterThan(0)
 
     // Debug: log the actual widths
     console.log(
       "Wire widths (thick_trace):",
-      wires.map((w: any) => w.width)
-    );
+      wires.map((w: any) => w.width),
+    )
 
-    expect(wires.every((w: any) => w.width === 0.6)).toBe(true);
-  });
+    expect(wires.every((w: any) => w.width === 0.6)).toBe(true)
+  })
 
   test("simple route with trace thickness multiplier", async () => {
     const simpleRouteJson: SimpleRouteJson = {
@@ -77,25 +77,25 @@ describe("Basic Trace Thickness Tests", () => {
         },
       ],
       bounds: { minX: -5, maxX: 5, minY: -2, maxY: 2 },
-    };
+    }
 
-    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson);
-    const traces = solver.solveSync();
+    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson)
+    const traces = solver.solveSync()
 
-    expect(traces).toBeDefined();
-    expect(traces.length).toBe(1);
+    expect(traces).toBeDefined()
+    expect(traces.length).toBe(1)
 
-    const trace = traces[0];
-    const wires = trace.route.filter((r: any) => r.route_type === "wire");
+    const trace = traces[0]
+    const wires = trace.route.filter((r: any) => r.route_type === "wire")
 
     // Debug: log the actual widths
     console.log(
       "Wire widths:",
-      wires.map((w: any) => w.width)
-    );
+      wires.map((w: any) => w.width),
+    )
 
-    expect(wires.every((w: any) => w.width === 0.3)).toBe(true); // 2 * 0.15 = 0.3
-  });
+    expect(wires.every((w: any) => w.width === 0.3)).toBe(true) // 2 * 0.15 = 0.3
+  })
 
   test("route with default trace thickness", async () => {
     const simpleRouteJson: SimpleRouteJson = {
@@ -122,16 +122,16 @@ describe("Basic Trace Thickness Tests", () => {
         },
       ],
       bounds: { minX: -5, maxX: 5, minY: -2, maxY: 2 },
-    };
+    }
 
-    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson);
-    const traces = solver.solveSync();
+    const solver = new CapacityMeshAutorouterCoreBinding(simpleRouteJson)
+    const traces = solver.solveSync()
 
-    expect(traces).toBeDefined();
-    expect(traces.length).toBe(1);
+    expect(traces).toBeDefined()
+    expect(traces.length).toBe(1)
 
-    const trace = traces[0];
-    const wires = trace.route.filter((r: any) => r.route_type === "wire");
-    expect(wires.every((w: any) => w.width === 0.15)).toBe(true); // Default thickness
-  });
-});
+    const trace = traces[0]
+    const wires = trace.route.filter((r: any) => r.route_type === "wire")
+    expect(wires.every((w: any) => w.width === 0.15)).toBe(true) // Default thickness
+  })
+})

@@ -1,8 +1,8 @@
-import type { PortPoint } from "../types/high-density-types";
+import type { PortPoint } from "../types/high-density-types"
 import {
   STANDARD_TRACE_THICKNESS,
   STANDARD_VIA_DIAMETER,
-} from "./getTraceThicknessFromConnection";
+} from "./getTraceThicknessFromConnection"
 
 /**
  * Get the effective trace thickness for a port point
@@ -11,7 +11,7 @@ import {
  * @returns The trace thickness in mm
  */
 export function getTraceThicknessFromPortPoint(portPoint: PortPoint): number {
-  return portPoint.traceThickness ?? STANDARD_TRACE_THICKNESS;
+  return portPoint.traceThickness ?? STANDARD_TRACE_THICKNESS
 }
 
 /**
@@ -21,7 +21,7 @@ export function getTraceThicknessFromPortPoint(portPoint: PortPoint): number {
  * @returns The via diameter in mm
  */
 export function getViaDiameterFromPortPoint(portPoint: PortPoint): number {
-  return portPoint.viaDiameter ?? STANDARD_VIA_DIAMETER;
+  return portPoint.viaDiameter ?? STANDARD_VIA_DIAMETER
 }
 
 /**
@@ -33,17 +33,17 @@ export function getViaDiameterFromPortPoint(portPoint: PortPoint): number {
  */
 export function getTraceThicknessFromPortPoints(
   portPoints: PortPoint[],
-  connectionName: string
+  connectionName: string,
 ): number {
   const connectionPortPoint = portPoints.find(
-    (pp) => pp.connectionName === connectionName
-  );
+    (pp) => pp.connectionName === connectionName,
+  )
 
   if (connectionPortPoint) {
-    return getTraceThicknessFromPortPoint(connectionPortPoint);
+    return getTraceThicknessFromPortPoint(connectionPortPoint)
   }
 
-  return STANDARD_TRACE_THICKNESS;
+  return STANDARD_TRACE_THICKNESS
 }
 
 /**
@@ -55,15 +55,15 @@ export function getTraceThicknessFromPortPoints(
  */
 export function getViaDiameterFromPortPoints(
   portPoints: PortPoint[],
-  connectionName: string
+  connectionName: string,
 ): number {
   const connectionPortPoint = portPoints.find(
-    (pp) => pp.connectionName === connectionName
-  );
+    (pp) => pp.connectionName === connectionName,
+  )
 
   if (connectionPortPoint) {
-    return getViaDiameterFromPortPoint(connectionPortPoint);
+    return getViaDiameterFromPortPoint(connectionPortPoint)
   }
 
-  return STANDARD_VIA_DIAMETER;
+  return STANDARD_VIA_DIAMETER
 }
