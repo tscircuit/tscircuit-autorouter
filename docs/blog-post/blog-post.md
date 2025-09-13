@@ -74,3 +74,5 @@ For the most part, you can think of hyper solvers as self-optimizing solvers tha
 ### How to Debug an Autorouter Issue
 
 ### How the cache works
+
+### Reporting Autorouter Bugs
