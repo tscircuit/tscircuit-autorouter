@@ -61,6 +61,8 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ## Advanced Concepts
 
+### What is a Solver?
+
 ### Hyper A\* Solvers
 
 A "Hyper Solver" is what we call a solver that "race" A\* solvers internally. This is primarily used in the High Density / Physical Trace Path solvers, because we want to run 100 different solvers, initialized with different parameters, but "give" the most iterations to the one that seems to be most successful.
