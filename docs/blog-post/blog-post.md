@@ -70,3 +70,7 @@ For the most part, you can think of hyper solvers as self-optimizing solvers tha
 ### DRC Checks
 
 "Design Rule Checks" can be run from `Debug > Design Rule Checks`, they catch issues that the autorouter may have created- e.g. a trace being too close to a pad it's not supposed to be connected to
+
+### How to Debug an Autorouter Issue
+
+### How the cache works
