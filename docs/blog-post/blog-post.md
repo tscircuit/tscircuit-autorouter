@@ -53,6 +53,24 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ### Stage 12: Solve for physical routes within each node
 
+This is by far the most complicated stage, and it's also "autorouting" in the
+truest most traditional definition. In this stage, we're figuring out how to
+take those physical entry/exit points around our square node, and connect them
+to eachother without them touching!
+
+There are so many different ways to do this and they all have advantages and
+disadvantages, so instead of choosing we decided to use a Hyper Solver, this
+special solver runs many sub-solvers in parallel to find any working solution.
+
+> Remember, we don't need the best paths, we just need ANY working paths. We'll
+> optimize them in a future stage.
+
+Each sub-solver uses a totally different technique, so let's go over each one:
+
+#### Stage 12.1 The Traditional Grid Solver with Hyper Parameters
+
+#### Stage 12.2 HD Polyline Solver i.e. Place and Force Solver
+
 ### Stage 13: Combine physical paths together
 
 ### Stage 14, 16: Remove useless vias
@@ -78,3 +96,5 @@ For the most part, you can think of hyper solvers as self-optimizing solvers tha
 ### How the cache works
 
 ### Reporting Autorouter Bugs
+
+### Spatial Indexing
