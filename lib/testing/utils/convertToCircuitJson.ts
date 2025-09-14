@@ -179,6 +179,59 @@ function createPcbPorts(srj: SimpleRouteJson): AnyCircuitElement[] {
 }
 
 /**
+ * Create pcb_smtpad elements from SRJ obstacles that reference pads/ports
+ * Only constructs pads when obstacle.connectedTo hints at a real pad/port.
+ */
+function createPcbSmtPads(srj: SimpleRouteJson): AnyCircuitElement[] {
+  const pads: AnyCircuitElement[] = []
+  const addedPadIds = new Set<string>()
+
+  for (const obstacle of srj.obstacles as any[]) {
+    const connectedTo: string[] = obstacle?.connectedTo || []
+    const padId: string | undefined = connectedTo.find((id) =>
+      id.startsWith("pcb_smtpad_"),
+    )
+    const pcbPortId: string | undefined = connectedTo.find((id) =>
+      id.startsWith("pcb_port_"),
+    )
+
+    // Construct only when we have at least a port or pad hint
+    if (!padId && !pcbPortId) continue
+
+    const layer: string | undefined = Array.isArray(obstacle.layers)
+      ? obstacle.layers[0]
+      : obstacle.layer
+    if (!layer) continue
+
+    const id = padId ?? `pcb_smtpad_${pads.length}`
+    if (addedPadIds.has(id)) continue
+    addedPadIds.add(id)
+
+    // Default to rectangular pads; SRJ obstacles generally provide width/height
+    const width = obstacle.width ?? 0
+    const height = obstacle.height ?? 0
+    const x = obstacle.center?.x ?? obstacle.x
+    const y = obstacle.center?.y ?? obstacle.y
+
+    if (typeof x !== "number" || typeof y !== "number") continue
+
+    pads.push({
+      type: "pcb_smtpad",
+      pcb_smtpad_id: id,
+      layer,
+      shape: "rect",
+      width,
+      height,
+      x,
+      y,
+      ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+    } as any)
+  }
+
+  return pads
+}
+
+/**
  * Extract vias from routes and convert them to pcb_via objects
  * @param routes The routes to extract vias from
  * @param minViaDiameter Default diameter for vias
@@ -275,6 +328,9 @@ export function convertToCircuitJson(
 
   // Add PCB ports for connection points
   circuitJson.push(...createPcbPorts(srjWithPointPairs))
+
+  // Add PCB SMT pads
+  circuitJson.push(...createPcbSmtPads(srjWithPointPairs))
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(...extractViasFromRoutes(routes, minViaDiameter))
