@@ -50,9 +50,12 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ### Stage 6: More mesh optimization (removing dead ends)
 
-TODO
+[Dead End Solver](https://share.cleanshot.com/LTgVVcF6)
 
 ### Stage 7: Solve for initial "High Level Planning" routes
+
+[Initial Node Pathing Solver Part 1 (overview)](https://share.cleanshot.com/SB7rcsw4)
+[Initial Node Pathing Solver Part 2 (code walkthrough)](https://share.cleanshot.com/zQGHS33R)
 
 ### Stage 8: Optimize high level path plans
 
