@@ -31,7 +31,7 @@ Before we get into the nitty-gritty details, you should understand the high-leve
 
 ### Stage 1: Create a minimum spanning tree
 
-TODO
+[Net to Point Pairs Video](https://share.cleanshot.com/GYFNck1D)
 
 ### Stage 2: Construct the Node Mesh
 
