@@ -42,9 +42,15 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ### Stage 3-4: Simplify the Node Mesh (Strawing)
 
+[Simplify Node Mesh, Straw Solving](https://share.cleanshot.com/TX7XsBqk)
+
 ### Stage 5: Solve for Mesh edges
 
-### Stage 6: More mesh optimization
+[Solving for Mesh Edges](https://share.cleanshot.com/q7QbnKxJ)
+
+### Stage 6: More mesh optimization (removing dead ends)
+
+TODO
 
 ### Stage 7: Solve for initial "High Level Planning" routes
 
