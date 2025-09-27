@@ -59,6 +59,8 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ### Stage 8: Optimize high level path plans
 
+[Optimizing High Level Path Plans](https://share.cleanshot.com/zQGHS33R)
+
 ### Stage 9-10: Find the initial physical entry/exit points into high-level nodes
 
 ### Stage 11: Optimize the physical entry/exit points to minimize crossings
