@@ -2,9 +2,9 @@
 
 An MIT-licensed full-pipeline PCB autorouter library for node.js and TypeScript projects. Part of [tscircuit](https://github.com/tscircuit/tscircuit)
 
-[View Online Playground](https://unraveller.vercel.app) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com)
+[View Online Playground](https://unraveller.vercel.app) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com) &middot; [Report/Debug Autorouter Bugs](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
-Check out this [short youtube explanation of this autorouter](https://youtu.be/MmTk0806fAo)
+Want to understand how the autorouter works? Check out a stage-by-stage breakdown with videos in [this autorouter walk through](./docs/blog-post/blog-post.md)
 
 ## How to file a bug report
 
@@ -129,48 +129,6 @@ For debugging or interactive applications, you can use the `visualize()` method 
 const visualization = solver.visualize()
 ```
 
-## System Architecture
-
-```mermaid
-flowchart LR
-    subgraph HDR[High Density Route Solver]
-        T1[ ] & T2[ ] & T3[ ] & T4[ ] & T5[ ] & T6[ ] & T7[ ] & T8[ ] & T9[ ]
-        subgraph IS[HyperSingleIntraNodeSolver / SingleIntraNodeSolver]
-            N1[ ] --> N2[ ]
-            N2 --> N3[ ]
-            N3 --> N4[ ]
-            N4 --> N5[ ]
-            N5 --> N6[ ]
-            N6 --> N7[ ]
-            N7 --> N8[ ]
-            N8 --> N9[ ]
-        end
-        subgraph SHDR[SingleHighDensityRouteSolver]
-        end
-        T1 & T2 & T3 & T4 & T5 & T6 & T7 & T8 & T9 --> IS
-        IS --> SHDR
-    end
-
-    NS[Node Solver] --> ES[Edge Solver]
-    ES --> MES[Mesh Edge Solver]
-    MES --> CPS[Capacity Planning Solver]
-    CPS --> EPSS[Edge to Port Segment Solver]
-    EPSS --> S2P[Segment to Point Solver]
-    S2P --> SPO[Segment Point Optimizer]
-    SPO --> HDR
-```
-
-The autorouter uses a multi-step approach that includes:
-
-1. **Node Solving**: Determines node placement
-2. **Edge Solving**: Creates connections between nodes
-3. **Mesh Edge Solving**: Refines connection patterns
-4. **Capacity Planning**: Allocates routing resources
-5. **Edge to Port Segment Solving**: Connects segments to ports
-6. **Segment to Point Solving**: Converts segments to exact point locations
-7. **Segment Point Optimization**: Optimizes point placements for better routing
-8. **High Density Routing**: Final detailed routing with obstacle avoidance
-
 ## Development
 
 To work on this library:
@@ -188,7 +146,3 @@ bun test
 # Build the library
 bun run build
 ```
-
-## License
-
-See the [LICENSE](LICENSE) file for details.

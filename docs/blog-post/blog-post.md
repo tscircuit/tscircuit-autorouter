@@ -63,9 +63,15 @@ What we call the `nodeSolver` because it creates `CapacityMeshNode`s that repres
 
 ### Stage 9-10: Find the initial physical entry/exit points into high-level nodes
 
-### Stage 11: Optimize the physical entry/exit points to minimize crossings
+[Finding the exact entry/exit points for traces in capacity nodes](https://share.cleanshot.com/ZnZlNyWd)
+
+### Stage 11: Unraveling: Optimize the physical entry/exit points to minimize crossings
+
+[Unravel Autorouting Phase](https://share.cleanshot.com/HqM4K9PF)
 
 ### Stage 12: Solve for physical routes within each node
+
+[The High Density Phase](https://share.cleanshot.com/V0GLLcz9)
 
 This is by far the most complicated stage, and it's also "autorouting" in the
 truest most traditional definition. In this stage, we're figuring out how to
@@ -83,13 +89,23 @@ Each sub-solver uses a totally different technique, so let's go over each one:
 
 #### Stage 12.1 The Traditional Grid Solver with Hyper Parameters
 
+Coming soon!
+
 #### Stage 12.2 HD Polyline Solver i.e. Place and Force Solver
 
-### Stage 13: Combine physical paths together
+Coming soon!
+
+### Stage 13: Combine physical paths together (Stitching)
+
+[The Stitch Phase](https://share.cleanshot.com/MbMDNNvc)
 
 ### Stage 14, 16: Remove useless vias
 
+[Remove Useless Vias Stage](https://share.cleanshot.com/ckgNBSZK)
+
 ### Stage 15, 17: Simplify Physical Paths
+
+[Simplify Physical Paths Stage](https://share.cleanshot.com/qPDZ7Bz4)
 
 ## Advanced Concepts
 
@@ -106,6 +122,8 @@ For the most part, you can think of hyper solvers as self-optimizing solvers tha
 "Design Rule Checks" can be run from `Debug > Design Rule Checks`, they catch issues that the autorouter may have created- e.g. a trace being too close to a pad it's not supposed to be connected to
 
 ### How to Debug an Autorouter Issue
+
+[Report an Autorouter Bug](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
 ### How the cache works
 
