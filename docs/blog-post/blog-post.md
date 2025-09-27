@@ -37,6 +37,9 @@ Before we get into the nitty-gritty details, you should understand the high-leve
 
 What we call the `nodeSolver` because it creates `CapacityMeshNode`s that represent where
 
+[Node Mesh Part 1](https://share.cleanshot.com/Tw8XJ0Qy)
+[Node Mesh Part 2](https://share.cleanshot.com/p0HNy5Bv)
+
 ### Stage 3-4: Simplify the Node Mesh (Strawing)
 
 ### Stage 5: Solve for Mesh edges
