@@ -641,7 +641,7 @@ export const GenericSolverDebugger = ({
                 <div>
                   Candidates:{" "}
                   <span className="font-bold">
-                    {(selectedSolver as any).candidates.length}
+                    {(selectedSolver as any).candidates?.length ?? 0}
                   </span>
                 </div>
                 <div>
