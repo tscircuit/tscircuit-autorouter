@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test"
 import { MultiHeadPolyLineIntraNodeSolver } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver"
-import cn8724 from "examples/assets/cn8724-nodeWithPortPoints.json"
+import cn8724 from "examples/legacy/assets/cn8724-nodeWithPortPoints.json"
 import "graphics-debug/matcher"
 
 test("hdpolyline05", () => {

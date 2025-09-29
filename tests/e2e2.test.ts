@@ -2,7 +2,7 @@ import { expect, test, describe } from "bun:test"
 import { CapacityMeshSolver } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
-import e2e8 from "examples/assets/e2e8.json"
+import e2e8 from "examples/legacy/assets/e2e8.json"
 
 describe("CapacityMeshSolver", () => {
   test("getOutputSimpleRouteJson throws when solver is not complete", () => {

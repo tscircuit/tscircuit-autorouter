@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test"
 import { CapacityMeshSolver } from "../lib"
-import keyboardRoutes from "../examples/assets/growing-grid-keyboard-sample-sample95-unrouted_simple_route.json"
+import keyboardRoutes from "../examples/legacy/assets/growing-grid-keyboard-sample-sample95-unrouted_simple_route.json"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTraces,

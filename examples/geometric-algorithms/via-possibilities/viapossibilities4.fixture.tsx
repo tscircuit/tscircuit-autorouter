@@ -1,4 +1,4 @@
-import cn48169 from "examples/assets/cn48169-nodeWithPortPoints.json"
+import cn48169 from "examples/legacy/assets/cn48169-nodeWithPortPoints.json"
 import React from "react"
 import { ViaPossibilitiesDebugger } from "./ViaPossibilitiesDebugger"
 import { NodeWithPortPoints } from "lib/types/high-density-types"

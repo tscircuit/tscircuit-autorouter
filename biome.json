@@ -12,7 +12,7 @@
       "cosmos-export",
       "dist",
       "package.json",
-      "examples/assets/*.json"
+      "examples/legacy/assets/*.json"
     ]
   },
   "javascript": {

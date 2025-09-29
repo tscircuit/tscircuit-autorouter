@@ -1,4 +1,4 @@
-import cn34933 from "examples/assets/cn34933-nodeWithPortPoints.json"
+import cn34933 from "examples/legacy/assets/cn34933-nodeWithPortPoints.json"
 import React from "react"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
