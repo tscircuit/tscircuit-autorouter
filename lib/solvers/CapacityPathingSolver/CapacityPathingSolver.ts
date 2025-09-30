@@ -441,8 +441,21 @@ export class CapacityPathingSolver extends BaseSolver {
     // Draw a dashed line from the start node to the end node
     const nextConnection =
       this.connectionsWithNodes[this.currentConnectionIndex]
-    if (nextConnection) {
-      const [start, end] = nextConnection.connection.pointsToConnect
+
+    // If we failed on the previous connection and haven't started the next one yet,
+    // show the failed connection instead
+    let connectionToVisualize = nextConnection
+    if (
+      !this.candidates &&
+      this.currentConnectionIndex > 0 &&
+      !this.connectionsWithNodes[this.currentConnectionIndex - 1].path
+    ) {
+      connectionToVisualize =
+        this.connectionsWithNodes[this.currentConnectionIndex - 1]
+    }
+
+    if (connectionToVisualize) {
+      const [start, end] = connectionToVisualize.connection.pointsToConnect
       graphics.lines!.push({
         points: [
           { x: start.x, y: start.y },
