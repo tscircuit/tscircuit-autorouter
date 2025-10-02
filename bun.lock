@@ -15,7 +15,7 @@
         "@tscircuit/checks": "^0.0.75",
         "@tscircuit/circuit-json-util": "^0.0.46",
         "@tscircuit/core": "^0.0.337",
-        "@tscircuit/math-utils": "^0.0.23",
+        "@tscircuit/math-utils": "^0.0.25",
         "@types/bun": "^1.2.16",
         "@types/fast-json-stable-stringify": "^2.1.2",
         "@types/object-hash": "^3.0.6",
@@ -336,7 +336,7 @@
 
     "@tscircuit/manual-edit-events": ["@tscircuit/manual-edit-events@0.0.6", "", { "dependencies": { "zod": "^3.23.8" } }, "sha512-PLgy+/Dsw1YcnNVNqfieNGTNIaRKRJ70Jt2LcSMljwaBOtsiOwtdzj24xCYO9XzJUZc7opKytShMlx863PehTQ=="],
 
-    "@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.23", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-8iNr/seND7t9lpk/IfmofvuS0bLD2C5Vc81mkThzKmqGNlqodInregw74KggWKZtX3Ejz9w6YtgZPqDUdwDQlw=="],
+    "@tscircuit/math-utils": ["@tscircuit/math-utils@0.0.25", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-ZiVeaqwpB14KtivLIlyRME/9PEXGc3XZ8HP5mKPWhKBWf7UktYoTRPkY9vxa/QiFZo4L/e1SFtUMR1PXXRSldg=="],
 
     "@tscircuit/mm": ["@tscircuit/mm@0.0.8", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-nl7nxE7AhARbKuobflI0LUzoir7+wJyvwfPw6bzA/O0Q3YTcH3vBkU/Of+V/fp6ht+AofiCXj7YAH9E446138Q=="],
 
