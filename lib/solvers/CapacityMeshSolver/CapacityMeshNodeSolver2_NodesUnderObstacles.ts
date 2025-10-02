@@ -27,7 +27,11 @@ interface Target {
 export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeSolver {
   VIA_DIAMETER = 0.6
   OBSTACLE_MARGIN = 0.1
-  SINGLE_LAYER_OBSTACLE_THRESHOLD = 0.2 // 20% coverage threshold
+  /**
+   * The threshold for the percentage of a single-layer node that must be
+   * covered by obstacles to be considered "under an obstacle"
+   */
+  OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES = 0.2 // 20% coverage threshold
 
   constructor(
     public srj: SimpleRouteJson,
@@ -71,13 +75,26 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
 
     for (const obstacle of overlappingObstacles) {
       // Calculate overlap rectangle
-      const overlapLeft = Math.max(nodeLeft, obstacle.center.x - obstacle.width / 2)
-      const overlapRight = Math.min(nodeRight, obstacle.center.x + obstacle.width / 2)
-      const overlapTop = Math.max(nodeTop, obstacle.center.y - obstacle.height / 2)
-      const overlapBottom = Math.min(nodeBottom, obstacle.center.y + obstacle.height / 2)
+      const overlapLeft = Math.max(
+        nodeLeft,
+        obstacle.center.x - obstacle.width / 2,
+      )
+      const overlapRight = Math.min(
+        nodeRight,
+        obstacle.center.x + obstacle.width / 2,
+      )
+      const overlapTop = Math.max(
+        nodeTop,
+        obstacle.center.y - obstacle.height / 2,
+      )
+      const overlapBottom = Math.min(
+        nodeBottom,
+        obstacle.center.y + obstacle.height / 2,
+      )
 
       if (overlapLeft < overlapRight && overlapTop < overlapBottom) {
-        const overlapArea = (overlapRight - overlapLeft) * (overlapBottom - overlapTop)
+        const overlapArea =
+          (overlapRight - overlapLeft) * (overlapBottom - overlapTop)
         totalOverlapArea += overlapArea
       }
     }
@@ -93,7 +110,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
     if (!node._containsObstacle) return false
 
     const coveragePercent = this.getObstacleCoveragePercentage(node)
-    return coveragePercent > this.SINGLE_LAYER_OBSTACLE_THRESHOLD
+    return coveragePercent > this.OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES
   }
 
   /**
