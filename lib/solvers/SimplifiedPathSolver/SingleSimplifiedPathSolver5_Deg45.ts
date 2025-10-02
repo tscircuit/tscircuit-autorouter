@@ -435,18 +435,32 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.addPathToResult(path45)
         this.solved = true
         return
-      } else {
-        // No valid 45-degree path to the end,
-        // add the current path if any and continue with normal advance
-        if (this.lastValidPath) {
-          this.addPathToResult(this.lastValidPath)
-          this.lastValidPath = null
-          this.tailDistanceAlongPath = this.lastValidPathHeadDistance
-        } else {
-          this.newRoute.push(endPoint)
-          this.solved = true
+      }
+
+      // No valid 45-degree path to the end. Revert to the original
+      // geometry for this segment to guarantee connectivity.
+      this.lastValidPath = null
+      this.tailDistanceAlongPath = this.totalPathLength
+      this.headDistanceAlongPath = this.totalPathLength
+
+      const dedupedOriginalRoute: Point[] = []
+      for (const point of this.inputRoute.route) {
+        if (
+          dedupedOriginalRoute.length === 0 ||
+          !this.arePointsEqual(
+            dedupedOriginalRoute[dedupedOriginalRoute.length - 1],
+            point,
+          )
+        ) {
+          dedupedOriginalRoute.push(point)
         }
       }
+
+      this.newRoute = dedupedOriginalRoute
+      this.newVias = [...this.inputRoute.vias]
+
+      this.solved = true
+      return
     }
 
     // Increment head distance but don't go past the end of the path
