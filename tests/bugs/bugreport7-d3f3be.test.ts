@@ -3,7 +3,7 @@ import { CapacityMeshSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import bugReport from "../../examples/bug-reports/bugreport6-d3f3be/bugreport6-d3f3be.json" assert {
+import bugReport from "../../examples/bug-reports/bugreport7-d3f3be/bugreport7-d3f3be.json" assert {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
