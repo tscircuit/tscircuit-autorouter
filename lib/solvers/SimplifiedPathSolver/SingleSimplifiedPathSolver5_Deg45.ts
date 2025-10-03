@@ -15,6 +15,7 @@ import {
   computeGapBetweenBoxes,
   segmentToBoundsMinDistance,
 } from "@tscircuit/math-utils"
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 
 interface Point {
   x: number
@@ -307,6 +308,18 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         pointToSegmentDistance(via, start, end) <
         this.OBSTACLE_MARGIN + via.diameter / 2 + this.TRACE_THICKNESS / 2
       ) {
+        return false
+      }
+    }
+
+    if (this.outline && this.outline.length >= 3) {
+      const crossesOutline = doesSegmentCrossPolygonBoundary(
+        { x: start.x, y: start.y },
+        { x: end.x, y: end.y },
+        this.outline,
+      )
+
+      if (crossesOutline) {
         return false
       }
     }

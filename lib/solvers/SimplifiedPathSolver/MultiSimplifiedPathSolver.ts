@@ -18,12 +18,14 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   obstacles: Obstacle[]
   connMap: ConnectivityMap
   colorMap: Record<string, string>
+  outline?: Array<{ x: number; y: number }>
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
     obstacles: Obstacle[]
     connMap?: ConnectivityMap
     colorMap?: Record<string, string>
+    outline?: Array<{ x: number; y: number }>
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
@@ -32,6 +34,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
+    this.outline = params.outline
 
     this.simplifiedHdRoutes = []
   }
@@ -53,6 +56,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         obstacles: this.obstacles,
         connMap: this.connMap,
         colorMap: this.colorMap,
+        outline: this.outline,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return
