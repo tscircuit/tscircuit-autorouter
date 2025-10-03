@@ -31,6 +31,23 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
     }
   }
 
+  // Draw board outline if provided
+  if (srj.outline && srj.outline.length >= 2) {
+    const outlinePoints = srj.outline.map((p) => ({ x: p.x, y: p.y }))
+    const isClosed =
+      outlinePoints.length >= 3 &&
+      outlinePoints[0]!.x === outlinePoints[outlinePoints.length - 1]!.x &&
+      outlinePoints[0]!.y === outlinePoints[outlinePoints.length - 1]!.y
+    if (!isClosed) {
+      outlinePoints.push({ ...outlinePoints[0]! })
+    }
+    lines.push({
+      points: outlinePoints,
+      strokeColor: "rgba(0, 136, 255, 0.95)",
+      strokeWidth: 0.2,
+    })
+  }
+
   // Process each trace
   if (srj.traces) {
     for (const trace of srj.traces) {

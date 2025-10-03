@@ -26,6 +26,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { CapacityNodeTargetMerger } from "./CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { CapacitySegmentPointOptimizer } from "./CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
 import { calculateOptimalCapacityDepth } from "../utils/getTunedTotalCapacity1"
+import { getBoundsFromOutline } from "../utils/getBoundsFromOutline"
 import { NetToPointPairsSolver } from "./NetToPointPairsSolver/NetToPointPairsSolver"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
@@ -382,9 +383,14 @@ export class AutoroutingPipelineSolver extends BaseSolver {
 
     // If capacityDepth is not provided, calculate it automatically
     if (opts.capacityDepth === undefined) {
-      // Calculate max width/height from bounds for initial node size
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
+      // Calculate max width/height from bounds or outline for initial node size
+      const outlineBounds =
+        srj.outline && srj.outline.length >= 3
+          ? getBoundsFromOutline(srj.outline)
+          : null
+      const boundsToUse = outlineBounds ?? srj.bounds
+      const boundsWidth = boundsToUse.maxX - boundsToUse.minX
+      const boundsHeight = boundsToUse.maxY - boundsToUse.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
