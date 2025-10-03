@@ -166,11 +166,11 @@ describe("polygon outline path simplification", () => {
         const start = trace.route[i]
         const end = trace.route[i + 1]
 
-        const crossesOutline = doesSegmentCrossPolygonBoundary(
-          { x: start.x, y: start.y },
-          { x: end.x, y: end.y },
-          simpleRouteJson.outline!,
-        )
+        const crossesOutline = doesSegmentCrossPolygonBoundary({
+          start: { x: start.x, y: start.y },
+          end: { x: end.x, y: end.y },
+          polygon: simpleRouteJson.outline!,
+        })
 
         expect(crossesOutline).toBeFalse()
       }

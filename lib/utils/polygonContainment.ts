@@ -3,6 +3,7 @@ import {
   getSegmentIntersection,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 export type PolygonPoint = { x: number; y: number }
 
@@ -52,11 +53,17 @@ export const isPointInOrOnPolygon = (
   return inside
 }
 
-export const doesSegmentCrossPolygonBoundary = (
-  start: PolygonPoint,
-  end: PolygonPoint,
-  polygon: PolygonPoint[],
-) => {
+export const doesSegmentCrossPolygonBoundary = ({
+  start,
+  end,
+  polygon,
+  margin = 0.2,
+}: {
+  start: PolygonPoint
+  end: PolygonPoint
+  polygon: PolygonPoint[]
+  margin?: number
+}) => {
   if (!polygon || polygon.length < 3) {
     return false
   }
@@ -81,6 +88,19 @@ export const doesSegmentCrossPolygonBoundary = (
     }
 
     if (!doSegmentsIntersect(start, end, edgeStart, edgeEnd)) {
+      if (!startOnEdge && !endOnEdge) {
+        const distanceToEdge = minimumDistanceBetweenSegments(
+          start,
+          end,
+          edgeStart,
+          edgeEnd,
+        )
+
+        if (distanceToEdge < margin - EPSILON) {
+          return true
+        }
+      }
+
       continue
     }
 

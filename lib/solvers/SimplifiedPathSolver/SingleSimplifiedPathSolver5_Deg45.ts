@@ -313,11 +313,11 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (this.outline && this.outline.length >= 3) {
-      const crossesOutline = doesSegmentCrossPolygonBoundary(
-        { x: start.x, y: start.y },
-        { x: end.x, y: end.y },
-        this.outline,
-      )
+      const crossesOutline = doesSegmentCrossPolygonBoundary({
+        start: { x: start.x, y: start.y },
+        end: { x: end.x, y: end.y },
+        polygon: this.outline,
+      })
 
       if (crossesOutline) {
         return false
