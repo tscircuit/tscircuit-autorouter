@@ -471,17 +471,18 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     // Draw outline polygon if provided
     if (this.outlinePolygon && this.outlinePolygon.length >= 2) {
-      const outlinePoints = this.outlinePolygon.map((point) => ({
-        x: point.x,
-        y: point.y,
-      }))
+      const outlinePoints = this.outlinePolygon.map(
+        (point: { x: number; y: number }) => ({
+          x: point.x,
+          y: point.y,
+        }),
+      )
 
       outlinePoints.push({ ...outlinePoints[0]! })
 
       graphics.lines!.push({
         points: outlinePoints,
         strokeColor: "rgba(0, 136, 255, 0.95)",
-        strokeWidth: 0.35,
         label: "outline",
       })
 
