@@ -23,7 +23,6 @@ describe("getBoundsFromOutline", () => {
   })
 
   test("throws on empty outline", () => {
-    // @ts-expect-error testing runtime error case
     expect(() => getBoundsFromOutline([])).toThrow(
       "Outline must contain at least one point",
     )
