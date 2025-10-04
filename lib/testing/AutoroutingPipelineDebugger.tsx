@@ -15,7 +15,7 @@ import { limitVisualizations } from "lib/utils/limitVisualizations"
 import { getNodesNearNode } from "lib/solvers/UnravelSolver/getNodesNearNode"
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 import { convertToCircuitJson } from "./utils/convertToCircuitJson"
-import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
+import { getDrcErrors } from "./getDrcErrors"
 import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
 import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
 import { CacheDebugger } from "./CacheDebugger"
@@ -277,17 +277,13 @@ export const AutoroutingPipelineDebugger = ({
         solver.srj.minTraceWidth,
       )
 
-      // Run the DRC check for trace overlaps
-      const errors = checkEachPcbTraceNonOverlapping(circuitJson)
+      const { errors: allErrors, locationAwareErrors } =
+        getDrcErrors(circuitJson)
 
-      // Convert errors to graphics objects for visualization
-      if (errors.length > 0) {
+      if (allErrors.length > 0) {
         const errorGraphics: GraphicsObject = {
-          circles: errors.map((error) => ({
-            center: {
-              x: error.center?.x ?? 0,
-              y: error.center?.y ?? 0,
-            },
+          circles: locationAwareErrors.map((error) => ({
+            center: error.center,
             radius: 0.75,
             fill: "rgba(255, 0, 0, 0.3)",
             layer: "drc",
@@ -295,26 +291,20 @@ export const AutoroutingPipelineDebugger = ({
             strokeWidth: 0.1,
             label: error.message,
           })),
-          points: errors.map((error) => ({
-            x: error.center?.x ?? 0,
-            y: error.center?.y ?? 0,
+          points: locationAwareErrors.map((error) => ({
+            x: error.center.x,
+            y: error.center.y,
             color: "red",
             size: 10,
             layer: "drc",
             label: error.message,
           })),
           // Cross markers at error points for better visibility
-          lines: errors.flatMap((error) => [
+          lines: locationAwareErrors.flatMap((error) => [
             {
               points: [
-                {
-                  x: (error.center?.x ?? 0) - 0.5,
-                  y: (error.center?.y ?? 0) - 0.5,
-                },
-                {
-                  x: (error.center?.x ?? 0) - 0.4,
-                  y: (error.center?.y ?? 0) - 0.4,
-                },
+                { x: error.center.x - 0.5, y: error.center.y - 0.5 },
+                { x: error.center.x - 0.4, y: error.center.y - 0.4 },
               ],
               layer: "drc",
               strokeColor: "red",
@@ -322,14 +312,8 @@ export const AutoroutingPipelineDebugger = ({
             },
             {
               points: [
-                {
-                  x: (error.center?.x ?? 0) + 0.5,
-                  y: (error.center?.y ?? 0) + 0.5,
-                },
-                {
-                  x: (error.center?.x ?? 0) + 0.4,
-                  y: (error.center?.y ?? 0) + 0.4,
-                },
+                { x: error.center.x + 0.5, y: error.center.y + 0.5 },
+                { x: error.center.x + 0.4, y: error.center.y + 0.4 },
               ],
               layer: "drc",
               strokeColor: "red",
@@ -337,28 +321,16 @@ export const AutoroutingPipelineDebugger = ({
             },
             {
               points: [
-                {
-                  x: (error.center?.x ?? 0) - 0.5,
-                  y: (error.center?.y ?? 0) + 0.5,
-                },
-                {
-                  x: (error.center?.x ?? 0) - 0.4,
-                  y: (error.center?.y ?? 0) + 0.4,
-                },
+                { x: error.center.x - 0.5, y: error.center.y + 0.5 },
+                { x: error.center.x - 0.4, y: error.center.y + 0.4 },
               ],
               strokeColor: "red",
               strokeWidth: 0.05,
             },
             {
               points: [
-                {
-                  x: (error.center?.x ?? 0) + 0.5,
-                  y: (error.center?.y ?? 0) - 0.5,
-                },
-                {
-                  x: (error.center?.x ?? 0) + 0.4,
-                  y: (error.center?.y ?? 0) - 0.4,
-                },
+                { x: error.center.x + 0.5, y: error.center.y - 0.5 },
+                { x: error.center.x + 0.4, y: error.center.y - 0.4 },
               ],
               layer: "drc",
               strokeColor: "red",
@@ -368,8 +340,10 @@ export const AutoroutingPipelineDebugger = ({
         }
 
         setDrcErrors(errorGraphics)
-        setDrcErrorCount(errors.length)
-        alert(`Found ${errors.length} DRC errors. See the highlighted areas.`)
+        setDrcErrorCount(allErrors.length)
+        alert(
+          `Found ${allErrors.length} DRC errors. See the highlighted areas.`,
+        )
       } else {
         setDrcErrors(null)
         setDrcErrorCount(0)

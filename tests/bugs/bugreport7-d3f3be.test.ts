@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, test } from "bun:test"
 import { CapacityMeshSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import bugReport from "../../examples/bug-reports/bugreport7-d3f3be/bugreport7-d3f3be.json" assert {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -52,7 +52,8 @@ describe("bug d3f3be1b path simplification", () => {
   })
 
   test("produces routes without DRC violations", () => {
-    const errors = checkEachPcbTraceNonOverlapping(circuitJson)
+    const { errors } = getDrcErrors(circuitJson)
+
     expect(errors).toHaveLength(0)
   })
 })

@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, test } from "bun:test"
-import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import type { AnyCircuitElement } from "circuit-json"
 import keyboard4 from "../examples/legacy/assets/keyboard4.json"
 import { CapacityMeshSolver } from "../lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson } from "lib/types"
 
 describe("keyboard4 autorouting", () => {
@@ -42,7 +42,8 @@ describe("keyboard4 autorouting", () => {
   })
 
   test("produces routes without DRC violations", () => {
-    const errors = checkEachPcbTraceNonOverlapping(circuitJson)
+    const { errors } = getDrcErrors(circuitJson)
+
     expect(errors).toHaveLength(0)
   })
 })
