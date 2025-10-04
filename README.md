@@ -9,8 +9,8 @@ Want to understand how the autorouter works? Check out a stage-by-stage breakdow
 ## How to file a bug report
 
 1. You should have [created a bug report via the tscircuit errors tab](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
-2. Run `bun run bug-report <bug-report-url>`
-3. This will download the bug report and create a debugging fixture file in the `examples/bug-reports` directory, you can then find the bug report in the server (via `bun run start`)
+2. Run `bun run bug-report <bug-report-url>` to download the report and create a debugging fixture file in the `examples/bug-reports` directory, you can then find the bug report in the server (via `bun run start`)
+3. Or run `bun run bug-report-with-test <bug-report-url>` to download the report, create the fixture, and scaffold a matching snapshot test under `tests/bugs`
 
 ## Installation
 

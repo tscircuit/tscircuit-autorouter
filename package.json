@@ -14,7 +14,8 @@
     "format:check": "biome format .",
     "vercel-build": "cosmos-export",
     "repomix:lib": "repomix --ignore 'testing/**,**/TwoRouteHighDensitySolver/**,**/RouteStitchingSolver/**,solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer.ts' lib",
-    "bug-report": "bun run scripts/download-bug-report.ts"
+    "bug-report": "bun run scripts/download-bug-report.ts",
+    "bug-report-with-test": "bun run scripts/create-bug-report-test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
