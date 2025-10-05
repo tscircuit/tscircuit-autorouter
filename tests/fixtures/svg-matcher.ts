@@ -2,6 +2,21 @@ import { expect, type MatcherResult } from "bun:test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import looksSame from "looks-same"
+import { Resvg } from "@resvg/resvg-js"
+
+// Convert SVGs to high-resolution PNGs for comparison
+// We'll use @resvg/resvg-js to render SVG to PNG at 4x scale for better diffing
+
+function svgToPngBuffer(svg: string, scale: number = 4): Buffer {
+  const resvg = new Resvg(svg, {
+    fitTo: {
+      mode: "zoom",
+      value: scale,
+    },
+    background: "black",
+  })
+  return resvg.render().asPng()
+}
 
 async function toMatchSvgSnapshot(
   // biome-ignore lint/suspicious/noExplicitAny: bun doesn't expose
@@ -41,14 +56,13 @@ async function toMatchSvgSnapshot(
 
   const existingSnapshot = fs.readFileSync(filePath, "utf-8")
 
-  const result: any = await looksSame(
-    Buffer.from(received),
-    Buffer.from(existingSnapshot),
-    {
-      strict: false,
-      tolerance: 2,
-    },
-  )
+  const receivedPng = svgToPngBuffer(received, 4)
+  const existingPng = svgToPngBuffer(existingSnapshot, 4)
+
+  const result: any = await looksSame(receivedPng, existingPng, {
+    strict: false,
+    tolerance: 2,
+  })
 
   if (updateSnapshot) {
     if (!forceUpdate && result.equal) {
@@ -74,8 +88,8 @@ async function toMatchSvgSnapshot(
 
   const diffPath = filePath.replace(".snap.svg", ".diff.png")
   await looksSame.createDiff({
-    reference: Buffer.from(existingSnapshot),
-    current: Buffer.from(received),
+    reference: existingPng,
+    current: receivedPng,
     diff: diffPath,
     highlightColor: "#ff00ff",
   })
