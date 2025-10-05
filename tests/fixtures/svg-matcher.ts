@@ -60,8 +60,9 @@ async function toMatchSvgSnapshot(
   const existingPng = svgToPngBuffer(existingSnapshot, 4)
 
   const result: any = await looksSame(receivedPng, existingPng, {
-    strict: false,
     tolerance: 2,
+    antialiasingTolerance: 2,
+    strict: false,
   })
 
   if (updateSnapshot) {
@@ -108,11 +109,10 @@ declare module "bun:test" {
   interface Matchers<T = unknown> {
     toMatchSvgSnapshot(
       testPath: string,
-      svgName?: string,
-    ): Promise<MatcherResult>
-    toMatchMultipleSvgSnapshots(
-      testPath: string,
-      svgNames?: string[],
+      opts: {
+        svgName?: string
+        scale?: number
+      },
     ): Promise<MatcherResult>
   }
 }
