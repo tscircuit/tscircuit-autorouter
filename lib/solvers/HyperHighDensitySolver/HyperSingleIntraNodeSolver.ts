@@ -2,10 +2,8 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import {
-  CachedIntraNodeRouteSolver,
-  IntraNodeRouteSolver,
-} from "../HighDensitySolver/IntraNodeSolver"
+import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
