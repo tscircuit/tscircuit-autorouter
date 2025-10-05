@@ -294,5 +294,5 @@ test("cn11081 single transition solver routes without DRC errors", () => {
 
   expect(errors.length).toBe(0)
   expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
-  expect(solverName).toMatchInlineSnapshot(`"IntraNodeRouteSolver"`)
+  expect(solverName).toMatchInlineSnapshot(`"CachedIntraNodeRouteSolver"`)
 })

@@ -19,37 +19,10 @@ import {
 } from "lib/cache/setupGlobalCaches"
 import objectHash from "object-hash"
 
-type CachedSolvedIntraNodeRouteSolver =
-  | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
-  | { success: false; error?: string }
-
-type CacheToIntraNodeSolverTransform = Record<string, never>
-
-const roundCoord = (n: number) => Math.round(n * 200) / 200
-
-const cloneValue = <T>(value: T): T =>
-  typeof structuredClone === "function"
-    ? structuredClone(value)
-    : JSON.parse(JSON.stringify(value))
-
-setupGlobalCaches()
-
-export class IntraNodeRouteSolver
-  extends BaseSolver
-  implements
-    CachableSolver<
-      CacheToIntraNodeSolverTransform,
-      CachedSolvedIntraNodeRouteSolver
-    >
-{
+export class IntraNodeRouteSolver extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {
-    connectionName: string
-    points: { x: number; y: number; z: number }[]
-  }[]
-
-  initialUnsolvedConnections: {
     connectionName: string
     points: { x: number; y: number; z: number }[]
   }[]
@@ -62,14 +35,6 @@ export class IntraNodeRouteSolver
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
-
-  cacheProvider: CacheProvider | null
-  cacheHit = false
-  hasAttemptedToUseCache = false
-  declare cacheKey?: string | undefined
-  declare cacheToSolveSpaceTransform?:
-    | CacheToIntraNodeSolverTransform
-    | undefined
 
   // Legacy compat
   get failedSolvers() {
@@ -86,7 +51,6 @@ export class IntraNodeRouteSolver
     colorMap?: Record<string, string>
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
-    cacheProvider?: CacheProvider | null
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -96,10 +60,6 @@ export class IntraNodeRouteSolver
     this.hyperParameters = params.hyperParameters ?? {}
     this.failedSubSolvers = []
     this.connMap = params.connMap
-    this.cacheProvider =
-      params.cacheProvider === undefined
-        ? getGlobalInMemoryCache()
-        : params.cacheProvider
     const unsolvedConnectionsMap: Map<
       string,
       { x: number; y: number; z: number }[]
@@ -139,8 +99,6 @@ export class IntraNodeRouteSolver
     this.totalConnections = this.unsolvedConnections.length
     this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
 
-    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
-
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
     )
@@ -163,10 +121,6 @@ export class IntraNodeRouteSolver
     // ) {
     //   this.handleSimpleNoCrossingsCase()
     // }
-
-    if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
-      this.saveToCacheSync()
-    }
   }
 
   // handleSimpleNoCrossingsCase() {
@@ -192,12 +146,6 @@ export class IntraNodeRouteSolver
   }
 
   _step() {
-    if (!this.hasAttemptedToUseCache && this.cacheProvider) {
-      if (this.attemptToUseCacheSync()) {
-        return
-      }
-    }
-
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
@@ -209,9 +157,6 @@ export class IntraNodeRouteSolver
         this.activeSubSolver = null
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
-        if (this.cacheProvider && !this.cacheHit) {
-          this.saveToCacheSync()
-        }
       }
       return
     }
@@ -220,9 +165,6 @@ export class IntraNodeRouteSolver
     this.progress = this.computeProgress()
     if (!unsolvedConnection) {
       this.solved = this.failedSubSolvers.length === 0
-      if (this.cacheProvider && !this.cacheHit) {
-        this.saveToCacheSync()
-      }
       return
     }
     if (unsolvedConnection.points.length === 1) {
@@ -260,6 +202,172 @@ export class IntraNodeRouteSolver
         hyperParameters: this.hyperParameters,
         connMap: this.connMap,
       })
+  }
+
+  visualize(): GraphicsObject {
+    const graphics: GraphicsObject = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+    }
+
+    // Draw node bounds
+    // graphics.rects!.push({
+    //   center: {
+    //     x: this.nodeWithPortPoints.center.x,
+    //     y: this.nodeWithPortPoints.center.y,
+    //   },
+    //   width: this.nodeWithPortPoints.width,
+    //   height: this.nodeWithPortPoints.height,
+    //   stroke: "gray",
+    //   fill: "transparent",
+    // })
+
+    // Visualize input nodeWithPortPoints
+    for (const pt of this.nodeWithPortPoints.portPoints) {
+      graphics.points!.push({
+        x: pt.x,
+        y: pt.y,
+        label: [pt.connectionName, `layer: ${pt.z}`].join("\n"),
+        color: this.colorMap[pt.connectionName] ?? "blue",
+      })
+    }
+
+    // Visualize solvedRoutes
+    for (
+      let routeIndex = 0;
+      routeIndex < this.solvedRoutes.length;
+      routeIndex++
+    ) {
+      const route = this.solvedRoutes[routeIndex]
+      if (route.route.length > 0) {
+        const routeColor = this.colorMap[route.connectionName] ?? "blue"
+
+        // Draw route segments between points
+        for (let i = 0; i < route.route.length - 1; i++) {
+          const p1 = route.route[i]
+          const p2 = route.route[i + 1]
+
+          graphics.lines!.push({
+            points: [p1, p2],
+            strokeColor:
+              p1.z === 0
+                ? safeTransparentize(routeColor, 0.2)
+                : safeTransparentize(routeColor, 0.8),
+            layer: `route-layer-${p1.z}`,
+            step: routeIndex,
+            strokeWidth: route.traceThickness,
+          })
+        }
+
+        // Draw vias
+        for (const via of route.vias) {
+          graphics.circles!.push({
+            center: { x: via.x, y: via.y },
+            radius: route.viaDiameter / 2,
+            fill: safeTransparentize(routeColor, 0.5),
+            layer: "via",
+            step: routeIndex,
+          })
+        }
+      }
+    }
+
+    // Draw border around the node
+    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)
+    const { minX, minY, maxX, maxY } = bounds
+
+    // Draw the four sides of the border with thin red lines
+    graphics.lines!.push({
+      points: [
+        { x: minX, y: minY },
+        { x: maxX, y: minY },
+        { x: maxX, y: maxY },
+        { x: minX, y: maxY },
+        { x: minX, y: minY },
+      ],
+      strokeColor: "rgba(255, 0, 0, 0.25)",
+      strokeDash: "4 4",
+      layer: "border",
+    })
+
+    return graphics
+  }
+}
+
+type CachedSolvedIntraNodeRouteSolver =
+  | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
+  | { success: false; error?: string }
+
+type CacheToIntraNodeSolverTransform = Record<string, never>
+
+const roundCoord = (n: number) => Math.round(n * 200) / 200
+
+const cloneValue = <T>(value: T): T =>
+  typeof structuredClone === "function"
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value))
+
+setupGlobalCaches()
+
+export class CachedIntraNodeRouteSolver
+  extends IntraNodeRouteSolver
+  implements
+    CachableSolver<
+      CacheToIntraNodeSolverTransform,
+      CachedSolvedIntraNodeRouteSolver
+    >
+{
+  cacheProvider: CacheProvider | null
+  cacheHit = false
+  hasAttemptedToUseCache = false
+  declare cacheKey?: string | undefined
+  declare cacheToSolveSpaceTransform?:
+    | CacheToIntraNodeSolverTransform
+    | undefined
+  initialUnsolvedConnections: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }[]
+
+  constructor(
+    params: ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
+      cacheProvider?: CacheProvider | null
+    },
+  ) {
+    super(params)
+    this.cacheProvider =
+      params.cacheProvider === undefined
+        ? getGlobalInMemoryCache()
+        : params.cacheProvider
+    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+
+    if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
+      this.saveToCacheSync()
+    }
+  }
+
+  _step(): void {
+    if (!this.hasAttemptedToUseCache && this.cacheProvider) {
+      if (this.attemptToUseCacheSync()) {
+        return
+      }
+    }
+
+    const wasSolved = this.solved
+    const wasFailed = this.failed
+
+    super._step()
+
+    if (
+      this.cacheProvider &&
+      !this.cacheHit &&
+      (this.solved || this.failed) &&
+      !(wasSolved || wasFailed)
+    ) {
+      this.saveToCacheSync()
+    }
   }
 
   computeCacheKeyAndTransform(): {
@@ -359,6 +467,7 @@ export class IntraNodeRouteSolver
     }
 
     if (!this.cacheKey) {
+      console.error("Failed to compute cache key.")
       return false
     }
 
@@ -366,6 +475,7 @@ export class IntraNodeRouteSolver
       const cachedSolution = this.cacheProvider.getCachedSolutionSync(
         this.cacheKey,
       )
+
       if (cachedSolution !== undefined && cachedSolution !== null) {
         this.applyCachedSolution(cachedSolution)
         return true
@@ -392,6 +502,7 @@ export class IntraNodeRouteSolver
     }
 
     if (!this.cacheKey) {
+      console.error("Failed to compute cache key before saving.")
       return
     }
 
@@ -404,96 +515,5 @@ export class IntraNodeRouteSolver
     } catch (error) {
       console.error("Error saving solution to cache:", error)
     }
-  }
-
-  visualize(): GraphicsObject {
-    const graphics: GraphicsObject = {
-      lines: [],
-      points: [],
-      rects: [],
-      circles: [],
-    }
-
-    // Draw node bounds
-    // graphics.rects!.push({
-    //   center: {
-    //     x: this.nodeWithPortPoints.center.x,
-    //     y: this.nodeWithPortPoints.center.y,
-    //   },
-    //   width: this.nodeWithPortPoints.width,
-    //   height: this.nodeWithPortPoints.height,
-    //   stroke: "gray",
-    //   fill: "transparent",
-    // })
-
-    // Visualize input nodeWithPortPoints
-    for (const pt of this.nodeWithPortPoints.portPoints) {
-      graphics.points!.push({
-        x: pt.x,
-        y: pt.y,
-        label: [pt.connectionName, `layer: ${pt.z}`].join("\n"),
-        color: this.colorMap[pt.connectionName] ?? "blue",
-      })
-    }
-
-    // Visualize solvedRoutes
-    for (
-      let routeIndex = 0;
-      routeIndex < this.solvedRoutes.length;
-      routeIndex++
-    ) {
-      const route = this.solvedRoutes[routeIndex]
-      if (route.route.length > 0) {
-        const routeColor = this.colorMap[route.connectionName] ?? "blue"
-
-        // Draw route segments between points
-        for (let i = 0; i < route.route.length - 1; i++) {
-          const p1 = route.route[i]
-          const p2 = route.route[i + 1]
-
-          graphics.lines!.push({
-            points: [p1, p2],
-            strokeColor:
-              p1.z === 0
-                ? safeTransparentize(routeColor, 0.2)
-                : safeTransparentize(routeColor, 0.8),
-            layer: `route-layer-${p1.z}`,
-            step: routeIndex,
-            strokeWidth: route.traceThickness,
-          })
-        }
-
-        // Draw vias
-        for (const via of route.vias) {
-          graphics.circles!.push({
-            center: { x: via.x, y: via.y },
-            radius: route.viaDiameter / 2,
-            fill: safeTransparentize(routeColor, 0.5),
-            layer: "via",
-            step: routeIndex,
-          })
-        }
-      }
-    }
-
-    // Draw border around the node
-    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)
-    const { minX, minY, maxX, maxY } = bounds
-
-    // Draw the four sides of the border with thin red lines
-    graphics.lines!.push({
-      points: [
-        { x: minX, y: minY },
-        { x: maxX, y: minY },
-        { x: maxX, y: maxY },
-        { x: minX, y: maxY },
-        { x: minX, y: minY },
-      ],
-      strokeColor: "rgba(255, 0, 0, 0.25)",
-      strokeDash: "4 4",
-      layer: "border",
-    })
-
-    return graphics
   }
 }
