@@ -23,6 +23,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
   obstacles: Obstacle[]
   connMap: ConnectivityMap
   colorMap: Record<string, string>
+  outline?: Array<{ x: number; y: number }>
 
   constructor(params: {
     inputRoute: HighDensityIntraNodeRoute
@@ -30,6 +31,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     obstacles: Obstacle[]
     connMap: ConnectivityMap
     colorMap: Record<string, string>
+    outline?: Array<{ x: number; y: number }>
   }) {
     super()
 
@@ -38,6 +40,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.connMap = params.connMap
     this.colorMap = params.colorMap
+    this.outline = params.outline
 
     this.newRoute = [this.inputRoute.route[0]]
     this.newVias = []
@@ -50,6 +53,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
       obstacles: this.obstacles,
       connMap: this.connMap.netMap,
       colorMap: this.colorMap,
+      outline: this.outline,
     }
   }
 

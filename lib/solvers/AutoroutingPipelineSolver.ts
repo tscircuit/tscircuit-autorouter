@@ -342,6 +342,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
+          outline: cms.srj.outline,
         },
       ],
     ),
@@ -368,6 +369,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
+          outline: cms.srj.outline,
         },
       ],
     ),
@@ -477,6 +479,43 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       this.multiSimplifiedPathSolver1?.visualize()
     const simplifiedPathSolverViz2 =
       this.multiSimplifiedPathSolver2?.visualize()
+    const problemOutline = this.srj.outline
+    const problemLines: Line[] = []
+
+    problemLines.push({
+      points: [
+        // Add five points representing the bounds of the PCB
+        {
+          x: this.srj.bounds?.minX ?? -50,
+          y: this.srj.bounds?.minY ?? -50,
+        },
+        { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.minY ?? -50 },
+        { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.maxY ?? 50 },
+        { x: this.srj.bounds?.minX ?? -50, y: this.srj.bounds?.maxY ?? 50 },
+        {
+          x: this.srj.bounds?.minX ?? -50,
+          y: this.srj.bounds?.minY ?? -50,
+        }, // Close the rectangle
+      ],
+      strokeColor: "rgba(255,0,0,0.25)",
+    })
+
+    if (problemOutline && problemOutline.length >= 2) {
+      const outlinePoints = problemOutline.map(
+        (point: { x: number; y: number }) => ({
+          x: point.x,
+          y: point.y,
+        }),
+      )
+
+      outlinePoints.push({ ...outlinePoints[0]! })
+
+      problemLines.push({
+        points: outlinePoints,
+        strokeColor: "rgba(0, 136, 255, 0.95)",
+      })
+    }
+
     const problemViz = {
       points: [
         ...this.srj.connections.flatMap((c) =>
@@ -497,25 +536,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           label: o.layers?.join(", "),
         })),
       ],
-      lines: [
-        {
-          points: [
-            // Add five points representing the bounds of the PCB
-            {
-              x: this.srj.bounds?.minX ?? -50,
-              y: this.srj.bounds?.minY ?? -50,
-            },
-            { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.minY ?? -50 },
-            { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.maxY ?? 50 },
-            { x: this.srj.bounds?.minX ?? -50, y: this.srj.bounds?.maxY ?? 50 },
-            {
-              x: this.srj.bounds?.minX ?? -50,
-              y: this.srj.bounds?.minY ?? -50,
-            }, // Close the rectangle
-          ],
-          strokeColor: "rgba(255,0,0,0.25)",
-        },
-      ],
+      lines: problemLines,
     } as GraphicsObject
     const visualizations = [
       problemViz,

@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test"
 import { SingleTransitionCrossingRouteSolver } from "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import node from "../../examples/legacy/assets/cn11081-nodeWithPortPoints.json" assert {
   type: "json",
 }
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 
 const nodeWithPortPoints = (node as any).nodeWithPortPoints
 
@@ -290,7 +290,7 @@ test("cn11081 single transition solver routes without DRC errors", () => {
       },
     ]
   `)
-  const errors = checkEachPcbTraceNonOverlapping(circuitJson)
+  const { errors } = getDrcErrors(circuitJson)
 
   expect(errors.length).toBe(0)
   expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)

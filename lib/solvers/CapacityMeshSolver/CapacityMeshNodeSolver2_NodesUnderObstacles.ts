@@ -7,6 +7,10 @@ import type {
   Obstacle,
   SimpleRouteJson,
 } from "../../types"
+import {
+  isRectCompletelyInsidePolygon,
+  isRectOverlappingPolygon,
+} from "@tscircuit/math-utils"
 import { COLORS } from "../colors"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { doRectsOverlap } from "lib/utils/doRectsOverlap"
@@ -41,6 +45,12 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
   }
 
   isNodeCompletelyOutsideBounds(node: CapacityMeshNode): boolean {
+    if (this.outlinePolygon) {
+      const nodeRect = this.getNodeRect(node)
+      if (!isRectOverlappingPolygon(nodeRect, this.outlinePolygon)) {
+        return true
+      }
+    }
     return (
       node.center.x + node.width / 2 < this.srj.bounds.minX ||
       node.center.x - node.width / 2 > this.srj.bounds.maxX ||
@@ -50,6 +60,17 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
   }
 
   isNodePartiallyOutsideBounds(node: CapacityMeshNode): boolean {
+    if (this.outlinePolygon) {
+      const nodeRect = this.getNodeRect(node)
+      const overlapsOutline = isRectOverlappingPolygon(
+        nodeRect,
+        this.outlinePolygon,
+      )
+      if (!overlapsOutline) {
+        return false
+      }
+      return !isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon)
+    }
     return (
       node.center.x - node.width / 2 < this.srj.bounds.minX ||
       node.center.x + node.width / 2 > this.srj.bounds.maxX ||

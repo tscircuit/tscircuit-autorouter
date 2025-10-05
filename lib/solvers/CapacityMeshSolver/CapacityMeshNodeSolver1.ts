@@ -7,6 +7,11 @@ import type {
   Obstacle,
   SimpleRouteJson,
 } from "../../types"
+import {
+  isRectCompletelyInsidePolygon,
+  isRectOverlappingPolygon,
+  type Polygon,
+} from "@tscircuit/math-utils"
 import { COLORS } from "../colors"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { doRectsOverlap } from "lib/utils/doRectsOverlap"
@@ -38,6 +43,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
   nodeToXYOverlappingObstaclesMap: Map<CapacityMeshNodeId, Obstacle[]>
   layerCount: number
+  protected outlinePolygon?: Polygon
 
   // targetObstacleMap: Record<string, { obstacle: Obstacle, node: CapacityMeshNode }>
 
@@ -55,6 +61,8 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     this.MAX_DEPTH = opts?.capacityDepth ?? this.MAX_DEPTH
     this.MAX_ITERATIONS = 100_000
     this.layerCount = srj.layerCount ?? 2
+    this.outlinePolygon =
+      srj.outline && srj.outline.length >= 3 ? srj.outline : undefined
 
     for (const obstacle of srj.obstacles) {
       if (!obstacle.zLayers) {
@@ -140,6 +148,25 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     return targets
   }
 
+  protected getNodeBounds(node: CapacityMeshNode) {
+    const halfWidth = node.width / 2
+    const halfHeight = node.height / 2
+    return {
+      minX: node.center.x - halfWidth,
+      maxX: node.center.x + halfWidth,
+      minY: node.center.y - halfHeight,
+      maxY: node.center.y + halfHeight,
+    }
+  }
+
+  protected getNodeRect(node: CapacityMeshNode) {
+    return {
+      center: { x: node.center.x, y: node.center.y },
+      width: node.width,
+      height: node.height,
+    }
+  }
+
   _nextNodeCounter = 0
   getNextNodeId(): string {
     return `cn${this._nextNodeCounter++}`
@@ -183,11 +210,11 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     }
     const overlappingObstacles: Obstacle[] = []
 
-    // Compute node bounds
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
+    const nodeBounds = this.getNodeBounds(node)
+    const nodeLeft = nodeBounds.minX
+    const nodeRight = nodeBounds.maxX
+    const nodeTop = nodeBounds.minY
+    const nodeBottom = nodeBounds.maxY
 
     const obstacles = node._parent
       ? this.getXYOverlappingObstacles(node._parent)
@@ -265,18 +292,21 @@ export class CapacityMeshNodeSolver extends BaseSolver {
       return true
     }
 
-    // Compute node bounds
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
+    const nodeBounds = this.getNodeBounds(node)
+
+    if (this.outlinePolygon) {
+      const nodeRect = this.getNodeRect(node)
+      if (!isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon)) {
+        return true
+      }
+    }
 
     // If node is outside the bounds, we consider it to contain an obstacle
     if (
-      nodeLeft < this.srj.bounds.minX ||
-      nodeRight > this.srj.bounds.maxX ||
-      nodeTop < this.srj.bounds.minY ||
-      nodeBottom > this.srj.bounds.maxY
+      nodeBounds.minX < this.srj.bounds.minX ||
+      nodeBounds.maxX > this.srj.bounds.maxX ||
+      nodeBounds.minY < this.srj.bounds.minY ||
+      nodeBounds.maxY > this.srj.bounds.maxY
     ) {
       return true
     }
@@ -289,11 +319,14 @@ export class CapacityMeshNodeSolver extends BaseSolver {
   isNodeCompletelyInsideObstacle(node: CapacityMeshNode): boolean {
     const overlappingObstacles = this.getXYZOverlappingObstacles(node)
 
-    // Compute node bounds
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
+    const nodeBounds = this.getNodeBounds(node)
+
+    if (this.outlinePolygon) {
+      const nodeRect = this.getNodeRect(node)
+      if (!isRectOverlappingPolygon(nodeRect, this.outlinePolygon)) {
+        return true
+      }
+    }
 
     for (const obstacle of overlappingObstacles) {
       const obsLeft = obstacle.center.x - obstacle.width / 2
@@ -303,10 +336,10 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
       // Check if the node's bounds are completely inside the obstacle's bounds.
       if (
-        nodeLeft >= obsLeft &&
-        nodeRight <= obsRight &&
-        nodeTop >= obsTop &&
-        nodeBottom <= obsBottom
+        nodeBounds.minX >= obsLeft &&
+        nodeBounds.maxX <= obsRight &&
+        nodeBounds.minY >= obsTop &&
+        nodeBounds.maxY <= obsBottom
       ) {
         return true
       }
@@ -434,6 +467,32 @@ export class CapacityMeshNodeSolver extends BaseSolver {
       circles: [],
       coordinateSystem: "cartesian",
       title: "Capacity Mesh Visualization",
+    }
+
+    // Draw outline polygon if provided
+    if (this.outlinePolygon && this.outlinePolygon.length >= 2) {
+      const outlinePoints = this.outlinePolygon.map(
+        (point: { x: number; y: number }) => ({
+          x: point.x,
+          y: point.y,
+        }),
+      )
+
+      outlinePoints.push({ ...outlinePoints[0]! })
+
+      graphics.lines!.push({
+        points: outlinePoints,
+        strokeColor: "rgba(0, 136, 255, 0.95)",
+        label: "outline",
+      })
+
+      for (const point of this.outlinePolygon) {
+        graphics.points!.push({
+          x: point.x,
+          y: point.y,
+          color: "rgba(0, 136, 255, 0.95)",
+        })
+      }
     }
 
     // Draw obstacles
