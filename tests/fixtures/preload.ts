@@ -1,2 +1,2 @@
-import "bun-match-svg"
+import "./svg-matcher"
 import "graphics-debug/matcher"
