@@ -73,18 +73,14 @@ async function toMatchSvgSnapshot(
   const receivedPng = svgToPngBuffer(received, scale)
   const existingPng = svgToPngBuffer(existingSnapshot, scale)
 
-  const result: any = await looksSame(
-    Buffer.from(receivedPng),
-    Buffer.from(existingPng),
-    {
-      strict: false,
-      tolerance: 5,
-      antialiasingTolerance: 4,
-      ignoreCaret: true,
-      shouldCluster: true,
-      clustersSize: 10,
-    },
-  )
+  const result: any = await looksSame(receivedPng, existingPng, {
+    strict: false,
+    tolerance: 5,
+    antialiasingTolerance: 4,
+    ignoreCaret: true,
+    shouldCluster: true,
+    clustersSize: 10,
+  })
 
   if (updateSnapshot) {
     if (!forceUpdate && result.equal) {
