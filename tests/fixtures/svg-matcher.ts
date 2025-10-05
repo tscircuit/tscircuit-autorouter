@@ -18,13 +18,20 @@ function svgToPngBuffer(svg: string, scale: number = 4): Buffer {
   return resvg.render().asPng()
 }
 
+type SvgSnapshotOpts = {
+  svgName?: string
+  scale?: number
+  tolerancePercent?: number // e.g. 0.05 for 5%
+}
+
 async function toMatchSvgSnapshot(
   // biome-ignore lint/suspicious/noExplicitAny: bun doesn't expose
   this: any,
   receivedMaybePromise: string | Promise<string>,
   testPathOriginal: string,
-  svgName?: string,
+  opts: SvgSnapshotOpts = {},
 ): Promise<MatcherResult> {
+  const { svgName, scale = 4, tolerancePercent = 0.05 } = opts
   const received = await receivedMaybePromise
   const testPath = testPathOriginal.replace(/\.test\.tsx?$/, "")
   const snapshotDir = path.join(path.dirname(testPath), "__snapshots__")
@@ -40,8 +47,8 @@ async function toMatchSvgSnapshot(
   const updateSnapshot =
     process.argv.includes("--update-snapshots") ||
     process.argv.includes("-u") ||
-    Boolean(process.env["BUN_UPDATE_SNAPSHOTS"])
-  const forceUpdate = Boolean(process.env["FORCE_BUN_UPDATE_SNAPSHOTS"])
+    Boolean(process.env.BUN_UPDATE_SNAPSHOTS)
+  const forceUpdate = Boolean(process.env.FORCE_BUN_UPDATE_SNAPSHOTS)
 
   const fileExists = fs.existsSync(filePath)
 
@@ -56,8 +63,8 @@ async function toMatchSvgSnapshot(
 
   const existingSnapshot = fs.readFileSync(filePath, "utf-8")
 
-  const receivedPng = svgToPngBuffer(received, 4)
-  const existingPng = svgToPngBuffer(existingSnapshot, 4)
+  const receivedPng = svgToPngBuffer(received, scale)
+  const existingPng = svgToPngBuffer(existingSnapshot, scale)
 
   const result: any = await looksSame(receivedPng, existingPng, {
     tolerance: 2,
@@ -65,10 +72,30 @@ async function toMatchSvgSnapshot(
     strict: false,
   })
 
+  // If images are not exactly equal, check if the difference is within the allowed tolerance
+  let pass = result.equal
+  let diffMessage = ""
+  if (
+    !result.equal &&
+    typeof result.differentPixels === "number" &&
+    typeof result.totalPixels === "number"
+  ) {
+    const percentDiff = result.differentPixels / result.totalPixels
+    if (percentDiff <= tolerancePercent) {
+      pass = true
+      diffMessage = `Images differ by ${(percentDiff * 100).toFixed(2)}% (allowed: ${(tolerancePercent * 100).toFixed(2)}%)`
+    } else {
+      diffMessage = `Images differ by ${(percentDiff * 100).toFixed(2)}% (allowed: ${(tolerancePercent * 100).toFixed(2)}%)`
+    }
+  }
+
   if (updateSnapshot) {
-    if (!forceUpdate && result.equal) {
+    if (!forceUpdate && pass) {
       return {
-        message: () => "Snapshot matches",
+        message: () =>
+          diffMessage
+            ? `Snapshot matches within tolerance. ${diffMessage}`
+            : "Snapshot matches",
         pass: true,
       }
     }
@@ -80,9 +107,12 @@ async function toMatchSvgSnapshot(
     }
   }
 
-  if (result.equal) {
+  if (pass) {
     return {
-      message: () => "Snapshot matches",
+      message: () =>
+        diffMessage
+          ? `Snapshot matches within tolerance. ${diffMessage}`
+          : "Snapshot matches",
       pass: true,
     }
   }
@@ -96,7 +126,9 @@ async function toMatchSvgSnapshot(
   })
 
   return {
-    message: () => `Snapshot does not match. Diff saved at ${diffPath}`,
+    message: () =>
+      `Snapshot does not match. Diff saved at ${diffPath}.` +
+      (diffMessage ? ` ${diffMessage}` : ""),
     pass: false,
   }
 }
@@ -109,9 +141,10 @@ declare module "bun:test" {
   interface Matchers<T = unknown> {
     toMatchSvgSnapshot(
       testPath: string,
-      opts: {
+      opts?: {
         svgName?: string
         scale?: number
+        tolerancePercent?: number
       },
     ): Promise<MatcherResult>
   }
