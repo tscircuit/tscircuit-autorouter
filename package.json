@@ -34,7 +34,7 @@
     "@types/react-dom": "^19.0.3",
     "@vercel/node": "^5.1.7",
     "@vitejs/plugin-react": "^4.3.4",
-    "bun-match-svg": "^0.0.9",
+    "bun-match-svg": "^0.0.14",
     "circuit-json-to-connectivity-map": "^0.0.19",
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
