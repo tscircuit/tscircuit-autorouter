@@ -10,6 +10,7 @@ import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingl
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 
 export class HighDensitySolver extends BaseSolver {
   unsolvedNodePortPoints: NodeWithPortPoints[]
@@ -48,6 +49,7 @@ export class HighDensitySolver extends BaseSolver {
    * of it.
    */
   _step() {
+    this.updateCacheStats()
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
@@ -57,6 +59,7 @@ export class HighDensitySolver extends BaseSolver {
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }
+      this.updateCacheStats()
       return
     }
     if (this.unsolvedNodePortPoints.length === 0) {
@@ -65,10 +68,12 @@ export class HighDensitySolver extends BaseSolver {
         this.failed = true
         // debugger
         this.error = `Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0, 5).map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`
+        this.updateCacheStats()
         return
       }
 
       this.solved = true
+      this.updateCacheStats()
       return
     }
     const node = this.unsolvedNodePortPoints.pop()!
@@ -78,6 +83,13 @@ export class HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
     })
+    this.updateCacheStats()
+  }
+
+  private updateCacheStats() {
+    const cacheProvider = getGlobalInMemoryCache()
+    this.stats.intraNodeCacheHits = cacheProvider.cacheHits
+    this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
   }
 
   visualize(): GraphicsObject {

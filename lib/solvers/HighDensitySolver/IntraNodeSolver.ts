@@ -12,11 +12,44 @@ import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { CachableSolver, CacheProvider } from "lib/cache/types"
+import {
+  getGlobalInMemoryCache,
+  setupGlobalCaches,
+} from "lib/cache/setupGlobalCaches"
+import objectHash from "object-hash"
 
-export class IntraNodeRouteSolver extends BaseSolver {
+type CachedSolvedIntraNodeRouteSolver =
+  | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
+  | { success: false; error?: string }
+
+type CacheToIntraNodeSolverTransform = Record<string, never>
+
+const roundCoord = (n: number) => Math.round(n * 200) / 200
+
+const cloneValue = <T>(value: T): T =>
+  typeof structuredClone === "function"
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value))
+
+setupGlobalCaches()
+
+export class IntraNodeRouteSolver
+  extends BaseSolver
+  implements
+    CachableSolver<
+      CacheToIntraNodeSolverTransform,
+      CachedSolvedIntraNodeRouteSolver
+    >
+{
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }[]
+
+  initialUnsolvedConnections: {
     connectionName: string
     points: { x: number; y: number; z: number }[]
   }[]
@@ -29,6 +62,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
+
+  cacheProvider: CacheProvider | null
+  cacheHit = false
+  hasAttemptedToUseCache = false
+  declare cacheKey?: string | undefined
+  declare cacheToSolveSpaceTransform?:
+    | CacheToIntraNodeSolverTransform
+    | undefined
 
   // Legacy compat
   get failedSolvers() {
@@ -45,6 +86,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     colorMap?: Record<string, string>
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
+    cacheProvider?: CacheProvider | null
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -54,6 +96,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.hyperParameters = params.hyperParameters ?? {}
     this.failedSubSolvers = []
     this.connMap = params.connMap
+    this.cacheProvider =
+      params.cacheProvider === undefined
+        ? getGlobalInMemoryCache()
+        : params.cacheProvider
     const unsolvedConnectionsMap: Map<
       string,
       { x: number; y: number; z: number }[]
@@ -93,6 +139,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.totalConnections = this.unsolvedConnections.length
     this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
 
+    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
     )
@@ -115,6 +163,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
     // ) {
     //   this.handleSimpleNoCrossingsCase()
     // }
+
+    if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
+      this.saveToCacheSync()
+    }
   }
 
   // handleSimpleNoCrossingsCase() {
@@ -140,6 +192,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   _step() {
+    if (!this.hasAttemptedToUseCache && this.cacheProvider) {
+      if (this.attemptToUseCacheSync()) {
+        return
+      }
+    }
+
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
@@ -151,6 +209,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
         this.activeSubSolver = null
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
+        if (this.cacheProvider && !this.cacheHit) {
+          this.saveToCacheSync()
+        }
       }
       return
     }
@@ -159,6 +220,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.progress = this.computeProgress()
     if (!unsolvedConnection) {
       this.solved = this.failedSubSolvers.length === 0
+      if (this.cacheProvider && !this.cacheHit) {
+        this.saveToCacheSync()
+      }
       return
     }
     if (unsolvedConnection.points.length === 1) {
@@ -196,6 +260,150 @@ export class IntraNodeRouteSolver extends BaseSolver {
         hyperParameters: this.hyperParameters,
         connMap: this.connMap,
       })
+  }
+
+  computeCacheKeyAndTransform(): {
+    cacheKey: string
+    cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform
+  } {
+    const center = this.nodeWithPortPoints.center
+    const normalizedConnections = this.initialUnsolvedConnections.map(
+      ({ connectionName, points }) => ({
+        connectionName,
+        points: points.map((point) => ({
+          connectionName,
+          x: roundCoord(point.x - center.x),
+          y: roundCoord(point.y - center.y),
+          z: point.z ?? 0,
+        })),
+      }),
+    )
+
+    const normalizedHyperParameters = Object.fromEntries(
+      Object.entries(this.hyperParameters ?? {})
+        .filter(([, value]) => value !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b)),
+    )
+
+    const normalizedConnMap = this.connMap
+      ? this.initialUnsolvedConnections.map(({ connectionName }) => ({
+          connectionName,
+          connectedIds: [
+            ...new Set(
+              this.connMap!.getIdsConnectedToNet(connectionName) ?? [],
+            ),
+          ].sort(),
+        }))
+      : undefined
+
+    const keyData = {
+      node: {
+        width: roundCoord(this.nodeWithPortPoints.width),
+        height: roundCoord(this.nodeWithPortPoints.height),
+        center: {
+          x: roundCoord(this.nodeWithPortPoints.center.x),
+          y: roundCoord(this.nodeWithPortPoints.center.y),
+        },
+        availableZ: this.nodeWithPortPoints.availableZ
+          ? [...this.nodeWithPortPoints.availableZ].sort()
+          : undefined,
+      },
+      normalizedConnections,
+      normalizedHyperParameters,
+      minDistBetweenEnteringPoints: roundCoord(
+        this.minDistBetweenEnteringPoints,
+      ),
+      normalizedConnMap,
+    }
+
+    const cacheKey = `intranode-solver:${objectHash(keyData)}`
+    const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
+
+    this.cacheKey = cacheKey
+    this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
+
+    return { cacheKey, cacheToSolveSpaceTransform }
+  }
+
+  applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
+    if (cachedSolution.success) {
+      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      this.solved = true
+      this.failed = false
+    } else {
+      this.solvedRoutes = []
+      this.failedSubSolvers = []
+      this.solved = false
+      this.failed = true
+      this.error = cachedSolution.error ?? this.error
+    }
+    this.unsolvedConnections = []
+    this.activeSubSolver = null
+    this.cacheHit = true
+    this.progress = 1
+  }
+
+  attemptToUseCacheSync(): boolean {
+    this.hasAttemptedToUseCache = true
+    if (!this.cacheProvider?.isSyncCache) {
+      return false
+    }
+
+    if (!this.cacheKey) {
+      try {
+        this.computeCacheKeyAndTransform()
+      } catch (error) {
+        console.error("Error computing cache key:", error)
+        return false
+      }
+    }
+
+    if (!this.cacheKey) {
+      return false
+    }
+
+    try {
+      const cachedSolution = this.cacheProvider.getCachedSolutionSync(
+        this.cacheKey,
+      )
+      if (cachedSolution !== undefined && cachedSolution !== null) {
+        this.applyCachedSolution(cachedSolution)
+        return true
+      }
+    } catch (error) {
+      console.error("Error attempting to use cache:", error)
+    }
+
+    return false
+  }
+
+  saveToCacheSync(): void {
+    if (!this.cacheProvider?.isSyncCache) {
+      return
+    }
+
+    if (!this.cacheKey) {
+      try {
+        this.computeCacheKeyAndTransform()
+      } catch (error) {
+        console.error("Error computing cache key during save:", error)
+        return
+      }
+    }
+
+    if (!this.cacheKey) {
+      return
+    }
+
+    const solutionToCache: CachedSolvedIntraNodeRouteSolver = this.failed
+      ? { success: false, error: this.error ?? undefined }
+      : { success: true, solvedRoutes: cloneValue(this.solvedRoutes) }
+
+    try {
+      this.cacheProvider.setCachedSolutionSync(this.cacheKey, solutionToCache)
+    } catch (error) {
+      console.error("Error saving solution to cache:", error)
+    }
   }
 
   visualize(): GraphicsObject {
