@@ -23,3 +23,10 @@ jobs:
 
       - name: Run tests
         run: bun test --timeout 60000
+
+      - name: Upload diff PNG artifacts
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: diff-png-artifacts
+          path: '**/*.diff.png'
