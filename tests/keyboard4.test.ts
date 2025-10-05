@@ -39,7 +39,7 @@ describe("keyboard4 autorouting", () => {
 
   test("matches the expected PCB snapshot", () => {
     expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, {
-      tolerancePercent: 2,
+      tolerance: 0.1,
     })
   })
 
