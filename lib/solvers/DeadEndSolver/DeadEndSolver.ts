@@ -71,10 +71,34 @@ export class DeadEndSolver extends BaseSolver {
 
     const leaf = this.leaves[this.leavesIndex]
 
-    // Get the single neighbor of the leaf node
-    const [neighbor] = this.adjacencyList.get(leaf)!
+    const leafNeighbors = this.adjacencyList.get(leaf)
 
-    const neighborsOfLeafNeighbor = this.adjacencyList.get(neighbor)!
+    if (!leafNeighbors || leafNeighbors.size === 0) {
+      this.removedNodeIds.add(leaf)
+      this.adjacencyList.delete(leaf)
+      this.leavesIndex += 1
+      if (this.leavesIndex === this.leaves.length) {
+        this.solved = true
+      }
+      return
+    }
+
+    // Get the single neighbor of the leaf node
+    const [neighbor] = leafNeighbors
+
+    const neighborsOfLeafNeighbor = neighbor
+      ? this.adjacencyList.get(neighbor)
+      : undefined
+
+    if (!neighbor || !neighborsOfLeafNeighbor) {
+      this.removedNodeIds.add(leaf)
+      this.adjacencyList.delete(leaf)
+      this.leavesIndex += 1
+      if (this.leavesIndex === this.leaves.length) {
+        this.solved = true
+      }
+      return
+    }
 
     // Remove the leaf from the adjacency list of the neighbor of the leaf.
     // This is, by definition, the only entry in the adjacency map that links
@@ -84,6 +108,9 @@ export class DeadEndSolver extends BaseSolver {
 
     // Add the leaf to the list of removed ids
     this.removedNodeIds.add(leaf)
+
+    // Remove the leaf entry entirely so that we never try to process it again
+    this.adjacencyList.delete(leaf)
 
     // Check if the neighbour of the leaf has now become a leaf such that it can
     // be removed in a future iteration.
