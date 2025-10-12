@@ -79,11 +79,18 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
       )
 
       for (const unprocessedNode of nodesInArea) {
+        // Do not merge targets with anything except the exact same target
         if (
-          unprocessedNode._containsTarget &&
-          unprocessedNode._targetConnectionName !== node._targetConnectionName
-        )
+          (unprocessedNode._containsTarget &&
+            unprocessedNode._targetConnectionName !==
+              node._targetConnectionName) ||
+          (node._containsTarget &&
+            (!unprocessedNode._containsTarget ||
+              unprocessedNode._targetConnectionName !==
+                node._targetConnectionName))
+        ) {
           continue
+        }
         // if (this.absorbedNodeIds.has(unprocessedNode.capacityMeshNodeId))
         //   continue
         if (unprocessedNode.capacityMeshNodeId === node.capacityMeshNodeId)
@@ -124,7 +131,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
       new Set(
         (rootNode._adjacentNodeIds ?? []).map((a) => this.nodeMap.get(a)!),
       ),
-    )
+    ).filter((n) => n && n.capacityMeshNodeId !== rootNode.capacityMeshNodeId)
 
     unprocessedAdjNodes.sort((a, b) => a.width * a.height - b.width * b.height)
 
@@ -187,7 +194,11 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
           [
             ...(rootNode._adjacentNodeIds ?? []),
             ...nodesToAbsorb.flatMap((n) => n._adjacentNodeIds ?? []),
-          ].filter((id) => !this.absorbedNodeIds.has(id)),
+          ].filter(
+            (id) =>
+              id !== rootNode.capacityMeshNodeId &&
+              !this.absorbedNodeIds.has(id),
+          ),
         ),
       )
     }
