@@ -13,8 +13,6 @@ import { CapacityHyperParameters } from "../CapacityHyperParameters"
 import { GraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "../colors"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 
 export type Candidate = {
   prevCandidate: Candidate | null
@@ -39,8 +37,6 @@ export class CapacityPathingSolver extends BaseSolver {
   simpleRouteJson: SimpleRouteJson
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
-  connMap?: ConnectivityMap
-  obstacleTree: ObstacleSpatialHashIndex
   GREEDY_MULTIPLIER = 1.1
   MAX_CANDIDATES_IN_MEMORY = 100_000
 
@@ -70,7 +66,6 @@ export class CapacityPathingSolver extends BaseSolver {
     colorMap,
     MAX_ITERATIONS = 1e6,
     hyperParameters = {},
-    connMap,
   }: {
     simpleRouteJson: SimpleRouteJson
     nodes: CapacityMeshNode[]
@@ -78,18 +73,12 @@ export class CapacityPathingSolver extends BaseSolver {
     colorMap?: Record<string, string>
     MAX_ITERATIONS?: number
     hyperParameters?: Partial<CapacityHyperParameters>
-    connMap?: ConnectivityMap
   }) {
     super()
     this.MAX_ITERATIONS = MAX_ITERATIONS
     this.simpleRouteJson = simpleRouteJson
     this.nodes = nodes
     this.edges = edges
-    this.connMap = connMap
-    this.obstacleTree = new ObstacleSpatialHashIndex(
-      "flatbush",
-      this.simpleRouteJson.obstacles,
-    )
     this.colorMap = colorMap ?? {}
     const { connectionsWithNodes, connectionNameToGoalNodeIds } =
       this.getConnectionsWithNodes()
@@ -252,38 +241,7 @@ export class CapacityPathingSolver extends BaseSolver {
   canTravelThroughObstacle(node: CapacityMeshNode, connectionName: string) {
     const goalNodeIds = this.connectionNameToGoalNodeIds.get(connectionName)
 
-    if (goalNodeIds?.includes(node.capacityMeshNodeId)) {
-      return true
-    }
-
-    if (!this.connMap) return false
-
-    // Check if node is inside a friendly obstacle
-    const nodeRect = {
-      center: node.center,
-      width: node.width,
-      height: node.height,
-    }
-    const overlappingObstacles = this.obstacleTree
-      .search(
-        nodeRect.center.x - nodeRect.width / 2,
-        nodeRect.center.y - nodeRect.height / 2,
-        nodeRect.center.x + nodeRect.width / 2,
-        nodeRect.center.y + nodeRect.height / 2,
-      )
-      .filter((o) => o.zLayers?.some((z) => node.availableZ.includes(z)))
-
-    for (const obstacle of overlappingObstacles) {
-      if (
-        obstacle.connectedTo?.some((connId) =>
-          this.connMap!.areIdsConnected(connId, connectionName),
-        )
-      ) {
-        return true
-      }
-    }
-
-    return false
+    return goalNodeIds?.includes(node.capacityMeshNodeId) ?? false
   }
 
   getDistanceBetweenNodes(A: CapacityMeshNode, B: CapacityMeshNode) {
@@ -335,6 +293,9 @@ export class CapacityPathingSolver extends BaseSolver {
     }
     if (!currentCandidate) {
       // TODO Track failed paths, make sure solver doesn't think it solved
+      console.error(
+        `Ran out of candidates on connection ${nextConnection.connection.name}`,
+      )
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedNodes = null

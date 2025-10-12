@@ -218,7 +218,6 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
           colorMap: cms.colorMap,
-          connMap: cms.connMap,
           hyperParameters: {
             MAX_CAPACITY_FACTOR: 1,
           },
