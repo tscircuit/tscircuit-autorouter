@@ -265,12 +265,12 @@ export class CapacityPathingSolver extends BaseSolver {
       height: node.height,
     }
     const overlappingObstacles = this.obstacleTree
-      .search({
-        minX: nodeRect.center.x - nodeRect.width / 2,
-        minY: nodeRect.center.y - nodeRect.height / 2,
-        maxX: nodeRect.center.x + nodeRect.width / 2,
-        maxY: nodeRect.center.y + nodeRect.height / 2,
-      })
+      .search(
+        nodeRect.center.x - nodeRect.width / 2,
+        nodeRect.center.y - nodeRect.height / 2,
+        nodeRect.center.x + nodeRect.width / 2,
+        nodeRect.center.y + nodeRect.height / 2,
+      )
       .filter((o) => o.zLayers?.some((z) => node.availableZ.includes(z)))
 
     for (const obstacle of overlappingObstacles) {
