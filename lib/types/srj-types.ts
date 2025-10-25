@@ -18,6 +18,7 @@ export interface Obstacle {
   width: number
   height: number
   connectedTo: TraceId[]
+  netIsAssignable?: boolean
 }
 
 export interface SimpleRouteConnection {
