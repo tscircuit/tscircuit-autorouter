@@ -31,6 +31,7 @@ import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMult
 import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
 import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
 import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
+import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver"
 import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -92,6 +93,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   highDensityRouteSolver?: HighDensitySolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets
+  mergeAssignableViaNodes?: AssignableViaNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
@@ -141,9 +143,19 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "mergeAssignableViaNodes",
+      AssignableViaNodeMergerSolver,
+      (cms) => [cms.nodeSolver?.finishedNodes!],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.mergeAssignableViaNodes?.newNodes!
+        },
+      },
+    ),
+    definePipelineStep(
       "singleLayerNodeMerger",
       SingleLayerNodeMergerSolver_OnlyMergeTargets,
-      (cms) => [cms.nodeSolver?.finishedNodes!],
+      (cms) => [cms.capacityNodes!],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
@@ -428,6 +440,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const nodeViz = this.nodeSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
+    const mergeAssignableViaNodesViz = this.mergeAssignableViaNodes?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
@@ -511,6 +524,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       netToPPSolver,
       nodeViz,
       nodeTargetMergerViz,
+      mergeAssignableViaNodesViz,
       singleLayerNodeMergerViz,
       strawSolverViz,
       edgeViz,
