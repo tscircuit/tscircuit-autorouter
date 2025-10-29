@@ -21,9 +21,6 @@ interface CapacityMeshNodeSolverOptions {
 export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles extends CapacityMeshNodeSolver2_NodeUnderObstacle {
   MAX_SIZE_FOR_SINGLE_LAYER_NODES = 4 // 4x4mm
 
-  /** Track which assignable obstacles have already received their single multi-layer node */
-  private claimedAssignableObstacles: WeakSet<Obstacle> = new WeakSet()
-
   constructor(
     public srj: SimpleRouteJson,
     public opts: CapacityMeshNodeSolverOptions = {},
@@ -64,10 +61,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
   private getAssignableContainer(node: CapacityMeshNode): Obstacle | null {
     const assignables = this.getOverlappingAssignableObstacles(node)
     for (const o of assignables) {
-      if (
-        !this.claimedAssignableObstacles.has(o) &&
-        this.isNodeCompletelyInsideSpecificObstacle(node, o)
-      ) {
+      if (this.isNodeCompletelyInsideSpecificObstacle(node, o)) {
         return o
       }
     }
@@ -149,6 +143,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
           if (this.shouldNodeBeXYSubdivided(n)) {
             unfinishedNewNodes.push(n)
           } else {
+            n._containsObstacle = false
             finishedNewNodes.push(n)
           }
         }
@@ -168,9 +163,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
           // Mark it as *not* containing an obstacle.
           childNode._containsObstacle = false
           childNode._completelyInsideObstacle = false
-
-          // Only one multi-layer node per assignable obstacle
-          this.claimedAssignableObstacles.add(assignableContainer)
+          ;(childNode as any)._assignedViaObstacle = assignableContainer
         }
         finishedNewNodes.push(childNode)
       }
