@@ -35,6 +35,22 @@ export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGre
     ) as typeof this.connectionsWithNodes
   }
 
+  getTotalCapacity(node: CapacityMeshNode): number {
+    return 0.5
+  }
+
+  doesNodeHaveCapacityForTrace(
+    node: CapacityMeshNode,
+    prevNode: CapacityMeshNode,
+  ) {
+    const usedCapacity =
+      this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
+
+    if (usedCapacity > 0) return false
+
+    return true
+  }
+
   computeG(
     prevCandidate: Parameters<CapacityPathingSolver["computeG"]>[0],
     node: Parameters<CapacityPathingSolver["computeG"]>[1],
@@ -59,29 +75,8 @@ export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGre
       ? 0
       : stepsSinceLayerChange * 10
 
-    // // Compute the length of each subpath that doesn't have a layer traversal
-    // // (i.e. a layer traversal means a new subpath)
-    // // compute the path
-    // const path = []
-    // let current = prevCandidate
-    // while (current) {
-    //   path.unshift(current.node)
-    //   current = current.prevCandidate
-    // }
-    // path.push(node)
-
-    // const singleLayerPaths: CapacityMeshNode[][] = [[]]
-    // let lastLayer = path[0].availableZ[0]
-    // for (const node of path) {
-    //   if (lastLayer !== node.availableZ[0]) {
-    //     lastLayer = node.availableZ[0]
-    //     singleLayerPaths.push([])
-    //   } else {
-    //     singleLayerPaths[singleLayerPaths.length - 1].push(node)
-    //   }
-    // }
-
-    // const singleLayerPenalty = 100 / singleLayerPaths.length
+    // TODO HUGE penalty if the distance between the layer change is small-
+    // this doesn't give a large enough gap for other traces to get through
 
     return super.computeG(prevCandidate, node, endGoal) + sameLayerPenalty
   }
