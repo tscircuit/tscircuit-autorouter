@@ -81,6 +81,7 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
                 trace,
               })),
           ),
+          routesWithVias: outputTraces,
         })
         return
       }
@@ -91,6 +92,7 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
     ) {
       const assignmentSolver = this.activeSubSolver as ObstacleAssignmentSolver
       this.srjWithObstacleAssignments = assignmentSolver.getOutputSrj()
+      console.log("srjWithObstacleAssignments", this.srjWithObstacleAssignments)
       // Start a new pipeline solver with the updated obstacle assignments
       this.activeSubSolver = new AutoroutingPipelineSolver(
         this.srjWithObstacleAssignments,

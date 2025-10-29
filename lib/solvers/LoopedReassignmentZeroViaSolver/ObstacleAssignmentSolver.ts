@@ -1,4 +1,9 @@
-import { SimpleRouteJson, SimplifiedPcbTrace, Obstacle } from "lib/types"
+import {
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+  Obstacle,
+} from "lib/types"
 import { BaseSolver } from "../BaseSolver"
 import { AutoroutingPipelineSolverOptions } from "../AutoroutingPipelineSolver"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -14,6 +19,7 @@ interface ObstacleAssignmentSolverInput {
     toLayer: string
     trace: SimplifiedPcbTrace
   }>
+  routesWithVias?: SimplifiedPcbTraces
 }
 
 interface ObstacleWithIndex {
@@ -35,6 +41,7 @@ export class ObstacleAssignmentSolver extends BaseSolver {
     toLayer: string
     trace: SimplifiedPcbTrace
   }>
+  routesWithVias?: SimplifiedPcbTraces
   currentViaIndex: number = 0
   newlyAssignedObstacleIndices: Set<number> = new Set()
 
@@ -42,6 +49,7 @@ export class ObstacleAssignmentSolver extends BaseSolver {
     super()
     this.inputSrj = input.inputSrj
     this.vias = input.vias
+    this.routesWithVias = input.routesWithVias
   }
 
   _step() {
@@ -287,6 +295,94 @@ export class ObstacleAssignmentSolver extends BaseSolver {
           layer: `z${mapLayerNameToZ(point.layer, layerCount)}`,
           label: `${connection.name}\n${point.layer}`,
         })
+      }
+    }
+
+    // Visualize routes with vias if provided
+    if (this.routesWithVias) {
+      if (!graphicsObject.lines) {
+        graphicsObject.lines = []
+      }
+
+      for (const trace of this.routesWithVias) {
+        // Group consecutive wire segments on the same layer into lines
+        let currentLine: Array<{ x: number; y: number }> = []
+        let currentLayer: string | null = null
+
+        for (const segment of trace.route) {
+          if (segment.route_type === "wire") {
+            // Start a new line if layer changed or if this is the first segment
+            if (currentLayer !== segment.layer) {
+              // Save previous line if it exists
+              if (currentLine.length > 0 && currentLayer) {
+                // Color based on layer: red for top, blue for bottom
+                const strokeColor =
+                  currentLayer === "top"
+                    ? "rgba(255, 0, 0, 0.8)" // Red for top
+                    : "rgba(0, 0, 255, 0.8)" // Blue for bottom
+
+                graphicsObject.lines.push({
+                  points: currentLine,
+                  strokeColor,
+                  strokeWidth: 0.08,
+                  layer: `z${mapLayerNameToZ(currentLayer, layerCount)}`,
+                })
+              }
+              // Start new line
+              currentLine = [{ x: segment.x, y: segment.y }]
+              currentLayer = segment.layer
+            } else {
+              // Continue current line
+              currentLine.push({ x: segment.x, y: segment.y })
+            }
+          } else if (segment.route_type === "via") {
+            // Save current line before the via
+            if (currentLine.length > 0 && currentLayer) {
+              // Color based on layer: red for top, blue for bottom
+              const strokeColor =
+                currentLayer === "top"
+                  ? "rgba(255, 0, 0, 0.8)" // Red for top
+                  : "rgba(0, 0, 255, 0.8)" // Blue for bottom
+
+              graphicsObject.lines.push({
+                points: currentLine,
+                strokeColor,
+                strokeWidth: 0.08,
+                layer: `z${mapLayerNameToZ(currentLayer, layerCount)}`,
+              })
+              currentLine = []
+            }
+
+            // Add via as a circle
+            graphicsObject.circles.push({
+              center: { x: segment.x, y: segment.y },
+              radius: 0.12,
+              fill: "rgba(255, 165, 0, 0.8)",
+              stroke: "rgba(255, 140, 0, 1)",
+              layer: `z${mapLayerNameToZ(segment.from_layer, layerCount)},z${mapLayerNameToZ(segment.to_layer, layerCount)}`,
+            })
+
+            // Start a new line on the new layer
+            currentLine = [{ x: segment.x, y: segment.y }]
+            currentLayer = segment.to_layer
+          }
+        }
+
+        // Save final line if it exists
+        if (currentLine.length > 0 && currentLayer) {
+          // Color based on layer: red for top, blue for bottom
+          const strokeColor =
+            currentLayer === "top"
+              ? "rgba(255, 0, 0, 0.8)" // Red for top
+              : "rgba(0, 0, 255, 0.8)" // Blue for bottom
+
+          graphicsObject.lines.push({
+            points: currentLine,
+            strokeColor,
+            strokeWidth: 0.08,
+            layer: `z${mapLayerNameToZ(currentLayer, layerCount)}`,
+          })
+        }
       }
     }
 
