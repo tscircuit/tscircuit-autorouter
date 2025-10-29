@@ -14,13 +14,36 @@ type CapacityPathingConstructorParams = ConstructorParameters<
 type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
   SHUFFLE_SEED?: number
 
-  EXTRA_TRAVEL_SEED?: number
-  EXTRA_TRAVEL_CHANCE?: number
+  DIRECTIVE_SEED?: number
+
+  FORCE_VIA_TRAVEL_CHANCE?: number
   FAR_VIA_MIN_DISTANCE?: number
-  EXTRA_TRAVEL_STRATEGY?: "closest_via_then_far_via"
 }
 
-export class AssignableViaCapacityPathingSolver_PenalizeNonVia extends CapacityPathingGreedySolver {
+/**
+ * This capacity path solver employs conditional directives. Whether or not the
+ * directive applies depends on the pseudo-random hash of the DIRECTIVE_SEED
+ *
+ * The main conditional directive is whether or not to force the path to go
+ * to go through a via then through a far via (if necessary to get to the goal
+ * layer). This is useful because it prevents an early path from cutting off
+ * all other paths.
+ *
+ * When forced to traverse via a via, you first select the closest "via" (a
+ * via is a node that has availableZ: [0,1]) then a via close
+ * to your first via that is a minimum of FAR_VIA_MIN_DISTANCE away. You sort
+ * these candidate vias by the weighted sum of the distance to the first via and
+ * the goal- seeking to minimize that total distance while staying FAR_VIA_MIN_DISTANCE
+ * away from the first via.
+ *
+ * The visualize() function helps understand the algorithm as it runs by
+ * highlighting the selected vias and the path currently being solved. Instead
+ * of solving for a single path for a pair of nodes, we now have to solve for
+ * multiple paths for multiple pairs of nodes (the middle nodes being the
+ * forced vias)
+ *
+ */
+export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends CapacityPathingGreedySolver {
   private get hyperParams(): AssignableViaCapacityHyperParameters {
     return this.hyperParameters as AssignableViaCapacityHyperParameters
   }
