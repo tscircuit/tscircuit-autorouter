@@ -1,9 +1,9 @@
 import { HyperParameterSupervisorSolver } from "lib/solvers/HyperParameterSupervisorSolver"
 import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters"
-import { AssignableViaCapacityPathingGreedySolver } from "./AssignableViaCapacityPathingGreedySolver"
+import { AssignableViaCapacityPathingSolver_PenalizeNonVia } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia"
 
 export type AssignableViaCapacityPathingParams = ConstructorParameters<
-  typeof AssignableViaCapacityPathingGreedySolver
+  typeof AssignableViaCapacityPathingSolver_PenalizeNonVia
 >[0]
 
 type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
@@ -11,7 +11,7 @@ type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
   LAYER_TRAVERSAL_REWARD?: number
 }
 
-export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingGreedySolver> {
+export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingSolver_PenalizeNonVia> {
   constructorParams: AssignableViaCapacityPathingParams
 
   constructor(opts: AssignableViaCapacityPathingParams) {
@@ -28,15 +28,15 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
         name: "traceOrderingSeed",
         possibleValues: [
           { TRACE_ORDERING_SEED: 0 },
-          // { TRACE_ORDERING_SEED: 1 },
-          // { TRACE_ORDERING_SEED: 2 },
-          // { TRACE_ORDERING_SEED: 3 },
-          // { TRACE_ORDERING_SEED: 4 },
-          // { TRACE_ORDERING_SEED: 5 },
-          // { TRACE_ORDERING_SEED: 6 },
-          // { TRACE_ORDERING_SEED: 7 },
-          // { TRACE_ORDERING_SEED: 8 },
-          // { TRACE_ORDERING_SEED: 9 },
+          { TRACE_ORDERING_SEED: 1 },
+          { TRACE_ORDERING_SEED: 2 },
+          { TRACE_ORDERING_SEED: 3 },
+          { TRACE_ORDERING_SEED: 4 },
+          { TRACE_ORDERING_SEED: 5 },
+          { TRACE_ORDERING_SEED: 6 },
+          { TRACE_ORDERING_SEED: 7 },
+          { TRACE_ORDERING_SEED: 8 },
+          { TRACE_ORDERING_SEED: 9 },
         ],
       },
       // {
@@ -49,7 +49,7 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
     ]
   }
 
-  computeG(solver: AssignableViaCapacityPathingGreedySolver) {
+  computeG(solver: AssignableViaCapacityPathingSolver_PenalizeNonVia) {
     const totalConnections = solver.connectionsWithNodes.length || 1
     const solvedConnections = solver.connectionsWithNodes.filter(
       (connection) => connection.path?.length,
@@ -59,7 +59,7 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
     return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio)
   }
 
-  computeH(solver: AssignableViaCapacityPathingGreedySolver) {
+  computeH(solver: AssignableViaCapacityPathingSolver_PenalizeNonVia) {
     const totalConnections = solver.connectionsWithNodes.length || 1
     const solvedConnections = solver.connectionsWithNodes.filter(
       (connection) => connection.path?.length,
@@ -70,7 +70,7 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
   }
 
   generateSolver(hyperParameters: HyperParameterOverrides) {
-    return new AssignableViaCapacityPathingGreedySolver({
+    return new AssignableViaCapacityPathingSolver_PenalizeNonVia({
       ...this.constructorParams,
       hyperParameters: {
         ...this.constructorParams.hyperParameters,

@@ -39,7 +39,7 @@ import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { AssignableViaCapacityPathingGreedySolver } from "./AssignableViaCapacityPathingGreedySolver"
+import { AssignableViaCapacityPathingSolver_PenalizeNonVia } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia"
 import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
 
 interface CapacityMeshSolverOptions {
@@ -84,7 +84,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
-  initialPathingSolver?: AssignableViaCapacityPathingGreedySolver
+  initialPathingSolver?: AssignableViaCapacityPathingSolver_PenalizeNonVia
   initialPathingHyperSolver?: HyperAssignableViaCapacityPathingSolver
   pathingOptimizer?: CapacityPathingMultiSectionSolver
   edgeToPortSegmentSolver?: CapacityEdgeToPortSegmentSolver

@@ -16,7 +16,7 @@ type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
   LAYER_TRAVERSAL_REWARD?: number
 }
 
-export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGreedySolver {
+export class AssignableViaCapacityPathingSolver_PenalizeNonVia extends CapacityPathingGreedySolver {
   private get hyperParams(): AssignableViaCapacityHyperParameters {
     return this.hyperParameters as AssignableViaCapacityHyperParameters
   }
