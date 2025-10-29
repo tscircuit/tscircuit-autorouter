@@ -61,9 +61,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
   private getAssignableContainer(node: CapacityMeshNode): Obstacle | null {
     const assignables = this.getOverlappingAssignableObstacles(node)
     for (const o of assignables) {
-      if (this.isNodeCompletelyInsideSpecificObstacle(node, o)) {
-        return o
-      }
+      return o
     }
     return null
   }
