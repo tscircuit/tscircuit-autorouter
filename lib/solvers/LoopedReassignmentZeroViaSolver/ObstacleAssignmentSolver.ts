@@ -164,9 +164,51 @@ export class ObstacleAssignmentSolver extends BaseSolver {
       (p) => p.layer === via.toLayer,
     )
 
-    // Only split if we have points on both layers
+    // Check if we have points on both layers
     if (fromLayerPoints.length === 0 || toLayerPoints.length === 0) {
-      this.addConnectionToObstacle(obstacle, connectionName)
+      // All points are on the same layer - need to split spatially
+      // This typically happens when routing between two pads on the same layer
+      // that requires a via to route through the other layer
+
+      if (originalConnection.pointsToConnect.length !== 2) {
+        // Can't handle connections with more than 2 points in this case
+        this.addConnectionToObstacle(obstacle, connectionName)
+        return
+      }
+
+      const [point1, point2] = originalConnection.pointsToConnect
+
+      // Create two new connections split at the via
+      const connection1Name = `${connectionName}_${via.fromLayer}`
+      const connection2Name = `${connectionName}_${via.toLayer}`
+
+      const connection1 = {
+        ...originalConnection,
+        name: connection1Name,
+        pointsToConnect: [
+          point1,
+          { x: obstacle.center.x, y: obstacle.center.y, layer: via.fromLayer },
+        ],
+      }
+
+      const connection2 = {
+        ...originalConnection,
+        name: connection2Name,
+        pointsToConnect: [
+          { x: obstacle.center.x, y: obstacle.center.y, layer: via.toLayer },
+          point2,
+        ],
+      }
+
+      // Update obstacle connections
+      this.replaceObstacleConnection(obstacle, connectionName, [
+        connection1Name,
+        connection2Name,
+      ])
+
+      // Replace original connection with split connections
+      this.outputSrj.connections.splice(connectionIndex, 1)
+      this.outputSrj.connections.push(connection1, connection2)
       return
     }
 
