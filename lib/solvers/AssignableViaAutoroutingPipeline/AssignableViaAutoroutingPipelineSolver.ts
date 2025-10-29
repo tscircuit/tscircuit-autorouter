@@ -37,9 +37,10 @@ import { HighDensityRoute } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { CapacityPathingGreedySolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { AssignableViaCapacityPathingGreedySolver } from "./AssignableViaCapacityPathingGreedySolver"
+import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -83,7 +84,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
-  initialPathingSolver?: CapacityPathingGreedySolver
+  initialPathingSolver?: AssignableViaCapacityPathingGreedySolver
+  initialPathingHyperSolver?: HyperAssignableViaCapacityPathingSolver
   pathingOptimizer?: CapacityPathingMultiSectionSolver
   edgeToPortSegmentSolver?: CapacityEdgeToPortSegmentSolver
   colorMap: Record<string, string>
@@ -190,8 +192,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "initialPathingSolver",
-      CapacityPathingGreedySolver,
+      "initialPathingHyperSolver",
+      HyperAssignableViaCapacityPathingSolver,
       (cms) => [
         {
           simpleRouteJson: cms.srjWithPointPairs!,
@@ -203,6 +205,14 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
           },
         },
       ],
+      {
+        onSolved: (cms) => {
+          const winningSolver = cms.initialPathingHyperSolver?.winningSolver
+          if (winningSolver) {
+            cms.initialPathingSolver = winningSolver
+          }
+        },
+      },
     ),
     definePipelineStep(
       "pathingOptimizer",
