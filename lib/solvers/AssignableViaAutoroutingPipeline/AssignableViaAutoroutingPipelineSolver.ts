@@ -193,7 +193,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "initialPathingHyperSolver",
-      HyperAssignableViaCapacityPathingSolver,
+      AssignableViaCapacityPathingSolver_PenalizeNonVia,
+      // HyperAssignableViaCapacityPathingSolver,
       (cms) => [
         {
           simpleRouteJson: cms.srjWithPointPairs!,
