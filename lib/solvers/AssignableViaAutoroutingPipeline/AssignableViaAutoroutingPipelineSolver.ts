@@ -30,7 +30,7 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
 import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
 import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
-import { SingleLayerNodeMergerSolver } from "lib/solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
+import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
 import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -91,7 +91,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   segmentToPointOptimizer?: CapacitySegmentPointOptimizer
   highDensityRouteSolver?: HighDensitySolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
-  singleLayerNodeMerger?: SingleLayerNodeMergerSolver
+  singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
@@ -142,7 +142,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "singleLayerNodeMerger",
-      SingleLayerNodeMergerSolver,
+      SingleLayerNodeMergerSolver_OnlyMergeTargets,
       (cms) => [cms.nodeSolver?.finishedNodes!],
       {
         onSolved: (cms) => {
