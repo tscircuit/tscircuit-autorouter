@@ -2,7 +2,10 @@ import { CapacityPathingGreedySolver } from "lib/solvers/CapacityPathingSectionS
 import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters"
 import type { CapacityMeshNode } from "lib/types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import type { CapacityPathingSolver } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver"
+import type {
+  Candidate,
+  CapacityPathingSolver,
+} from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver"
 
 type CapacityPathingConstructorParams = ConstructorParameters<
   typeof CapacityPathingGreedySolver
@@ -11,8 +14,6 @@ type CapacityPathingConstructorParams = ConstructorParameters<
 type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
   TRACE_ORDERING_SEED?: number
   LAYER_TRAVERSAL_REWARD?: number
-  LAYER_TRAVERSAL_HEURISTIC_FACTOR?: number
-  SINGLE_LAYER_TRANSITION_REWARD_FACTOR?: number
 }
 
 export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGreedySolver {
@@ -34,56 +35,55 @@ export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGre
     ) as typeof this.connectionsWithNodes
   }
 
-  private get layerTraversalReward() {
-    return this.hyperParams.LAYER_TRAVERSAL_REWARD ?? 0.75
-  }
-
-  private get layerTraversalHeuristicFactor() {
-    return this.hyperParams.LAYER_TRAVERSAL_HEURISTIC_FACTOR ?? 0.5
-  }
-
-  private get singleLayerTransitionFactor() {
-    return this.hyperParams.SINGLE_LAYER_TRANSITION_REWARD_FACTOR ?? 0.5
-  }
-
-  private computeLayerTraversalReward(
-    prevNode: CapacityMeshNode,
-    node: CapacityMeshNode,
-  ) {
-    if (!prevNode || !node) return 0
-
-    const prevLayers = prevNode.availableZ ?? []
-    const nextLayers = node.availableZ ?? []
-
-    const newLayerCount = nextLayers.filter(
-      (layer) => !prevLayers.includes(layer),
-    ).length
-
-    let reward = 0
-
-    if (newLayerCount > 0) {
-      reward += this.layerTraversalReward * newLayerCount
-    }
-
-    if (
-      prevLayers.length === 1 &&
-      nextLayers.length === 1 &&
-      prevLayers[0] !== nextLayers[0]
-    ) {
-      reward += this.layerTraversalReward * this.singleLayerTransitionFactor
-    }
-
-    return reward
-  }
-
   computeG(
     prevCandidate: Parameters<CapacityPathingSolver["computeG"]>[0],
     node: Parameters<CapacityPathingSolver["computeG"]>[1],
     endGoal: Parameters<CapacityPathingSolver["computeG"]>[2],
   ) {
-    const baseG = super.computeG(prevCandidate, node, endGoal)
-    const reward = this.computeLayerTraversalReward(prevCandidate.node, node)
-    return Math.max(0, baseG - reward)
+    // If same layer as prev node, add penalty
+    let stepsSinceLayerChange = 0
+    const currentLayer = node.availableZ[0]
+    let prevCursor: Candidate | null = prevCandidate
+    while (prevCursor) {
+      if (prevCursor.node.availableZ[0] === currentLayer) {
+        stepsSinceLayerChange++
+      } else {
+        break
+      }
+      prevCursor = prevCursor.prevCandidate
+    }
+
+    const hasMultipleLayerChanges = Boolean(prevCursor?.prevCandidate)
+
+    const sameLayerPenalty = hasMultipleLayerChanges
+      ? 0
+      : stepsSinceLayerChange * 10
+
+    // // Compute the length of each subpath that doesn't have a layer traversal
+    // // (i.e. a layer traversal means a new subpath)
+    // // compute the path
+    // const path = []
+    // let current = prevCandidate
+    // while (current) {
+    //   path.unshift(current.node)
+    //   current = current.prevCandidate
+    // }
+    // path.push(node)
+
+    // const singleLayerPaths: CapacityMeshNode[][] = [[]]
+    // let lastLayer = path[0].availableZ[0]
+    // for (const node of path) {
+    //   if (lastLayer !== node.availableZ[0]) {
+    //     lastLayer = node.availableZ[0]
+    //     singleLayerPaths.push([])
+    //   } else {
+    //     singleLayerPaths[singleLayerPaths.length - 1].push(node)
+    //   }
+    // }
+
+    // const singleLayerPenalty = 100 / singleLayerPaths.length
+
+    return super.computeG(prevCandidate, node, endGoal) + sameLayerPenalty
   }
 
   computeH(
@@ -91,10 +91,6 @@ export class AssignableViaCapacityPathingGreedySolver extends CapacityPathingGre
     node: Parameters<CapacityPathingSolver["computeH"]>[1],
     endGoal: Parameters<CapacityPathingSolver["computeH"]>[2],
   ) {
-    const baseH = super.computeH(prevCandidate, node, endGoal)
-    const reward =
-      this.computeLayerTraversalReward(prevCandidate.node, node) *
-      this.layerTraversalHeuristicFactor
-    return Math.max(0, baseH - reward)
+    return super.computeH(prevCandidate, node, endGoal)
   }
 }

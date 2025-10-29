@@ -28,16 +28,24 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
         name: "traceOrderingSeed",
         possibleValues: [
           { TRACE_ORDERING_SEED: 0 },
-          { TRACE_ORDERING_SEED: 1 },
+          // { TRACE_ORDERING_SEED: 1 },
+          // { TRACE_ORDERING_SEED: 2 },
+          // { TRACE_ORDERING_SEED: 3 },
+          // { TRACE_ORDERING_SEED: 4 },
+          // { TRACE_ORDERING_SEED: 5 },
+          // { TRACE_ORDERING_SEED: 6 },
+          // { TRACE_ORDERING_SEED: 7 },
+          // { TRACE_ORDERING_SEED: 8 },
+          // { TRACE_ORDERING_SEED: 9 },
         ],
       },
-      {
-        name: "layerTraversalReward",
-        possibleValues: [
-          { LAYER_TRAVERSAL_REWARD: 0.7 },
-          { LAYER_TRAVERSAL_REWARD: 1 },
-        ],
-      },
+      // {
+      //   name: "layerTraversalReward",
+      //   possibleValues: [
+      //     { LAYER_TRAVERSAL_REWARD: 0.7 },
+      //     { LAYER_TRAVERSAL_REWARD: 1 },
+      //   ],
+      // },
     ]
   }
 
