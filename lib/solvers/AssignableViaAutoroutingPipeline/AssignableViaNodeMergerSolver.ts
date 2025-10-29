@@ -33,10 +33,13 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
 
     // Group nodes by their assigned obstacle
     for (const node of nodes) {
-      const assignedObstacle = (node as any)._assignedViaObstacle as Obstacle | undefined
+      const assignedObstacle = (node as any)._assignedViaObstacle as
+        | Obstacle
+        | undefined
 
       if (assignedObstacle) {
-        const existingNodes = this.obstacleToNodesMap.get(assignedObstacle) || []
+        const existingNodes =
+          this.obstacleToNodesMap.get(assignedObstacle) || []
         existingNodes.push(node)
         this.obstacleToNodesMap.set(assignedObstacle, existingNodes)
       } else {
@@ -102,7 +105,10 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
       center: { x: centerX, y: centerY },
       width,
       height,
-      layer: availableZ.length === 1 ? `z${availableZ[0]}` : `z${availableZ.join(",")}`,
+      layer:
+        availableZ.length === 1
+          ? `z${availableZ[0]}`
+          : `z${availableZ.join(",")}`,
       availableZ,
       _containsObstacle: false,
       _completelyInsideObstacle: false,
@@ -144,7 +150,8 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
     }
 
     // Visualize obstacles that are still being processed
-    const nextObstacle = this.obstaclesToProcess[this.obstaclesToProcess.length - 1]
+    const nextObstacle =
+      this.obstaclesToProcess[this.obstaclesToProcess.length - 1]
     if (nextObstacle) {
       const nodesToMerge = this.obstacleToNodesMap.get(nextObstacle) || []
 
