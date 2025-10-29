@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { LoopedReassignmentZeroViaSolver } from "../../../lib/solvers/LoopedReassignmentZeroViaSolver/LoopedReassignmentZeroViaSolver"
-import { simpleRouteJson } from "../../../examples/unassigned-obstacles/LoopedReassignmentZeroViaSolver/LoopedRassignmentZeroViaSolver01.fixture"
+import { simpleRouteJson } from "../../../examples/unassigned-obstacles/LoopedReassignmentZeroViaSolver/LoopedReassignmentZeroViaSolver01.fixture"
 
 test("LoopedReassignmentZeroViaSolver should solve with obstacle assignment", async () => {
   // Create solver with the test SRJ

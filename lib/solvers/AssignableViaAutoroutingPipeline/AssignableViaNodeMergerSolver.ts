@@ -142,7 +142,6 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
 
       if (assignedObstacle) {
         rect.stroke = "rgba(255, 0, 255, 0.8)" // Magenta for merged via nodes
-        rect.strokeWidth = 2
         rect.label = `${rect.label || ""}\n(merged via)`
       }
 
@@ -158,7 +157,6 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
       for (const node of nodesToMerge) {
         const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
         rect.stroke = "rgba(0, 255, 0, 0.8)" // Green for nodes being merged
-        rect.strokeWidth = 1
         rect.label = `${rect.label || ""}\n(to be merged)`
         graphics.rects.push(rect)
       }
