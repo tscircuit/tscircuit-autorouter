@@ -41,6 +41,7 @@ import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { AssignableViaCapacityPathingSolver_PenalizeNonVia } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia"
 import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -193,7 +194,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "initialPathingHyperSolver",
-      AssignableViaCapacityPathingSolver_PenalizeNonVia,
+      AssignableViaCapacityPathingSolver_DirectiveSubOptimal,
       // HyperAssignableViaCapacityPathingSolver,
       (cms) => [
         {
