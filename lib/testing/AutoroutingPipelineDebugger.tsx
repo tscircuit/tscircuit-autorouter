@@ -29,6 +29,10 @@ import { AutoroutingPipelineMenuBar } from "./AutoroutingPipelineMenuBar"
 interface CapacityMeshPipelineDebuggerProps {
   srj: SimpleRouteJson
   animationSpeed?: number
+  createSolver?: (
+    srj: SimpleRouteJson,
+    opts: { cacheProvider?: CacheProvider | null },
+  ) => any
 }
 
 export const cacheProviderNames = [
@@ -50,6 +54,7 @@ const getGlobalCacheProviderFromName = (
 export const AutoroutingPipelineDebugger = ({
   srj,
   animationSpeed = 1,
+  createSolver: createSolverProp,
 }: CapacityMeshPipelineDebuggerProps) => {
   const [cacheProviderName, setCacheProviderNameState] =
     useState<CacheProviderName>(
@@ -70,10 +75,12 @@ export const AutoroutingPipelineDebugger = ({
   const createNewSolver = (
     opts: { cacheProvider?: CacheProvider | null } = {},
   ) =>
-    new AutoroutingPipelineSolver(srj, {
-      cacheProvider,
-      ...opts,
-    })
+    createSolverProp
+      ? createSolverProp(srj, { cacheProvider, ...opts })
+      : new AutoroutingPipelineSolver(srj, {
+          cacheProvider,
+          ...opts,
+        })
 
   const [solver, setSolver] = useState<CapacityMeshSolver>(() =>
     createNewSolver(),
