@@ -1,4 +1,4 @@
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "../../types"
+import type { SimpleRouteJson, Obstacle, CapacityMeshNode } from "../../types"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 
 interface CapacityMeshNodeSolverOptions {
@@ -9,21 +9,18 @@ interface CapacityMeshNodeSolverOptions {
  * This capacity mesh node solver is meant to be used in contexts where vias
  * aren't allowed, but there may be assignable vias on the PCB as obstacles.
  *
- * The behavior is different than other Capacity Mesh Node solvers in that:
- * - If there is no obstacle, instead of having a multi-layer capacity mesh node
- *   we have two single-layer capacity mesh nodes
- * - If we have an "assignable" obstacle, i.e. an obstacle with "netIsAssignable"
- *   set to true we create a multi-layer capacity mesh node with a capacity of
- *   1 (a single via)
- *   - NOTE: There is only ONE multi-layer capacity mesh node per assignable obstacle
- * - Mesh nodes should not be "too big", if a capacity mesh node is more than
- *   MAX_SIZE_FOR_SINGLE_LAYER_NODES it will be split into 4 smaller nodes
+ * Behavior:
+ * - Outside obstacles, multi-layer nodes are *always* Z-split into single-layer nodes.
+ * - Inside an "assignable" obstacle (obstacle.netIsAssignable === true), we keep
+ *   exactly *one* multi-layer node (capacity ~ 1 via region), i.e. we do not Z-split it.
+ *   Further nodes completely inside the same assignable obstacle will be Z-split (one per layer).
+ * - Single-layer nodes that are larger than MAX_SIZE_FOR_SINGLE_LAYER_NODES are XY-subdivided.
  */
 export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles extends CapacityMeshNodeSolver2_NodeUnderObstacle {
   MAX_SIZE_FOR_SINGLE_LAYER_NODES = 4 // 4x4mm
 
-  // Track which assignable obstacles already have a multi-layer node assigned
-  private assignedObstacleIds = new Set<string>()
+  /** Track which assignable obstacles have already received their single multi-layer node */
+  private claimedAssignableObstacles: WeakSet<Obstacle> = new WeakSet()
 
   constructor(
     public srj: SimpleRouteJson,
@@ -32,49 +29,67 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     super(srj, opts)
   }
 
-  /**
-   * Get the assignable obstacles that overlap with this node
-   */
-  private getAssignableObstacles(node: CapacityMeshNode) {
-    const overlappingObstacles = this.getXYZOverlappingObstacles(node)
-    return overlappingObstacles.filter((o) => o.netIsAssignable)
+  /** Whether an obstacle is a designated assignable-via region */
+  private isObstacleAssignable(ob: Obstacle): boolean {
+    return Boolean((ob as any)?.netIsAssignable)
   }
 
-  /**
-   * Get a unique ID for an obstacle (using its position and size)
-   */
-  private getObstacleId(obstacle: Obstacle): string {
-    return `${obstacle.center.x}_${obstacle.center.y}_${obstacle.width}_${obstacle.height}`
+  /** Assignable obstacles that overlap this node in XY *and* Z */
+  private getOverlappingAssignableObstacles(
+    node: CapacityMeshNode,
+  ): Obstacle[] {
+    return this.getXYZOverlappingObstacles(node).filter((o) =>
+      this.isObstacleAssignable(o),
+    )
   }
 
-  /**
-   * Check if this node contains an unassigned assignable obstacle
-   */
-  private hasUnassignedAssignableObstacle(node: CapacityMeshNode): boolean {
-    const assignableObstacles = this.getAssignableObstacles(node)
-    return assignableObstacles.some(
-      (o) => !this.assignedObstacleIds.has(this.getObstacleId(o)),
+  /** Is this node completely inside the given obstacle's rectangle? */
+  private isNodeCompletelyInsideSpecificObstacle(
+    node: CapacityMeshNode,
+    obstacle: Obstacle,
+  ): boolean {
+    const nb = this.getNodeBounds(node)
+    const obsLeft = obstacle.center.x - obstacle.width / 2
+    const obsRight = obstacle.center.x + obstacle.width / 2
+    const obsTop = obstacle.center.y - obstacle.height / 2
+    const obsBottom = obstacle.center.y + obstacle.height / 2
+
+    return (
+      nb.minX >= obsLeft &&
+      nb.maxX <= obsRight &&
+      nb.minY >= obsTop &&
+      nb.maxY <= obsBottom
     )
   }
 
   /**
-   * Mark assignable obstacles in this node as assigned
+   * If there is an assignable obstacle that completely contains this node
+   * and hasn't yet been used to create a multi-layer node, return it.
    */
-  private markAssignableObstaclesAsAssigned(node: CapacityMeshNode): void {
-    const assignableObstacles = this.getAssignableObstacles(node)
-    for (const obstacle of assignableObstacles) {
-      this.assignedObstacleIds.add(this.getObstacleId(obstacle))
+  private getAssignableContainer(node: CapacityMeshNode): Obstacle | null {
+    const assignables = this.getOverlappingAssignableObstacles(node)
+    for (const o of assignables) {
+      if (
+        !this.claimedAssignableObstacles.has(o) &&
+        this.isNodeCompletelyInsideSpecificObstacle(node, o)
+      ) {
+        return o
+      }
     }
+    return null
   }
 
   /**
-   * Override to add size check for single-layer nodes
+   * XY subdivision rules specialized for this solver:
+   *  - Subdivide if the node contains a target.
+   *  - Subdivide if the node intersects an obstacle boundary (not completely inside).
+   *  - Subdivide single-layer nodes that are larger than MAX_SIZE_FOR_SINGLE_LAYER_NODES.
    */
-  override shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
+  shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
     if (node._depth! >= this.MAX_DEPTH) return false
     if (node._containsTarget) return true
+    if (node._containsObstacle && !node._completelyInsideObstacle) return true
 
-    // If this is a single-layer node that's too big, subdivide it
     if (
       node.availableZ.length === 1 &&
       (node.width > this.MAX_SIZE_FOR_SINGLE_LAYER_NODES ||
@@ -82,15 +97,36 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     ) {
       return true
     }
-
-    if (node._containsObstacle && !node._completelyInsideObstacle) return true
     return false
   }
 
   /**
-   * Override the main stepping function to implement the custom Z-subdivision logic
+   * Multi-layer nodes are filtered unless they are completely inside an
+   * assignable obstacle (the single allowed via region per obstacle).
+   * Single-layer nodes use the standard relaxed single-layer filtering.
    */
-  override _step() {
+  shouldFilterNodeForObstacle(node: CapacityMeshNode): boolean {
+    if (!node._containsObstacle) return false
+
+    if (node.availableZ.length === 1) {
+      // Reuse parent behavior for single-layer (20% coverage threshold)
+      return this.shouldFilterSingleLayerNodeForObstacle(node)
+    }
+
+    // Multi-layer: only allowed as the single node inside an assignable obstacle
+    const container = this.getAssignableContainer(node)
+    if (container) return false
+
+    return true
+  }
+
+  /**
+   * Custom step that:
+   *  - Always Z-splits multi-layer nodes outside assignable obstacles
+   *  - Keeps exactly one multi-layer node per assignable obstacle
+   *  - Ensures Z-split single-layer nodes are further XY-subdivided if "too big"
+   */
+  _step() {
     const nextNode = this.unfinishedNodes.pop()
     if (!nextNode) {
       this.solved = true
@@ -105,51 +141,51 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     for (const childNode of childNodes) {
       const shouldBeXYSubdivided = this.shouldNodeBeXYSubdivided(childNode)
 
-      // Custom Z-subdivision logic:
-      // - Multi-layer nodes should be Z-subdivided UNLESS they contain an unassigned assignable obstacle
-      // - Single-layer nodes are never Z-subdivided
-      let shouldBeZSubdivided = false
-      if (childNode.availableZ.length > 1 && !shouldBeXYSubdivided) {
-        // Check if this node contains an unassigned assignable obstacle
-        const hasUnassignedAssignable =
-          this.hasUnassignedAssignableObstacle(childNode)
+      // Candidate assignable obstacle that fully contains the node & isn't claimed yet
+      const assignableContainer =
+        childNode.availableZ.length > 1 && !shouldBeXYSubdivided
+          ? this.getAssignableContainer(childNode)
+          : null
 
-        if (hasUnassignedAssignable) {
-          // Keep as multi-layer node (don't Z-subdivide)
-          // Mark the assignable obstacles as assigned
-          this.markAssignableObstaclesAsAssigned(childNode)
-          shouldBeZSubdivided = false
-        } else {
-          // No unassigned assignable obstacle, so Z-subdivide into single-layer nodes
-          shouldBeZSubdivided = true
-        }
-      }
+      // Z-subdivide multi-layer nodes except when this is the one allowed via region
+      const shouldBeZSubdivided =
+        childNode.availableZ.length > 1 &&
+        !shouldBeXYSubdivided &&
+        !assignableContainer
 
       if (shouldBeXYSubdivided) {
         unfinishedNewNodes.push(childNode)
-      } else if (
-        !shouldBeXYSubdivided &&
-        !this.shouldFilterNodeForObstacle(childNode) &&
-        !shouldBeZSubdivided
+        continue
+      }
+
+      if (shouldBeZSubdivided) {
+        // Split into per-layer nodes, then apply obstacle filtering and size gating
+        const zSubNodes = this.getZSubdivisionChildNodes(childNode)
+        for (const n of zSubNodes) {
+          if (!n._containsTarget && this.shouldFilterNodeForObstacle(n)) {
+            continue
+          }
+          if (this.shouldNodeBeXYSubdivided(n)) {
+            unfinishedNewNodes.push(n)
+          } else {
+            finishedNewNodes.push(n)
+          }
+        }
+        continue
+      }
+
+      // Not XY subdivided and not Z subdivided:
+      // - a single-layer node that passed filtering, or
+      // - the one multi-layer node inside an assignable obstacle
+      if (
+        !this.shouldFilterNodeForObstacle(childNode) ||
+        childNode._containsTarget
       ) {
         finishedNewNodes.push(childNode)
-      } else if (!shouldBeXYSubdivided && childNode._containsTarget) {
-        if (shouldBeZSubdivided) {
-          const zSubNodes = this.getZSubdivisionChildNodes(childNode)
-          finishedNewNodes.push(
-            ...zSubNodes.filter(
-              (n) => n._containsTarget || !this.shouldFilterNodeForObstacle(n),
-            ),
-          )
-        } else {
-          finishedNewNodes.push(childNode)
+        if (assignableContainer) {
+          // Ensure we only create one multi-layer node per assignable obstacle
+          this.claimedAssignableObstacles.add(assignableContainer)
         }
-      } else if (shouldBeZSubdivided) {
-        finishedNewNodes.push(
-          ...this.getZSubdivisionChildNodes(childNode).filter(
-            (zSubNode) => !this.shouldFilterNodeForObstacle(zSubNode),
-          ),
-        )
       }
     }
 

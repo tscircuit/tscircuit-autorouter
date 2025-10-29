@@ -141,6 +141,16 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "singleLayerNodeMerger",
+      SingleLayerNodeMergerSolver,
+      (cms) => [cms.nodeSolver?.finishedNodes!],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
+        },
+      },
+    ),
+    definePipelineStep(
       "edgeSolver",
       CapacityMeshEdgeSolver2_NodeTreeOptimization,
       (cms) => [cms.capacityNodes!],
