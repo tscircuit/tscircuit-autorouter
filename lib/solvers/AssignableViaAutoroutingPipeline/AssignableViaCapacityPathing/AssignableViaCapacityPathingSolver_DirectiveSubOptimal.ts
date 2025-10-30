@@ -6,6 +6,7 @@ import type {
   CapacityMeshNodeId,
   SimpleRouteConnection,
   SimpleRouteJson,
+  CapacityPath,
 } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { getNodeEdgeMap } from "lib/solvers/CapacityMeshSolver/getNodeEdgeMap"
@@ -689,6 +690,21 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     }
 
     return viable[0]
+  }
+
+  getCapacityPaths(): CapacityPath[] {
+    const capacityPaths: CapacityPath[] = []
+    for (const solvedRoute of this.solvedRoutes) {
+      const path = solvedRoute.path
+      if (path && path.length > 0) {
+        capacityPaths.push({
+          capacityPathId: solvedRoute.connection.name,
+          connectionName: solvedRoute.connection.name,
+          nodeIds: path.map((node) => node.capacityMeshNodeId),
+        })
+      }
+    }
+    return capacityPaths
   }
 
   visualize(): GraphicsObject {
