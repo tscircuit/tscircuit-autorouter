@@ -4,12 +4,34 @@ import type {
   CapacityMeshEdge,
   CapacityMeshNode,
   CapacityMeshNodeId,
+  SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { getNodeEdgeMap } from "lib/solvers/CapacityMeshSolver/getNodeEdgeMap"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import {
+  cloneAndShuffleArray,
+  seededRandom,
+} from "lib/utils/cloneAndShuffleArray"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { GraphicsObject } from "graphics-debug"
+
+const seededRandomDecision = (seeds: number[], chance: number) => {
+  const seed = seeds.reduce(
+    (acc, seed) => acc + ((seed * 16807) % 2147483647),
+    0,
+  )
+  const random = seededRandom(seed)
+  return random() < chance
+}
+
+export type Candidate = {
+  prevCandidate: Candidate | null
+  node: CapacityMeshNode
+  f: number
+  g: number
+  h: number
+}
 
 type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
   SHUFFLE_SEED?: number
@@ -18,6 +40,23 @@ type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
 
   FORCE_VIA_TRAVEL_CHANCE?: number
   FAR_VIA_MIN_DISTANCE?: number
+}
+
+type ConnectionNodePair = {
+  start: CapacityMeshNode
+  end: CapacityMeshNode
+  connection: SimpleRouteConnection
+}
+
+type SubpathNodePair = {
+  start: CapacityMeshNode
+  end: CapacityMeshNode
+  solved: boolean
+}
+
+export type ConnectionPathWithNodes = {
+  connection: SimpleRouteConnection
+  path: CapacityMeshNode[]
 }
 
 /**
@@ -43,11 +82,6 @@ type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
  * forced vias)
  *
  */
-type RouteSegment = {
-  start: CapacityMeshNode
-  end: CapacityMeshNode
-}
-
 export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends BaseSolver {
   /**
    * Used for
@@ -64,10 +98,17 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   nodeEdgeMap: Map<CapacityMeshNodeId, CapacityMeshEdge[]>
 
-  unprocessedConnectionPairs: {
-    start: CapacityMeshNode
-    end: CapacityMeshNode
-  }[]
+  unprocessedConnectionPairs: ConnectionNodePair[]
+  solvedRoutes: ConnectionPathWithNodes[] = []
+
+  activeConnectionPair: ConnectionNodePair | null = null
+
+  unprocessedSubpaths: SubpathNodePair[] | null = null
+  solvedSubpaths: SubpathNodePair[] | null = null
+
+  activeSubpath: SubpathNodePair | null = null
+
+  viaNodes: CapacityMeshNode[] = []
 
   constructor({
     simpleRouteJson,
@@ -112,11 +153,194 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         return {
           start: startNode,
           end: endNode,
+          connection: conn,
         }
       }),
       this.hyperParameters.SHUFFLE_SEED ?? 0,
     )
+
+    this.viaNodes = this.nodes.filter((node) => node.availableZ.length > 1)
   }
 
-  _step() {}
+  lastStepOperation:
+    | "none"
+    | "dequeueConnectionPair"
+    | "breakConnectionPairIntoSubpaths"
+    | "dequeueSubpath"
+    | "stepSolveSubpath"
+    | "finishedSolvingSubpath"
+    | "finishedSolvingConnectionPair" = "none"
+
+  _step() {
+    if (!this.activeConnectionPair) {
+      this.activeConnectionPair = this.unprocessedConnectionPairs.shift()!
+      if (!this.activeConnectionPair) {
+        this.solved = true
+        return
+      }
+      this.lastStepOperation = "dequeueConnectionPair"
+      return
+    }
+
+    if (this.activeConnectionPair && !this.unprocessedSubpaths) {
+      this.unprocessedSubpaths = this.breakConnectionPairIntoSubpaths(
+        this.activeConnectionPair,
+      )
+      this.solvedSubpaths = []
+      this.lastStepOperation = "breakConnectionPairIntoSubpaths"
+      return
+    }
+
+    if (!this.activeSubpath) {
+      this.activeSubpath = this.unprocessedSubpaths!.shift()!
+      if (!this.activeSubpath) {
+        this.activeConnectionPair = null
+        this.unprocessedSubpaths = null
+        this.activeSubpath = null
+
+        this.solvedRoutes.push(this.createSolvedRoute(this.solvedSubpaths!))
+
+        this.lastStepOperation = "finishedSolvingConnectionPair"
+        return
+      }
+
+      this.lastStepOperation = "dequeueSubpath"
+      return
+    }
+
+    if (this.activeSubpath) {
+      this.stepSolveSubpath(this.activeSubpath)
+
+      if (this.activeSubpath!.solved) {
+        this.solvedSubpaths!.push(this.activeSubpath)
+        this.activeSubpath = null
+        this.clearCandidateNodes()
+        this.lastStepOperation = "finishedSolvingSubpath"
+        return
+      }
+    }
+
+    this.lastStepOperation = "stepSolveSubpath"
+  }
+
+  queuedCandidateNodes: Candidate[]
+  visitedNodes: Set<CapacityMeshNodeId>
+
+  stepSolveSubpath(subpath: SubpathNodePair) {
+    // TOOD sort queuedCandidateNodes by f
+
+    // TODO pop candidate node from queuedCandidateNodes
+
+    // TODO check if candidate node is the end goal
+
+    // TODO get neighbors of candidate node and add to queuedCandidateNodes
+
+    throw new Error("Not implemented")
+  }
+
+  getNeighbors(node: CapacityMeshNode): CapacityMeshNode[] {
+    throw new Error("Not implemented")
+  }
+
+  clearCandidateNodes() {
+    this.queuedCandidateNodes = []
+    this.visitedNodes = new Set()
+  }
+
+  computeG(
+    prevCandidate: Candidate,
+    node: CapacityMeshNode,
+    endGoal: CapacityMeshNode,
+  ) {
+    throw new Error("Not implemented")
+  }
+
+  computeH(
+    prevCandidate: Candidate,
+    node: CapacityMeshNode,
+    endGoal: CapacityMeshNode,
+  ) {
+    throw new Error("Not implemented")
+  }
+
+  createSolvedRoute(subpaths: SubpathNodePair[]): ConnectionPathWithNodes {
+    return {
+      connection: this.activeConnectionPair!.connection,
+      path: subpaths
+        .map((subpath) => subpath.start)
+        .concat(subpaths[subpaths.length - 1].end),
+    }
+  }
+
+  breakConnectionPairIntoSubpaths(
+    connectionPair: ConnectionNodePair,
+  ): SubpathNodePair[] {
+    const shouldForceTravel = seededRandomDecision(
+      [this.hyperParameters.DIRECTIVE_SEED ?? 0, this.solvedRoutes.length],
+      this.hyperParameters.FORCE_VIA_TRAVEL_CHANCE ?? 0,
+    )
+    if (!shouldForceTravel) {
+      return [
+        {
+          start: connectionPair.start,
+          end: connectionPair.end,
+          solved: false,
+        },
+      ]
+    }
+    const subpaths: SubpathNodePair[] = []
+    const closestVia = this.getClosestVia(connectionPair.start)
+    const farVia = this.getFarVia(closestVia, connectionPair.end)
+
+    this.unprocessedSubpaths = []
+    this.unprocessedSubpaths.push({
+      start: connectionPair.start,
+      end: closestVia,
+      solved: false,
+    })
+    this.unprocessedSubpaths.push({
+      start: closestVia,
+      end: farVia,
+      solved: false,
+    })
+    this.unprocessedSubpaths.push({
+      start: farVia,
+      end: connectionPair.end,
+      solved: false,
+    })
+    return subpaths
+  }
+
+  getClosestVia(node: CapacityMeshNode): CapacityMeshNode {
+    throw new Error("Not implemented")
+  }
+
+  getFarVia(
+    closestVia: CapacityMeshNode,
+    end: CapacityMeshNode,
+  ): CapacityMeshNode {
+    throw new Error("Not implemented")
+  }
+
+  visualize(): GraphicsObject {
+    const graphics: GraphicsObject = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+    }
+
+    if (this.activeConnectionPair) {
+      graphics.lines!.push({
+        points: [
+          this.activeConnectionPair.start.center,
+          this.activeConnectionPair.end.center,
+        ],
+        strokeColor: "red",
+        strokeDash: "10 5",
+      })
+    }
+
+    return graphics
+  }
 }
