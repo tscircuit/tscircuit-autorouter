@@ -17,6 +17,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { GraphicsObject } from "graphics-debug"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { safeTransparentize } from "lib/solvers/colors"
+import { distance } from "@tscircuit/math-utils"
 
 const seededRandomDecision = (seeds: number[], chance: number) => {
   const seed = seeds.reduce(
@@ -119,19 +120,19 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     )
     this.nodeEdgeMap = getNodeEdgeMap(this.edges)
 
+    const nodesWithTargets = this.nodes.filter((node) => node._containsTarget)
     this.unprocessedConnectionPairs = cloneAndShuffleArray(
       this.simpleRouteJson.connections.map((conn) => {
-        const startNode = this.nodes.find(
-          (n) => n._targetConnectionName === conn.name,
+        const [startPtC, endPtC] = conn.pointsToConnect
+
+        // Find node containing start point
+        const startNode = nodesWithTargets.find(
+          (n) => distance(n.center, startPtC) < n.width / 2,
         )!
-        const endNode = this.nodes.find(
-          (n) => n._targetConnectionName === conn.name,
+        const endNode = nodesWithTargets.find(
+          (n) => distance(n.center, endPtC) < n.width / 2,
         )!
-        if (!startNode || !endNode) {
-          throw new Error(
-            `Could not find start or end node for connection "${conn.name}"`,
-          )
-        }
+
         return {
           start: startNode,
           end: endNode,
@@ -345,37 +346,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     const step = this._dist(prevCandidate.node, node)
     let g = prevCandidate.g + step
 
-    // Turning penalty to encourage straighter segments
-    const pp = prevCandidate.prevCandidate?.node
-    if (pp) {
-      const v1x = prevCandidate.node.center.x - pp.center.x
-      const v1y = prevCandidate.node.center.y - pp.center.y
-      const v2x = node.center.x - prevCandidate.node.center.x
-      const v2y = node.center.y - prevCandidate.node.center.y
-      const l1 = Math.hypot(v1x, v1y) || 1
-      const l2 = Math.hypot(v2x, v2y) || 1
-      const dot = (v1x * v2x + v1y * v2y) / (l1 * l2)
-      const clamped = Math.max(-1, Math.min(1, dot))
-      const angle = Math.acos(clamped) // 0 (straight) .. π (U-turn)
-      // modest turn cost, scaled by move length
-      g += 0.15 * angle * step
-    }
-
     // Strongly discourage reusing nodes already part of prior paths
+    // TODO modify so that they don't even become neighbors
     if (this.usedNodeMap.has(node.capacityMeshNodeId)) {
       g += 1e6
-    }
-
-    // Mild penalty for changing layers (if layers are meaningful here)
-    try {
-      const zPrev = mapLayerNameToZ(
-        prevCandidate.node.layer,
-        this.simpleRouteJson.layerCount,
-      )
-      const zNode = mapLayerNameToZ(node.layer, this.simpleRouteJson.layerCount)
-      if (zPrev !== zNode) g += 100
-    } catch {
-      // mapLayerNameToZ may throw or be undefined for custom layers — ignore
     }
 
     return g
@@ -389,20 +363,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     // Straight-line heuristic to the goal
     let h = this._dist(node, endGoal)
 
-    // Prefer being on the same layer as the goal, when layers are meaningful
-    try {
-      const zNode = mapLayerNameToZ(node.layer, this.simpleRouteJson.layerCount)
-      const zGoal = mapLayerNameToZ(
-        endGoal.layer,
-        this.simpleRouteJson.layerCount,
-      )
-      const dz = Math.abs(zNode - zGoal)
-      if (dz > 0) h += 50 * dz
-    } catch {
-      // ignore layer heuristic if mapping is unknown
-    }
-
     // Slight nudge away from already-used nodes
+    // TODO modify so that they don't even become neighbors
     if (this.usedNodeMap.has(node.capacityMeshNodeId)) {
       h += 100
     }
@@ -430,6 +392,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       this.hyperParameters.FORCE_VIA_TRAVEL_CHANCE ?? 0,
     )
     if (!shouldForceTravel) {
+      console.log("no force travel")
+      console.log(connectionPair)
       return [
         {
           start: connectionPair.start,
@@ -763,7 +727,22 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 8. Visualize visited nodes (if active)
+    // 8. Visualize candidate nodes with small circles
+    if (this.queuedCandidateNodes.length > 0) {
+      for (const candidate of this.queuedCandidateNodes) {
+        const node = candidate.node
+        if (node?.center && isValidPoint(node.center)) {
+          graphics.circles!.push({
+            center: node.center,
+            radius: 0.05,
+            fill: "rgba(255, 255, 0, 0.6)",
+            stroke: "yellow",
+          })
+        }
+      }
+    }
+
+    // 9. Visualize visited nodes with gray circles
     if (this.visitedNodes.size > 0) {
       for (const nodeId of this.visitedNodes) {
         const node = this.nodeMap.get(nodeId)
@@ -771,7 +750,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
           graphics.circles!.push({
             center: node.center,
             radius: 0.08,
-            fill: "rgba(100, 100, 255, 0.4)",
+            fill: "rgba(128, 128, 128, 0.5)",
+            stroke: "gray",
           })
         }
       }
