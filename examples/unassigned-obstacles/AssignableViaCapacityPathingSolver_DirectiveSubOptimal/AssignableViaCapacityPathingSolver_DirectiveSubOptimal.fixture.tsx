@@ -4,9 +4,12 @@ import constructorInput from "./AssignableViaCapacityPathingSolver_DirectiveSubO
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "lib/solvers/AssignableViaAutoroutingPipeline/AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 
 const createSolver = () => {
-  return new AssignableViaCapacityPathingSolver_DirectiveSubOptimal(
-    (constructorInput as any)[0],
-  )
+  return new AssignableViaCapacityPathingSolver_DirectiveSubOptimal({
+    ...(constructorInput as any)[0],
+    hyperParameters: {
+      FORCE_VIA_TRAVEL_CHANCE: 1,
+    },
+  })
 }
 
 export default () => {

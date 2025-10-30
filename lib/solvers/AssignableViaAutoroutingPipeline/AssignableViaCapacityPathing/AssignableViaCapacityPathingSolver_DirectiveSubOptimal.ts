@@ -56,6 +56,7 @@ type SubpathNodePair = {
   end: CapacityMeshNode
   solved: boolean
   path?: CapacityMeshNode[]
+  layer: number // Designated z-layer for this subpath
 }
 
 export type ConnectionPathWithNodes = {
@@ -107,7 +108,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     edges: CapacityMeshEdge[]
     colorMap?: Record<string, string>
     MAX_ITERATIONS?: number
-    hyperParameters?: Partial<CapacityHyperParameters>
+    hyperParameters?: Partial<AssignableViaCapacityHyperParameters>
   }) {
     super()
     this.hyperParameters = hyperParameters
@@ -331,10 +332,22 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       if (nn) neighbors.add(nn)
     }
 
-    // Filter out hard obstacles (non-traversable)
-    return Array.from(neighbors).filter(
-      (n) => !n._completelyInsideObstacle && !n._containsObstacle,
-    )
+    // Filter out hard obstacles (non-traversable) AND nodes that don't have the designated layer
+    const designatedLayer = this.activeSubpath?.layer
+    return Array.from(neighbors).filter((n) => {
+      // Must not be obstacle
+      if (n._completelyInsideObstacle || n._containsObstacle) return false
+
+      // Must contain the designated layer in availableZ
+      if (
+        designatedLayer !== undefined &&
+        !n.availableZ.includes(designatedLayer)
+      ) {
+        return false
+      }
+
+      return true
+    })
   }
 
   clearCandidateNodes() {
@@ -419,13 +432,13 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       this.hyperParameters.FORCE_VIA_TRAVEL_CHANCE ?? 0,
     )
     if (!shouldForceTravel) {
-      console.log("no force travel")
-      console.log(connectionPair)
+      // Find common layer between start and end, default to first available layer
       return [
         {
           start: connectionPair.start,
           end: connectionPair.end,
           solved: false,
+          layer: connectionPair.start.availableZ[0] ?? 0,
         },
       ]
     }
@@ -434,22 +447,38 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     const closestVia = this.getClosestVia(connectionPair.start)
     const farVia = this.getFarVia(closestVia, connectionPair.end)
 
+    const startLayer = connectionPair.start.availableZ[0] ?? 0
+    const endLayer = connectionPair.end.availableZ[0] ?? 0
+
+    // Assign different layers to each subpath
     const subpaths: SubpathNodePair[] = []
     subpaths.push({
       start: connectionPair.start,
       end: closestVia,
       solved: false,
+      layer: startLayer,
     })
-    subpaths.push({
-      start: closestVia,
-      end: farVia,
-      solved: false,
-    })
-    subpaths.push({
-      start: farVia,
-      end: connectionPair.end,
-      solved: false,
-    })
+    if (startLayer === endLayer) {
+      subpaths.push({
+        start: closestVia,
+        end: farVia,
+        solved: false,
+        layer: startLayer === 0 ? 1 : 0,
+      })
+      subpaths.push({
+        start: farVia,
+        end: connectionPair.end,
+        solved: false,
+        layer: endLayer,
+      })
+    } else {
+      subpaths.push({
+        start: closestVia,
+        end: connectionPair.end,
+        solved: false,
+        layer: endLayer,
+      })
+    }
     return subpaths
   }
 
@@ -701,6 +730,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
           graphics.lines!.push({
             points,
             strokeColor: safeTransparentize("purple", 1 - opacity),
+            strokeDash: this.activeSubpath?.layer === 1 ? "4 2" : undefined,
           })
         }
       }
