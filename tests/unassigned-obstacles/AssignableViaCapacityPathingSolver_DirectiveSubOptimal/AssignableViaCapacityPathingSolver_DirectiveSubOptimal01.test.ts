@@ -42,8 +42,7 @@ test("AssignableViaCapacityPathingSolver_DirectiveSubOptimal should complete", a
 
   // Verify visualization contains route endpoint points
   const routeEndpointPoints = graphics.points!.filter(
-    (point) =>
-      point.label?.includes("START:") || point.label?.includes("END:"),
+    (point) => point.label?.includes("START:") || point.label?.includes("END:"),
   )
   expect(routeEndpointPoints.length).toBeGreaterThan(0)
 

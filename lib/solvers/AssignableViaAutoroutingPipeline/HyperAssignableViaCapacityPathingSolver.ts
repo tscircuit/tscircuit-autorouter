@@ -56,7 +56,8 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
       solver.solvedRoutes.length +
       (solver.activeConnectionPair ? 1 : 0)
     const solvedConnections = solver.solvedRoutes.length
-    const solvedRatio = totalConnections > 0 ? solvedConnections / totalConnections : 0
+    const solvedRatio =
+      totalConnections > 0 ? solvedConnections / totalConnections : 0
 
     return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio)
   }
@@ -67,7 +68,8 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
       solver.solvedRoutes.length +
       (solver.activeConnectionPair ? 1 : 0)
     const solvedConnections = solver.solvedRoutes.length
-    const remainingRatio = totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0
+    const remainingRatio =
+      totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0
 
     return remainingRatio
   }

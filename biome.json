@@ -12,7 +12,8 @@
       "cosmos-export",
       "dist",
       "package.json",
-      "examples/legacy/assets/*.json"
+      "examples/legacy/assets/*.json",
+      "examples/unassigned-obstacles/AssignableViaCapacityPathingSolver_DirectiveSubOptimal/AssignableViaCapacityPathingSolver_DirectiveSubOptimal01.json"
     ]
   },
   "javascript": {
