@@ -339,7 +339,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     const designatedLayer = this.activeSubpath?.layer
     return Array.from(neighbors).filter((n) => {
       // Must not be obstacle
-      if (n._completelyInsideObstacle || n._containsObstacle) return false
+      if (n._containsObstacle && !n._containsTarget) return false
+      if (this.usedNodeMap.has(n.capacityMeshNodeId)) return false
 
       // Must contain the designated layer in availableZ
       if (
@@ -365,14 +366,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
   ) {
     // Base movement cost: Euclidean step
     const step = this._dist(prevCandidate.node, node)
-    let g = prevCandidate.g + step
-
-    // Strongly discourage reusing nodes already part of prior paths
-    // TODO modify so that they don't even become neighbors
-    if (this.usedNodeMap.has(node.capacityMeshNodeId)) {
-      g += 1e6
-    }
-
+    const g = prevCandidate.g + step
     return g
   }
 
@@ -382,13 +376,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     endGoal: CapacityMeshNode,
   ) {
     // Straight-line heuristic to the goal
-    let h = this._dist(node, endGoal)
-
-    // Slight nudge away from already-used nodes
-    // TODO modify so that they don't even become neighbors
-    if (this.usedNodeMap.has(node.capacityMeshNodeId)) {
-      h += 100
-    }
+    const h = this._dist(node, endGoal)
 
     return h
   }
@@ -688,7 +676,32 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 4. Visualize current active subpath with thick orange line
+    // 4. Visualize solved subpaths in green
+    if (this.solvedSubpaths) {
+      for (let i = 0; i < this.solvedSubpaths.length; i++) {
+        const subpath = this.solvedSubpaths[i]
+        if (subpath.path && subpath.path.length > 1) {
+          for (let j = 0; j < subpath.path.length - 1; j++) {
+            const node1 = subpath.path[j]
+            const node2 = subpath.path[j + 1]
+            if (
+              node1?.center &&
+              node2?.center &&
+              isValidPoint(node1.center) &&
+              isValidPoint(node2.center)
+            ) {
+              graphics.lines!.push({
+                points: [node1.center, node2.center],
+                strokeColor: "green",
+                strokeDash: subpath.layer === 1 ? "3 3" : undefined,
+              })
+            }
+          }
+        }
+      }
+    }
+
+    // 5. Visualize current active subpath with thick orange line
     if (this.activeSubpath) {
       const start = this.activeSubpath.start?.center
       const end = this.activeSubpath.end?.center
@@ -711,7 +724,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 5. Visualize top 10 candidate paths with decreasing opacity
+    // 6. Visualize top 10 candidate paths with decreasing opacity
     const topCandidates = this.queuedCandidateNodes
       .slice(0, 10)
       .sort((a, b) => a.f - b.f)
@@ -740,20 +753,20 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 6. Visualize active connection pair (if any)
+    // 7. Visualize active connection pair (if any)
     if (this.activeConnectionPair) {
       const start = this.activeConnectionPair.start?.center
       const end = this.activeConnectionPair.end?.center
       if (start && end && isValidPoint(start) && isValidPoint(end)) {
         graphics.lines!.push({
           points: [start, end],
-          strokeColor: "green",
+          strokeColor: "cyan",
           strokeDash: "20 5",
         })
       }
     }
 
-    // 7. Visualize directive vias (if using directive strategy)
+    // 8. Visualize directive vias (if using directive strategy)
     if (this.ogUnprocessedSubpaths) {
       const [, mid] = this.ogUnprocessedSubpaths
       if (mid.start?.center && isValidPoint(mid.start.center)) {
@@ -788,7 +801,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 8. Visualize candidate nodes with small circles
+    // 9. Visualize candidate nodes with small circles
     if (this.queuedCandidateNodes.length > 0) {
       for (const candidate of this.queuedCandidateNodes) {
         const node = candidate.node
@@ -803,7 +816,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 9. Visualize visited nodes with gray circles
+    // 10. Visualize visited nodes with gray circles
     if (this.visitedNodes.size > 0) {
       for (const nodeId of this.visitedNodes) {
         const node = this.nodeMap.get(nodeId)
