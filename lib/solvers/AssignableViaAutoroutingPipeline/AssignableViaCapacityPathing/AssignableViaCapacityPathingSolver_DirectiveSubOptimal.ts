@@ -88,6 +88,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
   activeConnectionPair: ConnectionNodePair | null = null
 
+  ogUnprocessedSubpaths: SubpathNodePair[] | null = null
   unprocessedSubpaths: SubpathNodePair[] | null = null
   solvedSubpaths: SubpathNodePair[] | null = null
 
@@ -172,6 +173,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       this.unprocessedSubpaths = this.breakConnectionPairIntoSubpaths(
         this.activeConnectionPair,
       )
+      this.ogUnprocessedSubpaths = this.unprocessedSubpaths.slice()
       this.solvedSubpaths = []
       this.lastStepOperation = "breakConnectionPairIntoSubpaths"
       return
@@ -184,6 +186,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         const completedConnectionPair = this.activeConnectionPair
         this.activeConnectionPair = null
         this.unprocessedSubpaths = null
+        this.ogUnprocessedSubpaths = null
         this.activeSubpath = null
 
         this.solvedRoutes.push(
@@ -485,9 +488,9 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
   getClosestVia(node: CapacityMeshNode): CapacityMeshNode {
     if (this.viaNodes.length === 0) return node
     // Exclude blocked vias
-    const candidates = this.viaNodes.filter(
-      (v) => !v._completelyInsideObstacle && !v._containsObstacle,
-    )
+    const candidates = this.viaNodes
+      .filter((v) => !v._completelyInsideObstacle && !v._containsObstacle)
+      .filter((v) => !this.usedNodeMap.has(v.capacityMeshNodeId))
     if (candidates.length === 0) return node
     candidates.sort((a, b) => this._dist(a, node) - this._dist(b, node))
     return candidates[0]
@@ -506,6 +509,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     const viable = this.viaNodes.filter(
       (v) =>
+        !this.usedNodeMap.has(v.capacityMeshNodeId) &&
         v.capacityMeshNodeId !== closestVia.capacityMeshNodeId &&
         !v._completelyInsideObstacle &&
         !v._containsObstacle &&
@@ -635,7 +639,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     for (let i = 0; i < this.solvedRoutes.length; i++) {
       const solvedRoute = this.solvedRoutes[i]
       const path = solvedRoute.path
-      const color = this.colorMap[solvedRoute.connection.name] || "green"
+      const color = "blue"
 
       for (let j = 0; j < path.length - 1; j++) {
         const node1 = path[j]
@@ -743,15 +747,15 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       if (start && end && isValidPoint(start) && isValidPoint(end)) {
         graphics.lines!.push({
           points: [start, end],
-          strokeColor: "red",
-          strokeDash: "10 5",
+          strokeColor: "green",
+          strokeDash: "20 5",
         })
       }
     }
 
     // 7. Visualize directive vias (if using directive strategy)
-    if (this.unprocessedSubpaths && this.unprocessedSubpaths.length === 3) {
-      const [, mid] = this.unprocessedSubpaths
+    if (this.ogUnprocessedSubpaths) {
+      const [, mid] = this.ogUnprocessedSubpaths
       if (mid.start?.center && isValidPoint(mid.start.center)) {
         const radius = Math.max(mid.start.width || 0, mid.start.height || 0)
         if (isValidNumber(radius) && radius > 0) {
