@@ -194,8 +194,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "initialPathingHyperSolver",
-      AssignableViaCapacityPathingSolver_DirectiveSubOptimal,
-      // HyperAssignableViaCapacityPathingSolver,
+      // AssignableViaCapacityPathingSolver_DirectiveSubOptimal,
+      HyperAssignableViaCapacityPathingSolver,
       (cms) => [
         {
           simpleRouteJson: cms.srjWithPointPairs!,
@@ -211,7 +211,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
         onSolved: (cms) => {
           const winningSolver = cms.initialPathingHyperSolver?.winningSolver
           if (winningSolver) {
-            cms.initialPathingSolver = winningSolver
+            // cms.initialPathingSolver = winningSolver
+            // cms.
           }
         },
       },

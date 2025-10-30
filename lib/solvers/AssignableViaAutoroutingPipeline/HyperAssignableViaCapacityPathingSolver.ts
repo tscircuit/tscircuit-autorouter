@@ -1,9 +1,9 @@
 import { HyperParameterSupervisorSolver } from "lib/solvers/HyperParameterSupervisorSolver"
 import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters"
-import { AssignableViaCapacityPathingSolver_PenalizeNonVia } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia"
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 
 export type AssignableViaCapacityPathingParams = ConstructorParameters<
-  typeof AssignableViaCapacityPathingSolver_PenalizeNonVia
+  typeof AssignableViaCapacityPathingSolver_DirectiveSubOptimal
 >[0]
 
 type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
@@ -11,7 +11,7 @@ type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
   LAYER_TRAVERSAL_REWARD?: number
 }
 
-export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingSolver_PenalizeNonVia> {
+export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingSolver_DirectiveSubOptimal> {
   constructorParams: AssignableViaCapacityPathingParams
 
   constructor(opts: AssignableViaCapacityPathingParams) {
@@ -27,29 +27,30 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
       {
         name: "traceOrderingSeed",
         possibleValues: [
-          { TRACE_ORDERING_SEED: 0 },
-          { TRACE_ORDERING_SEED: 1 },
-          { TRACE_ORDERING_SEED: 2 },
-          { TRACE_ORDERING_SEED: 3 },
-          { TRACE_ORDERING_SEED: 4 },
-          { TRACE_ORDERING_SEED: 5 },
-          { TRACE_ORDERING_SEED: 6 },
-          { TRACE_ORDERING_SEED: 7 },
-          { TRACE_ORDERING_SEED: 8 },
-          { TRACE_ORDERING_SEED: 9 },
+          { SHUFFLE_SEED: 0 },
+          { SHUFFLE_SEED: 1 },
+          { SHUFFLE_SEED: 2 },
+          { SHUFFLE_SEED: 3 },
+          { SHUFFLE_SEED: 4 },
+          { SHUFFLE_SEED: 5 },
+          { SHUFFLE_SEED: 6 },
+          { SHUFFLE_SEED: 7 },
+          { SHUFFLE_SEED: 8 },
+          { SHUFFLE_SEED: 9 },
         ],
       },
-      // {
-      //   name: "layerTraversalReward",
-      //   possibleValues: [
-      //     { LAYER_TRAVERSAL_REWARD: 0.7 },
-      //     { LAYER_TRAVERSAL_REWARD: 1 },
-      //   ],
-      // },
+      {
+        name: "forceViaTravelChance",
+        possibleValues: [
+          { FORCE_VIA_TRAVEL_CHANCE: 0.6 },
+          { FORCE_VIA_TRAVEL_CHANCE: 0.8 },
+          { FORCE_VIA_TRAVEL_CHANCE: 0.9 },
+        ],
+      },
     ]
   }
 
-  computeG(solver: AssignableViaCapacityPathingSolver_PenalizeNonVia) {
+  computeG(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
     const totalConnections = solver.connectionsWithNodes.length || 1
     const solvedConnections = solver.connectionsWithNodes.filter(
       (connection) => connection.path?.length,
@@ -59,7 +60,7 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
     return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio)
   }
 
-  computeH(solver: AssignableViaCapacityPathingSolver_PenalizeNonVia) {
+  computeH(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
     const totalConnections = solver.connectionsWithNodes.length || 1
     const solvedConnections = solver.connectionsWithNodes.filter(
       (connection) => connection.path?.length,
@@ -70,7 +71,7 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
   }
 
   generateSolver(hyperParameters: HyperParameterOverrides) {
-    return new AssignableViaCapacityPathingSolver_PenalizeNonVia({
+    return new AssignableViaCapacityPathingSolver_DirectiveSubOptimal({
       ...this.constructorParams,
       hyperParameters: {
         ...this.constructorParams.hyperParameters,
