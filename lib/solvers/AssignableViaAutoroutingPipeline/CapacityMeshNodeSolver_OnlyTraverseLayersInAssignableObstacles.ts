@@ -19,7 +19,7 @@ interface CapacityMeshNodeSolverOptions {
  *   so we mark `_containsObstacle = false` and `_completelyInsideObstacle = false` on it.
  */
 export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles extends CapacityMeshNodeSolver2_NodeUnderObstacle {
-  MAX_SIZE_FOR_SINGLE_LAYER_NODES = 4 // 4x4mm
+  MAX_SIZE_FOR_SINGLE_LAYER_NODES = 2 // 2x2mm
 
   constructor(
     public srj: SimpleRouteJson,

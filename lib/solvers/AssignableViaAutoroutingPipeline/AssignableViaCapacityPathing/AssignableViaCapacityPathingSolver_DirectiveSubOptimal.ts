@@ -96,21 +96,24 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
   viaNodes: CapacityMeshNode[] = []
 
-  constructor({
-    simpleRouteJson,
-    nodes,
-    edges,
-    colorMap,
-    MAX_ITERATIONS = 1e6,
-    hyperParameters = {},
-  }: {
-    simpleRouteJson: SimpleRouteJson
-    nodes: CapacityMeshNode[]
-    edges: CapacityMeshEdge[]
-    colorMap?: Record<string, string>
-    MAX_ITERATIONS?: number
-    hyperParameters?: Partial<AssignableViaCapacityHyperParameters>
-  }) {
+  constructor(
+    private inputParams: {
+      simpleRouteJson: SimpleRouteJson
+      nodes: CapacityMeshNode[]
+      edges: CapacityMeshEdge[]
+      colorMap?: Record<string, string>
+      MAX_ITERATIONS?: number
+      hyperParameters?: Partial<AssignableViaCapacityHyperParameters>
+    },
+  ) {
+    const {
+      simpleRouteJson,
+      nodes,
+      edges,
+      colorMap,
+      MAX_ITERATIONS = 1e6,
+      hyperParameters = {},
+    } = inputParams
     super()
     this.hyperParameters = hyperParameters
     this.MAX_ITERATIONS = MAX_ITERATIONS
@@ -147,6 +150,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // "Via" nodes are those with multiple available Z-layers
     this.viaNodes = this.nodes.filter((node) => node.availableZ.length > 1)
+  }
+
+  getConstructorParams(): typeof this.inputParams {
+    return this.inputParams
   }
 
   lastStepOperation:
@@ -338,11 +345,18 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     // Filter out hard obstacles (non-traversable) AND nodes that don't have the designated layer
     const designatedLayer = this.activeSubpath?.layer
     return Array.from(neighbors).filter((n) => {
+      const isGoalNode =
+        n.capacityMeshNodeId === this.activeSubpath?.end.capacityMeshNodeId
+
+      if (isGoalNode) return true
       // Must not be obstacle
-      if (n._containsObstacle && !n._containsTarget) return false
+      if (n._containsObstacle) return false
+
+      // Must not be an unrelated target
+      if (n._containsTarget) return false
+
       if (this.usedNodeMap.has(n.capacityMeshNodeId)) return false
 
-      // Must contain the designated layer in availableZ
       if (
         designatedLayer !== undefined &&
         !n.availableZ.includes(designatedLayer)
