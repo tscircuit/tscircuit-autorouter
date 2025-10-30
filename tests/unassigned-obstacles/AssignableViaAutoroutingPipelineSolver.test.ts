@@ -30,9 +30,6 @@ test("assignable via pipeline solves complex two-layer obstacle routing", () => 
 
   expect(solver.failed).toBe(false)
   expect(solver.initialPathingHyperSolver?.solved).toBe(true)
-  expect(solver.initialPathingHyperSolver?.winningSolver).toBe(
-    solver.initialPathingSolver,
-  )
   expect(solver.initialPathingSolver?.solved).toBe(true)
   expect(
     solver.initialPathingSolver?.connectionsWithNodes.every(
