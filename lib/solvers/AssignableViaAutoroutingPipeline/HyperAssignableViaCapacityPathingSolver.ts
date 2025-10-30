@@ -51,21 +51,23 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
   }
 
   computeG(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
-    const totalConnections = solver.connectionsWithNodes.length || 1
-    const solvedConnections = solver.connectionsWithNodes.filter(
-      (connection) => connection.path?.length,
-    ).length
-    const solvedRatio = solvedConnections / totalConnections
+    const totalConnections =
+      solver.unprocessedConnectionPairs.length +
+      solver.solvedRoutes.length +
+      (solver.activeConnectionPair ? 1 : 0)
+    const solvedConnections = solver.solvedRoutes.length
+    const solvedRatio = totalConnections > 0 ? solvedConnections / totalConnections : 0
 
     return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio)
   }
 
   computeH(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
-    const totalConnections = solver.connectionsWithNodes.length || 1
-    const solvedConnections = solver.connectionsWithNodes.filter(
-      (connection) => connection.path?.length,
-    ).length
-    const remainingRatio = 1 - solvedConnections / totalConnections
+    const totalConnections =
+      solver.unprocessedConnectionPairs.length +
+      solver.solvedRoutes.length +
+      (solver.activeConnectionPair ? 1 : 0)
+    const solvedConnections = solver.solvedRoutes.length
+    const remainingRatio = totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0
 
     return remainingRatio
   }
