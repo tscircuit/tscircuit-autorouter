@@ -13,6 +13,9 @@ test("AssignableViaCapacityPathingSolver_DirectiveSubOptimal should complete", a
   solver.solve()
 
   // Verify solver completed successfully
+  if (solver.failed) {
+    console.log("Solver failed with error:", solver.error)
+  }
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
 

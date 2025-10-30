@@ -8,6 +8,9 @@ const createSolver = () => {
     ...(constructorInput as any)[0],
     hyperParameters: {
       FORCE_VIA_TRAVEL_CHANCE: 1,
+      FAR_VIA_MIN_DISTANCE: 10,
+      SHUFFLE_SEED: 4,
+      MAX_CLOSEST_VIA_SKIP: 0,
     },
   })
 }

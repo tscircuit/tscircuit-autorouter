@@ -43,6 +43,8 @@ type AssignableViaCapacityHyperParameters = Partial<CapacityHyperParameters> & {
 
   FORCE_VIA_TRAVEL_CHANCE?: number
   FAR_VIA_MIN_DISTANCE?: number
+  MAX_CLOSEST_VIA_SKIP?: number
+  MAX_FURTHEST_VIA_SKIP?: number
 }
 
 type ConnectionNodePair = {
@@ -95,6 +97,14 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
   activeSubpath: SubpathNodePair | null = null
 
   viaNodes: CapacityMeshNode[] = []
+
+  // Map to store the closest via for the start node of each connection pair
+  closestViaForConnectionStartMap: Map<ConnectionNodePair, CapacityMeshNode> =
+    new Map()
+
+  // Map to store the closest via for the end node of each connection pair
+  closestViaForConnectionEndMap: Map<ConnectionNodePair, CapacityMeshNode> =
+    new Map()
 
   constructor(
     private inputParams: {
@@ -165,6 +175,43 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     | "finishedSolvingSubpath"
     | "finishedSolvingConnectionPair" = "none"
 
+  /**
+   * Computes and stores the closest via for both start and end of each unprocessed connection pair.
+   * This is used to ensure we don't "steal" a via that's closest to another connection.
+   */
+  computeClosestViaForAllConnections() {
+    this.closestViaForConnectionStartMap.clear()
+    this.closestViaForConnectionEndMap.clear()
+
+    for (const connectionPair of this.unprocessedConnectionPairs) {
+      // Find the closest available via to this connection's start node
+      const availableVias = this.viaNodes
+        .filter((v) => !v._completelyInsideObstacle && !v._containsObstacle)
+        .filter((v) => !this.usedNodeMap.has(v.capacityMeshNodeId))
+
+      if (availableVias.length > 0) {
+        // Compute closest via to start node
+        const closestViaToStart = availableVias.reduce((closest, via) => {
+          const distToClosest = this._dist(closest, connectionPair.start)
+          const distToVia = this._dist(via, connectionPair.start)
+          return distToVia < distToClosest ? via : closest
+        })
+        this.closestViaForConnectionStartMap.set(
+          connectionPair,
+          closestViaToStart,
+        )
+
+        // Compute closest via to end node
+        const closestViaToEnd = availableVias.reduce((closest, via) => {
+          const distToClosest = this._dist(closest, connectionPair.end)
+          const distToVia = this._dist(via, connectionPair.end)
+          return distToVia < distToClosest ? via : closest
+        })
+        this.closestViaForConnectionEndMap.set(connectionPair, closestViaToEnd)
+      }
+    }
+  }
+
   _step() {
     if (!this.activeConnectionPair) {
       this.activeConnectionPair = this.unprocessedConnectionPairs.shift()!
@@ -172,6 +219,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         this.solved = true
         return
       }
+      // Compute closest via for all remaining connections to avoid stealing vias
+      this.computeClosestViaForAllConnections()
       this.lastStepOperation = "dequeueConnectionPair"
       return
     }
@@ -489,12 +538,62 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
   getClosestVia(node: CapacityMeshNode): CapacityMeshNode {
     if (this.viaNodes.length === 0) return node
-    // Exclude blocked vias
+
+    // Get the set of vias that are closest to other connections (start or end)
+    const reservedVias = new Set<CapacityMeshNodeId>()
+
+    // Check vias reserved for start nodes of other connections
+    for (const [connectionPair, closestVia] of this
+      .closestViaForConnectionStartMap) {
+      // Don't mark as reserved if this is the current active connection pair
+      if (connectionPair !== this.activeConnectionPair) {
+        reservedVias.add(closestVia.capacityMeshNodeId)
+      }
+    }
+
+    // Check vias reserved for end nodes of other connections
+    for (const [connectionPair, closestVia] of this
+      .closestViaForConnectionEndMap) {
+      // Don't mark as reserved if this is the current active connection pair
+      if (connectionPair !== this.activeConnectionPair) {
+        reservedVias.add(closestVia.capacityMeshNodeId)
+      }
+    }
+
+    // Exclude blocked vias, used vias, and vias reserved for other connections
     const candidates = this.viaNodes
       .filter((v) => !v._completelyInsideObstacle && !v._containsObstacle)
       .filter((v) => !this.usedNodeMap.has(v.capacityMeshNodeId))
-    if (candidates.length === 0) return node
+      .filter((v) => !reservedVias.has(v.capacityMeshNodeId))
+
+    // If no candidates after filtering, fall back to any available via (including reserved ones)
+    if (candidates.length === 0) {
+      const fallbackCandidates = this.viaNodes
+        .filter((v) => !v._completelyInsideObstacle && !v._containsObstacle)
+        .filter((v) => !this.usedNodeMap.has(v.capacityMeshNodeId))
+      if (fallbackCandidates.length === 0) return node
+      fallbackCandidates.sort(
+        (a, b) => this._dist(a, node) - this._dist(b, node),
+      )
+      return fallbackCandidates[0]
+    }
+
     candidates.sort((a, b) => this._dist(a, node) - this._dist(b, node))
+
+    // Apply MAX_CLOSEST_VIA_SKIP if configured
+    const maxSkip = this.hyperParameters.MAX_CLOSEST_VIA_SKIP ?? 0
+    if (maxSkip > 0 && candidates.length > 1) {
+      // Generate seeded random number K between 0 and MAX_CLOSEST_VIA_SKIP
+      const seed =
+        (this.hyperParameters.DIRECTIVE_SEED ?? 0) + this.solvedRoutes.length
+      const random = seededRandom(seed)
+      const k = Math.floor(random() * (maxSkip + 1))
+
+      // Skip the first k vias, but ensure we don't go out of bounds
+      const skipIndex = Math.min(k, candidates.length - 1)
+      return candidates[skipIndex]
+    }
+
     return candidates[0]
   }
 
@@ -509,39 +608,86 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         ? this.hyperParameters.FAR_VIA_MIN_DISTANCE
         : 50
 
+    // Get the set of vias that are closest to other connections (start or end)
+    const reservedVias = new Set<CapacityMeshNodeId>()
+
+    // Check vias reserved for start nodes of other connections
+    for (const [connectionPair, closestViaForConnection] of this
+      .closestViaForConnectionStartMap) {
+      // Don't mark as reserved if this is the current active connection pair
+      if (connectionPair !== this.activeConnectionPair) {
+        reservedVias.add(closestViaForConnection.capacityMeshNodeId)
+      }
+    }
+
+    // Check vias reserved for end nodes of other connections
+    for (const [connectionPair, closestViaForConnection] of this
+      .closestViaForConnectionEndMap) {
+      // Don't mark as reserved if this is the current active connection pair
+      if (connectionPair !== this.activeConnectionPair) {
+        reservedVias.add(closestViaForConnection.capacityMeshNodeId)
+      }
+    }
+
+    // Filter vias: exclude used, obstacles, reserved, closestVia, and those too close to closestVia
     const viable = this.viaNodes.filter(
       (v) =>
         !this.usedNodeMap.has(v.capacityMeshNodeId) &&
         v.capacityMeshNodeId !== closestVia.capacityMeshNodeId &&
         !v._completelyInsideObstacle &&
         !v._containsObstacle &&
+        !reservedVias.has(v.capacityMeshNodeId) &&
         this._dist(v, closestVia) >= minD,
     )
 
     if (viable.length === 0) {
-      // Fall back: farthest available via from the first via (still avoiding obstacles)
+      // Fall back: try without the reserved filter
       const fallback = this.viaNodes
         .filter(
           (v) =>
             v.capacityMeshNodeId !== closestVia.capacityMeshNodeId &&
             !v._completelyInsideObstacle &&
-            !v._containsObstacle,
+            !v._containsObstacle &&
+            !this.usedNodeMap.has(v.capacityMeshNodeId) &&
+            this._dist(v, closestVia) >= minD,
         )
-        .sort(
-          (a, b) => this._dist(b, closestVia) - this._dist(a, closestVia),
-        )[0]
-      return fallback ?? closestVia
+        .sort((a, b) => this._dist(a, end) - this._dist(b, end))
+
+      if (fallback.length > 0) return fallback[0]
+
+      // Final fallback: any available via
+      const finalFallback = this.viaNodes
+        .filter(
+          (v) =>
+            v.capacityMeshNodeId !== closestVia.capacityMeshNodeId &&
+            !v._completelyInsideObstacle &&
+            !v._containsObstacle &&
+            !this.usedNodeMap.has(v.capacityMeshNodeId),
+        )
+        .sort((a, b) => this._dist(a, end) - this._dist(b, end))[0]
+
+      return finalFallback ?? closestVia
     }
 
-    // Minimize weighted sum: distance from closestVia + distance to goal
-    // (staying at least FAR_VIA_MIN_DISTANCE away from closestVia)
-    viable.sort((a, b) => {
-      const sa = this._dist(a, closestVia) + this._dist(a, end)
-      const sb = this._dist(b, closestVia) + this._dist(b, end)
-      if (sa !== sb) return sa - sb
-      // tie-break: closer to goal
-      return this._dist(a, end) - this._dist(b, end)
-    })
+    // Sort by distance to goal (end) - optimize for vias closest to the goal
+    viable.sort((a, b) => this._dist(a, end) - this._dist(b, end))
+
+    // Apply MAX_FURTHEST_VIA_SKIP if configured
+    const maxSkip = this.hyperParameters.MAX_FURTHEST_VIA_SKIP ?? 0
+    if (maxSkip > 0 && viable.length > 1) {
+      // Generate seeded random number K between 0 and MAX_FURTHEST_VIA_SKIP
+      const seed =
+        (this.hyperParameters.DIRECTIVE_SEED ?? 0) +
+        this.solvedRoutes.length +
+        1000
+      const random = seededRandom(seed)
+      const k = Math.floor(random() * (maxSkip + 1))
+
+      // Skip the first k vias, but ensure we don't go out of bounds
+      const skipIndex = Math.min(k, viable.length - 1)
+      return viable[skipIndex]
+    }
+
     return viable[0]
   }
 
@@ -781,7 +927,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     }
 
     // 8. Visualize directive vias (if using directive strategy)
-    if (this.ogUnprocessedSubpaths) {
+    if (this.ogUnprocessedSubpaths && this.ogUnprocessedSubpaths.length === 3) {
       const [, mid] = this.ogUnprocessedSubpaths
       if (mid.start?.center && isValidPoint(mid.start.center)) {
         const radius = Math.max(mid.start.width || 0, mid.start.height || 0)
