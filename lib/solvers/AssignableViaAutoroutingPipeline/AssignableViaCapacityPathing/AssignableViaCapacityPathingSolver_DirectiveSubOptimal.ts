@@ -55,6 +55,7 @@ type SubpathNodePair = {
   start: CapacityMeshNode
   end: CapacityMeshNode
   solved: boolean
+  path?: CapacityMeshNode[]
 }
 
 export type ConnectionPathWithNodes = {
@@ -226,6 +227,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // Trivial case
     if (start.capacityMeshNodeId === end.capacityMeshNodeId) {
+      subpath.path = [start]
       subpath.solved = true
       // mark single node as used
       this.usedNodeMap.set(start.capacityMeshNodeId, true)
@@ -273,12 +275,15 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // Goal check
     if (current.node.capacityMeshNodeId === end.capacityMeshNodeId) {
-      // Backtrack and mark the path's nodes as used
+      // Backtrack and collect the path, marking nodes as used
+      const path: CapacityMeshNode[] = []
       let walk: Candidate | null = current
       while (walk) {
+        path.unshift(walk.node)
         this.usedNodeMap.set(walk.node.capacityMeshNodeId, true)
         walk = walk.prevCandidate
       }
+      subpath.path = path
       subpath.solved = true
       return
     }
@@ -376,11 +381,33 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     subpaths: SubpathNodePair[],
     connectionPair: ConnectionNodePair,
   ): ConnectionPathWithNodes {
+    // Concatenate all subpath paths, avoiding duplicate nodes at boundaries
+    const fullPath: CapacityMeshNode[] = []
+
+    for (let i = 0; i < subpaths.length; i++) {
+      const subpath = subpaths[i]
+      if (!subpath.path) {
+        // Fallback: if path wasn't stored, just use start and end
+        if (i === 0) {
+          fullPath.push(subpath.start)
+        }
+        if (i === subpaths.length - 1) {
+          fullPath.push(subpath.end)
+        }
+      } else {
+        if (i === 0) {
+          // First subpath: add all nodes
+          fullPath.push(...subpath.path)
+        } else {
+          // Subsequent subpaths: skip first node (it's the same as the last node of previous path)
+          fullPath.push(...subpath.path.slice(1))
+        }
+      }
+    }
+
     return {
       connection: connectionPair.connection,
-      path: subpaths
-        .map((subpath) => subpath.start)
-        .concat(subpaths[subpaths.length - 1].end),
+      path: fullPath,
     }
   }
 
@@ -515,7 +542,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // 1. Visualize ALL nodes as rectangles with detailed labels
     for (const node of this.nodes) {
-      const isUsed = this.usedNodeMap.has(node.capacityMeshNodeId)
       const isInCandidates = this.queuedCandidateNodes.some(
         (c) => c.node.capacityMeshNodeId === node.capacityMeshNodeId,
       )
@@ -535,16 +561,13 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
         graphics.rects!.push({
           ...rect,
-          fill: isUsed
-            ? "rgba(0, 255, 0, 0.3)"
-            : isInCandidates
-              ? "rgba(255, 255, 0, 0.2)"
-              : node._containsTarget
-                ? "rgba(0, 150, 255, 0.15)"
-                : node._containsObstacle
-                  ? "rgba(255, 0, 0, 0.1)"
-                  : "rgba(200, 200, 200, 0.05)",
-          stroke: isUsed ? "green" : undefined,
+          fill: isInCandidates
+            ? "rgba(255, 128, 255, 0.5)"
+            : node._containsTarget
+              ? "rgba(0, 150, 255, 0.15)"
+              : node._containsObstacle
+                ? "rgba(255, 0, 0, 0.1)"
+                : "rgba(200, 200, 200, 0.05)",
           label: [
             `ID: ${node.capacityMeshNodeId}`,
             `Size: ${node.width.toFixed(2)}x${node.height.toFixed(2)}`,
@@ -552,7 +575,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
             candidate ? `g: ${candidate.g.toFixed(2)}` : "",
             candidate ? `h: ${candidate.h.toFixed(2)}` : "",
             candidate ? `f: ${candidate.f.toFixed(2)}` : "",
-            isUsed ? "USED" : "",
             node._containsTarget ? "TARGET" : "",
             node._containsObstacle ? "OBSTACLE" : "",
           ]
@@ -580,7 +602,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       }
     }
 
-    // 3. Visualize all solved routes as thick colored lines
+    // 3. Visualize all solved routes as lines between each node
     for (let i = 0; i < this.solvedRoutes.length; i++) {
       const solvedRoute = this.solvedRoutes[i]
       const path = solvedRoute.path
@@ -595,6 +617,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
           isValidPoint(node1.center) &&
           isValidPoint(node2.center)
         ) {
+          // Check if both nodes are on z=1
+          const bothOnZ1 =
+            node1.availableZ.includes(1) && node2.availableZ.includes(1)
+
           // Add slight offset to show overlapping routes
           const offset = (i % 5) * 0.02
           graphics.lines!.push({
@@ -603,6 +629,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
               { x: node2.center.x + offset, y: node2.center.y + offset },
             ],
             strokeColor: color,
+            strokeDash: bothOnZ1 ? "5 5" : undefined,
           })
         }
       }
@@ -673,7 +700,7 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         if (points.length > 1) {
           graphics.lines!.push({
             points,
-            strokeColor: safeTransparentize("yellow", 1 - opacity),
+            strokeColor: safeTransparentize("purple", 1 - opacity),
           })
         }
       }
