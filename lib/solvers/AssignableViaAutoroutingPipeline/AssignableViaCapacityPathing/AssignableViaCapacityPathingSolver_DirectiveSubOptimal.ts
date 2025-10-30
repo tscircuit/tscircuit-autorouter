@@ -223,8 +223,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     this.lastStepOperation = "stepSolveSubpath"
   }
 
-  queuedCandidateNodes: Candidate[]
-  visitedNodes: Set<CapacityMeshNodeId>
+  queuedCandidateNodes: Candidate[] = []
+  visitedNodes: Set<CapacityMeshNodeId> = new Set()
 
   stepSolveSubpath(subpath: SubpathNodePair) {
     // TOOD sort queuedCandidateNodes by f
