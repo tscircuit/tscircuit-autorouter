@@ -73,6 +73,7 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
 
     // Collect all unique z-layers from the nodes to merge
     const zLayersSet = new Set<number>()
+    let containsTarget = false
 
     for (const node of nodesToMerge) {
       const nodeMinX = node.center.x - node.width / 2
@@ -88,6 +89,11 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
       // Collect all z-layers
       for (const z of node.availableZ) {
         zLayersSet.add(z)
+      }
+
+      // Check if any node contains a target
+      if (node._containsTarget) {
+        containsTarget = true
       }
     }
 
@@ -110,6 +116,7 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
           ? `z${availableZ[0]}`
           : `z${availableZ.join(",")}`,
       availableZ,
+      _containsTarget: containsTarget,
       _containsObstacle: false,
       _completelyInsideObstacle: false,
     }

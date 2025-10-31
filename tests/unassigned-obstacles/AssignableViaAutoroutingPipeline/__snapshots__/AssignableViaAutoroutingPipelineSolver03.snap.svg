@@ -36,6 +36,18 @@
   <g>
     <circle data-type="point" data-label="conn-1 (top)" data-x="0" data-y="0" cx="320" cy="320" r="3" fill="orange" />
   </g>
+  <g>
+    <circle data-type="point" data-label="START: source_trace_0" data-x="0" data-y="3.90625" cx="320" cy="101.25" r="3" fill="black" />
+  </g>
+  <g>
+    <circle data-type="point" data-label="END: source_trace_0" data-x="0" data-y="0" cx="320" cy="320" r="3" fill="black" />
+  </g>
+  <g>
+    <circle data-type="point" data-label="START: source_trace_1" data-x="0" data-y="0" cx="320" cy="320" r="3" fill="black" />
+  </g>
+  <g>
+    <circle data-type="point" data-label="END: source_trace_1" data-x="0" data-y="-3.90625" cx="320" cy="538.75" r="3" fill="black" />
+  </g>
   <polyline data-points="-5,-5 5,-5 5,5 -5,5 -5,-5" data-type="line" points="40,600 600,600 600,40 40,40 40,600" fill="none" stroke="rgba(255,0,0,0.25)" stroke-width="1" />
   <polyline data-points="0,0 0,-4" data-type="line" points="320,320 320,544" fill="none" stroke="hsl(150, 100%, 50%)" stroke-width="1" />
   <polyline data-points="0,4 0,0" data-type="line" points="320,96 320,320" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="1" />
@@ -167,16 +179,16 @@
   <polyline data-points="0.34375,0.90625 0.484375,0.453125" data-type="line" points="339.25,269.25 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.34375,0.90625 0.96875,0.90625" data-type="line" points="339.25,269.25 374.25,269.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.46875,0.15625 0.46875,-0.15625" data-type="line" points="346.25,311.25 346.25,328.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.46875,0.15625 0.46875,0.46875" data-type="line" points="346.25,311.25 346.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.484375,0.140625 0.484375,-0.171875" data-type="line" points="347.125,312.125 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.484375,0.140625 0.03125,-0.03125" data-type="line" points="347.125,312.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.484375,0.140625 0,0" data-type="line" points="347.125,312.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.484375,0.140625 0.484375,0.453125" data-type="line" points="347.125,312.125 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.15625,0.46875 -0.15625,0.46875" data-type="line" points="328.75,293.75 311.25,293.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.15625,0.46875 0.46875,0.46875" data-type="line" points="328.75,293.75 346.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.171875,0.453125 -0.140625,0.453125" data-type="line" points="329.625,294.625 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.171875,0.453125 0.03125,-0.03125" data-type="line" points="329.625,294.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.171875,0.453125 0,0" data-type="line" points="329.625,294.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.171875,0.453125 0.484375,0.453125" data-type="line" points="329.625,294.625 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-1.875,3.125 -3.125,3.125" data-type="line" points="215,145 145,145" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-1.875,3.125 -1.875,1.875" data-type="line" points="215,145 215,215" fill="none" stroke="black" stroke-width="1" />
@@ -282,14 +294,14 @@
   <polyline data-points="-0.28125,0.90625 -0.140625,0.453125" data-type="line" points="304.25,269.25 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.46875,0.15625 -0.46875,-0.15625" data-type="line" points="293.75,311.25 293.75,328.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.46875,0.15625 -0.46875,0.46875" data-type="line" points="293.75,311.25 293.75,293.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-0.453125,0.140625 -0.453125,-0.171875" data-type="line" points="294.625,312.125 294.625,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,0.140625 -0.453125,0.453125" data-type="line" points="294.625,312.125 294.625,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.453125,0.140625 0.03125,-0.03125" data-type="line" points="294.625,312.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.453125,0.140625 0,0" data-type="line" points="294.625,312.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-0.46875,0.46875 -0.15625,0.46875" data-type="line" points="293.75,293.75 311.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,0.453125 -0.140625,0.453125" data-type="line" points="294.625,294.625 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.140625,0.453125 0.03125,-0.03125" data-type="line" points="312.125,294.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.140625,0.453125 0,0" data-type="line" points="312.125,294.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-4.3125,0.5625 -4.3125,-0.6875" data-type="line" points="78.5,288.5 78.5,358.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,0.5625 -4.3125,1.8125" data-type="line" points="78.5,288.5 78.5,218.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,0.5625 -3.0625,0.5625" data-type="line" points="78.5,288.5 148.5,288.5" fill="none" stroke="black" stroke-width="1" />
@@ -353,15 +365,15 @@
   <polyline data-points="0.96875,-0.34375 0.484375,-0.484375" data-type="line" points="374.25,339.25 347.125,347.125" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.96875,-0.34375 0.484375,-0.171875" data-type="line" points="374.25,339.25 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.15625,-0.46875 -0.15625,-0.46875" data-type="line" points="328.75,346.25 311.25,346.25" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.15625,-0.46875 0.46875,-0.46875" data-type="line" points="328.75,346.25 346.25,346.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.171875,-0.484375 -0.140625,-0.484375" data-type="line" points="329.625,347.125 312.125,347.125" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.171875,-0.484375 0.03125,-0.03125" data-type="line" points="329.625,347.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.171875,-0.484375 0,0" data-type="line" points="329.625,347.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.171875,-0.484375 0.484375,-0.484375" data-type="line" points="329.625,347.125 347.125,347.125" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.46875,-0.46875 0.46875,-0.15625" data-type="line" points="346.25,346.25 346.25,328.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.484375,-0.484375 0.484375,-0.171875" data-type="line" points="347.125,347.125 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.484375,-0.171875 0.03125,-0.03125" data-type="line" points="347.125,329.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="0.484375,-0.171875 0,0" data-type="line" points="347.125,329.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="3.1875,-4.4375 1.9375,-4.4375" data-type="line" points="498.5,568.5 428.5,568.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="3.1875,-4.4375 3.1875,-3.1875" data-type="line" points="498.5,568.5 498.5,498.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="3.1875,-4.4375 4.4375,-4.4375" data-type="line" points="498.5,568.5 568.5,568.5" fill="none" stroke="black" stroke-width="1" />
@@ -471,10 +483,10 @@
   <polyline data-points="-0.46875,-0.46875 -0.15625,-0.46875" data-type="line" points="293.75,346.25 311.25,346.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,-0.484375 -0.453125,-0.171875" data-type="line" points="294.625,347.125 294.625,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,-0.484375 -0.140625,-0.484375" data-type="line" points="294.625,347.125 312.125,347.125" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.140625,-0.484375 0.03125,-0.03125" data-type="line" points="312.125,347.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.453125,-0.171875 0.03125,-0.03125" data-type="line" points="294.625,329.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.140625,-0.484375 0,0" data-type="line" points="312.125,347.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.453125,-0.171875 0,0" data-type="line" points="294.625,329.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-4.3125,-1.9375 -4.3125,-3.1875" data-type="line" points="78.5,428.5 78.5,498.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,-1.9375 -4.3125,-0.6875" data-type="line" points="78.5,428.5 78.5,358.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,-1.9375 -3.0625,-1.9375" data-type="line" points="78.5,428.5 148.5,428.5" fill="none" stroke="black" stroke-width="1" />
@@ -681,16 +693,16 @@
   <polyline data-points="0.34375,0.90625 0.484375,0.453125" data-type="line" points="339.25,269.25 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.34375,0.90625 0.96875,0.90625" data-type="line" points="339.25,269.25 374.25,269.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.46875,0.15625 0.46875,-0.15625" data-type="line" points="346.25,311.25 346.25,328.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.46875,0.15625 0.46875,0.46875" data-type="line" points="346.25,311.25 346.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.484375,0.140625 0.484375,-0.171875" data-type="line" points="347.125,312.125 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.484375,0.140625 0.03125,-0.03125" data-type="line" points="347.125,312.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.484375,0.140625 0,0" data-type="line" points="347.125,312.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.484375,0.140625 0.484375,0.453125" data-type="line" points="347.125,312.125 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.15625,0.46875 -0.15625,0.46875" data-type="line" points="328.75,293.75 311.25,293.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.15625,0.46875 0.46875,0.46875" data-type="line" points="328.75,293.75 346.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.171875,0.453125 -0.140625,0.453125" data-type="line" points="329.625,294.625 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.171875,0.453125 0.03125,-0.03125" data-type="line" points="329.625,294.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.171875,0.453125 0,0" data-type="line" points="329.625,294.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.171875,0.453125 0.484375,0.453125" data-type="line" points="329.625,294.625 347.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-1.875,3.125 -3.125,3.125" data-type="line" points="215,145 145,145" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-1.875,3.125 -1.875,1.875" data-type="line" points="215,145 215,215" fill="none" stroke="black" stroke-width="1" />
@@ -796,14 +808,14 @@
   <polyline data-points="-0.28125,0.90625 -0.140625,0.453125" data-type="line" points="304.25,269.25 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.46875,0.15625 -0.46875,-0.15625" data-type="line" points="293.75,311.25 293.75,328.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.46875,0.15625 -0.46875,0.46875" data-type="line" points="293.75,311.25 293.75,293.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-0.453125,0.140625 -0.453125,-0.171875" data-type="line" points="294.625,312.125 294.625,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,0.140625 -0.453125,0.453125" data-type="line" points="294.625,312.125 294.625,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.453125,0.140625 0.03125,-0.03125" data-type="line" points="294.625,312.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.453125,0.140625 0,0" data-type="line" points="294.625,312.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-0.46875,0.46875 -0.15625,0.46875" data-type="line" points="293.75,293.75 311.25,293.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,0.453125 -0.140625,0.453125" data-type="line" points="294.625,294.625 312.125,294.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.140625,0.453125 0.03125,-0.03125" data-type="line" points="312.125,294.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.140625,0.453125 0,0" data-type="line" points="312.125,294.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-4.3125,0.5625 -4.3125,-0.6875" data-type="line" points="78.5,288.5 78.5,358.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,0.5625 -4.3125,1.8125" data-type="line" points="78.5,288.5 78.5,218.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,0.5625 -3.0625,0.5625" data-type="line" points="78.5,288.5 148.5,288.5" fill="none" stroke="black" stroke-width="1" />
@@ -867,15 +879,15 @@
   <polyline data-points="0.96875,-0.34375 0.484375,-0.484375" data-type="line" points="374.25,339.25 347.125,347.125" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.96875,-0.34375 0.484375,-0.171875" data-type="line" points="374.25,339.25 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.15625,-0.46875 -0.15625,-0.46875" data-type="line" points="328.75,346.25 311.25,346.25" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.15625,-0.46875 0.46875,-0.46875" data-type="line" points="328.75,346.25 346.25,346.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.171875,-0.484375 -0.140625,-0.484375" data-type="line" points="329.625,347.125 312.125,347.125" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.171875,-0.484375 0.03125,-0.03125" data-type="line" points="329.625,347.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.171875,-0.484375 0,0" data-type="line" points="329.625,347.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="0.171875,-0.484375 0.484375,-0.484375" data-type="line" points="329.625,347.125 347.125,347.125" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.46875,-0.46875 0.46875,-0.15625" data-type="line" points="346.25,346.25 346.25,328.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0.484375,-0.484375 0.484375,-0.171875" data-type="line" points="347.125,347.125 347.125,329.625" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="0.484375,-0.171875 0.03125,-0.03125" data-type="line" points="347.125,329.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="0.484375,-0.171875 0,0" data-type="line" points="347.125,329.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="3.1875,-4.4375 1.9375,-4.4375" data-type="line" points="498.5,568.5 428.5,568.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="3.1875,-4.4375 3.1875,-3.1875" data-type="line" points="498.5,568.5 498.5,498.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="3.1875,-4.4375 4.4375,-4.4375" data-type="line" points="498.5,568.5 568.5,568.5" fill="none" stroke="black" stroke-width="1" />
@@ -985,10 +997,10 @@
   <polyline data-points="-0.46875,-0.46875 -0.15625,-0.46875" data-type="line" points="293.75,346.25 311.25,346.25" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,-0.484375 -0.453125,-0.171875" data-type="line" points="294.625,347.125 294.625,329.625" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-0.453125,-0.484375 -0.140625,-0.484375" data-type="line" points="294.625,347.125 312.125,347.125" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.140625,-0.484375 0.03125,-0.03125" data-type="line" points="312.125,347.125 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="black" stroke-width="1" />
-  <polyline data-points="-0.453125,-0.171875 0.03125,-0.03125" data-type="line" points="294.625,329.625 321.75,321.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.140625,-0.484375 0,0" data-type="line" points="312.125,347.125 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
+  <polyline data-points="-0.453125,-0.171875 0,0" data-type="line" points="294.625,329.625 320,320" fill="none" stroke="black" stroke-width="1" stroke-dasharray="10 5" />
   <polyline data-points="-4.3125,-1.9375 -4.3125,-3.1875" data-type="line" points="78.5,428.5 78.5,498.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,-1.9375 -4.3125,-0.6875" data-type="line" points="78.5,428.5 78.5,358.5" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="-4.3125,-1.9375 -3.0625,-1.9375" data-type="line" points="78.5,428.5 148.5,428.5" fill="none" stroke="black" stroke-width="1" />
@@ -1067,6 +1079,535 @@
   <polyline data-points="0,3.90625 -0.15625,4.84375" data-type="line" points="320,101.25 311.25,48.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0,3.90625 0.15625,4.84375" data-type="line" points="320,101.25 328.75,48.75" fill="none" stroke="black" stroke-width="1" />
   <polyline data-points="0,3.90625 0.46875,4.84375" data-type="line" points="320,101.25 346.25,48.75" fill="none" stroke="black" stroke-width="1" />
+  <polyline data-points="3.125,3.125 1.875,3.125" data-type="line" points="495,145 425,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 3.125,1.875" data-type="line" points="495,145 495,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 3.125,4.375" data-type="line" points="495,145 495,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 4.375,3.125" data-type="line" points="495,145 565,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,3.125 4.375,1.875" data-type="line" points="565,145 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,3.125 4.375,4.375" data-type="line" points="565,145 565,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,4.375 1.875,4.375" data-type="line" points="495,75 425,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,4.375 4.375,4.375" data-type="line" points="495,75 565,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 1.875,3.125" data-type="line" points="495,145 425,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 3.125,1.875" data-type="line" points="495,145 495,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 3.125,4.375" data-type="line" points="495,145 495,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,3.125 4.375,3.125" data-type="line" points="495,145 565,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,3.125 4.375,1.875" data-type="line" points="565,145 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,3.125 4.375,4.375" data-type="line" points="565,145 565,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,4.375 1.875,4.375" data-type="line" points="495,75 425,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,4.375 4.375,4.375" data-type="line" points="495,75 565,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 0.9375,2.8125" data-type="line" points="425,145 372.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 0.9375,3.4375" data-type="line" points="425,145 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 1.875,1.875" data-type="line" points="425,145 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 1.875,4.375" data-type="line" points="425,145 425,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 0.9375,2.8125" data-type="line" points="425,145 372.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 0.9375,3.4375" data-type="line" points="425,145 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 1.875,1.875" data-type="line" points="425,145 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,3.125 1.875,4.375" data-type="line" points="425,145 425,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,4.375 0.9375,4.0625" data-type="line" points="425,75 372.5,92.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,4.375 0.9375,4.6875" data-type="line" points="425,75 372.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,4.375 0.9375,4.0625" data-type="line" points="425,75 372.5,92.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,4.375 0.9375,4.6875" data-type="line" points="425,75 372.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0,3.90625" data-type="line" points="372.5,92.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.9375,3.4375" data-type="line" points="372.5,92.5 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.9375,4.6875" data-type="line" points="372.5,92.5 372.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.46875,3.90625" data-type="line" points="372.5,92.5 346.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.46875,4.21875" data-type="line" points="372.5,92.5 346.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.9375,3.4375" data-type="line" points="372.5,92.5 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.0625 0.9375,4.6875" data-type="line" points="372.5,92.5 372.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.6875 0,3.90625" data-type="line" points="372.5,57.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.6875 0.46875,4.84375" data-type="line" points="372.5,57.5 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.6875 0.46875,4.53125" data-type="line" points="372.5,57.5 346.25,66.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,4.6875 0.46875,4.84375" data-type="line" points="372.5,57.5 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.53125 -0.15625,4.53125" data-type="line" points="328.75,66.25 311.25,66.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.53125 0.46875,4.53125" data-type="line" points="328.75,66.25 346.25,66.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.53125 0.15625,4.21875" data-type="line" points="328.75,66.25 328.75,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.53125 0.15625,4.84375" data-type="line" points="328.75,66.25 328.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,4.53125 0.46875,4.21875" data-type="line" points="346.25,66.25 346.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,4.53125 0.46875,4.84375" data-type="line" points="346.25,66.25 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.84375 -0.15625,4.84375" data-type="line" points="328.75,48.75 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.84375 0.46875,4.84375" data-type="line" points="328.75,48.75 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.84375 -0.15625,4.84375" data-type="line" points="328.75,48.75 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.84375 0.46875,4.84375" data-type="line" points="328.75,48.75 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.90625 -0.15625,3.90625" data-type="line" points="328.75,101.25 311.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.90625 0.15625,3.59375" data-type="line" points="328.75,101.25 328.75,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.90625 0.46875,3.90625" data-type="line" points="328.75,101.25 346.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,3.90625 0.46875,3.59375" data-type="line" points="346.25,101.25 346.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.21875 -0.15625,4.21875" data-type="line" points="328.75,83.75 311.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.21875 0.15625,3.90625" data-type="line" points="328.75,83.75 328.75,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,4.21875 0.46875,4.21875" data-type="line" points="328.75,83.75 346.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,4.21875 0.46875,3.90625" data-type="line" points="346.25,83.75 346.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 -0.3125,2.8125" data-type="line" points="337.5,162.5 302.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0,3.90625" data-type="line" points="337.5,162.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.625,1.875" data-type="line" points="337.5,162.5 355,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.9375,2.8125" data-type="line" points="337.5,162.5 372.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 -0.3125,2.8125" data-type="line" points="337.5,162.5 302.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.625,1.875" data-type="line" points="337.5,162.5 355,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.15625,3.28125" data-type="line" points="337.5,162.5 328.75,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.46875,3.28125" data-type="line" points="337.5,162.5 346.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.9375,2.8125" data-type="line" points="337.5,162.5 372.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,2.8125 0.625,1.875" data-type="line" points="372.5,162.5 355,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,2.8125 0.9375,3.4375" data-type="line" points="372.5,162.5 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,2.8125 0.625,1.875" data-type="line" points="372.5,162.5 355,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,2.8125 0.9375,3.4375" data-type="line" points="372.5,162.5 372.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,3.4375 0,3.90625" data-type="line" points="372.5,127.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,3.4375 0.46875,3.28125" data-type="line" points="372.5,127.5 346.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,3.4375 0.46875,3.59375" data-type="line" points="372.5,127.5 346.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.28125 -0.15625,3.28125" data-type="line" points="328.75,136.25 311.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.28125 0.46875,3.28125" data-type="line" points="328.75,136.25 346.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.28125 0.15625,3.59375" data-type="line" points="328.75,136.25 328.75,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,3.28125 0.46875,3.59375" data-type="line" points="346.25,136.25 346.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.59375 -0.15625,3.59375" data-type="line" points="328.75,118.75 311.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,3.59375 0.46875,3.59375" data-type="line" points="328.75,118.75 346.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 1.875,0.625" data-type="line" points="495,285 425,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 3.125,-0.625" data-type="line" points="495,285 495,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 3.125,1.875" data-type="line" points="495,285 495,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 4.375,0.625" data-type="line" points="495,285 565,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,0.625 4.375,-0.625" data-type="line" points="565,285 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,0.625 4.375,1.875" data-type="line" points="565,285 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,1.875 1.875,1.875" data-type="line" points="495,215 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,1.875 4.375,1.875" data-type="line" points="495,215 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 1.875,0.625" data-type="line" points="495,285 425,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 3.125,-0.625" data-type="line" points="495,285 495,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 3.125,1.875" data-type="line" points="495,285 495,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,0.625 4.375,0.625" data-type="line" points="495,285 565,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,0.625 4.375,-0.625" data-type="line" points="565,285 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,0.625 4.375,1.875" data-type="line" points="565,285 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,1.875 1.875,1.875" data-type="line" points="495,215 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,1.875 4.375,1.875" data-type="line" points="495,215 565,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 0.9375,0.3125" data-type="line" points="425,285 372.5,302.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 0.9375,0.9375" data-type="line" points="425,285 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 1.875,-0.625" data-type="line" points="425,285 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 1.875,1.875" data-type="line" points="425,285 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 0.9375,0.3125" data-type="line" points="425,285 372.5,302.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 0.9375,0.9375" data-type="line" points="425,285 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 1.875,-0.625" data-type="line" points="425,285 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,0.625 1.875,1.875" data-type="line" points="425,285 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 -0.625,1.875" data-type="line" points="355,215 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 0.3125,0.9375" data-type="line" points="355,215 337.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 0.9375,0.9375" data-type="line" points="355,215 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 1.875,1.875" data-type="line" points="355,215 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 -0.625,1.875" data-type="line" points="355,215 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 0.3125,0.9375" data-type="line" points="355,215 337.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 0.9375,0.9375" data-type="line" points="355,215 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,1.875 1.875,1.875" data-type="line" points="355,215 425,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.46875,0.15625" data-type="line" points="372.5,302.5 346.25,311.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.46875,0.46875" data-type="line" points="372.5,302.5 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.9375,-0.3125" data-type="line" points="372.5,302.5 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.9375,0.9375" data-type="line" points="372.5,302.5 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.46875,0.15625" data-type="line" points="372.5,302.5 346.25,311.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.46875,0.46875" data-type="line" points="372.5,302.5 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.9375,-0.3125" data-type="line" points="372.5,302.5 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,0.3125 0.9375,0.9375" data-type="line" points="372.5,302.5 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 -0.3125,0.9375" data-type="line" points="337.5,267.5 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.15625,0.46875" data-type="line" points="337.5,267.5 328.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.46875,0.46875" data-type="line" points="337.5,267.5 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.9375,0.9375" data-type="line" points="337.5,267.5 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 -0.3125,0.9375" data-type="line" points="337.5,267.5 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.15625,0.46875" data-type="line" points="337.5,267.5 328.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.46875,0.46875" data-type="line" points="337.5,267.5 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.9375,0.9375" data-type="line" points="337.5,267.5 372.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0.46875,-0.15625" data-type="line" points="346.25,311.25 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0.46875,0.46875" data-type="line" points="346.25,311.25 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0.46875,-0.15625" data-type="line" points="346.25,311.25 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0,0" data-type="line" points="346.25,311.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,0.15625 0.46875,0.46875" data-type="line" points="346.25,311.25 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 -0.15625,0.46875" data-type="line" points="328.75,293.75 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0.46875,0.46875" data-type="line" points="328.75,293.75 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 -0.15625,0.46875" data-type="line" points="328.75,293.75 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0.46875,0.46875" data-type="line" points="328.75,293.75 346.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -3.125,3.125" data-type="line" points="215,145 145,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -1.875,1.875" data-type="line" points="215,145 215,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -1.875,4.375" data-type="line" points="215,145 215,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -0.9375,2.8125" data-type="line" points="215,145 267.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -0.9375,3.4375" data-type="line" points="215,145 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -3.125,3.125" data-type="line" points="215,145 145,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -1.875,1.875" data-type="line" points="215,145 215,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -1.875,4.375" data-type="line" points="215,145 215,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -0.9375,2.8125" data-type="line" points="215,145 267.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,3.125 -0.9375,3.4375" data-type="line" points="215,145 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -3.125,4.375" data-type="line" points="215,75 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -0.9375,4.0625" data-type="line" points="215,75 267.5,92.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -0.9375,4.6875" data-type="line" points="215,75 267.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -3.125,4.375" data-type="line" points="215,75 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -0.9375,4.0625" data-type="line" points="215,75 267.5,92.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,4.375 -0.9375,4.6875" data-type="line" points="215,75 267.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.9375,3.4375" data-type="line" points="267.5,92.5 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.9375,4.6875" data-type="line" points="267.5,92.5 267.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 0,3.90625" data-type="line" points="267.5,92.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.9375,3.4375" data-type="line" points="267.5,92.5 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.9375,4.6875" data-type="line" points="267.5,92.5 267.5,57.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.46875,3.90625" data-type="line" points="267.5,92.5 293.75,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.0625 -0.46875,4.21875" data-type="line" points="267.5,92.5 293.75,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.6875 0,3.90625" data-type="line" points="267.5,57.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.6875 -0.46875,4.84375" data-type="line" points="267.5,57.5 293.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.6875 -0.46875,4.53125" data-type="line" points="267.5,57.5 293.75,66.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,4.6875 -0.46875,4.84375" data-type="line" points="267.5,57.5 293.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.53125 -0.46875,4.21875" data-type="line" points="293.75,66.25 293.75,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.53125 -0.46875,4.84375" data-type="line" points="293.75,66.25 293.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.53125 -0.15625,4.53125" data-type="line" points="293.75,66.25 311.25,66.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,4.53125 -0.15625,4.21875" data-type="line" points="311.25,66.25 311.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,4.53125 -0.15625,4.84375" data-type="line" points="311.25,66.25 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.84375 -0.15625,4.84375" data-type="line" points="293.75,48.75 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.84375 -0.15625,4.84375" data-type="line" points="293.75,48.75 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,3.90625 -0.46875,3.59375" data-type="line" points="293.75,101.25 293.75,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,3.90625 -0.15625,3.90625" data-type="line" points="293.75,101.25 311.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,3.90625 -0.15625,3.59375" data-type="line" points="311.25,101.25 311.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.21875 -0.46875,3.90625" data-type="line" points="293.75,83.75 293.75,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,4.21875 -0.15625,4.21875" data-type="line" points="293.75,83.75 311.25,83.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,4.21875 -0.15625,3.90625" data-type="line" points="311.25,83.75 311.25,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.625,1.875" data-type="line" points="267.5,162.5 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.9375,3.4375" data-type="line" points="267.5,162.5 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.3125,2.8125" data-type="line" points="267.5,162.5 302.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.625,1.875" data-type="line" points="267.5,162.5 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.9375,3.4375" data-type="line" points="267.5,162.5 267.5,127.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,2.8125 -0.3125,2.8125" data-type="line" points="267.5,162.5 302.5,162.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,2.8125 -0.625,1.875" data-type="line" points="302.5,162.5 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,2.8125 0,3.90625" data-type="line" points="302.5,162.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,2.8125 -0.625,1.875" data-type="line" points="302.5,162.5 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,2.8125 -0.46875,3.28125" data-type="line" points="302.5,162.5 293.75,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,2.8125 -0.15625,3.28125" data-type="line" points="302.5,162.5 311.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,3.4375 0,3.90625" data-type="line" points="267.5,127.5 320,101.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,3.4375 -0.46875,3.28125" data-type="line" points="267.5,127.5 293.75,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,3.4375 -0.46875,3.59375" data-type="line" points="267.5,127.5 293.75,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,3.28125 -0.46875,3.59375" data-type="line" points="293.75,136.25 293.75,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,3.28125 -0.15625,3.28125" data-type="line" points="293.75,136.25 311.25,136.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,3.28125 -0.15625,3.59375" data-type="line" points="311.25,136.25 311.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,3.59375 -0.15625,3.59375" data-type="line" points="293.75,118.75 311.25,118.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -4.375,1.875" data-type="line" points="75,145 75,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -4.375,4.375" data-type="line" points="75,145 75,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -3.125,3.125" data-type="line" points="75,145 145,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,3.125 -3.125,1.875" data-type="line" points="145,145 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,3.125 -3.125,4.375" data-type="line" points="145,145 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,4.375 -3.125,4.375" data-type="line" points="75,75 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -4.375,1.875" data-type="line" points="75,145 75,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -4.375,4.375" data-type="line" points="75,145 75,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,3.125 -3.125,3.125" data-type="line" points="75,145 145,145" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,3.125 -3.125,1.875" data-type="line" points="145,145 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,3.125 -3.125,4.375" data-type="line" points="145,145 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,4.375 -3.125,4.375" data-type="line" points="75,75 145,75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -3.125,0.625" data-type="line" points="215,285 145,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -1.875,-0.625" data-type="line" points="215,285 215,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -1.875,1.875" data-type="line" points="215,285 215,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -0.9375,0.3125" data-type="line" points="215,285 267.5,302.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -0.9375,0.9375" data-type="line" points="215,285 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -3.125,0.625" data-type="line" points="215,285 145,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -1.875,-0.625" data-type="line" points="215,285 215,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -1.875,1.875" data-type="line" points="215,285 215,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -0.9375,0.3125" data-type="line" points="215,285 267.5,302.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,0.625 -0.9375,0.9375" data-type="line" points="215,285 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,1.875 -3.125,1.875" data-type="line" points="215,215 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,1.875 -0.625,1.875" data-type="line" points="215,215 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,1.875 -3.125,1.875" data-type="line" points="215,215 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,1.875 -0.625,1.875" data-type="line" points="215,215 285,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,1.875 -0.9375,0.9375" data-type="line" points="285,215 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,1.875 -0.3125,0.9375" data-type="line" points="285,215 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,1.875 -0.9375,0.9375" data-type="line" points="285,215 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,1.875 -0.3125,0.9375" data-type="line" points="285,215 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.9375,-0.3125" data-type="line" points="267.5,302.5 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.9375,0.9375" data-type="line" points="267.5,302.5 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.46875,0.15625" data-type="line" points="267.5,302.5 293.75,311.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.46875,0.46875" data-type="line" points="267.5,302.5 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.9375,-0.3125" data-type="line" points="267.5,302.5 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.9375,0.9375" data-type="line" points="267.5,302.5 267.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.46875,0.15625" data-type="line" points="267.5,302.5 293.75,311.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.3125 -0.46875,0.46875" data-type="line" points="267.5,302.5 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.9375 -0.3125,0.9375" data-type="line" points="267.5,267.5 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,0.9375 -0.3125,0.9375" data-type="line" points="267.5,267.5 302.5,267.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,0.9375 -0.46875,0.46875" data-type="line" points="302.5,267.5 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,0.9375 -0.15625,0.46875" data-type="line" points="302.5,267.5 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,0.9375 -0.46875,0.46875" data-type="line" points="302.5,267.5 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,0.9375 -0.15625,0.46875" data-type="line" points="302.5,267.5 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 -0.46875,-0.15625" data-type="line" points="293.75,311.25 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 -0.46875,0.46875" data-type="line" points="293.75,311.25 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 -0.46875,-0.15625" data-type="line" points="293.75,311.25 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 -0.46875,0.46875" data-type="line" points="293.75,311.25 293.75,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.15625 0,0" data-type="line" points="293.75,311.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.46875 -0.15625,0.46875" data-type="line" points="293.75,293.75 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,0.46875 -0.15625,0.46875" data-type="line" points="293.75,293.75 311.25,293.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,0.46875 0,0" data-type="line" points="311.25,293.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -4.375,-0.625" data-type="line" points="75,285 75,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -4.375,1.875" data-type="line" points="75,285 75,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -3.125,0.625" data-type="line" points="75,285 145,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,0.625 -3.125,-0.625" data-type="line" points="145,285 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,0.625 -3.125,1.875" data-type="line" points="145,285 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,1.875 -3.125,1.875" data-type="line" points="75,215 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -4.375,-0.625" data-type="line" points="75,285 75,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -4.375,1.875" data-type="line" points="75,285 75,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,0.625 -3.125,0.625" data-type="line" points="75,285 145,285" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,0.625 -3.125,-0.625" data-type="line" points="145,285 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,0.625 -3.125,1.875" data-type="line" points="145,285 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,1.875 -3.125,1.875" data-type="line" points="75,215 145,215" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 1.875,-1.875" data-type="line" points="495,425 425,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 3.125,-3.125" data-type="line" points="495,425 495,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 3.125,-0.625" data-type="line" points="495,425 495,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 4.375,-1.875" data-type="line" points="495,425 565,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-1.875 4.375,-3.125" data-type="line" points="565,425 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-1.875 4.375,-0.625" data-type="line" points="565,425 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-0.625 1.875,-0.625" data-type="line" points="495,355 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-0.625 4.375,-0.625" data-type="line" points="495,355 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 1.875,-1.875" data-type="line" points="495,425 425,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 3.125,-3.125" data-type="line" points="495,425 495,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 3.125,-0.625" data-type="line" points="495,425 495,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-1.875 4.375,-1.875" data-type="line" points="495,425 565,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-1.875 4.375,-3.125" data-type="line" points="565,425 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-1.875 4.375,-0.625" data-type="line" points="565,425 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-0.625 1.875,-0.625" data-type="line" points="495,355 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-0.625 4.375,-0.625" data-type="line" points="495,355 565,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 -0.625,-1.875" data-type="line" points="355,425 285,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.3125,-2.8125" data-type="line" points="355,425 337.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.3125,-0.9375" data-type="line" points="355,425 337.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.9375,-2.8125" data-type="line" points="355,425 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.9375,-0.9375" data-type="line" points="355,425 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 1.875,-1.875" data-type="line" points="355,425 425,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 -0.625,-1.875" data-type="line" points="355,425 285,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.3125,-2.8125" data-type="line" points="355,425 337.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.3125,-0.9375" data-type="line" points="355,425 337.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.9375,-2.8125" data-type="line" points="355,425 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 0.9375,-0.9375" data-type="line" points="355,425 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.625,-1.875 1.875,-1.875" data-type="line" points="355,425 425,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-1.875 1.875,-3.125" data-type="line" points="425,425 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-1.875 1.875,-0.625" data-type="line" points="425,425 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-1.875 1.875,-3.125" data-type="line" points="425,425 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-1.875 1.875,-0.625" data-type="line" points="425,425 425,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-0.625 0.9375,-0.9375" data-type="line" points="425,355 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-0.625 0.9375,-0.3125" data-type="line" points="425,355 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-0.625 0.9375,-0.9375" data-type="line" points="425,355 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-0.625 0.9375,-0.3125" data-type="line" points="425,355 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 -0.3125,-0.9375" data-type="line" points="337.5,372.5 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.15625,-0.46875" data-type="line" points="337.5,372.5 328.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.46875,-0.46875" data-type="line" points="337.5,372.5 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.9375,-0.9375" data-type="line" points="337.5,372.5 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 -0.3125,-0.9375" data-type="line" points="337.5,372.5 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.15625,-0.46875" data-type="line" points="337.5,372.5 328.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.46875,-0.46875" data-type="line" points="337.5,372.5 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-0.9375 0.9375,-0.9375" data-type="line" points="337.5,372.5 372.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.9375 0.9375,-0.3125" data-type="line" points="372.5,372.5 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.9375 0.9375,-0.3125" data-type="line" points="372.5,372.5 372.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.3125 0.46875,-0.46875" data-type="line" points="372.5,337.5 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.3125 0.46875,-0.15625" data-type="line" points="372.5,337.5 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.3125 0.46875,-0.46875" data-type="line" points="372.5,337.5 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-0.3125 0.46875,-0.15625" data-type="line" points="372.5,337.5 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 -0.15625,-0.46875" data-type="line" points="328.75,346.25 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0.46875,-0.46875" data-type="line" points="328.75,346.25 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 -0.15625,-0.46875" data-type="line" points="328.75,346.25 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0,0" data-type="line" points="328.75,346.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-0.46875 0.46875,-0.46875" data-type="line" points="328.75,346.25 346.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-0.46875 0.46875,-0.15625" data-type="line" points="346.25,346.25 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-0.46875 0.46875,-0.15625" data-type="line" points="346.25,346.25 346.25,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-0.15625 0,0" data-type="line" points="346.25,328.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 1.875,-4.375" data-type="line" points="495,565 425,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 3.125,-3.125" data-type="line" points="495,565 495,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 4.375,-4.375" data-type="line" points="495,565 565,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-4.375 4.375,-3.125" data-type="line" points="565,565 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-3.125 1.875,-3.125" data-type="line" points="495,495 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-3.125 4.375,-3.125" data-type="line" points="495,495 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 1.875,-4.375" data-type="line" points="495,565 425,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 3.125,-3.125" data-type="line" points="495,565 495,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-4.375 4.375,-4.375" data-type="line" points="495,565 565,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="4.375,-4.375 4.375,-3.125" data-type="line" points="565,565 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-3.125 1.875,-3.125" data-type="line" points="495,495 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="3.125,-3.125 4.375,-3.125" data-type="line" points="495,495 565,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 0.9375,-4.6875" data-type="line" points="425,565 372.5,582.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 0.9375,-4.0625" data-type="line" points="425,565 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 1.875,-3.125" data-type="line" points="425,565 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 0.9375,-4.6875" data-type="line" points="425,565 372.5,582.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 0.9375,-4.0625" data-type="line" points="425,565 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-4.375 1.875,-3.125" data-type="line" points="425,565 425,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-3.125 0.9375,-3.4375" data-type="line" points="425,495 372.5,512.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-3.125 0.9375,-2.8125" data-type="line" points="425,495 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-3.125 0.9375,-3.4375" data-type="line" points="425,495 372.5,512.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="1.875,-3.125 0.9375,-2.8125" data-type="line" points="425,495 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.46875,-3.59375" data-type="line" points="372.5,512.5 346.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.46875,-3.28125" data-type="line" points="372.5,512.5 346.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.9375,-4.0625" data-type="line" points="372.5,512.5 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.9375,-2.8125" data-type="line" points="372.5,512.5 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0,-3.90625" data-type="line" points="372.5,512.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.9375,-4.0625" data-type="line" points="372.5,512.5 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-3.4375 0.9375,-2.8125" data-type="line" points="372.5,512.5 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 -0.3125,-2.8125" data-type="line" points="337.5,477.5 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 0.15625,-3.28125" data-type="line" points="337.5,477.5 328.75,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 0.46875,-3.28125" data-type="line" points="337.5,477.5 346.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 0.9375,-2.8125" data-type="line" points="337.5,477.5 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 0,-3.90625" data-type="line" points="337.5,477.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 -0.3125,-2.8125" data-type="line" points="337.5,477.5 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.3125,-2.8125 0.9375,-2.8125" data-type="line" points="337.5,477.5 372.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.59375 -0.15625,-3.59375" data-type="line" points="328.75,521.25 311.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.59375 0.46875,-3.59375" data-type="line" points="328.75,521.25 346.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.59375 0.15625,-3.28125" data-type="line" points="328.75,521.25 328.75,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-3.59375 0.46875,-3.28125" data-type="line" points="346.25,521.25 346.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.28125 -0.15625,-3.28125" data-type="line" points="328.75,503.75 311.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.28125 0.46875,-3.28125" data-type="line" points="328.75,503.75 346.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0.46875,-4.84375" data-type="line" points="372.5,582.5 346.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0.46875,-4.53125" data-type="line" points="372.5,582.5 346.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0.9375,-4.0625" data-type="line" points="372.5,582.5 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0.46875,-4.84375" data-type="line" points="372.5,582.5 346.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0,-3.90625" data-type="line" points="372.5,582.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.6875 0.9375,-4.0625" data-type="line" points="372.5,582.5 372.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.0625 0.46875,-4.21875" data-type="line" points="372.5,547.5 346.25,556.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.0625 0.46875,-3.90625" data-type="line" points="372.5,547.5 346.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.9375,-4.0625 0,-3.90625" data-type="line" points="372.5,547.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.21875 -0.15625,-4.21875" data-type="line" points="328.75,556.25 311.25,556.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.21875 0.15625,-4.53125" data-type="line" points="328.75,556.25 328.75,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.21875 0.46875,-4.21875" data-type="line" points="328.75,556.25 346.25,556.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.21875 0.15625,-3.90625" data-type="line" points="328.75,556.25 328.75,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-4.21875 0.46875,-4.53125" data-type="line" points="346.25,556.25 346.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-4.21875 0.46875,-3.90625" data-type="line" points="346.25,556.25 346.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.90625 -0.15625,-3.90625" data-type="line" points="328.75,538.75 311.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.90625 0.46875,-3.90625" data-type="line" points="328.75,538.75 346.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-3.90625 0.15625,-3.59375" data-type="line" points="328.75,538.75 328.75,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-3.90625 0.46875,-3.59375" data-type="line" points="346.25,538.75 346.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 -0.15625,-4.84375" data-type="line" points="328.75,591.25 311.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 0.46875,-4.84375" data-type="line" points="328.75,591.25 346.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 0.15625,-4.53125" data-type="line" points="328.75,591.25 328.75,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 -0.15625,-4.84375" data-type="line" points="328.75,591.25 311.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 0,-3.90625" data-type="line" points="328.75,591.25 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.84375 0.46875,-4.84375" data-type="line" points="328.75,591.25 346.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-4.84375 0.46875,-4.53125" data-type="line" points="346.25,591.25 346.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.46875,-4.84375 0,-3.90625" data-type="line" points="346.25,591.25 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.53125 -0.15625,-4.53125" data-type="line" points="328.75,573.75 311.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0.15625,-4.53125 0.46875,-4.53125" data-type="line" points="328.75,573.75 346.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -3.125,-1.875" data-type="line" points="215,425 145,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -1.875,-3.125" data-type="line" points="215,425 215,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -1.875,-0.625" data-type="line" points="215,425 215,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -0.625,-1.875" data-type="line" points="215,425 285,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -3.125,-1.875" data-type="line" points="215,425 145,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -1.875,-3.125" data-type="line" points="215,425 215,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -1.875,-0.625" data-type="line" points="215,425 215,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-1.875 -0.625,-1.875" data-type="line" points="215,425 285,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.9375,-2.8125" data-type="line" points="285,425 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.9375,-0.9375" data-type="line" points="285,425 267.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.3125,-2.8125" data-type="line" points="285,425 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.3125,-0.9375" data-type="line" points="285,425 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.9375,-2.8125" data-type="line" points="285,425 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.9375,-0.9375" data-type="line" points="285,425 267.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.3125,-2.8125" data-type="line" points="285,425 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.625,-1.875 -0.3125,-0.9375" data-type="line" points="285,425 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -3.125,-0.625" data-type="line" points="215,355 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -0.9375,-0.9375" data-type="line" points="215,355 267.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -0.9375,-0.3125" data-type="line" points="215,355 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -3.125,-0.625" data-type="line" points="215,355 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -0.9375,-0.9375" data-type="line" points="215,355 267.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-0.625 -0.9375,-0.3125" data-type="line" points="215,355 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.9375 -0.9375,-0.3125" data-type="line" points="267.5,372.5 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.9375 -0.3125,-0.9375" data-type="line" points="267.5,372.5 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.9375 -0.9375,-0.3125" data-type="line" points="267.5,372.5 267.5,337.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.9375 -0.3125,-0.9375" data-type="line" points="267.5,372.5 302.5,372.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-0.9375 -0.46875,-0.46875" data-type="line" points="302.5,372.5 293.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-0.9375 -0.15625,-0.46875" data-type="line" points="302.5,372.5 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-0.9375 -0.46875,-0.46875" data-type="line" points="302.5,372.5 293.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-0.9375 -0.15625,-0.46875" data-type="line" points="302.5,372.5 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.3125 -0.46875,-0.46875" data-type="line" points="267.5,337.5 293.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.3125 -0.46875,-0.15625" data-type="line" points="267.5,337.5 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.3125 -0.46875,-0.46875" data-type="line" points="267.5,337.5 293.75,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-0.3125 -0.46875,-0.15625" data-type="line" points="267.5,337.5 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.46875 -0.46875,-0.15625" data-type="line" points="293.75,346.25 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.46875 -0.15625,-0.46875" data-type="line" points="293.75,346.25 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.46875 -0.46875,-0.15625" data-type="line" points="293.75,346.25 293.75,328.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.46875 -0.15625,-0.46875" data-type="line" points="293.75,346.25 311.25,346.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-0.46875 0,0" data-type="line" points="311.25,346.25 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-0.15625 0,0" data-type="line" points="293.75,328.75 320,320" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -4.375,-3.125" data-type="line" points="75,425 75,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -4.375,-0.625" data-type="line" points="75,425 75,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -3.125,-1.875" data-type="line" points="75,425 145,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-1.875 -3.125,-3.125" data-type="line" points="145,425 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-1.875 -3.125,-0.625" data-type="line" points="145,425 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-0.625 -3.125,-0.625" data-type="line" points="75,355 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -4.375,-3.125" data-type="line" points="75,425 75,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -4.375,-0.625" data-type="line" points="75,425 75,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-1.875 -3.125,-1.875" data-type="line" points="75,425 145,425" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-1.875 -3.125,-3.125" data-type="line" points="145,425 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-1.875 -3.125,-0.625" data-type="line" points="145,425 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-0.625 -3.125,-0.625" data-type="line" points="75,355 145,355" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -3.125,-4.375" data-type="line" points="215,565 145,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -1.875,-3.125" data-type="line" points="215,565 215,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -0.9375,-4.6875" data-type="line" points="215,565 267.5,582.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -0.9375,-4.0625" data-type="line" points="215,565 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -3.125,-4.375" data-type="line" points="215,565 145,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -1.875,-3.125" data-type="line" points="215,565 215,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -0.9375,-4.6875" data-type="line" points="215,565 267.5,582.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-4.375 -0.9375,-4.0625" data-type="line" points="215,565 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -3.125,-3.125" data-type="line" points="215,495 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -0.9375,-3.4375" data-type="line" points="215,495 267.5,512.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -0.9375,-2.8125" data-type="line" points="215,495 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -3.125,-3.125" data-type="line" points="215,495 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -0.9375,-3.4375" data-type="line" points="215,495 267.5,512.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-1.875,-3.125 -0.9375,-2.8125" data-type="line" points="215,495 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.9375,-4.0625" data-type="line" points="267.5,512.5 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.9375,-2.8125" data-type="line" points="267.5,512.5 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.46875,-3.59375" data-type="line" points="267.5,512.5 293.75,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.46875,-3.28125" data-type="line" points="267.5,512.5 293.75,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.9375,-4.0625" data-type="line" points="267.5,512.5 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 -0.9375,-2.8125" data-type="line" points="267.5,512.5 267.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-3.4375 0,-3.90625" data-type="line" points="267.5,512.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-2.8125 -0.3125,-2.8125" data-type="line" points="267.5,477.5 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-2.8125 -0.3125,-2.8125" data-type="line" points="267.5,477.5 302.5,477.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-2.8125 -0.46875,-3.28125" data-type="line" points="302.5,477.5 293.75,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-2.8125 -0.15625,-3.28125" data-type="line" points="302.5,477.5 311.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.3125,-2.8125 0,-3.90625" data-type="line" points="302.5,477.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-3.59375 -0.46875,-3.28125" data-type="line" points="293.75,521.25 293.75,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-3.59375 -0.15625,-3.59375" data-type="line" points="293.75,521.25 311.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-3.59375 -0.15625,-3.28125" data-type="line" points="311.25,521.25 311.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-3.28125 -0.15625,-3.28125" data-type="line" points="293.75,503.75 311.25,503.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 -0.9375,-4.0625" data-type="line" points="267.5,582.5 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 -0.46875,-4.84375" data-type="line" points="267.5,582.5 293.75,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 -0.46875,-4.53125" data-type="line" points="267.5,582.5 293.75,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 -0.9375,-4.0625" data-type="line" points="267.5,582.5 267.5,547.5" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 -0.46875,-4.84375" data-type="line" points="267.5,582.5 293.75,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.6875 0,-3.90625" data-type="line" points="267.5,582.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.0625 -0.46875,-4.21875" data-type="line" points="267.5,547.5 293.75,556.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.0625 -0.46875,-3.90625" data-type="line" points="267.5,547.5 293.75,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.9375,-4.0625 0,-3.90625" data-type="line" points="267.5,547.5 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.21875 -0.46875,-4.53125" data-type="line" points="293.75,556.25 293.75,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.21875 -0.46875,-3.90625" data-type="line" points="293.75,556.25 293.75,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.21875 -0.15625,-4.21875" data-type="line" points="293.75,556.25 311.25,556.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-4.21875 -0.15625,-4.53125" data-type="line" points="311.25,556.25 311.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-4.21875 -0.15625,-3.90625" data-type="line" points="311.25,556.25 311.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-3.90625 -0.46875,-3.59375" data-type="line" points="293.75,538.75 293.75,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-3.90625 -0.15625,-3.90625" data-type="line" points="293.75,538.75 311.25,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-3.90625 -0.15625,-3.59375" data-type="line" points="311.25,538.75 311.25,521.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.84375 -0.46875,-4.53125" data-type="line" points="293.75,591.25 293.75,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.84375 -0.15625,-4.84375" data-type="line" points="293.75,591.25 311.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.84375 0,-3.90625" data-type="line" points="293.75,591.25 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.84375 -0.15625,-4.84375" data-type="line" points="293.75,591.25 311.25,591.25" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-4.84375 -0.15625,-4.53125" data-type="line" points="311.25,591.25 311.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.15625,-4.84375 0,-3.90625" data-type="line" points="311.25,591.25 320,538.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-0.46875,-4.53125 -0.15625,-4.53125" data-type="line" points="293.75,573.75 311.25,573.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-4.375 -4.375,-3.125" data-type="line" points="75,565 75,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-4.375 -3.125,-4.375" data-type="line" points="75,565 145,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-4.375 -3.125,-3.125" data-type="line" points="145,565 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-3.125 -3.125,-3.125" data-type="line" points="75,495 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-4.375 -4.375,-3.125" data-type="line" points="75,565 75,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-4.375 -3.125,-4.375" data-type="line" points="75,565 145,565" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-3.125,-4.375 -3.125,-3.125" data-type="line" points="145,565 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="-4.375,-3.125 -3.125,-3.125" data-type="line" points="75,495 145,495" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0,3.90625 -0.46875,4.84375" data-type="line" points="320,101.25 293.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0,3.90625 -0.15625,4.84375" data-type="line" points="320,101.25 311.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0,3.90625 0.15625,4.84375" data-type="line" points="320,101.25 328.75,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0,3.90625 0.46875,4.84375" data-type="line" points="320,101.25 346.25,48.75" fill="none" stroke="rgba(150, 150, 150, 0.2)" stroke-width="1" />
+  <polyline data-points="0,3.90625 0.3125,2.8125" data-type="line" points="320,101.25 337.5,162.5" fill="none" stroke="blue" stroke-width="1" />
+  <polyline data-points="0.3125,2.8125 0.625,1.875" data-type="line" points="337.5,162.5 355,215" fill="none" stroke="blue" stroke-width="1" />
+  <polyline data-points="0.625,1.875 0.3125,0.9375" data-type="line" points="355,215 337.5,267.5" fill="none" stroke="blue" stroke-width="1" />
+  <polyline data-points="0.3125,0.9375 0.15625,0.46875" data-type="line" points="337.5,267.5 328.75,293.75" fill="none" stroke="blue" stroke-width="1" />
+  <polyline data-points="0.15625,0.46875 0,0" data-type="line" points="328.75,293.75 320,320" fill="none" stroke="blue" stroke-width="1" />
+  <polyline data-points="0.02,0.02 0.17625,-0.44875" data-type="line" points="321.12,318.88 329.87,345.13" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
+  <polyline data-points="0.17625,-0.44875 0.3325,-0.9175" data-type="line" points="329.87,345.13 338.62,371.38" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
+  <polyline data-points="0.3325,-0.9175 0.645,-1.855" data-type="line" points="338.62,371.38 356.12,423.88" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
+  <polyline data-points="0.645,-1.855 0.3325,-2.7925" data-type="line" points="356.12,423.88 338.62,476.38" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
+  <polyline data-points="0.3325,-2.7925 0.02,-3.88625" data-type="line" points="338.62,476.38 321.12,537.63" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
+  <polyline data-points="0,0 0.15625,-0.46875" data-type="line" points="320,320 328.75,346.25" fill="none" stroke="green" stroke-width="1" stroke-dasharray="3 3" />
+  <polyline data-points="0.15625,-0.46875 0.3125,-0.9375" data-type="line" points="328.75,346.25 337.5,372.5" fill="none" stroke="green" stroke-width="1" stroke-dasharray="3 3" />
+  <polyline data-points="0.3125,-0.9375 0.625,-1.875" data-type="line" points="337.5,372.5 355,425" fill="none" stroke="green" stroke-width="1" stroke-dasharray="3 3" />
+  <polyline data-points="0.625,-1.875 0.3125,-2.8125" data-type="line" points="355,425 337.5,477.5" fill="none" stroke="green" stroke-width="1" stroke-dasharray="3 3" />
+  <polyline data-points="0.3125,-2.8125 0,-3.90625" data-type="line" points="337.5,477.5 320,538.75" fill="none" stroke="green" stroke-width="1" stroke-dasharray="3 3" />
   <rect data-type="rect" data-label="" data-x="0" data-y="4" x="286.4" y="62.400000000000034" width="67.20000000000005" height="67.19999999999996" fill="rgba(255,0,0,0.25)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="-4" x="286.4" y="510.4" width="67.20000000000005" height="67.19999999999993" fill="rgba(0,0,255,0.25)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="0" x="303.2" y="303.2" width="33.60000000000002" height="33.60000000000002" fill="rgba(255,0,0,0.25)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1211,23 +1752,16 @@
   <rect data-type="rect" data-label="" data-x="-0.90625" data-y="-0.34375" x="255.25" y="325.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.9375" data-y="-0.3125" x="358.5" y="323.5" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-0.3125" x="253.5" y="323.5" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.171875" data-y="-0.171875" x="322.625" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.484375" data-y="-0.171875" x="340.125" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.453125" data-y="-0.171875" x="287.625" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.140625" data-y="-0.171875" x="305.125" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-0.15625" x="321.75" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.46875" data-y="-0.15625" x="339.25" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-0.15625" x="286.75" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-0.15625" x="304.25" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="0" x="303.2" y="303.2" width="33.60000000000002" height="33.60000000000002" fill="rgba(255,0,0,0.3)" stroke="red" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.171875" data-y="0.140625" x="322.625" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.484375" data-y="0.140625" x="340.125" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.453125" data-y="0.140625" x="287.625" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.140625" data-y="0.140625" x="305.125" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.15625" data-y="0.15625" x="321.75" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.46875" data-y="0.15625" x="339.25" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.46875" data-y="0.15625" x="286.75" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="0.15625" x="304.25" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.96875" data-y="0.28125" x="360.25" y="290.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.90625" data-y="0.28125" x="255.25" y="290.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.9375" data-y="0.3125" x="358.5" y="288.5" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1435,8 +1969,6 @@
   <rect data-type="rect" data-label="" data-x="0.34375" data-y="0.90625" x="325.25" y="255.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.9375" data-y="0.9375" x="358.5" y="253.5" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.96875" data-y="0.90625" x="360.25" y="255.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.15625" data-y="0.15625" x="321.75" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.171875" data-y="0.140625" x="322.625" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.46875" data-y="0.15625" x="339.25" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.484375" data-y="0.140625" x="340.125" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.15625" data-y="0.46875" x="321.75" y="286.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1503,8 +2035,6 @@
   <rect data-type="rect" data-label="" data-x="-0.28125" data-y="0.90625" x="290.25" y="255.25" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.46875" data-y="0.15625" x="286.75" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.453125" data-y="0.140625" x="287.625" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="0.15625" x="304.25" y="304.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.140625" data-y="0.140625" x="305.125" y="305.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.46875" data-y="0.46875" x="286.75" y="286.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.453125" data-y="0.453125" x="287.625" y="287.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.15625" data-y="0.46875" x="304.25" y="286.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1541,8 +2071,6 @@
   <rect data-type="rect" data-label="" data-x="0.171875" data-y="-0.484375" x="322.625" y="340.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.46875" data-y="-0.46875" x="339.25" y="339.25" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.484375" data-y="-0.484375" x="340.125" y="340.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-0.15625" x="321.75" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.171875" data-y="-0.171875" x="322.625" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.46875" data-y="-0.15625" x="339.25" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.484375" data-y="-0.171875" x="340.125" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="-4.4375" x="470.5" y="540.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1609,8 +2137,6 @@
   <rect data-type="rect" data-label="" data-x="-0.140625" data-y="-0.484375" x="305.125" y="340.125" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-0.15625" x="286.75" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-0.453125" data-y="-0.171875" x="287.625" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-0.15625" x="304.25" y="321.75" width="14" height="14" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="-0.140625" data-y="-0.171875" x="305.125" y="322.625" width="14" height="14" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.3125" data-y="-1.9375" x="50.5" y="400.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-3.0625" data-y="-1.9375" x="120.5" y="400.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.3125" data-y="-0.6875" x="50.5" y="330.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1665,6 +2191,7 @@
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-4.375" x="117" y="537" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.375" data-y="-3.125" x="47" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-3.125" x="117" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,0,0,0.1)" stroke="rgba(255, 0, 255, 0.8)" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="3.0625" x="470.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="4.4375" data-y="3.0625" x="540.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="4.3125" x="470.5" y="50.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -1913,14 +2440,11 @@
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-4.375" x="117" y="537" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.375" data-y="-3.125" x="47" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-3.125" x="117" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,0,0,0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="3.90625" x="292" y="66.25" width="56" height="70" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.0625" data-y="-3.96875" x="295.5" y="507.25" width="56" height="70" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.03125" data-y="-0.03125" x="307.75" y="307.75" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="3.90625" x="285.56" y="58.06" width="68.88" height="86.38" fill="rgba(0,200,200, 0.1)" stroke="rgba(0, 217, 255, 0.8)" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="-3.90625" x="285.56" y="495.56" width="68.88" height="86.38000000000005" fill="rgba(0,0,200, 0.1)" stroke="rgba(0, 217, 255, 0.8)" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="303.06" y="303.06" width="33.879999999999995" height="33.879999999999995" fill="rgba(0,200,200, 0.1)" stroke="rgba(0, 217, 255, 0.8)" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="303.06" y="303.06" width="33.879999999999995" height="33.879999999999995" fill="rgba(0,0,200, 0.1)" stroke="rgba(0, 217, 255, 0.8)" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="3.0625" x="470.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="4.4375" data-y="3.0625" x="540.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="4.3125" x="470.5" y="50.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -2169,10 +2693,9 @@
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-4.375" x="117" y="537" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.375" data-y="-3.125" x="47" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-3.125" x="117" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,0,0,0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="3.90625" x="292" y="66.25" width="56" height="70" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.0625" data-y="-3.96875" x="295.5" y="507.25" width="56" height="70" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.03125" data-y="-0.03125" x="307.75" y="307.75" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="3.0625" x="470.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="4.4375" data-y="3.0625" x="540.5" y="120.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="3.1875" data-y="4.3125" x="470.5" y="50.5" width="56" height="56" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
@@ -2421,10 +2944,260 @@
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-4.375" x="117" y="537" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-4.375" data-y="-3.125" x="47" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="-3.125" data-y="-3.125" x="117" y="467" width="56" height="56" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,0,0,0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0" data-y="3.90625" x="292" y="66.25" width="56" height="70" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
   <rect data-type="rect" data-label="" data-x="0.0625" data-y="-3.96875" x="295.5" y="507.25" width="56" height="70" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="306" y="306" width="28" height="28" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
-  <rect data-type="rect" data-label="" data-x="0.03125" data-y="-0.03125" x="307.75" y="307.75" width="28" height="28" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="3.1125" x="462.1" y="112.1" width="67.19999999999993" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="3.1125" x="532.1" y="112.1" width="67.19999999999993" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="4.3625" x="462.1" y="42.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="4.3625" x="532.1" y="42.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="3.125" x="461.4" y="111.4" width="67.20000000000005" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="3.125" x="531.4" y="111.4" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="4.375" x="461.4" y="41.400000000000034" width="67.20000000000005" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="4.375" x="531.4" y="41.400000000000034" width="67.19999999999993" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="3.125" x="391.4" y="111.4" width="67.20000000000005" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="3.1125" x="392.1" y="112.1" width="67.19999999999993" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="4.375" x="391.4" y="41.400000000000034" width="67.20000000000005" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="4.3625" x="392.1" y="42.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="4.0625" x="356.4" y="76.40000000000003" width="32.200000000000045" height="32.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="4.05625" x="356.75" y="76.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="4.6875" x="356.4" y="41.400000000000034" width="32.200000000000045" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="4.68125" x="356.75" y="41.75" width="32.19999999999999" height="32.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="4.528125" x="321.575" y="59.07499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="4.528125" x="339.075" y="59.07499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="4.84375" x="321.4" y="41.400000000000034" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="4.840625" x="321.575" y="41.57499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="4.84375" x="338.9" y="41.400000000000034" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="4.840625" x="339.075" y="41.57499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="3.903125" x="321.575" y="94.07500000000002" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="3.903125" x="339.075" y="94.07500000000002" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="4.215625" x="321.575" y="76.57500000000002" width="14.699999999999989" height="14.69999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="4.215625" x="339.075" y="76.57500000000002" width="14.699999999999989" height="14.69999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.3125" data-y="2.8125" x="321.4" y="146.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.31875" data-y="2.80625" x="321.75" y="146.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="2.8125" x="356.4" y="146.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="2.80625" x="356.75" y="146.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="3.4375" x="356.4" y="111.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="3.43125" x="356.75" y="111.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="3.278125" x="321.575" y="129.075" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="3.278125" x="339.075" y="129.075" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="3.590625" x="321.575" y="111.57499999999999" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="3.590625" x="339.075" y="111.57499999999999" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="0.6125" x="462.1" y="252.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="0.6125" x="532.1" y="252.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="1.8625" x="462.1" y="182.1" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="1.8625" x="532.1" y="182.1" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="0.625" x="461.4" y="251.39999999999998" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="0.625" x="531.4" y="251.39999999999998" width="67.19999999999993" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="1.875" x="461.4" y="181.4" width="67.20000000000005" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="1.875" x="531.4" y="181.4" width="67.19999999999993" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="0.625" x="391.4" y="251.39999999999998" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="0.6125" x="392.1" y="252.10000000000002" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.625" data-y="1.875" x="321.4" y="181.4" width="67.20000000000005" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.6375" data-y="1.8625" x="322.1" y="182.1" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="1.875" x="391.4" y="181.4" width="67.20000000000005" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="1.8625" x="392.1" y="182.1" width="67.19999999999993" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="0.3125" x="356.4" y="286.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="0.30625" x="356.75" y="286.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.3125" data-y="0.9375" x="321.4" y="251.39999999999998" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.31875" data-y="0.93125" x="321.75" y="251.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="0.9375" x="356.4" y="251.39999999999998" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="0.93125" x="356.75" y="251.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="0.15625" x="338.9" y="303.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="0.153125" x="339.075" y="304.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="0.46875" x="321.4" y="286.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="0.465625" x="321.575" y="286.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="0.46875" x="338.9" y="286.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="0.465625" x="339.075" y="286.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="3.125" x="181.4" y="111.4" width="67.20000000000002" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="3.1125" x="182.1" y="112.1" width="67.19999999999999" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="4.375" x="181.4" y="41.400000000000034" width="67.20000000000002" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="4.3625" x="182.1" y="42.10000000000002" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="4.0625" x="251.39999999999998" y="76.40000000000003" width="32.200000000000045" height="32.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="4.05625" x="251.75" y="76.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="4.6875" x="251.39999999999998" y="41.400000000000034" width="32.200000000000045" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="4.68125" x="251.75" y="41.75" width="32.19999999999999" height="32.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="4.528125" x="286.575" y="59.07499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="4.528125" x="304.075" y="59.07499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="4.84375" x="286.4" y="41.400000000000034" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="4.840625" x="286.575" y="41.57499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="4.84375" x="303.9" y="41.400000000000034" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="4.840625" x="304.075" y="41.57499999999999" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="3.903125" x="286.575" y="94.07500000000002" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="3.903125" x="304.075" y="94.07500000000002" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="4.215625" x="286.575" y="76.57500000000002" width="14.699999999999989" height="14.69999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="4.215625" x="304.075" y="76.57500000000002" width="14.699999999999989" height="14.69999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="2.8125" x="251.39999999999998" y="146.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="2.80625" x="251.75" y="146.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.3125" data-y="2.8125" x="286.4" y="146.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.30625" data-y="2.80625" x="286.75" y="146.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="3.4375" x="251.39999999999998" y="111.4" width="32.200000000000045" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="3.43125" x="251.75" y="111.75" width="32.19999999999999" height="32.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="3.278125" x="286.575" y="129.075" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="3.278125" x="304.075" y="129.075" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="3.590625" x="286.575" y="111.57499999999999" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="3.590625" x="304.075" y="111.57499999999999" width="14.699999999999989" height="14.700000000000017" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="3.1125" x="42.10000000000002" y="112.1" width="67.19999999999999" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="3.1125" x="112.1" y="112.1" width="67.20000000000002" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="4.3625" x="42.10000000000002" y="42.10000000000002" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="4.3625" x="112.1" y="42.10000000000002" width="67.20000000000002" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="3.125" x="41.400000000000034" y="111.4" width="67.19999999999996" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="3.125" x="111.4" y="111.4" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="4.375" x="41.400000000000034" y="41.400000000000034" width="67.19999999999996" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="4.375" x="111.4" y="41.400000000000034" width="67.19999999999999" height="67.19999999999996" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="0.625" x="181.4" y="251.39999999999998" width="67.20000000000002" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="0.6125" x="182.1" y="252.10000000000002" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="1.875" x="181.4" y="181.4" width="67.20000000000002" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="1.8625" x="182.1" y="182.1" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.625" data-y="1.875" x="251.39999999999998" y="181.4" width="67.20000000000005" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.6125" data-y="1.8625" x="252.10000000000002" y="182.1" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="0.3125" x="251.39999999999998" y="286.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="0.30625" x="251.75" y="286.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="0.9375" x="251.39999999999998" y="251.39999999999998" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="0.93125" x="251.75" y="251.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.3125" data-y="0.9375" x="286.4" y="251.39999999999998" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.30625" data-y="0.93125" x="286.75" y="251.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="0.15625" x="286.4" y="303.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="0.153125" x="286.575" y="304.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="0.46875" x="286.4" y="286.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="0.465625" x="286.575" y="286.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="0.46875" x="303.9" y="286.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="0.465625" x="304.075" y="286.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="0.6125" x="42.10000000000002" y="252.10000000000002" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="0.6125" x="112.1" y="252.10000000000002" width="67.20000000000002" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="1.8625" x="42.10000000000002" y="182.1" width="67.19999999999999" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="1.8625" x="112.1" y="182.1" width="67.20000000000002" height="67.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="0.625" x="41.400000000000034" y="251.39999999999998" width="67.19999999999996" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="0.625" x="111.4" y="251.39999999999998" width="67.19999999999999" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="1.875" x="41.400000000000034" y="181.4" width="67.19999999999996" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="1.875" x="111.4" y="181.4" width="67.19999999999999" height="67.20000000000002" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="-1.8875" x="462.1" y="392.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="-1.8875" x="532.1" y="392.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="-0.6375" x="462.1" y="322.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="-0.6375" x="532.1" y="322.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="-1.875" x="461.4" y="391.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="-1.875" x="531.4" y="391.4" width="67.19999999999993" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="-0.625" x="461.4" y="321.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="-0.625" x="531.4" y="321.4" width="67.19999999999993" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.625" data-y="-1.875" x="321.4" y="391.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.6375" data-y="-1.8875" x="322.1" y="392.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="-1.875" x="391.4" y="391.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="-1.8875" x="392.1" y="392.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="-0.625" x="391.4" y="321.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="-0.6375" x="392.1" y="322.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.3125" data-y="-0.9375" x="321.4" y="356.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.31875" data-y="-0.94375" x="321.75" y="356.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-0.9375" x="356.4" y="356.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-0.94375" x="356.75" y="356.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-0.3125" x="356.4" y="321.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-0.31875" x="356.75" y="321.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-0.46875" x="321.4" y="338.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="-0.471875" x="321.575" y="339.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-0.46875" x="338.9" y="338.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="-0.471875" x="339.075" y="339.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-0.15625" x="338.9" y="321.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="-0.159375" x="339.075" y="321.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="-4.3875" x="462.1" y="532.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="-4.3875" x="532.1" y="532.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.1375" data-y="-3.1375" x="462.1" y="462.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.3875" data-y="-3.1375" x="532.1" y="462.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="-4.375" x="461.4" y="531.4" width="67.20000000000005" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="-4.375" x="531.4" y="531.4" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="3.125" data-y="-3.125" x="461.4" y="461.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="4.375" data-y="-3.125" x="531.4" y="461.4" width="67.19999999999993" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="-4.375" x="391.4" y="531.4" width="67.20000000000005" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="-4.3875" x="392.1" y="532.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.875" data-y="-3.125" x="391.4" y="461.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="1.8875" data-y="-3.1375" x="392.1" y="462.1" width="67.19999999999993" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-3.4375" x="356.4" y="496.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-3.44375" x="356.75" y="496.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.3125" data-y="-2.8125" x="321.4" y="461.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.31875" data-y="-2.81875" x="321.75" y="461.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-2.8125" x="356.4" y="461.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-2.81875" x="356.75" y="461.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-3.59375" x="321.4" y="513.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-3.59375" x="338.9" y="513.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-3.28125" x="321.4" y="496.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-3.28125" x="338.9" y="496.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-4.6875" x="356.4" y="566.4000000000001" width="32.200000000000045" height="32.19999999999982" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-4.69375" x="356.75" y="566.75" width="32.19999999999999" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.9375" data-y="-4.0625" x="356.4" y="531.4" width="32.200000000000045" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.94375" data-y="-4.06875" x="356.75" y="531.75" width="32.19999999999999" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-4.21875" x="321.4" y="548.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-4.21875" x="338.9" y="548.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-3.90625" x="321.4" y="531.4" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-3.90625" x="338.9" y="531.4" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-4.84375" x="321.4" y="583.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.159375" data-y="-4.846875" x="321.575" y="584.075" width="14.699999999999989" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-4.84375" x="338.9" y="583.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.471875" data-y="-4.846875" x="339.075" y="584.075" width="14.699999999999989" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.15625" data-y="-4.53125" x="321.4" y="566.4000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.46875" data-y="-4.53125" x="338.9" y="566.4000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="-1.875" x="181.4" y="391.4" width="67.20000000000002" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="-1.8875" x="182.1" y="392.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.625" data-y="-1.875" x="251.39999999999998" y="391.4" width="67.20000000000005" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.6125" data-y="-1.8875" x="252.10000000000002" y="392.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="-0.625" x="181.4" y="321.4" width="67.20000000000002" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="-0.6375" x="182.1" y="322.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-0.9375" x="251.39999999999998" y="356.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-0.94375" x="251.75" y="356.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.3125" data-y="-0.9375" x="286.4" y="356.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.30625" data-y="-0.94375" x="286.75" y="356.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-0.3125" x="251.39999999999998" y="321.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-0.31875" x="251.75" y="321.75" width="32.19999999999999" height="32.19999999999999" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-0.46875" x="286.4" y="338.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="-0.471875" x="286.575" y="339.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-0.46875" x="303.9" y="338.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="-0.471875" x="304.075" y="339.075" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-0.15625" x="286.4" y="321.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="-0.159375" x="286.575" y="321.575" width="14.699999999999989" height="14.699999999999989" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="-1.8875" x="42.10000000000002" y="392.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="-1.8875" x="112.1" y="392.1" width="67.20000000000002" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="-0.6375" x="42.10000000000002" y="322.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="-0.6375" x="112.1" y="322.1" width="67.20000000000002" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="-1.875" x="41.400000000000034" y="391.4" width="67.19999999999996" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="-1.875" x="111.4" y="391.4" width="67.19999999999999" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="-0.625" x="41.400000000000034" y="321.4" width="67.19999999999996" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="-0.625" x="111.4" y="321.4" width="67.19999999999999" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="-4.375" x="181.4" y="531.4" width="67.20000000000002" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="-4.3875" x="182.1" y="532.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.875" data-y="-3.125" x="181.4" y="461.4" width="67.20000000000002" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-1.8625" data-y="-3.1375" x="182.1" y="462.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-3.4375" x="251.39999999999998" y="496.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-3.44375" x="251.75" y="496.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-2.8125" x="251.39999999999998" y="461.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-2.81875" x="251.75" y="461.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.3125" data-y="-2.8125" x="286.4" y="461.4" width="32.200000000000045" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.30625" data-y="-2.81875" x="286.75" y="461.75" width="32.19999999999999" height="32.200000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-3.59375" x="286.4" y="513.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-3.59375" x="303.9" y="513.9" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-3.28125" x="286.4" y="496.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-3.28125" x="303.9" y="496.4" width="14.700000000000045" height="14.700000000000045" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-4.6875" x="251.39999999999998" y="566.4000000000001" width="32.200000000000045" height="32.19999999999982" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-4.69375" x="251.75" y="566.75" width="32.19999999999999" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.9375" data-y="-4.0625" x="251.39999999999998" y="531.4" width="32.200000000000045" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.93125" data-y="-4.06875" x="251.75" y="531.75" width="32.19999999999999" height="32.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-4.21875" x="286.4" y="548.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-4.21875" x="303.9" y="548.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-3.90625" x="286.4" y="531.4" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-3.90625" x="303.9" y="531.4" width="14.700000000000045" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-4.84375" x="286.4" y="583.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.465625" data-y="-4.846875" x="286.575" y="584.075" width="14.699999999999989" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-4.84375" x="303.9" y="583.9000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.153125" data-y="-4.846875" x="304.075" y="584.075" width="14.699999999999989" height="14.699999999999932" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.46875" data-y="-4.53125" x="286.4" y="566.4000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-0.15625" data-y="-4.53125" x="303.9" y="566.4000000000001" width="14.700000000000045" height="14.699999999999818" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="-4.3875" x="42.10000000000002" y="532.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="-4.3875" x="112.1" y="532.1" width="67.20000000000002" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.3625" data-y="-3.1375" x="42.10000000000002" y="462.1" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.1125" data-y="-3.1375" x="112.1" y="462.1" width="67.20000000000002" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="-4.375" x="41.400000000000034" y="531.4" width="67.19999999999996" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="-4.375" x="111.4" y="531.4" width="67.19999999999999" height="67.19999999999993" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-4.375" data-y="-3.125" x="41.400000000000034" y="461.4" width="67.19999999999996" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="-3.125" data-y="-3.125" x="111.4" y="461.4" width="67.19999999999999" height="67.20000000000005" fill="rgba(200, 200, 200, 0.05)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="0" x="303.9" y="303.9" width="32.200000000000045" height="32.200000000000045" fill="rgba(0, 150, 255, 0.15)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0" data-y="3.90625" x="286.4" y="58.900000000000034" width="67.20000000000005" height="84.69999999999996" fill="rgba(0, 150, 255, 0.15)" stroke="black" stroke-width="0.017857142857142856" />
+  <rect data-type="rect" data-label="" data-x="0.0125" data-y="-3.91875" x="287.1" y="497.1" width="67.19999999999999" height="84.69999999999993" fill="rgba(0, 150, 255, 0.15)" stroke="black" stroke-width="0.017857142857142856" />
   <g id="crosshair" style="display: none">
     <line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5" />
     <line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5" /><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text>

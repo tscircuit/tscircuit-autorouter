@@ -62,6 +62,7 @@ export const simpleRouteJson: SimpleRouteJson = {
       connectedTo: [],
       width: 0.6,
       height: 0.6,
+      netIsAssignable: true,
     },
   ],
   connections: [

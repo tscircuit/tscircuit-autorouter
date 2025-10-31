@@ -34,6 +34,13 @@ export class SingleLayerNodeMergerSolver_OnlyMergeTargets extends BaseSolver {
     this.absorbedNodeIds = new Set()
     const unprocessedNodesWithArea: Array<[CapacityMeshNode, number]> = []
     for (const node of nodes) {
+      // Skip assignable via nodes - pass them through unchanged
+      if ((node as any)._assignedViaObstacle) {
+        this.newNodes.push(node)
+        this.absorbedNodeIds.add(node.capacityMeshNodeId)
+        continue
+      }
+
       // Only process nodes that contain targets
       if (!node._containsTarget) {
         this.newNodes.push(node)
