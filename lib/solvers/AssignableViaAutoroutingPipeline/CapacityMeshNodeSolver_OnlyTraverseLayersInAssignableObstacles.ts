@@ -96,7 +96,9 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
       for (const node of this.finishedNodes) {
         // Check if this node overlaps with this assignable obstacle
-        const nodeOverlaps = this.getXYZOverlappingObstacles(node).some((o) => o === obstacle)
+        const nodeOverlaps = this.getXYZOverlappingObstacles(node).some(
+          (o) => o === obstacle,
+        )
         if (nodeOverlaps) {
           overlappingNodes.push(node)
         }
@@ -114,12 +116,17 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     }
 
     // Remove the nodes
-    this.finishedNodes = this.finishedNodes.filter((node) => !nodesToRemove.has(node))
+    this.finishedNodes = this.finishedNodes.filter(
+      (node) => !nodesToRemove.has(node),
+    )
 
     // Add a single multi-layer node for each assignable obstacle
     for (const obstacle of assignableObstacles) {
       const overlappingNodes = obstacleToNodesMap.get(obstacle) || []
-      const availableZ = Array.from({ length: this.srj.layerCount }, (_, i) => this.srj.layerCount - i - 1)
+      const availableZ = Array.from(
+        { length: this.srj.layerCount },
+        (_, i) => this.srj.layerCount - i - 1,
+      )
 
       // Calculate bounding box that covers all removed nodes
       let minX = obstacle.center.x - obstacle.width / 2
@@ -167,7 +174,10 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
         center: { x: centerX, y: centerY },
         width,
         height,
-        layer: availableZ.length === 1 ? `z${availableZ[0]}` : `z${availableZ.join(",")}`,
+        layer:
+          availableZ.length === 1
+            ? `z${availableZ[0]}`
+            : `z${availableZ.join(",")}`,
         availableZ,
         _depth: 0,
         _containsTarget: containsTarget,
