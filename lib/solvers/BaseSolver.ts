@@ -12,6 +12,7 @@ export class BaseSolver {
   failedSubSolvers?: BaseSolver[]
   timeToSolve?: number
   stats: Record<string, any> = {}
+  zSeparation: number = 0 // Global Z-separation for visualization
 
   /**
    * For cached solvers
@@ -62,7 +63,7 @@ export class BaseSolver {
     this.timeToSolve = endTime - startTime
   }
 
-  visualize(): GraphicsObject {
+  visualize(opts?: { zSeparation?: number }): GraphicsObject {
     return {
       lines: [],
       points: [],

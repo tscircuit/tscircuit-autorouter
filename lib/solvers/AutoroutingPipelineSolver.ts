@@ -55,6 +55,7 @@ interface CapacityMeshSolverOptions {
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
+  zSeparation?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -382,6 +383,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   ) {
     super()
     this.MAX_ITERATIONS = 100e6
+    this.zSeparation = opts.zSeparation ?? 0 // Set zSeparation from options
 
     // If capacityDepth is not provided, calculate it automatically
     if (opts.capacityDepth === undefined) {
@@ -440,6 +442,10 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    // Set zSeparation on the new solver
+    if (this.activeSubSolver) {
+      this.activeSubSolver.zSeparation = this.zSeparation
+    }
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()

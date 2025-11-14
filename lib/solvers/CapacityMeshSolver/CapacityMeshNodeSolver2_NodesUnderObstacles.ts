@@ -16,6 +16,7 @@ import { isPointInRect } from "lib/utils/isPointInRect"
 import { doRectsOverlap } from "lib/utils/doRectsOverlap"
 import { CapacityMeshNodeSolver } from "./CapacityMeshNodeSolver1"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 
 interface CapacityMeshNodeSolverOptions {
   capacityDepth?: number
@@ -321,5 +322,120 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
 
     this.unfinishedNodes.push(...unfinishedNewNodes)
     this.finishedNodes.push(...finishedNewNodes)
+  }
+
+  visualize(): GraphicsObject {
+    const graphics: GraphicsObject = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+      coordinateSystem: "cartesian",
+      title: "Capacity Mesh Visualization (Nodes Under Obstacles)",
+    }
+
+    // Draw outline polygon if provided
+    if (this.outlinePolygon && this.outlinePolygon.length >= 2) {
+      const outlinePoints = this.outlinePolygon.map(
+        (point: { x: number; y: number }) => ({
+          x: point.x,
+          y: point.y,
+        }),
+      )
+
+      outlinePoints.push({ ...outlinePoints[0]! })
+
+      graphics.lines!.push({
+        points: outlinePoints,
+        strokeColor: "rgba(0, 136, 255, 0.95)",
+        label: "outline",
+      })
+
+      for (const point of this.outlinePolygon) {
+        graphics.points!.push({
+          x: point.x,
+          y: point.y,
+          color: "rgba(0, 136, 255, 0.95)",
+        })
+      }
+    }
+
+    // Draw obstacles
+    for (const obstacle of this.srj.obstacles) {
+      graphics.rects!.push({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        fill:
+          obstacle.zLayers?.length === 1 && obstacle.zLayers?.includes(1)
+            ? "rgba(0,0,255,0.3)"
+            : "rgba(255,0,0,0.3)",
+        stroke: "red",
+        label: ["obstacle", `z: ${obstacle.zLayers!.join(",")}`].join("\n"),
+      })
+    }
+
+    // Draw mesh nodes (both finished and unfinished) with Z-separation
+    const allNodes = [...this.finishedNodes, ...this.unfinishedNodes]
+
+    for (const node of allNodes) {
+      const lowestZ = Math.min(...node.availableZ)
+      const isNextToBeProcessed =
+        this.unfinishedNodes.length > 0 &&
+        node === this.unfinishedNodes[this.unfinishedNodes.length - 1]
+
+      // Z-separation offset calculation (SUBTLE but visible)
+      const offsetX = lowestZ * this.zSeparation * 0.01 // Reduced from 0.5
+      const offsetY = -lowestZ * this.zSeparation * 0.01 // Reduced from 0.25
+
+      const originalCenter = { ...node.center }
+      const offsetCenter = {
+        x: node.center.x + offsetX,
+        y: node.center.y + offsetY,
+      }
+
+      const deltaX = offsetCenter.x - originalCenter.x
+      const deltaY = offsetCenter.y - originalCenter.y
+
+      graphics.rects!.push({
+        center: offsetCenter,
+        width: Math.max(node.width - 2, node.width * 0.8),
+        height: Math.max(node.height - 2, node.height * 0.8),
+        fill: node._containsObstacle
+          ? "rgba(255,0,0,0.1)"
+          : ({
+              "0,1": "rgba(0,0,0,0.1)",
+              "0": "rgba(0,200,200, 0.1)",
+              "1": "rgba(0,0,200, 0.1)",
+            }[node.availableZ.join(",")] ?? "rgba(0,200,200,0.1)"),
+        stroke: isNextToBeProcessed ? "rgba(255,165,0,0.5)" : undefined,
+        label: [
+          node.capacityMeshNodeId,
+          `availableZ: ${node.availableZ.join(",")}`,
+          `target? ${node._containsTarget ?? false}`,
+          `obs? ${node._containsObstacle ?? false}`,
+          `${node.width.toFixed(2)}x${node.height.toFixed(2)}`,
+          `lowestZ: ${lowestZ}`,
+          `zSep: ${this.zSeparation}`,
+          `offset: (${deltaX.toFixed(3)}, ${deltaY.toFixed(3)})`,
+        ].join("\n"),
+      })
+    }
+    graphics.rects!.sort((a, b) => a.center.y - b.center.y)
+
+    // Draw connection points (each connection gets a unique color).
+    this.srj.connections.forEach((connection, index) => {
+      const color = COLORS[index % COLORS.length]
+      for (const pt of connection.pointsToConnect) {
+        graphics.points!.push({
+          x: pt.x,
+          y: pt.y,
+          label: `conn-${index} (${pt.layer})`,
+          color,
+        })
+      }
+    })
+
+    return graphics
   }
 }

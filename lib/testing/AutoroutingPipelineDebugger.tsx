@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import {
   InteractiveGraphics,
   InteractiveGraphicsCanvas,
@@ -29,6 +29,7 @@ import { AutoroutingPipelineMenuBar } from "./AutoroutingPipelineMenuBar"
 interface CapacityMeshPipelineDebuggerProps {
   srj: SimpleRouteJson
   animationSpeed?: number
+  zSeparation?: number
   createSolver?: (
     srj: SimpleRouteJson,
     opts: { cacheProvider?: CacheProvider | null },
@@ -54,6 +55,7 @@ const getGlobalCacheProviderFromName = (
 export const AutoroutingPipelineDebugger = ({
   srj,
   animationSpeed = 1,
+  zSeparation: zSeparationProp,
   createSolver: createSolverProp,
 }: CapacityMeshPipelineDebuggerProps) => {
   const [cacheProviderName, setCacheProviderNameState] =
@@ -74,13 +76,19 @@ export const AutoroutingPipelineDebugger = ({
 
   const createNewSolver = (
     opts: { cacheProvider?: CacheProvider | null } = {},
-  ) =>
-    createSolverProp
+  ) => {
+    console.log("🔧 [AutoroutingPipelineDebugger] Creating new solver...")
+    const newSolver = createSolverProp
       ? createSolverProp(srj, { cacheProvider, ...opts })
       : new AutoroutingPipelineSolver(srj, {
           cacheProvider,
           ...opts,
         })
+    console.log(
+      "🔧 [AutoroutingPipelineDebugger] Solver created, zSeparation will be set in useEffect",
+    )
+    return newSolver
+  }
 
   const [solver, setSolver] = useState<CapacityMeshSolver>(() =>
     createNewSolver(),
@@ -104,6 +112,7 @@ export const AutoroutingPipelineDebugger = ({
   const [drcErrorCount, setDrcErrorCount] = useState<number>(0)
   const [showDeepestVisualization, setShowDeepestVisualization] =
     useState(false)
+  const [zSeparation, setZSeparation] = useState<number>(zSeparationProp ?? 0.5)
   const [isBreakpointDialogOpen, setIsBreakpointDialogOpen] = useState(false)
   const [breakpointNodeId, setBreakpointNodeId] = useState<string>(
     () => window.localStorage.getItem("lastBreakpointNodeId") || "",
@@ -120,6 +129,44 @@ export const AutoroutingPipelineDebugger = ({
     setDrcErrorCount(0)
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on reset
   }
+
+  // Force update nodeSolver visualization
+  const forceUpdateNodeSolver = useCallback(() => {
+    if (solver?.nodeSolver) {
+      // Trigger a dummy update to force re-visualization
+      solver.nodeSolver.zSeparation = solver.nodeSolver.zSeparation + 0.0001
+      solver.nodeSolver.zSeparation = zSeparation // Reset to correct value
+    }
+  }, [solver, zSeparation])
+
+  // Update zSeparation on solver when it changes
+  useEffect(() => {
+    if (solver) {
+      solver.zSeparation = zSeparation
+
+      // Explicitly update nodeSolver zSeparation
+      if (solver.nodeSolver) {
+        solver.nodeSolver.zSeparation = zSeparation
+        forceUpdateNodeSolver() // Force nodeSolver to re-visualize
+      }
+
+      setForceUpdate((prev) => prev + 1) // Force re-render to update visualization
+    }
+  }, [zSeparation, solver, forceUpdateNodeSolver])
+
+  // Set initial zSeparation when solver is created
+  useEffect(() => {
+    if (solver && solver.zSeparation === 0) {
+      solver.zSeparation = zSeparation
+
+      // Explicitly update nodeSolver zSeparation
+      if (solver.nodeSolver) {
+        solver.nodeSolver.zSeparation = zSeparation
+      }
+
+      setForceUpdate((prev) => prev + 1)
+    }
+  }, [solver, zSeparation])
 
   // Animation effect
   useEffect(() => {
@@ -470,6 +517,87 @@ export const AutoroutingPipelineDebugger = ({
     deepestActiveSubSolver = deepestActiveSubSolver.activeSubSolver
   }
 
+  // Apply Z-separation to visualization - ENHANCED for better visibility
+  const applyZSeparation = (graphics: GraphicsObject): GraphicsObject => {
+    // For solvers that don't support zSeparation parameter, we can apply it here as post-processing
+    if (!graphics || zSeparation === 0) {
+      return graphics
+    }
+
+    let processedRects = 0
+    let offsetAppliedRects = 0
+
+    // ENHANCED: Make separation more visible - increase multiplier from 0.1/0.05 to 0.5/0.25
+    const separatedGraphics: GraphicsObject = {
+      ...graphics,
+      rects:
+        graphics.rects?.map((rect) => {
+          // Extract layer information from rect properties
+          const layerMatch = rect.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          // ENHANCED: Use larger multipliers for better visibility
+          const newCenter = {
+            x: rect.center.x + layerIndex * zSeparation * 0.5, // Was 0.1
+            y: rect.center.y - layerIndex * zSeparation * 0.25, // Was 0.05
+          }
+
+          if (layerIndex > 0) {
+            offsetAppliedRects++
+          }
+
+          processedRects++
+
+          return {
+            ...rect,
+            center: newCenter,
+          }
+        }) || [],
+      lines:
+        graphics.lines?.map((line) => ({
+          ...line,
+          points:
+            line.points?.map((point) => {
+              const layerMatch = line.layer?.match(/z(\d+)/)
+              const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+              // ENHANCED: Use larger multipliers for lines too
+              return {
+                x: point.x + layerIndex * zSeparation * 0.5, // Was 0.1
+                y: point.y - layerIndex * zSeparation * 0.25, // Was 0.05
+              }
+            }) || [],
+        })) || [],
+      points:
+        graphics.points?.map((point) => {
+          const layerMatch = point.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          // ENHANCED: Use larger multipliers for points too
+          return {
+            x: point.x + layerIndex * zSeparation * 0.5, // Was 0.1
+            y: point.y - layerIndex * zSeparation * 0.25, // Was 0.05
+          }
+        }) || [],
+      circles:
+        graphics.circles?.map((circle) => {
+          const layerMatch = circle.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          // ENHANCED: Use larger multipliers for circles too
+          return {
+            ...circle,
+            center: {
+              x: circle.center.x + layerIndex * zSeparation * 0.5, // Was 0.1
+              y: circle.center.y - layerIndex * zSeparation * 0.25, // Was 0.05
+            },
+          }
+        }) || [],
+    }
+
+    return separatedGraphics
+  }
+
   // Safely get visualization
   const visualization = useMemo(() => {
     try {
@@ -483,14 +611,20 @@ export const AutoroutingPipelineDebugger = ({
         baseVisualization = solver?.preview() || { points: [], lines: [] }
       } else {
         baseVisualization = solver?.visualize() || { points: [], lines: [] }
+        baseVisualization = solver?.visualize() || { points: [], lines: [] }
       }
 
       // If we have DRC errors, combine them with the base visualization
       if (drcErrors) {
-        return addVisualizationToLastStep(baseVisualization, drcErrors)
+        baseVisualization = addVisualizationToLastStep(
+          baseVisualization,
+          drcErrors,
+        )
       }
 
-      return baseVisualization
+      const finalVisualization = applyZSeparation(baseVisualization)
+
+      return finalVisualization
     } catch (error) {
       console.error("Visualization error:", error)
       return { points: [], lines: [] }
@@ -502,6 +636,7 @@ export const AutoroutingPipelineDebugger = ({
     drcErrors,
     showDeepestVisualization,
     deepestActiveSubSolver,
+    zSeparation,
   ])
 
   return (
@@ -638,6 +773,41 @@ export const AutoroutingPipelineDebugger = ({
           <label htmlFor="showDeepestVisualization" className="text-sm">
             Deep Viz
           </label>
+        </div>
+        <div className="ml-4 flex items-center gap-2">
+          <label htmlFor="zSeparation" className="text-sm">
+            Z Separation:
+          </label>
+          <input
+            type="range"
+            id="zSeparation"
+            min="0"
+            max="5" // Increased max for better visibility
+            step="0.1"
+            value={zSeparation}
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value)
+              console.log(
+                "🎚️ [AutoroutingPipelineDebugger] Z-separation slider changed:",
+                { oldValue: zSeparation, newValue },
+              )
+              setZSeparation(newValue)
+              console.log(
+                "🎚️ [AutoroutingPipelineDebugger] Z-separation state updated to:",
+                newValue,
+              )
+            }}
+            className="w-32" // Wider slider for better control
+          />
+          <span
+            className="text-sm tabular-nums font-bold"
+            style={{ color: zSeparation > 0 ? "#10b981" : "#6b7280" }}
+          >
+            {zSeparation.toFixed(1)}mm
+          </span>
+          {zSeparation > 0 && (
+            <span className="text-xs text-green-600">✨ Active</span>
+          )}
         </div>
       </div>
 

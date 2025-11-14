@@ -5,6 +5,7 @@ import {
 } from "graphics-debug/react"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import type { GraphicsObject } from "graphics-debug"
 
 interface GenericSolverDebuggerProps {
   createSolver: () => BaseSolver
@@ -12,6 +13,8 @@ interface GenericSolverDebuggerProps {
   onSolverStarted?: (solver: BaseSolver) => void
   onSolverCompleted?: (solver: BaseSolver) => void
   showDeepestVisualizationInitial?: boolean
+  showZSeparationControl?: boolean
+  zSeparationInitial?: number
 }
 
 export const GenericSolverDebugger = ({
@@ -20,6 +23,8 @@ export const GenericSolverDebugger = ({
   onSolverStarted,
   onSolverCompleted,
   showDeepestVisualizationInitial = false,
+  showZSeparationControl = false,
+  zSeparationInitial = 0.5,
 }: GenericSolverDebuggerProps) => {
   const [mainSolver, setMainSolver] = useState<BaseSolver>(() => createSolver())
   const [previewMode, setPreviewMode] = useState(false)
@@ -45,6 +50,7 @@ export const GenericSolverDebugger = ({
     window.localStorage.getItem("lastSelectedStatKey") || null,
   )
   const [showStatSelectionDialog, setShowStatSelectionDialog] = useState(false)
+  const [zSeparation, setZSeparation] = useState<number>(zSeparationInitial)
 
   const selectedSolver = useMemo(() => {
     if (selectedSolverKey === "main") {
@@ -74,6 +80,86 @@ export const GenericSolverDebugger = ({
     setMainSolver(createSolver())
     setSelectedSolverKey("main")
     setSelectedStatKey(null)
+  }
+
+  // Update zSeparation on solver when it changes
+  useEffect(() => {
+    if (mainSolver) {
+      mainSolver.zSeparation = zSeparation
+
+      // Update nodeSolver zSeparation if it exists (for nodeSolver-specific debugging)
+      // Check if the solver has a nodeSolver property (like CapacityMeshSolver)
+      if ("nodeSolver" in mainSolver && mainSolver.nodeSolver) {
+        ;(mainSolver.nodeSolver as any).zSeparation = zSeparation
+      }
+
+      // Force re-render to update visualization
+      setForceUpdate((prev) => prev + 1)
+    }
+  }, [zSeparation, mainSolver])
+
+  // Apply Z-separation to visualization - similar to AutoroutingPipelineDebugger
+  const applyZSeparation = (graphics: GraphicsObject): GraphicsObject => {
+    if (!graphics || zSeparation === 0) {
+      return graphics
+    }
+
+    const separatedGraphics: GraphicsObject = {
+      ...graphics,
+      rects:
+        graphics.rects?.map((rect) => {
+          const layerMatch = rect.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          return {
+            ...rect,
+            center: {
+              x: rect.center.x + layerIndex * zSeparation * 0.5,
+              y: rect.center.y - layerIndex * zSeparation * 0.25,
+            },
+          }
+        }) || [],
+      lines:
+        graphics.lines?.map((line) => ({
+          ...line,
+          points:
+            line.points?.map((point) => {
+              const layerMatch = line.layer?.match(/z(\d+)/)
+              const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+              return {
+                x: point.x + layerIndex * zSeparation * 0.5,
+                y: point.y - layerIndex * zSeparation * 0.25,
+              }
+            }) || [],
+        })) || [],
+      points:
+        graphics.points?.map((point) => {
+          const layerMatch = point.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          return {
+            ...point,
+            x: point.x + layerIndex * zSeparation * 0.5,
+            y: point.y - layerIndex * zSeparation * 0.25,
+          }
+        }) || [],
+      circles:
+        graphics.circles?.map((circle) => {
+          const layerMatch = circle.layer?.match(/z(\d+)/)
+          const layerIndex = layerMatch ? parseInt(layerMatch[1]) : 0
+
+          return {
+            ...circle,
+            center: {
+              x: circle.center.x + layerIndex * zSeparation * 0.5,
+              y: circle.center.y - layerIndex * zSeparation * 0.25,
+            },
+          }
+        }) || [],
+    }
+
+    return separatedGraphics
   }
 
   const stats = useRef({
@@ -316,16 +402,30 @@ export const GenericSolverDebugger = ({
   // Safely get visualization
   const visualization = useMemo(() => {
     try {
+      let baseVisualization: GraphicsObject
+
       if (showDeepestVisualization && deepestActiveSubSolver) {
-        return previewMode
+        baseVisualization = previewMode
           ? deepestActiveSubSolver.preview() || { points: [], lines: [] }
           : deepestActiveSubSolver.visualize() || { points: [], lines: [] }
+      } else if (previewMode) {
+        baseVisualization = selectedSolver?.preview() || {
+          points: [],
+          lines: [],
+        }
+      } else {
+        baseVisualization = selectedSolver?.visualize() || {
+          points: [],
+          lines: [],
+        }
       }
 
-      if (previewMode) {
-        return selectedSolver?.preview() || { points: [], lines: [] }
+      // Apply Z separation if enabled
+      if (showZSeparationControl) {
+        return applyZSeparation(baseVisualization)
       }
-      return selectedSolver?.visualize() || { points: [], lines: [] }
+
+      return baseVisualization
     } catch (error) {
       console.error("Visualization error:", error)
       return { points: [], lines: [] }
@@ -336,6 +436,8 @@ export const GenericSolverDebugger = ({
     previewMode,
     showDeepestVisualization,
     deepestActiveSubSolver,
+    zSeparation,
+    showZSeparationControl,
   ])
 
   // Generate solver options for dropdown
@@ -600,6 +702,47 @@ export const GenericSolverDebugger = ({
       )}
 
       <div className="border rounded-md p-4 mb-4">
+        {showZSeparationControl && (
+          <div className="mb-3 pb-2 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="zSeparation"
+                className="text-sm font-medium text-gray-700"
+              >
+                Z Separation:
+              </label>
+              <input
+                type="range"
+                id="zSeparation"
+                min="0"
+                max="5"
+                step="0.1"
+                value={zSeparation}
+                onChange={(e) => {
+                  const newValue = parseFloat(e.target.value)
+                  setZSeparation(newValue)
+                }}
+                className="flex-1 max-w-xs h-2"
+                title={`Z Separation: ${zSeparation.toFixed(1)}mm`}
+              />
+              <span
+                className="text-sm font-bold tabular-nums min-w-[3rem] text-right"
+                style={{ color: zSeparation > 0 ? "#10b981" : "#6b7280" }}
+                title={`Current Z separation: ${zSeparation.toFixed(1)}mm`}
+              >
+                {zSeparation.toFixed(1)}mm
+              </span>
+              {zSeparation > 0 && (
+                <span
+                  className="text-sm text-green-600"
+                  title="Z separation active"
+                >
+                  ✨
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         {objectSelectionEnabled || renderer === "vector" ? (
           <InteractiveGraphics graphics={visualization} />
         ) : (
