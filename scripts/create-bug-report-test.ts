@@ -113,7 +113,6 @@ test("${jsonFileName}", () => {
 })
 `
 
-
 fs.writeFileSync(testFilePath, testTemplate)
 console.log(`Snapshot test created at ${testFilePath}`)
 
