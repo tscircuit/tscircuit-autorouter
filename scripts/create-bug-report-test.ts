@@ -86,12 +86,33 @@ try {
   process.exit(1)
 }
 
-const fixtureTemplate = `// @ts-nocheck\nimport { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"\nimport bugReportJson from "./${jsonFileName}"\n\nexport default () => {\n  return <AutoroutingPipelineDebugger srj={bugReportJson.simple_route_json} />\n}\n`
+const fixtureTemplate = `
+// @ts-nocheck
+import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger";
+import bugReportJson from "./${jsonFileName}";
+export default () => {
+  return <AutoroutingPipelineDebugger srj={bugReportJson.simple_route_json} />;
+};
+`
 
 fs.writeFileSync(fixtureFilePath, fixtureTemplate)
 console.log(`Fixture file created at ${fixtureFilePath}`)
 
-const testTemplate = `import { beforeAll, describe, expect, test } from "bun:test"\nimport { CapacityMeshSolver } from "lib"\nimport { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"\nimport { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"\nimport { convertCircuitJsonToPcbSvg } from "circuit-to-svg"\nimport bugReport from "../../examples/bug-reports/${dirName}/${jsonFileName}" assert { type: "json" }\nimport type { SimpleRouteJson } from "lib/types"\n\nconst srj = bugReport.simple_route_json as SimpleRouteJson\n\ndescribe("bug report ${dirName}", () => {\n  let solver: CapacityMeshSolver\n  let circuitJson: ReturnType<typeof convertToCircuitJson>\n  let pcbSvg: string\n\n  beforeAll(() => {\n    solver = new CapacityMeshSolver(srj)\n    solver.solve()\n\n    if (solver.failed || !solver.solved) {\n      throw new Error(\`Solver failed: \${solver.error ?? "unknown"}\`)\n    }\n\n    const srjWithPointPairs = solver.srjWithPointPairs\n    if (!srjWithPointPairs) {\n      throw new Error("Solver did not produce point pairs SRJ")\n    }\n\n    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()\n\n    circuitJson = convertToCircuitJson(\n      srjWithPointPairs,\n      simplifiedTraces,\n      srj.minTraceWidth,\n    )\n\n    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)\n  })\n\n  test("matches expected PCB snapshot", () => {\n    expect(pcbSvg).toMatchSvgSnapshot(import.meta.path)\n  })\n\n  test("produces routes without DRC violations", () => {\n    const errors = checkEachPcbTraceNonOverlapping(circuitJson)\n    expect(errors).toHaveLength(0)\n  })\n})\n`
+const testTemplate = `
+import bugReport from "../../examples/bug-reports/${dirName}/${jsonFileName}" assert { type: "json" }
+import { expect, test } from "bun:test"
+import { AutoroutingPipelineSolver } from "lib"
+import { SimpleRouteJson } from "lib/types"
+
+const srj = bugReport.simple_route_json as SimpleRouteJson
+
+test("${jsonFileName}", () => {
+  const solver = new AutoroutingPipelineSolver(srj)
+  solver.solve()
+  expect(solver.visualize()).toMatchSnapshot("${jsonFileName}")
+})
+`
+
 
 fs.writeFileSync(testFilePath, testTemplate)
 console.log(`Snapshot test created at ${testFilePath}`)
