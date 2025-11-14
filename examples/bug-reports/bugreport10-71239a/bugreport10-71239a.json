@@ -345,9 +345,7 @@
           "y": 3.8100000000000596
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_0",
           "connectivity_net79",
@@ -364,9 +362,7 @@
           "y": 2.5400000000000778
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_1",
           "connectivity_net80",
@@ -383,9 +379,7 @@
           "y": 1.270000000000096
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_2",
           "connectivity_net81",
@@ -402,9 +396,7 @@
           "y": 5.08676887303992e-16
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_3",
           "connectivity_net82",
@@ -421,9 +413,7 @@
           "y": -1.2699999999999814
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_4",
           "connectivity_net83",
@@ -440,9 +430,7 @@
           "y": -2.539999999999963
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_5",
           "connectivity_net84",
@@ -459,9 +447,7 @@
           "y": -3.809999999999945
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_6",
           "connectivity_net85",
@@ -478,9 +464,7 @@
           "y": 3.8100000000000587
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_7",
           "connectivity_net3",
@@ -503,9 +487,7 @@
           "y": 2.540000000000077
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_8",
           "connectivity_net91",
@@ -522,9 +504,7 @@
           "y": 1.270000000000095
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_9",
           "connectivity_net90",
@@ -541,9 +521,7 @@
           "y": -5.086768873040129e-16
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_10",
           "connectivity_net89",
@@ -560,9 +538,7 @@
           "y": -1.2699999999999823
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_11",
           "connectivity_net88",
@@ -579,9 +555,7 @@
           "y": -2.539999999999964
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_12",
           "connectivity_net87",
@@ -598,9 +572,7 @@
           "y": -3.809999999999946
         },
         "height": 0.5739892,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_13",
           "connectivity_net86",
@@ -617,9 +589,7 @@
           "y": 4.01
         },
         "height": 0.54,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_14",
           "connectivity_net3",
@@ -642,9 +612,7 @@
           "y": 2.9899999999999993
         },
         "height": 0.54,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_15",
           "connectivity_net92",
@@ -661,12 +629,7 @@
           "y": -4
         },
         "height": 1.6,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_0",
           "connectivity_net65",
@@ -683,12 +646,7 @@
           "y": 4
         },
         "height": 1.6,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_1",
           "connectivity_net66",
@@ -705,12 +663,7 @@
           "y": 4
         },
         "height": 1.6,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_2",
           "connectivity_net67",
@@ -727,12 +680,7 @@
           "y": -4
         },
         "height": 1.6,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_3",
           "connectivity_net68",
@@ -749,12 +697,7 @@
           "y": -2
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_4",
           "connectivity_net69",
@@ -771,12 +714,7 @@
           "y": 0
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_5",
           "connectivity_net70",
@@ -793,12 +731,7 @@
           "y": 2
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_6",
           "connectivity_net71",
@@ -815,12 +748,7 @@
           "y": 2
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_7",
           "connectivity_net72",
@@ -837,12 +765,7 @@
           "y": 0
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_8",
           "connectivity_net73",
@@ -859,12 +782,7 @@
           "y": -2
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_9",
           "connectivity_net74",
@@ -881,12 +799,7 @@
           "y": 6
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_10",
           "connectivity_net75",
@@ -903,12 +816,7 @@
           "y": 6
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_11",
           "connectivity_net76",
@@ -925,12 +833,7 @@
           "y": -6
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_12",
           "connectivity_net77",
@@ -947,12 +850,7 @@
           "y": -6
         },
         "height": 1.3,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_13",
           "connectivity_net78",
