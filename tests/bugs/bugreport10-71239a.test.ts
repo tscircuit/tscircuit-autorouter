@@ -8,5 +8,5 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("solve even when we have gaps between collision nodes and straw nodes", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(solver.visualize()).toMatchSnapshot()
+  expect(solver.visualize()).toMatchSnapshot(`bugreport10-71239a`)
 })
