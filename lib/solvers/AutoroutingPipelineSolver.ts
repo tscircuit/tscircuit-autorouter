@@ -35,6 +35,7 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 import { UnravelMultiSectionSolver } from "./UnravelSolver/UnravelMultiSectionSolver"
 import { CapacityPathingMultiSectionSolver } from "./CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
 import { StrawSolver } from "./StrawSolver/StrawSolver"
+import { CollisionBoxExpander } from "./CollisionBoxExpander/CollisionBoxExpander"
 import { SingleLayerNodeMergerSolver } from "./SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { CapacityNodeTargetMerger2 } from "./CapacityNodeTargetMerger/CapacityNodeTargetMerger2"
 import { SingleSimplifiedPathSolver } from "./SimplifiedPathSolver/SingleSimplifiedPathSolver"
@@ -104,6 +105,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
+  collisionBoxExpander?: CollisionBoxExpander
   deadEndSolver?: DeadEndSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
   uselessViaRemovalSolver2?: UselessViaRemovalSolver
@@ -181,6 +183,16 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.strawSolver?.getResultNodes()!
+        },
+      },
+    ),
+    definePipelineStep(
+      "collisionBoxExpander",
+      CollisionBoxExpander,
+      (cms) => [cms.capacityNodes!],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.collisionBoxExpander?.getAllNodes()!
         },
       },
     ),
@@ -470,6 +482,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
+    const collisionBoxExpanderViz = this.collisionBoxExpander?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
     const initialPathingViz = this.initialPathingSolver?.visualize()
@@ -553,6 +566,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       nodeTargetMergerViz,
       singleLayerNodeMergerViz,
       strawSolverViz,
+      collisionBoxExpanderViz,
       edgeViz,
       deadEndViz,
       initialPathingViz,
@@ -619,6 +633,10 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     }
 
     // This output is good as-is
+    if (this.collisionBoxExpander) {
+      return this.collisionBoxExpander?.visualize()
+    }
+
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver?.visualize()
     }

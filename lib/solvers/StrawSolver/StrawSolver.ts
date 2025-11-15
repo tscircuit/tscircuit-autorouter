@@ -204,9 +204,10 @@ export class StrawSolver extends BaseSolver {
       return
     }
 
-    // Skip nodes that are too small to subdivide
+    // Mark nodes that are too small to subdivide as ignorable (don't delete them)
     if (rootNode.width < this.strawSize && rootNode.height < this.strawSize) {
-      this.skippedNodes.push(rootNode)
+      rootNode._isIgnorable = true
+      this.strawNodes.push(rootNode) // Keep the node, just mark it
       return
     }
 
@@ -218,58 +219,130 @@ export class StrawSolver extends BaseSolver {
 
     // Create straws for this node
     const strawNodes = this.createStrawsForNode(rootNode)
-    this.strawNodes.push(...strawNodes)
+    if (strawNodes.length === 0) {
+      rootNode._isIgnorable = true
+      this.skippedNodes.push(rootNode)
+    } else {
+      this.strawNodes.push(...strawNodes)
+    }
   }
 
   visualize(): GraphicsObject {
+    const ignorableCount = this.strawNodes.filter(
+      (node) => node._isIgnorable,
+    ).length
+    const totalStrawCount = this.strawNodes.length
+
     const graphics: GraphicsObject = {
       rects: [],
       lines: [],
       points: [],
       circles: [],
-      title: "Straw Solver",
+      title: `Straw Solver${ignorableCount > 0 ? ` - ${ignorableCount} Ignorable Nodes` : ""}`,
     }
 
-    // Draw unprocessed nodes
+    // Add summary statistics if there are ignorable nodes
+    if (ignorableCount > 0) {
+      graphics.points!.push({
+        x: 0,
+        y: 0,
+        label: `Ignorable Nodes: ${ignorableCount}/${totalStrawCount} (${((ignorableCount / totalStrawCount) * 100).toFixed(1)}%)`,
+        color: "rgba(255, 200, 0, 1)",
+        layer: "info",
+      })
+    }
+
+    // Draw unprocessed nodes with special highlighting for targets
     for (const node of this.unprocessedNodes) {
+      let fillColor = "rgba(200, 200, 200, 0.5)"
+      let strokeColor = "rgba(0, 0, 0, 0.5)"
+      let label = `${node.capacityMeshNodeId}\nUnprocessed\n${node.width}x${node.height}`
+
+      if (node._containsTarget) {
+        fillColor = "rgba(100, 255, 100, 0.6)" // Green for targets
+        strokeColor = "rgba(0, 200, 0, 0.8)"
+        label = `${node.capacityMeshNodeId}\nTARGET\n${node.width}x${node.height}`
+      }
+
       graphics.rects!.push({
         center: node.center,
         width: node.width,
         height: node.height,
-        fill: "rgba(200, 200, 200, 0.5)",
-        stroke: "rgba(0, 0, 0, 0.5)",
-        label: `${node.capacityMeshNodeId}\nUnprocessed\n${node.width}x${node.height}`,
+        fill: fillColor,
+        stroke: strokeColor,
+        label: label,
       })
     }
 
-    // Draw straw nodes with different colors based on layer
+    // Draw straw nodes with different colors based on layer and ignorable status
     for (const node of this.strawNodes) {
-      const color =
-        node.availableZ[0] === 0
-          ? "rgba(0, 150, 255, 0.5)"
-          : "rgba(255, 100, 0, 0.5)"
+      let color: string
+      let strokeColor: string
+      let strokeWidthNum: number
+
+      if (node._isIgnorable) {
+        // Highlight ignorable nodes with special styling
+        color =
+          node.availableZ[0] === 0
+            ? "rgba(255, 200, 0, 0.6)" // Yellow for layer 0 ignorable
+            : "rgba(255, 150, 50, 0.6)" // Orange for other layers
+        strokeColor = "rgba(255, 100, 0, 0.8)"
+        strokeWidthNum = 2 // Thicker border for ignorable nodes
+      } else {
+        // Normal styling for non-ignorable nodes
+        color =
+          node.availableZ[0] === 0
+            ? "rgba(0, 150, 255, 0.5)"
+            : "rgba(255, 100, 0, 0.5)"
+        strokeColor = "rgba(0, 0, 0, 0.5)"
+        strokeWidthNum = 1
+      }
 
       graphics.rects!.push({
         center: node.center,
         width: node.width,
         height: node.height,
         fill: color,
-        stroke: "rgba(0, 0, 0, 0.5)",
-        label: `${node.capacityMeshNodeId}\nLayer: ${node.availableZ[0]}\n${node.width}x${node.height}`,
+        stroke: strokeColor,
+        label: `${node.capacityMeshNodeId}\nLayer: ${node.availableZ[0]}${node._isIgnorable ? "\nIGNORABLE" : ""}\n${node.width}x${node.height}`,
         layer: `z${node.availableZ.join(",")}`,
       })
+
+      // Add a small indicator circle for ignorable nodes
+      if (node._isIgnorable) {
+        graphics.circles!.push({
+          center: {
+            x: node.center.x + node.width / 2 - 0.1,
+            y: node.center.y + node.height / 2 - 0.1,
+          },
+          radius: 0.05,
+          fill: "rgba(255, 0, 0, 1)",
+          layer: `z${node.availableZ.join(",")}`,
+          label: "!",
+        })
+      }
     }
 
-    // Draw multi-layer nodes
+    // Draw multi-layer nodes with special highlighting for targets
     for (const node of this.multiLayerNodes) {
+      let fillColor = "rgba(100, 255, 100, 0.5)"
+      let strokeColor = "rgba(0, 0, 0, 0.5)"
+      let label = `${node.capacityMeshNodeId}\nLayers: ${node.availableZ.join(",")}\n${node.width}x${node.height}`
+
+      if (node._containsTarget) {
+        fillColor = "rgba(50, 255, 50, 0.7)" // Brighter green for targets
+        strokeColor = "rgba(0, 150, 0, 0.8)"
+        label = `${node.capacityMeshNodeId}\nTARGET\nLayers: ${node.availableZ.join(",")}\n${node.width}x${node.height}`
+      }
+
       graphics.rects!.push({
         center: node.center,
         width: node.width * 0.9,
         height: node.height * 0.9,
-        fill: "rgba(100, 255, 100, 0.5)",
-        stroke: "rgba(0, 0, 0, 0.5)",
+        fill: fillColor,
+        stroke: strokeColor,
         layer: `z${node.availableZ.join(",")}`,
-        label: `${node.capacityMeshNodeId}\nLayers: ${node.availableZ.join(",")}\n${node.width}x${node.height}`,
+        label: label,
       })
     }
 
