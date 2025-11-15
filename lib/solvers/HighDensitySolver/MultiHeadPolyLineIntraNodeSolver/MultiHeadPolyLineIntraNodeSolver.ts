@@ -1128,14 +1128,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphicsObject: Required<GraphicsObject> = {
-      points: [],
-      lines: [],
-      rects: [],
-      circles: [],
-      coordinateSystem: "cartesian",
-      title: "MultiHeadPolyLineIntraNodeSolver Visualization",
-    }
+    const graphicsObject: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        points: [],
+        lines: [],
+        rects: [],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "MultiHeadPolyLineIntraNodeSolver Visualization",
+      }
 
     // Draw node bounds
     graphicsObject.lines.push({
