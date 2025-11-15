@@ -219,6 +219,7 @@ export class StrawSolver extends BaseSolver {
     // Create straws for this node
     const strawNodes = this.createStrawsForNode(rootNode)
     this.strawNodes.push(...strawNodes)
+    if (strawNodes.length === 0) this.strawNodes.push(rootNode) // Keep the original node as well
   }
 
   visualize(): GraphicsObject {
