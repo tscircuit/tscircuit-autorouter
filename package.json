@@ -39,7 +39,7 @@
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "flatbush": "^4.4.0",
-    "graphics-debug": "^0.0.44",
+    "graphics-debug": "^0.0.67",
     "looks-same": "9",
     "rbush": "^4.0.1",
     "react": "18",
