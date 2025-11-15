@@ -3,6 +3,7 @@ export type TraceId = string
 export interface SimpleRouteJson {
   layerCount: number
   minTraceWidth: number
+  minViaDiameter?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
