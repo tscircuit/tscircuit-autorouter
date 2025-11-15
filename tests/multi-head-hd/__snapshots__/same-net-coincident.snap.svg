@@ -1,108 +1,44 @@
-<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <circle data-type="point" data-label="A (Port z=0)" data-x="4" data-y="4" cx="40" cy="600" r="3" fill="hsl(90, 100%, 50%)" />
-  </g>
-  <g>
-    <circle data-type="point" data-label="A (Port z=0)" data-x="6" data-y="4" cx="600" cy="600" r="3" fill="hsl(90, 100%, 50%)" />
-  </g>
-  <g>
-    <circle data-type="point" data-label="B (Port z=0)" data-x="4" data-y="4" cx="40" cy="600" r="3" fill="hsl(270, 100%, 50%)" />
-  </g>
-  <g>
-    <circle data-type="point" data-label="B (Port z=0)" data-x="6" data-y="4" cx="600" cy="600" r="3" fill="hsl(270, 100%, 50%)" />
-  </g>
-  <polyline data-points="4,4 6,4 6,6 4,6 4,4" data-type="line" points="40,600 600,600 600,40 40,40 40,600" fill="none" stroke="gray" stroke-width="1" />
-  <polyline data-points="4,4 4.661245716374063,4.675670461592055" data-type="line" points="40,600 225.14880058473773,410.81227075422476" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="4.661245716374063,4.675670461592055 5,5" data-type="line" points="225.14880058473773,410.81227075422476 320,320" fill="none" stroke="rgba(128,255,0,0.5)" stroke-width="42" stroke-dasharray="0.15 0.15" />
-  <polyline data-points="5,5 5.337668624195841,5.3375479701487265" data-type="line" points="320,320 414.5472147748353,225.48656835835664" fill="none" stroke="rgba(128,255,0,0.5)" stroke-width="42" stroke-dasharray="0.15 0.15" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 6,4" data-type="line" points="414.5472147748353,225.48656835835664 600,600" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="4.661245716374063,4.675670461592055 4.642260911000123,4.790624049211355" data-type="line" points="225.14880058473773,410.81227075422476 219.83305508003446,378.62526622082055" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.661245716374063,4.675670461592055 4.632187913061935,4.7314434818067825" data-type="line" points="225.14880058473773,410.81227075422476 217.0126156573417,395.1958250941009" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.661245716374063,4.675670461592055 4.6541865838629155,4.681310765178508" data-type="line" points="225.14880058473773,410.81227075422476 223.1722434816163,409.23298575001786" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.661245716374063,4.675670461592055 4.680254466954773,4.751705463914895" data-type="line" points="225.14880058473773,410.81227075422476 230.4712507473364,389.5224701038294" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.661245716374063,4.675670461592055 4.588919701138498,4.603344446356489" data-type="line" points="225.14880058473773,410.81227075422476 204.89751631877948,431.063555020183" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 5.337951670463659,5.337933751762414" data-type="line" points="414.5472147748353,225.48656835835664 414.6264677298245,225.37854950652422" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 5.338894410808959,5.339327317013637" data-type="line" points="414.5472147748353,225.48656835835664 414.8904350265086,224.98835123618164" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 5.3507288143255805,5.345835794773794" data-type="line" points="414.5472147748353,225.48656835835664 418.20406801116246,223.16597746333787" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 5.33747940319976,5.339061738117373" data-type="line" points="414.5472147748353,225.48656835835664 414.4942328959328,225.06271332713573" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.337668624195841,5.3375479701487265 5.409994639431406,5.409873985384292" data-type="line" points="414.5472147748353,225.48656835835664 434.79849904079356,205.2352840923984" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4,4 4.501666592609405,4.125" data-type="line" points="40,600 180.46664593063338,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="4.501666592609405,4.125 5.000900191052761,4.125" data-type="line" points="180.46664593063338,565 320.252053494773,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="5.000900191052761,4.125 5.499200742706081,4.125" data-type="line" points="320.252053494773,565 459.7762079577026,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="5.499200742706081,4.125 6,4" data-type="line" points="459.7762079577026,565 600,600" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42" />
-  <polyline data-points="4.501666592609405,4.125 4.545529281495474,4.087431597009757" data-type="line" points="180.46664593063338,565 192.74819881873282,575.5191528372682" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.501666592609405,4.125 4.500896597231364,4.1248213716399755" data-type="line" points="180.46664593063338,565 180.25104722478181,565.0500159408068" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.501666592609405,4.125 4.49216221731905,4.042661235493647" data-type="line" points="180.46664593063338,565 177.80542084933404,588.054854061779" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="4.501666592609405,4.125 4.501410126579843,4.124220257835233" data-type="line" points="180.46664593063338,565 180.39483544235623,565.2183278061348" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.000900191052761,4.125 5.020503720662874,4.111164812290607" data-type="line" points="320.252053494773,565 325.7410417856047,568.87385255863" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.000900191052761,4.125 4.9870926154724575,4.123211178214184" data-type="line" points="320.252053494773,565 316.3859323322881,565.5008701000284" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.000900191052761,4.125 5.013261973293774,4.0559551721730385" data-type="line" points="320.252053494773,565 323.71335252225686,584.3325517915491" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.000900191052761,4.125 5.00074627583715,4.123572566883038" data-type="line" points="320.252053494773,565 320.2089572344021,565.3996812727494" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.499200742706081,4.125 5.502036280540328,4.121921882332996" data-type="line" points="459.7762079577026,565 460.5701585512918,565.861872946761" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.499200742706081,4.125 5.464793794005222,4.112708139960777" data-type="line" points="459.7762079577026,565 450.1422623214621,568.4417208109826" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.499200742706081,4.125 5.514692397196264,4.097772537718637" data-type="line" points="459.7762079577026,565 464.11387121495386,572.6236894387816" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <polyline data-points="5.499200742706081,4.125 5.499295353204121,4.123431343761158" data-type="line" points="459.7762079577026,565 459.80269889715396,565.4392237468758" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2" />
-  <circle data-type="circle" data-label="" data-x="4.661245716374063" data-y="4.675670461592055" cx="225.14880058473773" cy="410.81227075422476" r="84" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713" />
-  <circle data-type="circle" data-label="" data-x="5" data-y="5" cx="320" cy="320" r="0.068359375" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713" />
-  <circle data-type="circle" data-label="" data-x="5.337668624195841" data-y="5.3375479701487265" cx="414.5472147748353" cy="225.48656835835664" r="84" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713" />
-  <circle data-type="circle" data-label="" data-x="4.501666592609405" data-y="4.125" cx="180.46664593063338" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713" />
-  <circle data-type="circle" data-label="" data-x="5.000900191052761" data-y="4.125" cx="320.252053494773" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713" />
-  <circle data-type="circle" data-label="" data-x="5.499200742706081" data-y="4.125" cx="459.7762079577026" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713" />
-  <g id="crosshair" style="display: none">
-    <line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5" />
-    <line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5" /><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text>
-  </g>
-  <script>
-    <![CDATA[
-    document.currentScript.parentElement.addEventListener('mousemove', (e) => {
-      const svg = e.currentTarget;
-      const rect = svg.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const crosshair = svg.getElementById('crosshair');
-      const h = svg.getElementById('crosshair-h');
-      const v = svg.getElementById('crosshair-v');
-      const coords = svg.getElementById('coordinates');
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><circle data-type="point" data-label="A (Port z=0)" data-x="4" data-y="4" cx="40" cy="600" r="3" fill="hsl(90, 100%, 50%)"/></g><g><circle data-type="point" data-label="A (Port z=0)" data-x="6" data-y="4" cx="600" cy="600" r="3" fill="hsl(90, 100%, 50%)"/></g><g><circle data-type="point" data-label="B (Port z=0)" data-x="4" data-y="4" cx="40" cy="600" r="3" fill="hsl(270, 100%, 50%)"/></g><g><circle data-type="point" data-label="B (Port z=0)" data-x="6" data-y="4" cx="600" cy="600" r="3" fill="hsl(270, 100%, 50%)"/></g><g><polyline data-points="4,4 6,4 6,6 4,6 4,4" data-type="line" data-label="" points="40,600 600,600 600,40 40,40 40,600" fill="none" stroke="gray" stroke-width="1px"/></g><g><polyline data-points="4,4 4.661245716374063,4.675670461592055" data-type="line" data-label="A segment (z=0)" points="40,600 225.14880058473773,410.81227075422476" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 5,5" data-type="line" data-label="A segment (z=1)" points="225.14880058473773,410.81227075422476 320,320" fill="none" stroke="rgba(128,255,0,0.5)" stroke-width="42" stroke-dasharray="0.15 0.15"/></g><g><polyline data-points="5,5 5.337668624195841,5.3375479701487265" data-type="line" data-label="A segment (z=1)" points="320,320 414.5472147748353,225.48656835835664" fill="none" stroke="rgba(128,255,0,0.5)" stroke-width="42" stroke-dasharray="0.15 0.15"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 6,4" data-type="line" data-label="A segment (z=0)" points="414.5472147748353,225.48656835835664 600,600" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 4.642260911000123,4.790624049211355" data-type="line" data-label="Force by B Seg 1-2 on A mPoint 0" points="225.14880058473773,410.81227075422476 219.83305508003446,378.62526622082055" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 4.632187913061935,4.7314434818067825" data-type="line" data-label="Force by B Seg 2-3 on A mPoint 0" points="225.14880058473773,410.81227075422476 217.0126156573417,395.1958250941009" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 4.6541865838629155,4.681310765178508" data-type="line" data-label="Force by B Seg 3-4 on A mPoint 0" points="225.14880058473773,410.81227075422476 223.1722434816163,409.23298575001786" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 4.680254466954773,4.751705463914895" data-type="line" data-label="Force by B Seg 0-1 on A mPoint 0" points="225.14880058473773,410.81227075422476 230.4712507473364,389.5224701038294" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.661245716374063,4.675670461592055 4.588919701138498,4.603344446356489" data-type="line" data-label="Force by A Via 3 on A mPoint 0" points="225.14880058473773,410.81227075422476 204.89751631877948,431.063555020183" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 5.337951670463659,5.337933751762414" data-type="line" data-label="Force by B Seg 0-1 on A mPoint 2" points="414.5472147748353,225.48656835835664 414.6264677298245,225.37854950652422" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 5.338894410808959,5.339327317013637" data-type="line" data-label="Force by B Seg 1-2 on A mPoint 2" points="414.5472147748353,225.48656835835664 414.8904350265086,224.98835123618164" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 5.3507288143255805,5.345835794773794" data-type="line" data-label="Force by B Seg 2-3 on A mPoint 2" points="414.5472147748353,225.48656835835664 418.20406801116246,223.16597746333787" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 5.33747940319976,5.339061738117373" data-type="line" data-label="Force by B Seg 3-4 on A mPoint 2" points="414.5472147748353,225.48656835835664 414.4942328959328,225.06271332713573" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.337668624195841,5.3375479701487265 5.409994639431406,5.409873985384292" data-type="line" data-label="Force by A Via 1 on A mPoint 2" points="414.5472147748353,225.48656835835664 434.79849904079356,205.2352840923984" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4,4 4.501666592609405,4.125" data-type="line" data-label="B segment (z=0)" points="40,600 180.46664593063338,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="4.501666592609405,4.125 5.000900191052761,4.125" data-type="line" data-label="B segment (z=0)" points="180.46664593063338,565 320.252053494773,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="5.000900191052761,4.125 5.499200742706081,4.125" data-type="line" data-label="B segment (z=0)" points="320.252053494773,565 459.7762079577026,565" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="5.499200742706081,4.125 6,4" data-type="line" data-label="B segment (z=0)" points="459.7762079577026,565 600,600" fill="none" stroke="hsl(270, 100%, 50%)" stroke-width="42"/></g><g><polyline data-points="4.501666592609405,4.125 4.545529281495474,4.087431597009757" data-type="line" data-label="Force by A Seg 0-1 on B mPoint 0" points="180.46664593063338,565 192.74819881873282,575.5191528372682" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.501666592609405,4.125 4.500896597231364,4.1248213716399755" data-type="line" data-label="Force by A Seg 3-4 on B mPoint 0" points="180.46664593063338,565 180.25104722478181,565.0500159408068" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.501666592609405,4.125 4.49216221731905,4.042661235493647" data-type="line" data-label="Force by A Via 1 on B mPoint 0" points="180.46664593063338,565 177.80542084933404,588.054854061779" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="4.501666592609405,4.125 4.501410126579843,4.124220257835233" data-type="line" data-label="Force by A Via 3 on B mPoint 0" points="180.46664593063338,565 180.39483544235623,565.2183278061348" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.000900191052761,4.125 5.020503720662874,4.111164812290607" data-type="line" data-label="Force by A Seg 0-1 on B mPoint 1" points="320.252053494773,565 325.7410417856047,568.87385255863" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.000900191052761,4.125 4.9870926154724575,4.123211178214184" data-type="line" data-label="Force by A Seg 3-4 on B mPoint 1" points="320.252053494773,565 316.3859323322881,565.5008701000284" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.000900191052761,4.125 5.013261973293774,4.0559551721730385" data-type="line" data-label="Force by A Via 1 on B mPoint 1" points="320.252053494773,565 323.71335252225686,584.3325517915491" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.000900191052761,4.125 5.00074627583715,4.123572566883038" data-type="line" data-label="Force by A Via 3 on B mPoint 1" points="320.252053494773,565 320.2089572344021,565.3996812727494" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.499200742706081,4.125 5.502036280540328,4.121921882332996" data-type="line" data-label="Force by A Seg 0-1 on B mPoint 2" points="459.7762079577026,565 460.5701585512918,565.861872946761" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.499200742706081,4.125 5.464793794005222,4.112708139960777" data-type="line" data-label="Force by A Seg 3-4 on B mPoint 2" points="459.7762079577026,565 450.1422623214621,568.4417208109826" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.499200742706081,4.125 5.514692397196264,4.097772537718637" data-type="line" data-label="Force by A Via 1 on B mPoint 2" points="459.7762079577026,565 464.11387121495386,572.6236894387816" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><g><polyline data-points="5.499200742706081,4.125 5.499295353204121,4.123431343761158" data-type="line" data-label="Force by A Via 3 on B mPoint 2" points="459.7762079577026,565 459.80269889715396,565.4392237468758" fill="none" stroke="hsl(90, 100%, 50%)" stroke-width="5.6000000000000005" stroke-dasharray="2,2"/></g><circle data-type="circle" data-label="" data-x="4.661245716374063" data-y="4.675670461592055" cx="225.14880058473773" cy="410.81227075422476" r="84" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713"/><circle data-type="circle" data-label="" data-x="5" data-y="5" cx="320" cy="320" r="0.068359375" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713"/><circle data-type="circle" data-label="" data-x="5.337668624195841" data-y="5.3375479701487265" cx="414.5472147748353" cy="225.48656835835664" r="84" fill="rgba(128,255,0,0.5)" stroke="black" stroke-width="0.0035714285714285713"/><circle data-type="circle" data-label="" data-x="4.501666592609405" data-y="4.125" cx="180.46664593063338" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713"/><circle data-type="circle" data-label="" data-x="5.000900191052761" data-y="4.125" cx="320.252053494773" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713"/><circle data-type="circle" data-label="" data-x="5.499200742706081" data-y="4.125" cx="459.7762079577026" cy="565" r="0.068359375" fill="hsl(270, 100%, 50%)" stroke="black" stroke-width="0.0035714285714285713"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
 
-      crosshair.style.display = 'block';
-      h.setAttribute('x1', '0');
-      h.setAttribute('x2', '640');
-      h.setAttribute('y1', y);
-      h.setAttribute('y2', y);
-      v.setAttribute('x1', x);
-      v.setAttribute('x2', x);
-      v.setAttribute('y1', '0');
-      v.setAttribute('y2', '640');
-
-      // Calculate real coordinates using inverse transformation
-      const matrix = {
-        "a": 280,
-        "c": 0,
-        "e": -1080,
-        "b": 0,
-        "d": -280,
-        "f": 1720
-      };
-      // Manually invert and apply the affine transform
-      // Since we only use translate and scale, we can directly compute:
-      // x' = (x - tx) / sx
-      // y' = (y - ty) / sy
-      const sx = matrix.a;
-      const sy = matrix.d;
-      const tx = matrix.e;
-      const ty = matrix.f;
-      const realPoint = {
-        x: (x - tx) / sx,
-        y: (y - ty) / sy // Flip y back since we used negative scale
-      }
-
-      coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
-      coords.setAttribute('x', (x + 5).toString());
-      coords.setAttribute('y', (y - 5).toString());
-    });
-    document.currentScript.parentElement.addEventListener('mouseleave', () => {
-      document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
-    });
-    ]]>
-  </script>
-</svg>
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":280,"c":0,"e":-1080,"b":0,"d":-280,"f":1720};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>

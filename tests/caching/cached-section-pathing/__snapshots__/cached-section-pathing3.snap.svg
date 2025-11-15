@@ -1,120 +1,116 @@
-<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <circle data-type="point" data-label="Start: connection_A_B
-(nodeA0)" data-x="1" data-y="-1" cx="60.74074074074076" cy="164.44444444444446" r="3" fill="red" /><text x="65.74074074074076" y="159.44444444444446" font-family="sans-serif" font-size="12">Start: connection_A_B
-      (nodeA0)</text>
-  </g>
-  <g>
-    <circle data-type="point" data-label="End: connection_A_B
-(nodeB2)" data-x="11" data-y="-1" cx="579.2592592592592" cy="164.44444444444446" r="3" fill="red" /><text x="584.2592592592592" y="159.44444444444446" font-family="sans-serif" font-size="12">End: connection_A_B
-      (nodeB2)</text>
-  </g>
-  <g>
-    <circle data-type="point" data-label="Start: connection_C_D
-(nodeC)" data-x="1.0204" data-y="-4.9796" cx="61.79851851851854" cy="370.79407407407405" r="3" fill="blue" /><text x="66.79851851851853" y="365.79407407407405" font-family="sans-serif" font-size="12">Start: connection_C_D
-      (nodeC)</text>
-  </g>
-  <g>
-    <circle data-type="point" data-label="End: connection_C_D
-(nodeD)" data-x="9.0204" data-y="-4.9796" cx="476.61333333333334" cy="370.79407407407405" r="3" fill="blue" /><text x="481.61333333333334" y="365.79407407407405" font-family="sans-serif" font-size="12">End: connection_C_D
-      (nodeD)</text>
-  </g>
-  <polyline data-points="1.3,-1 2.7,-1" data-type="line" points="76.29629629629632,164.44444444444446 148.8888888888889,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="1,-5.3 1,-6.7" data-type="line" points="60.74074074074076,387.4074074074074 60.74074074074076,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="1.3,-7 2.7,-7" data-type="line" points="76.29629629629632,475.55555555555554 148.8888888888889,475.55555555555554" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="1.3,-5 2.7,-5" data-type="line" points="76.29629629629632,371.85185185185185 148.8888888888889,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="3,-1.3 3,-2.7" data-type="line" points="164.44444444444446,180 164.44444444444446,252.5925925925926" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="3,-3.3 3,-4.7" data-type="line" points="164.44444444444446,283.7037037037037 164.44444444444446,356.2962962962963" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="3,-5.3 3,-6.7" data-type="line" points="164.44444444444446,387.4074074074074 164.44444444444446,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="3.3,-5 4.7,-5" data-type="line" points="180,371.85185185185185 252.5925925925926,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="3.3,-7 4.7,-7" data-type="line" points="180,475.55555555555554 252.5925925925926,475.55555555555554" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="5,-5.3 5,-6.7" data-type="line" points="268.14814814814815,387.4074074074074 268.14814814814815,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="5.3,-5 6.7,-5" data-type="line" points="283.7037037037037,371.85185185185185 356.2962962962963,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="7,-1.3 7,-2.7" data-type="line" points="371.85185185185185,180 371.85185185185185,252.5925925925926" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="7,-3.3 7,-4.7" data-type="line" points="371.85185185185185,283.7037037037037 371.85185185185185,356.2962962962963" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="7.3,-5 8.7,-5" data-type="line" points="387.4074074074074,371.85185185185185 459.99999999999994,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="9,-5.3 9,-6.7" data-type="line" points="475.55555555555554,387.4074074074074 475.55555555555554,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="7.3,-1 8.7,-1" data-type="line" points="387.4074074074074,164.44444444444446 459.99999999999994,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="9.3,-1 10.7,-1" data-type="line" points="491.11111111111114,164.44444444444446 563.7037037037037,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1" />
-  <polyline data-points="1,-1 1,-1" data-type="line" points="60.74074074074076,164.44444444444446 60.74074074074076,164.44444444444446" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2 2" />
-  <polyline data-points="11,-1 11,-1" data-type="line" points="579.2592592592592,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2 2" />
-  <polyline data-points="1,-1 11,-1" data-type="line" points="60.74074074074076,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="red" stroke-width="1" stroke-dasharray="5 5" />
-  <polyline data-points="1,-5 1.0204,-4.9796" data-type="line" points="60.74074074074076,371.85185185185185 61.79851851851854,370.79407407407405" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2 2" />
-  <polyline data-points="9,-5 9.0204,-4.9796" data-type="line" points="475.55555555555554,371.85185185185185 476.61333333333334,370.79407407407405" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2 2" />
-  <polyline data-points="1.0204,-4.9796 9.0204,-4.9796" data-type="line" points="61.79851851851854,370.79407407407405 476.61333333333334,370.79407407407405" fill="none" stroke="blue" stroke-width="1" stroke-dasharray="5 5" />
-  <polyline data-points="1,-1 3,-1 3,-3 3,-5 5,-5 7,-5 7,-3 7,-1 9,-1 11,-1" data-type="line" points="60.74074074074076,164.44444444444446 164.44444444444446,164.44444444444446 164.44444444444446,268.14814814814815 164.44444444444446,371.85185185185185 268.14814814814815,371.85185185185185 371.85185185185185,371.85185185185185 371.85185185185185,268.14814814814815 371.85185185185185,164.44444444444446 475.55555555555554,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="rgba(255,0,0,0.8)" stroke-width="1" />
-  <polyline data-points="1.0306,-4.9694 1.0306,-6.9694 3.0306,-6.9694 5.0306,-6.9694 5.0306,-4.9694 7.0306,-4.9694 9.0306,-4.9694" data-type="line" points="62.32740740740743,370.2651851851852 62.32740740740743,473.9688888888889 166.03111111111113,473.9688888888889 269.7348148148148,473.9688888888889 269.7348148148148,370.2651851851852 373.4385185185185,370.2651851851852 477.1422222222222,370.2651851851852" fill="none" stroke="rgba(0,0,255,0.8)" stroke-width="1" />
-  <rect data-type="rect" data-label="" data-x="1" data-y="-1" x="40.00000000000002" y="143.70370370370372" width="41.481481481481474" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="3" data-y="-1" x="143.70370370370372" y="143.70370370370372" width="41.48148148148147" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="1" data-y="-7" x="40.00000000000002" y="454.8148148148148" width="41.481481481481474" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="1" data-y="-5" x="40.00000000000002" y="351.1111111111111" width="41.481481481481474" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="3" data-y="-3" x="143.70370370370372" y="247.40740740740742" width="41.48148148148147" height="41.481481481481495" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="3" data-y="-5" x="143.70370370370372" y="351.1111111111111" width="41.48148148148147" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="3" data-y="-7" x="143.70370370370372" y="454.8148148148148" width="41.48148148148147" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="5" data-y="-5" x="247.4074074074074" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="5" data-y="-7" x="247.4074074074074" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="7" data-y="-1" x="351.1111111111111" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="7" data-y="-3" x="351.1111111111111" y="247.40740740740742" width="41.481481481481524" height="41.481481481481495" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="7" data-y="-5" x="351.1111111111111" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="9" data-y="-5" x="454.8148148148148" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="9" data-y="-1" x="454.8148148148148" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="11" data-y="-1" x="558.5185185185185" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <rect data-type="rect" data-label="" data-x="9" data-y="-7" x="454.8148148148148" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288" />
-  <g id="crosshair" style="display: none">
-    <line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5" />
-    <line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5" /><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text>
-  </g>
-  <script>
-    <![CDATA[
-    document.currentScript.parentElement.addEventListener('mousemove', (e) => {
-      const svg = e.currentTarget;
-      const rect = svg.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const crosshair = svg.getElementById('crosshair');
-      const h = svg.getElementById('crosshair-h');
-      const v = svg.getElementById('crosshair-v');
-      const coords = svg.getElementById('coordinates');
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><circle data-type="point" data-label="Start: connection_A_B
+(nodeA0)" data-x="1" data-y="-1" cx="60.74074074074076" cy="164.44444444444446" r="3" fill="red"/><text x="65.74074074074076" y="159.44444444444446" font-family="sans-serif" font-size="12">Start: connection_A_B
+(nodeA0)</text></g><g><circle data-type="point" data-label="End: connection_A_B
+(nodeB2)" data-x="11" data-y="-1" cx="579.2592592592592" cy="164.44444444444446" r="3" fill="red"/><text x="584.2592592592592" y="159.44444444444446" font-family="sans-serif" font-size="12">End: connection_A_B
+(nodeB2)</text></g><g><circle data-type="point" data-label="Start: connection_C_D
+(nodeC)" data-x="1.0204" data-y="-4.9796" cx="61.79851851851854" cy="370.79407407407405" r="3" fill="blue"/><text x="66.79851851851853" y="365.79407407407405" font-family="sans-serif" font-size="12">Start: connection_C_D
+(nodeC)</text></g><g><circle data-type="point" data-label="End: connection_C_D
+(nodeD)" data-x="9.0204" data-y="-4.9796" cx="476.61333333333334" cy="370.79407407407405" r="3" fill="blue"/><text x="481.61333333333334" y="365.79407407407405" font-family="sans-serif" font-size="12">End: connection_C_D
+(nodeD)</text></g><g><polyline data-points="1.3,-1 2.7,-1" data-type="line" data-label="" points="76.29629629629632,164.44444444444446 148.8888888888889,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="1,-5.3 1,-6.7" data-type="line" data-label="" points="60.74074074074076,387.4074074074074 60.74074074074076,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="1.3,-7 2.7,-7" data-type="line" data-label="" points="76.29629629629632,475.55555555555554 148.8888888888889,475.55555555555554" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="1.3,-5 2.7,-5" data-type="line" data-label="" points="76.29629629629632,371.85185185185185 148.8888888888889,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="3,-1.3 3,-2.7" data-type="line" data-label="" points="164.44444444444446,180 164.44444444444446,252.5925925925926" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="3,-3.3 3,-4.7" data-type="line" data-label="" points="164.44444444444446,283.7037037037037 164.44444444444446,356.2962962962963" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="3,-5.3 3,-6.7" data-type="line" data-label="" points="164.44444444444446,387.4074074074074 164.44444444444446,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="3.3,-5 4.7,-5" data-type="line" data-label="" points="180,371.85185185185185 252.5925925925926,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="3.3,-7 4.7,-7" data-type="line" data-label="" points="180,475.55555555555554 252.5925925925926,475.55555555555554" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="5,-5.3 5,-6.7" data-type="line" data-label="" points="268.14814814814815,387.4074074074074 268.14814814814815,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="5.3,-5 6.7,-5" data-type="line" data-label="" points="283.7037037037037,371.85185185185185 356.2962962962963,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="7,-1.3 7,-2.7" data-type="line" data-label="" points="371.85185185185185,180 371.85185185185185,252.5925925925926" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="7,-3.3 7,-4.7" data-type="line" data-label="" points="371.85185185185185,283.7037037037037 371.85185185185185,356.2962962962963" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="7.3,-5 8.7,-5" data-type="line" data-label="" points="387.4074074074074,371.85185185185185 459.99999999999994,371.85185185185185" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="9,-5.3 9,-6.7" data-type="line" data-label="" points="475.55555555555554,387.4074074074074 475.55555555555554,460" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="7.3,-1 8.7,-1" data-type="line" data-label="" points="387.4074074074074,164.44444444444446 459.99999999999994,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="9.3,-1 10.7,-1" data-type="line" data-label="" points="491.11111111111114,164.44444444444446 563.7037037037037,164.44444444444446" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1px"/></g><g><polyline data-points="1,-1 1,-1" data-type="line" data-label="" points="60.74074074074076,164.44444444444446 60.74074074074076,164.44444444444446" fill="none" stroke="gray" stroke-width="1px" stroke-dasharray="2 2"/></g><g><polyline data-points="11,-1 11,-1" data-type="line" data-label="" points="579.2592592592592,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="gray" stroke-width="1px" stroke-dasharray="2 2"/></g><g><polyline data-points="1,-1 11,-1" data-type="line" data-label="" points="60.74074074074076,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="red" stroke-width="1px" stroke-dasharray="5 5"/></g><g><polyline data-points="1,-5 1.0204,-4.9796" data-type="line" data-label="" points="60.74074074074076,371.85185185185185 61.79851851851854,370.79407407407405" fill="none" stroke="gray" stroke-width="1px" stroke-dasharray="2 2"/></g><g><polyline data-points="9,-5 9.0204,-4.9796" data-type="line" data-label="" points="475.55555555555554,371.85185185185185 476.61333333333334,370.79407407407405" fill="none" stroke="gray" stroke-width="1px" stroke-dasharray="2 2"/></g><g><polyline data-points="1.0204,-4.9796 9.0204,-4.9796" data-type="line" data-label="" points="61.79851851851854,370.79407407407405 476.61333333333334,370.79407407407405" fill="none" stroke="blue" stroke-width="1px" stroke-dasharray="5 5"/></g><g><polyline data-points="1,-1 3,-1 3,-3 3,-5 5,-5 7,-5 7,-3 7,-1 9,-1 11,-1" data-type="line" data-label="" points="60.74074074074076,164.44444444444446 164.44444444444446,164.44444444444446 164.44444444444446,268.14814814814815 164.44444444444446,371.85185185185185 268.14814814814815,371.85185185185185 371.85185185185185,371.85185185185185 371.85185185185185,268.14814814814815 371.85185185185185,164.44444444444446 475.55555555555554,164.44444444444446 579.2592592592592,164.44444444444446" fill="none" stroke="rgba(255,0,0,0.8)" stroke-width="1px"/></g><g><polyline data-points="1.0306,-4.9694 1.0306,-6.9694 3.0306,-6.9694 5.0306,-6.9694 5.0306,-4.9694 7.0306,-4.9694 9.0306,-4.9694" data-type="line" data-label="" points="62.32740740740743,370.2651851851852 62.32740740740743,473.9688888888889 166.03111111111113,473.9688888888889 269.7348148148148,473.9688888888889 269.7348148148148,370.2651851851852 373.4385185185185,370.2651851851852 477.1422222222222,370.2651851851852" fill="none" stroke="rgba(0,0,255,0.8)" stroke-width="1px"/></g><g><rect data-type="rect" data-label="nodeA0
+(Section Node)
+Z: 0,1" data-x="1" data-y="-1" x="40.00000000000002" y="143.70370370370372" width="41.481481481481474" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="45.00000000000002" y="143.70370370370372" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888888" fill="rgba(128, 0, 128, 0.1)">nodeA0
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeA
+(Section Node)
+Z: 0,1" data-x="3" data-y="-1" x="143.70370370370372" y="143.70370370370372" width="41.48148148148147" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="148.70370370370372" y="143.70370370370372" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888888" fill="rgba(128, 0, 128, 0.1)">nodeA
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeF
+(Section Node)
+Z: 0,1" data-x="1" data-y="-7" x="40.00000000000002" y="454.8148148148148" width="41.481481481481474" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="45.00000000000002" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeF
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeC
+(Section Node)
+Z: 0,1" data-x="1" data-y="-5" x="40.00000000000002" y="351.1111111111111" width="41.481481481481474" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="45.00000000000002" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeC
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C2
+(Section Node)
+Z: 0,1" data-x="3" data-y="-3" x="143.70370370370372" y="247.40740740740742" width="41.48148148148147" height="41.481481481481495" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="148.70370370370372" y="247.40740740740742" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888889" fill="rgba(128, 0, 128, 0.1)">nodeR2C2
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C3
+(Section Node)
+Z: 0,1" data-x="3" data-y="-5" x="143.70370370370372" y="351.1111111111111" width="41.48148148148147" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="148.70370370370372" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeR2C3
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C4
+(Section Node)
+Z: 0,1" data-x="3" data-y="-7" x="143.70370370370372" y="454.8148148148148" width="41.48148148148147" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="148.70370370370372" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeR2C4
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR3C3
+(Section Node)
+Z: 0,1" data-x="5" data-y="-5" x="247.4074074074074" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="252.4074074074074" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeR3C3
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR3C4
+(Section Node)
+Z: 0,1" data-x="5" data-y="-7" x="247.4074074074074" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="252.4074074074074" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeR3C4
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeB
+(Section Node)
+Z: 0,1" data-x="7" data-y="-1" x="351.1111111111111" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="143.70370370370372" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeB
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR4C2
+(Section Node)
+Z: 0,1" data-x="7" data-y="-3" x="351.1111111111111" y="247.40740740740742" width="41.481481481481524" height="41.481481481481495" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="247.40740740740742" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.4888888888888903" fill="rgba(128, 0, 128, 0.1)">nodeR4C2
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR4C3
+(Section Node)
+Z: 0,1" data-x="7" data-y="-5" x="351.1111111111111" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeR4C3
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeD
+(Section Node)
+Z: 0,1" data-x="9" data-y="-5" x="454.8148148148148" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="459.8148148148148" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeD
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeB1
+(Section Node)
+Z: 0,1" data-x="9" data-y="-1" x="454.8148148148148" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="459.8148148148148" y="143.70370370370372" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeB1
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeB2
+(Section Node)
+Z: 0,1" data-x="11" data-y="-1" x="558.5185185185185" y="143.70370370370372" width="41.481481481481524" height="41.48148148148147" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="563.5185185185185" y="143.70370370370372" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.48888888888889" fill="rgba(128, 0, 128, 0.1)">nodeB2
+(Section Node)
+Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeE
+(Section Node)
+Z: 0,1" data-x="9" data-y="-7" x="454.8148148148148" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="459.8148148148148" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeE
+(Section Node)
+Z: 0,1</text></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
 
-      crosshair.style.display = 'block';
-      h.setAttribute('x1', '0');
-      h.setAttribute('x2', '640');
-      h.setAttribute('y1', y);
-      h.setAttribute('y2', y);
-      v.setAttribute('x1', x);
-      v.setAttribute('x2', x);
-      v.setAttribute('y1', '0');
-      v.setAttribute('y2', '640');
-
-      // Calculate real coordinates using inverse transformation
-      const matrix = {
-        "a": 51.85185185185185,
-        "c": 0,
-        "e": 8.888888888888914,
-        "b": 0,
-        "d": -51.85185185185185,
-        "f": 112.59259259259261
-      };
-      // Manually invert and apply the affine transform
-      // Since we only use translate and scale, we can directly compute:
-      // x' = (x - tx) / sx
-      // y' = (y - ty) / sy
-      const sx = matrix.a;
-      const sy = matrix.d;
-      const tx = matrix.e;
-      const ty = matrix.f;
-      const realPoint = {
-        x: (x - tx) / sx,
-        y: (y - ty) / sy // Flip y back since we used negative scale
-      }
-
-      coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
-      coords.setAttribute('x', (x + 5).toString());
-      coords.setAttribute('y', (y - 5).toString());
-    });
-    document.currentScript.parentElement.addEventListener('mouseleave', () => {
-      document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
-    });
-    ]]>
-  </script>
-</svg>
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":51.85185185185185,"c":0,"e":8.888888888888914,"b":0,"d":-51.85185185185185,"f":112.59259259259261};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
