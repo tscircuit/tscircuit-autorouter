@@ -98,18 +98,22 @@ export default () => {
 fs.writeFileSync(fixtureFilePath, fixtureTemplate)
 console.log(`Fixture file created at ${fixtureFilePath}`)
 
-const testTemplate = `
-import bugReport from "../../examples/bug-reports/${dirName}/${jsonFileName}" assert { type: "json" }
-import { expect, test } from "bun:test"
+const testTemplate = `import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
-import { SimpleRouteJson } from "lib/types"
+import bugReport from "../../examples/bug-reports/${dirName}/${jsonFileName}" assert {
+  type: "json",
+}
+import type { SimpleRouteJson } from "lib/types"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("${jsonFileName}", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(solver.visualize()).toMatchSnapshot(import.meta.path)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
 `
 

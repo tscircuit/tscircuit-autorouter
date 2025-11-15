@@ -57,6 +57,7 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "dependencies": {
+    "bun-match-svg": "^0.0.14",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0"
   }
