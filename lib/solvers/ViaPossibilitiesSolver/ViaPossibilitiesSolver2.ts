@@ -336,7 +336,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphics: Required<GraphicsObject> = {
+    const graphics: GraphicsObject = {
       points: [],
       lines: [],
       circles: [],
