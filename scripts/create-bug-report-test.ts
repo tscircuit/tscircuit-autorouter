@@ -109,7 +109,7 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("${jsonFileName}", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(solver.visualize()).toMatchSnapshot("${jsonFileName}")
+  expect(solver.visualize()).toMatchSnapshot(import.meta.path)
 })
 `
 
