@@ -173,7 +173,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
    * Return a GraphicsObject that visualizes the segments with assigned points.
    */
   visualize(): GraphicsObject {
-    const graphics: Required<GraphicsObject> = {
+    const graphics: GraphicsObject = {
       points: [],
       lines: this.solvedSegments.map((seg) => ({
         points: [seg.start, seg.end],
@@ -204,7 +204,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
 
         // Add a dashed line to show the true position if there's an offset
         if (ap.point.z !== 0) {
-          graphics.lines.push({
+          graphics.lines!.push({
             points: [truePoint, offsetPoint],
             strokeColor: "rgba(0, 0, 0, 0.25)",
             strokeDash: "5 5",
@@ -213,7 +213,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         }
 
         // Add the point with label
-        graphics.points.push({
+        graphics.points!.push({
           x: offsetPoint.x,
           y: offsetPoint.y,
           label: [
@@ -262,7 +262,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         }
       }
     }
-    graphics.lines.push(...(dashedLines as any))
+    graphics.lines!.push(...dashedLines)
 
     return graphics
   }
