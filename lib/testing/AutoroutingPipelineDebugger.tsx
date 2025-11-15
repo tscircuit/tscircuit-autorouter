@@ -611,7 +611,6 @@ export const AutoroutingPipelineDebugger = ({
         baseVisualization = solver?.preview() || { points: [], lines: [] }
       } else {
         baseVisualization = solver?.visualize() || { points: [], lines: [] }
-        baseVisualization = solver?.visualize() || { points: [], lines: [] }
       }
 
       // If we have DRC errors, combine them with the base visualization
