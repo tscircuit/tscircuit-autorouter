@@ -260,14 +260,16 @@ export class UnravelMultiSectionSolver extends BaseSolver {
       return this.activeSubSolver.visualize()
     }
 
-    const graphics: Required<GraphicsObject> = {
-      lines: [],
-      points: [],
-      rects: [],
-      circles: [],
-      coordinateSystem: "cartesian",
-      title: "Unravel Multi Section Solver",
-    }
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "Unravel Multi Section Solver",
+      }
 
     // Visualize nodes
     for (const [nodeId, node] of this.nodeMap.entries()) {

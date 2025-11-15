@@ -74,14 +74,16 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
       return this.activeSubSolver.visualize()
     }
 
-    const graphics: Required<GraphicsObject> = {
-      lines: [],
-      points: [],
-      circles: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Multi Simplified Path Solver",
-    }
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        lines: [],
+        points: [],
+        circles: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Multi Simplified Path Solver",
+      }
 
     // Visualize the original unsimplified routes in red with transparency
     for (const route of this.unsimplifiedHdRoutes) {

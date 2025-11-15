@@ -200,14 +200,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     }
   }
   visualize(): GraphicsObject {
-    const graphics: Required<GraphicsObject> = {
-      circles: [],
-      lines: [],
-      points: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Single Route Useless Via Removal Solver",
-    }
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        circles: [],
+        lines: [],
+        points: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Single Route Useless Via Removal Solver",
+      }
 
     // Draw the sections, draw the active section in orange
 

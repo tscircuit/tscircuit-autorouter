@@ -663,52 +663,54 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         (seg) => !this.isSegmentMutable(seg.nodePortSegmentId!),
       ),
     )
-    const graphics: Required<GraphicsObject> = {
-      points: [...this.currentMutatedSegments.values()].flatMap((seg, i) =>
-        seg.assignedPoints!.map((ap) => ({
-          x: ap.point.x,
-          y: ap.point.y,
-          label: `${seg.nodePortSegmentId}\nlayer: ${ap.point.z}\n${ap.connectionName}\n${immutableSegments.has(seg) ? "(IMMUTABLE)" : ""}`,
-          color: this.colorMap[ap.connectionName],
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        points: [...this.currentMutatedSegments.values()].flatMap((seg, i) =>
+          seg.assignedPoints!.map((ap) => ({
+            x: ap.point.x,
+            y: ap.point.y,
+            label: `${seg.nodePortSegmentId}\nlayer: ${ap.point.z}\n${ap.connectionName}\n${immutableSegments.has(seg) ? "(IMMUTABLE)" : ""}`,
+            color: this.colorMap[ap.connectionName],
+          })),
+        ),
+        lines: [...this.currentMutatedSegments.values()].map((seg) => ({
+          points: [seg.start, seg.end],
         })),
-      ),
-      lines: [...this.currentMutatedSegments.values()].map((seg) => ({
-        points: [seg.start, seg.end],
-      })),
-      rects: [
-        ...[...this.nodeMap.values()]
-          .map((node) => {
-            const segmentIds = this.nodeIdToSegmentIds.get(
-              node.capacityMeshNodeId,
-            )
-            if (!segmentIds) return null
+        rects: [
+          ...[...this.nodeMap.values()]
+            .map((node) => {
+              const segmentIds = this.nodeIdToSegmentIds.get(
+                node.capacityMeshNodeId,
+              )
+              if (!segmentIds) return null
 
-            const segments = segmentIds.map(
-              (segmentId) => this.currentMutatedSegments.get(segmentId)!,
-            )!
-            let label: string
-            if (node._containsTarget) {
-              label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
-            } else {
-              const intraNodeCrossings =
-                getIntraNodeCrossingsFromSegments(segments)
-              label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
-            }
+              const segments = segmentIds.map(
+                (segmentId) => this.currentMutatedSegments.get(segmentId)!,
+              )!
+              let label: string
+              if (node._containsTarget) {
+                label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+              } else {
+                const intraNodeCrossings =
+                  getIntraNodeCrossingsFromSegments(segments)
+                label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+              }
 
-            return {
-              center: node.center,
-              label,
-              color: "red",
-              width: node.width / 8,
-              height: node.height / 8,
-            } as Rect
-          })
-          .filter((r) => r !== null),
-      ],
-      circles: [],
-      coordinateSystem: "cartesian",
-      title: "Capacity Segment Point Optimizer",
-    }
+              return {
+                center: node.center,
+                label,
+                color: "red",
+                width: node.width / 8,
+                height: node.height / 8,
+              } as Rect
+            })
+            .filter((r) => r !== null),
+        ],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "Capacity Segment Point Optimizer",
+      }
 
     // Add a dashed line connecting the assignment points with the same
     // connection name within the same node

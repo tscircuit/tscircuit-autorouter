@@ -337,7 +337,8 @@ export class SingleLayerNodeMergerSolver_OnlyMergeTargets extends BaseSolver {
       rects: [],
       coordinateSystem: "cartesian",
       title: "Single Layer Node Merger (Only Merge Targets)",
-    } as Required<GraphicsObject>
+    } as GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles">
 
     for (const node of this.newNodes) {
       graphics.rects.push(createRectFromCapacityNode(node))

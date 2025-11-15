@@ -740,14 +740,16 @@ export class UnravelSectionSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphics: Required<GraphicsObject> = {
-      points: [],
-      lines: [],
-      rects: [],
-      circles: [],
-      coordinateSystem: "cartesian",
-      title: "Unravel Section Solver",
-    }
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        points: [],
+        lines: [],
+        rects: [],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "Unravel Section Solver",
+      }
 
     // Get the candidate to visualize
     let candidate: UnravelCandidate | null = null

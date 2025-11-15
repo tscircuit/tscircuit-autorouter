@@ -69,14 +69,16 @@ export class UselessViaRemovalSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const visualization: Required<GraphicsObject> = {
-      lines: [],
-      points: [],
-      rects: [],
-      circles: [],
-      coordinateSystem: "cartesian",
-      title: "Useless Via Removal Solver",
-    }
+    const visualization: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "Useless Via Removal Solver",
+      }
 
     // Visualize obstacles
     for (const obstacle of this.input.obstacles) {

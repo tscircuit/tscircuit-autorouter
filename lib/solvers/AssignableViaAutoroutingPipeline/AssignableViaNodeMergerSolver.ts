@@ -140,7 +140,8 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
       rects: [],
       coordinateSystem: "cartesian",
       title: "Assignable Via Node Merger",
-    } as Required<GraphicsObject>
+    } as GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles">
 
     // Visualize the new merged nodes
     for (const node of this.newNodes) {

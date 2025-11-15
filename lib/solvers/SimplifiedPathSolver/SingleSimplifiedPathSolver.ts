@@ -86,14 +86,16 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
   }
 
   getVisualsForNewRouteAndObstacles() {
-    const graphics: Required<GraphicsObject> = {
-      lines: [],
-      points: [],
-      circles: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Simplified Path Solver",
-    }
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        lines: [],
+        points: [],
+        circles: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Simplified Path Solver",
+      }
 
     // Visualize the original route in red
     for (let i = 0; i < this.inputRoute.route.length - 1; i++) {
