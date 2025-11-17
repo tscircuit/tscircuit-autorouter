@@ -41,9 +41,18 @@ export class NetToPointPairsSolver extends BaseSolver {
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
     const externalGroups = connection.externallyConnectedPointIds ?? []
-    const pointIdToGroup = new Map<string, number>()
+    const pointIdToExternalGroup = new Map<string, number>()
     externalGroups.forEach((group, idx) =>
-      group.forEach((pid) => pointIdToGroup.set(pid, idx)),
+      group.forEach((pid) => pointIdToExternalGroup.set(pid, idx)),
+    )
+
+    // ----------------------------------------------
+    // 2.  Detect internally-connected point groups
+    // ----------------------------------------------
+    const internalGroups = connection.internallyConnectedPointIds ?? []
+    const pointIdToInternalGroup = new Map<string, number>()
+    internalGroups.forEach((group, idx) =>
+      group.forEach((pid) => pointIdToInternalGroup.set(pid, idx)),
     )
 
     const areExternallyConnected = (
@@ -51,8 +60,18 @@ export class NetToPointPairsSolver extends BaseSolver {
       b: { pointId?: string },
     ) => {
       if (!a.pointId || !b.pointId) return false
-      const g1 = pointIdToGroup.get(a.pointId)
-      const g2 = pointIdToGroup.get(b.pointId)
+      const g1 = pointIdToExternalGroup.get(a.pointId)
+      const g2 = pointIdToExternalGroup.get(b.pointId)
+      return g1 !== undefined && g1 === g2
+    }
+
+    const areInternallyConnected = (
+      a: { pointId?: string },
+      b: { pointId?: string },
+    ) => {
+      if (!a.pointId || !b.pointId) return false
+      const g1 = pointIdToInternalGroup.get(a.pointId)
+      const g2 = pointIdToInternalGroup.get(b.pointId)
       return g1 !== undefined && g1 === g2
     }
 
@@ -61,24 +80,58 @@ export class NetToPointPairsSolver extends BaseSolver {
         areExternallyConnected(
           connection.pointsToConnect[0],
           connection.pointsToConnect[1],
+        ) ||
+        areInternallyConnected(
+          connection.pointsToConnect[0],
+          connection.pointsToConnect[1],
         )
       ) {
-        // No routing required – they are already connected off-board
+        // No routing required – they are already connected
         return
       }
       this.newConnections.push(connection)
       return
     }
 
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect)
+    // Create a representative point for each internal group
+    const internalGroupRepresentatives = new Map<
+      number,
+      (typeof connection.pointsToConnect)[0]
+    >()
 
-    let mstIdx = 0
-    for (const edge of edges) {
-      if (areExternallyConnected(edge.from, edge.to)) continue
-      this.newConnections.push({
-        pointsToConnect: [edge.from, edge.to],
-        name: `${connection.name}_mst${mstIdx++}`,
-      })
+    // Find representatives for internal groups (first point in each group)
+    connection.pointsToConnect.forEach((point) => {
+      if (!point.pointId) return
+      const groupId = pointIdToInternalGroup.get(point.pointId)
+      if (groupId !== undefined && !internalGroupRepresentatives.has(groupId)) {
+        internalGroupRepresentatives.set(groupId, point)
+      }
+    })
+
+    // Get external points (not in any internal group)
+    const externalPoints = connection.pointsToConnect.filter((point) => {
+      if (!point.pointId) return true
+      return !pointIdToInternalGroup.has(point.pointId)
+    })
+
+    // Combine external points with internal representatives
+    const pointsForMst = [
+      ...externalPoints,
+      ...internalGroupRepresentatives.values(),
+    ]
+
+    // If we have 2 or more points to connect, build MST
+    if (pointsForMst.length >= 2) {
+      const edges = buildMinimumSpanningTree(pointsForMst)
+
+      let mstIdx = 0
+      for (const edge of edges) {
+        if (areExternallyConnected(edge.from, edge.to)) continue
+        this.newConnections.push({
+          pointsToConnect: [edge.from, edge.to],
+          name: `${connection.name}_mst${mstIdx++}`,
+        })
+      }
     }
   }
 

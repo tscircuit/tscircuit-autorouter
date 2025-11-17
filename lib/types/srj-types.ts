@@ -35,6 +35,7 @@ export interface SimpleRouteConnection {
     pcb_port_id?: string
   }>
   externallyConnectedPointIds?: string[][]
+  internallyConnectedPointIds?: string[][]
 }
 
 export interface SimplifiedPcbTrace {
