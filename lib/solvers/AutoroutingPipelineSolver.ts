@@ -110,6 +110,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver
   multiSimplifiedPathSolver2?: MultiSimplifiedPathSolver
   viaDiameter: number
+  minTraceWidth: number
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -309,6 +310,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
+        traceWidth: cms.minTraceWidth,
       },
     ]),
     definePipelineStep(
@@ -389,6 +391,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     super()
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = srj.minViaDiameter ?? 0.6
+    this.minTraceWidth = srj.minTraceWidth
 
     // If capacityDepth is not provided, calculate it automatically
     if (opts.capacityDepth === undefined) {
