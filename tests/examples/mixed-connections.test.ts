@@ -2,7 +2,12 @@ import { test, expect } from "bun:test"
 import * as fs from "node:fs"
 import { AutoroutingPipelineSolver } from "lib/solvers/AutoroutingPipelineSolver"
 import type { SimpleRouteJson } from "lib/types"
-const mixedConnectionsSrj: SimpleRouteJson = JSON.parse(fs.readFileSync("examples/features/mixed-connections/assets/mixed-connections.srj.json", "utf-8"))
+const mixedConnectionsSrj: SimpleRouteJson = JSON.parse(
+  fs.readFileSync(
+    "examples/features/mixed-connections/assets/mixed-connections.srj.json",
+    "utf-8",
+  ),
+)
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import "tests/fixtures/svg-matcher"

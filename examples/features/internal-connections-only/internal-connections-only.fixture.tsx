@@ -4,5 +4,9 @@ import React from "react"
 import type { SimpleRouteJson } from "lib/types"
 
 export default () => {
-  return <AutoroutingPipelineDebugger srj={internalConnectionsOnlySrj as SimpleRouteJson} />
+  return (
+    <AutoroutingPipelineDebugger
+      srj={internalConnectionsOnlySrj as SimpleRouteJson}
+    />
+  )
 }
