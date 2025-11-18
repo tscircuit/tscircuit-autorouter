@@ -1,0 +1,29 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.15,
+  "minViaDiameter": 0.6,
+  "obstacles": [
+    { "type": "rect", "layers": ["top"], "center": { "x": 0, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_0"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 5, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_1"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 10, "y": 5 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_2"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 15, "y": 5 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_3"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 20, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_4"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 25, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_5"] }
+  ],
+  "connections": [
+    {
+      "name": "MIXED_CONNECTION",
+      "pointsToConnect": [
+        { "x": 0, "y": 0, "layer": "top", "pointId": "INT_1", "pcb_port_id": "pcb_port_0" },
+        { "x": 5, "y": 0, "layer": "top", "pointId": "INT_2", "pcb_port_id": "pcb_port_1" },
+        { "x": 10, "y": 5, "layer": "top", "pointId": "EXT_1", "pcb_port_id": "pcb_port_2" },
+        { "x": 15, "y": 5, "layer": "top", "pointId": "EXT_2", "pcb_port_id": "pcb_port_3" },
+        { "x": 20, "y": 0, "layer": "top", "pointId": "REG_1", "pcb_port_id": "pcb_port_4" },
+        { "x": 25, "y": 0, "layer": "top", "pointId": "REG_2", "pcb_port_id": "pcb_port_5" }
+      ],
+      "internallyConnectedInsideTheChip": [["INT_1", "INT_2"]],
+      "alreadyConnectedToExternalComponent": [["EXT_1", "EXT_2"]]
+    }
+  ],
+  "bounds": { "minX": -2, "maxX": 30, "minY": -5, "maxY": 10 }
+}
