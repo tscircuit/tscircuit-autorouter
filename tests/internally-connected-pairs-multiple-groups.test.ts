@@ -25,7 +25,7 @@ test("NetToPointPairsSolver > handles multiple internal groups", () => {
           { x: 20, y: 2, layer: "top", pointId: "POWER_INPUT" },
           { x: 25, y: 8, layer: "top", pointId: "DECOUPLING_CAP" },
         ],
-        internallyConnectedPointIds: [
+        internallyConnectedInsideTheChip: [
           ["MCU_IOVDD_1", "MCU_IOVDD_2", "MCU_IOVDD_3"], // Group 1: IOVDD pins
           ["MCU_COREVDD_1", "MCU_COREVDD_2"], // Group 2: COREVDD pins
         ],
@@ -84,8 +84,8 @@ test("NetToPointPairsSolver > handles mixed internal and external connections", 
           { x: 20, y: 0, layer: "top", pointId: "REG_1" },
           { x: 25, y: 0, layer: "top", pointId: "REG_2" },
         ],
-        internallyConnectedPointIds: [["INT_1", "INT_2"]],
-        externallyConnectedPointIds: [["EXT_1", "EXT_2"]],
+        internallyConnectedInsideTheChip: [["INT_1", "INT_2"]],
+        alreadyConnectedToExternalComponent: [["EXT_1", "EXT_2"]],
       },
     ],
     bounds: { minX: -2, maxX: 30, minY: -5, maxY: 10 },

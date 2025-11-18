@@ -165,7 +165,7 @@ export const simpleRouteJson: SimpleRouteJson = {
           pcb_port_id: "pcb_port_3",
         },
       ],
-      externallyConnectedPointIds: [["TEST_POINT_0", "TEST_POINT_1"]],
+      alreadyConnectedToExternalComponent: [["TEST_POINT_0", "TEST_POINT_1"]],
     },
   ],
   layerCount: 2,

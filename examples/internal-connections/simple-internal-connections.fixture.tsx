@@ -5,7 +5,7 @@ import React from "react"
 /**
  * Super Simple Internal Connections Example
  *
- * This is the simplest possible example to demonstrate internallyConnectedPointIds.
+ * This is the simplest possible example to demonstrate internallyConnectedInsideTheChip.
  *
  * Imagine individual component pads on a PCB:
  * - Battery pads: BATTERY_PLUS, BATTERY_MINUS, BATTERY_STATUS
@@ -15,10 +15,10 @@ import React from "react"
  *
  * Each pad is represented as a separate obstacle (like real PCB pads!)
  *
- * Without internallyConnectedPointIds: The autorouter would try to
+ * Without internallyConnectedInsideTheChip: The autorouter would try to
  * externally connect CHIP_VDD1, CHIP_VDD2, and CHIP_VDD3 together.
  *
- * With internallyConnectedPointIds: The autorouter knows these 3 pads
+ * With internallyConnectedInsideTheChip: The autorouter knows these 3 pads
  * are already connected internally (like RP2040 IOVDD pins), so it only
  * routes the battery to one representative pad.
  *
@@ -165,7 +165,9 @@ export const simpleInternalConnections: SimpleRouteJson = {
         },
       ],
       // 🔑 KEY: Tell the autorouter these chip pins are already connected internally
-      internallyConnectedPointIds: [["CHIP_VDD1", "CHIP_VDD2", "CHIP_VDD3"]],
+      internallyConnectedInsideTheChip: [
+        ["CHIP_VDD1", "CHIP_VDD2", "CHIP_VDD3"],
+      ],
     },
 
     {
@@ -198,7 +200,7 @@ export const simpleInternalConnections: SimpleRouteJson = {
         },
       ],
       // Ground pins are also internally connected through the chip
-      internallyConnectedPointIds: [["CHIP_GND1", "CHIP_GND2"]],
+      internallyConnectedInsideTheChip: [["CHIP_GND1", "CHIP_GND2"]],
     },
 
     {
@@ -221,7 +223,7 @@ export const simpleInternalConnections: SimpleRouteJson = {
           pcb_port_id: "chip_enable",
         },
       ],
-      // No internallyConnectedPointIds - this needs external routing
+      // No internallyConnectedInsideTheChip - this needs external routing
     },
   ],
 

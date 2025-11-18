@@ -19,7 +19,7 @@ test("NetToPointPairsSolver > handles internally connected RP2040 IOVDD pins", (
           // External component that needs connection
           { x: 20, y: 10, layer: "top", pointId: "EXTERNAL_CAP" },
         ],
-        internallyConnectedPointIds: [
+        internallyConnectedInsideTheChip: [
           [
             "RP2040_IOVDD_1",
             "RP2040_IOVDD_2",
@@ -86,7 +86,7 @@ test("NetToPointPairsSolver > handles case with only internally connected points
           { x: 5, y: 0, layer: "top", pointId: "INT_2" },
           { x: 10, y: 0, layer: "top", pointId: "INT_3" },
         ],
-        internallyConnectedPointIds: [
+        internallyConnectedInsideTheChip: [
           ["INT_1", "INT_2", "INT_3"], // All points are internal
         ],
       },

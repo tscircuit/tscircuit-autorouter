@@ -40,48 +40,52 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const externalGroups = connection.externallyConnectedPointIds ?? []
-    const pointIdToExternalGroup = new Map<string, number>()
-    externalGroups.forEach((group, idx) =>
-      group.forEach((pid) => pointIdToExternalGroup.set(pid, idx)),
+    const externalComponentGroups =
+      connection.alreadyConnectedToExternalComponent ?? []
+    const pointIdToExternalComponentGroup = new Map<string, number>()
+    externalComponentGroups.forEach((group, idx) =>
+      group.forEach((pid) => pointIdToExternalComponentGroup.set(pid, idx)),
     )
 
     // ----------------------------------------------
-    // 2.  Detect internally-connected point groups
+    // 2.  Detect chip-connected point groups
     // ----------------------------------------------
-    const internalGroups = connection.internallyConnectedPointIds ?? []
-    const pointIdToInternalGroup = new Map<string, number>()
-    internalGroups.forEach((group, idx) =>
-      group.forEach((pid) => pointIdToInternalGroup.set(pid, idx)),
+    const internalChipConnectionGroups =
+      connection.internallyConnectedInsideTheChip ?? []
+    const pointIdToInternalChipConnectionGroup = new Map<string, number>()
+    internalChipConnectionGroups.forEach((group, idx) =>
+      group.forEach((pid) =>
+        pointIdToInternalChipConnectionGroup.set(pid, idx),
+      ),
     )
 
-    const areExternallyConnected = (
+    const areAlreadyConnectedToExternalComponent = (
       a: { pointId?: string },
       b: { pointId?: string },
     ) => {
       if (!a.pointId || !b.pointId) return false
-      const g1 = pointIdToExternalGroup.get(a.pointId)
-      const g2 = pointIdToExternalGroup.get(b.pointId)
+      const g1 = pointIdToExternalComponentGroup.get(a.pointId)
+      const g2 = pointIdToExternalComponentGroup.get(b.pointId)
       return g1 !== undefined && g1 === g2
     }
 
-    const areInternallyConnected = (
+    const areInternallyConnectedInsideTheChip = (
       a: { pointId?: string },
       b: { pointId?: string },
     ) => {
       if (!a.pointId || !b.pointId) return false
-      const g1 = pointIdToInternalGroup.get(a.pointId)
-      const g2 = pointIdToInternalGroup.get(b.pointId)
+      const g1 = pointIdToInternalChipConnectionGroup.get(a.pointId)
+      const g2 = pointIdToInternalChipConnectionGroup.get(b.pointId)
       return g1 !== undefined && g1 === g2
     }
 
     if (connection.pointsToConnect.length === 2) {
       if (
-        areExternallyConnected(
+        areAlreadyConnectedToExternalComponent(
           connection.pointsToConnect[0],
           connection.pointsToConnect[1],
         ) ||
-        areInternallyConnected(
+        areInternallyConnectedInsideTheChip(
           connection.pointsToConnect[0],
           connection.pointsToConnect[1],
         )
@@ -94,7 +98,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     // Create a representative point for each internal group
-    const internalGroupRepresentatives = new Map<
+    const internalChipConnectionGroupRepresentatives = new Map<
       number,
       (typeof connection.pointsToConnect)[0]
     >()
@@ -102,22 +106,25 @@ export class NetToPointPairsSolver extends BaseSolver {
     // Find representatives for internal groups (first point in each group)
     connection.pointsToConnect.forEach((point) => {
       if (!point.pointId) return
-      const groupId = pointIdToInternalGroup.get(point.pointId)
-      if (groupId !== undefined && !internalGroupRepresentatives.has(groupId)) {
-        internalGroupRepresentatives.set(groupId, point)
+      const groupId = pointIdToInternalChipConnectionGroup.get(point.pointId)
+      if (
+        groupId !== undefined &&
+        !internalChipConnectionGroupRepresentatives.has(groupId)
+      ) {
+        internalChipConnectionGroupRepresentatives.set(groupId, point)
       }
     })
 
     // Get external points (not in any internal group)
     const externalPoints = connection.pointsToConnect.filter((point) => {
       if (!point.pointId) return true
-      return !pointIdToInternalGroup.has(point.pointId)
+      return !pointIdToInternalChipConnectionGroup.has(point.pointId)
     })
 
     // Combine external points with internal representatives
     const pointsForMst = [
       ...externalPoints,
-      ...internalGroupRepresentatives.values(),
+      ...internalChipConnectionGroupRepresentatives.values(),
     ]
 
     // If we have 2 or more points to connect, build MST
@@ -126,7 +133,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
       let mstIdx = 0
       for (const edge of edges) {
-        if (areExternallyConnected(edge.from, edge.to)) continue
+        if (areAlreadyConnectedToExternalComponent(edge.from, edge.to)) continue
         this.newConnections.push({
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,

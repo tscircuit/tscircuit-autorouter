@@ -58,7 +58,7 @@ test("AutoroutingPipelineSolver > full integration with internally connected pai
             pcb_port_id: "capacitor_2",
           },
         ],
-        internallyConnectedPointIds: [["IOVDD_1", "IOVDD_2", "IOVDD_3"]],
+        internallyConnectedInsideTheChip: [["IOVDD_1", "IOVDD_2", "IOVDD_3"]],
       },
     ],
     bounds: { minX: -5, maxX: 35, minY: -10, maxY: 15 },
