@@ -1,0 +1,22 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.15,
+  "minViaDiameter": 0.6,
+  "obstacles": [
+    { "type": "rect", "layers": ["top"], "center": { "x": 0, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_0"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 5, "y": 0 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_1"] },
+    { "type": "rect", "layers": ["top"], "center": { "x": 10, "y": 5 }, "width": 0.6, "height": 0.6, "connectedTo": ["pcb_port_2"] }
+  ],
+  "connections": [
+    {
+      "name": "INTERNAL_ONLY_CONNECTION",
+      "pointsToConnect": [
+        { "x": 0, "y": 0, "layer": "top", "pointId": "INT_1", "pcb_port_id": "pcb_port_0" },
+        { "x": 5, "y": 0, "layer": "top", "pointId": "INT_2", "pcb_port_id": "pcb_port_1" },
+        { "x": 10, "y": 5, "layer": "top", "pointId": "REG_1", "pcb_port_id": "pcb_port_2" }
+      ],
+      "internallyConnectedInsideTheChip": [["INT_1", "INT_2"]]
+    }
+  ],
+  "bounds": { "minX": -2, "maxX": 15, "minY": -5, "maxY": 10 }
+}
