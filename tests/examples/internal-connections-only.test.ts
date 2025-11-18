@@ -8,10 +8,7 @@ import "tests/fixtures/svg-matcher"
 
 test("internal-connections-only example", async () => {
   const internalConnectionsOnlySrj: SimpleRouteJson = JSON.parse(
-    fs.readFileSync(
-      "assets/internal-connections-only.srj.json",
-      "utf-8",
-    ),
+    fs.readFileSync("assets/internal-connections-only.srj.json", "utf-8"),
   )
   const solver = new AutoroutingPipelineSolver(internalConnectionsOnlySrj)
   solver.solve()

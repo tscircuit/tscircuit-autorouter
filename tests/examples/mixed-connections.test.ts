@@ -3,10 +3,7 @@ import * as fs from "node:fs"
 import { AutoroutingPipelineSolver } from "lib/solvers/AutoroutingPipelineSolver"
 import type { SimpleRouteJson } from "lib/types"
 const mixedConnectionsSrj: SimpleRouteJson = JSON.parse(
-  fs.readFileSync(
-    "assets/mixed-connections.srj.json",
-    "utf-8",
-  ),
+  fs.readFileSync("assets/mixed-connections.srj.json", "utf-8"),
 )
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
