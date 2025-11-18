@@ -97,8 +97,20 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    // Create a representative point for each internal group
-    const internalChipConnectionGroupRepresentatives = new Map<
+    /**
+     * For groups of points that are internally connected inside the chip
+     * (defined by `internallyConnectedInsideTheChip`), we create a single
+     * "representative" point. This is an optimization: instead of routing
+     * to every point in the internal group, the autorouter only needs to
+     * connect to this one representative point. The internal connections
+     * within the chip are assumed to handle the connectivity for the rest
+     * of the group.
+     *
+     * This reduces the complexity of the Minimum Spanning Tree (MST) calculation
+     * and results in cleaner, more efficient PCB layouts by avoiding redundant
+     * traces to already-connected chip pins.
+     */
+    const representativePointsForInternallyConnectedChipGroups = new Map<
       number,
       (typeof connection.pointsToConnect)[0]
     >()
@@ -109,9 +121,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       const groupId = pointIdToInternalChipConnectionGroup.get(point.pointId)
       if (
         groupId !== undefined &&
-        !internalChipConnectionGroupRepresentatives.has(groupId)
+        !representativePointsForInternallyConnectedChipGroups.has(groupId)
       ) {
-        internalChipConnectionGroupRepresentatives.set(groupId, point)
+        representativePointsForInternallyConnectedChipGroups.set(groupId, point)
       }
     })
 
@@ -124,7 +136,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     // Combine external points with internal representatives
     const pointsForMst = [
       ...externalPoints,
-      ...internalChipConnectionGroupRepresentatives.values(),
+      ...representativePointsForInternallyConnectedChipGroups.values(),
     ]
 
     // If we have 2 or more points to connect, build MST
