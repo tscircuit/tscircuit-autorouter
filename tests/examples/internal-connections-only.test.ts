@@ -9,7 +9,7 @@ import "tests/fixtures/svg-matcher"
 test("internal-connections-only example", async () => {
   const internalConnectionsOnlySrj: SimpleRouteJson = JSON.parse(
     fs.readFileSync(
-      "examples/features/internal-connections-only/assets/internal-connections-only.srj.json",
+      "assets/internal-connections-only.srj.json",
       "utf-8",
     ),
   )

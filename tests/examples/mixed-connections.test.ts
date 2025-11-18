@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver } from "lib/solvers/AutoroutingPipelineSolver
 import type { SimpleRouteJson } from "lib/types"
 const mixedConnectionsSrj: SimpleRouteJson = JSON.parse(
   fs.readFileSync(
-    "examples/features/mixed-connections/assets/mixed-connections.srj.json",
+    "assets/mixed-connections.srj.json",
     "utf-8",
   ),
 )
