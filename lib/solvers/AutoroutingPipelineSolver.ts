@@ -50,6 +50,7 @@ import { CapacityPathingSolver5 } from "./CapacityPathingSolver/CapacityPathingS
 import { CapacityPathingGreedySolver } from "./CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { NetToPointPairsSolver2_OffBoardConnection } from "./NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -127,7 +128,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   pipelineDef = [
     definePipelineStep(
       "netToPointPairsSolver",
-      NetToPointPairsSolver,
+      NetToPointPairsSolver2_OffBoardConnection,
       (cms) => [cms.srj, cms.colorMap],
       {
         onSolved: (cms) => {

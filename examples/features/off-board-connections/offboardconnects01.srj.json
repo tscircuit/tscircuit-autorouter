@@ -1,0 +1,53 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.2,
+  "obstacles": [
+    {
+      "type": "rect",
+      "layers": ["top", "bottom"],
+      "center": { "x": -7, "y": 2 },
+      "width": 5,
+      "height": 5,
+      "connectedTo": ["pointA"]
+    },
+    {
+      "type": "rect",
+      "layers": ["top", "bottom"],
+      "center": { "x": 10, "y": -5 },
+      "width": 5,
+      "height": 5,
+      "connectedTo": ["pointB"]
+    },
+    {
+      "type": "rect",
+      "layers": ["top", "bottom"],
+      "center": { "x": -7, "y": -5 },
+      "width": 5,
+      "height": 5,
+      "connectedTo": ["pointC"]
+    }
+  ],
+  "connections": [
+    {
+      "name": "connectionA",
+      "pointsToConnect": [
+        { "x": -7, "y": 2, "layer": "top", "pointId": "pointA" },
+        { "x": 10, "y": -5, "layer": "top", "pointId": "pointB" }
+      ]
+    },
+    {
+      "name": "connectionB",
+      "isOffBoard": true,
+      "pointsToConnect": [
+        { "x": -7, "y": -5, "layer": "top", "pointId": "pointC" },
+        { "x": 10, "y": -5, "layer": "top", "pointId": "pointB" }
+      ]
+    }
+  ],
+  "bounds": {
+    "minX": -15,
+    "maxX": 15,
+    "minY": -15,
+    "maxY": 15
+  }
+}

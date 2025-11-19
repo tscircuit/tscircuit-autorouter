@@ -2,6 +2,13 @@ export type TraceId = string
 export type NetId = string
 export type PointId = string
 export type OffBoardConnectionId = string
+export type ConnectionPoint = {
+  x: number
+  y: number
+  layer: string
+  pointId?: PointId
+  pcb_port_id?: string
+}
 
 export interface SimpleRouteJson {
   layerCount: number
@@ -31,13 +38,7 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
-  pointsToConnect: Array<{
-    x: number
-    y: number
-    layer: string
-    pointId?: PointId
-    pcb_port_id?: string
-  }>
+  pointsToConnect: ConnectionPoint[]
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]

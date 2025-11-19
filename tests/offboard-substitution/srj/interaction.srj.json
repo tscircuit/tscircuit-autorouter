@@ -1,0 +1,58 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.2,
+  "obstacles": [
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": 0 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["A"]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -5, "y": -5 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["A_prime"]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 10, "y": 0 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["B"]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 10, "y": 10 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["C"]
+    }
+  ],
+  "connections": [
+    {
+      "name": "on-board-net",
+      "pointsToConnect": [
+        { "x": 0, "y": 0, "layer": "top", "pointId": "A" },
+        { "x": 10, "y": 0, "layer": "top", "pointId": "B" },
+        { "x": 10, "y": 10, "layer": "top", "pointId": "C" }
+      ],
+      "externallyConnectedPointIds": [["B", "C"]]
+    },
+    {
+      "name": "off-board-A",
+      "isOffBoard": true,
+      "pointsToConnect": [
+        { "x": 0, "y": 0, "layer": "top", "pointId": "A" },
+        { "x": -5, "y": -5, "layer": "top", "pointId": "A_prime" }
+      ]
+    }
+  ],
+  "bounds": { "minX": -10, "maxX": 15, "minY": -10, "maxY": 15 }
+}
