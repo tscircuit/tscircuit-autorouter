@@ -151,9 +151,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = (
-            cms.nodeSolver as any as RectdiffSolver
-          ).meshNodes
+          cms.capacityNodes = cms.nodeSolver?.meshNodes ?? []
         },
       },
     ),
