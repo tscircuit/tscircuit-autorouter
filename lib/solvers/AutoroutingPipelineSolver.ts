@@ -1,3 +1,4 @@
+import { RectdiffSolver } from "lib/solvers/RectdiffSolver"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { combineVisualizations } from "../utils/combineVisualizations"
 import type {
@@ -91,7 +92,7 @@ function definePipelineStep<
 
 export class AutoroutingPipelineSolver extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
-  nodeSolver?: CapacityMeshNodeSolver
+  nodeSolver?: RectdiffSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
   initialPathingSolver?: CapacityPathingGreedySolver
@@ -143,14 +144,16 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "nodeSolver",
-      CapacityMeshNodeSolver2_NodeUnderObstacle,
+      RectdiffSolver,
       (cms) => [
         cms.netToPointPairsSolver?.getNewSimpleRouteJson() || cms.srj,
-        cms.opts,
+        {},
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.finishedNodes!
+          cms.capacityNodes = (
+            cms.nodeSolver as any as RectdiffSolver
+          ).meshNodes
         },
       },
     ),
@@ -169,7 +172,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     definePipelineStep(
       "singleLayerNodeMerger",
       SingleLayerNodeMergerSolver,
-      (cms) => [cms.nodeSolver?.finishedNodes!],
+      (cms) => [cms.nodeSolver?.meshNodes || []],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
