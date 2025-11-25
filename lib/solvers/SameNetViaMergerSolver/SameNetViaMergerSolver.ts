@@ -58,9 +58,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.obstacles = input.obstacles
 
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", input.obstacles)
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(
-      this.inputHdRoutes,
-    )
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.inputHdRoutes)
     this.vias = []
     this.offendingVias = []
     this.connMap = input.connMap
@@ -94,13 +92,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const firstVia = this.vias[i]
       const viasInNet = this.viasByNet.get(firstVia.net)
       if (!viasInNet) continue
-      for (let j = 0; j < viasInNet.length; j++) {
+
+      const firstIndexInNet = viasInNet.indexOf(firstVia)
+
+      for (let j = firstIndexInNet + 1; j < viasInNet.length; j++) {
         const secondVia = viasInNet[j]
-        if (firstVia.net !== secondVia.net) continue
+
         const squaredDistance =
           (firstVia.x - secondVia.x) ** 2 + (firstVia.y - secondVia.y) ** 2
         const maxDistance = firstVia.diameter / 2 + secondVia.diameter / 2
         const maxSquaredDistance = maxDistance ** 2
+
         if (squaredDistance <= maxSquaredDistance && squaredDistance !== 0) {
           this.offendingVias.push([firstVia, secondVia])
         }
@@ -133,28 +135,34 @@ export class SameNetViaMergerSolver extends BaseSolver {
       for (let j = 1; j < route.length; j++) {
         const prev = route[j - 1]
         const curr = route[j]
-        console.log(curr)
         if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
           route.splice(j, 0, {
             x: viaNotToRemove.x,
             y: viaNotToRemove.y,
-            z: layer,
+            z: prev.z,
           })
           break
         }
       }
     }
 
+    // this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
+    //   this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
+    //     if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
+    //       return {
+    //         x: viaNotToRemove.x,
+    //         y: viaNotToRemove.y
+    //       }
+    //     }
+    //     return via
+    //   })
     this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
-      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
-        if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
-          return {
-            x: viaNotToRemove.x,
-            y: viaNotToRemove.y
-          }
-        }
-        return via
+      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
+        return viaToRemove.x !== via.x || viaToRemove.y !== via.y
       })
+    console.log(this.mergedViaHdRoutes)
+    console.log(viaToRemove)
+    console.log(viaNotToRemove)
 
     this.offendingVias.shift()
   }
@@ -244,5 +252,4 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
     return visualization
   }
-
 }
