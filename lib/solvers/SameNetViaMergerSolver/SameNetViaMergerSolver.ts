@@ -44,8 +44,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
 
-
-
   obstacleSHI: ObstacleSpatialHashIndex | null = null
   hdRouteSHI: HighDensityRouteSpatialIndex | null = null
 
