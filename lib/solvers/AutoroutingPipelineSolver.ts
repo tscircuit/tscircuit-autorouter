@@ -369,28 +369,23 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep(
-      "uselessViaMerger",
-      UselessViaMergerSolver,
-      (cms) => [
-        {
-          unsimplifiedHdRoutes:
-            cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
-          obstacles: cms.srj.obstacles,
-          colorMap: cms.colorMap,
-          layercount: cms.srj.layercount,
-          connMap: cms.connMap,
-          outline: cms.srj.outline,
-        },
-      ],
-    ),
+    definePipelineStep("uselessViaMerger", UselessViaMergerSolver, (cms) => [
+      {
+        unsimplifiedHdRoutes:
+          cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
+        obstacles: cms.srj.obstacles,
+        colorMap: cms.colorMap,
+        layercount: cms.srj.layercount,
+        connMap: cms.connMap,
+        outline: cms.srj.outline,
+      },
+    ]),
     definePipelineStep(
       "multiSimplifiedPathSolver2",
       MultiSimplifiedPathSolver,
       (cms) => [
         {
-          unsimplifiedHdRoutes:
-            cms.uselessViaMerger?.getOptimizedHdRoutes()!,
+          unsimplifiedHdRoutes: cms.uselessViaMerger?.getOptimizedHdRoutes()!,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
