@@ -46,6 +46,7 @@ import {
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "./CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { DeadEndSolver } from "./DeadEndSolver/DeadEndSolver"
 import { UselessViaRemovalSolver } from "./UselessViaRemovalSolver/UselessViaRemovalSolver"
+import { UselessViaMergerSolver } from "./UselessViaMergerSolver/UselessViaMergerSolver"
 import { CapacityPathingSolver5 } from "./CapacityPathingSolver/CapacityPathingSolver5"
 import { CapacityPathingGreedySolver } from "./CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
@@ -369,12 +370,27 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "uselessViaMerger",
+      UselessViaMergerSolver,
+      (cms) => [
+        {
+          unsimplifiedHdRoutes:
+            cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
+          obstacles: cms.srj.obstacles,
+          colorMap: cms.colorMap,
+          layercount: cms.srj.layercount,
+          connMap: cms.connMap,
+          outline: cms.srj.outline,
+        },
+      ],
+    ),
+    definePipelineStep(
       "multiSimplifiedPathSolver2",
       MultiSimplifiedPathSolver,
       (cms) => [
         {
           unsimplifiedHdRoutes:
-            cms.uselessViaRemovalSolver2?.getOptimizedHdRoutes()!,
+            cms.uselessViaMerger?.getOptimizedHdRoutes()!,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
