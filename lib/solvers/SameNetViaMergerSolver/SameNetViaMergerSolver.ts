@@ -146,8 +146,14 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
-      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
-        return via.x !== viaToRemove.x && via.y !== viaToRemove.y
+      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
+        if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
+          return {
+            x: viaNotToRemove.x,
+            y: viaNotToRemove.y
+          }
+        }
+        return via
       })
 
     this.offendingVias.shift()
