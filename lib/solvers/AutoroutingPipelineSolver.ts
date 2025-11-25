@@ -654,7 +654,6 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    console.log(this)
     return (
       this.sameNetViaMerger?.getOptimizedHdRoutes() ??
       this.multiSimplifiedPathSolver2?.simplifiedHdRoutes ??

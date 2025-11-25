@@ -116,7 +116,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
       return
     }
     const currentOffendingVias = this.offendingVias[0]
-    console.log(currentOffendingVias)
     const viaToRemove =
       currentOffendingVias[0].layers.length <
       currentOffendingVias[1].layers.length
@@ -137,8 +136,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const curr = route[j]
 
         if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
-          console.log(structuredClone(route), j)
-
           route.splice(j, 0, {
             x: viaNotToRemove.x,
             y: viaNotToRemove.y,
@@ -149,8 +146,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
             y: viaNotToRemove.y,
             z: prev.z,
           })
-
-          console.log(structuredClone(route), j)
 
           this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
             this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
