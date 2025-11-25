@@ -43,6 +43,7 @@ export class UselessViaMergerSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
+  viasByNet: Map<string, Via[]>
 
   activeSubSolver?: SingleRouteUselessViaMergerSolver | null | undefined = null
 
@@ -81,10 +82,22 @@ export class UselessViaMergerSolver extends BaseSolver {
       }
     }
 
+    this.viasByNet = new Map<string, Via[]>();
+
+    for (const via of this.vias) {
+      const list = this.viasByNet.get(via.net);
+      if (list) {
+        list.push(via);
+      } else {
+        this.viasByNet.set(via.net, [via]);
+      }
+    }
+
     for (let i = 0; i < this.vias.length - 1; i++) {
       const firstVia = this.vias[i]
-      for (let j = i + 1; j < this.vias.length; j++) {
-        const secondVia = this.vias[j]
+      const viasInNet = this.viasByNet.get(firstVia.net)
+      for (let j = 0; j < viasInNet.length; j++) {
+        const secondVia = viasInNet[j]
         if (firstVia.net !== secondVia.net) continue
         const squaredDistance =
           (firstVia.x - secondVia.x) ** 2 + (firstVia.y - secondVia.y) ** 2
