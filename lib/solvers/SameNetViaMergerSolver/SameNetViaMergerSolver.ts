@@ -114,6 +114,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
       return
     }
     const currentOffendingVias = this.offendingVias[0]
+    console.log(currentOffendingVias)
     const viaToRemove =
       currentOffendingVias[0].layers.length <
       currentOffendingVias[1].layers.length
@@ -132,12 +133,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       for (let j = 1; j < route.length; j++) {
         const prev = route[j - 1]
         const curr = route[j]
-
-        const crossesIntoLayer = prev.z !== layer && curr.z === layer
-
-        const crossesOutOfLayer = prev.z === layer && curr.z !== layer
-
-        if (crossesIntoLayer || crossesOutOfLayer) {
+        console.log(curr)
+        if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
           route.splice(j, 0, {
             x: viaNotToRemove.x,
             y: viaNotToRemove.y,
@@ -159,4 +156,87 @@ export class SameNetViaMergerSolver extends BaseSolver {
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
     return this.mergedViaHdRoutes
   }
+
+  visualize(): GraphicsObject {
+    const visualization: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+        coordinateSystem: "cartesian",
+        title: "Same Net Via Merger Solver",
+      }
+
+    // Visualize obstacles
+    for (const obstacle of this.input.obstacles) {
+      let fillColor = "rgba(128, 128, 128, 0.2)" // Default faded gray
+      const strokeColor = "rgba(128, 128, 128, 0.5)"
+      const isOnLayer0 = obstacle.zLayers?.includes(0)
+      const isOnLayer1 = obstacle.zLayers?.includes(1)
+
+      if (isOnLayer0 && isOnLayer1) {
+        fillColor = "rgba(128, 0, 128, 0.2)" // Faded purple for both layers
+      } else if (isOnLayer0) {
+        fillColor = "rgba(255, 0, 0, 0.2)" // Faded red for layer 0
+      } else if (isOnLayer1) {
+        fillColor = "rgba(0, 0, 255, 0.2)" // Faded blue for layer 1
+      }
+
+      visualization.rects.push({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        fill: fillColor,
+        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+      })
+    }
+
+    // Display each optimized route
+    for (const route of this.mergedViaHdRoutes) {
+      // Skip routes with no points
+      if (route.route.length === 0) continue
+
+      const color = this.input.colorMap[route.connectionName] || "#888888"
+
+      // Add lines connecting route points on the same layer
+      for (let i = 0; i < route.route.length - 1; i++) {
+        const current = route.route[i]
+        const next = route.route[i + 1]
+
+        // Only draw segments that are on the same layer
+        if (current.z === next.z) {
+          visualization.lines.push({
+            points: [
+              { x: current.x, y: current.y },
+              { x: next.x, y: next.y },
+            ],
+            strokeColor: current.z === 0 ? "red" : "blue",
+            strokeWidth: route.traceThickness,
+            label: `${route.connectionName} (z=${current.z})`,
+          })
+        }
+      }
+
+      // Add circles for vias
+      for (const via of route.vias) {
+        visualization.circles.push({
+          center: { x: via.x, y: via.y },
+          radius: route.viaDiameter / 2,
+          fill: "rgba(255, 0, 255, 0.5)",
+          label: `${route.connectionName} via`,
+        })
+      }
+    }
+
+    if (this.activeSubSolver) {
+      visualization.lines.push(
+        ...(this.activeSubSolver.visualize().lines ?? []),
+      )
+    }
+
+    return visualization
+  }
+
 }
