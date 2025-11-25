@@ -372,7 +372,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep("sameNetViaMerger", SameNetViaMergerSolver, (cms) => [
       {
-        unsimplifiedHdRoutes:
+        inputHdRoutes:
           cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
         obstacles: cms.srj.obstacles,
         colorMap: cms.colorMap,
