@@ -19,9 +19,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_0",
           "connectivity_net544",
@@ -38,9 +36,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_1",
           "connectivity_net193",
@@ -71,9 +67,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_2",
           "connectivity_net208",
@@ -104,9 +98,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_3",
           "connectivity_net268",
@@ -141,9 +133,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_4",
           "connectivity_net283",
@@ -178,9 +168,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_5",
           "connectivity_net298",
@@ -215,9 +203,7 @@
           "y": -48.25
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_6",
           "connectivity_net12",
@@ -236,9 +222,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_7",
           "connectivity_net296",
@@ -326,9 +310,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_8",
           "connectivity_net251",
@@ -462,9 +444,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_9",
           "connectivity_net176",
@@ -598,9 +578,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_10",
           "connectivity_net101",
@@ -734,9 +712,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_11",
           "connectivity_net545",
@@ -753,9 +729,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_12",
           "connectivity_net546",
@@ -772,9 +746,7 @@
           "y": -31.75
         },
         "height": 3,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_13",
           "connectivity_net547",
@@ -791,9 +763,7 @@
           "y": 40.46499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_14",
           "connectivity_net101",
@@ -927,9 +897,7 @@
           "y": 43.00499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_15",
           "connectivity_net101",
@@ -1063,9 +1031,7 @@
           "y": 33.19500120000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_16",
           "connectivity_net101",
@@ -1199,9 +1165,7 @@
           "y": 35.735001199999985
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_17",
           "connectivity_net101",
@@ -1335,9 +1299,7 @@
           "y": 40.46499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_18",
           "connectivity_net101",
@@ -1471,9 +1433,7 @@
           "y": 43.00499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_19",
           "connectivity_net101",
@@ -1607,9 +1567,7 @@
           "y": 33.19500120000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_20",
           "connectivity_net101",
@@ -1743,9 +1701,7 @@
           "y": 35.735001199999985
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_21",
           "connectivity_net101",
@@ -1879,9 +1835,7 @@
           "y": 40.46499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_22",
           "connectivity_net101",
@@ -2015,9 +1969,7 @@
           "y": 43.00499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_23",
           "connectivity_net101",
@@ -2151,9 +2103,7 @@
           "y": 33.19500120000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_24",
           "connectivity_net101",
@@ -2287,9 +2237,7 @@
           "y": 35.735001199999985
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_25",
           "connectivity_net101",
@@ -2423,9 +2371,7 @@
           "y": 40.46499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_26",
           "connectivity_net101",
@@ -2559,9 +2505,7 @@
           "y": 43.00499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_27",
           "connectivity_net101",
@@ -2695,9 +2639,7 @@
           "y": 33.19500120000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_28",
           "connectivity_net101",
@@ -2831,9 +2773,7 @@
           "y": 35.735001199999985
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_29",
           "connectivity_net101",
@@ -2967,9 +2907,7 @@
           "y": 40.46499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_30",
           "connectivity_net101",
@@ -3103,9 +3041,7 @@
           "y": 43.00499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_31",
           "connectivity_net101",
@@ -3239,9 +3175,7 @@
           "y": 33.19500120000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_32",
           "connectivity_net101",
@@ -3375,9 +3309,7 @@
           "y": 35.735001199999985
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_33",
           "connectivity_net101",
@@ -3511,9 +3443,7 @@
           "y": 21.414998800000014
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_34",
           "connectivity_net176",
@@ -3647,9 +3577,7 @@
           "y": 23.954998799999977
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_35",
           "connectivity_net176",
@@ -3783,9 +3711,7 @@
           "y": 14.145001200000015
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_36",
           "connectivity_net176",
@@ -3919,9 +3845,7 @@
           "y": 16.68500119999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_37",
           "connectivity_net176",
@@ -4055,9 +3979,7 @@
           "y": 21.414998800000014
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_38",
           "connectivity_net176",
@@ -4191,9 +4113,7 @@
           "y": 23.954998799999977
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_39",
           "connectivity_net176",
@@ -4327,9 +4247,7 @@
           "y": 14.145001200000015
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_40",
           "connectivity_net176",
@@ -4463,9 +4381,7 @@
           "y": 16.68500119999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_41",
           "connectivity_net176",
@@ -4599,9 +4515,7 @@
           "y": 21.414998800000014
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_42",
           "connectivity_net176",
@@ -4735,9 +4649,7 @@
           "y": 23.954998799999977
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_43",
           "connectivity_net176",
@@ -4871,9 +4783,7 @@
           "y": 14.145001200000015
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_44",
           "connectivity_net176",
@@ -5007,9 +4917,7 @@
           "y": 16.68500119999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_45",
           "connectivity_net176",
@@ -5143,9 +5051,7 @@
           "y": 21.414998800000014
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_46",
           "connectivity_net176",
@@ -5279,9 +5185,7 @@
           "y": 23.954998799999977
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_47",
           "connectivity_net176",
@@ -5415,9 +5319,7 @@
           "y": 14.145001200000015
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_48",
           "connectivity_net176",
@@ -5551,9 +5453,7 @@
           "y": 16.68500119999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_49",
           "connectivity_net176",
@@ -5687,9 +5587,7 @@
           "y": 21.414998800000014
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_50",
           "connectivity_net176",
@@ -5823,9 +5721,7 @@
           "y": 23.954998799999977
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_51",
           "connectivity_net176",
@@ -5959,9 +5855,7 @@
           "y": 14.145001200000015
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_52",
           "connectivity_net176",
@@ -6095,9 +5989,7 @@
           "y": 16.68500119999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_53",
           "connectivity_net176",
@@ -6231,9 +6123,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_54",
           "connectivity_net251",
@@ -6367,9 +6257,7 @@
           "y": 4.90499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_55",
           "connectivity_net251",
@@ -6503,9 +6391,7 @@
           "y": -4.904998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_56",
           "connectivity_net251",
@@ -6639,9 +6525,7 @@
           "y": -2.36499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_57",
           "connectivity_net251",
@@ -6775,9 +6659,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_58",
           "connectivity_net251",
@@ -6911,9 +6793,7 @@
           "y": 4.90499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_59",
           "connectivity_net251",
@@ -7047,9 +6927,7 @@
           "y": -4.904998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_60",
           "connectivity_net251",
@@ -7183,9 +7061,7 @@
           "y": -2.36499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_61",
           "connectivity_net251",
@@ -7319,9 +7195,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_62",
           "connectivity_net251",
@@ -7455,9 +7329,7 @@
           "y": 4.90499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_63",
           "connectivity_net251",
@@ -7591,9 +7463,7 @@
           "y": -4.904998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_64",
           "connectivity_net251",
@@ -7727,9 +7597,7 @@
           "y": -2.36499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_65",
           "connectivity_net251",
@@ -7863,9 +7731,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_66",
           "connectivity_net251",
@@ -7999,9 +7865,7 @@
           "y": 4.90499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_67",
           "connectivity_net251",
@@ -8135,9 +7999,7 @@
           "y": -4.904998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_68",
           "connectivity_net251",
@@ -8271,9 +8133,7 @@
           "y": -2.36499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_69",
           "connectivity_net251",
@@ -8407,9 +8267,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_70",
           "connectivity_net251",
@@ -8543,9 +8401,7 @@
           "y": 4.90499879999998
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_71",
           "connectivity_net251",
@@ -8679,9 +8535,7 @@
           "y": -4.904998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_72",
           "connectivity_net251",
@@ -8815,9 +8669,7 @@
           "y": -2.36499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_73",
           "connectivity_net251",
@@ -8951,9 +8803,7 @@
           "y": -16.685001199999988
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_74",
           "connectivity_net296",
@@ -9041,9 +8891,7 @@
           "y": -14.145001200000022
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_75",
           "connectivity_net296",
@@ -9131,9 +8979,7 @@
           "y": -23.954998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_76",
           "connectivity_net296",
@@ -9221,9 +9067,7 @@
           "y": -21.41499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_77",
           "connectivity_net296",
@@ -9311,9 +9155,7 @@
           "y": -16.685001199999988
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_78",
           "connectivity_net296",
@@ -9401,9 +9243,7 @@
           "y": -14.145001200000022
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_79",
           "connectivity_net296",
@@ -9491,9 +9331,7 @@
           "y": -23.954998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_80",
           "connectivity_net296",
@@ -9581,9 +9419,7 @@
           "y": -21.41499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_81",
           "connectivity_net296",
@@ -9671,9 +9507,7 @@
           "y": -16.685001199999988
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_82",
           "connectivity_net296",
@@ -9761,9 +9595,7 @@
           "y": -14.145001200000022
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "bottom"
-        ],
+        "layers": ["bottom"],
         "connectedTo": [
           "pcb_smtpad_83",
           "connectivity_net296",
@@ -9851,9 +9683,7 @@
           "y": -23.954998799999984
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_84",
           "connectivity_net296",
@@ -9941,9 +9771,7 @@
           "y": -21.41499880000002
         },
         "height": 2.4999949999999997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_85",
           "connectivity_net296",
@@ -10031,12 +9859,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_0",
           "connectivity_net101",
@@ -10170,12 +9993,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_1",
           "connectivity_net193",
@@ -10206,12 +10024,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_2",
           "connectivity_net101",
@@ -10345,12 +10158,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_3",
           "connectivity_net208",
@@ -10381,12 +10189,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_4",
           "connectivity_net101",
@@ -10520,12 +10323,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_5",
           "connectivity_net268",
@@ -10560,12 +10358,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_6",
           "connectivity_net101",
@@ -10699,12 +10492,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_7",
           "connectivity_net283",
@@ -10739,12 +10527,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_8",
           "connectivity_net101",
@@ -10878,12 +10661,7 @@
           "y": 47.1
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_9",
           "connectivity_net298",
@@ -10918,12 +10696,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_10",
           "connectivity_net176",
@@ -11057,12 +10830,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_11",
           "connectivity_net193",
@@ -11093,12 +10861,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_12",
           "connectivity_net176",
@@ -11232,12 +10995,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_13",
           "connectivity_net208",
@@ -11268,12 +11026,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_14",
           "connectivity_net176",
@@ -11407,12 +11160,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_15",
           "connectivity_net268",
@@ -11447,12 +11195,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_16",
           "connectivity_net176",
@@ -11586,12 +11329,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_17",
           "connectivity_net283",
@@ -11626,12 +11364,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_18",
           "connectivity_net176",
@@ -11765,12 +11498,7 @@
           "y": 28.049999999999997
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_19",
           "connectivity_net298",
@@ -11805,12 +11533,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_20",
           "connectivity_net251",
@@ -11944,12 +11667,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_21",
           "connectivity_net193",
@@ -11980,12 +11698,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_22",
           "connectivity_net251",
@@ -12119,12 +11832,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_23",
           "connectivity_net208",
@@ -12155,12 +11863,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_24",
           "connectivity_net251",
@@ -12294,12 +11997,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_25",
           "connectivity_net268",
@@ -12334,12 +12032,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_26",
           "connectivity_net251",
@@ -12473,12 +12166,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_27",
           "connectivity_net283",
@@ -12513,12 +12201,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_28",
           "connectivity_net251",
@@ -12652,12 +12335,7 @@
           "y": 8.999999999999998
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_29",
           "connectivity_net298",
@@ -12692,12 +12370,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_30",
           "connectivity_net296",
@@ -12785,12 +12458,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_31",
           "connectivity_net268",
@@ -12825,12 +12493,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_32",
           "connectivity_net296",
@@ -12918,12 +12581,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_33",
           "connectivity_net283",
@@ -12958,12 +12616,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_34",
           "connectivity_net296",
@@ -13051,12 +12704,7 @@
           "y": -10.050000000000004
         },
         "height": 1,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_35",
           "connectivity_net298",
@@ -13091,12 +12739,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13107,12 +12750,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13123,12 +12761,7 @@
           "y": 40.46499880000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13139,12 +12772,7 @@
           "y": 43.004998800000095
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13155,12 +12783,7 @@
           "y": 33.19500120000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13171,12 +12794,7 @@
           "y": 35.7350012000001
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13187,12 +12805,7 @@
           "y": 38.10000000000004
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13203,12 +12816,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13219,12 +12827,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13235,12 +12838,7 @@
           "y": 40.46499880000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13251,12 +12849,7 @@
           "y": 43.004998800000095
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13267,12 +12860,7 @@
           "y": 33.19500120000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13283,12 +12871,7 @@
           "y": 35.7350012000001
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13299,12 +12882,7 @@
           "y": 38.10000000000004
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13315,12 +12893,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13331,12 +12904,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13347,12 +12915,7 @@
           "y": 40.46499880000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13363,12 +12926,7 @@
           "y": 43.004998800000095
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13379,12 +12937,7 @@
           "y": 33.19500120000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13395,12 +12948,7 @@
           "y": 35.7350012000001
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13411,12 +12959,7 @@
           "y": 38.10000000000004
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13427,12 +12970,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13443,12 +12981,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13459,12 +12992,7 @@
           "y": 40.46499880000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13475,12 +13003,7 @@
           "y": 43.004998800000095
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13491,12 +13014,7 @@
           "y": 33.19500120000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13507,12 +13025,7 @@
           "y": 35.7350012000001
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13523,12 +13036,7 @@
           "y": 38.10000000000004
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13539,12 +13047,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13555,12 +13058,7 @@
           "y": 38.1
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13571,12 +13069,7 @@
           "y": 40.46499880000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13587,12 +13080,7 @@
           "y": 43.004998800000095
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13603,12 +13091,7 @@
           "y": 33.19500120000002
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13619,12 +13102,7 @@
           "y": 35.7350012000001
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13635,12 +13113,7 @@
           "y": 38.10000000000004
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13651,12 +13124,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13667,12 +13135,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13683,12 +13146,7 @@
           "y": 21.414998800000014
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13699,12 +13157,7 @@
           "y": 23.95499880000009
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13715,12 +13168,7 @@
           "y": 14.145001200000015
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13731,12 +13179,7 @@
           "y": 16.685001200000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13747,12 +13190,7 @@
           "y": 19.05000000000003
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13763,12 +13201,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13779,12 +13212,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13795,12 +13223,7 @@
           "y": 21.414998800000014
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13811,12 +13234,7 @@
           "y": 23.95499880000009
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13827,12 +13245,7 @@
           "y": 14.145001200000015
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13843,12 +13256,7 @@
           "y": 16.685001200000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13859,12 +13267,7 @@
           "y": 19.05000000000003
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13875,12 +13278,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13891,12 +13289,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13907,12 +13300,7 @@
           "y": 21.414998800000014
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13923,12 +13311,7 @@
           "y": 23.95499880000009
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13939,12 +13322,7 @@
           "y": 14.145001200000015
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13955,12 +13333,7 @@
           "y": 16.685001200000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13971,12 +13344,7 @@
           "y": 19.05000000000003
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -13987,12 +13355,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14003,12 +13366,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14019,12 +13377,7 @@
           "y": 21.414998800000014
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14035,12 +13388,7 @@
           "y": 23.95499880000009
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14051,12 +13399,7 @@
           "y": 14.145001200000015
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14067,12 +13410,7 @@
           "y": 16.685001200000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14083,12 +13421,7 @@
           "y": 19.05000000000003
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14099,12 +13432,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14115,12 +13443,7 @@
           "y": 19.049999999999997
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14131,12 +13454,7 @@
           "y": 21.414998800000014
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14147,12 +13465,7 @@
           "y": 23.95499880000009
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14163,12 +13476,7 @@
           "y": 14.145001200000015
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14179,12 +13487,7 @@
           "y": 16.685001200000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14195,12 +13498,7 @@
           "y": 19.05000000000003
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14211,12 +13509,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14227,12 +13520,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14243,12 +13531,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14259,12 +13542,7 @@
           "y": 4.904998800000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14275,12 +13553,7 @@
           "y": -4.904998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14291,12 +13564,7 @@
           "y": -2.3649987999999063
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14307,12 +13575,7 @@
           "y": 3.1530333899354446e-14
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14323,12 +13586,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14339,12 +13597,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14355,12 +13608,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14371,12 +13619,7 @@
           "y": 4.904998800000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14387,12 +13630,7 @@
           "y": -4.904998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14403,12 +13641,7 @@
           "y": -2.3649987999999063
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14419,12 +13652,7 @@
           "y": 3.1530333899354446e-14
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14435,12 +13663,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14451,12 +13674,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14467,12 +13685,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14483,12 +13696,7 @@
           "y": 4.904998800000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14499,12 +13707,7 @@
           "y": -4.904998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14515,12 +13718,7 @@
           "y": -2.3649987999999063
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14531,12 +13729,7 @@
           "y": 3.1530333899354446e-14
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14547,12 +13740,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14563,12 +13751,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14579,12 +13762,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14595,12 +13773,7 @@
           "y": 4.904998800000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14611,12 +13784,7 @@
           "y": -4.904998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14627,12 +13795,7 @@
           "y": -2.3649987999999063
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14643,12 +13806,7 @@
           "y": 3.1530333899354446e-14
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14659,12 +13817,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14675,12 +13828,7 @@
           "y": -1.7763568394002505e-15
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14691,12 +13839,7 @@
           "y": 2.3649988000000164
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14707,12 +13850,7 @@
           "y": 4.904998800000094
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14723,12 +13861,7 @@
           "y": -4.904998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14739,12 +13872,7 @@
           "y": -2.3649987999999063
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14755,12 +13883,7 @@
           "y": 3.1530333899354446e-14
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14771,12 +13894,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14787,12 +13905,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14803,12 +13916,7 @@
           "y": -16.685001199999988
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14819,12 +13927,7 @@
           "y": -14.145001199999909
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14835,12 +13938,7 @@
           "y": -23.954998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14851,12 +13949,7 @@
           "y": -21.414998799999907
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14867,12 +13960,7 @@
           "y": -19.04999999999997
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14883,12 +13971,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14899,12 +13982,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14915,12 +13993,7 @@
           "y": -16.685001199999988
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14931,12 +14004,7 @@
           "y": -14.145001199999909
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14947,12 +14015,7 @@
           "y": -23.954998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14963,12 +14026,7 @@
           "y": -21.414998799999907
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14979,12 +14037,7 @@
           "y": -19.04999999999997
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -14995,12 +14048,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15011,12 +14059,7 @@
           "y": -19.050000000000004
         },
         "height": 1.7018,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15027,12 +14070,7 @@
           "y": -16.685001199999988
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15043,12 +14081,7 @@
           "y": -14.145001199999909
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15059,12 +14092,7 @@
           "y": -23.954998799999984
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15075,12 +14103,7 @@
           "y": -21.414998799999907
         },
         "height": 2.9999939999999996,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       },
       {
@@ -15091,12 +14114,7 @@
           "y": -19.04999999999997
         },
         "height": 4.1999916,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       }
     ],
