@@ -63,59 +63,68 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.offendingVias = []
     this.connMap = input.connMap
 
-    for (let i = 0; i < this.unprocessedRoutes.length; i++) {
-      const route = this.unprocessedRoutes[i]
+    this.viasByNet = new Map<string, Via[]>()
+
+    this.rebuildVias()
+  }
+
+  private rebuildVias() {
+    this.vias = []
+    this.viasByNet = new Map<string, Via[]>()
+
+    for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
+      const route = this.mergedViaHdRoutes[i]
       for (let j = 0; j < route.vias.length; j++) {
-        const via = route.vias[j]
-        this.vias.push({
-          ...via,
+        const viaPoint = route.vias[j]
+        const via: Via = {
+          x: viaPoint.x,
+          y: viaPoint.y,
           diameter: route.viaDiameter,
           net: this.connMap?.idToNetMap[route.connectionName] ?? "",
           layers: [...new Set(route.route.map((p) => p.z))],
           routeIndex: i,
-        })
+        }
+        this.vias.push(via)
+        const list = this.viasByNet.get(via.net)
+        if (list) list.push(via)
+        else this.viasByNet.set(via.net, [via])
       }
     }
+  }
 
-    this.viasByNet = new Map<string, Via[]>()
-
-    for (const via of this.vias) {
-      const list = this.viasByNet.get(via.net)
-      if (list) {
-        list.push(via)
-      } else {
-        this.viasByNet.set(via.net, [via])
-      }
-    }
-
+  private findNextOffendingPair(): [Via, Via] | null {
     for (let i = 0; i < this.vias.length - 1; i++) {
       const firstVia = this.vias[i]
       const viasInNet = this.viasByNet.get(firstVia.net)
       if (!viasInNet) continue
 
       const firstIndexInNet = viasInNet.indexOf(firstVia)
+      const startJ = firstIndexInNet >= 0 ? firstIndexInNet + 1 : 0
 
-      for (let j = firstIndexInNet + 1; j < viasInNet.length; j++) {
+      for (let j = startJ; j < viasInNet.length; j++) {
         const secondVia = viasInNet[j]
-
-        const squaredDistance =
-          (firstVia.x - secondVia.x) ** 2 + (firstVia.y - secondVia.y) ** 2
+        const dx = firstVia.x - secondVia.x
+        const dy = firstVia.y - secondVia.y
+        const squaredDistance = dx * dx + dy * dy
         const maxDistance = firstVia.diameter / 2 + secondVia.diameter / 2
-        const maxSquaredDistance = maxDistance ** 2
+        const maxSquaredDistance = maxDistance * maxDistance
 
         if (squaredDistance <= maxSquaredDistance && squaredDistance !== 0) {
-          this.offendingVias.push([firstVia, secondVia])
+          return [firstVia, secondVia]
         }
       }
     }
+    return null
   }
 
   _step() {
-    if (this.offendingVias.length === 0) {
+    const pair = this.findNextOffendingPair()
+    if (!pair) {
       this.solved = true
       return
     }
-    const currentOffendingVias = this.offendingVias[0]
+
+    const currentOffendingVias = pair
     const viaToRemove =
       currentOffendingVias[0].layers.length <
       currentOffendingVias[1].layers.length
@@ -128,6 +137,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         : currentOffendingVias[0]
 
     const route = this.mergedViaHdRoutes[viaToRemove.routeIndex].route
+
     for (let i = 0; i < viaToRemove.layers.length; i++) {
       const layer = viaToRemove.layers[i]
 
@@ -158,13 +168,14 @@ export class SameNetViaMergerSolver extends BaseSolver {
               return via
             })
 
-          this.offendingVias.shift()
+          this.rebuildVias()
+
           return
         }
       }
     }
 
-    this.offendingVias.shift()
+    this.rebuildVias()
   }
 
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
