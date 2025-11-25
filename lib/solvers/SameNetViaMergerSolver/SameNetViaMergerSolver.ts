@@ -115,7 +115,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
       this.solved = true
       return
     }
-    console.log(this.offendingVias)
     const currentOffendingVias = this.offendingVias[0]
     const viaToRemove =
       currentOffendingVias[0].layers.length <
@@ -127,7 +126,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
       currentOffendingVias[1].layers.length
         ? currentOffendingVias[1]
         : currentOffendingVias[0]
-    console.log(this.optimizedHdRoutes[viaToRemove.routeIndex].route)
 
     const route = this.optimizedHdRoutes[viaToRemove.routeIndex].route
     for (let i = 0; i < viaToRemove.layers.length; i++) {
@@ -156,7 +154,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
       this.optimizedHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
         return via.x !== viaToRemove.x && via.y !== viaToRemove.y
       })
-    console.log(this.optimizedHdRoutes[viaToRemove.routeIndex].vias)
 
     this.offendingVias.shift()
   }
