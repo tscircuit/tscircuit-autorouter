@@ -14,7 +14,7 @@ import { SingleRouteUselessViaRemovalSolver } from "../UselessViaRemovalSolver/S
 import {} from "@tscircuit/checks"
 
 export interface SameNetViaMergerSolverInput {
-  unsimplifiedHdRoutes: HighDensityRoute[]
+  inputHdRoutes: HighDensityRoute[]
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
@@ -32,8 +32,8 @@ type Via = {
 }
 
 export class SameNetViaMergerSolver extends BaseSolver {
-  unsimplifiedHdRoutes: HighDensityRoute[]
-  optimizedHdRoutes: HighDensityRoute[]
+  inputHdRoutes: HighDensityRoute[]
+  mergedViaHdRoutes: HighDensityRoute[]
   unprocessedRoutes: HighDensityRoute[]
   vias: Via[]
   offendingVias: [Via, Via][]
@@ -50,16 +50,16 @@ export class SameNetViaMergerSolver extends BaseSolver {
   constructor(private input: SameNetViaMergerSolverInput) {
     super()
     this.MAX_ITERATIONS = 1e6
-    this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes
-    this.mergedViaHdRoutes = structuredClone(this.unsimplifiedHdRoutes)
-    this.unprocessedRoutes = [...input.unsimplifiedHdRoutes]
+    this.inputHdRoutes = input.inputHdRoutes
+    this.mergedViaHdRoutes = structuredClone(this.inputHdRoutes)
+    this.unprocessedRoutes = [...input.inputHdRoutes]
     this.colorMap = input.colorMap
     this.outline = input.outline
     this.obstacles = input.obstacles
 
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", input.obstacles)
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(
-      this.unsimplifiedHdRoutes,
+      this.inputHdRoutes,
     )
     this.vias = []
     this.offendingVias = []
@@ -101,7 +101,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
           (firstVia.x - secondVia.x) ** 2 + (firstVia.y - secondVia.y) ** 2
         const maxDistance = firstVia.diameter / 2 + secondVia.diameter / 2
         const maxSquaredDistance = maxDistance ** 2
-        if (squaredDistance <= maxSquaredDistance) {
+        if (squaredDistance <= maxSquaredDistance && squaredDistance !== 0) {
           this.offendingVias.push([firstVia, secondVia])
         }
       }
@@ -125,7 +125,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         ? currentOffendingVias[1]
         : currentOffendingVias[0]
 
-    const route = this.optimizedHdRoutes[viaToRemove.routeIndex].route
+    const route = this.mergedViaHdRoutes[viaToRemove.routeIndex].route
     for (let i = 0; i < viaToRemove.layers.length; i++) {
       const layer = viaToRemove.layers[i]
 
@@ -148,8 +148,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       }
     }
 
-    this.optimizedHdRoutes[viaToRemove.routeIndex].vias =
-      this.optimizedHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
+    this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
+      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
         return via.x !== viaToRemove.x && via.y !== viaToRemove.y
       })
 
@@ -157,6 +157,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
-    return this.optimizedHdRoutes
+    return this.mergedViaHdRoutes
   }
 }
