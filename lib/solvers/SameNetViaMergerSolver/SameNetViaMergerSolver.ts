@@ -13,14 +13,13 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { SingleRouteUselessViaRemovalSolver } from "../UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
 import {} from "@tscircuit/checks"
 
-export interface UselessViaMergerSolverInput {
+export interface SameNetViaMergerSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
   connMap?: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
-  obstacles: Obstacle[]
 }
 
 type Via = {
@@ -32,25 +31,25 @@ type Via = {
   layers: number[]
 }
 
-export class UselessViaMergerSolver extends BaseSolver {
+export class SameNetViaMergerSolver extends BaseSolver {
   unsimplifiedHdRoutes: HighDensityRoute[]
   optimizedHdRoutes: HighDensityRoute[]
   unprocessedRoutes: HighDensityRoute[]
   vias: Via[]
   offendingVias: [Via, Via][]
-  currentViaRoutes: HighDensityIntraNodeRoute
+  currentViaRoutes: HighDensityIntraNodeRoute[] = []
   connMap?: ConnectivityMap
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
 
-  activeSubSolver?: SingleRouteUselessViaMergerSolver | null | undefined = null
+
 
   obstacleSHI: ObstacleSpatialHashIndex | null = null
   hdRouteSHI: HighDensityRouteSpatialIndex | null = null
 
-  constructor(private input: UselessViaMergerSolverInput) {
+  constructor(private input: SameNetViaMergerSolverInput) {
     super()
     this.MAX_ITERATIONS = 1e6
     this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes
@@ -75,27 +74,28 @@ export class UselessViaMergerSolver extends BaseSolver {
         this.vias.push({
           ...via,
           diameter: route.viaDiameter,
-          net: this.connMap.idToNetMap[route.connectionName],
+          net: this.connMap?.idToNetMap[route.connectionName] ?? "",
           layers: [...new Set(route.route.map((p) => p.z))],
           routeIndex: i,
         })
       }
     }
 
-    this.viasByNet = new Map<string, Via[]>();
+    this.viasByNet = new Map<string, Via[]>()
 
     for (const via of this.vias) {
-      const list = this.viasByNet.get(via.net);
+      const list = this.viasByNet.get(via.net)
       if (list) {
-        list.push(via);
+        list.push(via)
       } else {
-        this.viasByNet.set(via.net, [via]);
+        this.viasByNet.set(via.net, [via])
       }
     }
 
     for (let i = 0; i < this.vias.length - 1; i++) {
       const firstVia = this.vias[i]
       const viasInNet = this.viasByNet.get(firstVia.net)
+      if (!viasInNet) continue
       for (let j = 0; j < viasInNet.length; j++) {
         const secondVia = viasInNet[j]
         if (firstVia.net !== secondVia.net) continue

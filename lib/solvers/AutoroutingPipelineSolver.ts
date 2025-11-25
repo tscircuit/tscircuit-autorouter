@@ -46,7 +46,7 @@ import {
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "./CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { DeadEndSolver } from "./DeadEndSolver/DeadEndSolver"
 import { UselessViaRemovalSolver } from "./UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { UselessViaMergerSolver } from "./UselessViaMergerSolver/UselessViaMergerSolver"
+import { SameNetViaMergerSolver } from "./SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { CapacityPathingSolver5 } from "./CapacityPathingSolver/CapacityPathingSolver5"
 import { CapacityPathingGreedySolver } from "./CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
@@ -109,6 +109,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
   uselessViaRemovalSolver2?: UselessViaRemovalSolver
+  sameNetViaMerger?: SameNetViaMergerSolver
   multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver
   multiSimplifiedPathSolver2?: MultiSimplifiedPathSolver
   viaDiameter: number
@@ -369,13 +370,13 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("uselessViaMerger", UselessViaMergerSolver, (cms) => [
+    definePipelineStep("sameNetViaMerger", SameNetViaMergerSolver, (cms) => [
       {
         unsimplifiedHdRoutes:
           cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
         obstacles: cms.srj.obstacles,
         colorMap: cms.colorMap,
-        layercount: cms.srj.layercount,
+        layerCount: cms.srj.layerCount,
         connMap: cms.connMap,
         outline: cms.srj.outline,
       },
@@ -385,7 +386,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       MultiSimplifiedPathSolver,
       (cms) => [
         {
-          unsimplifiedHdRoutes: cms.uselessViaMerger?.getOptimizedHdRoutes()!,
+          unsimplifiedHdRoutes: cms.sameNetViaMerger?.getOptimizedHdRoutes()!,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
