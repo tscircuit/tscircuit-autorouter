@@ -132,37 +132,42 @@ export class SameNetViaMergerSolver extends BaseSolver {
     for (let i = 0; i < viaToRemove.layers.length; i++) {
       const layer = viaToRemove.layers[i]
 
-      for (let j = 1; j < route.length; j++) {
+      for (let j = route.length - 1; j >= 1; j--) {
         const prev = route[j - 1]
         const curr = route[j]
+
         if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
+          console.log(structuredClone(route), j)
+
+          route.splice(j, 0, {
+            x: viaNotToRemove.x,
+            y: viaNotToRemove.y,
+            z: curr.z,
+          })
           route.splice(j, 0, {
             x: viaNotToRemove.x,
             y: viaNotToRemove.y,
             z: prev.z,
           })
-          break
+
+          console.log(structuredClone(route), j)
+
+          this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
+            this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
+              if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
+                return {
+                  x: viaNotToRemove.x,
+                  y: viaNotToRemove.y,
+                }
+              }
+              return via
+            })
+
+          this.offendingVias.shift()
+          return
         }
       }
     }
-
-    // this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
-    //   this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
-    //     if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
-    //       return {
-    //         x: viaNotToRemove.x,
-    //         y: viaNotToRemove.y
-    //       }
-    //     }
-    //     return via
-    //   })
-    this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
-      this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.filter((via) => {
-        return viaToRemove.x !== via.x || viaToRemove.y !== via.y
-      })
-    console.log(this.mergedViaHdRoutes)
-    console.log(viaToRemove)
-    console.log(viaNotToRemove)
 
     this.offendingVias.shift()
   }
@@ -226,7 +231,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
               { x: current.x, y: current.y },
               { x: next.x, y: next.y },
             ],
-            strokeColor: current.z === 0 ? "red" : "blue",
+            strokeColor:
+              current.z === 0 ? "rgba(255, 0, 0, 0.5)" : "rgba(0, 0, 255, 0.5)",
             strokeWidth: route.traceThickness,
             label: `${route.connectionName} (z=${current.z})`,
           })

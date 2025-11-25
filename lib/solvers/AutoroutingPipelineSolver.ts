@@ -370,22 +370,13 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("sameNetViaMerger", SameNetViaMergerSolver, (cms) => [
-      {
-        inputHdRoutes: cms.uselessViaRemovalSolver2!.getOptimizedHdRoutes()!,
-        obstacles: cms.srj.obstacles,
-        colorMap: cms.colorMap,
-        layerCount: cms.srj.layerCount,
-        connMap: cms.connMap,
-        outline: cms.srj.outline,
-      },
-    ]),
     definePipelineStep(
       "multiSimplifiedPathSolver2",
       MultiSimplifiedPathSolver,
       (cms) => [
         {
-          unsimplifiedHdRoutes: cms.sameNetViaMerger?.getOptimizedHdRoutes()!,
+          unsimplifiedHdRoutes:
+            cms.uselessViaRemovalSolver2?.getOptimizedHdRoutes()!,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
@@ -394,6 +385,16 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep("sameNetViaMerger", SameNetViaMergerSolver, (cms) => [
+      {
+        inputHdRoutes: cms.multiSimplifiedPathSolver2!.simplifiedHdRoutes,
+        obstacles: cms.srj.obstacles,
+        colorMap: cms.colorMap,
+        layerCount: cms.srj.layerCount,
+        connMap: cms.connMap,
+        outline: cms.srj.outline,
+      },
+    ]),
   ]
 
   constructor(
@@ -653,7 +654,9 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    console.log(this)
     return (
+      this.sameNetViaMerger?.getOptimizedHdRoutes() ??
       this.multiSimplifiedPathSolver2?.simplifiedHdRoutes ??
       this.uselessViaRemovalSolver2?.getOptimizedHdRoutes() ??
       this.multiSimplifiedPathSolver1?.simplifiedHdRoutes ??
