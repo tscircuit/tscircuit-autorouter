@@ -155,7 +155,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.handleOffendingPair(pair[0], pair[1])
   }
 
-  getOptimizedHdRoutes(): HighDensityRoute[] | null {
+  getMergedViaHdRoutes(): HighDensityRoute[] | null {
     return this.mergedViaHdRoutes
   }
 
