@@ -117,65 +117,46 @@ export class SameNetViaMergerSolver extends BaseSolver {
     return null
   }
 
-  _step() {
-    const pair = this.findNextOffendingPair()
-    if (!pair) {
-      this.solved = true
-      return
-    }
-
-    const currentOffendingVias = pair
-    const viaToRemove =
-      currentOffendingVias[0].layers.length <
-      currentOffendingVias[1].layers.length
-        ? currentOffendingVias[0]
-        : currentOffendingVias[1]
-    const viaNotToRemove =
-      currentOffendingVias[0].layers.length <
-      currentOffendingVias[1].layers.length
-        ? currentOffendingVias[1]
-        : currentOffendingVias[0]
+  private handleOffendingPair(v1: Via, v2: Via) {
+    const viaToRemove = v1.layers.length < v2.layers.length ? v1 : v2
+    const viaKeep = viaToRemove === v1 ? v2 : v1
 
     const route = this.mergedViaHdRoutes[viaToRemove.routeIndex].route
 
     for (let i = 0; i < viaToRemove.layers.length; i++) {
-      const layer = viaToRemove.layers[i]
-
       for (let j = route.length - 1; j >= 1; j--) {
         const prev = route[j - 1]
         const curr = route[j]
 
         if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
-          route.splice(j, 0, {
-            x: viaNotToRemove.x,
-            y: viaNotToRemove.y,
-            z: curr.z,
-          })
-          route.splice(j, 0, {
-            x: viaNotToRemove.x,
-            y: viaNotToRemove.y,
-            z: prev.z,
-          })
+          route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: curr.z })
+          route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
 
-          this.mergedViaHdRoutes[viaToRemove.routeIndex].vias =
-            this.mergedViaHdRoutes[viaToRemove.routeIndex].vias.map((via) => {
-              if (via.x === viaToRemove.x && via.y === viaToRemove.y) {
-                return {
-                  x: viaNotToRemove.x,
-                  y: viaNotToRemove.y,
-                }
-              }
-              return via
-            })
+          const r = this.mergedViaHdRoutes[viaToRemove.routeIndex]
+          r.vias = r.vias.map((vx) =>
+            vx.x === viaToRemove.x && vx.y === viaToRemove.y
+              ? { x: viaKeep.x, y: viaKeep.y }
+              : vx
+          )
 
           this.rebuildVias()
-
           return
         }
       }
     }
 
     this.rebuildVias()
+  }
+
+  _step() {
+    const pair = this.findNextOffendingPair()
+
+    if (!pair) {
+      this.solved = true
+      return
+    }
+
+    this.handleOffendingPair(pair[0], pair[1])
   }
 
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
