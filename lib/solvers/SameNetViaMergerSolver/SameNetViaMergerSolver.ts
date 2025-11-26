@@ -1,5 +1,4 @@
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SegmentTree } from "lib/data-structures/SegmentTree"
 import { BaseSolver } from "../BaseSolver"
 import {
   HighDensityIntraNodeRoute,
@@ -7,11 +6,8 @@ import {
 } from "lib/types/high-density-types"
 import { Obstacle } from "lib/types"
 import { GraphicsObject } from "graphics-debug"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { SingleRouteUselessViaRemovalSolver } from "../UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
-import {} from "@tscircuit/checks"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
