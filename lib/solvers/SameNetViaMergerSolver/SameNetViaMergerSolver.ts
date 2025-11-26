@@ -136,7 +136,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
           r.vias = r.vias.map((vx) =>
             vx.x === viaToRemove.x && vx.y === viaToRemove.y
               ? { x: viaKeep.x, y: viaKeep.y }
-              : vx
+              : vx,
           )
 
           this.rebuildVias()
