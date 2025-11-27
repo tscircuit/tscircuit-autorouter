@@ -113,11 +113,14 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
     node: CapacityMeshNode,
     endGoal: CapacityMeshNode,
   ) {
-    return (
+    let cost =
       prevCandidate.g +
       this.getDistanceBetweenNodes(prevCandidate.node, node) +
       this.getNodeCapacityPenalty(node)
-    )
+    if (this.isOffboardPortal(node)) {
+      cost *= 0.3
+    }
+    return cost
   }
 
   computeH(
@@ -125,9 +128,16 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
     node: CapacityMeshNode,
     endGoal: CapacityMeshNode,
   ) {
-    return (
+    let estimate =
       this.getDistanceBetweenNodes(node, endGoal) +
       this.getNodeCapacityPenalty(node)
-    )
+    if (this.isOffboardPortal(node)) {
+      estimate *= 0.3
+    }
+    return estimate
+  }
+
+  private isOffboardPortal(node: CapacityMeshNode): boolean {
+    return node.capacityMeshNodeId.startsWith("offboard-port-")
   }
 }

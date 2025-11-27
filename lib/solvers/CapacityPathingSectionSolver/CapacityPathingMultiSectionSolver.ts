@@ -567,11 +567,48 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
     const capacityPaths: CapacityPath[] = []
     for (const connection of this.connectionsWithNodes) {
       const path = connection.path
-      if (path) {
+      if (!path || path.length === 0) continue
+      const segments = connection.portalSegments ?? []
+      if (segments.length === 0) {
         capacityPaths.push({
           capacityPathId: connection.connection.name,
           connectionName: connection.connection.name,
           nodeIds: path.map((node) => node.capacityMeshNodeId),
+        })
+        continue
+      }
+      const portalNodeIds = new Set(
+        segments.map((segment) => segment.portalNodeId),
+      )
+      const isPortalOnly = (nodeIds: CapacityMeshNodeId[]) =>
+        nodeIds.every((id) => portalNodeIds.has(id))
+      let current: CapacityMeshNodeId[] = []
+      let fragmentIndex = 0
+      for (const node of path) {
+        const nodeId = node.capacityMeshNodeId
+        current.push(nodeId)
+        if (portalNodeIds.has(nodeId)) {
+          const fragmentNodes = [...current]
+          if (!isPortalOnly(fragmentNodes)) {
+            const fragmentName = `${connection.connection.name}#${fragmentIndex++}`
+            capacityPaths.push({
+              capacityPathId: fragmentName,
+              connectionName: fragmentName,
+              nodeIds: fragmentNodes,
+              portalSegments: segments.filter(
+                (segment) => segment.portalNodeId === nodeId,
+              ),
+            })
+          }
+          current = [nodeId]
+        }
+      }
+      if (current.length > 1 && !isPortalOnly(current)) {
+        const fragmentName = `${connection.connection.name}#${fragmentIndex++}`
+        capacityPaths.push({
+          capacityPathId: fragmentName,
+          connectionName: fragmentName,
+          nodeIds: current,
         })
       }
     }

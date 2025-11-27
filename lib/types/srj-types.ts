@@ -1,11 +1,14 @@
 export type TraceId = string
 export type NetId = string
 export type PointId = string
+export type ObstacleId = string
+export type LayerName = string
+export type GroupId = string
 export type OffBoardConnectionId = string
 export type ConnectionPoint = {
   x: number
   y: number
-  layer: string
+  layer: LayerName
   pointId?: PointId
   pcb_port_id?: string
 }
@@ -23,7 +26,7 @@ export interface SimpleRouteJson {
 
 export interface Obstacle {
   type: "rect"
-  layers: string[]
+  layers: LayerName[]
   zLayers?: number[]
   center: { x: number; y: number }
   width: number
@@ -54,14 +57,14 @@ export interface SimplifiedPcbTrace {
         x: number
         y: number
         width: number
-        layer: string
+        layer: LayerName
       }
     | {
         route_type: "via"
         x: number
         y: number
-        to_layer: string
-        from_layer: string
+        to_layer: LayerName
+        from_layer: LayerName
       }
   >
 }

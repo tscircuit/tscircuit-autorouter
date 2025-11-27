@@ -3,6 +3,8 @@ import { combineVisualizations } from "../utils/combineVisualizations"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
+  CapacityPath,
+  SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
@@ -51,6 +53,7 @@ import { CapacityPathingGreedySolver } from "./CapacityPathingSectionSolver/Capa
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { NetToPointPairsSolver2_OffBoardConnection } from "./NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { OffboardConnectionEdgeBuilderSolver } from "./OffboardPortalEdgeSolver/OffboardConnectionEdgeBuilderSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -106,6 +109,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
+  offboardConnectionEdgeBuilder?: OffboardConnectionEdgeBuilderSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
   uselessViaRemovalSolver2?: UselessViaRemovalSolver
   multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver
@@ -122,8 +126,80 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
+  capacityEdgesWithPortals: CapacityMeshEdge[] | null = null
 
   cacheProvider: CacheProvider | null = null
+  /**
+   * Removes synthetic offboard edges from the capacity edges list.
+   */
+  private stripOffboardEdges(stage: string) {
+    if (!this.capacityEdges) return
+    const originalCount = this.capacityEdges.length
+    this.capacityEdges = this.capacityEdges.filter(
+      (edge) => !edge.capacityMeshEdgeId.startsWith("offboard-"),
+    )
+    const removed = originalCount - this.capacityEdges.length
+    this.capacityEdgesWithPortals = null
+  }
+
+  /**
+   * Creates new portal connections on the SRJ based on the paths found.
+   */
+  private ensurePortalConnectionsOnSrj(params: {
+    srj: SimpleRouteJson | undefined | null
+    paths: CapacityPath[]
+    nodes: CapacityMeshNode[]
+  }) {
+    const { srj, paths, nodes } = params
+    if (!srj || paths.length === 0) return
+    const connections = srj.connections
+    const existing = new Set(connections.map((conn) => conn.name))
+    const templateByBase = new Map<string, SimpleRouteConnection>()
+    for (const conn of connections) {
+      if (!conn.name.includes("#")) {
+        templateByBase.set(conn.name, conn)
+      }
+    }
+    const nodeMap = new Map(
+      nodes.map((node) => [node.capacityMeshNodeId, node]),
+    )
+    for (const path of paths) {
+      const name = path.connectionName
+      if (!name.includes("#") || existing.has(name)) continue
+      const baseName = name.split("#")[0]
+      const template =
+        templateByBase.get(baseName) ||
+        connections.find((conn) => conn.name === baseName)
+      if (!template) continue
+      const startNode = nodeMap.get(path.nodeIds[0]!)
+      const endNode = nodeMap.get(path.nodeIds[path.nodeIds.length - 1]!)
+      const points =
+        startNode && endNode
+          ? [
+              {
+                x: startNode.center.x,
+                y: startNode.center.y,
+                layer: startNode.layer,
+              },
+              {
+                x: endNode.center.x,
+                y: endNode.center.y,
+                layer: endNode.layer,
+              },
+            ]
+          : template.pointsToConnect?.map((pt) => ({ ...pt }))
+      const clone: SimpleRouteConnection = {
+        ...template,
+        name,
+        pointsToConnect: points ?? template.pointsToConnect,
+      }
+      connections.push(clone)
+      existing.add(name)
+      if (this.colorMap[baseName] && !this.colorMap[name]) {
+        this.colorMap[name] = this.colorMap[baseName]
+      }
+    }
+  }
 
   pipelineDef = [
     definePipelineStep(
@@ -214,13 +290,34 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "offboardConnectionEdgeBuilder",
+      OffboardConnectionEdgeBuilderSolver,
+      (cms) => [
+        {
+          nodes: cms.capacityNodes!,
+          edges: cms.capacityEdges || [],
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes =
+            cms.offboardConnectionEdgeBuilder?.getNodes() ?? cms.capacityNodes
+          cms.capacityEdges =
+            cms.offboardConnectionEdgeBuilder?.getEdges() ?? cms.capacityEdges
+          cms.capacityEdgesWithPortals = cms.capacityEdges
+        },
+      },
+    ),
+    definePipelineStep(
       "initialPathingSolver",
       CapacityPathingGreedySolver,
       (cms) => [
         {
           simpleRouteJson: cms.srjWithPointPairs!,
           nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
+          edges: (cms.capacityEdgesWithPortals ?? cms.capacityEdges) || [],
           colorMap: cms.colorMap,
           hyperParameters: {
             MAX_CAPACITY_FACTOR: 1,
@@ -238,7 +335,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           initialPathingSolver: cms.initialPathingSolver,
           simpleRouteJson: cms.srjWithPointPairs!,
           nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
+          edges: (cms.capacityEdgesWithPortals ?? cms.capacityEdges) || [],
           colorMap: cms.colorMap,
           cacheProvider: cms.cacheProvider,
           hyperParameters: {
@@ -246,6 +343,36 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           },
         },
       ],
+      {
+        onSolved: (cms) => {
+          const paths = cms.pathingOptimizer?.getCapacityPaths() || []
+          if (paths.length > 0) {
+            cms.ensurePortalConnectionsOnSrj({
+              srj: cms.srjWithPointPairs,
+              paths,
+              nodes: cms.capacityNodes ?? [],
+            })
+            cms.ensurePortalConnectionsOnSrj({
+              srj: cms.srj,
+              paths,
+              nodes: cms.capacityNodes ?? [],
+            })
+            const connectionsWithPortals = new Set(
+              paths
+                .filter((p) => p.portalSegments?.length)
+                .map((p) => p.connectionName.split("#")[0]),
+            )
+            if (connectionsWithPortals.size > 0) {
+              cms.removeBaseConnectionsFromSrj(
+                cms.srjWithPointPairs,
+                connectionsWithPortals,
+              )
+              cms.removeBaseConnectionsFromSrj(cms.srj, connectionsWithPortals)
+            }
+          }
+          cms.stripOffboardEdges("after pathingOptimizer")
+        },
+      },
     ),
     definePipelineStep(
       "edgeToPortSegmentSolver",
@@ -654,6 +781,16 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   /**
    * Returns the SimpleRouteJson with routes converted to SimplifiedPcbTraces
    */
+  private removeBaseConnectionsFromSrj(
+    srj: SimpleRouteJson | undefined | null,
+    connectionsToRemove: Set<string>,
+  ) {
+    if (!srj) return
+    srj.connections = srj.connections.filter(
+      (conn) => !connectionsToRemove.has(conn.name),
+    )
+  }
+
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved || !this.highDensityRouteSolver) {
       throw new Error("Cannot get output before solving is complete")

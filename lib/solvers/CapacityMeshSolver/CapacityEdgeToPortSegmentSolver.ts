@@ -145,17 +145,30 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
             y: segmentCenter.y,
             label: `${nodeId}: ${segment.connectionNames.join(", ")}\navailableZ: ${segment.availableZ.join(",")}\nnodePortSegmentId: ${segment.nodePortSegmentId!}`,
           })
+          const connectionName = segment.connectionNames[i]
+          const strokeColor = safeTransparentize(
+            this.getConnectionColor(connectionName),
+            0.6,
+          )
           graphics.lines!.push({
             points: [segment.start, segment.end],
-            strokeColor: safeTransparentize(
-              this.colorMap[segment.connectionNames[i]],
-              0.6,
-            ),
+            strokeColor,
           })
         }
       })
     })
     return graphics
+  }
+
+  /**
+   * Gets the color for a connection, handling portal-suffixed names.
+   */
+  private getConnectionColor(connectionName: string): string {
+    if (this.colorMap[connectionName]) return this.colorMap[connectionName]
+    const baseName = connectionName.split("#")[0]
+    return (
+      this.colorMap[baseName] ?? "rgba(0, 0, 0, 0.6)" // fallback so visualization never crashes
+    )
   }
 }
 

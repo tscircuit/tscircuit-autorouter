@@ -4,6 +4,7 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   CapacityPath,
+  CapacityPortalSegment,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "../../types"
@@ -27,6 +28,7 @@ export type ConnectionPathWithNodes = {
   nodes: CapacityMeshNode[]
   path?: CapacityMeshNode[]
   straightLineDistance: number
+  portalSegments?: CapacityPortalSegment[]
 }
 
 export class CapacityPathingSolver extends BaseSolver {
@@ -58,6 +60,7 @@ export class CapacityPathingSolver extends BaseSolver {
   >
 
   hyperParameters: Partial<CapacityHyperParameters>
+  private loggedOffboardNodes: Set<string>
 
   constructor({
     simpleRouteJson,
@@ -96,6 +99,7 @@ export class CapacityPathingSolver extends BaseSolver {
       ...this.nodes.map((node) => node._depth ?? 0),
     )
     this.debug_lastNodeCostMap = new Map()
+    this.loggedOffboardNodes = new Set()
   }
 
   getTotalCapacity(node: CapacityMeshNode): number {
@@ -207,6 +211,7 @@ export class CapacityPathingSolver extends BaseSolver {
           capacityPathId: connection.connection.name,
           connectionName: connection.connection.name,
           nodeIds: path.map((node) => node.capacityMeshNodeId),
+          portalSegments: connection.portalSegments,
         })
       }
     }
@@ -293,9 +298,6 @@ export class CapacityPathingSolver extends BaseSolver {
     }
     if (!currentCandidate) {
       // TODO Track failed paths, make sure solver doesn't think it solved
-      console.error(
-        `Ran out of candidates on connection ${nextConnection.connection.name}`,
-      )
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedNodes = null
@@ -316,6 +318,7 @@ export class CapacityPathingSolver extends BaseSolver {
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedNodes = null
+      sanitizeConnectionPortalSegments(nextConnection)
       return
     }
 
@@ -331,12 +334,7 @@ export class CapacityPathingSolver extends BaseSolver {
       }
       const connectionName =
         this.connectionsWithNodes[this.currentConnectionIndex].connection.name
-      if (
-        neighborNode._containsObstacle &&
-        !this.canTravelThroughObstacle(neighborNode, connectionName)
-      ) {
-        continue
-      }
+      if (!this.isNodeTraversable(neighborNode, connectionName)) continue
       const g = this.computeG(currentCandidate, neighborNode, end)
       const h = this.computeH(currentCandidate, neighborNode, end)
       const f = g + h * this.GREEDY_MULTIPLIER
@@ -357,6 +355,22 @@ export class CapacityPathingSolver extends BaseSolver {
       this.candidates.push(newCandidate)
     }
     this.visitedNodes!.add(currentCandidate.node.capacityMeshNodeId)
+  }
+
+  private isNodeTraversable(
+    node: CapacityMeshNode,
+    connectionName: string,
+  ): boolean {
+    if (node.capacityMeshNodeId.startsWith("offboard-port-")) {
+      return true
+    }
+    if (
+      node._containsObstacle &&
+      !this.canTravelThroughObstacle(node, connectionName)
+    ) {
+      return false
+    }
+    return true
   }
 
   visualize(): GraphicsObject {
@@ -489,4 +503,26 @@ export class CapacityPathingSolver extends BaseSolver {
 
     return graphics
   }
+}
+
+export function sanitizeConnectionPortalSegments(
+  connection: ConnectionPathWithNodes,
+) {
+  const path = connection.path
+  if (!path || path.length === 0) return
+  const segments: CapacityPortalSegment[] = []
+  for (let i = 1; i < path.length - 1; i++) {
+    const node = path[i]!
+    if (!node.capacityMeshNodeId.startsWith("offboard-port-")) continue
+    const prev = path[i - 1]
+    const next = path[i + 1]
+    if (!prev || !next) continue
+    segments.push({
+      connectionName: connection.connection.name,
+      fromNodeId: prev.capacityMeshNodeId,
+      toNodeId: next.capacityMeshNodeId,
+      portalNodeId: node.capacityMeshNodeId,
+    })
+  }
+  connection.portalSegments = segments.length ? segments : undefined
 }

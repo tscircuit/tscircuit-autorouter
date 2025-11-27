@@ -30,4 +30,5 @@ export interface CapacityMeshNode {
 export interface CapacityMeshEdge {
   capacityMeshEdgeId: string
   nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
+  isVirtualPortal?: boolean
 }
