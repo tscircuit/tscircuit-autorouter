@@ -145,9 +145,10 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
             y: segmentCenter.y,
             label: `${nodeId}: ${segment.connectionNames.join(", ")}\navailableZ: ${segment.availableZ.join(",")}\nnodePortSegmentId: ${segment.nodePortSegmentId!}`,
           })
-          const connectionName = segment.connectionNames[i]
+          const currentConnectionNameForSharedSegment =
+            segment.connectionNames[i]
           const strokeColor = safeTransparentize(
-            this.getConnectionColor(connectionName),
+            this.getConnectionColor(currentConnectionNameForSharedSegment),
             0.6,
           )
           graphics.lines!.push({

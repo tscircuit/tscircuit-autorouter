@@ -38,12 +38,19 @@ type PortalGroupEntry = {
 }
 
 /**
- * This solver identifies "assignable" obstacles that act as off-board connection
- * points. It creates synthetic nodes within these obstacles to serve as anchors
- * for routing. It then builds two types of edges:
- * 1.  "Bridge" edges to connect these synthetic nodes to the main routing grid.
- * 2.  "Portal" edges to create a fully connected graph between all synthetic
- *     nodes that share the same `offBoardConnectsTo` group ID.
+ * This solver processes "assignable" obstacles to create stable connection
+ * points for off-board nets.
+ *
+ * For each assignable obstacle found, it **always creates a new synthetic
+ * node** at the obstacle's center. This ensures a predictable anchor point,
+ * rather than attempting to find and reuse a potentially non-ideal existing
+ * node within the obstacle's area.
+ *
+ * After creating an anchor node, it builds two types of edges:
+ * 1. "Bridge" edges: To connect the new anchor to the nearest nodes in the
+ *    main routing grid.
+ * 2. "Portal" edges: To create a fully-connected graph between all anchor
+ *    nodes that belong to the same off-board group (e.g., "USB_D+").
  */
 export class OffboardConnectionEdgeBuilderSolver extends BaseSolver {
   private readonly originalNodes: CapacityMeshNode[]
