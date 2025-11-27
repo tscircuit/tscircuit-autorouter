@@ -5,6 +5,7 @@ import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 export class CapacityPathingSolver5 extends CapacityPathingSolver {
   NEGATIVE_CAPACITY_PENALTY_FACTOR = 1
   REDUCED_CAPACITY_PENALTY_FACTOR = 1
+  OFFBOARD_PORTAL_COST_MULTIPLIER = 0.3
 
   constructor(...args: ConstructorParameters<typeof CapacityPathingSolver>) {
     super(...args)
@@ -118,7 +119,7 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
       this.getDistanceBetweenNodes(prevCandidate.node, node) +
       this.getNodeCapacityPenalty(node)
     if (this.isOffboardPortal(node)) {
-      cost *= 0.3
+      cost *= this.OFFBOARD_PORTAL_COST_MULTIPLIER
     }
     return cost
   }
@@ -132,7 +133,7 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
       this.getDistanceBetweenNodes(node, endGoal) +
       this.getNodeCapacityPenalty(node)
     if (this.isOffboardPortal(node)) {
-      estimate *= 0.3
+      estimate *= this.OFFBOARD_PORTAL_COST_MULTIPLIER
     }
     return estimate
   }

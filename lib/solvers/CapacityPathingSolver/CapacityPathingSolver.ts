@@ -505,6 +505,14 @@ export class CapacityPathingSolver extends BaseSolver {
   }
 }
 
+/**
+ * Analyzes a completed connection path to identify and extract "portal segments".
+ * A portal segment represents a "hop" across an off-board portal node. This
+ * function iterates through the path, and for each node marked as a portal
+ * (by its name prefix), it records the nodes immediately before and after it.
+ * This list of portal segments is then attached to the connection object for
+ * use in later stages, like splitting the path into fragments.
+ */
 export function sanitizeConnectionPortalSegments(
   connection: ConnectionPathWithNodes,
 ) {
