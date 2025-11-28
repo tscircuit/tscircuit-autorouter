@@ -21,6 +21,8 @@ export interface CapacityMeshNode {
   _targetConnectionName?: string
   _strawNode?: boolean
   _strawParentCapacityMeshNodeId?: CapacityMeshNodeId
+  _isVirtualOffboard?: boolean
+  _offboardNetName?: string
 
   _adjacentNodeIds?: CapacityMeshNodeId[]
 
@@ -30,4 +32,6 @@ export interface CapacityMeshNode {
 export interface CapacityMeshEdge {
   capacityMeshEdgeId: string
   nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
+  isOffboardEdge?: boolean
+  offboardNetName?: string
 }
