@@ -12,19 +12,19 @@ import { createNodeMap } from "lib/utils/createNodeMap"
 type AnimationState = "showing_original_path" | "showing_fragment" | "done"
 
 /**
- * Splits capacity paths at teleportation edges into separate fragments.
- * When a path crosses a teleportation edge (created by OffboardCapacityNodeSolver),
+ * Splits capacity paths at offboard edges into separate fragments.
+ * When a path crosses an offboard edge (created by OffboardCapacityNodeSolver),
  * this solver breaks it into independent path segments.
  *
  * Each fragment becomes a separate connection with its own `connectionName`
  * (e.g., `AD_NET_frag_0`, `AD_NET_frag_1`). The solver also creates new
  * `SimpleRouteConnection` entries with appropriate `pointsToConnect` - the
- * original pad location plus a synthetic point at the teleportation node.
+ * original pad location plus a synthetic point at the offboard node.
  *
  * This enables downstream solvers to route each fragment independently,
  * treating them as separate traces that terminate at off-board connection points.
  */
-export class TeleportationPathFragmentSolver extends BaseSolver {
+export class OffboardPathFragmentSolver extends BaseSolver {
   private inputPaths: CapacityPath[]
   private capacityEdges: CapacityMeshEdge[]
   private originalConnections: SimpleRouteConnection[]
@@ -155,17 +155,17 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
       )
 
       const isFirstFragment = fragIdx === 0
-      const teleportNodeId = isFirstFragment
+      const offboardNodeId = isFirstFragment
         ? fragment.nodeIds[fragment.nodeIds.length - 1]
         : fragment.nodeIds[0]
 
-      const teleportNode = this.nodeMap.get(teleportNodeId)
+      const offboardNode = this.nodeMap.get(offboardNodeId)
 
-      if (fragmentPoints.length > 0 && teleportNode) {
+      if (fragmentPoints.length > 0 && offboardNode) {
         const realPoint = fragmentPoints[0]
         const syntheticPoint = {
-          x: teleportNode.center.x,
-          y: teleportNode.center.y,
+          x: offboardNode.center.x,
+          y: offboardNode.center.y,
           layer: realPoint.layer,
         }
 
@@ -187,8 +187,8 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
       return [path]
     }
 
-    // Find teleportation edges
-    const teleportIndices: number[] = []
+    // Find offboard edges
+    const offboardIndices: number[] = []
     for (let i = 0; i < nodeIds.length - 1; i++) {
       const edge = this.capacityEdges.find(
         (e) =>
@@ -196,11 +196,11 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
           (e.nodeIds[0] === nodeIds[i + 1] && e.nodeIds[1] === nodeIds[i]),
       )
       if (edge && edge.isOffboardEdge) {
-        teleportIndices.push(i)
+        offboardIndices.push(i)
       }
     }
 
-    if (teleportIndices.length === 0) {
+    if (offboardIndices.length === 0) {
       return [path]
     }
 
@@ -208,8 +208,8 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
     let startIdx = 0
     let fragmentIndex = 0
 
-    for (const teleportIdx of teleportIndices) {
-      const fragNodes = nodeIds.slice(startIdx, teleportIdx + 1)
+    for (const offboardIdx of offboardIndices) {
+      const fragNodes = nodeIds.slice(startIdx, offboardIdx + 1)
       if (fragNodes.length >= 1) {
         const fragId = this.nextFragmentId++
         fragments.push({
@@ -220,7 +220,7 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
           originalConnectionName: path.connectionName,
         })
       }
-      startIdx = teleportIdx + 1
+      startIdx = offboardIdx + 1
     }
 
     if (startIdx < nodeIds.length) {
@@ -316,7 +316,7 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
       }
     }
 
-    // Show teleportation edges
+    // Show offboard edges
     for (const edge of this.capacityEdges) {
       if (edge.isOffboardEdge) {
         const node1 = this.nodeMap.get(edge.nodeIds[0])
@@ -332,7 +332,7 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
       }
     }
 
-    let title = "Teleportation Fragment Solver"
+    let title = "Offboard Path Fragment Solver"
     if (this.animationState === "showing_original_path") {
       title += " - Analyzing path..."
     } else if (this.animationState === "showing_fragment") {

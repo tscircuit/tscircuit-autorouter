@@ -6,7 +6,7 @@ export interface CapacityPath {
   capacityPathId: CapacityPathId
   connectionName: string
   nodeIds: CapacityMeshNodeId[]
-  /** True if this path was created by splitting at a teleportation edge */
+  /** True if this path was created by splitting at an offboard edge */
   isFragmentedPath?: boolean
   /** Original connection name before fragmentation */
   originalConnectionName?: string

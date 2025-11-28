@@ -8,13 +8,13 @@ import { getMidpoint } from "lib/utils/getMidpoint"
 type AnimationState = "showing_nodes" | "showing_edges" | "done"
 
 /**
- * Creates teleportation edges between assignable via obstacles that share
+ * Creates offboard edges between assignable via obstacles that share
  * the same `offBoardConnectsTo` net name. These obstacles represent off-board
  * connection points (like edge connectors) that are logically connected
  * through external wiring.
  *
  * The solver finds all capacity nodes with `_assignedViaObstacle.offBoardConnectsTo`,
- * groups them by net name, and creates zero-cost "teleportation" edges between
+ * groups them by net name, and creates zero-cost offboard edges between
  * matching nodes. This allows the pathing solver to route through these virtual
  * connections as if the obstacles were directly connected.
  */
@@ -159,7 +159,7 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
     netName: string,
   ): CapacityMeshEdge {
     return {
-      capacityMeshEdgeId: `teleport_${this.nextEdgeId++}`,
+      capacityMeshEdgeId: `offboard_${this.nextEdgeId++}`,
       nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
       isOffboardEdge: true,
       offboardNetName: netName,
@@ -178,7 +178,7 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
 
     // Draw neighbor connections (edges connecting to shown assignable nodes)
     for (const edge of this.capacityEdges) {
-      if (edge.isOffboardEdge) continue // Skip teleportation edges
+      if (edge.isOffboardEdge) continue // Skip offboard edges
 
       const connectsToShownNode =
         shownNodeIds.has(edge.nodeIds[0]) || shownNodeIds.has(edge.nodeIds[1])
@@ -224,7 +224,7 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
       })
     }
 
-    // Draw created teleportation edges
+    // Draw created offboard edges
     for (let i = 0; i < this.createdEdges.length; i++) {
       const edge = this.createdEdges[i]
       const isNewest =

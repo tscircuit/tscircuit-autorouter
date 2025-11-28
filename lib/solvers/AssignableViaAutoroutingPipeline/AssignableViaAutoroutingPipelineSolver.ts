@@ -40,7 +40,7 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
-import { TeleportationPathFragmentSolver } from "./TeleportationPathFragmentSolver"
+import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -97,7 +97,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets
   mergeAssignableViaNodes?: AssignableViaNodeMergerSolver
   offboardCapacityNodeSolver?: OffboardCapacityNodeSolver
-  teleportationPathFragmentSolver?: TeleportationPathFragmentSolver
+  offboardPathFragmentSolver?: OffboardPathFragmentSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   uselessViaRemovalSolver1?: UselessViaRemovalSolver
@@ -235,8 +235,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "teleportationPathFragmentSolver",
-      TeleportationPathFragmentSolver,
+      "offboardPathFragmentSolver",
+      OffboardPathFragmentSolver,
       (cms) => [
         {
           capacityPaths: cms.initialPathingSolver?.getCapacityPaths() || [],
@@ -247,7 +247,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const solver = cms.teleportationPathFragmentSolver
+          const solver = cms.offboardPathFragmentSolver
           if (!solver) return
 
           // Add colors for fragmented connection names based on original connection
@@ -295,7 +295,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
           capacityPaths:
-            cms.teleportationPathFragmentSolver?.getFragmentedPaths() ||
+            cms.offboardPathFragmentSolver?.getFragmentedPaths() ||
             cms.initialPathingSolver?.getCapacityPaths() ||
             [],
           colorMap: cms.colorMap,
@@ -513,8 +513,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
     const initialPathingViz = this.initialPathingSolver?.visualize()
-    const teleportationFragmentViz =
-      this.teleportationPathFragmentSolver?.visualize()
+    const offboardFragmentViz = this.offboardPathFragmentSolver?.visualize()
     const pathingOptimizerViz = this.pathingOptimizer?.visualize()
     const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize()
     const segmentToPointViz = this.segmentToPointSolver?.visualize()
@@ -599,7 +598,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       edgeViz,
       deadEndViz,
       initialPathingViz,
-      teleportationFragmentViz,
+      offboardFragmentViz,
       pathingOptimizerViz,
       edgeToPortSegmentViz,
       segmentToPointViz,
