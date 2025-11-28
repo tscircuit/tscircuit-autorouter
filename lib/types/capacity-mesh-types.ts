@@ -21,6 +21,7 @@ export interface CapacityMeshNode {
   _targetConnectionName?: string
   _strawNode?: boolean
   _strawParentCapacityMeshNodeId?: CapacityMeshNodeId
+  _isOffboardPort?: boolean
 
   _adjacentNodeIds?: CapacityMeshNodeId[]
 

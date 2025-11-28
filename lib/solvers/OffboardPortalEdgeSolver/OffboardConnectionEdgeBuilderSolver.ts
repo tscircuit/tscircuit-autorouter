@@ -248,6 +248,7 @@ export class OffboardConnectionEdgeBuilderSolver extends BaseSolver {
       availableZ: [entry.z],
       _containsObstacle: true,
       _completelyInsideObstacle: true,
+      _isOffboardPort: true,
     }
 
     this.nodes.push(newSyntheticNode)

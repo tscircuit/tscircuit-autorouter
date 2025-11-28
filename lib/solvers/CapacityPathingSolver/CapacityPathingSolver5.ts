@@ -139,6 +139,6 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
   }
 
   private isOffboardPortal(node: CapacityMeshNode): boolean {
-    return node.capacityMeshNodeId.startsWith("offboard-port-")
+    return Boolean(node._isOffboardPort)
   }
 }

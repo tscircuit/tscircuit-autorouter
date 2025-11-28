@@ -361,7 +361,7 @@ export class CapacityPathingSolver extends BaseSolver {
     node: CapacityMeshNode,
     connectionName: string,
   ): boolean {
-    if (node.capacityMeshNodeId.startsWith("offboard-port-")) {
+    if (node._isOffboardPort) {
       return true
     }
     if (
@@ -521,7 +521,7 @@ export function sanitizeConnectionPortalSegments(
   const segments: CapacityPortalSegment[] = []
   for (let i = 1; i < path.length - 1; i++) {
     const node = path[i]!
-    if (!node.capacityMeshNodeId.startsWith("offboard-port-")) continue
+    if (!node._isOffboardPort) continue
     const prev = path[i - 1]
     const next = path[i + 1]
     if (!prev || !next) continue
