@@ -2,6 +2,8 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshEdge, CapacityMeshNode } from "../../types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { createNodeMap } from "lib/utils/createNodeMap"
+import { getMidpoint } from "lib/utils/getMidpoint"
 
 type AnimationState = "showing_nodes" | "showing_edges" | "done"
 
@@ -39,6 +41,9 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
 
   private nextEdgeId = 0
 
+  // Node map for O(1) lookups
+  private nodeMap: Map<string, CapacityMeshNode> = new Map()
+
   constructor(solverParams: {
     capacityNodes: CapacityMeshNode[]
     capacityEdges: CapacityMeshEdge[]
@@ -46,6 +51,9 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
     super()
     this.capacityNodes = solverParams.capacityNodes
     this.capacityEdges = solverParams.capacityEdges
+
+    // Build node map for O(1) lookups
+    this.nodeMap = createNodeMap(this.capacityNodes)
 
     // Initialize enhanced edges
     this.enhancedEdges = [...this.capacityEdges]
@@ -176,12 +184,8 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
         shownNodeIds.has(edge.nodeIds[0]) || shownNodeIds.has(edge.nodeIds[1])
 
       if (connectsToShownNode) {
-        const node1 = this.capacityNodes.find(
-          (n) => n.capacityMeshNodeId === edge.nodeIds[0],
-        )
-        const node2 = this.capacityNodes.find(
-          (n) => n.capacityMeshNodeId === edge.nodeIds[1],
-        )
+        const node1 = this.nodeMap.get(edge.nodeIds[0])
+        const node2 = this.nodeMap.get(edge.nodeIds[1])
 
         if (node1 && node2) {
           lines.push({
@@ -227,12 +231,8 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
         i === this.createdEdges.length - 1 &&
         this.animationState === "showing_edges"
 
-      const node1 = this.capacityNodes.find(
-        (n) => n.capacityMeshNodeId === edge.nodeIds[0],
-      )
-      const node2 = this.capacityNodes.find(
-        (n) => n.capacityMeshNodeId === edge.nodeIds[1],
-      )
+      const node1 = this.nodeMap.get(edge.nodeIds[0])
+      const node2 = this.nodeMap.get(edge.nodeIds[1])
 
       if (node1 && node2) {
         // Edge line
@@ -244,12 +244,11 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
         })
 
         // Midpoint label
-        const midX = (node1.center.x + node2.center.x) / 2
-        const midY = (node1.center.y + node2.center.y) / 2
+        const midpoint = getMidpoint(node1.center, node2.center)
 
         points.push({
-          x: midX,
-          y: midY,
+          x: midpoint.x,
+          y: midpoint.y,
           color: isNewest ? "red" : "orange",
           label: `${isNewest ? "NEW: " : ""}⚡ ${edge.offboardNetName}`,
         })

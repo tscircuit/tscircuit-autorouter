@@ -6,6 +6,8 @@ import type {
   CapacityPath,
   SimpleRouteConnection,
 } from "lib/types"
+import { isPointInRect } from "lib/utils/isPointInRect"
+import { createNodeMap } from "lib/utils/createNodeMap"
 
 type AnimationState = "showing_original_path" | "showing_fragment" | "done"
 
@@ -56,10 +58,8 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
     this.capacityEdges = capacityEdges
     this.originalConnections = connections
 
-    // Build node map for visualization
-    for (const node of capacityNodes) {
-      this.nodeMap.set(node.capacityMeshNodeId, node)
-    }
+    // Build node map for visualization and lookups
+    this.nodeMap = createNodeMap(capacityNodes)
   }
 
   _step() {
@@ -146,14 +146,7 @@ export class TeleportationPathFragmentSolver extends BaseSolver {
             const node = this.nodeMap.get(nodeId)
             if (!node) continue
 
-            const halfWidth = node.width / 2
-            const halfHeight = node.height / 2
-            if (
-              point.x >= node.center.x - halfWidth &&
-              point.x <= node.center.x + halfWidth &&
-              point.y >= node.center.y - halfHeight &&
-              point.y <= node.center.y + halfHeight
-            ) {
+            if (isPointInRect(point, node)) {
               return true
             }
           }
