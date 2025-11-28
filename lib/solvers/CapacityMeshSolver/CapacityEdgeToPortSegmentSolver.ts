@@ -27,6 +27,7 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
 
   nodePortSegments: Map<CapacityMeshNodeId, NodePortSegment[]>
   colorMap: Record<string, string>
+  originalConnectionMap: Map<string, string>
 
   constructor({
     nodes,
@@ -46,6 +47,17 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
     this.nodeEdgeMap = getNodeEdgeMap(edges)
     this.capacityPaths = capacityPaths
     this.colorMap = colorMap ?? {}
+
+    // Build mapping from connection names to original connection names
+    this.originalConnectionMap = new Map()
+    for (const path of capacityPaths) {
+      if (path.originalConnectionName) {
+        this.originalConnectionMap.set(
+          path.connectionName,
+          path.originalConnectionName,
+        )
+      }
+    }
 
     // We will be evaluating capacity paths
     this.unprocessedNodeIds = [
@@ -166,9 +178,10 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
    */
   private getConnectionColor(connectionName: string): string {
     if (this.colorMap[connectionName]) return this.colorMap[connectionName]
-    const baseName = connectionName.split("#")[0]
+    const originalName =
+      this.originalConnectionMap.get(connectionName) ?? connectionName
     return (
-      this.colorMap[baseName] ?? "rgba(0, 0, 0, 0.6)" // fallback so visualization never crashes
+      this.colorMap[originalName] ?? "rgba(0, 0, 0, 0.6)" // fallback so visualization never crashes
     )
   }
 }

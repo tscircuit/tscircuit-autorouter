@@ -5,6 +5,8 @@ export type CapacityPathId = string
 export interface CapacityPath {
   capacityPathId: CapacityPathId
   connectionName: string
+  originalConnectionName?: string
+  isPortalFragment?: boolean
   nodeIds: CapacityMeshNodeId[]
   portalSegments?: CapacityPortalSegment[]
 }

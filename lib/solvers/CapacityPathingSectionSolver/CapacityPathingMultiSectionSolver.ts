@@ -590,10 +590,12 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
         if (portalNodeIds.has(nodeId)) {
           const fragmentNodes = [...current]
           if (!isPortalOnly(fragmentNodes)) {
-            const fragmentName = `${connection.connection.name}#${fragmentIndex++}`
+            const fragmentName = `${connection.connection.name}_fragment_${fragmentIndex++}`
             capacityPaths.push({
               capacityPathId: fragmentName,
               connectionName: fragmentName,
+              originalConnectionName: connection.connection.name,
+              isPortalFragment: true,
               nodeIds: fragmentNodes,
               portalSegments: segments.filter(
                 (segment) => segment.portalNodeId === nodeId,
@@ -604,10 +606,12 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
         }
       }
       if (current.length > 1 && !isPortalOnly(current)) {
-        const fragmentName = `${connection.connection.name}#${fragmentIndex++}`
+        const fragmentName = `${connection.connection.name}_fragment_${fragmentIndex++}`
         capacityPaths.push({
           capacityPathId: fragmentName,
           connectionName: fragmentName,
+          originalConnectionName: connection.connection.name,
+          isPortalFragment: true,
           nodeIds: current,
         })
       }

@@ -39,6 +39,8 @@ export interface Obstacle {
 export interface SimpleRouteConnection {
   name: string
   isOffBoard?: boolean
+  isPortalConnection?: boolean
+  originalConnectionName?: string
   netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: ConnectionPoint[]

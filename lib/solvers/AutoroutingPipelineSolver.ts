@@ -154,10 +154,10 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     if (!srj || paths.length === 0) return
     const connections = srj.connections
     const existing = new Set(connections.map((conn) => conn.name))
-    const templateByBase = new Map<string, SimpleRouteConnection>()
+    const baseConnectionTemplates = new Map<string, SimpleRouteConnection>()
     for (const conn of connections) {
-      if (!conn.name.includes("#")) {
-        templateByBase.set(conn.name, conn)
+      if (!conn.isPortalConnection) {
+        baseConnectionTemplates.set(conn.name, conn)
       }
     }
     const nodeMap = new Map(
@@ -165,11 +165,12 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     )
     for (const path of paths) {
       const name = path.connectionName
-      if (!name.includes("#") || existing.has(name)) continue
-      const baseName = name.split("#")[0]
+      if (!path.isPortalFragment || existing.has(name)) continue
+      const originalName = path.originalConnectionName
+      if (!originalName) continue
       const template =
-        templateByBase.get(baseName) ||
-        connections.find((conn) => conn.name === baseName)
+        baseConnectionTemplates.get(originalName) ||
+        connections.find((conn) => conn.name === originalName)
       if (!template) continue
       const startNode = nodeMap.get(path.nodeIds[0]!)
       const endNode = nodeMap.get(path.nodeIds[path.nodeIds.length - 1]!)
@@ -192,11 +193,13 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         ...template,
         name,
         pointsToConnect: points ?? template.pointsToConnect,
+        isPortalConnection: true,
+        originalConnectionName: originalName,
       }
       connections.push(clone)
       existing.add(name)
-      if (this.colorMap[baseName] && !this.colorMap[name]) {
-        this.colorMap[name] = this.colorMap[baseName]
+      if (this.colorMap[originalName] && !this.colorMap[name]) {
+        this.colorMap[name] = this.colorMap[originalName]
       }
     }
   }
@@ -360,7 +363,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
             const connectionsWithPortals = new Set(
               paths
                 .filter((p) => p.portalSegments?.length)
-                .map((p) => p.connectionName.split("#")[0]),
+                .map((p) => p.originalConnectionName || p.connectionName),
             )
             if (connectionsWithPortals.size > 0) {
               cms.removeBaseConnectionsFromSrj(
