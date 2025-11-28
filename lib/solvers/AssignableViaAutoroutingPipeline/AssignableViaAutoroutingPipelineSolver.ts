@@ -254,8 +254,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
           const fragmentedPaths = solver.getFragmentedPaths()
 
           for (const path of fragmentedPaths) {
-            if (path.isFragmentedPath && path.originalConnectionName) {
-              const originalColor = cms.colorMap[path.originalConnectionName]
+            if (path.isFragmentedPath && path.mstPairConnectionName) {
+              const originalColor = cms.colorMap[path.mstPairConnectionName]
               if (originalColor && !cms.colorMap[path.connectionName]) {
                 cms.colorMap[path.connectionName] = originalColor
               }

@@ -217,7 +217,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           connectionName: `${path.connectionName}_frag_${fragmentIndex++}`,
           nodeIds: fragNodes,
           isFragmentedPath: true,
-          originalConnectionName: path.connectionName,
+          mstPairConnectionName: path.connectionName,
         })
       }
       startIdx = offboardIdx + 1
@@ -232,7 +232,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           connectionName: `${path.connectionName}_frag_${fragmentIndex++}`,
           nodeIds: fragNodes,
           isFragmentedPath: true,
-          originalConnectionName: path.connectionName,
+          mstPairConnectionName: path.connectionName,
         })
       }
     }

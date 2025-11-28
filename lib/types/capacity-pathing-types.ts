@@ -8,6 +8,6 @@ export interface CapacityPath {
   nodeIds: CapacityMeshNodeId[]
   /** True if this path was created by splitting at an offboard edge */
   isFragmentedPath?: boolean
-  /** Original connection name before fragmentation */
-  originalConnectionName?: string
+  /** MST pair connection name before fragmentation */
+  mstPairConnectionName?: string
 }
