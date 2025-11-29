@@ -52,6 +52,7 @@ import { CapacityPathingGreedySolver } from "./CapacityPathingSectionSolver/Capa
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { NetToPointPairsSolver2_OffBoardConnection } from "./NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { RectDiffSolver } from "@tscircuit/rectdiff"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -92,7 +93,7 @@ function definePipelineStep<
 
 export class AutoroutingPipelineSolver extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
-  nodeSolver?: CapacityMeshNodeSolver
+  nodeSolver?: RectDiffSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
   initialPathingSolver?: CapacityPathingGreedySolver
@@ -145,14 +146,11 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     ),
     definePipelineStep(
       "nodeSolver",
-      CapacityMeshNodeSolver2_NodeUnderObstacle,
-      (cms) => [
-        cms.netToPointPairsSolver?.getNewSimpleRouteJson() || cms.srj,
-        cms.opts,
-      ],
+      RectDiffSolver,
+      (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! }],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.finishedNodes!
+          cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
         },
       },
     ),
@@ -169,19 +167,9 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     //   cms.srj.connections,
     // ]),
     definePipelineStep(
-      "singleLayerNodeMerger",
-      SingleLayerNodeMergerSolver,
-      (cms) => [cms.nodeSolver?.finishedNodes!],
-      {
-        onSolved: (cms) => {
-          cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
-        },
-      },
-    ),
-    definePipelineStep(
       "strawSolver",
       StrawSolver,
-      (cms) => [{ nodes: cms.singleLayerNodeMerger?.newNodes! }],
+      (cms) => [{ nodes: cms.capacityNodes! }],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.strawSolver?.getResultNodes()!

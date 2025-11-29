@@ -702,11 +702,16 @@ export const AutoroutingPipelineDebugger = ({
 
                           if (solver.nodeTargetMerger?.newNodes) {
                             nodeData = solver.nodeTargetMerger.newNodes.find(
-                              (n) => n.capacityMeshNodeId === nodeId,
+                              (n: any) => n.capacityMeshNodeId === nodeId,
                             )
-                          } else if (solver.nodeSolver?.finishedNodes) {
-                            nodeData = solver.nodeSolver.finishedNodes.find(
-                              (n) => n.capacityMeshNodeId === nodeId,
+                          } else if (
+                            solver.nodeSolver &&
+                            "finishedNodes" in solver.nodeSolver
+                          ) {
+                            const finishedNodes = (solver.nodeSolver as any)
+                              .finishedNodes as Array<any> | undefined
+                            nodeData = finishedNodes?.find(
+                              (n: any) => n.capacityMeshNodeId === nodeId,
                             )
                           }
 
