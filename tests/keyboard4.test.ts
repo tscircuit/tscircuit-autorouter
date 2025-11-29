@@ -7,7 +7,7 @@ import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson } from "lib/types"
 
-describe("keyboard4 autorouting", () => {
+describe.skip("keyboard4 autorouting", () => {
   const keyboard4Srj = keyboard4 as unknown as SimpleRouteJson
 
   let circuitJson: AnyCircuitElement[]

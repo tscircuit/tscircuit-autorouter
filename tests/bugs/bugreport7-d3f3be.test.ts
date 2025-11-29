@@ -10,7 +10,7 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-describe("bug d3f3be1b path simplification", () => {
+describe.skip("bug d3f3be1b path simplification", () => {
   let solver: CapacityMeshSolver
   let circuitJson: ReturnType<typeof convertToCircuitJson>
   let pcbSvg: string

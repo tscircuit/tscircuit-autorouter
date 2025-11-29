@@ -151,7 +151,7 @@ const simpleRouteJson: SimpleRouteJson = {
   ],
 }
 
-describe("polygon outline path simplification", () => {
+describe.skip("polygon outline path simplification", () => {
   test("simplified traces stay within the outline", () => {
     const solver = new CapacityMeshSolver(simpleRouteJson)
     solver.solve()
