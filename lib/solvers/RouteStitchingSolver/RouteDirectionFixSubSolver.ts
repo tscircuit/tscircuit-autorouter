@@ -3,8 +3,6 @@ import { BaseSolver } from "../BaseSolver"
 import { GraphicsObject } from "graphics-debug"
 
 /**
- * RouteDirectionFixSubSolver
- *
  * Optimizes route directions by comparing pad-to-endpoint distances.
  * Reverses routes when cross-connections provide better alignment.
  */
