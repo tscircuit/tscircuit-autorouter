@@ -205,10 +205,6 @@ export const AutoroutingPipelineDebugger = ({
 
   // Go to specific iteration
   const handleGoToIteration = () => {
-    if (solver.solved || solver.failed) {
-      return
-    }
-
     const targetIteration = window.prompt(
       "Enter target iteration number:",
       lastTargetIteration.toString(),
@@ -579,7 +575,6 @@ export const AutoroutingPipelineDebugger = ({
           <button
             className="ml-2 rounded-md px-2 py-0 hover:bg-gray-100"
             onClick={handleGoToIteration}
-            disabled={solver.solved || solver.failed}
             title={
               lastTargetIteration > 0
                 ? `Last: ${lastTargetIteration}`
