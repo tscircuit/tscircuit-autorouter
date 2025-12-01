@@ -49,71 +49,41 @@ export class RouteDirectionFixSubSolver extends BaseSolver {
 
     const route = this.routes[this.currentIndex]
 
-    // Validate route data integrity
-    if (!route) {
+    // Logical validation - set failed for invalid data states
+    if (!route || !route.route || !Array.isArray(route.route)) {
       this.failed = true
-      this.error = `Route at index ${this.currentIndex} is null or undefined`
-      return
-    }
-
-    if (!route.route || !Array.isArray(route.route)) {
-      this.failed = true
-      this.error = `Route ${route.connectionName || "unnamed"} has invalid route data`
+      this.error = `Invalid route data at index ${this.currentIndex}`
       return
     }
 
     if (route.route.length >= 4) {
-      try {
-        const pad1 = route.route[0]
-        const pad2 = route.route[route.route.length - 1]
-        const point1 = route.route[1]
-        const point2 = route.route[route.route.length - 2]
+      const pad1 = route.route[0]
+      const pad2 = route.route[route.route.length - 1]
+      const point1 = route.route[1]
+      const point2 = route.route[route.route.length - 2]
 
-        // Validate coordinate data
-        if (!pad1 || !pad2 || !point1 || !point2) {
-          throw new Error("Route contains null/undefined points")
-        }
+      // Use squared distances for performance optimization (comparison remains valid)
+      const currentDirectionDistanceSquared =
+        (pad1.x - point1.x) ** 2 +
+        (pad1.y - point1.y) ** 2 +
+        (pad2.x - point2.x) ** 2 +
+        (pad2.y - point2.y) ** 2
+      const alternativeDirectionDistanceSquared =
+        (pad1.x - point2.x) ** 2 +
+        (pad1.y - point2.y) ** 2 +
+        (pad2.x - point1.x) ** 2 +
+        (pad2.y - point1.y) ** 2
 
-        if (
-          typeof pad1.x !== "number" ||
-          typeof pad1.y !== "number" ||
-          typeof pad2.x !== "number" ||
-          typeof pad2.y !== "number" ||
-          typeof point1.x !== "number" ||
-          typeof point1.y !== "number" ||
-          typeof point2.x !== "number" ||
-          typeof point2.y !== "number"
-        ) {
-          throw new Error("Route contains invalid coordinate data")
-        }
-
-        // Use squared distances for performance optimization (comparison remains valid)
-        const currentDirectionDistanceSquared =
-          (pad1.x - point1.x) ** 2 +
-          (pad1.y - point1.y) ** 2 +
-          (pad2.x - point2.x) ** 2 +
-          (pad2.y - point2.y) ** 2
-        const alternativeDirectionDistanceSquared =
-          (pad1.x - point2.x) ** 2 +
-          (pad1.y - point2.y) ** 2 +
-          (pad2.x - point1.x) ** 2 +
-          (pad2.y - point1.y) ** 2
-
-        if (
-          currentDirectionDistanceSquared > alternativeDirectionDistanceSquared
-        ) {
-          const mid = route.route.slice(1, route.route.length - 1)
-          route.route = [
-            route.route[0],
-            ...mid.reverse(),
-            route.route[route.route.length - 1],
-          ]
-          this.reversedRoutes.add(route.connectionName)
-        }
-      } catch (error) {
-        this.failed = true
-        this.error = `Failed to process route ${route.connectionName || "unnamed"}: ${error}`
-        return
+      if (
+        currentDirectionDistanceSquared > alternativeDirectionDistanceSquared
+      ) {
+        const mid = route.route.slice(1, route.route.length - 1)
+        route.route = [
+          route.route[0],
+          ...mid.reverse(),
+          route.route[route.route.length - 1],
+        ]
+        this.reversedRoutes.add(route.connectionName)
       }
     }
 
