@@ -3,6 +3,7 @@ import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { SingleHighDensityRouteStitchSolver } from "./SingleHighDensityRouteStitchSolver"
+import { RouteDirectionFixSubSolver } from "./RouteDirectionFixSubSolver"
 import { GraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "../colors"
 
@@ -15,7 +16,10 @@ export type UnsolvedRoute = {
 
 export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   unsolvedRoutes: UnsolvedRoute[]
-  activeSolver: SingleHighDensityRouteStitchSolver | null = null
+  activeSolver:
+    | SingleHighDensityRouteStitchSolver
+    | RouteDirectionFixSubSolver
+    | null = null
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []
   colorMap: Record<string, string> = {}
   defaultTraceThickness: number
@@ -55,7 +59,12 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     if (this.activeSolver) {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
-        this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
+        if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver) {
+          this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
+        } else if (this.activeSolver instanceof RouteDirectionFixSubSolver) {
+          this.mergedHdRoutes = this.activeSolver.getProcessedRoutes()
+          this.solved = true
+        }
         this.activeSolver = null
       } else if (this.activeSolver.failed) {
         this.failed = true
@@ -67,7 +76,10 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     const unsolvedRoute = this.unsolvedRoutes.pop()
 
     if (!unsolvedRoute) {
-      this.solved = true
+      this.activeSolver = new RouteDirectionFixSubSolver(
+        this.mergedHdRoutes,
+        this.colorMap,
+      )
       return
     }
 
@@ -83,6 +95,10 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
+    if (this.activeSolver instanceof RouteDirectionFixSubSolver) {
+      // If the active solver is a RouteDirectionFixSubSolver, visualize only it
+      return this.activeSolver.visualize()
+    }
     const graphics: GraphicsObject = {
       points: [],
       lines: [],
@@ -112,7 +128,8 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
 
       // Merge rects if they exist
       if (activeSolverGraphics.rects?.length) {
-        graphics.rects = activeSolverGraphics.rects
+        if (!graphics.rects) graphics.rects = []
+        graphics.rects.push(...activeSolverGraphics.rects)
       }
     }
 
