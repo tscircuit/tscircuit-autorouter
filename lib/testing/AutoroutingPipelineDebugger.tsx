@@ -35,6 +35,20 @@ interface CapacityMeshPipelineDebuggerProps {
   ) => any
 }
 
+export const SPEED_DEFINITIONS = [
+  { label: "1s / step", delay: 1000, steps: 1 },
+  { label: "500ms / step", delay: 500, steps: 1 },
+  { label: "100ms / step", delay: 100, steps: 1 },
+  { label: "50ms / step", delay: 50, steps: 1 },
+  { label: "1x", delay: 1, steps: 1 },
+  { label: "2x", delay: 1, steps: 2 },
+  { label: "5x", delay: 1, steps: 5 },
+  { label: "10x", delay: 1, steps: 10 },
+  { label: "100x", delay: 1, steps: 100 },
+  { label: "500x", delay: 1, steps: 500 },
+  { label: "5000x", delay: 1, steps: 5000 },
+]
+
 export const cacheProviderNames = [
   "None",
   "In Memory",
@@ -94,7 +108,7 @@ export const AutoroutingPipelineDebugger = ({
   const [canSelectObjects, setCanSelectObjects] = useState(false)
   const [, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
-  const [speedLevel, setSpeedLevel] = useState(0)
+  const [speedLevel, setSpeedLevel] = useState(4)
   const [solveTime, setSolveTime] = useState<number | null>(null)
   const [dialogObject, setDialogObject] = useState<Rect | null>(null)
   const [lastTargetIteration, setLastTargetIteration] = useState<number>(
@@ -110,9 +124,6 @@ export const AutoroutingPipelineDebugger = ({
   )
   const isSolvingToBreakpointRef = useRef(false) // Ref to track breakpoint solving state
 
-  const speedLevels = [1, 2, 5, 10, 100, 500, 5000]
-  const speedLabels = ["1x", "2x", "5x", "10x", "100x", "500x", "5000x"]
-
   // Reset solver
   const resetSolver = () => {
     setSolver(createNewSolver())
@@ -126,8 +137,13 @@ export const AutoroutingPipelineDebugger = ({
     let intervalId: ReturnType<typeof setInterval> | undefined
 
     if (isAnimating && !solver.solved && !solver.failed) {
+      const speedDef = SPEED_DEFINITIONS[speedLevel]
+      // For speeds >= 1x (index 4+), we might still want to respect the passed-in animationSpeed prop
+      // but for slow speeds, we must enforce the delay
+      const delay = speedLevel < 4 ? speedDef.delay : animationSpeed
+
       intervalId = setInterval(() => {
-        const stepsPerInterval = speedLevels[speedLevel]
+        const stepsPerInterval = speedDef.steps
 
         for (let i = 0; i < stepsPerInterval; i++) {
           if (solver.solved || solver.failed) {
@@ -136,7 +152,7 @@ export const AutoroutingPipelineDebugger = ({
           solver.step()
         }
         setForceUpdate((prev) => prev + 1)
-      }, animationSpeed)
+      }, delay)
     }
 
     return () => {
@@ -450,7 +466,7 @@ export const AutoroutingPipelineDebugger = ({
 
   // Increase animation speed
   const increaseSpeed = () => {
-    setSpeedLevel((prev) => Math.min(prev + 1, speedLevels.length - 1))
+    setSpeedLevel((prev) => Math.min(prev + 1, SPEED_DEFINITIONS.length - 1))
     if (!isAnimating) {
       setIsAnimating(true)
     }

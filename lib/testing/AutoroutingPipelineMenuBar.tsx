@@ -13,6 +13,7 @@ import {
 import {
   type CacheProviderName,
   cacheProviderNames,
+  SPEED_DEFINITIONS,
 } from "./AutoroutingPipelineDebugger"
 import { CacheProvider } from "lib/cache/types"
 
@@ -37,8 +38,6 @@ interface AutoroutingPipelineMenuBarProps {
   onSetCacheProviderName: (provider: CacheProviderName) => void
   onClearCache: () => void
 }
-
-const animationSpeeds = [1, 2, 5, 10, 100, 500, 5000]
 
 export const AutoroutingPipelineMenuBar = ({
   renderer,
@@ -100,14 +99,14 @@ export const AutoroutingPipelineMenuBar = ({
       <MenubarMenu>
         <MenubarTrigger>Animation</MenubarTrigger>
         <MenubarContent>
-          {animationSpeeds.map((speed) => (
+          {SPEED_DEFINITIONS.map((speedDef, index) => (
             <MenubarItem
-              key={speed}
-              onClick={() => onSetAnimationSpeed(speed)}
-              disabled={animationSpeed === speed}
+              key={speedDef.label}
+              onClick={() => onSetAnimationSpeed(index)}
+              disabled={animationSpeed === index}
             >
-              {speed}x{" "}
-              {animationSpeed === speed && <MenubarShortcut>✓</MenubarShortcut>}
+              {speedDef.label}{" "}
+              {animationSpeed === index && <MenubarShortcut>✓</MenubarShortcut>}
             </MenubarItem>
           ))}
         </MenubarContent>
