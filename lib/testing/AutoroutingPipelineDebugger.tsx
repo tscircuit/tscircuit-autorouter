@@ -665,7 +665,11 @@ export const AutoroutingPipelineDebugger = ({
             graphics={visualization}
             onObjectClicked={({ object }) => {
               if (!canSelectObjects) return
-              if (!object.label?.includes("cn")) return
+              if (
+                !object.label?.includes("cn") &&
+                !object.label?.includes("cmn")
+              )
+                return
               setDialogObject(object)
             }}
             objectLimit={20e3}
@@ -704,9 +708,11 @@ export const AutoroutingPipelineDebugger = ({
                     onClick={() => {
                       if (dialogObject?.label) {
                         // Extract the capacity mesh node ID from the label
-                        const match = dialogObject.label.match(/cn(\d+)/)
-                        if (match?.[1]) {
-                          const nodeId = `cn${parseInt(match[1], 10)}`
+                        const match =
+                          dialogObject.label.match(/cn_(\d+)/) ??
+                          dialogObject.label.match(/cmn_(\d+)/)
+                        if (match?.[0]) {
+                          const nodeId = match[0]
 
                           // Find the node in the solver's data
                           let nodeData = null
