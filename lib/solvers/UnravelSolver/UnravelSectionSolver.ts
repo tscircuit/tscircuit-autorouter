@@ -380,14 +380,14 @@ export class UnravelSectionSolver extends BaseSolver {
         pointB.segmentId,
       )!.availableZ
 
-      const aIsZLocked =
+      const AIsZLocked =
         this.unravelSection.zLockedSegmentPointIds.has(APointId)
-      const bIsZLocked =
+      const BIsZLocked =
         this.unravelSection.zLockedSegmentPointIds.has(BPointId)
 
       if (
         this.unravelSection.mutableSegmentPointIds.has(APointId) &&
-        !aIsZLocked &&
+        !AIsZLocked &&
         aAvailableZ.includes(pointB.z)
       ) {
         operations.push({
@@ -398,7 +398,7 @@ export class UnravelSectionSolver extends BaseSolver {
       }
       if (
         this.unravelSection.mutableSegmentPointIds.has(BPointId) &&
-        !bIsZLocked &&
+        !BIsZLocked &&
         bAvailableZ.includes(pointA.z)
       ) {
         operations.push({
