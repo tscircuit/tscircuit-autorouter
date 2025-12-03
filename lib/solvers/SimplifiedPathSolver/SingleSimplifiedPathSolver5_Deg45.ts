@@ -574,6 +574,12 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.lastValidPath = null // Ensure lastValidPath is clear
         this.lastValidPathHeadDistance = this.tailDistanceAlongPath
       } else if (indexAfterLayerChange < this.inputRoute.route.length) {
+        // Check if it's the last point - if so, we are done as there are no more segments
+        if (indexAfterLayerChange === this.inputRoute.route.length - 1) {
+          this.solved = true
+          return
+        }
+
         // Fallback if the exact segment wasn't found but index is valid
         // This might happen due to floating point comparisons if getPointAtDistance was used previously
         console.warn(
@@ -589,7 +595,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           this.lastValidPathHeadDistance = this.tailDistanceAlongPath
         } else {
           console.error(
-            "Could not find segment start after layer change, path might be incomplete.",
+            `[${this.inputRoute.connectionName}] Could not find segment start after layer change. Path might be incomplete.
+            Index sought: ${indexAfterLayerChange}, Point: (${this.inputRoute.route[indexAfterLayerChange].x.toFixed(3)}, ${this.inputRoute.route[indexAfterLayerChange].y.toFixed(3)}, z=${this.inputRoute.route[indexAfterLayerChange].z})
+            Route Length: ${this.inputRoute.route.length}, Path Segments: ${this.pathSegments.length}`,
           )
           this.solved = true // Prevent infinite loop
         }

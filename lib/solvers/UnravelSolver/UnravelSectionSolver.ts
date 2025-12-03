@@ -278,6 +278,17 @@ export class UnravelSectionSolver extends BaseSolver {
       }
     }
 
+    const zLockedSegmentPointIds = new Set<SegmentPointId>()
+    for (const sp of segmentPoints) {
+      if (
+        sp.capacityMeshNodeIds.some(
+          (id) => this.nodeMap.get(id)?._containsTarget,
+        )
+      ) {
+        zLockedSegmentPointIds.add(sp.segmentPointId)
+      }
+    }
+
     return {
       allNodeIds: allSectionNodeIds,
       mutableNodeIds,
@@ -289,6 +300,7 @@ export class UnravelSectionSolver extends BaseSolver {
       segmentPointsInSegment,
       originalPointMap: sectionPointMap,
       mutableSegmentPointIds,
+      zLockedSegmentPointIds,
     }
   }
 
@@ -368,8 +380,14 @@ export class UnravelSectionSolver extends BaseSolver {
         pointB.segmentId,
       )!.availableZ
 
+      const aIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(APointId)
+      const bIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(BPointId)
+
       if (
         this.unravelSection.mutableSegmentPointIds.has(APointId) &&
+        !aIsZLocked &&
         aAvailableZ.includes(pointB.z)
       ) {
         operations.push({
@@ -380,6 +398,7 @@ export class UnravelSectionSolver extends BaseSolver {
       }
       if (
         this.unravelSection.mutableSegmentPointIds.has(BPointId) &&
+        !bIsZLocked &&
         bAvailableZ.includes(pointA.z)
       ) {
         operations.push({
@@ -416,6 +435,15 @@ export class UnravelSectionSolver extends BaseSolver {
       const DIsMutable =
         this.unravelSection.mutableSegmentPointIds.has(DPointId)
 
+      const AIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(APointId)
+      const BIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(BPointId)
+      const CIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(CPointId)
+      const DIsZLocked =
+        this.unravelSection.zLockedSegmentPointIds.has(DPointId)
+
       if (AIsMutable && CIsMutable && A.segmentId === C.segmentId) {
         sharedSegments.push([APointId, CPointId])
       }
@@ -448,7 +476,8 @@ export class UnravelSectionSolver extends BaseSolver {
       }
 
       // Only propose layer changes if both segments can use the target layer
-      if (AIsMutable && BIsMutable) {
+      // and neither point is z-locked
+      if (AIsMutable && BIsMutable && !AIsZLocked && !BIsZLocked) {
         const newZ = A.z === 0 ? 1 : 0
         if (isNewZAvailableForAll([aSegment, bSegment], newZ)) {
           operations.push({
@@ -459,7 +488,7 @@ export class UnravelSectionSolver extends BaseSolver {
         }
       }
 
-      if (CIsMutable && DIsMutable) {
+      if (CIsMutable && DIsMutable && !CIsZLocked && !DIsZLocked) {
         const newZ = C.z === 0 ? 1 : 0
         if (isNewZAvailableForAll([cSegment, dSegment], newZ)) {
           operations.push({
@@ -471,7 +500,7 @@ export class UnravelSectionSolver extends BaseSolver {
       }
 
       // 3. CHANGE LAYER OF EACH POINT INDIVIDUALLY TO MAKE TRANSITION CROSSING
-      if (AIsMutable) {
+      if (AIsMutable && !AIsZLocked) {
         const newZ = A.z === 0 ? 1 : 0
         if (aSegment.availableZ.includes(newZ)) {
           operations.push({
@@ -482,7 +511,7 @@ export class UnravelSectionSolver extends BaseSolver {
         }
       }
 
-      if (BIsMutable) {
+      if (BIsMutable && !BIsZLocked) {
         const newZ = B.z === 0 ? 1 : 0
         if (bSegment.availableZ.includes(newZ)) {
           operations.push({
@@ -493,7 +522,7 @@ export class UnravelSectionSolver extends BaseSolver {
         }
       }
 
-      if (CIsMutable) {
+      if (CIsMutable && !CIsZLocked) {
         const newZ = C.z === 0 ? 1 : 0
         if (cSegment.availableZ.includes(newZ)) {
           operations.push({
@@ -504,7 +533,7 @@ export class UnravelSectionSolver extends BaseSolver {
         }
       }
 
-      if (DIsMutable) {
+      if (DIsMutable && !DIsZLocked) {
         const newZ = D.z === 0 ? 1 : 0
         if (dSegment.availableZ.includes(newZ)) {
           operations.push({

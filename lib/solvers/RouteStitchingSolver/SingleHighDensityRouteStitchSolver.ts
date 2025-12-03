@@ -3,6 +3,10 @@ import { BaseSolver } from "../BaseSolver"
 import { GraphicsObject } from "graphics-debug"
 import { distance } from "@tscircuit/math-utils"
 
+const VIA_PENALTY = 1000
+const GAP_PENALTY = 100000
+const GEOMETRIC_TOLERANCE = 1e-3
+
 export class SingleHighDensityRouteStitchSolver extends BaseSolver {
   mergedHdRoute: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
@@ -49,18 +53,43 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       return // Early exit as there's nothing to stitch
     }
 
-    const { firstRoute } = this.getDisjointedRoute()
+    // Find the route closest to the global start or end to serve as the "seed" route.
+    // This is more robust than looking for "disjoint" ends, which can fail with small gaps.
+    let bestDist = Infinity
+    let firstRoute = opts.hdRoutes[0]
+    let orientation: "start-to-end" | "end-to-start" = "start-to-end"
 
-    const firstRouteToStartDist = Math.min(
-      distance(firstRoute.route[0], opts.start),
-      distance(firstRoute.route[firstRoute.route.length - 1], opts.start),
-    )
-    const firstRouteToEndDist = Math.min(
-      distance(firstRoute.route[0], opts.end),
-      distance(firstRoute.route[firstRoute.route.length - 1], opts.end),
-    )
+    for (const route of opts.hdRoutes) {
+      const firstPoint = route.route[0]
+      const lastPoint = route.route[route.route.length - 1]
 
-    if (firstRouteToStartDist < firstRouteToEndDist) {
+      const distStartToFirst = distance(opts.start, firstPoint)
+      const distStartToLast = distance(opts.start, lastPoint)
+      const distEndToFirst = distance(opts.end, firstPoint)
+      const distEndToLast = distance(opts.end, lastPoint)
+
+      const minDist = Math.min(
+        distStartToFirst,
+        distStartToLast,
+        distEndToFirst,
+        distEndToLast,
+      )
+
+      if (minDist < bestDist) {
+        bestDist = minDist
+        firstRoute = route
+        if (
+          Math.min(distEndToFirst, distEndToLast) <
+          Math.min(distStartToFirst, distStartToLast)
+        ) {
+          orientation = "end-to-start"
+        } else {
+          orientation = "start-to-end"
+        }
+      }
+    }
+
+    if (orientation === "start-to-end") {
       this.start = opts.start
       this.end = opts.end
     } else {
@@ -85,13 +114,13 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
 
   /**
    * Scan `remainingHdRoutes` and find a route that has **one** end that is not
-   * within `5e-6` of the start or end of any other route on the same layer.
+   * within `1e-3` of the start or end of any other route on the same layer.
    * That “lonely” end marks one extremity of the whole chain, which we use as
    * our starting segment. If no such route exists (e.g., the data form a loop),
    * we simply return the first route so the solver can proceed.
    */
   getDisjointedRoute() {
-    const TOL = 5e-6
+    const TOL = GEOMETRIC_TOLERANCE
 
     for (const candidate of this.remainingHdRoutes) {
       const candidateEnds = [
@@ -143,40 +172,94 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     // 2. If the last point is closest, we need to reverse the hd route before merging
     // 3. After merging, we remove it from the remaining routes
 
-    let closestRouteIndex = 0
+    // Find the next logical route to merge using prioritized selection
+    // Priority 1: Same layer, connected (or very close)
+    // Priority 2: Different layer, same X/Y (Via)
+    // Priority 3: Closest endpoint (Gap bridging)
+
+    let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
-    let closestDistance = Infinity
+    let bestScore = Infinity
+
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
-      const lastPointInCandidate = hdRoute.route[hdRoute.route.length - 1]
       const firstPointInCandidate = hdRoute.route[0]
+      const lastPointInCandidate = hdRoute.route[hdRoute.route.length - 1]
+
       const distToFirst = distance(lastMergedPoint, firstPointInCandidate)
       const distToLast = distance(lastMergedPoint, lastPointInCandidate)
-      if (
-        distToFirst < closestDistance &&
-        lastMergedPoint.z === firstPointInCandidate.z
-      ) {
-        closestDistance = distToFirst
+
+      // Evaluate "First" end
+      let scoreFirst = Infinity
+      if (lastMergedPoint.z === firstPointInCandidate.z) {
+        if (distToFirst < GEOMETRIC_TOLERANCE) {
+          scoreFirst = distToFirst // Connected on same layer
+        } else {
+          scoreFirst = GAP_PENALTY + distToFirst // Gap on same layer
+        }
+      } else {
+        // Different Z
+        if (distToFirst < GEOMETRIC_TOLERANCE) {
+          scoreFirst = VIA_PENALTY + distToFirst // Via transition
+        } else {
+          scoreFirst = GAP_PENALTY + distToFirst // Gap on different layer
+        }
+      }
+
+      if (scoreFirst < bestScore) {
+        bestScore = scoreFirst
         closestRouteIndex = i
         matchedOn = "first"
       }
-      if (
-        distToLast < closestDistance &&
-        lastMergedPoint.z === lastPointInCandidate.z
-      ) {
-        closestDistance = distToLast
+
+      // Evaluate "Last" end
+      let scoreLast = Infinity
+      if (lastMergedPoint.z === lastPointInCandidate.z) {
+        if (distToLast < GEOMETRIC_TOLERANCE) {
+          scoreLast = distToLast // Connected on same layer
+        } else {
+          scoreLast = GAP_PENALTY + distToLast // Gap on same layer
+        }
+      } else {
+        // Different Z
+        if (distToLast < GEOMETRIC_TOLERANCE) {
+          scoreLast = VIA_PENALTY + distToLast // Via transition
+        } else {
+          scoreLast = GAP_PENALTY + distToLast // Gap on different layer
+        }
+      }
+
+      if (scoreLast < bestScore) {
+        bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
       }
     }
 
+    if (closestRouteIndex === -1) {
+      // Should not happen given the gap fallback, but if no routes remain, we are done
+      this.remainingHdRoutes = [] // Force exit next step
+      return
+    }
+
     const hdRouteToMerge = this.remainingHdRoutes[closestRouteIndex]
     this.remainingHdRoutes.splice(closestRouteIndex, 1)
 
+    let pointsToAdd: Array<{ x: number; y: number; z: number }>
     if (matchedOn === "first") {
-      this.mergedHdRoute.route.push(...hdRouteToMerge.route)
+      pointsToAdd = hdRouteToMerge.route
     } else {
-      this.mergedHdRoute.route.push(...[...hdRouteToMerge.route].reverse())
+      pointsToAdd = [...hdRouteToMerge.route].reverse()
+    }
+
+    if (
+      pointsToAdd.length > 0 &&
+      distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
+      lastMergedPoint.z === pointsToAdd[0].z
+    ) {
+      this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
+    } else {
+      this.mergedHdRoute.route.push(...pointsToAdd)
     }
 
     this.mergedHdRoute.vias.push(...hdRouteToMerge.vias)
