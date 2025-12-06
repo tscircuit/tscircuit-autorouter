@@ -666,9 +666,10 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     const allHdRoutes = this._getOutputHdRoutes()
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
-      const netConnectionName = this.srj.connections.find(
-        (c) => c.name === connection.name,
-      )?.netConnectionName
+      const netConnectionName =
+        connection.netConnectionName ??
+        this.srj.connections.find((c) => c.name === connection.name)
+          ?.netConnectionName
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
