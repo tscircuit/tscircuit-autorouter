@@ -46,7 +46,7 @@ export default async function handler(
     }
 
     // Convert solver output to simplified trace format
-    const traces = convertSolverOutputToTraces(solver)
+    const traces = solver.getOutputSimplifiedPcbTraces()
 
     // Return the solution
     const output_simple_route_json = {
@@ -79,47 +79,4 @@ function validateSimpleRouteJson(input: any): boolean {
     typeof input.bounds.minY === "number" &&
     typeof input.bounds.maxY === "number"
   )
-}
-
-function convertSolverOutputToTraces(solver: CapacityMeshSolver) {
-  const traces = []
-  const routes = solver.highDensityRouteSolver?.routes || []
-
-  for (const route of routes) {
-    const trace = {
-      type: "pcb_trace" as const,
-      pcb_trace_id: route.connectionName,
-      route: [] as Array<any>,
-    }
-
-    // Convert route points to wire and via segments
-    for (let i = 0; i < route.route.length - 1; i++) {
-      const current = route.route[i]
-      const next = route.route[i + 1]
-
-      // If z-level changes, add a via
-      if (current.z !== next.z) {
-        trace.route.push({
-          route_type: "via",
-          x: current.x,
-          y: current.y,
-          from_layer: `layer${current.z}`,
-          to_layer: `layer${next.z}`,
-        })
-      }
-
-      // Add wire segment
-      trace.route.push({
-        route_type: "wire",
-        x: next.x,
-        y: next.y,
-        width: route.traceThickness,
-        layer: `layer${next.z}`,
-      })
-    }
-
-    traces.push(trace)
-  }
-
-  return traces
 }

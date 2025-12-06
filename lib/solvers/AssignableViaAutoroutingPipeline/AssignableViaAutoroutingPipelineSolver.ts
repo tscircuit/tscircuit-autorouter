@@ -710,9 +710,10 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       const fragMatch = connection.name.match(/^(.+?)_frag_\d+$/)
       const originalName = fragMatch ? fragMatch[1] : connection.name
 
-      const netConnectionName = this.srj.connections.find(
-        (c) => c.name === originalName,
-      )?.netConnectionName
+      const netConnectionName =
+        connection.netConnectionName ??
+        this.srj.connections.find((c) => c.name === originalName)
+          ?.netConnectionName
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
