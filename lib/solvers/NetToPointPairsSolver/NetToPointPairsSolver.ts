@@ -2,6 +2,7 @@ import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
+import { mergeConnections } from "../../utils/mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
 /**
@@ -26,7 +27,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     public colorMap: Record<string, string> = {},
   ) {
     super()
-    this.unprocessedConnections = [...ogSrj.connections]
+    this.unprocessedConnections = mergeConnections([...ogSrj.connections])
     this.newConnections = []
   }
 

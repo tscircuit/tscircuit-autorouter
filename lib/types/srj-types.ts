@@ -20,6 +20,9 @@ export type ConnectionPoint =
   | SingleLayerConnectionPoint
   | MultiLayerConnectionPoint
 
+export type PointKey = string
+export type ConnectionTempId = string
+
 export interface SimpleRouteJson {
   layerCount: number
   minTraceWidth: number
