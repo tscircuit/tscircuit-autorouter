@@ -2,7 +2,7 @@ import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
-import { mergeConnections } from "../../utils/mergeConnections"
+import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
 /**
