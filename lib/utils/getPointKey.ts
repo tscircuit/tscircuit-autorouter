@@ -1,7 +1,4 @@
-import {
-  ConnectionPoint,
-  PointKey,
-} from "lib/types"
+import { ConnectionPoint, PointKey } from "lib/types"
 import {
   isMultiLayerConnectionPoint,
   isSingleLayerConnectionPoint,

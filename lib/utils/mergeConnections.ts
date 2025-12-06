@@ -69,7 +69,9 @@ export function mergeConnections(
     if (!connectionTempIdGroups.has(rootConnectionTempId)) {
       connectionTempIdGroups.set(rootConnectionTempId, [])
     }
-    connectionTempIdGroups.get(rootConnectionTempId)!.push(simpleRouteConnection)
+    connectionTempIdGroups
+      .get(rootConnectionTempId)!
+      .push(simpleRouteConnection)
   })
 
   const mergedSimpleRouteConnections: SimpleRouteConnection[] = []
@@ -91,7 +93,10 @@ export function mergeConnections(
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
       simpleRouteConnection.pointsToConnect.forEach((connectionPoint) =>
-        uniqueConnectionPoints.set(getPointKey(connectionPoint), connectionPoint),
+        uniqueConnectionPoints.set(
+          getPointKey(connectionPoint),
+          connectionPoint,
+        ),
       )
 
       // Collect names
