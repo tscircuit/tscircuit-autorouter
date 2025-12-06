@@ -190,57 +190,6 @@ export default () => {
               </form>
             </div>
           </div>
-
-          <div className="mt-12 p-6 bg-blue-50 rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-              About Simple Route JSON
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">
-                  Required Fields
-                </h3>
-                <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
-                  <li>
-                    <code className="bg-white px-1 rounded">layerCount</code> -
-                    Number of PCB layers
-                  </li>
-                  <li>
-                    <code className="bg-white px-1 rounded">minTraceWidth</code>{" "}
-                    - Minimum trace width in mm
-                  </li>
-                  <li>
-                    <code className="bg-white px-1 rounded">connections</code> -
-                    Array of nets to route
-                  </li>
-                  <li>
-                    <code className="bg-white px-1 rounded">obstacles</code> -
-                    Array of obstacles/pads
-                  </li>
-                  <li>
-                    <code className="bg-white px-1 rounded">bounds</code> -
-                    Routing area boundaries
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">
-                  Useful Tips
-                </h3>
-                <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
-                  <li>Use the sample JSON as a starting template</li>
-                  <li>
-                    Layer names: "top", "bottom", "inner1", "inner2", etc.
-                  </li>
-                  <li>Coordinates are in millimeters</li>
-                  <li>Check browser console for detailed error messages</li>
-                  <li>
-                    Once loaded, you can step through the routing algorithm
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
