@@ -53,6 +53,7 @@ import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { NetToPointPairsSolver2_OffBoardConnection } from "./NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { RectDiffSolver } from "@tscircuit/rectdiff"
+import { TraceSimplificationSolver } from "./TraceSimplificationSolver/TraceSimplificationSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -108,11 +109,8 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
-  uselessViaRemovalSolver1?: UselessViaRemovalSolver
-  uselessViaRemovalSolver2?: UselessViaRemovalSolver
   sameNetViaMerger?: SameNetViaMergerSolver
-  multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver
-  multiSimplifiedPathSolver2?: MultiSimplifiedPathSolver
+  traceSimplificationSolver?: TraceSimplificationSolver
   viaDiameter: number
   minTraceWidth: number
 
@@ -320,64 +318,24 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "uselessViaRemovalSolver1",
-      UselessViaRemovalSolver,
+      "traceSimplificationSolver",
+      TraceSimplificationSolver,
       (cms) => [
         {
-          unsimplifiedHdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
-          obstacles: cms.srj.obstacles,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "multiSimplifiedPathSolver1",
-      MultiSimplifiedPathSolver,
-      (cms) => [
-        {
-          unsimplifiedHdRoutes:
-            cms.uselessViaRemovalSolver1?.getOptimizedHdRoutes() ||
-            cms.highDensityStitchSolver!.mergedHdRoutes,
+          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "uselessViaRemovalSolver2",
-      UselessViaRemovalSolver,
-      (cms) => [
-        {
-          unsimplifiedHdRoutes:
-            cms.multiSimplifiedPathSolver1!.simplifiedHdRoutes,
-          obstacles: cms.srj.obstacles,
-          colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "multiSimplifiedPathSolver2",
-      MultiSimplifiedPathSolver,
-      (cms) => [
-        {
-          unsimplifiedHdRoutes:
-            cms.uselessViaRemovalSolver2?.getOptimizedHdRoutes()!,
-          obstacles: cms.srj.obstacles,
-          connMap: cms.connMap,
-          colorMap: cms.colorMap,
-          outline: cms.srj.outline,
-          defaultViaDiameter: cms.viaDiameter,
+          iterations: 2,
         },
       ],
     ),
     definePipelineStep("sameNetViaMerger", SameNetViaMergerSolver, (cms) => [
       {
-        inputHdRoutes: cms.multiSimplifiedPathSolver2!.simplifiedHdRoutes,
+        inputHdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
         obstacles: cms.srj.obstacles,
         colorMap: cms.colorMap,
         layerCount: cms.srj.layerCount,
@@ -487,12 +445,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       this.segmentToPointOptimizer?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
-    const uselessViaRemovalViz1 = this.uselessViaRemovalSolver1?.visualize()
-    const uselessViaRemovalViz2 = this.uselessViaRemovalSolver2?.visualize()
-    const simplifiedPathSolverViz1 =
-      this.multiSimplifiedPathSolver1?.visualize()
-    const simplifiedPathSolverViz2 =
-      this.multiSimplifiedPathSolver2?.visualize()
+    const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
 
@@ -568,10 +521,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
       segmentOptimizationViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
       highDensityStitchViz,
-      uselessViaRemovalViz1,
-      simplifiedPathSolverViz1,
-      uselessViaRemovalViz2,
-      simplifiedPathSolverViz2,
+      traceSimplificationViz,
       this.solved
         ? combineVisualizations(
             problemViz,
@@ -646,10 +596,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.sameNetViaMerger?.getMergedViaHdRoutes() ??
-      this.multiSimplifiedPathSolver2?.simplifiedHdRoutes ??
-      this.uselessViaRemovalSolver2?.getOptimizedHdRoutes() ??
-      this.multiSimplifiedPathSolver1?.simplifiedHdRoutes ??
-      this.uselessViaRemovalSolver1?.getOptimizedHdRoutes() ??
+      this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
   }
