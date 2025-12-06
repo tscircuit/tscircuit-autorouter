@@ -4,28 +4,29 @@ import { Obstacle } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { GraphicsObject } from "graphics-debug"
 
-type Phase = "via_removal" | "path_simplification"
+type Phase = "via_removal" | "via_merging" | "path_simplification"
 
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
- * via removal and path simplification phases. It reduces redundant vias and simplifies
- * routing paths through configurable iterations.
+ * via removal, via merging, and path simplification phases. It reduces redundant vias
+ * and simplifies routing paths through configurable iterations.
  *
- * The solver operates in two alternating phases per iteration:
+ * The solver operates in three alternating phases per iteration:
  * 1. "via_removal" - Removes unnecessary vias from routes using UselessViaRemovalSolver
- * 2. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
+ * 2. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
+ * 3. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
  *
- * Each iteration consists of both phases executed sequentially. The default is 2 iterations,
- * meaning the solver runs via_removal → path_simplification → via_removal → path_simplification.
+ * Each iteration consists of all phases executed sequentially.
  */
 export class TraceSimplificationSolver extends BaseSolver {
   /** The current state of high-density routes being progressively simplified */
   private hdRoutes: HighDensityRoute[] = []
   /** Current iteration count (0-indexed) */
   private currentRun = 0
-  /** Total number of iterations to run (each iteration includes both phases) */
+  /** Total number of iterations to run (each iteration includes all phases) */
   private totalIterations: number
   /** Current phase of simplification being executed */
   private currentPhase: Phase = "via_removal"
@@ -90,6 +91,8 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         // Advance phase
         if (this.currentPhase === "via_removal") {
+          this.currentPhase = "via_merging"
+        } else if (this.currentPhase === "via_merging") {
           this.currentPhase = "path_simplification"
         } else {
           this.currentPhase = "via_removal"
@@ -123,6 +126,19 @@ export class TraceSimplificationSolver extends BaseSolver {
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
+          break
+
+        case "via_merging":
+          this.activeSubSolver = new SameNetViaMergerSolver({
+            inputHdRoutes: this.hdRoutes,
+            obstacles: this.simplificationConfig.obstacles,
+            colorMap: this.simplificationConfig.colorMap,
+            layerCount: this.simplificationConfig.layerCount,
+            connMap: this.simplificationConfig.connMap,
+            outline: this.simplificationConfig.outline,
+          })
+          this.extractResult = (s) =>
+            (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []
           break
 
         case "path_simplification":
