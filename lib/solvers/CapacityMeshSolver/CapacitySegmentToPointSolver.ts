@@ -2,7 +2,8 @@ import { BaseSolver } from "../BaseSolver"
 import type { NodePortSegment } from "../../types/capacity-edges-to-port-segments-types"
 import type { GraphicsObject, Line } from "graphics-debug"
 import type { NodeWithPortPoints } from "../../types/high-density-types"
-import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import type { CapacityMeshNode, CapacityMeshNodeId, Obstacle } from "lib/types"
+import { CapacitySegmentPointClearanceSolver } from "./subsolvers/CapacitySegmentPointClearanceSolver"
 
 export interface SegmentWithAssignedPoints extends NodePortSegment {
   assignedPoints?: {
@@ -35,6 +36,9 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
   })[]
   nodeMap: Record<string, CapacityMeshNode>
   colorMap: Record<string, string>
+  activeSubSolver: CapacitySegmentPointClearanceSolver | null = null
+  clearanceSubsolverCompleted = false
+  obstacles: Obstacle[] = []
 
   // We use an extra property on segments to remember assigned points.
   // Each segment will get an added property "assignedPoints" which is an array of:
@@ -44,9 +48,11 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     segments,
     colorMap,
     nodes,
+    obstacles,
   }: {
     segments: NodePortSegment[]
     colorMap?: Record<string, string>
+    obstacles: Obstacle[],
     /**
      * This isn't used by the algorithm, but allows associating metadata
      * for the result datatype (the center, width, height of the node)
@@ -61,12 +67,23 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     this.nodeMap = Object.fromEntries(
       nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    this.obstacles = obstacles
+    this.activeSubSolver = null
   }
 
   /**
    * Perform one iteration step.
    */
   _step() {
+    if (this.activeSubSolver) {
+      this.activeSubSolver.step()
+      if (this.activeSubSolver.solved || this.activeSubSolver.failed) {
+        this.activeSubSolver = null
+        this.clearanceSubsolverCompleted = true
+      }
+      return
+    }
+
     let updated = false
     // unsolved segments: segments without complete assignments.
     const unsolved = [...this.unsolvedSegments]
@@ -133,7 +150,34 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
 
     // If all segments have been assigned points, mark solved.
     if (this.unsolvedSegments.length === 0) {
-      this.solved = true
+        const capacityMeshNodeList = Object.values(this.nodeMap)
+        const obstacleList = this.obstacles
+        const minimumTraceWidth = 0.15
+        const clearanceThreshold = minimumTraceWidth * 1.5
+        const segmentPointClearanceContext = {
+          capacityMeshNodeList,
+          obstacleList,
+          minimumTraceWidth,
+          clearanceThreshold,
+        }
+
+      if (
+        !this.activeSubSolver &&
+        !this.clearanceSubsolverCompleted
+      ) {
+        this.activeSubSolver = new CapacitySegmentPointClearanceSolver({
+          segmentList: this.solvedSegments,
+          context: segmentPointClearanceContext,
+        })
+        return
+      }
+
+      if (!this.activeSubSolver) {
+        if (!this.clearanceSubsolverCompleted) {
+          this.clearanceSubsolverCompleted = true
+        }
+        this.solved = true
+      }
     }
   }
 
@@ -173,6 +217,10 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
    * Return a GraphicsObject that visualizes the segments with assigned points.
    */
   visualize(): GraphicsObject {
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+
     const graphics: GraphicsObject = {
       points: [],
       lines: this.solvedSegments.map((seg) => ({
