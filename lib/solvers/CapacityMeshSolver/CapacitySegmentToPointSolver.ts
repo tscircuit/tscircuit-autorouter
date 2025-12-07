@@ -52,7 +52,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
   }: {
     segments: NodePortSegment[]
     colorMap?: Record<string, string>
-    obstacles: Obstacle[],
+    obstacles: Obstacle[]
     /**
      * This isn't used by the algorithm, but allows associating metadata
      * for the result datatype (the center, width, height of the node)
@@ -150,21 +150,18 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
 
     // If all segments have been assigned points, mark solved.
     if (this.unsolvedSegments.length === 0) {
-        const capacityMeshNodeList = Object.values(this.nodeMap)
-        const obstacleList = this.obstacles
-        const minimumTraceWidth = 0.15
-        const clearanceThreshold = minimumTraceWidth * 1.5
-        const segmentPointClearanceContext = {
-          capacityMeshNodeList,
-          obstacleList,
-          minimumTraceWidth,
-          clearanceThreshold,
-        }
+      const capacityMeshNodeList = Object.values(this.nodeMap)
+      const obstacleList = this.obstacles
+      const minimumTraceWidth = 0.15
+      const clearanceThreshold = minimumTraceWidth * 2
+      const segmentPointClearanceContext = {
+        capacityMeshNodeList,
+        obstacleList,
+        minimumTraceWidth,
+        clearanceThreshold,
+      }
 
-      if (
-        !this.activeSubSolver &&
-        !this.clearanceSubsolverCompleted
-      ) {
+      if (!this.activeSubSolver && !this.clearanceSubsolverCompleted) {
         this.activeSubSolver = new CapacitySegmentPointClearanceSolver({
           segmentList: this.solvedSegments,
           context: segmentPointClearanceContext,

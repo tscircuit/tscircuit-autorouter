@@ -15,12 +15,24 @@ export interface SegmentPointClearanceContext {
   clearanceThreshold: number
 }
 
+type ConnectionName = string
+
+type ConnectionClusterEntry = {
+  segment: SegmentWithAssignedPoints
+  pointIndex: number
+}
+
+type ConnectionClusterMap = Map<ConnectionName, ConnectionClusterEntry[]>
+
+type NodeClusterMap = Map<CapacityMeshNodeId, ConnectionClusterMap>
+
 export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   segmentList: SegmentWithAssignedPoints[]
   context: SegmentPointClearanceContext
   capacityMeshNodeIdWithNearbyObstacleList: CapacityMeshNodeId[]
   capacityMeshNodeById: Map<CapacityMeshNodeId, CapacityMeshNode>
   capacityMeshNodeIdToObstacleList!: Map<CapacityMeshNodeId, Obstacle[]>
+  clusterMap!: NodeClusterMap
 
   constructor(params: {
     segmentList: SegmentWithAssignedPoints[]
@@ -49,6 +61,46 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
         segment.capacityMeshNodeId,
       ),
     )
+
+    console.log("[CapacitySegmentPointClearanceSolver] constructor", {
+      segmentCount: this.segmentList.length,
+      capacityMeshNodeCount: this.context.capacityMeshNodeList.length,
+      obstacleCount: this.context.obstacleList.length,
+      nearbyNodeCount: this.capacityMeshNodeIdWithNearbyObstacleList.length,
+      clearanceThreshold: this.context.clearanceThreshold,
+      minimumTraceWidth: this.context.minimumTraceWidth,
+    })
+
+    // Group all assigned points by capacityMeshNodeId and connectionName so
+    // we can later adjust them together per (node, connection) cluster.
+    this.clusterMap = new Map()
+
+    for (const segment of this.segmentList) {
+      if (!segment.assignedPoints || segment.assignedPoints.length === 0) {
+        continue
+      }
+
+      const capacityMeshNodeId = segment.capacityMeshNodeId
+      if (!this.clusterMap.has(capacityMeshNodeId)) {
+        this.clusterMap.set(capacityMeshNodeId, new Map())
+      }
+      const connectionMap = this.clusterMap.get(capacityMeshNodeId)!
+
+      for (
+        let pointIndex = 0;
+        pointIndex < segment.assignedPoints.length;
+        pointIndex++
+      ) {
+        const assignedPoint = segment.assignedPoints[pointIndex]
+        const connectionName = assignedPoint.connectionName
+
+        if (!connectionMap.has(connectionName)) {
+          connectionMap.set(connectionName, [])
+        }
+
+        connectionMap.get(connectionName)!.push({ segment, pointIndex })
+      }
+    }
   }
 
   private createCapacityMeshNodeIdWithNearbyObstacleList(): CapacityMeshNodeId[] {
@@ -122,111 +174,103 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   }
 
   _step() {
-    for (const segment of this.segmentList) {
-      if (!segment.assignedPoints || segment.assignedPoints.length === 0) {
-        continue
-      }
+    console.log("[CapacitySegmentPointClearanceSolver] _step start", {
+      clusterNodeCount: this.clusterMap.size,
+    })
 
-      const capacityMeshNode = this.capacityMeshNodeById.get(
-        segment.capacityMeshNodeId,
-      )
-      if (!capacityMeshNode) {
-        continue
-      }
+    // For each (node, connection) cluster, compute a shared inward shift
+    // that brings all of its points to at least the target clearance.
+    for (const [
+      capacityMeshNodeId,
+      connectionMap,
+    ] of this.clusterMap.entries()) {
+      console.log("[CapacitySegmentPointClearanceSolver] processing node", {
+        capacityMeshNodeId,
+        connectionCount: connectionMap.size,
+      })
+      const capacityMeshNode = this.capacityMeshNodeById.get(capacityMeshNodeId)
+      if (!capacityMeshNode) continue
 
-      for (const assignedPoint of segment.assignedPoints) {
-        this.adjustAssignedPointIfNearObstacleBoundary({
-          assignedPoint,
-          segment,
-          capacityMeshNode,
-        })
+      const obstacleListForNode =
+        this.capacityMeshNodeIdToObstacleList.get(capacityMeshNodeId) ?? []
+      if (obstacleListForNode.length === 0) continue
+
+      for (const [connectionName, clusterEntries] of connectionMap.entries()) {
+        if (clusterEntries.length === 0) continue
+
+        // Compute cluster centroid from the current point positions.
+        let centroidX = 0
+        let centroidY = 0
+        for (const { segment, pointIndex } of clusterEntries) {
+          const point = segment.assignedPoints![pointIndex].point
+          centroidX += point.x
+          centroidY += point.y
+        }
+        centroidX /= clusterEntries.length
+        centroidY /= clusterEntries.length
+
+        // Unit vector pointing from cluster centroid toward the node center.
+        const clusterInwardUnit = getUnitVectorFromPointAToB(
+          { x: centroidX, y: centroidY },
+          { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
+        )
+
+        // Determine how far we need to move this whole cluster inward.
+        const clearanceThreshold = this.context.clearanceThreshold
+        let requiredShiftDistance = 0
+
+        for (const { segment, pointIndex } of clusterEntries) {
+          const point = segment.assignedPoints![pointIndex].point
+
+          // Measure distance to the closest obstacle assigned to this node.
+          let closestDistance = Infinity
+          for (const obstacle of obstacleListForNode) {
+            const obstacleBox = {
+              center: { x: obstacle.center.x, y: obstacle.center.y },
+              width: obstacle.width,
+              height: obstacle.height,
+            }
+            const distanceToObstacle = pointToBoxDistance(
+              { x: point.x, y: point.y },
+              obstacleBox,
+            )
+            if (distanceToObstacle < closestDistance) {
+              closestDistance = distanceToObstacle
+            }
+          }
+
+          if (!Number.isFinite(closestDistance)) continue
+
+          const pointShiftNeeded = Math.max(
+            0,
+            clearanceThreshold - closestDistance,
+          )
+          if (pointShiftNeeded > requiredShiftDistance) {
+            requiredShiftDistance = pointShiftNeeded
+          }
+        }
+
+        if (requiredShiftDistance <= 0) continue
+
+        // Apply the same inward shift to every point in this cluster so
+        // their relative positions stay consistent.
+        for (const { segment, pointIndex } of clusterEntries) {
+          const point = segment.assignedPoints![pointIndex].point
+          segment.assignedPoints![pointIndex].point = {
+            x: point.x + clusterInwardUnit.x * requiredShiftDistance,
+            y: point.y + clusterInwardUnit.y * requiredShiftDistance,
+            z: point.z,
+          }
+        }
       }
     }
 
     this.solved = true
   }
 
-  private adjustAssignedPointIfNearObstacleBoundary(params: {
-    assignedPoint: {
-      connectionName: string
-      point: { x: number; y: number; z: number }
-    }
-    segment: SegmentWithAssignedPoints
-    capacityMeshNode: CapacityMeshNode
-  }) {
-    // If the point is too close to a nearby obstacle, push it inward toward the node center.
-    const { assignedPoint, capacityMeshNode } = params
-
-    // Get the obstacles that are near this capacity mesh node.
-    const obstacleListForNode =
-      this.capacityMeshNodeIdToObstacleList.get(
-        capacityMeshNode.capacityMeshNodeId,
-      ) ?? []
-
-    // If there are no nearby obstacles, no adjustment is needed.
-    if (obstacleListForNode.length === 0) {
-      return
-    }
-
-    // Target clearance distance between the trace centerline and the obstacle.
-    const clearanceThreshold = this.context.clearanceThreshold
-
-    // Track the closest obstacle and its distance to this point.
-    let closestObstacle: Obstacle | null = null
-    let closestDistance = Infinity
-
-    // Find the nearest obstacle to the current assigned point.
-    for (const obstacle of obstacleListForNode) {
-      // Represent the obstacle as a Box for pointToBoxDistance.
-      const obstacleBox = {
-        center: { x: obstacle.center.x, y: obstacle.center.y },
-        width: obstacle.width,
-        height: obstacle.height,
-      }
-
-      // Distance from the point to the obstacle rectangle (0 if inside).
-      const distanceToObstacle = pointToBoxDistance(
-        { x: assignedPoint.point.x, y: assignedPoint.point.y },
-        obstacleBox,
-      )
-
-      // Keep the smallest distance and its obstacle.
-      if (distanceToObstacle < closestDistance) {
-        closestDistance = distanceToObstacle
-        closestObstacle = obstacle
-      }
-    }
-
-    // If we somehow did not find any obstacle, bail out.
-    if (!closestObstacle) {
-      return
-    }
-
-    // If we already have enough clearance, do not move the point.
-    if (closestDistance > clearanceThreshold) {
-      return
-    }
-
-    // Unit vector pointing from the current point toward the node center.
-    const inwardUnit = getUnitVectorFromPointAToB(
-      { x: assignedPoint.point.x, y: assignedPoint.point.y },
-      { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
-    )
-
-    // How far we need to nudge the point inward to reach the target clearance.
-    const shiftDistance = clearanceThreshold - closestDistance
-
-    // Apply the inward shift while preserving the original z layer.
-    assignedPoint.point = {
-      x: assignedPoint.point.x + inwardUnit.x * shiftDistance,
-      y: assignedPoint.point.y + inwardUnit.y * shiftDistance,
-      z: assignedPoint.point.z,
-    }
-  }
-
   visualize(): GraphicsObject {
-    // For now just render nothing; we will extend this later to show
-    // before/after point positions around obstacles.
+    // TODO: Return a visualization that highlights clusters of points around
+    // obstacles and any adjusted positions once the optimization is implemented.
     return {
       lines: [],
       points: [],

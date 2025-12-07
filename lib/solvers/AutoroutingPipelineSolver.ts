@@ -262,7 +262,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
             segments: allSegments,
             colorMap: cms.colorMap,
             nodes: cms.capacityNodes!,
-            obstacles: cms.srjWithPointPairs!.obstacles || []
+            obstacles: cms.srjWithPointPairs!.obstacles || [],
           },
         ]
       },
