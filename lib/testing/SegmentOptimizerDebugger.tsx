@@ -52,6 +52,7 @@ const SegmentOptimizerDebugger = ({
       segments,
       colorMap,
       nodes,
+      obstacles: [],
     })
     pointSolver.solve()
 

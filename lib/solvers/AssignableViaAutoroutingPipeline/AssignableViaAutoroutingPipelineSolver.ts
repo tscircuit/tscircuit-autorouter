@@ -317,10 +317,12 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
             segments: allSegments,
             colorMap: cms.colorMap,
             nodes: cms.capacityNodes!,
+            obstacles: cms.srj.obstacles,
           },
         ]
       },
     ),
+
     // definePipelineStep(
     //   "segmentToPointOptimizer",
     //   CapacitySegmentPointOptimizer,
