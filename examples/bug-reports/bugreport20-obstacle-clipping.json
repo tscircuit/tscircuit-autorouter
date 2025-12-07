@@ -1,0 +1,109 @@
+{
+  "bounds": {
+    "minX": -10,
+    "maxX": 10,
+    "minY": -10,
+    "maxY": 10
+  },
+  "obstacles": [
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": -0.51,
+        "y": 0
+      },
+      "width": 0.54,
+      "height": 0.64,
+      "connectedTo": [
+        "pcb_smtpad_0",
+        "connectivity_net11",
+        "source_port_0",
+        "pcb_smtpad_0",
+        "pcb_port_0"
+      ],
+      "zLayers": [0]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": 0.51,
+        "y": 0
+      },
+      "width": 0.54,
+      "height": 0.64,
+      "connectedTo": [
+        "pcb_smtpad_1",
+        "connectivity_net12",
+        "source_port_1",
+        "pcb_smtpad_1",
+        "pcb_port_1"
+      ],
+      "zLayers": [0]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": 4.49,
+        "y": 0
+      },
+      "width": 0.54,
+      "height": 0.64,
+      "connectedTo": [
+        "pcb_smtpad_2",
+        "connectivity_net0",
+        "source_trace_0",
+        "source_port_3",
+        "source_port_2",
+        "pcb_port_2",
+        "pcb_smtpad_2",
+        "pcb_port_3"
+      ],
+      "zLayers": [0]
+    },
+    {
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": 5.51,
+        "y": 0
+      },
+      "width": 0.54,
+      "height": 0.64,
+      "connectedTo": [
+        "pcb_smtpad_3",
+        "connectivity_net14",
+        "source_port_4",
+        "pcb_smtpad_3",
+        "pcb_port_4"
+      ],
+      "zLayers": [0]
+    }
+  ],
+  "connections": [
+    {
+      "name": "source_trace_0",
+      "source_trace_id": "source_trace_0",
+      "pointsToConnect": [
+        {
+          "x": 4.49,
+          "y": 0,
+          "layer": "top",
+          "pointId": "pcb_port_3",
+          "pcb_port_id": "pcb_port_3"
+        },
+        {
+          "x": -0.51,
+          "y": 0,
+          "layer": "top",
+          "pointId": "pcb_port_2",
+          "pcb_port_id": "pcb_port_2"
+        }
+      ]
+    }
+  ],
+  "layerCount": 2,
+  "minTraceWidth": 0.15
+}
