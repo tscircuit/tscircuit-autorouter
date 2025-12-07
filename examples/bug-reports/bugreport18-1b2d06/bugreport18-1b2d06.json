@@ -388,14 +388,14 @@
           {
             "x": -3.81,
             "y": 3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_0",
             "pcb_port_id": "pcb_port_0"
           },
           {
             "x": 3.81,
             "y": -1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_11",
             "pcb_port_id": "pcb_port_11"
           }
@@ -407,14 +407,14 @@
           {
             "x": -1.27,
             "y": 3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_1",
             "pcb_port_id": "pcb_port_1"
           },
           {
             "x": 1.27,
             "y": -1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_10",
             "pcb_port_id": "pcb_port_10"
           }
@@ -426,14 +426,14 @@
           {
             "x": 1.27,
             "y": 3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_2",
             "pcb_port_id": "pcb_port_2"
           },
           {
             "x": -3.81,
             "y": 1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_4",
             "pcb_port_id": "pcb_port_4"
           }
@@ -445,14 +445,14 @@
           {
             "x": 3.81,
             "y": 3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_3",
             "pcb_port_id": "pcb_port_3"
           },
           {
             "x": -1.27,
             "y": 1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_5",
             "pcb_port_id": "pcb_port_5"
           }
@@ -464,14 +464,14 @@
           {
             "x": 1.27,
             "y": 1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_6",
             "pcb_port_id": "pcb_port_6"
           },
           {
             "x": 3.81,
             "y": -3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_15",
             "pcb_port_id": "pcb_port_15"
           }
@@ -483,14 +483,14 @@
           {
             "x": 3.81,
             "y": 1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_7",
             "pcb_port_id": "pcb_port_7"
           },
           {
             "x": -1.27,
             "y": -3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_13",
             "pcb_port_id": "pcb_port_13"
           }
@@ -502,14 +502,14 @@
           {
             "x": -3.81,
             "y": -1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_8",
             "pcb_port_id": "pcb_port_8"
           },
           {
             "x": 1.27,
             "y": -3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_14",
             "pcb_port_id": "pcb_port_14"
           }
@@ -521,14 +521,14 @@
           {
             "x": -1.27,
             "y": -1.27,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_9",
             "pcb_port_id": "pcb_port_9"
           },
           {
             "x": -3.81,
             "y": -3.81,
-            "layer": "top",
+            "layers": ["top", "inner1", "inner2", "bottom"],
             "pointId": "pcb_port_12",
             "pcb_port_id": "pcb_port_12"
           }
