@@ -26,6 +26,14 @@ type ConnectionClusterMap = Map<ConnectionName, ConnectionClusterEntry[]>
 
 type NodeClusterMap = Map<CapacityMeshNodeId, ConnectionClusterMap>
 
+const SEGMENT_POINT_CLEARANCE_COLORS = {
+  node: "#3e4fe68a",
+  obstacle: "#cf3333ff",
+  segment: "#cac82fff",
+  point: "#000000ff",
+  beforeAfterLine: "#5f5f5fff",
+} as const
+
 export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   segmentList: SegmentWithAssignedPoints[]
   context: SegmentPointClearanceContext
@@ -33,6 +41,19 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   capacityMeshNodeById: Map<CapacityMeshNodeId, CapacityMeshNode>
   capacityMeshNodeIdToObstacleList!: Map<CapacityMeshNodeId, Obstacle[]>
   clusterMap!: NodeClusterMap
+  clusterOrder: Array<{
+    capacityMeshNodeId: CapacityMeshNodeId
+    connectionName: ConnectionName
+  }> = []
+  currentClusterIndex = 0
+  activeClusterIndex: number | null = null
+  lastClusterSnapshot: {
+    capacityMeshNodeId: CapacityMeshNodeId
+    connectionName: ConnectionName
+    oldPoints: { x: number; y: number }[]
+    newPoints: { x: number; y: number }[]
+  } | null = null
+  visualizationPhase: "before" | "after" | null = null
 
   constructor(params: {
     segmentList: SegmentWithAssignedPoints[]
@@ -118,6 +139,15 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
     const clearanceThreshold = this.context.clearanceThreshold
 
     // Walk every capacity mesh node and check its proximity to all obstacles.
+    console.log(
+      "[CapacitySegmentPointClearanceSolver] building nearby-node list",
+      {
+        capacityMeshNodeCount: this.context.capacityMeshNodeList.length,
+        obstacleCount: this.context.obstacleList.length,
+        clearanceThreshold,
+      },
+    )
+
     for (const capacityMeshNode of this.context.capacityMeshNodeList) {
       if (capacityMeshNode._containsObstacle) {
         // Nodes that contain obstacles are not candidates for
@@ -176,105 +206,270 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   _step() {
     console.log("[CapacitySegmentPointClearanceSolver] _step start", {
       clusterNodeCount: this.clusterMap.size,
+      currentClusterIndex: this.currentClusterIndex,
     })
 
-    // For each (node, connection) cluster, compute a shared inward shift
-    // that brings all of its points to at least the target clearance.
-    for (const [
-      capacityMeshNodeId,
-      connectionMap,
-    ] of this.clusterMap.entries()) {
-      console.log("[CapacitySegmentPointClearanceSolver] processing node", {
-        capacityMeshNodeId,
-        connectionCount: connectionMap.size,
+    // Initialize cluster processing order lazily.
+    if (this.clusterOrder.length === 0) {
+      for (const [capacityMeshNodeId, connectionMap] of this.clusterMap) {
+        for (const connectionName of connectionMap.keys()) {
+          this.clusterOrder.push({ capacityMeshNodeId, connectionName })
+        }
+      }
+      console.log("[CapacitySegmentPointClearanceSolver] built clusterOrder", {
+        clusterCount: this.clusterOrder.length,
       })
-      const capacityMeshNode = this.capacityMeshNodeById.get(capacityMeshNodeId)
-      if (!capacityMeshNode) continue
+    }
 
-      const obstacleListForNode =
-        this.capacityMeshNodeIdToObstacleList.get(capacityMeshNodeId) ?? []
-      if (obstacleListForNode.length === 0) continue
+    if (this.currentClusterIndex >= this.clusterOrder.length) {
+      this.solved = true
+      return
+    }
 
-      for (const [connectionName, clusterEntries] of connectionMap.entries()) {
-        if (clusterEntries.length === 0) continue
+    const { capacityMeshNodeId, connectionName } =
+      this.clusterOrder[this.currentClusterIndex]
+    this.activeClusterIndex = this.currentClusterIndex
+    this.currentClusterIndex += 1
+    this.visualizationPhase = "before"
 
-        // Compute cluster centroid from the current point positions.
-        let centroidX = 0
-        let centroidY = 0
-        for (const { segment, pointIndex } of clusterEntries) {
-          const point = segment.assignedPoints![pointIndex].point
-          centroidX += point.x
-          centroidY += point.y
+    const connectionMap = this.clusterMap.get(capacityMeshNodeId)
+    if (!connectionMap) {
+      return
+    }
+
+    const clusterEntries = connectionMap.get(connectionName) ?? []
+    if (clusterEntries.length === 0) {
+      return
+    }
+
+    console.log("[CapacitySegmentPointClearanceSolver] processing cluster", {
+      capacityMeshNodeId,
+      connectionName,
+      entryCount: clusterEntries.length,
+    })
+
+    const capacityMeshNode = this.capacityMeshNodeById.get(capacityMeshNodeId)
+    if (!capacityMeshNode) {
+      return
+    }
+
+    const obstacleListForNode =
+      this.capacityMeshNodeIdToObstacleList.get(capacityMeshNodeId) ?? []
+    if (obstacleListForNode.length === 0) {
+      return
+    }
+
+    // Compute cluster centroid from the current point positions.
+    let centroidX = 0
+    let centroidY = 0
+    const oldPoints: { x: number; y: number }[] = []
+    for (const { segment, pointIndex } of clusterEntries) {
+      const point = segment.assignedPoints![pointIndex].point
+      centroidX += point.x
+      centroidY += point.y
+      oldPoints.push({ x: point.x, y: point.y })
+    }
+    centroidX /= clusterEntries.length
+    centroidY /= clusterEntries.length
+
+    // Unit vector pointing from cluster centroid toward the node center.
+    const clusterInwardUnit = getUnitVectorFromPointAToB(
+      { x: centroidX, y: centroidY },
+      { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
+    )
+
+    // Determine how far we need to move this whole cluster inward.
+    const clearanceThreshold = this.context.clearanceThreshold
+    let requiredShiftDistance = 0
+
+    for (const { segment, pointIndex } of clusterEntries) {
+      const point = segment.assignedPoints![pointIndex].point
+
+      // Measure distance to the closest obstacle assigned to this node.
+      let closestDistance = Infinity
+      for (const obstacle of obstacleListForNode) {
+        const obstacleBox = {
+          center: { x: obstacle.center.x, y: obstacle.center.y },
+          width: obstacle.width,
+          height: obstacle.height,
         }
-        centroidX /= clusterEntries.length
-        centroidY /= clusterEntries.length
-
-        // Unit vector pointing from cluster centroid toward the node center.
-        const clusterInwardUnit = getUnitVectorFromPointAToB(
-          { x: centroidX, y: centroidY },
-          { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
+        const distanceToObstacle = pointToBoxDistance(
+          { x: point.x, y: point.y },
+          obstacleBox,
         )
-
-        // Determine how far we need to move this whole cluster inward.
-        const clearanceThreshold = this.context.clearanceThreshold
-        let requiredShiftDistance = 0
-
-        for (const { segment, pointIndex } of clusterEntries) {
-          const point = segment.assignedPoints![pointIndex].point
-
-          // Measure distance to the closest obstacle assigned to this node.
-          let closestDistance = Infinity
-          for (const obstacle of obstacleListForNode) {
-            const obstacleBox = {
-              center: { x: obstacle.center.x, y: obstacle.center.y },
-              width: obstacle.width,
-              height: obstacle.height,
-            }
-            const distanceToObstacle = pointToBoxDistance(
-              { x: point.x, y: point.y },
-              obstacleBox,
-            )
-            if (distanceToObstacle < closestDistance) {
-              closestDistance = distanceToObstacle
-            }
-          }
-
-          if (!Number.isFinite(closestDistance)) continue
-
-          const pointShiftNeeded = Math.max(
-            0,
-            clearanceThreshold - closestDistance,
-          )
-          if (pointShiftNeeded > requiredShiftDistance) {
-            requiredShiftDistance = pointShiftNeeded
-          }
+        if (distanceToObstacle < closestDistance) {
+          closestDistance = distanceToObstacle
         }
+      }
 
-        if (requiredShiftDistance <= 0) continue
+      if (!Number.isFinite(closestDistance)) {
+        continue
+      }
 
-        // Apply the same inward shift to every point in this cluster so
-        // their relative positions stay consistent.
-        for (const { segment, pointIndex } of clusterEntries) {
-          const point = segment.assignedPoints![pointIndex].point
-          segment.assignedPoints![pointIndex].point = {
-            x: point.x + clusterInwardUnit.x * requiredShiftDistance,
-            y: point.y + clusterInwardUnit.y * requiredShiftDistance,
-            z: point.z,
-          }
-        }
+      const pointShiftNeeded = Math.max(0, clearanceThreshold - closestDistance)
+      if (pointShiftNeeded > requiredShiftDistance) {
+        requiredShiftDistance = pointShiftNeeded
       }
     }
 
-    this.solved = true
+    if (requiredShiftDistance <= 0) {
+      return
+    }
+
+    // Apply the same inward shift to every point in this cluster so
+    // their relative positions stay consistent.
+    const newPoints: { x: number; y: number }[] = []
+
+    for (const { segment, pointIndex } of clusterEntries) {
+      const point = segment.assignedPoints![pointIndex].point
+      const shiftedPoint = {
+        x: point.x + clusterInwardUnit.x * requiredShiftDistance,
+        y: point.y + clusterInwardUnit.y * requiredShiftDistance,
+        z: point.z,
+      }
+      segment.assignedPoints![pointIndex].point = shiftedPoint
+      newPoints.push({ x: shiftedPoint.x, y: shiftedPoint.y })
+    }
+
+    this.lastClusterSnapshot = {
+      capacityMeshNodeId,
+      connectionName,
+      oldPoints,
+      newPoints,
+    }
+    this.visualizationPhase = "after"
   }
 
   visualize(): GraphicsObject {
-    // TODO: Return a visualization that highlights clusters of points around
-    // obstacles and any adjusted positions once the optimization is implemented.
+    if (
+      this.activeClusterIndex === null ||
+      this.clusterOrder.length === 0 ||
+      this.activeClusterIndex >= this.clusterOrder.length
+    ) {
+      return {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+      }
+    }
+
+    const activeCluster = this.clusterOrder[this.activeClusterIndex]
+
+    const connectionMap = this.clusterMap.get(activeCluster.capacityMeshNodeId)
+    if (!connectionMap) {
+      return {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+      }
+    }
+
+    const clusterEntries = connectionMap.get(activeCluster.connectionName) ?? []
+    if (clusterEntries.length === 0) {
+      return {
+        lines: [],
+        points: [],
+        rects: [],
+        circles: [],
+      }
+    }
+
+    const lines: NonNullable<GraphicsObject["lines"]> = []
+    const points: NonNullable<GraphicsObject["points"]> = []
+    const rects: NonNullable<GraphicsObject["rects"]> = []
+
+    const capacityMeshNode = this.capacityMeshNodeById.get(
+      activeCluster.capacityMeshNodeId,
+    )
+    if (capacityMeshNode) {
+      rects.push({
+        center: { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
+        width: capacityMeshNode.width,
+        height: capacityMeshNode.height,
+        color: SEGMENT_POINT_CLEARANCE_COLORS.node,
+        fill: SEGMENT_POINT_CLEARANCE_COLORS.node,
+      })
+    }
+
+    const obstacleListForNode =
+      this.capacityMeshNodeIdToObstacleList.get(
+        activeCluster.capacityMeshNodeId,
+      ) ?? []
+    for (const obstacle of obstacleListForNode) {
+      rects.push({
+        center: { x: obstacle.center.x, y: obstacle.center.y },
+        width: obstacle.width,
+        height: obstacle.height,
+        color: SEGMENT_POINT_CLEARANCE_COLORS.obstacle,
+        fill: SEGMENT_POINT_CLEARANCE_COLORS.obstacle,
+      })
+    }
+
+    const seenSegmentIds = new Set<string>()
+
+    for (const { segment } of clusterEntries) {
+      const segmentId = String(segment.nodePortSegmentId ?? "")
+      if (segmentId && !seenSegmentIds.has(segmentId)) {
+        seenSegmentIds.add(segmentId)
+        lines.push({
+          points: [segment.start, segment.end],
+          step: 4,
+          strokeColor: SEGMENT_POINT_CLEARANCE_COLORS.segment,
+        })
+      }
+    }
+
+    // If we have a snapshot for the last processed cluster and are in the
+    // "after" phase, draw before/after points.
+    if (
+      this.visualizationPhase === "after" &&
+      this.lastClusterSnapshot &&
+      this.lastClusterSnapshot.capacityMeshNodeId ===
+        activeCluster.capacityMeshNodeId &&
+      this.lastClusterSnapshot.connectionName === activeCluster.connectionName
+    ) {
+      const { oldPoints, newPoints } = this.lastClusterSnapshot
+      for (let i = 0; i < oldPoints.length; i++) {
+        const oldPoint = oldPoints[i]
+        const newPoint = newPoints[i]
+        points.push({
+          x: oldPoint.x,
+          y: oldPoint.y,
+          color: SEGMENT_POINT_CLEARANCE_COLORS.point,
+        })
+        points.push({
+          x: newPoint.x,
+          y: newPoint.y,
+          color: SEGMENT_POINT_CLEARANCE_COLORS.point,
+        })
+        lines.push({
+          points: [
+            { x: oldPoint.x, y: oldPoint.y },
+            { x: newPoint.x, y: newPoint.y },
+          ],
+          step: 4,
+          strokeDash: "5 5",
+          strokeColor: SEGMENT_POINT_CLEARANCE_COLORS.beforeAfterLine,
+        })
+      }
+    } else {
+      // Otherwise just draw current points using the connection color.
+      for (const { segment, pointIndex } of clusterEntries) {
+        const p = segment.assignedPoints![pointIndex].point
+        points.push({
+          x: p.x,
+          y: p.y,
+          color: SEGMENT_POINT_CLEARANCE_COLORS.point,
+        })
+      }
+    }
+
     return {
-      lines: [],
-      points: [],
-      rects: [],
+      lines,
+      points,
+      rects,
       circles: [],
     }
   }
