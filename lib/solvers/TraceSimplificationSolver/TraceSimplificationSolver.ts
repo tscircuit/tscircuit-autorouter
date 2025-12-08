@@ -22,17 +22,16 @@ type Phase = "via_removal" | "via_merging" | "path_simplification"
  * Each iteration consists of all phases executed sequentially.
  */
 export class TraceSimplificationSolver extends BaseSolver {
-  /** The current state of high-density routes being progressively simplified */
-  private hdRoutes: HighDensityRoute[] = []
-  /** Current iteration count (0-indexed) */
-  private currentRun = 0
-  /** Total number of iterations to run (each iteration includes all phases) */
-  private totalIterations: number
-  /** Current phase of simplification being executed */
-  private currentPhase: Phase = "via_removal"
+  hdRoutes: HighDensityRoute[] = []
+
+  simplificationPipelineLoops = 0
+
+  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 1000
+
+  currentPhase: Phase = "via_removal"
+
   /** Callback to extract results from the active sub-solver */
-  private extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null =
-    null
+  extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null = null
 
   /** Returns the simplified routes. This is the primary output of the solver. */
   get simplifiedHdRoutes(): HighDensityRoute[] {
@@ -60,17 +59,17 @@ export class TraceSimplificationSolver extends BaseSolver {
       outline?: Array<{ x: number; y: number }>
       defaultViaDiameter: number
       layerCount: number
-      iterations?: number
     },
   ) {
     super()
     this.hdRoutes = [...simplificationConfig.hdRoutes]
-    this.totalIterations = simplificationConfig.iterations ?? 2
     this.MAX_ITERATIONS = 100e6
   }
 
   _step() {
-    if (this.currentRun >= this.totalIterations) {
+    if (
+      this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+    ) {
       this.solved = true
       return
     }
@@ -78,6 +77,10 @@ export class TraceSimplificationSolver extends BaseSolver {
     // If we have an active sub-solver, let it run
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
+
+      if (!this.activeSubSolver.failed && !this.activeSubSolver.solved) {
+        return
+      }
 
       if (this.activeSubSolver.solved) {
         // Capture output using the registered callback
@@ -96,11 +99,14 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.currentPhase = "path_simplification"
         } else {
           this.currentPhase = "via_removal"
-          this.currentRun++
+          this.simplificationPipelineLoops++
         }
 
         // Check if all iterations are complete
-        if (this.currentRun >= this.totalIterations) {
+        if (
+          this.simplificationPipelineLoops >=
+          this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+        ) {
           this.solved = true
           return
         }
@@ -111,7 +117,6 @@ export class TraceSimplificationSolver extends BaseSolver {
           "Sub-solver failed without error message"
         return
       }
-      return
     }
 
     // No active sub-solver, start the next one

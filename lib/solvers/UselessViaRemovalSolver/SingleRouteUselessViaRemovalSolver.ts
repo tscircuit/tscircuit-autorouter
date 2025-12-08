@@ -85,7 +85,15 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       if (firstSection.z !== secondSection.z) {
         // Try moving first section to match second section (for MLCP endpoints)
         const targetZ = secondSection.z
+        // Check that the endpoint obstacle supports the target layer
+        const firstPoint = firstSection.points[0]
+        const endpointSupportsLayer = this.canEndpointConnectOnLayer(
+          firstPoint.x,
+          firstPoint.y,
+          targetZ,
+        )
         if (
+          endpointSupportsLayer &&
           this.canSectionMoveToLayer({ currentSection: firstSection, targetZ })
         ) {
           firstSection.z = targetZ
@@ -112,7 +120,15 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         if (lastSection.z !== secondLastSection.z) {
           // Try moving last section to match second-last section (for MLCP endpoints)
           const targetZ = secondLastSection.z
+          // Check that the endpoint obstacle supports the target layer
+          const lastPoint = lastSection.points[lastSection.points.length - 1]
+          const endpointSupportsLayer = this.canEndpointConnectOnLayer(
+            lastPoint.x,
+            lastPoint.y,
+            targetZ,
+          )
           if (
+            endpointSupportsLayer &&
             this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })
           ) {
             lastSection.z = targetZ
@@ -154,6 +170,46 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     this.currentSectionIndex++
     return
+  }
+
+  /**
+   * Check if an endpoint (first or last point of the route) can connect
+   * to a different layer. This is only allowed if the obstacles the endpoint
+   * connects to support that layer.
+   */
+  canEndpointConnectOnLayer(endpointX: number, endpointY: number, targetZ: number): boolean {
+    // Find obstacles near the endpoint that are connected to this route
+    // Use a larger search area to find obstacles the endpoint might be inside
+    const nearbyObstacles = this.obstacleSHI.searchArea(
+      endpointX,
+      endpointY,
+      2, // Search wider area
+      2,
+    )
+
+    // Filter to obstacles that this trace connects to and contain the endpoint
+    const connectedObstacles = nearbyObstacles.filter((obstacle) => {
+      if (!obstacle.connectedTo?.includes(this.unsimplifiedRoute.connectionName)) {
+        return false
+      }
+      // Check if the endpoint is within or very close to the obstacle bounds
+      const halfWidth = obstacle.width / 2 + 0.05 // Add small margin
+      const halfHeight = obstacle.height / 2 + 0.05
+      const withinX = Math.abs(endpointX - obstacle.center.x) <= halfWidth
+      const withinY = Math.abs(endpointY - obstacle.center.y) <= halfHeight
+      return withinX && withinY
+    })
+
+    // If we found connected obstacles, check if any support the target layer
+    if (connectedObstacles.length > 0) {
+      return connectedObstacles.some((obstacle) =>
+        obstacle.zLayers?.includes(targetZ),
+      )
+    }
+
+    // If no connected obstacles found at the endpoint, the endpoint
+    // might be a via or intermediate point - allow the layer change
+    return true
   }
 
   canSectionMoveToLayer({
