@@ -2,11 +2,11 @@ import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { CapacityMeshNode, CapacityMeshNodeId, Obstacle } from "lib/types"
 import type { SegmentWithAssignedPoints } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import {
-  boundsDistance,
-  getUnitVectorFromPointAToB,
-  pointToBoxDistance,
-} from "@tscircuit/math-utils"
+  collectNearbyObstaclesForCapacityNodes,
+  isAxisAlignedSegmentCluster,
+} from "lib/solvers/CapacityMeshSolver/subsolvers/capacitySegmentPointClearanceHelpers"
 
 export interface SegmentPointClearanceContext {
   capacityMeshNodeList: CapacityMeshNode[]
@@ -116,89 +116,16 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   }
 
   private createCapacityMeshNodeIdWithNearbyObstacleList(): CapacityMeshNodeId[] {
-    // Unique set of node ids that are near at least one obstacle.
-    const capacityMeshNodeIdSet = new Set<CapacityMeshNodeId>()
-    // Reset the node->obstacle mapping each time we rebuild this list.
-    this.capacityMeshNodeIdToObstacleList = new Map()
+    const { capacityMeshNodeIdList, capacityMeshNodeIdToObstacleList } =
+      collectNearbyObstaclesForCapacityNodes({
+        capacityMeshNodeList: this.context.capacityMeshNodeList,
+        obstacleList: this.context.obstacleList,
+        clearanceThreshold: this.context.clearanceThreshold,
+      })
 
-    // If there are no obstacles at all, nothing to do.
-    if (this.context.obstacleList.length === 0) {
-      return []
-    }
+    this.capacityMeshNodeIdToObstacleList = capacityMeshNodeIdToObstacleList
 
-    // How close a node boundary can be to an obstacle before we care.
-    const clearanceThreshold = this.context.clearanceThreshold
-
-    // Walk every capacity mesh node and check its proximity to all obstacles.
-    for (const capacityMeshNode of this.context.capacityMeshNodeList) {
-      if (capacityMeshNode._containsObstacle) {
-        // Nodes that contain obstacles are not candidates for
-        // clearance-based point adjustment.
-        continue
-      }
-
-      // Compute simple bounds for the capacity mesh node.
-      const capacityMeshNodeHalfWidth = capacityMeshNode.width / 2
-      const capacityMeshNodeHalfHeight = capacityMeshNode.height / 2
-      const capacityMeshNodeBounds = {
-        minX: capacityMeshNode.center.x - capacityMeshNodeHalfWidth,
-        maxX: capacityMeshNode.center.x + capacityMeshNodeHalfWidth,
-        minY: capacityMeshNode.center.y - capacityMeshNodeHalfHeight,
-        maxY: capacityMeshNode.center.y + capacityMeshNodeHalfHeight,
-      }
-
-      // Check this node against every obstacle.
-      for (const obstacle of this.context.obstacleList) {
-        // Skip obstacles that do not share any z-layer with this node.
-        const obstacleZLayers = obstacle.zLayers ?? []
-        const hasSharedZLayer = obstacleZLayers.some((zLayer) =>
-          capacityMeshNode.availableZ.includes(zLayer),
-        )
-        if (!hasSharedZLayer) {
-          continue
-        }
-
-        // Compute bounds for the obstacle rectangle.
-        const obstacleHalfWidth = obstacle.width / 2
-        const obstacleHalfHeight = obstacle.height / 2
-        const obstacleBounds = {
-          minX: obstacle.center.x - obstacleHalfWidth,
-          maxX: obstacle.center.x + obstacleHalfWidth,
-          minY: obstacle.center.y - obstacleHalfHeight,
-          maxY: obstacle.center.y + obstacleHalfHeight,
-        }
-
-        // Minimum distance between the node bounds and obstacle bounds.
-        const distanceBetweenBounds = boundsDistance(
-          capacityMeshNodeBounds,
-          obstacleBounds,
-        )
-
-        // If the bounds overlap (distance <= 0), the node is under or inside
-        // the obstacle; we do not process these nodes in the clearance solver.
-        if (distanceBetweenBounds <= 0) {
-          continue
-        }
-
-        // If the obstacle is within the clearance band (but not overlapping),
-        // record it for this node so we can enforce a margin along the boundary.
-        if (distanceBetweenBounds <= clearanceThreshold) {
-          capacityMeshNodeIdSet.add(capacityMeshNode.capacityMeshNodeId)
-          const obstacleListForNode =
-            this.capacityMeshNodeIdToObstacleList.get(
-              capacityMeshNode.capacityMeshNodeId,
-            ) ?? []
-          obstacleListForNode.push(obstacle)
-          this.capacityMeshNodeIdToObstacleList.set(
-            capacityMeshNode.capacityMeshNodeId,
-            obstacleListForNode,
-          )
-        }
-      }
-    }
-
-    // Return the list of node ids that are near at least one obstacle.
-    return Array.from(capacityMeshNodeIdSet)
+    return capacityMeshNodeIdList
   }
 
   _step() {
@@ -233,7 +160,7 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
     }
 
     // Only adjust clusters that are axis-aligned (all same x or all same y).
-    if (!this.isAxisAlignedCluster(clusterEntries)) {
+    if (!isAxisAlignedSegmentCluster({ clusterEntries })) {
       return
     }
 
