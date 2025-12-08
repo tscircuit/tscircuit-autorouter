@@ -97,13 +97,24 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       this.end = opts.start
     }
 
+    // Determine the best z-value for the start point by looking at the closest
+    // point of the first route. This handles multi-layer connection points
+    // where the connection point supports multiple layers but the route is on
+    // a specific layer.
+    const firstRouteFirstPoint = firstRoute.route[0]
+    const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
+    const distToFirst = distance(this.start, firstRouteFirstPoint)
+    const distToLast = distance(this.start, firstRouteLastPoint)
+    const closestFirstRoutePoint =
+      distToFirst <= distToLast ? firstRouteFirstPoint : firstRouteLastPoint
+
     this.mergedHdRoute = {
       connectionName: opts.connectionName, // Use mandatory connectionName
       route: [
         {
           x: this.start.x,
           y: this.start.y,
-          z: this.start.z,
+          z: closestFirstRoutePoint.z,
         },
       ],
       vias: [],
@@ -155,10 +166,14 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
   _step() {
     if (this.remainingHdRoutes.length === 0) {
       // Add the end point to the merged route
+      // Use the z-value of the last merged point to handle multi-layer connection
+      // points where the route is on a specific layer
+      const lastMergedPoint =
+        this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       this.mergedHdRoute.route.push({
         x: this.end.x,
         y: this.end.y,
-        z: this.end.z,
+        z: lastMergedPoint.z,
       })
       this.solved = true
       return
