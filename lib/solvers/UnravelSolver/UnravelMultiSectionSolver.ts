@@ -210,7 +210,6 @@ export class UnravelMultiSectionSolver extends BaseSolver {
     //   this.activeSubSolver.iterationsSinceImprovement >
     //   this.MAX_ITERATIONS_WITHOUT_IMPROVEMENT
 
-    // cn90994
     if (this.activeSubSolver.failed) {
       this.stats.failedOptimizations += 1
       this.activeSubSolver = null

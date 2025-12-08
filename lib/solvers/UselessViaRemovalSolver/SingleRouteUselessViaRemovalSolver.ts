@@ -177,7 +177,11 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
    * to a different layer. This is only allowed if the obstacles the endpoint
    * connects to support that layer.
    */
-  canEndpointConnectOnLayer(endpointX: number, endpointY: number, targetZ: number): boolean {
+  canEndpointConnectOnLayer(
+    endpointX: number,
+    endpointY: number,
+    targetZ: number,
+  ): boolean {
     // Find obstacles near the endpoint that are connected to this route
     // Use a larger search area to find obstacles the endpoint might be inside
     const nearbyObstacles = this.obstacleSHI.searchArea(
@@ -189,7 +193,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     // Filter to obstacles that this trace connects to and contain the endpoint
     const connectedObstacles = nearbyObstacles.filter((obstacle) => {
-      if (!obstacle.connectedTo?.includes(this.unsimplifiedRoute.connectionName)) {
+      if (
+        !obstacle.connectedTo?.includes(this.unsimplifiedRoute.connectionName)
+      ) {
         return false
       }
       // Check if the endpoint is within or very close to the obstacle bounds
