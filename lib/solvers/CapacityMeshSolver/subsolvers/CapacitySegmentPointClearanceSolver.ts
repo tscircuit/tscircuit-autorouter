@@ -262,10 +262,18 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
     centroidY /= clusterEntries.length
 
     // Unit vector pointing from cluster centroid toward the node center.
-    const clusterInwardUnit = getUnitVectorFromPointAToB(
-      { x: centroidX, y: centroidY },
-      { x: capacityMeshNode.center.x, y: capacityMeshNode.center.y },
-    )
+    const dirX = capacityMeshNode.center.x - centroidX
+    const dirY = capacityMeshNode.center.y - centroidY
+    const dirLength = Math.hypot(dirX, dirY)
+    if (!Number.isFinite(dirLength) || dirLength < 1e-6) {
+      // Degenerate direction (centroid at node center); skip shifting to
+      // avoid introducing NaN coordinates.
+      return
+    }
+    const clusterInwardUnit = {
+      x: dirX / dirLength,
+      y: dirY / dirLength,
+    }
 
     // Determine how far we need to move this whole cluster inward.
     const clearanceThreshold = this.context.clearanceThreshold
