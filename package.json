@@ -27,7 +27,7 @@
     "@tscircuit/circuit-json-util": "^0.0.46",
     "@tscircuit/core": "^0.0.337",
     "@tscircuit/math-utils": "^0.0.27",
-    "@tscircuit/rectdiff": "^0.0.3",
+    "@tscircuit/rectdiff": "^0.0.7",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
