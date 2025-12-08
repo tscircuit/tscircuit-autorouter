@@ -32,7 +32,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     unsimplifiedRoute: HighDensityRoute
   }) {
     super()
-    this.currentSectionIndex = 1
+    this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
     this.obstacleSHI = params.obstacleSHI
     this.hdRouteSHI = params.hdRouteSHI
     this.unsimplifiedRoute = params.unsimplifiedRoute
@@ -101,18 +101,21 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     // Handle last section (endpoint 2) - can be moved if it's a multi-layer connection point
     if (this.currentSectionIndex === this.routeSections.length - 1) {
-      const lastSection = this.routeSections[this.routeSections.length - 1]
-      const secondLastSection = this.routeSections[this.routeSections.length - 2]
+      // Only attempt via removal if there are at least 2 sections
+      if (this.routeSections.length >= 2) {
+        const lastSection = this.routeSections[this.routeSections.length - 1]
+        const secondLastSection = this.routeSections[this.routeSections.length - 2]
 
-      if (lastSection.z !== secondLastSection.z) {
-        // Try moving last section to match second-last section (for MLCP endpoints)
-        const targetZ = secondLastSection.z
-        if (this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })) {
-          lastSection.z = targetZ
-          lastSection.points = lastSection.points.map((p) => ({
-            ...p,
-            z: targetZ,
-          }))
+        if (lastSection.z !== secondLastSection.z) {
+          // Try moving last section to match second-last section (for MLCP endpoints)
+          const targetZ = secondLastSection.z
+          if (this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })) {
+            lastSection.z = targetZ
+            lastSection.points = lastSection.points.map((p) => ({
+              ...p,
+              z: targetZ,
+            }))
+          }
         }
       }
       this.solved = true
