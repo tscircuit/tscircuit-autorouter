@@ -192,8 +192,8 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
     const dirX = capacityMeshNode.center.x - centroidX
     const dirY = capacityMeshNode.center.y - centroidY
     const dirLength = Math.hypot(dirX, dirY)
-    if (!Number.isFinite(dirLength) || dirLength < 1e-6) {
-      // Degenerate direction (centroid at node center); skip shifting to
+    if (!Number.isFinite(dirLength) || dirLength <= 0) {
+      // Degenerate direction (zero-length or invalid); skip shifting to
       // avoid introducing NaN coordinates.
       return
     }
