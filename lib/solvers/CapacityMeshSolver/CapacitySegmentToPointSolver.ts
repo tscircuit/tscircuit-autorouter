@@ -81,27 +81,6 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       if (this.activeSubSolver.solved || this.activeSubSolver.failed) {
         this.activeSubSolver = null
         this.clearanceSubsolverCompleted = true
-        const debugAfter: Array<{
-          capacityMeshNodeId: string
-          nodeCenter: { x: number; y: number }
-          assignedPoints: {
-            connectionName: string
-            point: { x: number; y: number; z: number }
-          }[]
-        }> = []
-        for (const seg of this.solvedSegments) {
-          const node = this.nodeMap[seg.capacityMeshNodeId]
-          debugAfter.push({
-            capacityMeshNodeId: seg.capacityMeshNodeId,
-            nodeCenter: node.center,
-            assignedPoints: seg.assignedPoints.map((ap) => ({
-              connectionName: ap.connectionName,
-              point: { ...ap.point },
-            })),
-          })
-        }
-        ;(globalThis as any).capacitySegmentPointClearanceDebugAfter =
-          debugAfter
       }
       return
     }
@@ -176,29 +155,6 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       const obstacleList = this.obstacles
       const minimumTraceWidth = 0.15
       const clearanceThreshold = minimumTraceWidth * 2
-
-      const debugBefore: Array<{
-        capacityMeshNodeId: string
-        nodeCenter: { x: number; y: number }
-        assignedPoints: {
-          connectionName: string
-          point: { x: number; y: number; z: number }
-        }[]
-      }> = []
-
-      for (const seg of this.solvedSegments) {
-        const node = this.nodeMap[seg.capacityMeshNodeId]
-        debugBefore.push({
-          capacityMeshNodeId: seg.capacityMeshNodeId,
-          nodeCenter: node.center,
-          assignedPoints: seg.assignedPoints.map((ap) => ({
-            connectionName: ap.connectionName,
-            point: { ...ap.point },
-          })),
-        })
-      }
-      ;(globalThis as any).capacitySegmentPointClearanceDebugBefore =
-        debugBefore
 
       const segmentPointClearanceContext = {
         capacityMeshNodeList,
