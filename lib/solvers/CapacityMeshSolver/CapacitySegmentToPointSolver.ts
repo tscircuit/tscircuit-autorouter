@@ -102,10 +102,6 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         }
         ;(globalThis as any).capacitySegmentPointClearanceDebugAfter =
           debugAfter
-        console.log(
-          "[CapacitySegmentToPointSolver][ClearanceDebug] after",
-          debugAfter,
-        )
       }
       return
     }
@@ -203,10 +199,6 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       }
       ;(globalThis as any).capacitySegmentPointClearanceDebugBefore =
         debugBefore
-      console.log(
-        "[CapacitySegmentToPointSolver][ClearanceDebug] before",
-        debugBefore,
-      )
 
       const segmentPointClearanceContext = {
         capacityMeshNodeList,

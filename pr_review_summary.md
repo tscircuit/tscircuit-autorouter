@@ -1,0 +1,5 @@
+- [ ] Remove temporary clearance debug globals (`capacitySegmentPointClearanceDebugBefore/After`) once investigation is done
+- [ ] Consider moving axis-aligned and layer-aware clearance logic into a clearly named helper module to keep subsolver focused
+- [ ] Audit use of `Math.hypot` and distance thresholds to ensure consistent behavior across solvers (avoid NaNs everywhere)
+- [ ] Revisit visualization API for subsolvers to standardize on `color` vs `fill`/`strokeColor` usage
+- [ ] Add a small targeted unit test for `CapacitySegmentPointClearanceSolver` axis-aligned behavior to avoid regressions
