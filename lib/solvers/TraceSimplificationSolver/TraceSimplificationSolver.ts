@@ -26,7 +26,9 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   simplificationPipelineLoops = 0
 
-  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 1000
+  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
+
+  PHASE_ORDER: Phase[] = ["via_removal", "via_merging", "path_simplification"]
 
   currentPhase: Phase = "via_removal"
 
