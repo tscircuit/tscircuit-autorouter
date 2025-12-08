@@ -22,6 +22,7 @@ import { createSegmentPointMap } from "./createSegmentPointMap"
 import { getIntraNodeCrossingsFromSegmentPoints } from "lib/utils/getIntraNodeCrossingsFromSegmentPoints"
 import { getNodesNearNode } from "./getNodesNearNode"
 import { CacheProvider } from "lib/cache/types"
+import { doSegmentsIntersect, distance } from "@tscircuit/math-utils"
 
 export class UnravelMultiSectionSolver extends BaseSolver {
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
@@ -133,32 +134,6 @@ export class UnravelMultiSectionSolver extends BaseSolver {
    * support multiple layers (MLCP connections). Uses graph coloring to
    * assign different layers to crossing connections.
    */
-  /**
-   * Check if two line segments cross (proper intersection, not just touch).
-   */
-  doLineSegmentsCross(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    x3: number,
-    y3: number,
-    x4: number,
-    y4: number,
-  ): boolean {
-    // Using cross product to determine orientation
-    const d1 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
-    const d2 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3)
-    const d3 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)
-    const d4 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1)
-
-    // Proper crossing - segments cross if endpoints are on opposite sides
-    if (d1 * d2 < 0 && d3 * d4 < 0) {
-      return true
-    }
-    return false
-  }
-
   optimizeMLCPConnectionLayers() {
     // Group segment points by connection name
     const connectionSegmentPoints = new Map<string, SegmentPoint[]>()
@@ -215,10 +190,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
       for (let i = 0; i < segPoints.length; i++) {
         for (let j = i + 1; j < segPoints.length; j++) {
-          const dist = Math.hypot(
-            segPoints[j].x - segPoints[i].x,
-            segPoints[j].y - segPoints[i].y,
-          )
+          const dist = distance(segPoints[i], segPoints[j])
           if (dist > maxDist) {
             maxDist = dist
             startPoint = segPoints[i]
@@ -242,20 +214,8 @@ export class UnravelMultiSectionSolver extends BaseSolver {
         if (!ep1 || !ep2) continue
 
         // Check if the line segments from start to end cross
-        if (
-          this.doLineSegmentsCross(
-            ep1.start.x,
-            ep1.start.y,
-            ep1.end.x,
-            ep1.end.y,
-            ep2.start.x,
-            ep2.start.y,
-            ep2.end.x,
-            ep2.end.y,
-          )
-        ) {
-          const key =
-            conn1 < conn2 ? `${conn1}|${conn2}` : `${conn2}|${conn1}`
+        if (doSegmentsIntersect(ep1.start, ep1.end, ep2.start, ep2.end)) {
+          const key = conn1 < conn2 ? `${conn1}|${conn2}` : `${conn2}|${conn1}`
           crossingPairs.add(key)
         }
       }
@@ -272,9 +232,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
       // Find layers used by crossing connections
       for (const pair of crossingPairs) {
         if (pair.includes(connName)) {
-          const otherConn = pair
-            .split("|")
-            .find((c) => c !== connName)
+          const otherConn = pair.split("|").find((c) => c !== connName)
           if (otherConn && connectionLayer.has(otherConn)) {
             usedLayers.add(connectionLayer.get(otherConn)!)
           }

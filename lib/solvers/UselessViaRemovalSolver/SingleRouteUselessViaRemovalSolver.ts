@@ -85,7 +85,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       if (firstSection.z !== secondSection.z) {
         // Try moving first section to match second section (for MLCP endpoints)
         const targetZ = secondSection.z
-        if (this.canSectionMoveToLayer({ currentSection: firstSection, targetZ })) {
+        if (
+          this.canSectionMoveToLayer({ currentSection: firstSection, targetZ })
+        ) {
           firstSection.z = targetZ
           firstSection.points = firstSection.points.map((p) => ({
             ...p,
@@ -104,12 +106,15 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       // Only attempt via removal if there are at least 2 sections
       if (this.routeSections.length >= 2) {
         const lastSection = this.routeSections[this.routeSections.length - 1]
-        const secondLastSection = this.routeSections[this.routeSections.length - 2]
+        const secondLastSection =
+          this.routeSections[this.routeSections.length - 2]
 
         if (lastSection.z !== secondLastSection.z) {
           // Try moving last section to match second-last section (for MLCP endpoints)
           const targetZ = secondLastSection.z
-          if (this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })) {
+          if (
+            this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })
+          ) {
             lastSection.z = targetZ
             lastSection.points = lastSection.points.map((p) => ({
               ...p,
@@ -199,7 +204,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       for (const obstacle of obstacles) {
         // Skip obstacles that are connected to this trace
         // (the trace is supposed to connect to them)
-        if (obstacle.connectedTo?.includes(this.unsimplifiedRoute.connectionName)) {
+        if (
+          obstacle.connectedTo?.includes(this.unsimplifiedRoute.connectionName)
+        ) {
           continue
         }
 
