@@ -83,15 +83,6 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
       ),
     )
 
-    console.log("[CapacitySegmentPointClearanceSolver] constructor", {
-      segmentCount: this.segmentList.length,
-      capacityMeshNodeCount: this.context.capacityMeshNodeList.length,
-      obstacleCount: this.context.obstacleList.length,
-      nearbyNodeCount: this.capacityMeshNodeIdWithNearbyObstacleList.length,
-      clearanceThreshold: this.context.clearanceThreshold,
-      minimumTraceWidth: this.context.minimumTraceWidth,
-    })
-
     // Group all assigned points by capacityMeshNodeId and connectionName so
     // we can later adjust them together per (node, connection) cluster.
     this.clusterMap = new Map()
@@ -139,15 +130,6 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
     const clearanceThreshold = this.context.clearanceThreshold
 
     // Walk every capacity mesh node and check its proximity to all obstacles.
-    console.log(
-      "[CapacitySegmentPointClearanceSolver] building nearby-node list",
-      {
-        capacityMeshNodeCount: this.context.capacityMeshNodeList.length,
-        obstacleCount: this.context.obstacleList.length,
-        clearanceThreshold,
-      },
-    )
-
     for (const capacityMeshNode of this.context.capacityMeshNodeList) {
       if (capacityMeshNode._containsObstacle) {
         // Nodes that contain obstacles are not candidates for
@@ -204,11 +186,6 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
   }
 
   _step() {
-    console.log("[CapacitySegmentPointClearanceSolver] _step start", {
-      clusterNodeCount: this.clusterMap.size,
-      currentClusterIndex: this.currentClusterIndex,
-    })
-
     // Initialize cluster processing order lazily.
     if (this.clusterOrder.length === 0) {
       for (const [capacityMeshNodeId, connectionMap] of this.clusterMap) {
@@ -216,9 +193,6 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
           this.clusterOrder.push({ capacityMeshNodeId, connectionName })
         }
       }
-      console.log("[CapacitySegmentPointClearanceSolver] built clusterOrder", {
-        clusterCount: this.clusterOrder.length,
-      })
     }
 
     if (this.currentClusterIndex >= this.clusterOrder.length) {
@@ -242,11 +216,10 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
       return
     }
 
-    console.log("[CapacitySegmentPointClearanceSolver] processing cluster", {
-      capacityMeshNodeId,
-      connectionName,
-      entryCount: clusterEntries.length,
-    })
+    // Only adjust clusters that are axis-aligned (all same x or all same y).
+    if (!this.isAxisAlignedCluster(clusterEntries)) {
+      return
+    }
 
     const capacityMeshNode = this.capacityMeshNodeById.get(capacityMeshNodeId)
     if (!capacityMeshNode) {
@@ -338,6 +311,31 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
       newPoints,
     }
     this.visualizationPhase = "after"
+  }
+
+  private isAxisAlignedCluster(
+    clusterEntries: ConnectionClusterEntry[],
+  ): boolean {
+    if (clusterEntries.length < 2) return false
+
+    const epsilon = 1e-6
+    const firstPoint =
+      clusterEntries[0].segment.assignedPoints![clusterEntries[0].pointIndex]
+        .point
+
+    let allSameX = true
+    let allSameY = true
+
+    for (const { segment, pointIndex } of clusterEntries) {
+      const p = segment.assignedPoints![pointIndex].point
+      if (Math.abs(p.x - firstPoint.x) > epsilon) allSameX = false
+      if (Math.abs(p.y - firstPoint.y) > epsilon) allSameY = false
+      if (!allSameX && !allSameY) {
+        return false
+      }
+    }
+
+    return allSameX || allSameY
   }
 
   visualize(): GraphicsObject {
