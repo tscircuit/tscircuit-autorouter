@@ -163,8 +163,80 @@ export class TraceSimplificationSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    if (!this.activeSubSolver)
-      return { lines: [], points: [], rects: [], circles: [] } // Empty visualization if no routes
-    return this.activeSubSolver.visualize()
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+
+    const visualization: GraphicsObject & {
+      lines: NonNullable<GraphicsObject["lines"]>
+      points: NonNullable<GraphicsObject["points"]>
+      rects: NonNullable<GraphicsObject["rects"]>
+      circles: NonNullable<GraphicsObject["circles"]>
+    } = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+      coordinateSystem: "cartesian",
+      title: "Trace Simplification Solver",
+    }
+
+    // Visualize obstacles
+    for (const obstacle of this.simplificationConfig.obstacles) {
+      let fillColor = "rgba(128, 128, 128, 0.2)"
+      const isOnLayer0 = obstacle.zLayers?.includes(0)
+      const isOnLayer1 = obstacle.zLayers?.includes(1)
+
+      if (isOnLayer0 && isOnLayer1) {
+        fillColor = "rgba(128, 0, 128, 0.2)"
+      } else if (isOnLayer0) {
+        fillColor = "rgba(255, 0, 0, 0.2)"
+      } else if (isOnLayer1) {
+        fillColor = "rgba(0, 0, 255, 0.2)"
+      }
+
+      visualization.rects.push({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        fill: fillColor,
+        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+      })
+    }
+
+    // Draw output routes and vias
+    for (const route of this.hdRoutes) {
+      if (route.route.length === 0) continue
+
+      // Draw lines connecting route points on the same layer
+      for (let i = 0; i < route.route.length - 1; i++) {
+        const current = route.route[i]
+        const next = route.route[i + 1]
+
+        if (current.z === next.z) {
+          visualization.lines.push({
+            points: [
+              { x: current.x, y: current.y },
+              { x: next.x, y: next.y },
+            ],
+            strokeColor: current.z === 0 ? "red" : "blue",
+            strokeWidth: route.traceThickness,
+            label: `${route.connectionName} (z=${current.z})`,
+          })
+        }
+      }
+
+      // Draw circles for vias
+      for (const via of route.vias) {
+        visualization.circles.push({
+          center: { x: via.x, y: via.y },
+          radius: route.viaDiameter / 2,
+          fill: "rgba(255, 0, 255, 0.5)",
+          label: `${route.connectionName} via`,
+        })
+      }
+    }
+
+    return visualization
   }
 }
