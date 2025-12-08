@@ -149,6 +149,15 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
 
       // Check this node against every obstacle.
       for (const obstacle of this.context.obstacleList) {
+        // Skip obstacles that do not share any z-layer with this node.
+        const obstacleZLayers = obstacle.zLayers ?? []
+        const hasSharedZLayer = obstacleZLayers.some((zLayer) =>
+          capacityMeshNode.availableZ.includes(zLayer),
+        )
+        if (!hasSharedZLayer) {
+          continue
+        }
+
         // Compute bounds for the obstacle rectangle.
         const obstacleHalfWidth = obstacle.width / 2
         const obstacleHalfHeight = obstacle.height / 2
@@ -165,7 +174,14 @@ export class CapacitySegmentPointClearanceSolver extends BaseSolver {
           obstacleBounds,
         )
 
-        // If the obstacle is within the clearance band, record it for this node.
+        // If the bounds overlap (distance <= 0), the node is under or inside
+        // the obstacle; we do not process these nodes in the clearance solver.
+        if (distanceBetweenBounds <= 0) {
+          continue
+        }
+
+        // If the obstacle is within the clearance band (but not overlapping),
+        // record it for this node so we can enforce a margin along the boundary.
         if (distanceBetweenBounds <= clearanceThreshold) {
           capacityMeshNodeIdSet.add(capacityMeshNode.capacityMeshNodeId)
           const obstacleListForNode =
