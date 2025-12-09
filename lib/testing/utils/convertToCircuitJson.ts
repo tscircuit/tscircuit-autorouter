@@ -97,7 +97,9 @@ function createSourceTraces(
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
     const netConnectionName =
-      connection.netConnectionName || connection.rootConnectionName || connection.name
+      connection.netConnectionName ||
+      connection.rootConnectionName ||
+      connection.name
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
