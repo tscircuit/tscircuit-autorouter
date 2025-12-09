@@ -4,8 +4,8 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
   for (const connection of srj.connections) {
-    if (connection.parentNetId) {
-      connMap.addConnections([[connection.name, connection.parentNetId]])
+    if (connection.rootConnectionName) {
+      connMap.addConnections([[connection.name, connection.rootConnectionName]])
     }
     // Also link the connection name to its overall netConnectionName if available
     if (connection.netConnectionName) {

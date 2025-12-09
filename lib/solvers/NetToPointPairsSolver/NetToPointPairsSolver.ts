@@ -69,7 +69,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       }
       this.newConnections.push({
         ...connection,
-        parentNetId: connection.name,
+        rootConnectionName: connection.name,
       })
       return
     }
@@ -82,7 +82,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
-        parentNetId: connection.name,
+        rootConnectionName: connection.name,
         mergedConnectionNames: connection.mergedConnectionNames,
         netConnectionName: connection.netConnectionName,
       })

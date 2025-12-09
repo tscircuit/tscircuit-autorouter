@@ -48,7 +48,7 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
-  parentNetId?: string
+  rootConnectionName?: string
   mergedConnectionNames?: string[]
   isOffBoard?: boolean
   netConnectionName?: string

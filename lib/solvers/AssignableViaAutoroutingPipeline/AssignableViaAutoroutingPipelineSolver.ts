@@ -695,7 +695,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
 
     for (const connection of connections) {
       const netConnectionName = connection.netConnectionName
-      const parentNetId = connection.parentNetId
+      const parentNetId = connection.rootConnectionName
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(

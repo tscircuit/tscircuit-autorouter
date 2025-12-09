@@ -605,7 +605,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
-            netConnectionName ?? connection.parentNetId ?? connection.name,
+            netConnectionName ?? connection.rootConnectionName ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

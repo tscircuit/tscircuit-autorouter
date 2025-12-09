@@ -178,7 +178,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           name: fragment.connectionName,
           pointsToConnect,
           netConnectionName: originalConnection.netConnectionName,
-          parentNetId: originalConnection.parentNetId, // Propagate parentNetId
+          rootConnectionName: originalConnection.rootConnectionName, // Propagate parentNetId
         })
       }
     }
