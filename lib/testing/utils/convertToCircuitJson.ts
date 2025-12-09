@@ -96,7 +96,8 @@ function createSourceTraces(
       .filter(Boolean)
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
-    const netConnectionName = connection.netConnectionName || connection.parentNetId || connection.name
+    const netConnectionName =
+      connection.netConnectionName || connection.parentNetId || connection.name
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
@@ -338,7 +339,10 @@ export function convertToCircuitJson(
   // Build a map of connection names to simplify lookups
   const connectionMap = new Map<string, string>()
   srjWithPointPairs.connections.forEach((conn) => {
-    connectionMap.set(conn.name, conn.netConnectionName || conn.parentNetId || conn.name)
+    connectionMap.set(
+      conn.name,
+      conn.netConnectionName || conn.parentNetId || conn.name,
+    )
   })
 
   // Process routes based on their type

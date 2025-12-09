@@ -669,8 +669,6 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     return {}
   }
 
-
-
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.multiSimplifiedPathSolver2?.simplifiedHdRoutes ??

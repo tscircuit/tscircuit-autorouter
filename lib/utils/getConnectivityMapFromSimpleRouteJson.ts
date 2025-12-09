@@ -11,7 +11,7 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
     if (connection.netConnectionName) {
       connMap.addConnections([[connection.name, connection.netConnectionName]])
     }
-    
+
     // Link to all merged connection names (original names before merge)
     if (connection.mergedConnectionNames) {
       for (const mergedName of connection.mergedConnectionNames) {

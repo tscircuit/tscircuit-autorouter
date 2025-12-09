@@ -132,7 +132,8 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           // Assuming parentNetIds aligns with connectionNames in the original segment.
           // If connectionNames were sorted, we lose the index.
           // Ideally, we should zip them first.
-          parentNetId: candidate.parentNetIds?.[candidate.connectionNames.indexOf(conn)],
+          parentNetId:
+            candidate.parentNetIds?.[candidate.connectionNames.indexOf(conn)],
           point: points[idx],
         }),
       )

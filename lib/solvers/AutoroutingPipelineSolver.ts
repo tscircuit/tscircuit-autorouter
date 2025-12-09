@@ -570,8 +570,6 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     return {}
   }
 
-
-
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
@@ -606,7 +604,8 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name: netConnectionName ?? connection.parentNetId ?? connection.name,
+          connection_name:
+            netConnectionName ?? connection.parentNetId ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 
