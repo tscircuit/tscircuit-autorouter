@@ -5,19 +5,16 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
   for (const connection of srj.connections) {
     if (connection.parentNetId) {
-      console.log(`[ConnMap] Linking parent: ${connection.name} -> ${connection.parentNetId}`);
       connMap.addConnections([[connection.name, connection.parentNetId]])
     }
     // Also link the connection name to its overall netConnectionName if available
     if (connection.netConnectionName) {
-      console.log(`[ConnMap] Linking netConnectionName: ${connection.name} -> ${connection.netConnectionName}`);
       connMap.addConnections([[connection.name, connection.netConnectionName]])
     }
     
     // Link to all merged connection names (original names before merge)
     if (connection.mergedConnectionNames) {
       for (const mergedName of connection.mergedConnectionNames) {
-        console.log(`[ConnMap] Linking merged: ${connection.name} -> ${mergedName}`);
         connMap.addConnections([[connection.name, mergedName]])
       }
     }
