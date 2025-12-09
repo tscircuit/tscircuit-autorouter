@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "bun:test"
 import { CapacityMeshSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import bugReport from "../../examples/bug-reports/bugreport7-d3f3be/bugreport7-d3f3be.json" assert {
+import bugReport from "../../examples/bug-reports/bugreport07-d3f3be/bugreport07-d3f3be.json" assert {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"

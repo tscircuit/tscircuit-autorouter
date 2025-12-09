@@ -3,7 +3,7 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CapacityMeshSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
-import bugReport from "../../examples/bug-reports/bugreport8-e3ec95/bugreport8-e3ec95.json" assert {
+import bugReport from "../../examples/bug-reports/bugreport08-e3ec95/bugreport08-e3ec95.json" assert {
   type: "json",
 }
 const srj = bugReport.simple_route_json as SimpleRouteJson
