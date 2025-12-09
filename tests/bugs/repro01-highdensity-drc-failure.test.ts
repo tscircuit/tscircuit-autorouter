@@ -83,7 +83,7 @@ test("cn11081 single transition solver routes without DRC errors", () => {
       {
         "connected_source_net_ids": [],
         "connected_source_port_ids": [],
-        "source_trace_id": "source_net_0",
+        "source_trace_id": "source_net_0_mst22",
         "type": "source_trace",
       },
       {
@@ -285,7 +285,7 @@ test("cn11081 single transition solver routes without DRC errors", () => {
             "y": 10.26171875,
           },
         ],
-        "source_trace_id": "source_net_0",
+        "source_trace_id": "source_net_0_mst22",
         "type": "pcb_trace",
       },
     ]

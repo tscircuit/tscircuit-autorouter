@@ -570,16 +570,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
     return {}
   }
 
-  /**
-   * Get original connection name from connection name with MST suffix
-   * @param mstConnectionName The MST-suffixed connection name (e.g. "connection1_mst0")
-   * @returns The original connection name (e.g. "connection1")
-   */
-  private getOriginalConnectionName(mstConnectionName: string): string {
-    // MST connections are named like "connection_mst0", so extract the original name
-    const match = mstConnectionName.match(/^(.+?)_mst\d+$/)
-    return match ? match[1] : mstConnectionName
-  }
+
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
@@ -615,9 +606,7 @@ export class AutoroutingPipelineSolver extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name:
-            netConnectionName ??
-            this.getOriginalConnectionName(connection.name),
+          connection_name: netConnectionName ?? connection.parentNetId ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

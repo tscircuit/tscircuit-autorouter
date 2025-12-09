@@ -132,6 +132,7 @@ export function mergeConnections(
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
       name: Array.from(mergedNames).join("__"), // Combine original names
+      mergedConnectionNames: Array.from(mergedNames), // Store original names
       pointsToConnect: Array.from(uniqueConnectionPoints.values()),
       isOffBoard: isOffBoard,
       // Only include if there are any mergedExternallyConnectedPointIds

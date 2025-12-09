@@ -92,6 +92,26 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       height: bounds.maxY - bounds.minY,
     }
 
+    // DEBUG LOGGING
+    console.log("--- SingleSimplifiedPathSolver5 DEBUG ---");
+    console.log("Input Route Connection Name:", this.inputRoute.connectionName);
+    console.log("Input Route parentNetId:", this.inputRoute.parentNetId);
+    console.log("ConnMap netMap:", JSON.stringify((this.connMap as any).netMap, null, 2));
+    
+    // Test connectivity against a known problematic obstacle if possible, or just log the check logic
+    if (this.obstacles.length > 0) {
+        const sampleObstacle = this.obstacles.find(o => o.connectedTo.length > 0);
+        if (sampleObstacle) {
+            console.log("Sample Obstacle connectedTo:", JSON.stringify(sampleObstacle.connectedTo));
+            sampleObstacle.connectedTo.forEach(id => {
+                const isConnected = this.connMap.areIdsConnected(this.inputRoute.connectionName, id);
+                console.log(`Checking connection: ${this.inputRoute.connectionName} <-> ${id} = ${isConnected}`);
+            });
+        }
+    }
+    console.log("-----------------------------------------");
+
+
     this.filteredObstacles = this.obstacles
       .filter(
         (obstacle) =>

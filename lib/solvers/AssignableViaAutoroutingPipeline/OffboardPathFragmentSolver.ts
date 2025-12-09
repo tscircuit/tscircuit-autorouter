@@ -178,6 +178,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           name: fragment.connectionName,
           pointsToConnect,
           netConnectionName: originalConnection.netConnectionName,
+          parentNetId: originalConnection.parentNetId, // Propagate parentNetId
         })
       }
     }
@@ -217,6 +218,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         fragments.push({
           capacityPathId: `${path.capacityPathId}_frag_${fragId}`,
           connectionName: `${path.connectionName}_frag_${fragmentIndex++}`,
+          parentNetId: path.parentNetId, // Propagate parentNetId
           nodeIds: fragNodes,
           isFragmentedPath: true,
           mstPairConnectionName: path.connectionName,
@@ -232,6 +234,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         fragments.push({
           capacityPathId: `${path.capacityPathId}_frag_${fragId}`,
           connectionName: `${path.connectionName}_frag_${fragmentIndex++}`,
+          parentNetId: path.parentNetId, // Propagate parentNetId
           nodeIds: fragNodes,
           isFragmentedPath: true,
           mstPairConnectionName: path.connectionName,

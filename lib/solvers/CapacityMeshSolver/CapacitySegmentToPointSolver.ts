@@ -7,6 +7,7 @@ import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 export interface SegmentWithAssignedPoints extends NodePortSegment {
   assignedPoints?: {
     connectionName: string
+    parentNetId?: string
     point: { x: number; y: number; z: number }
   }[]
 }
@@ -30,6 +31,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
   solvedSegments: (NodePortSegment & {
     assignedPoints: {
       connectionName: string
+      parentNetId?: string
       point: { x: number; y: number; z: number }
     }[]
   })[]
@@ -85,7 +87,11 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           z: seg.availableZ[0],
         }
         ;(seg as any).assignedPoints = [
-          { connectionName: seg.connectionNames[0], point: center },
+          {
+            connectionName: seg.connectionNames[0],
+            parentNetId: seg.parentNetIds?.[0],
+            point: center,
+          },
         ]
         // Move seg from unsolvedSegments to solvedSegments.
         this.unsolvedSegments.splice(this.unsolvedSegments.indexOf(seg), 1)
@@ -122,6 +128,11 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       ;(candidate as any).assignedPoints = sortedConnections.map(
         (conn, idx) => ({
           connectionName: conn,
+          // Note: Mapping back from sorted connections to parentNetIds is tricky if they aren't paired.
+          // Assuming parentNetIds aligns with connectionNames in the original segment.
+          // If connectionNames were sorted, we lose the index.
+          // Ideally, we should zip them first.
+          parentNetId: candidate.parentNetIds?.[candidate.connectionNames.indexOf(conn)],
           point: points[idx],
         }),
       )

@@ -95,6 +95,7 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
           start: segment.start,
           end: segment.end,
           connectionNames: [path.connectionName],
+          parentNetIds: path.parentNetId ? [path.parentNetId] : undefined,
           availableZ: mutuallyAvailableZ,
         }
 
@@ -242,6 +243,7 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
   const remainingSegments = segments.map((s) => ({
     ...s,
     connectionNames: [...s.connectionNames],
+    parentNetIds: s.parentNetIds ? [...s.parentNetIds] : [],
     availableZ: [...s.availableZ].sort((a, b) => a - b), // Ensure Z is sorted for comparison
   }))
 
@@ -273,6 +275,13 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
           currentConnections.add(cn),
         )
         mergedSegment.connectionNames = Array.from(currentConnections)
+
+        // Combine parent net IDs
+        const currentParentNetIds = new Set(mergedSegment.parentNetIds || [])
+        segmentUnderTest.parentNetIds?.forEach((id) =>
+          currentParentNetIds.add(id),
+        )
+        mergedSegment.parentNetIds = Array.from(currentParentNetIds)
 
         // DO NOT merge availableZ - they must be identical to reach here.
 
