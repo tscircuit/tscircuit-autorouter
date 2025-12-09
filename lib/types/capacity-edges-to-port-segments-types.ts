@@ -5,4 +5,5 @@ export interface NodePortSegment {
   end: { x: number; y: number }
   availableZ: number[]
   connectionNames: string[]
+  parentNetIds?: string[]
 }

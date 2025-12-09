@@ -67,7 +67,10 @@ export class NetToPointPairsSolver extends BaseSolver {
         // No routing required – they are already connected off-board
         return
       }
-      this.newConnections.push(connection)
+      this.newConnections.push({
+        ...connection,
+        rootConnectionName: connection.name,
+      })
       return
     }
 
@@ -79,6 +82,8 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
+        rootConnectionName: connection.name,
+        mergedConnectionNames: connection.mergedConnectionNames,
         netConnectionName: connection.netConnectionName,
       })
     }

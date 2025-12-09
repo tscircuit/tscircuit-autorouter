@@ -45,6 +45,7 @@ export interface SegmentPoint {
   segmentPointId: SegmentPointId
   directlyConnectedSegmentPointIds: SegmentPointId[]
   connectionName: string
+  parentNetId?: string
   segmentId: string
   capacityMeshNodeIds: CapacityMeshNodeId[]
   x: number

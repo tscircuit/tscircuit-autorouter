@@ -428,6 +428,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
             y: segmentPoint.y,
             z: segmentPoint.z,
             connectionName: segmentPoint.connectionName,
+            parentNetId: segmentPoint.parentNetId,
           })
         }
       }

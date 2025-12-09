@@ -205,6 +205,14 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   }
 
   onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
-    this.solvedRoutes = solver.solver.solvedRoutes
+    this.solvedRoutes = solver.solver.solvedRoutes.map((route) => {
+      const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
+        (p) => p.connectionName === route.connectionName,
+      )
+      if (matchingPortPoint?.parentNetId) {
+        return { ...route, parentNetId: matchingPortPoint.parentNetId }
+      }
+      return route
+    })
   }
 }
