@@ -707,7 +707,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name: netConnectionName ?? rootConnectionName ?? connection.name,
+          connection_name:
+            netConnectionName ?? rootConnectionName ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

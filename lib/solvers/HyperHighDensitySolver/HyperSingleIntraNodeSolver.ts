@@ -210,7 +210,10 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         (p) => p.connectionName === route.connectionName,
       )
       if (matchingPortPoint?.rootConnectionName) {
-        return { ...route, rootConnectionName: matchingPortPoint.rootConnectionName }
+        return {
+          ...route,
+          rootConnectionName: matchingPortPoint.rootConnectionName,
+        }
       }
       return route
     })

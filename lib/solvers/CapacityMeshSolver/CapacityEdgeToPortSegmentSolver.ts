@@ -95,7 +95,9 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
           start: segment.start,
           end: segment.end,
           connectionNames: [path.connectionName],
-          rootConnectionNames: path.rootConnectionName ? [path.rootConnectionName] : undefined,
+          rootConnectionNames: path.rootConnectionName
+            ? [path.rootConnectionName]
+            : undefined,
           availableZ: mutuallyAvailableZ,
         }
 
@@ -243,7 +245,9 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
   const remainingSegments = segments.map((s) => ({
     ...s,
     connectionNames: [...s.connectionNames],
-    rootConnectionNames: s.rootConnectionNames ? [...s.rootConnectionNames] : [],
+    rootConnectionNames: s.rootConnectionNames
+      ? [...s.rootConnectionNames]
+      : [],
     availableZ: [...s.availableZ].sort((a, b) => a - b), // Ensure Z is sorted for comparison
   }))
 
@@ -277,11 +281,15 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
         mergedSegment.connectionNames = Array.from(currentConnections)
 
         // Combine root connection names
-        const currentRootConnectionNames = new Set(mergedSegment.rootConnectionNames || [])
+        const currentRootConnectionNames = new Set(
+          mergedSegment.rootConnectionNames || [],
+        )
         segmentUnderTest.rootConnectionNames?.forEach((id) =>
           currentRootConnectionNames.add(id),
         )
-        mergedSegment.rootConnectionNames = Array.from(currentRootConnectionNames)
+        mergedSegment.rootConnectionNames = Array.from(
+          currentRootConnectionNames,
+        )
 
         // DO NOT merge availableZ - they must be identical to reach here.
 

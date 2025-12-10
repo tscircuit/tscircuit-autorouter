@@ -133,7 +133,9 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           // If connectionNames were sorted, we lose the index.
           // Ideally, we should zip them first.
           rootConnectionName:
-            candidate.rootConnectionNames?.[candidate.connectionNames.indexOf(conn)],
+            candidate.rootConnectionNames?.[
+              candidate.connectionNames.indexOf(conn)
+            ],
           point: points[idx],
         }),
       )
