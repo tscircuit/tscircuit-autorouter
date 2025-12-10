@@ -11,7 +11,7 @@ const srj = bugReport as SimpleRouteJson
 // Regression: obstacle-clipping solver previously got stuck when safe intervals became empty
 // for segments adjacent to small rectangular obstacles around the endpoints.
 
-test("bugreport23-LGA15x4-4-layer", () => {
+test("LGA15x4-4-layer", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
