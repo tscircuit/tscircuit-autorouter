@@ -695,7 +695,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
 
     for (const connection of connections) {
       const netConnectionName = connection.netConnectionName
-      const parentNetId = connection.rootConnectionName
+      const rootConnectionName = connection.rootConnectionName
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
@@ -707,7 +707,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name: netConnectionName ?? parentNetId ?? connection.name,
+          connection_name: netConnectionName ?? rootConnectionName ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

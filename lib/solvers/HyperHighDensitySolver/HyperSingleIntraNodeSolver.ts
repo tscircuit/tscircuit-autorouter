@@ -209,8 +209,8 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
         (p) => p.connectionName === route.connectionName,
       )
-      if (matchingPortPoint?.parentNetId) {
-        return { ...route, parentNetId: matchingPortPoint.parentNetId }
+      if (matchingPortPoint?.rootConnectionName) {
+        return { ...route, rootConnectionName: matchingPortPoint.rootConnectionName }
       }
       return route
     })
