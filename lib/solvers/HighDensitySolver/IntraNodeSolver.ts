@@ -172,7 +172,28 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
     if (unsolvedConnection.points.length === 2) {
       const [A, B] = unsolvedConnection.points
-      if (A.x === B.x && A.y === B.y && A.z === B.z) {
+      const sameX = Math.abs(A.x - B.x) < 1e-6
+      const sameY = Math.abs(A.y - B.y) < 1e-6
+
+      if (sameX && sameY && A.z === B.z) {
+        return
+      }
+
+      // Fast-path: if the points share the same x/y but differ in layer,
+      // we can directly create a vertical via-only route without invoking
+      // the heavier search-based solvers. This prevents the hyper solver
+      // from timing out on degenerate zero-length connections.
+      if (sameX && sameY && A.z !== B.z) {
+        this.solvedRoutes.push({
+          connectionName: unsolvedConnection.connectionName,
+          traceThickness: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+          route: [
+            { x: A.x, y: A.y, z: A.z },
+            { x: B.x, y: B.y, z: B.z },
+          ],
+          vias: [{ x: A.x, y: A.y }],
+        })
         return
       }
     }
