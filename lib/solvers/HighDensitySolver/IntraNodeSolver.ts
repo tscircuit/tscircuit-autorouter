@@ -184,15 +184,29 @@ export class IntraNodeRouteSolver extends BaseSolver {
       // the heavier search-based solvers. This prevents the hyper solver
       // from timing out on degenerate zero-length connections.
       if (sameX && sameY && A.z !== B.z) {
+        const viaPoint = {
+          x: this.nodeWithPortPoints.center.x,
+          y: this.nodeWithPortPoints.center.y,
+        }
+        const route = [
+          { x: A.x, y: A.y, z: A.z },
+          { ...viaPoint, z: A.z },
+          { ...viaPoint, z: B.z },
+          { x: B.x, y: B.y, z: B.z },
+        ].filter(
+          (pt, idx, arr) =>
+            idx === 0 ||
+            Math.abs(pt.x - arr[idx - 1].x) > 1e-6 ||
+            Math.abs(pt.y - arr[idx - 1].y) > 1e-6 ||
+            pt.z !== arr[idx - 1].z,
+        )
+
         this.solvedRoutes.push({
           connectionName: unsolvedConnection.connectionName,
           traceThickness: this.traceWidth,
           viaDiameter: this.viaDiameter,
-          route: [
-            { x: A.x, y: A.y, z: A.z },
-            { x: B.x, y: B.y, z: B.z },
-          ],
-          vias: [{ x: A.x, y: A.y }],
+          route,
+          vias: [viaPoint],
         })
         return
       }
