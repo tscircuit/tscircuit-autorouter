@@ -250,6 +250,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       // Check if adding this via would exceed the limit
       if (this.currentViaCount >= this.maxViaCount) {
         this.failed = true
+        this.error = `Exceeded max via count of ${this.maxViaCount}`
         return
       }
     }
@@ -280,7 +281,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       // Determine the Z level to switch to (the one NOT occupied by the intersected segment)
       const nextZ = this.availableZ.find((z) => z !== intersectedSegmentZ)!
       if (nextZ === undefined) {
-        console.error("Could not determine next Z level for via placement!")
+        this.error = "Could not determine next Z level for via placement!"
         this.failed = true // Mark as failed if Z logic breaks
         return
       }
