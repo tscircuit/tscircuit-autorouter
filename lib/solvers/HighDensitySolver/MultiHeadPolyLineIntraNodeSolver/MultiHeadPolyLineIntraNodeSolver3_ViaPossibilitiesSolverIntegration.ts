@@ -32,13 +32,6 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
   ) {
     super(params)
     this.MAX_ITERATIONS = 1000
-    if (this.candidates.length === 0) {
-      this.failed = true
-      this.error = `ViaPossibilitiesSolver could not find any valid seed layouts after trying ${Math.min(
-        2000,
-        factorial(this.uniqueConnections),
-      )} seeds`
-    }
   }
 
   createInitialCandidateFromSeed(shuffleSeed: number): Candidate | null {
