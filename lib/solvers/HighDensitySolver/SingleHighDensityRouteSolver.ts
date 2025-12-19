@@ -459,6 +459,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     if (!currentNode || !currentNodeKey) {
       this.failed = true
+      this.error = "Ran out of candidate nodes to explore"
       return
     }
     this.exploredNodes.add(currentNodeKey)

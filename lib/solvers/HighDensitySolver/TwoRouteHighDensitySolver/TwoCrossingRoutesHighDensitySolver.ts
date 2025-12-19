@@ -68,6 +68,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     if (this.routes.length !== 2) {
       this.failed = true
+      this.error = `Expected 2 routes, but got ${this.routes.length}`
       return
     }
 
@@ -76,6 +77,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
       routeA.startPort.z === routeA.endPort.z
     if (!routeAStartsAndEndsOnSameLayer) {
       this.failed = true
+      this.error = "Route A must start and end on the same layer"
       return
     }
 
@@ -83,12 +85,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
       routeB.startPort.z === routeB.endPort.z
     if (!routeBStartsAndEndsOnSameLayer) {
       this.failed = true
+      this.error = "Route B must start and end on the same layer"
       return
     }
 
     const routesAreSameLayer = routeA.startPort.z === routeB.startPort.z
     if (!routesAreSameLayer) {
       this.failed = true
+      this.error = "Both routes must be on the same layer"
       return
     }
     // TODO check to make sure the lines cross
@@ -683,6 +687,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     // If both approaches fail, mark as failed
     this.failed = true
+    this.error = "All crossover strategies failed"
   }
 
   /**

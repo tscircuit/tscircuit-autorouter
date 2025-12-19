@@ -74,6 +74,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
 
     if (this.routes.length !== 2) {
       this.failed = true
+      this.error = `Expected 2 routes, but got ${this.routes.length}`
       return
     }
 
@@ -89,6 +90,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       (!routeAHasTransition && !routeBHasTransition)
     ) {
       this.failed = true
+      this.error = "Exactly one route must have a layer transition"
       return
     }
   }
@@ -401,6 +403,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
 
     // If approach fails, mark as failed
     this.failed = true
+    this.error = "Failed to find a valid via position and route path"
   }
 
   /**
