@@ -511,6 +511,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
+    const offboardCapacityViz = this.offboardCapacityNodeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
     const initialPathingViz = this.initialPathingSolver?.visualize()
     const offboardFragmentViz = this.offboardPathFragmentSolver?.visualize()
