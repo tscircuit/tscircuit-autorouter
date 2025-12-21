@@ -18,6 +18,7 @@ import {
   cloneAndShuffleArray,
   seededRandom,
 } from "lib/utils/cloneAndShuffleArray"
+import { computeSectionScore } from "../MultiSectionPortPointOptimizer"
 
 export interface PortPointPathingHyperParameters {
   SHUFFLE_SEED?: number
@@ -308,6 +309,11 @@ export class PortPointPathingSolver extends BaseSolver {
     const baseCost = this.pfToFailureCost(pfBefore)
     this.baseNodeCostCache.set(nodeId, baseCost)
     return baseCost
+  }
+
+  computeBoardScore(): number {
+    const allNodesWithPortPoints = this.getNodesWithPortPoints()
+    return computeSectionScore(allNodesWithPortPoints, this.capacityMeshNodeMap)
   }
 
   /**
