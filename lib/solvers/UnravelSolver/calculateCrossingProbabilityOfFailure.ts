@@ -9,6 +9,17 @@ export const calculateNodeProbabilityOfFailure = (
 ): number => {
   if (node?._containsTarget) return 0
 
+  const numLayers = node.availableZ?.length ?? 2
+
+  if (
+    numLayers === 1 &&
+    (numSameLayerCrossings > 0 ||
+      numEntryExitLayerChanges > 0 ||
+      numTransitionCrossings > 0)
+  ) {
+    return 1
+  }
+
   // Number of traces through the node
   const totalCapacity = getTunedTotalCapacity1(node)
 

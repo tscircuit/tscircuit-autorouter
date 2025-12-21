@@ -165,125 +165,130 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     definePipelineStep(
       "offboardPathFragmentSolver",
       PortPointOffboardPathFragmentSolver,
-      (cms) => [{}],
+      (cms) => [
+        {
+          srj: cms.srjWithPointPairs!,
+          colorMap: cms.colorMap,
+        },
+      ],
     ),
-    // definePipelineStep(
-    //   "portPointPathingSolver",
-    //   PortPointPathingSolver,
-    //   (cms) => {
-    //     // Convert capacity nodes and segment points to InputNodeWithPortPoints
-    //     const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
-    //       (node) => ({
-    //         capacityMeshNodeId: node.capacityMeshNodeId,
-    //         center: node.center,
-    //         width: node.width,
-    //         height: node.height,
-    //         portPoints: [] as InputPortPoint[],
-    //         availableZ: node.availableZ,
-    //         _containsTarget: node._containsTarget,
-    //         _containsObstacle: node._containsObstacle,
-    //       }),
-    //     )
+    definePipelineStep(
+      "portPointPathingSolver",
+      PortPointPathingSolver,
+      (cms) => {
+        // Convert capacity nodes and segment points to InputNodeWithPortPoints
+        const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
+          (node) => ({
+            capacityMeshNodeId: node.capacityMeshNodeId,
+            center: node.center,
+            width: node.width,
+            height: node.height,
+            portPoints: [] as InputPortPoint[],
+            availableZ: node.availableZ,
+            _containsTarget: node._containsTarget,
+            _containsObstacle: node._containsObstacle,
+          }),
+        )
 
-    //     // Build a map for quick lookup
-    //     const nodeMap = new Map(
-    //       inputNodes.map((n) => [n.capacityMeshNodeId, n]),
-    //     )
+        // Build a map for quick lookup
+        const nodeMap = new Map(
+          inputNodes.map((n) => [n.capacityMeshNodeId, n]),
+        )
 
-    //     // Add port points from the available segment point solver
-    //     const segmentPointSolver = cms.availableSegmentPointSolver!
-    //     for (const segment of segmentPointSolver.sharedEdgeSegments) {
-    //       for (const segmentPortPoint of segment.portPoints) {
-    //         const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
-    //         const inputPortPoint: InputPortPoint = {
-    //           portPointId: segmentPortPoint.segmentPortPointId,
-    //           x: segmentPortPoint.x,
-    //           y: segmentPortPoint.y,
-    //           z: segmentPortPoint.availableZ[0] ?? 0,
-    //           connectionNodeIds: [nodeId1, nodeId2],
-    //           distToCentermostPortOnZ: segmentPortPoint.distToCentermostPortOnZ,
-    //         }
+        // Add port points from the available segment point solver
+        const segmentPointSolver = cms.availableSegmentPointSolver!
+        for (const segment of segmentPointSolver.sharedEdgeSegments) {
+          for (const segmentPortPoint of segment.portPoints) {
+            const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
+            const inputPortPoint: InputPortPoint = {
+              portPointId: segmentPortPoint.segmentPortPointId,
+              x: segmentPortPoint.x,
+              y: segmentPortPoint.y,
+              z: segmentPortPoint.availableZ[0] ?? 0,
+              connectionNodeIds: [nodeId1, nodeId2],
+              distToCentermostPortOnZ: segmentPortPoint.distToCentermostPortOnZ,
+            }
 
-    //         // Add to first node
-    //         const node1 = nodeMap.get(nodeId1)
-    //         if (node1) {
-    //           node1.portPoints.push(inputPortPoint)
-    //         }
-    //         // Note: Don't add to second node - the solver will handle the shared edge
-    //       }
-    //     }
+            // Add to first node
+            const node1 = nodeMap.get(nodeId1)
+            if (node1) {
+              node1.portPoints.push(inputPortPoint)
+            }
+            // Note: Don't add to second node - the solver will handle the shared edge
+          }
+        }
 
-    //     return [
-    //       {
-    //         simpleRouteJson: cms.srjWithPointPairs!,
-    //         inputNodes,
-    //         capacityMeshNodes: cms.capacityNodes!,
-    //         colorMap: cms.colorMap,
-    //       },
-    //     ]
-    //   },
-    // ),
-    // definePipelineStep(
-    //   "multiSectionPortPointOptimizer",
-    //   MultiSectionPortPointOptimizer,
-    //   (cms) => {
-    //     const portPointSolver = cms.portPointPathingSolver!
-    //     return [
-    //       {
-    //         simpleRouteJson: cms.srjWithPointPairs!,
-    //         inputNodes: portPointSolver.inputNodes,
-    //         capacityMeshNodes: cms.capacityNodes!,
-    //         capacityMeshEdges: cms.capacityEdges!,
-    //         colorMap: cms.colorMap,
-    //         initialConnectionResults: portPointSolver.connectionsWithResults,
-    //         initialAssignedPortPoints: portPointSolver.assignedPortPoints,
-    //         initialNodeAssignedPortPoints:
-    //           portPointSolver.nodeAssignedPortPoints,
-    //       },
-    //     ]
-    //   },
-    // ),
-    // definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
-    //   {
-    //     nodePortPoints:
-    //       cms.portPointPathingSolver?.getNodesWithPortPoints() ??
-    //       cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
-    //       [],
-    //     colorMap: cms.colorMap,
-    //     connMap: cms.connMap,
-    //     viaDiameter: cms.viaDiameter,
-    //     traceWidth: cms.minTraceWidth,
-    //   },
-    // ]),
-    // definePipelineStep(
-    //   "highDensityStitchSolver",
-    //   MultipleHighDensityRouteStitchSolver,
-    //   (cms) => [
-    //     {
-    //       connections: cms.srjWithPointPairs!.connections,
-    //       hdRoutes: cms.highDensityRouteSolver!.routes,
-    //       colorMap: cms.colorMap,
-    //       layerCount: cms.srj.layerCount,
-    //       defaultViaDiameter: cms.viaDiameter,
-    //     },
-    //   ],
-    // ),
-    // definePipelineStep(
-    //   "traceSimplificationSolver",
-    //   TraceSimplificationSolver,
-    //   (cms) => [
-    //     {
-    //       hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
-    //       obstacles: cms.srj.obstacles,
-    //       connMap: cms.connMap,
-    //       colorMap: cms.colorMap,
-    //       outline: cms.srj.outline,
-    //       defaultViaDiameter: cms.viaDiameter,
-    //       layerCount: cms.srj.layerCount,
-    //       iterations: 2,
-    //     },
-    //   ],
-    // ),
+        return [
+          {
+            simpleRouteJson: cms.srjWithPointPairs!,
+            inputNodes,
+            capacityMeshNodes: cms.capacityNodes!,
+            colorMap: cms.colorMap,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "multiSectionPortPointOptimizer",
+      MultiSectionPortPointOptimizer,
+      (cms) => {
+        const portPointSolver = cms.portPointPathingSolver!
+        return [
+          {
+            simpleRouteJson: cms.srjWithPointPairs!,
+            inputNodes: portPointSolver.inputNodes,
+            capacityMeshNodes: cms.capacityNodes!,
+            capacityMeshEdges: cms.capacityEdges!,
+            colorMap: cms.colorMap,
+            initialConnectionResults: portPointSolver.connectionsWithResults,
+            initialAssignedPortPoints: portPointSolver.assignedPortPoints,
+            initialNodeAssignedPortPoints:
+              portPointSolver.nodeAssignedPortPoints,
+          },
+        ]
+      },
+    ),
+    definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
+      {
+        nodePortPoints:
+          cms.portPointPathingSolver?.getNodesWithPortPoints() ??
+          cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
+          [],
+        colorMap: cms.colorMap,
+        connMap: cms.connMap,
+        viaDiameter: cms.viaDiameter,
+        traceWidth: cms.minTraceWidth,
+      },
+    ]),
+    definePipelineStep(
+      "highDensityStitchSolver",
+      MultipleHighDensityRouteStitchSolver,
+      (cms) => [
+        {
+          connections: cms.srjWithPointPairs!.connections,
+          hdRoutes: cms.highDensityRouteSolver!.routes,
+          colorMap: cms.colorMap,
+          layerCount: cms.srj.layerCount,
+          defaultViaDiameter: cms.viaDiameter,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "traceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          defaultViaDiameter: cms.viaDiameter,
+          layerCount: cms.srj.layerCount,
+          iterations: 2,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -379,6 +384,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     const deadEndViz = this.deadEndSolver?.visualize()
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
+    const offboardPathFragmentViz = this.offboardPathFragmentSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
@@ -461,6 +467,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       edgeViz,
       deadEndViz,
       availableSegmentPointViz,
+      offboardPathFragmentViz,
       portPointPathingViz,
       multiSectionOptViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
