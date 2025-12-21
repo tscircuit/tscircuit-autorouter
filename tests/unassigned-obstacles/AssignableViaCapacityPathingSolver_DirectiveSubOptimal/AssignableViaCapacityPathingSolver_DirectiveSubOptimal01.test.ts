@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "../../../lib/autorouter-pipelines/AssignableAutoroutingPipeline/AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "../../../lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 // @ts-ignore
 import constructorInput from "../../../examples/unassigned-obstacles/AssignableViaCapacityPathingSolver_DirectiveSubOptimal/AssignableViaCapacityPathingSolver_DirectiveSubOptimal01.json"
 

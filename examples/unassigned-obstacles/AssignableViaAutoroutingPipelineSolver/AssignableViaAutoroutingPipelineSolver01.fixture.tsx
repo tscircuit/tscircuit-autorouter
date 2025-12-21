@@ -1,5 +1,5 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
-import { AssignableViaAutoroutingPipelineSolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline/AssignableAutoroutingPipelineSolver"
+import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
 
 export const simpleRouteJson = {
   layerCount: 2,
@@ -49,7 +49,7 @@ export const simpleRouteJson = {
 export default () => (
   <AutoroutingPipelineDebugger
     createSolver={(srj, opts) =>
-      new AssignableViaAutoroutingPipelineSolver(srj, opts)
+      new AssignableAutoroutingPipeline1Solver(srj, opts)
     }
     srj={simpleRouteJson as any}
   />

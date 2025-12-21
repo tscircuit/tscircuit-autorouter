@@ -1,5 +1,5 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
-import { AssignableViaAutoroutingPipelineSolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline/AssignableAutoroutingPipelineSolver"
+import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
 
 import simpleRouteJson from "../LoopedReassignmentZeroViaSolver/LoopedReassignmentZeroViaSolver02.json"
 import { SimpleRouteJson } from "lib/types"
@@ -18,7 +18,7 @@ function makeViasAssignable(srj: SimpleRouteJson) {
 export default () => (
   <AutoroutingPipelineDebugger
     createSolver={(srj, opts) =>
-      new AssignableViaAutoroutingPipelineSolver(srj, opts)
+      new AssignableAutoroutingPipeline1Solver(srj, opts)
     }
     srj={makeViasAssignable(simpleRouteJson as SimpleRouteJson)}
   />

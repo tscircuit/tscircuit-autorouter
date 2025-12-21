@@ -53,9 +53,9 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
   getConstructorParams: (
-    instance: AssignableViaAutoroutingPipelineSolver,
+    instance: AssignableAutoroutingPipeline1Solver,
   ) => ConstructorParameters<T>
-  onSolved?: (instance: AssignableViaAutoroutingPipelineSolver) => void
+  onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void
 }
 
 function definePipelineStep<
@@ -64,11 +64,11 @@ function definePipelineStep<
   ) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
-  solverName: keyof AssignableViaAutoroutingPipelineSolver,
+  solverName: keyof AssignableAutoroutingPipeline1Solver,
   solverClass: T,
-  getConstructorParams: (instance: AssignableViaAutoroutingPipelineSolver) => P,
+  getConstructorParams: (instance: AssignableAutoroutingPipeline1Solver) => P,
   opts: {
-    onSolved?: (instance: AssignableViaAutoroutingPipelineSolver) => void
+    onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void
   } = {},
 ): PipelineStep<T> {
   return {
@@ -79,7 +79,7 @@ function definePipelineStep<
   }
 }
 
-export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
+export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger

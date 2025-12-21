@@ -33,7 +33,7 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline2 Port Point Pathing (Default)",
   },
   {
-    id: "AssignableViaAutoroutingPipelineSolver",
+    id: "AssignableAutoroutingPipeline1Solver",
     label: "Assignable Pipeline",
   },
 ] as const

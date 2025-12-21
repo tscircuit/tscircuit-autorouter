@@ -1,4 +1,4 @@
-import { AssignableViaAutoroutingPipelineSolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline/AssignableAutoroutingPipelineSolver"
+import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import type { SimpleRouteJson } from "lib/types"
 
@@ -64,7 +64,7 @@ export default () => (
   <AutoroutingPipelineDebugger
     srj={simpleRouteJson}
     createSolver={(srj, opts) =>
-      new AssignableViaAutoroutingPipelineSolver(srj, opts)
+      new AssignableAutoroutingPipeline1Solver(srj, opts)
     }
   />
 )

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { HyperAssignableViaCapacityPathingSolver } from "../../../lib/autorouter-pipelines/AssignableAutoroutingPipeline/HyperAssignableViaCapacityPathingSolver"
+import { HyperAssignableViaCapacityPathingSolver } from "../../../lib/autorouter-pipelines/AssignableAutoroutingPipeline1/HyperAssignableViaCapacityPathingSolver"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import "../../../tests/fixtures/svg-matcher"
 // @ts-ignore
