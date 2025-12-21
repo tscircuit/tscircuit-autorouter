@@ -958,6 +958,8 @@ export class PortPointPathingSolver extends BaseSolver {
       this.clearCostCaches()
 
       this.currentConnectionIndex++
+      this.progress =
+        this.currentConnectionIndex / this.connectionsWithResults.length
       this.candidates = null
       this.visitedPortPoints = null
       this.currentPathIterations = 0
