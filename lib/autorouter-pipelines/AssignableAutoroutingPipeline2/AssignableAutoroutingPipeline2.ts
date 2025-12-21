@@ -41,6 +41,7 @@ import {
 } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFragmentSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -89,6 +90,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   highDensityRouteSolver?: HighDensitySolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
+  offboardPathFragmentSolver?: PortPointOffboardPathFragmentSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
@@ -159,6 +161,11 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           colorMap: cms.colorMap,
         },
       ],
+    ),
+    definePipelineStep(
+      "offboardPathFragmentSolver",
+      PortPointOffboardPathFragmentSolver,
+      (cms) => [{}],
     ),
     // definePipelineStep(
     //   "portPointPathingSolver",

@@ -1510,7 +1510,7 @@
         "connectedTo": []
       }
     ],
-    "layerCount": 2,
+    "layerCount": 1,
     "connections": [
       {
         "name": "source_trace_4",
