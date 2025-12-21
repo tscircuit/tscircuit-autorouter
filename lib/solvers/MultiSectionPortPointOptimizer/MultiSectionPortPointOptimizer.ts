@@ -67,8 +67,9 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
   //   CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
   // },
   {
-    SHUFFLE_SEED: 3,
-    EXPANSION_DEGREES: 8,
+    EXPANSION_DEGREES: 4,
+    MEMORY_PF_FACTOR: 50,
+    NODE_PF_FACTOR: 10,
     CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
   },
 ]
@@ -128,13 +129,13 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   sectionAttempts: number = 0
 
   /** Maximum number of attempts per node */
-  MAX_ATTEMPTS_PER_NODE = 25
+  MAX_ATTEMPTS_PER_NODE = 50
 
   /** Maximum total number of section optimization attempts */
   MAX_SECTION_ATTEMPTS = 500
 
   /** Acceptable probability of failure threshold */
-  ACCEPTABLE_PF = 0.1
+  ACCEPTABLE_PF = 0.05
 
   constructor(params: MultiSectionPortPointOptimizerParams) {
     super()
@@ -743,6 +744,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           // Record the board score after this attempt
           ;(this.stats.sectionScores as Record<string, number>)[attemptKey] =
             newBoardScore
+          console.log(newBoardScore.toFixed(2))
 
           // Only count as successful if the BOARD score actually improved (higher is better)
           if (newBoardScore > previousBoardScore) {

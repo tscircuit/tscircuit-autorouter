@@ -30,7 +30,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     super()
     this.params = params
     this.MAX_ITERATIONS = 100e6
-    this.GREEDY_MULTIPLIER = 1
+    this.GREEDY_MULTIPLIER = 1.2
     // Run each solver for enough steps to get meaningful score differentiation
     // This allows early scores to diverge before switching, enabling better decisions
     this.MIN_SUBSTEPS = 50
