@@ -165,9 +165,6 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.NODE_PF_MAX_PENALTY ?? 10_000
   }
 
-  /** Cost penalty for changing layers (used in heuristic) */
-  Z_DIST_COST = 0
-
   /** Penalty factor for port points that are far from the center of the segment */
   get CENTER_OFFSET_DIST_PENALTY_FACTOR() {
     return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
@@ -499,11 +496,6 @@ export class PortPointPathingSolver extends BaseSolver {
     const leavingNodeId = prevCandidate.currentNodeId
     const prevPoint = prevCandidate.point
 
-    const distanceCost = distance(prevPoint, {
-      x: exitPortPoint.x,
-      y: exitPortPoint.y,
-    })
-
     const entry: PortPoint = {
       x: prevPoint.x,
       y: prevPoint.y,
@@ -526,27 +518,7 @@ export class PortPointPathingSolver extends BaseSolver {
       exit,
     )
 
-    const reusePenalty = this.getPortPointReusePenalty(
-      exitPortPoint.portPointId,
-      rootConnectionName,
-    )
-
-    const distToCentermostPortWithFocusShift =
-      exitPortPoint.distToCentermostPortOnZ - this.CENTER_OFFSET_FOCUS_SHIFT
-    const centerOffsetPenalty =
-      distToCentermostPortWithFocusShift ** 2 *
-      this.CENTER_OFFSET_DIST_PENALTY_FACTOR
-
-    // NOTE: random is intentionally NOT included in g so g remains an "exact path cost".
-    // It will be used as a tie-breaker in f.
-    return (
-      prevCandidate.g +
-      this.BASE_CANDIDATE_COST +
-      distanceCost +
-      nodeDeltaCost +
-      reusePenalty +
-      centerOffsetPenalty
-    )
+    return prevCandidate.g + nodeDeltaCost
   }
 
   /**
@@ -560,7 +532,6 @@ export class PortPointPathingSolver extends BaseSolver {
     rootConnectionName?: string,
   ): number {
     const endNodeId = candidateAtEndNode.currentNodeId
-    const distanceCost = distance(candidateAtEndNode.point, endPoint)
 
     const entry: PortPoint = {
       x: candidateAtEndNode.point.x,
@@ -583,12 +554,7 @@ export class PortPointPathingSolver extends BaseSolver {
       exit,
     )
 
-    return (
-      candidateAtEndNode.g +
-      this.BASE_CANDIDATE_COST +
-      distanceCost +
-      nodeDeltaCost
-    )
+    return candidateAtEndNode.g + nodeDeltaCost
   }
 
   /**
@@ -623,10 +589,7 @@ export class PortPointPathingSolver extends BaseSolver {
     // Estimate the remaining "step costs"
     const estStepCost = estHops * this.BASE_CANDIDATE_COST
 
-    const needsLayerChange = !endNode.availableZ.includes(currentZ)
-    const zChangeCost = needsLayerChange ? this.Z_DIST_COST : 0
-
-    return distanceToGoal + estStepCost + memRiskCost + zChangeCost
+    return distanceToGoal + estStepCost + memRiskCost
   }
 
   getAvailableExitPortPoints(nodeId: CapacityMeshNodeId) {
