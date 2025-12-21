@@ -224,6 +224,10 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
+            hyperParameters: {
+              NODE_PF_FACTOR: 0.001,
+              NODE_PF_MAX_PENALTY: 15,
+            },
           },
         ]
       },

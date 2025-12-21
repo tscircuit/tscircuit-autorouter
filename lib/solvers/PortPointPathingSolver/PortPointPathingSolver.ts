@@ -26,6 +26,7 @@ export interface PortPointPathingHyperParameters {
   GREEDY_MULTIPLIER?: number
   NODE_PF_FACTOR?: number
   RANDOM_COST_MAGNITUDE?: number
+  NODE_PF_MAX_PENALTY?: number
 
   MEMORY_PF_FACTOR?: number
   BASE_CANDIDATE_COST?: number
@@ -158,6 +159,10 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Cost of adding a candidate to the path */
   get BASE_CANDIDATE_COST() {
     return this.hyperParameters.BASE_CANDIDATE_COST ?? 0
+  }
+
+  get NODE_PF_MAX_PENALTY() {
+    return this.hyperParameters.NODE_PF_MAX_PENALTY ?? 10_000
   }
 
   /** Cost penalty for changing layers (used in heuristic) */
