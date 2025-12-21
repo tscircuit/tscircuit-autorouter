@@ -431,7 +431,15 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             : o.layers?.includes("bottom")
               ? "rgba(0,0,255,0.25)"
               : "rgba(255,0,0,0.25)",
-          label: o.layers?.join(", "),
+          label: [
+            "obstacle",
+            o.offBoardConnectsTo
+              ? `offboardConnections: ${o.offBoardConnectsTo?.join(", ")}`
+              : "",
+            o.layers?.join(", "),
+          ]
+            .filter(Boolean)
+            .join("\n"),
         })),
       ],
       lines: problemLines,
