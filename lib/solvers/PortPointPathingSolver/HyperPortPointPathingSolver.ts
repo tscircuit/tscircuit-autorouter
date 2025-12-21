@@ -31,8 +31,9 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     this.params = params
     this.MAX_ITERATIONS = 100e6
     this.GREEDY_MULTIPLIER = 1
-    // Each sub-solver runs 100 steps before we switch
-    this.MIN_SUBSTEPS = 1
+    // Run each solver for enough steps to get meaningful score differentiation
+    // This allows early scores to diverge before switching, enabling better decisions
+    this.MIN_SUBSTEPS = 50
   }
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
@@ -65,28 +66,43 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   }
 
   /**
-   * G measures how much "resource" (iterations) we've spent on this solver
+   * G measures the "cost" of this solver based on current score.
+   * We use the raw board score (more negative = worse quality = higher cost).
+   *
+   * The key insight is that early scores (at ~25% progress) are predictive
+   * of final quality. Solvers with better early scores tend to finish better.
    */
   computeG(solver: PortPointPathingSolver): number {
     const boardScore = solver.computeBoardScore()
-    return solver.iterations // + boardScore * 100
+    return -boardScore
   }
 
   /**
-   * H estimates how much work is remaining.
-   * We use the fraction of connections not yet routed.
+   * H estimates remaining "cost" based on current trajectory.
+   *
+   * Key insight from analysis: bad solvers have similar early scores but
+   * explode later (e.g., seed 760: -0.23 @ 25% → -15.05 final).
+   * Good solvers maintain low scores throughout (e.g., seed 829: -0.06 @ 25% → -2.42 final).
+   *
+   * We estimate remaining cost by extrapolating current score/connection rate.
    */
   computeH(solver: PortPointPathingSolver): number {
-    const totalConnections = solver.connectionsWithResults.length
-    if (totalConnections === 0) return 1
+    const progress = solver.progress || 0
 
-    const completedConnections = solver.currentConnectionIndex
-    const remainingConnections = totalConnections - completedConnections
-    // Assume it takes 100 iterations to route a single connection
-    return (
-      remainingConnections * 100 -
-      solver.computeBoardScore() * remainingConnections
-    )
+    // If very early, don't penalize yet - not enough signal
+    if (progress < 0.1) return 0
+
+    const boardScore = solver.computeBoardScore()
+    const remainingProgress = 1 - progress
+
+    // Estimate: if we're at X% progress with score Y, we might end up at Y / progress
+    // This extrapolates current score rate to final score
+    // A solver with score -0.5 at 50% might end at -1.0
+    // A solver with score -2.0 at 50% might end at -4.0
+    const scorePerProgress = boardScore / progress
+    const estimatedRemainingCost = -scorePerProgress * remainingProgress
+
+    return estimatedRemainingCost
   }
 
   /**
