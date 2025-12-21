@@ -34,7 +34,11 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AssignableAutoroutingPipeline1Solver",
-    label: "Assignable Pipeline",
+    label: "Assignable Pipeline 1",
+  },
+  {
+    id: "AssignableAutoroutingPipeline2",
+    label: "Assignable Pipeline 2",
   },
 ] as const
 

@@ -31,10 +31,12 @@ import {
   PIPELINE_OPTIONS,
   type PipelineId,
 } from "./AutoroutingPipelineMenuBar"
+import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
   AssignableAutoroutingPipeline1Solver,
+  AssignableAutoroutingPipeline2,
   AutoroutingPipeline1_OriginalUnravel,
 } as const
 
