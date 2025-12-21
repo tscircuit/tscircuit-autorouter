@@ -226,9 +226,7 @@ export class PortPointPathingSolver extends BaseSolver {
       capacityMeshNodes.map((n) => [n.capacityMeshNodeId, n]),
     )
     this.nodeMemoryPfMap = nodeMemoryPfMap ?? new Map()
-    this.hyperParameters = hyperParameters ?? {
-      SHUFFLE_SEED: 0,
-    }
+    this.hyperParameters = hyperParameters ?? {}
     this.nodeMap = new Map(inputNodes.map((n) => [n.capacityMeshNodeId, n]))
 
     // Compute a rough node pitch to convert distance into estimated hops for heuristic
@@ -345,10 +343,14 @@ export class PortPointPathingSolver extends BaseSolver {
     const afterCost = this.pfToFailureCost(pfAfter)
 
     // If the estimator ever yields a lower Pf after adding points, don't reward it here.
-    const delta = Math.max(0, afterCost - baseCost) * this.NODE_PF_FACTOR
+    const delta = Math.max(0, afterCost - baseCost)
 
     this.segmentDeltaCostCache.set(key, delta)
-    return delta
+    // console.log(this.iterations, { nodeId, entry, exit })
+    // if (nodeId === "cmn_8" && exit.z === 1 && this.iterations >= 26) {
+    //   debugger
+    // }
+    return delta * this.NODE_PF_FACTOR
   }
 
   getConnectionsWithNodes() {
@@ -578,18 +580,15 @@ export class PortPointPathingSolver extends BaseSolver {
     const estHops =
       this.avgNodePitch > 0 ? distanceToGoal / this.avgNodePitch : 0
 
-    const memPfHere = this.clampPf(this.nodeMemoryPfMap.get(currentNodeId) ?? 0)
-    const memPfGoal = this.clampPf(this.nodeMemoryPfMap.get(endGoalNodeId) ?? 0)
-    const avgMemPf = (memPfHere + memPfGoal) / 2
+    const memPf = this.clampPf(this.nodeMemoryPfMap.get(currentNodeId) ?? 0)
 
     // Convert memory Pf into an additive cost per hop (same log-space)
-    const memRiskPerHop = this.pfToFailureCost(avgMemPf) * this.MEMORY_PF_FACTOR
-    const memRiskCost = estHops * memRiskPerHop
+    const memRiskForHop = this.pfToFailureCost(memPf) * this.MEMORY_PF_FACTOR
 
     // Estimate the remaining "step costs"
     const estStepCost = estHops * this.BASE_CANDIDATE_COST
 
-    return distanceToGoal + estStepCost + memRiskCost
+    return distanceToGoal + estStepCost + memRiskForHop
   }
 
   getAvailableExitPortPoints(nodeId: CapacityMeshNodeId) {

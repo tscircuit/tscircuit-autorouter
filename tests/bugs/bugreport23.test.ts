@@ -17,6 +17,7 @@ test("bugreport23 - should not fail with null z property in port points", async 
   const msppo = solver.multiSectionPortPointOptimizer
   const ogViz = structuredClone(solver.portPointPathingSolver!.visualize())
   let bestScore = msppo!.computeBoardScore()
+  // Best known is -1.5, best initial has ever been with the proper shuffle seed is -2.42
   console.log(0, bestScore.toFixed(2), kluer.red(msppo?.stats.errors))
   while (solver.getCurrentPhase() !== "highDensityRouteSolver") {
     solver.step()
@@ -36,7 +37,6 @@ test("bugreport23 - should not fail with null z property in port points", async 
 
   console.log(solver.multiSectionPortPointOptimizer?.stats)
 
-  // -5.54122260713225 is best score seen so far
   expect(
     stackGraphicsVertically([
       ogViz,

@@ -219,6 +219,7 @@ export function visualizePointPathSolver(
         let xSame = 0
         let xTransition = 0
         let xLC = 0
+        let nodeDeltaCost = 0
 
         const targetNode = solver.nodeMap.get(
           candidate.prevCandidate?.currentNodeId!,
@@ -262,7 +263,30 @@ export function visualizePointPathSolver(
             )
             costPf = pf ** 2 * solver.NODE_PF_FACTOR
           }
+
+          // Compute nodeDeltaCost (the g increment from prev to current)
+          nodeDeltaCost =
+            candidate.prevCandidate.g > 0
+              ? candidate.g - candidate.prevCandidate.g
+              : candidate.g
         }
+
+        // Compute heuristic components
+        const [_startNodeId, endNodeId] = currentConnection.nodeIds
+        const endNode = solver.nodeMap.get(endNodeId)
+        const distanceToGoal = endNode
+          ? Math.sqrt(
+              (head.x - endNode.center.x) ** 2 +
+                (head.y - endNode.center.y) ** 2,
+            )
+          : 0
+        const estHops =
+          solver.avgNodePitch > 0 ? distanceToGoal / solver.avgNodePitch : 0
+        const estStepCost = estHops * solver.BASE_CANDIDATE_COST
+
+        const memPfHere =
+          solver.nodeMemoryPfMap.get(candidate.currentNodeId) ?? 0
+        const memRiskCost = -Math.log(1 - memPfHere) * solver.MEMORY_PF_FACTOR
 
         graphics.circles!.push({
           center: head,
@@ -271,8 +295,12 @@ export function visualizePointPathSolver(
           layer: `z${candidate.z}`,
           label: [
             `f: ${candidate.f.toFixed(2)}`,
-            `g: ${candidate.g.toFixed(2)}`,
+            `g: ${candidate.g.toFixed(2)} (nodeDelta: ${nodeDeltaCost.toFixed(2)})`,
             `h: ${candidate.h.toFixed(2)}`,
+            `  dist: ${distanceToGoal.toFixed(2)}`,
+            `  estHops: ${estHops.toFixed(1)}`,
+            `  estStepCost: ${estStepCost.toFixed(2)}`,
+            `  memRiskCost: ${memRiskCost.toFixed(2)}`,
             `z: ${candidate.z}`,
             `node: ${candidate.currentNodeId}`,
             `Cost(Pf): ${costPf.toFixed(3)}`,
