@@ -231,7 +231,9 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             numShuffleSeeds: 200,
             hyperParameters: {
               // 1 = 60% maximum pf (see computeSectionScore)
-              NODE_PF_MAX_PENALTY: 1,
+              // 5 = 99.3% maximum pf
+              // 10 = 99.995% maximum pf (1 - e**(-10))
+              NODE_PF_MAX_PENALTY: 100,
             },
           } as HyperPortPointPathingSolverParams,
         ]
