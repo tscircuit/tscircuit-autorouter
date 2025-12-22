@@ -381,10 +381,6 @@ export class PortPointPathingSolver extends BaseSolver {
     if (pfAfter >= this.NODE_MAX_PF) return this.NODE_PF_MAX_PENALTY
 
     this.segmentDeltaCostCache.set(key, delta)
-    // console.log(this.iterations, { nodeId, entry, exit })
-    // if (nodeId === "cmn_8" && exit.z === 1 && this.iterations >= 26) {
-    //   debugger
-    // }
     return delta * this.NODE_PF_FACTOR
   }
 

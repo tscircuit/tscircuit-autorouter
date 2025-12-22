@@ -54,7 +54,11 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
 })[] = [
   {
     SHUFFLE_SEED: 100,
-    EXPANSION_DEGREES: 3,
+    MEMORY_PF_FACTOR: 10,
+    EXPANSION_DEGREES: 5,
+    FORCE_CENTER_FIRST: true,
+    CENTER_OFFSET_DIST_PENALTY_FACTOR: 10,
+    MAX_ITERATIONS_PER_PATH: 1000,
     RANDOM_WALK_DISTANCE: 10,
   },
 ]
@@ -122,10 +126,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   sectionAttempts: number = 0
 
   /** Maximum number of attempts per node */
-  MAX_ATTEMPTS_PER_NODE = 10
+  MAX_ATTEMPTS_PER_NODE = 1000
 
   /** Maximum total number of section optimization attempts */
-  MAX_SECTION_ATTEMPTS = 100
+  MAX_SECTION_ATTEMPTS = 1000
 
   /** Acceptable probability of failure threshold */
   ACCEPTABLE_PF = 0.05
@@ -481,13 +485,13 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     const sectionSrj = this.createSectionSimpleRouteJson(section)
     const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(section)
 
-    return new HyperPortPointPathingSolver({
+    return new PortPointPathingSolver({
       simpleRouteJson: sectionSrj,
       inputNodes: preparedInputNodes,
       capacityMeshNodes: section.capacityMeshNodes,
       colorMap: this.colorMap,
       nodeMemoryPfMap: this.nodePfMap,
-      numShuffleSeeds: 10,
+      // numShuffleSeeds: 10,
       hyperParameters: this.getHyperParametersForScheduleIndex(
         this.currentScheduleIndex,
         this.sectionAttempts,
