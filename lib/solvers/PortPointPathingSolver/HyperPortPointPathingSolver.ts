@@ -1,6 +1,7 @@
 import type { GraphicsObject } from "graphics-debug"
 import {
   HyperParameterSupervisorSolver,
+  SupervisedSolver,
   type HyperParameterDef,
 } from "../HyperParameterSupervisorSolver"
 import {
@@ -37,7 +38,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   }
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
-    const numSeeds = this.params.numShuffleSeeds ?? 900
+    const numSeeds = this.params.numShuffleSeeds ?? 50
     const shuffleSeeds = Array.from({ length: numSeeds }, (_, i) => ({
       SHUFFLE_SEED: i,
     }))
@@ -202,6 +203,12 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
       return best.solver.computeBoardScore()
     }
     return 0
+  }
+
+  onSolve(solver: SupervisedSolver<PortPointPathingSolver>) {
+    this.stats = {
+      ...solver.solver.stats,
+    }
   }
 
   visualize(): GraphicsObject {

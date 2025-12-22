@@ -46,33 +46,18 @@ export interface MultiSectionPortPointOptimizerParams {
   initialNodeAssignedPortPoints: Map<CapacityMeshNodeId, PortPoint[]>
 }
 
+// Generate optimization schedule with multiple shuffle seeds per expansion degree
 const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
   EXPANSION_DEGREES: number
-})[] = [
-  // {
-  //   SHUFFLE_SEED: 1,
-  //   EXPANSION_DEGREES: 3,
-  //   CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-  //   // CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-  //   // EXPANSION_DEGREES: 5,
-  //   // MEMORY_PF_FACTOR: 1,
-  //   // NODE_PF_FACTOR: 0.01,
-  //   // GREEDY_MULTIPLIER: 5,
-  //   // MAX_ITERATIONS_PER_PATH: 1000,
-  //   // GREEDY_MULTIPLIER: 10,
-  // },
-  // {
-  //   SHUFFLE_SEED: 2,
-  //   EXPANSION_DEGREES: 4,
-  //   CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-  // },
-  {
-    EXPANSION_DEGREES: 4,
-    MEMORY_PF_FACTOR: 50,
-    NODE_PF_FACTOR: 10,
+})[] = []
+
+for (let seed = 0; seed < 30; seed++) {
+  OPTIMIZATION_SCHEDULE.push({
+    SHUFFLE_SEED: seed * 100,
+    EXPANSION_DEGREES: 5,
     CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-  },
-]
+  })
+}
 
 /**
  * MultiSectionPortPointOptimizer runs local optimization on sections of the
@@ -129,10 +114,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   sectionAttempts: number = 0
 
   /** Maximum number of attempts per node */
-  MAX_ATTEMPTS_PER_NODE = 50
+  MAX_ATTEMPTS_PER_NODE = 10
 
   /** Maximum total number of section optimization attempts */
-  MAX_SECTION_ATTEMPTS = 500
+  MAX_SECTION_ATTEMPTS = 100
 
   /** Acceptable probability of failure threshold */
   ACCEPTABLE_PF = 0.05
@@ -467,15 +452,16 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     })
   }
 
-  getHyperParametersForAttempt(
-    attempt: number,
+  getHyperParametersForScheduleIndex(
+    scheduleIndex: number,
+    sectionAttempt: number,
   ): PortPointPathingHyperParameters {
+    const scheduleParams = OPTIMIZATION_SCHEDULE[scheduleIndex]
     return {
-      ...OPTIMIZATION_SCHEDULE[attempt % OPTIMIZATION_SCHEDULE.length],
-      SHUFFLE_SEED:
-        (OPTIMIZATION_SCHEDULE[attempt % OPTIMIZATION_SCHEDULE.length]
-          .SHUFFLE_SEED ?? 0) +
-        attempt * 1700,
+      ...scheduleParams,
+      // Use the schedule's seed plus an offset based on section attempt
+      // This ensures different sections try different variations
+      SHUFFLE_SEED: (scheduleParams.SHUFFLE_SEED ?? 0) + sectionAttempt * 17,
     }
   }
 
@@ -688,7 +674,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
               capacityMeshNodes: this.currentSection.capacityMeshNodes,
               colorMap: this.colorMap,
               nodeMemoryPfMap: this.nodePfMap,
-              hyperParameters: this.getHyperParametersForAttempt(
+              hyperParameters: this.getHyperParametersForScheduleIndex(
+                this.currentScheduleIndex,
                 this.sectionAttempts,
               ),
             })
@@ -704,8 +691,53 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         }
 
         // Sub-solver succeeded - compute new section score (for quick comparison)
-        const newNodesWithPortPoints =
-          this.activeSubSolver.getNodesWithPortPoints()
+        // Map __cut__ port points back to original connection names to make comparison fair
+        // with "before" score. The __cut__ prefix format is: __cut__<originalName>__<startIndex>
+        const newNodesWithPortPoints = this.activeSubSolver
+          .getNodesWithPortPoints()
+          .map((node) => ({
+            ...node,
+            portPoints: node.portPoints.map((pp) => {
+              if (pp.connectionName.startsWith("__cut__")) {
+                // Extract original connection name from __cut__<name>__<index>
+                const withoutPrefix = pp.connectionName.slice("__cut__".length)
+                const lastUnderscoreIdx = withoutPrefix.lastIndexOf("__")
+                const originalName =
+                  lastUnderscoreIdx >= 0
+                    ? withoutPrefix.slice(0, lastUnderscoreIdx)
+                    : withoutPrefix
+                return { ...pp, connectionName: originalName }
+              }
+              return pp
+            }),
+          }))
+
+        // Get connection names that were re-routed by the sub-solver
+        const reroutedConnNames = new Set<string>()
+        for (const node of newNodesWithPortPoints) {
+          for (const pp of node.portPoints) {
+            reroutedConnNames.add(pp.connectionName)
+          }
+        }
+
+        // Filter "before" nodes to only include port points from re-routed connections
+        // This ensures we're comparing apples to apples
+        const beforeNodes = this.getSectionNodesWithPortPoints(
+          this.currentSection!,
+        )
+        const filteredBeforeNodes = beforeNodes
+          .map((node) => ({
+            ...node,
+            portPoints: node.portPoints.filter((pp) =>
+              reroutedConnNames.has(pp.connectionName),
+            ),
+          }))
+          .filter((node) => node.portPoints.length > 0)
+
+        const filteredBeforeScore = computeSectionScore(
+          filteredBeforeNodes,
+          this.capacityMeshNodeMap,
+        )
         const newSectionScore = computeSectionScore(
           newNodesWithPortPoints,
           this.capacityMeshNodeMap,
@@ -714,7 +746,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         const attemptKey = `attempt${this.sectionAttempts}`
 
         // Compare section scores first (higher is better)
-        if (newSectionScore > this.sectionScoreBeforeOptimization) {
+        // Use filteredBeforeScore to compare only connections that were re-routed
+        if (newSectionScore > filteredBeforeScore) {
           // Section score improved - tentatively apply and check board score
           const previousBoardScore = this.stats.currentBoardScore as number
 
@@ -744,7 +777,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           // Record the board score after this attempt
           ;(this.stats.sectionScores as Record<string, number>)[attemptKey] =
             newBoardScore
-          console.log(newBoardScore.toFixed(2))
+          console.log("newBoardScore:", newBoardScore.toFixed(2))
 
           // Only count as successful if the BOARD score actually improved (higher is better)
           if (newBoardScore > previousBoardScore) {
@@ -792,7 +825,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
               capacityMeshNodes: this.currentSection.capacityMeshNodes,
               colorMap: this.colorMap,
               nodeMemoryPfMap: this.nodePfMap,
-              hyperParameters: this.getHyperParametersForAttempt(
+              hyperParameters: this.getHyperParametersForScheduleIndex(
+                this.currentScheduleIndex,
                 this.sectionAttempts,
               ),
             })
@@ -876,7 +910,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       capacityMeshNodes: this.currentSection.capacityMeshNodes,
       colorMap: this.colorMap,
       nodeMemoryPfMap: this.nodePfMap,
-      hyperParameters: this.getHyperParametersForAttempt(this.sectionAttempts),
+      hyperParameters: this.getHyperParametersForScheduleIndex(
+        this.currentScheduleIndex,
+        this.sectionAttempts,
+      ),
     })
   }
 

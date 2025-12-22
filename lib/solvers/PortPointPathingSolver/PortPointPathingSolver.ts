@@ -836,6 +836,9 @@ export class PortPointPathingSolver extends BaseSolver {
       this.connectionsWithResults[this.currentConnectionIndex]
     if (!nextConnection) {
       this.solved = true
+      this.stats = {
+        boardScore: this.computeBoardScore(),
+      }
       return
     }
 

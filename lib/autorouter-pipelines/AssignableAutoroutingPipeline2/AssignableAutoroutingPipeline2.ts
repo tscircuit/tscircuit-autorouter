@@ -232,26 +232,26 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep(
-      "multiSectionPortPointOptimizer",
-      MultiSectionPortPointOptimizer,
-      (cms) => {
-        const portPointSolver = cms.portPointPathingSolver!
-        return [
-          {
-            simpleRouteJson: cms.srjWithPointPairs!,
-            inputNodes: portPointSolver.inputNodes,
-            capacityMeshNodes: cms.capacityNodes!,
-            capacityMeshEdges: cms.capacityEdges!,
-            colorMap: cms.colorMap,
-            initialConnectionResults: portPointSolver.connectionsWithResults,
-            initialAssignedPortPoints: portPointSolver.assignedPortPoints,
-            initialNodeAssignedPortPoints:
-              portPointSolver.nodeAssignedPortPoints,
-          },
-        ]
-      },
-    ),
+    // definePipelineStep(
+    //   "multiSectionPortPointOptimizer",
+    //   MultiSectionPortPointOptimizer,
+    //   (cms) => {
+    //     const portPointSolver = cms.portPointPathingSolver!
+    //     return [
+    //       {
+    //         simpleRouteJson: cms.srjWithPointPairs!,
+    //         inputNodes: portPointSolver.inputNodes,
+    //         capacityMeshNodes: cms.capacityNodes!,
+    //         capacityMeshEdges: cms.capacityEdges!,
+    //         colorMap: cms.colorMap,
+    //         initialConnectionResults: portPointSolver.connectionsWithResults,
+    //         initialAssignedPortPoints: portPointSolver.assignedPortPoints,
+    //         initialNodeAssignedPortPoints:
+    //           portPointSolver.nodeAssignedPortPoints,
+    //       },
+    //     ]
+    //   },
+    // ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints:
