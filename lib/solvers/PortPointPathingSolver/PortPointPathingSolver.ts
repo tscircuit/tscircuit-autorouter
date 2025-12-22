@@ -100,6 +100,8 @@ export interface PortPointCandidate {
   distanceTraveled: number
   /** Whether this candidate has ever crossed through an off-board node */
   hasTouchedOffBoardNode?: boolean
+
+  lastMoveWasOffBoard?: boolean
 }
 
 export interface ConnectionPathResult {
@@ -1187,24 +1189,29 @@ export class PortPointPathingSolver extends BaseSolver {
       }
 
       // Get the node we'd enter via this port point
-      const targetNodeId = this.getOtherNodeId(
+      const nextNodeId = this.getOtherNodeId(
         portPoint,
         (portPoint as { throughNodeId?: CapacityMeshNodeId }).throughNodeId ??
           currentCandidate.currentNodeId,
       )
-      if (!targetNodeId) continue
+      if (!nextNodeId) continue
+
+      const throughNode =
+        "throughNodeId" in portPoint && portPoint.throughNodeId
+          ? this.nodeMap.get(portPoint.throughNodeId as string)
+          : null
 
       // Prevent node cycles (keeps delta-pf accounting correct)
-      if (this.isNodeInPathChain(currentCandidate, targetNodeId)) continue
+      if (this.isNodeInPathChain(currentCandidate, nextNodeId)) continue
 
-      const targetNode = this.nodeMap.get(targetNodeId)
-      if (!targetNode) continue
+      const nextNode = this.nodeMap.get(nextNodeId)
+      if (!nextNode) continue
 
       // Check obstacle constraints
       if (
-        targetNode._containsObstacle &&
+        nextNode._containsObstacle &&
         !this.canTravelThroughObstacle(
-          targetNode,
+          nextNode,
           connectionName,
           rootConnectionName!,
         )
@@ -1215,7 +1222,7 @@ export class PortPointPathingSolver extends BaseSolver {
       const g = this.computeG(
         currentCandidate,
         portPoint,
-        targetNodeId,
+        nextNodeId,
         connectionName,
         rootConnectionName,
       )
@@ -1227,11 +1234,11 @@ export class PortPointPathingSolver extends BaseSolver {
       // Determine if this candidate has touched an off-board node
       const hasTouchedOffBoardNode =
         currentCandidate.hasTouchedOffBoardNode ||
-        Boolean(targetNode._offBoardConnectionId)
+        Boolean(nextNode._offBoardConnectionId)
 
       const h = this.computeH(
         portPoint,
-        targetNodeId,
+        nextNodeId,
         endNodeId,
         portPoint.z,
         distanceTraveled,
@@ -1240,19 +1247,24 @@ export class PortPointPathingSolver extends BaseSolver {
 
       const f = g + h * this.GREEDY_MULTIPLIER
 
+      const lastMoveWasOffBoard =
+        Boolean(currentNode?._offBoardConnectionId) &&
+        Boolean(throughNode?._offBoardConnectionId)
+
       this.candidates.push({
         prevCandidate: currentCandidate,
         portPoint,
-        currentNodeId: targetNodeId,
+        currentNodeId: nextNodeId,
         point: { x: portPoint.x, y: portPoint.y },
         z: portPoint.z,
         f,
         g,
         h,
         distanceTraveled,
+        lastMoveWasOffBoard: lastMoveWasOffBoard,
         hasTouchedOffBoardNode:
           hasTouchedOffBoardNode ||
-          Boolean(targetNode._offBoardConnectionId) ||
+          Boolean(nextNode._offBoardConnectionId) ||
           Boolean(currentNode?._offBoardConnectionId),
       })
     }

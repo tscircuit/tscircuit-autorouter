@@ -224,13 +224,19 @@ export function visualizePointPathSolver(
       .slice(0, 30)
 
     for (const candidate of sortedCandidates) {
-      const candidatePath: Array<{ x: number; y: number; z: number }> = []
+      const candidatePath: Array<{
+        x: number
+        y: number
+        z: number
+        lastMoveWasOffBoard?: boolean
+      }> = []
       let current: PortPointCandidate | null = candidate
       while (current) {
         candidatePath.unshift({
           x: current.point.x,
           y: current.point.y,
           z: current.z,
+          lastMoveWasOffBoard: current.lastMoveWasOffBoard,
         })
         current = current.prevCandidate
       }
@@ -244,7 +250,9 @@ export function visualizePointPathSolver(
         const commonLayer = pointA.z
 
         let strokeDash: string | undefined
-        if (sameLayer) {
+        if (pointB.lastMoveWasOffBoard) {
+          strokeDash = "2 2"
+        } else if (sameLayer) {
           strokeDash = commonLayer === 0 ? undefined : "10 5"
         } else {
           strokeDash = "3 3 10"
@@ -358,6 +366,7 @@ export function visualizePointPathSolver(
             `xSame: ${xSame}, xTrans: ${xTransition}, xLC: ${xLC}`,
             `routeOffBoard=${solver.currentConnectionShouldRouteOffBoard}`,
             `offBoardTouched=${candidate.hasTouchedOffBoardNode ?? false}`,
+            `lastMoveWasOffBoard=${candidate.lastMoveWasOffBoard ?? false}`,
           ].join("\n"),
         })
       }
