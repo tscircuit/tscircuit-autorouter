@@ -205,8 +205,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           }),
         )
 
-        console.log(cms.capacityNodes)
-
         // Build a map for quick lookup
         const nodeMap = new Map(
           inputNodes.map((n) => [n.capacityMeshNodeId, n]),
