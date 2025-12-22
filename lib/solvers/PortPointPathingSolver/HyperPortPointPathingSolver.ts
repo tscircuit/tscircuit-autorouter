@@ -42,7 +42,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   getHyperParameterDefs(): Array<HyperParameterDef> {
     const numSeeds = this.params.numShuffleSeeds ?? 50
     const shuffleSeeds = Array.from({ length: numSeeds }, (_, i) => ({
-      SHUFFLE_SEED: i,
+      SHUFFLE_SEED: i + (this.params.hyperParameters?.SHUFFLE_SEED ?? 0),
     }))
 
     return [

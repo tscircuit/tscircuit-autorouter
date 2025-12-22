@@ -28,6 +28,7 @@ import type {
 } from "../../types/high-density-types"
 import { computeSectionScore, computeNodePf } from "./computeSectionScore"
 import { visualizeSection } from "./visualizeSection"
+import { HyperPortPointPathingSolver } from "../PortPointPathingSolver/HyperPortPointPathingSolver"
 
 export interface MultiSectionPortPointOptimizerParams {
   simpleRouteJson: SimpleRouteJson
@@ -49,15 +50,20 @@ export interface MultiSectionPortPointOptimizerParams {
 // Generate optimization schedule with multiple shuffle seeds per expansion degree
 const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
   EXPANSION_DEGREES: number
-})[] = []
+})[] = [
+  {
+    SHUFFLE_SEED: 100,
+    EXPANSION_DEGREES: 4,
+  },
+]
 
-for (let seed = 0; seed < 30; seed++) {
-  OPTIMIZATION_SCHEDULE.push({
-    SHUFFLE_SEED: seed * 100,
-    EXPANSION_DEGREES: 5,
-    CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-  })
-}
+// for (let seed = 0; seed < 30; seed++) {
+//   OPTIMIZATION_SCHEDULE.push({
+//     SHUFFLE_SEED: seed * 100,
+//     EXPANSION_DEGREES: 3,
+//     CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
+//   })
+// }
 
 /**
  * MultiSectionPortPointOptimizer runs local optimization on sections of the
@@ -466,6 +472,28 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   }
 
   /**
+   * Create a PortPointPathingSolver for the current section.
+   * This centralizes the solver creation logic that was previously duplicated in 3 places.
+   */
+  createSectionSolver(section: PortPointSection): PortPointPathingSolver {
+    const sectionSrj = this.createSectionSimpleRouteJson(section)
+    const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(section)
+
+    return new HyperPortPointPathingSolver({
+      simpleRouteJson: sectionSrj,
+      inputNodes: preparedInputNodes,
+      capacityMeshNodes: section.capacityMeshNodes,
+      colorMap: this.colorMap,
+      nodeMemoryPfMap: this.nodePfMap,
+      numShuffleSeeds: 10,
+      hyperParameters: this.getHyperParametersForScheduleIndex(
+        this.currentScheduleIndex,
+        this.sectionAttempts,
+      ),
+    }) as unknown as PortPointPathingSolver
+  }
+
+  /**
    * Reattach the optimized section results back to the main state.
    * Handles both fully contained connections AND cut paths.
    */
@@ -661,24 +689,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
               expansionDegrees: params.EXPANSION_DEGREES,
             })
 
-            const sectionSrj = this.createSectionSimpleRouteJson(
-              this.currentSection,
-            )
-            const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(
-              this.currentSection,
-            )
-
-            this.activeSubSolver = new PortPointPathingSolver({
-              simpleRouteJson: sectionSrj,
-              inputNodes: preparedInputNodes,
-              capacityMeshNodes: this.currentSection.capacityMeshNodes,
-              colorMap: this.colorMap,
-              nodeMemoryPfMap: this.nodePfMap,
-              hyperParameters: this.getHyperParametersForScheduleIndex(
-                this.currentScheduleIndex,
-                this.sectionAttempts,
-              ),
-            })
+            this.activeSubSolver = this.createSectionSolver(this.currentSection)
           } else {
             // All schedule params exhausted, move on
             this.stats.failedOptimizations++
@@ -812,24 +823,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
               expansionDegrees: params.EXPANSION_DEGREES,
             })
 
-            const sectionSrj = this.createSectionSimpleRouteJson(
-              this.currentSection,
-            )
-            const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(
-              this.currentSection,
-            )
-
-            this.activeSubSolver = new PortPointPathingSolver({
-              simpleRouteJson: sectionSrj,
-              inputNodes: preparedInputNodes,
-              capacityMeshNodes: this.currentSection.capacityMeshNodes,
-              colorMap: this.colorMap,
-              nodeMemoryPfMap: this.nodePfMap,
-              hyperParameters: this.getHyperParametersForScheduleIndex(
-                this.currentScheduleIndex,
-                this.sectionAttempts,
-              ),
-            })
+            this.activeSubSolver = this.createSectionSolver(this.currentSection)
           } else {
             // All schedule params exhausted without improvement
             this.stats.failedOptimizations++
@@ -888,33 +882,16 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       this.capacityMeshNodeMap,
     )
 
-    // Create SimpleRouteJson for section
+    // Check if section has connections to optimize (create temp SimpleRouteJson to check)
     const sectionSrj = this.createSectionSimpleRouteJson(this.currentSection)
-
-    // Skip if no connections to optimize
     if (sectionSrj.connections.length === 0) {
       this.currentSection = null
       this.currentSectionCenterNodeId = null
       return
     }
 
-    // Prepare input nodes for cut paths (marks cut path endpoint nodes as targets)
-    const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(
-      this.currentSection,
-    )
-
     // Create and start PortPointPathingSolver for this section
-    this.activeSubSolver = new PortPointPathingSolver({
-      simpleRouteJson: sectionSrj,
-      inputNodes: preparedInputNodes,
-      capacityMeshNodes: this.currentSection.capacityMeshNodes,
-      colorMap: this.colorMap,
-      nodeMemoryPfMap: this.nodePfMap,
-      hyperParameters: this.getHyperParametersForScheduleIndex(
-        this.currentScheduleIndex,
-        this.sectionAttempts,
-      ),
-    })
+    this.activeSubSolver = this.createSectionSolver(this.currentSection)
   }
 
   visualize(): GraphicsObject {

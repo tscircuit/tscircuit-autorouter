@@ -1069,6 +1069,9 @@ export class PortPointPathingSolver extends BaseSolver {
         this.getAvailableExitPortPointsForOffboardConnection(
           currentCandidate.currentNodeId,
         )
+      // for (const pp of availablePortPoints) {
+      //   this.visitedPortPoints?.add(pp.portPointId)
+      // }
     } else if (this.FORCE_CENTER_FIRST) {
       availablePortPoints = this.getAvailableExitPortPointsWithOmissions(
         currentCandidate.currentNodeId,
