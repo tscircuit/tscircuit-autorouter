@@ -36,6 +36,9 @@ export interface PortPointPathingHyperParameters {
   FORCE_CENTER_FIRST?: boolean
 
   RANDOM_WALK_DISTANCE?: number
+
+  FORCE_OFF_BOARD_FREQUENCY?: number
+  FORCE_OFF_BOARD_SEED?: number
 }
 
 /**
@@ -95,6 +98,8 @@ export interface PortPointCandidate {
   h: number
   /** Total distance traveled from start to this candidate */
   distanceTraveled: number
+  /** Whether this candidate has ever crossed through an off-board node */
+  hasTouchedOffBoardNode?: boolean
 }
 
 export interface ConnectionPathResult {
@@ -182,6 +187,14 @@ export class PortPointPathingSolver extends BaseSolver {
 
   get FORCE_CENTER_FIRST() {
     return this.hyperParameters.FORCE_CENTER_FIRST ?? true
+  }
+
+  get FORCE_OFF_BOARD_FREQUENCY() {
+    return this.hyperParameters.FORCE_OFF_BOARD_FREQUENCY ?? 0
+  }
+
+  get FORCE_OFF_BOARD_SEED() {
+    return this.hyperParameters.FORCE_OFF_BOARD_SEED ?? 0
   }
 
   get NODE_MAX_PF() {
