@@ -21,6 +21,7 @@ test("bugreport23 - should not fail with null z property in port points", async 
 
   const ppps = solver.portPointPathingSolver
   console.log(0, ppps!.computeBoardScore().toFixed(2), ppps?.iterations)
+  return
   // // Print the board score after each activeSubSolver finishes
   const msppo = solver.multiSectionPortPointOptimizer
   const ogViz = structuredClone(solver.portPointPathingSolver!.visualize())

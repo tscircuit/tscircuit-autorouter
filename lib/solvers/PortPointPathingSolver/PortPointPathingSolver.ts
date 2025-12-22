@@ -166,6 +166,14 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.NODE_PF_MAX_PENALTY ?? 10_000
   }
 
+  get NODE_MAX_PF() {
+    const NODE_MAX_PF = Math.min(
+      0.99999,
+      1 - Math.exp(-this.NODE_PF_MAX_PENALTY),
+    )
+    return NODE_MAX_PF
+  }
+
   /** Penalty factor for port points that are far from the center of the segment */
   get CENTER_OFFSET_DIST_PENALTY_FACTOR() {
     return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
@@ -285,6 +293,7 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Convert Pf into an additive "failure cost" */
   private pfToFailureCost(pf: number): number {
     const p = this.clampPf(pf)
+    if (p >= this.NODE_MAX_PF) return this.NODE_PF_MAX_PENALTY
     // -log(1-p) is 0 at p=0 and increases quickly as p->1
     return -Math.log(1 - p)
   }
@@ -350,6 +359,8 @@ export class PortPointPathingSolver extends BaseSolver {
 
     // If the estimator ever yields a lower Pf after adding points, don't reward it here.
     const delta = Math.max(0, afterCost - baseCost)
+
+    if (pfAfter >= this.NODE_MAX_PF) return this.NODE_PF_MAX_PENALTY
 
     this.segmentDeltaCostCache.set(key, delta)
     // console.log(this.iterations, { nodeId, entry, exit })

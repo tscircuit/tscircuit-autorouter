@@ -20,8 +20,12 @@ import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCro
 export function computeSectionScore(
   nodesWithPortPoints: NodeWithPortPoints[],
   capacityMeshNodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>,
+  opts?: {
+    NODE_MAX_PF?: number
+  },
 ): number {
   let logSuccess = 0 // log(probability all nodes succeed)
+  const NODE_MAX_PF = opts?.NODE_MAX_PF ?? 0.99999
 
   for (const nodeWithPortPoints of nodesWithPortPoints) {
     const node = capacityMeshNodeMap.get(nodeWithPortPoints.capacityMeshNodeId)
@@ -41,7 +45,7 @@ export function computeSectionScore(
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
       ),
-      0.999999,
+      NODE_MAX_PF,
     )
 
     // Add log(1 - Pf) to logSuccess

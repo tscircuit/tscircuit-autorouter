@@ -265,6 +265,9 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
+            hyperParameters: {
+              NODE_PF_MAX_PENALTY: 10,
+            },
           },
         ]
       },

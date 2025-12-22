@@ -5,6 +5,7 @@ import {
   type HyperParameterDef,
 } from "../HyperParameterSupervisorSolver"
 import {
+  PortPointPathingHyperParameters,
   PortPointPathingSolver,
   type InputNodeWithPortPoints,
 } from "./PortPointPathingSolver"
@@ -15,13 +16,14 @@ import type {
 } from "../../types"
 import type { NodeWithPortPoints } from "../../types/high-density-types"
 
-interface HyperPortPointPathingSolverParams {
+export interface HyperPortPointPathingSolverParams {
   simpleRouteJson: SimpleRouteJson
   capacityMeshNodes: CapacityMeshNode[]
   inputNodes: InputNodeWithPortPoints[]
   colorMap?: Record<string, string>
   nodeMemoryPfMap?: Map<CapacityMeshNodeId, number>
   numShuffleSeeds?: number
+  hyperParameters?: Partial<PortPointPathingHyperParameters>
 }
 
 export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<PortPointPathingSolver> {
@@ -61,6 +63,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
       colorMap: this.params.colorMap,
       nodeMemoryPfMap: this.params.nodeMemoryPfMap,
       hyperParameters: {
+        ...this.params.hyperParameters,
         SHUFFLE_SEED: hyperParameters.SHUFFLE_SEED,
       },
     })

@@ -42,6 +42,10 @@ import {
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFragmentSolver"
+import {
+  HyperPortPointPathingSolver,
+  HyperPortPointPathingSolverParams,
+} from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -174,7 +178,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      PortPointPathingSolver,
+      HyperPortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
         const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
@@ -224,11 +228,12 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
+            numShuffleSeeds: 200,
             hyperParameters: {
-              NODE_PF_FACTOR: 0.001,
-              NODE_PF_MAX_PENALTY: 15,
+              // 1 = 60% maximum pf (see computeSectionScore)
+              NODE_PF_MAX_PENALTY: 1,
             },
-          },
+          } as HyperPortPointPathingSolverParams,
         ]
       },
     ),
