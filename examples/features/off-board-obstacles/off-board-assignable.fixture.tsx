@@ -60,11 +60,4 @@ export const simpleRouteJson: SimpleRouteJson = {
   minTraceWidth: 0.2,
 }
 
-export default () => (
-  <AutoroutingPipelineDebugger
-    srj={simpleRouteJson}
-    createSolver={(srj, opts) =>
-      new AssignableAutoroutingPipeline1Solver(srj, opts)
-    }
-  />
-)
+export default () => <AutoroutingPipelineDebugger srj={simpleRouteJson} />

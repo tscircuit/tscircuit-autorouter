@@ -3,9 +3,10 @@ import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/A
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 import { simpleRouteJson } from "../../../examples/features/off-board-obstacles/off-board-assignable.fixture"
+import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 
 test("routes with assignable off-board obstacles between pads", () => {
-  const solver = new AssignableAutoroutingPipeline1Solver(
+  const solver = new AssignableAutoroutingPipeline2(
     simpleRouteJson as SimpleRouteJson,
   )
   solver.solve()
