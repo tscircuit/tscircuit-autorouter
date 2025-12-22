@@ -157,7 +157,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.relateNodesToOffBoardConnections?.newNodes!
+          cms.capacityNodes =
+            cms.relateNodesToOffBoardConnections?.getOutput().capacityNodes!
         },
       },
     ),

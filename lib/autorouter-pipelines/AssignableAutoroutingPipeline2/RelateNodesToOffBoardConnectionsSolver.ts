@@ -58,9 +58,6 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
 
     // Create a sptial hash with all capacity nodes
     this.nodeTree = new CapacityNodeTree(this.input.capacityMeshNodes)
-    console.log({
-      unprocessedObstacles: this.unprocessedObstacles,
-    })
   }
 
   _step() {
@@ -74,8 +71,6 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     const offBoardConnId = this.offBoardConnMap.getNetConnectedToId(
       obstacle.obstacleId!,
     )!
-    console.log({ offBoardConnId, obstacleId: obstacle.obstacleId })
-
     const nodesNearObstacle = this.nodeTree
       .getNodesInArea(
         obstacle.center.x,
@@ -105,6 +100,14 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
       ...existingNodesInNet,
       ...nodesToAddToNet,
     ])
+  }
+
+  getOutput() {
+    return {
+      // we're currently modifying the input capacity nodes, but in the
+      // future we should POSSIBLY avoid mutating
+      capacityNodes: this.input.capacityMeshNodes,
+    }
   }
 
   visualize() {
