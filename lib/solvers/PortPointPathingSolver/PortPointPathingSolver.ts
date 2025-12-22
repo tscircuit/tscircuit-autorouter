@@ -736,6 +736,7 @@ export class PortPointPathingSolver extends BaseSolver {
     // add the port points for the other nodes
     for (const otherNodeId of currentNode?._offBoardConnectedCapacityMeshNodeIds ??
       []) {
+      if (otherNodeId === nodeId) continue
       const otherNode = this.nodeMap.get(otherNodeId)
       if (!otherNode) continue
       const nodeAssignment = this.assignedOffBoardConnectionMap.get(
@@ -763,6 +764,7 @@ export class PortPointPathingSolver extends BaseSolver {
     node: InputNodeWithPortPoints,
     rootConnectionNameToUse: string,
   ) {
+    if (!node._offBoardConnectionId) return false
     const assignedRootConnectionName = this.assignedOffBoardConnectionMap.get(
       node._offBoardConnectionId!,
     )?.rootConnectionName
@@ -1067,7 +1069,14 @@ export class PortPointPathingSolver extends BaseSolver {
     // Expand to available port points from current node
 
     let availablePortPoints: InputPortPoint[]
-    if (this.FORCE_CENTER_FIRST) {
+    const currentNode = this.nodeMap.get(currentCandidate.currentNodeId)
+    console.log({ currentNode })
+    if (currentNode?._offBoardConnectionId) {
+      availablePortPoints =
+        this.getAvailableExitPortPointsForOffboardConnection(
+          currentCandidate.currentNodeId,
+        )
+    } else if (this.FORCE_CENTER_FIRST) {
       availablePortPoints = this.getAvailableExitPortPointsWithOmissions(
         currentCandidate.currentNodeId,
         endNodeId,
@@ -1077,13 +1086,6 @@ export class PortPointPathingSolver extends BaseSolver {
         currentCandidate.currentNodeId,
       )
     }
-
-    const availableOffboardPortPoints =
-      this.getAvailableExitPortPointsForOffboardConnection(
-        currentCandidate.currentNodeId,
-      )
-
-    availablePortPoints.push(...availableOffboardPortPoints)
 
     for (const portPoint of availablePortPoints) {
       // Don't revisit port points in this path chain
