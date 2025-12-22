@@ -222,6 +222,9 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               z: segmentPortPoint.availableZ[0] ?? 0,
               connectionNodeIds: [nodeId1, nodeId2],
               distToCentermostPortOnZ: segmentPortPoint.distToCentermostPortOnZ,
+              connectsToOffBoardNode: segment.nodeIds.some(
+                (n) => nodeMap.get(n)?._offBoardConnectionId,
+              ),
             }
 
             // Add to first node

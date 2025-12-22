@@ -51,6 +51,8 @@ export interface InputPortPoint {
   connectionNodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   /** XY distance to the centermost port on this Z level (centermost port has distance 0) */
   distToCentermostPortOnZ: number
+
+  connectsToOffBoardNode?: boolean
 }
 
 /**
@@ -615,6 +617,10 @@ export class PortPointPathingSolver extends BaseSolver {
       return 0
     }
 
+    if (point.connectsToOffBoardNode) {
+      return 0
+    }
+
     const endNode = this.nodeMap.get(endGoalNodeId)
     if (!endNode) return 0
 
@@ -812,7 +818,6 @@ export class PortPointPathingSolver extends BaseSolver {
     rootConnectionName?: string,
   ): PortPoint[] {
     const assignedPortPoints: PortPoint[] = []
-    const nodeIdsInPath = Array.from(new Set(path.map((c) => c.currentNodeId)))
 
     for (const candidate of path) {
       if (!candidate.portPoint) continue // Skip start/end target points
@@ -845,15 +850,21 @@ export class PortPointPathingSolver extends BaseSolver {
 
     // Mark all nodes that are off board connected to have all their port points
     // assigned
+    const nodeIdsInPath = Array.from(new Set(path.map((c) => c.currentNodeId)))
     for (const nodeId of nodeIdsInPath) {
       const node = this.nodeMap.get(nodeId)
       if (!node) continue
       if (!node._offBoardConnectionId) continue
-      for (const pp of node.portPoints) {
-        this.assignedPortPoints.set(pp.portPointId, {
-          connectionName,
-          rootConnectionName,
-        })
+      for (const offBoardConnectedNodeId of node?._offBoardConnectedCapacityMeshNodeIds ??
+        []) {
+        const portPoints =
+          this.nodePortPointsMap.get(offBoardConnectedNodeId) ?? []
+        for (const pp of portPoints) {
+          this.assignedPortPoints.set(pp.portPointId, {
+            connectionName,
+            rootConnectionName,
+          })
+        }
       }
     }
 
