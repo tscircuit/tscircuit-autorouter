@@ -75,8 +75,8 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
       .getNodesInArea(
         obstacle.center.x,
         obstacle.center.y,
-        obstacle.width / 2,
-        obstacle.height / 2,
+        obstacle.width / 10,
+        obstacle.height / 10,
       )
       .filter((n) => n.availableZ.some((z) => obstacle.zLayers?.includes(z)))
 

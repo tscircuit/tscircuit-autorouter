@@ -214,11 +214,6 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Heuristic scaling: an estimate of "node pitch" used to estimate remaining hops */
   avgNodePitch = 1
 
-  assignedOffBoardConnectionMap: Map<
-    string,
-    { connectionName: string; rootConnectionName?: string }
-  > = new Map()
-
   /** Cache of base node cost (cost of node in current committed state) */
   private baseNodeCostCache = new Map<CapacityMeshNodeId, number>()
   /** Cache of delta cost for a specific node segment (entry->exit) for a specific connection */
@@ -739,17 +734,15 @@ export class PortPointPathingSolver extends BaseSolver {
       if (otherNodeId === nodeId) continue
       const otherNode = this.nodeMap.get(otherNodeId)
       if (!otherNode) continue
-      const nodeAssignment = this.assignedOffBoardConnectionMap.get(
-        otherNode._offBoardConnectionId!,
-      )
-      if (
-        nodeAssignment &&
-        nodeAssignment.rootConnectionName !== currentRootConnectionName
-      )
-        continue
       const otherPortPoints = this.nodePortPointsMap.get(otherNodeId) ?? []
       for (const pp of otherPortPoints) {
         if (this.visitedPortPoints?.has(pp.portPointId)) continue
+        const assignment = this.assignedPortPoints.get(pp.portPointId)
+        if (
+          assignment &&
+          assignment.rootConnectionName !== currentRootConnectionName
+        )
+          continue
         availablePortPoints.push({
           ...pp,
           throughNodeId: otherNodeId,
@@ -758,20 +751,6 @@ export class PortPointPathingSolver extends BaseSolver {
     }
 
     return availablePortPoints
-  }
-
-  isNodeAvailableForOffboardConnection(
-    node: InputNodeWithPortPoints,
-    rootConnectionNameToUse: string,
-  ) {
-    if (!node._offBoardConnectionId) return false
-    const assignedRootConnectionName = this.assignedOffBoardConnectionMap.get(
-      node._offBoardConnectionId!,
-    )?.rootConnectionName
-
-    if (!assignedRootConnectionName) return true
-    if (assignedRootConnectionName === rootConnectionNameToUse) return true
-    return false
   }
 
   canTravelThroughObstacle(
@@ -783,7 +762,7 @@ export class PortPointPathingSolver extends BaseSolver {
 
     return (
       goalNodeIds?.includes(node.capacityMeshNodeId) ||
-      this.isNodeAvailableForOffboardConnection(node, rootConnectionName)
+      Boolean(node._offBoardConnectionId)
     )
   }
 
@@ -816,6 +795,7 @@ export class PortPointPathingSolver extends BaseSolver {
     rootConnectionName?: string,
   ): PortPoint[] {
     const assignedPortPoints: PortPoint[] = []
+    const nodeIdsInPath = Array.from(new Set(path.map((c) => c.currentNodeId)))
 
     for (const candidate of path) {
       if (!candidate.portPoint) continue // Skip start/end target points
@@ -843,6 +823,20 @@ export class PortPointPathingSolver extends BaseSolver {
         const nodePortPoints = this.nodeAssignedPortPoints.get(nodeId) ?? []
         nodePortPoints.push(portPoint)
         this.nodeAssignedPortPoints.set(nodeId, nodePortPoints)
+      }
+    }
+
+    // Mark all nodes that are off board connected to have all their port points
+    // assigned
+    for (const nodeId of nodeIdsInPath) {
+      const node = this.nodeMap.get(nodeId)
+      if (!node) continue
+      if (!node._offBoardConnectionId) continue
+      for (const pp of node.portPoints) {
+        this.assignedPortPoints.set(pp.portPointId, {
+          connectionName,
+          rootConnectionName,
+        })
       }
     }
 
@@ -1070,7 +1064,6 @@ export class PortPointPathingSolver extends BaseSolver {
 
     let availablePortPoints: InputPortPoint[]
     const currentNode = this.nodeMap.get(currentCandidate.currentNodeId)
-    console.log({ currentNode })
     if (currentNode?._offBoardConnectionId) {
       availablePortPoints =
         this.getAvailableExitPortPointsForOffboardConnection(
