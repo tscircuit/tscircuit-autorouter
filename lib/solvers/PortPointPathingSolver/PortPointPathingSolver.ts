@@ -671,7 +671,7 @@ export class PortPointPathingSolver extends BaseSolver {
       currentConnection?.connection.rootConnectionName
 
     // Group by "other side node" + z
-    const groups = new Map<string, InputPortPoint[]>()
+    const portsOnSameEdgeMap = new Map<string, InputPortPoint[]>()
 
     for (const pp of portPoints) {
       if (this.visitedPortPoints?.has(pp.portPointId)) continue
@@ -679,37 +679,23 @@ export class PortPointPathingSolver extends BaseSolver {
       const otherNodeId = this.getOtherNodeId(pp, nodeId)
       if (!otherNodeId) continue
 
-      const key = `${otherNodeId}|${pp.z}`
-      const arr = groups.get(key) ?? []
-      arr.push(pp)
-      groups.set(key, arr)
-    }
-
-    // If this node is connected to other nodes via off board connections, also
-    // add the port points for the other nodes
-    for (const otherNodeId of currentNode?._offBoardConnectedCapacityMeshNodeIds ??
-      []) {
       const otherNode = this.nodeMap.get(otherNodeId)
-      if (!otherNode) continue
-      const otherPortPoints = this.nodePortPointsMap.get(otherNodeId) ?? []
-      for (const pp of otherPortPoints) {
-        if (this.visitedPortPoints?.has(pp.portPointId)) continue
-        const key = `${otherNodeId}|${pp.z}`
-        const arr = groups.get(key) ?? []
-        arr.push(pp)
-        groups.set(key, arr)
-      }
+
+      const edgeKey = `${otherNodeId}|${pp.z}`
+      const arr = portsOnSameEdgeMap.get(edgeKey) ?? []
+      arr.push(pp)
+      portsOnSameEdgeMap.set(edgeKey, arr)
     }
 
     const result: InputPortPoint[] = []
 
-    for (const [, group] of groups) {
+    for (const [, portsOnSameEdge] of portsOnSameEdgeMap) {
       // Sort by "center offset distance" (0 first)
-      group.sort(
+      portsOnSameEdge.sort(
         (a, b) => a.distToCentermostPortOnZ - b.distToCentermostPortOnZ,
       )
 
-      const center = group[0]
+      const center = portsOnSameEdge[0]
       if (!center) continue
 
       // If center is already assigned, add adjacent offsets (next closest ones)
@@ -724,14 +710,53 @@ export class PortPointPathingSolver extends BaseSolver {
       }
 
       const unassignedOnSide: InputPortPoint[] = []
-      for (let i = 1; i < group.length; i++) {
-        if (this.assignedPortPoints.has(group[i].portPointId)) continue
-        unassignedOnSide.push(group[i])
+      for (let i = 1; i < portsOnSameEdge.length; i++) {
+        if (this.assignedPortPoints.has(portsOnSameEdge[i].portPointId))
+          continue
+        unassignedOnSide.push(portsOnSameEdge[i])
       }
       result.push(...unassignedOnSide)
     }
 
     return result
+  }
+
+  getAvailableExitPortPointsForOffboardConnection(nodeId: CapacityMeshNodeId) {
+    const currentNode = this.nodeMap.get(nodeId)
+    if (!currentNode) return []
+    const currentConnection =
+      this.connectionsWithResults[this.currentConnectionIndex]
+    const currentRootConnectionName =
+      currentConnection?.connection.rootConnectionName
+    const availablePortPoints: (InputPortPoint & {
+      throughNodeId: CapacityMeshNodeId
+    })[] = []
+
+    // If this node is connected to other nodes via off board connections, also
+    // add the port points for the other nodes
+    for (const otherNodeId of currentNode?._offBoardConnectedCapacityMeshNodeIds ??
+      []) {
+      const otherNode = this.nodeMap.get(otherNodeId)
+      if (!otherNode) continue
+      const nodeAssignment = this.assignedOffBoardConnectionMap.get(
+        otherNode._offBoardConnectionId!,
+      )
+      if (
+        nodeAssignment &&
+        nodeAssignment.rootConnectionName !== currentRootConnectionName
+      )
+        continue
+      const otherPortPoints = this.nodePortPointsMap.get(otherNodeId) ?? []
+      for (const pp of otherPortPoints) {
+        if (this.visitedPortPoints?.has(pp.portPointId)) continue
+        availablePortPoints.push({
+          ...pp,
+          throughNodeId: otherNodeId,
+        })
+      }
+    }
+
+    return availablePortPoints
   }
 
   isNodeAvailableForOffboardConnection(
@@ -1053,6 +1078,13 @@ export class PortPointPathingSolver extends BaseSolver {
       )
     }
 
+    const availableOffboardPortPoints =
+      this.getAvailableExitPortPointsForOffboardConnection(
+        currentCandidate.currentNodeId,
+      )
+
+    availablePortPoints.push(...availableOffboardPortPoints)
+
     for (const portPoint of availablePortPoints) {
       // Don't revisit port points in this path chain
       if (
@@ -1062,10 +1094,9 @@ export class PortPointPathingSolver extends BaseSolver {
       }
 
       // Get the node we'd enter via this port point
-      const targetNodeId = this.getOtherNodeId(
-        portPoint,
-        currentCandidate.currentNodeId,
-      )
+      const targetNodeId =
+        (portPoint as { throughNodeId?: CapacityMeshNodeId }).throughNodeId ??
+        this.getOtherNodeId(portPoint, currentCandidate.currentNodeId)
       if (!targetNodeId) continue
 
       // Prevent node cycles (keeps delta-pf accounting correct)

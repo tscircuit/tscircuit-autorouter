@@ -146,10 +146,14 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     const effectiveLength = Math.max(0, segmentLength - 2 * edgeMargin)
 
     // At minimum we need 1 port point, at maximum we space them minPortSpacing apart
-    const maxPortPoints = Math.max(
+    let maxPortPoints = Math.max(
       1,
       Math.floor(effectiveLength / this.minPortSpacing) + 1,
     )
+
+    if (node1._offBoardConnectionId || node2._offBoardConnectionId) {
+      maxPortPoints = 1
+    }
 
     // Create port points evenly spaced along the segment
     // Each port point is created for a single layer (not multiple layers)
