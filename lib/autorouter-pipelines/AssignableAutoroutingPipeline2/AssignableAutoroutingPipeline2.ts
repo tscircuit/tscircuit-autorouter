@@ -46,6 +46,7 @@ import {
   HyperPortPointPathingSolver,
   HyperPortPointPathingSolverParams,
 } from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
+import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -90,6 +91,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   nodeSolver?: RectDiffPipeline
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
+  relateNodesToOffBoardConnections?: RelateNodesToOffBoardConnectionsSolver
   colorMap: Record<string, string>
   highDensityRouteSolver?: HighDensitySolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
@@ -119,7 +121,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   pipelineDef = [
     definePipelineStep(
       "netToPointPairsSolver",
-      NetToPointPairsSolver2_OffBoardConnection,
+      NetToPointPairsSolver,
       (cms) => [cms.srj, cms.colorMap],
       {
         onSolved: (cms) => {
@@ -141,6 +143,21 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
+        },
+      },
+    ),
+    definePipelineStep(
+      "relateNodesToOffBoardConnections",
+      RelateNodesToOffBoardConnectionsSolver,
+      (cms) => [
+        {
+          capacityMeshNodes: cms.capacityNodes!,
+          srj: cms.srj,
+        },
+      ],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.relateNodesToOffBoardConnections?.newNodes!
         },
       },
     ),
@@ -167,16 +184,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "offboardPathFragmentSolver",
-      PortPointOffboardPathFragmentSolver,
-      (cms) => [
-        {
-          srj: cms.srjWithPointPairs!,
-          colorMap: cms.colorMap,
-        },
-      ],
-    ),
-    definePipelineStep(
       "portPointPathingSolver",
       HyperPortPointPathingSolver,
       (cms) => {
@@ -191,8 +198,12 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             availableZ: node.availableZ,
             _containsTarget: node._containsTarget,
             _containsObstacle: node._containsObstacle,
+
+            // offBoardConnectedCapacityMeshNodeIds: ...
           }),
         )
+
+        console.log(cms.capacityNodes)
 
         // Build a map for quick lookup
         const nodeMap = new Map(

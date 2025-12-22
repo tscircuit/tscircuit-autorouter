@@ -50,3 +50,14 @@ export const createColorMapFromStrings = (strings: string[]) => {
   }
   return colorMap
 }
+
+export const getStringColor = (s: string, opacity: number = 1) => {
+  if (!s) return "rgba(0, 0, 0, 0.5)"
+  const hue =
+    (s.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) * 300) /
+    s.length
+  if (opacity < 1) {
+    return `hsla(${hue}, 100%, 50%, ${opacity})`
+  }
+  return `hsl(${hue}, 100%, 50%)`
+}

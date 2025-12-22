@@ -67,6 +67,8 @@ export interface InputNodeWithPortPoints {
   _containsTarget?: boolean
   /** If true, this node contains an obstacle */
   _containsObstacle?: boolean
+
+  offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
 }
 
 /**
