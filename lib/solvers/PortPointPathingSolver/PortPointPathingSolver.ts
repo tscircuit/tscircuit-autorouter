@@ -585,7 +585,7 @@ export class PortPointPathingSolver extends BaseSolver {
    *  - memoryPfMap to bias away from historically high Pf regions
    */
   computeH(
-    point: { x: number; y: number },
+    point: InputPortPoint,
     currentNodeId: CapacityMeshNodeId,
     endGoalNodeId: CapacityMeshNodeId,
     currentZ: number,
@@ -605,7 +605,13 @@ export class PortPointPathingSolver extends BaseSolver {
     // Estimate the remaining "step costs"
     const estStepCost = estHops * this.BASE_CANDIDATE_COST
 
-    return distanceToGoal + estStepCost + memRiskForHop
+    const centerOffsetDistPenalty =
+      this.CENTER_OFFSET_DIST_PENALTY_FACTOR *
+      point.distToCentermostPortOnZ ** 2
+
+    return (
+      distanceToGoal + estStepCost + memRiskForHop + centerOffsetDistPenalty
+    )
   }
 
   getAvailableExitPortPoints(nodeId: CapacityMeshNodeId) {
@@ -1023,12 +1029,7 @@ export class PortPointPathingSolver extends BaseSolver {
         rootConnectionName,
       )
 
-      const h = this.computeH(
-        { x: portPoint.x, y: portPoint.y },
-        targetNodeId,
-        endNodeId,
-        portPoint.z,
-      )
+      const h = this.computeH(portPoint, targetNodeId, endNodeId, portPoint.z)
 
       // Random tie-breaker influences ordering without contaminating g
       const tieBreaker =
