@@ -94,6 +94,7 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     }
     for (const newNode of nodesToAddToNet) {
       newNode._offBoardConnectedCapacityMeshNodeIds = allNodeIdsInNet
+      newNode._offBoardConnectionId = offBoardConnId
     }
 
     this.nodesInNet.set(offBoardConnId, [

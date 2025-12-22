@@ -22,7 +22,15 @@ export function visualizePointPathSolver(
     const memPf = solver.nodeMemoryPfMap.get(node.capacityMeshNodeId) ?? 0
     const red = Math.min(255, Math.floor(pf * 512))
     const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512))
-    const color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, 0.3)`
+    let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, 0.3)`
+
+    if (node._containsObstacle) {
+      color = "rgba(255, 0, 0, 0.3)"
+    }
+
+    if (node._offBoardConnectedCapacityMeshNodeIds?.length) {
+      color = "rgba(255, 165, 0, 0.3)"
+    }
 
     const nodeWithPortPoints = solver.buildNodeWithPortPointsForCrossing(node)
     const crossings = getIntraNodeCrossings(nodeWithPortPoints)
@@ -33,7 +41,7 @@ export function visualizePointPathSolver(
       height: node.height * 0.9,
       layer: `z${node.availableZ.join(",")}`,
       fill: color,
-      label: `${node.capacityMeshNodeId}\npf: ${pf.toFixed(3)}, memPf: ${memPf.toFixed(3)}\nxSame: ${crossings.numSameLayerCrossings}, xLC: ${crossings.numEntryExitLayerChanges}, xTransition: ${crossings.numTransitionPairCrossings}`,
+      label: `${node.capacityMeshNodeId}\npf: ${pf.toFixed(3)}, memPf: ${memPf.toFixed(3)}\nxSame: ${crossings.numSameLayerCrossings}, xLC: ${crossings.numEntryExitLayerChanges}, xTransition: ${crossings.numTransitionPairCrossings}\nobCmid: ${node._offBoardConnectedCapacityMeshNodeIds?.join(",")}\nobs: ${node._containsObstacle ? "yes" : "no"}`,
     })
   }
 
@@ -169,9 +177,8 @@ export function visualizePointPathSolver(
       }
     }
 
-    const sortedCandidates = [...solver.candidates]
-      .sort((a, b) => a.f - b.f)
-      .slice(0, 20)
+    const sortedCandidates = [...solver.candidates].sort((a, b) => a.f - b.f)
+    // .slice(0, 20)
 
     for (const candidate of sortedCandidates) {
       const candidatePath: Array<{ x: number; y: number; z: number }> = []

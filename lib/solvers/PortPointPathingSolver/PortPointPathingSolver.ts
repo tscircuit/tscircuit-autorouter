@@ -68,7 +68,8 @@ export interface InputNodeWithPortPoints {
   /** If true, this node contains an obstacle */
   _containsObstacle?: boolean
 
-  offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
+  _offBoardConnectionId?: string
+  _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
 }
 
 /**
@@ -212,6 +213,11 @@ export class PortPointPathingSolver extends BaseSolver {
 
   /** Heuristic scaling: an estimate of "node pitch" used to estimate remaining hops */
   avgNodePitch = 1
+
+  assignedOffBoardConnectionMap: Map<
+    string,
+    { connectionName: string; rootConnectionName?: string }
+  > = new Map()
 
   /** Cache of base node cost (cost of node in current committed state) */
   private baseNodeCostCache = new Map<CapacityMeshNodeId, number>()
@@ -658,6 +664,7 @@ export class PortPointPathingSolver extends BaseSolver {
     _endGoalNodeId: CapacityMeshNodeId,
   ): InputPortPoint[] {
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
+    const currentNode = this.nodeMap.get(nodeId)
     const currentConnection =
       this.connectionsWithResults[this.currentConnectionIndex]
     const currentRootConnectionName =
@@ -676,6 +683,22 @@ export class PortPointPathingSolver extends BaseSolver {
       const arr = groups.get(key) ?? []
       arr.push(pp)
       groups.set(key, arr)
+    }
+
+    // If this node is connected to other nodes via off board connections, also
+    // add the port points for the other nodes
+    for (const otherNodeId of currentNode?._offBoardConnectedCapacityMeshNodeIds ??
+      []) {
+      const otherNode = this.nodeMap.get(otherNodeId)
+      if (!otherNode) continue
+      const otherPortPoints = this.nodePortPointsMap.get(otherNodeId) ?? []
+      for (const pp of otherPortPoints) {
+        if (this.visitedPortPoints?.has(pp.portPointId)) continue
+        const key = `${otherNodeId}|${pp.z}`
+        const arr = groups.get(key) ?? []
+        arr.push(pp)
+        groups.set(key, arr)
+      }
     }
 
     const result: InputPortPoint[] = []
@@ -711,12 +734,30 @@ export class PortPointPathingSolver extends BaseSolver {
     return result
   }
 
+  isNodeAvailableForOffboardConnection(
+    node: InputNodeWithPortPoints,
+    rootConnectionNameToUse: string,
+  ) {
+    const assignedRootConnectionName = this.assignedOffBoardConnectionMap.get(
+      node._offBoardConnectionId!,
+    )?.rootConnectionName
+
+    if (!assignedRootConnectionName) return true
+    if (assignedRootConnectionName === rootConnectionNameToUse) return true
+    return false
+  }
+
   canTravelThroughObstacle(
     node: InputNodeWithPortPoints,
     connectionName: string,
+    rootConnectionName: string,
   ): boolean {
     const goalNodeIds = this.connectionNameToGoalNodeIds.get(connectionName)
-    return goalNodeIds?.includes(node.capacityMeshNodeId) ?? false
+
+    return (
+      goalNodeIds?.includes(node.capacityMeshNodeId) ||
+      this.isNodeAvailableForOffboardConnection(node, rootConnectionName)
+    )
   }
 
   /**
@@ -1036,7 +1077,11 @@ export class PortPointPathingSolver extends BaseSolver {
       // Check obstacle constraints
       if (
         targetNode._containsObstacle &&
-        !this.canTravelThroughObstacle(targetNode, connectionName)
+        !this.canTravelThroughObstacle(
+          targetNode,
+          connectionName,
+          rootConnectionName!,
+        )
       ) {
         continue
       }
@@ -1051,11 +1096,7 @@ export class PortPointPathingSolver extends BaseSolver {
 
       const h = this.computeH(portPoint, targetNodeId, endNodeId, portPoint.z)
 
-      // Random tie-breaker influences ordering without contaminating g
-      const tieBreaker =
-        this.RANDOM_COST_MAGNITUDE * seededRandom(this.iterations)()
-
-      const f = g + h * this.GREEDY_MULTIPLIER + tieBreaker
+      const f = g + h * this.GREEDY_MULTIPLIER
 
       this.candidates.push({
         prevCandidate: currentCandidate,

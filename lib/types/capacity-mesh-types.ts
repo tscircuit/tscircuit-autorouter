@@ -25,6 +25,8 @@ export interface CapacityMeshNode {
   _offboardNetName?: string
 
   _adjacentNodeIds?: CapacityMeshNodeId[]
+
+  _offBoardConnectionId?: string
   _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
 
   _parent?: CapacityMeshNode

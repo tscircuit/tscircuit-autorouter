@@ -186,7 +186,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HyperPortPointPathingSolver,
+      PortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
         const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
@@ -199,8 +199,9 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             availableZ: node.availableZ,
             _containsTarget: node._containsTarget,
             _containsObstacle: node._containsObstacle,
-
-            // offBoardConnectedCapacityMeshNodeIds: ...
+            _offBoardConnectionId: node._offBoardConnectionId,
+            _offBoardConnectedCapacityMeshNodeIds:
+              node._offBoardConnectedCapacityMeshNodeIds,
           }),
         )
 
