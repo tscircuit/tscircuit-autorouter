@@ -34,6 +34,8 @@ export interface PortPointPathingHyperParameters {
 
   MAX_ITERATIONS_PER_PATH?: number
   FORCE_CENTER_FIRST?: boolean
+
+  RANDOM_WALK_DISTANCE?: number
 }
 
 /**
@@ -89,6 +91,8 @@ export interface PortPointCandidate {
   f: number
   g: number
   h: number
+  /** Total distance traveled from start to this candidate */
+  distanceTraveled: number
 }
 
 export interface ConnectionPathResult {
@@ -145,6 +149,10 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Multiplied by Pf delta cost (in -log(1-pf) space) */
   get NODE_PF_FACTOR() {
     return this.hyperParameters.NODE_PF_FACTOR ?? 50
+  }
+
+  get RANDOM_WALK_DISTANCE() {
+    return this.hyperParameters.RANDOM_WALK_DISTANCE ?? 0
   }
 
   /** Used only in heuristic (h) to "look ahead" into known-congested regions */
@@ -597,7 +605,16 @@ export class PortPointPathingSolver extends BaseSolver {
     currentNodeId: CapacityMeshNodeId,
     endGoalNodeId: CapacityMeshNodeId,
     currentZ: number,
+    distanceTraveled: number,
   ): number {
+    // Random walk: if we haven't traveled far enough, return 0 to encourage exploration
+    if (
+      this.RANDOM_WALK_DISTANCE > 0 &&
+      distanceTraveled < this.RANDOM_WALK_DISTANCE
+    ) {
+      return 0
+    }
+
     const endNode = this.nodeMap.get(endGoalNodeId)
     if (!endNode) return 0
 
@@ -971,6 +988,7 @@ export class PortPointPathingSolver extends BaseSolver {
           startNodeId,
           endNodeId,
           z,
+          0,
         )
         const f = 0 + h * this.GREEDY_MULTIPLIER
 
@@ -983,6 +1001,7 @@ export class PortPointPathingSolver extends BaseSolver {
           f,
           g: 0,
           h,
+          distanceTraveled: 0,
         })
       }
     }
@@ -1035,6 +1054,9 @@ export class PortPointPathingSolver extends BaseSolver {
         g: finalG,
         h: 0,
         f: finalG,
+        distanceTraveled:
+          currentCandidate.distanceTraveled +
+          distance(currentCandidate.point, finalPoint),
       }
 
       const path = this.getBacktrackedPath(finalCandidate)
@@ -1125,7 +1147,17 @@ export class PortPointPathingSolver extends BaseSolver {
         rootConnectionName,
       )
 
-      const h = this.computeH(portPoint, targetNodeId, endNodeId, portPoint.z)
+      const distanceTraveled =
+        currentCandidate.distanceTraveled +
+        distance(currentCandidate.point, portPoint)
+
+      const h = this.computeH(
+        portPoint,
+        targetNodeId,
+        endNodeId,
+        portPoint.z,
+        distanceTraveled,
+      )
 
       const f = g + h * this.GREEDY_MULTIPLIER
 
@@ -1138,6 +1170,7 @@ export class PortPointPathingSolver extends BaseSolver {
         f,
         g,
         h,
+        distanceTraveled,
       })
     }
 

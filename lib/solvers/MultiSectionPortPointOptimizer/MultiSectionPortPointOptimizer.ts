@@ -53,7 +53,8 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
 })[] = [
   {
     SHUFFLE_SEED: 100,
-    EXPANSION_DEGREES: 4,
+    EXPANSION_DEGREES: 3,
+    RANDOM_WALK_DISTANCE: 10,
   },
 ]
 
