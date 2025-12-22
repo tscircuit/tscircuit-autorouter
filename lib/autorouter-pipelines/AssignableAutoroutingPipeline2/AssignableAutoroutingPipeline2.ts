@@ -297,24 +297,24 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     //     },
     //   ],
     // ),
-    // definePipelineStep(
-    //   "traceSimplificationSolver",
-    //   TraceSimplificationSolver,
-    //   (cms) => [
-    //     {
-    //       hdRoutes:
-    //         cms.highDensityStitchSolver!.mergedHdRoutes ??
-    //         cms.highDensityRouteSolver?.routes,
-    //       obstacles: cms.srj.obstacles,
-    //       connMap: cms.connMap,
-    //       colorMap: cms.colorMap,
-    //       outline: cms.srj.outline,
-    //       defaultViaDiameter: cms.viaDiameter,
-    //       layerCount: cms.srj.layerCount,
-    //       iterations: 2,
-    //     },
-    //   ],
-    // ),
+    definePipelineStep(
+      "traceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => [
+        {
+          hdRoutes:
+            cms.highDensityStitchSolver?.mergedHdRoutes ??
+            cms.highDensityRouteSolver?.routes!,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          defaultViaDiameter: cms.viaDiameter,
+          layerCount: cms.srj.layerCount,
+          iterations: 2,
+        },
+      ],
+    ),
   ]
 
   constructor(
