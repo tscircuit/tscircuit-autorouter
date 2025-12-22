@@ -33,6 +33,7 @@ export interface PortPointPathingHyperParameters {
   BASE_CANDIDATE_COST?: number
 
   MAX_ITERATIONS_PER_PATH?: number
+  FORCE_CENTER_FIRST?: boolean
 }
 
 /**
@@ -164,6 +165,10 @@ export class PortPointPathingSolver extends BaseSolver {
 
   get NODE_PF_MAX_PENALTY() {
     return this.hyperParameters.NODE_PF_MAX_PENALTY ?? 10_000
+  }
+
+  get FORCE_CENTER_FIRST() {
+    return this.hyperParameters.FORCE_CENTER_FIRST ?? true
   }
 
   get NODE_MAX_PF() {
@@ -897,7 +902,12 @@ export class PortPointPathingSolver extends BaseSolver {
           ? { x: startPoint.x, y: startPoint.y }
           : startNode.center
 
-        const h = this.computeH(p, startNodeId, endNodeId, z)
+        const h = this.computeH(
+          { ...p, distToCentermostPortOnZ: 0 } as any,
+          startNodeId,
+          endNodeId,
+          z,
+        )
         const f = 0 + h * this.GREEDY_MULTIPLIER
 
         this.candidates.push({
@@ -987,10 +997,18 @@ export class PortPointPathingSolver extends BaseSolver {
     }
 
     // Expand to available port points from current node
-    const availablePortPoints = this.getAvailableExitPortPointsWithOmissions(
-      currentCandidate.currentNodeId,
-      endNodeId,
-    )
+
+    let availablePortPoints: InputPortPoint[]
+    if (this.FORCE_CENTER_FIRST) {
+      availablePortPoints = this.getAvailableExitPortPointsWithOmissions(
+        currentCandidate.currentNodeId,
+        endNodeId,
+      )
+    } else {
+      availablePortPoints = this.getAvailableExitPortPoints(
+        currentCandidate.currentNodeId,
+      )
+    }
 
     for (const portPoint of availablePortPoints) {
       // Don't revisit port points in this path chain

@@ -234,7 +234,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               // 5 = 99.3% maximum pf
               // 10 = 99.995% maximum pf (1 - e**(-10))
               NODE_PF_MAX_PENALTY: 100,
-              CENTER_OFFSET_DIST_PENALTY_FACTOR: 1,
+              CENTER_OFFSET_DIST_PENALTY_FACTOR: 10,
+              FORCE_CENTER_FIRST: true,
             },
           } as HyperPortPointPathingSolverParams,
         ]
