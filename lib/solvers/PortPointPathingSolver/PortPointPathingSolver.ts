@@ -1094,9 +1094,11 @@ export class PortPointPathingSolver extends BaseSolver {
       }
 
       // Get the node we'd enter via this port point
-      const targetNodeId =
+      const targetNodeId = this.getOtherNodeId(
+        portPoint,
         (portPoint as { throughNodeId?: CapacityMeshNodeId }).throughNodeId ??
-        this.getOtherNodeId(portPoint, currentCandidate.currentNodeId)
+          currentCandidate.currentNodeId,
+      )
       if (!targetNodeId) continue
 
       // Prevent node cycles (keeps delta-pf accounting correct)
