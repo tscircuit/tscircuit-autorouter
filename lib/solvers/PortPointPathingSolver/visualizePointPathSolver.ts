@@ -356,6 +356,8 @@ export function visualizePointPathSolver(
             `Cost(Pf): ${costPf.toFixed(3)}`,
             `Pf: ${pf.toFixed(3)}`,
             `xSame: ${xSame}, xTrans: ${xTransition}, xLC: ${xLC}`,
+            `routeOffBoard=${solver.currentConnectionShouldRouteOffBoard}`,
+            `offBoardTouched=${candidate.hasTouchedOffBoardNode ?? false}`,
           ].join("\n"),
         })
       }
