@@ -5,9 +5,16 @@ import { safeTransparentize } from "../colors"
 import type { PortPointCandidate } from "./PortPointPathingSolver"
 import type { PortPoint } from "../../types/high-density-types"
 import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
+import type { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
+
+function isPortPointPathingSolver(
+  solver: PortPointPathingSolver | MultiSectionPortPointOptimizer,
+): solver is PortPointPathingSolver {
+  return "computeNodePf" in solver && typeof solver.computeNodePf === "function"
+}
 
 export function visualizePointPathSolver(
-  solver: PortPointPathingSolver,
+  solver: PortPointPathingSolver | MultiSectionPortPointOptimizer,
 ): GraphicsObject {
   const graphics: GraphicsObject = {
     lines: [],
@@ -18,8 +25,35 @@ export function visualizePointPathSolver(
 
   // Draw nodes with pf coloring
   for (const node of solver.inputNodes) {
-    const pf = solver.computeNodePf(node)
-    const memPf = solver.nodeMemoryPfMap.get(node.capacityMeshNodeId) ?? 0
+    let pf = 0
+    let memPf = 0
+    let crossings = {
+      numSameLayerCrossings: 0,
+      numEntryExitLayerChanges: 0,
+      numTransitionPairCrossings: 0,
+    }
+
+    if (isPortPointPathingSolver(solver)) {
+      pf = solver.computeNodePf(node)
+      memPf = solver.nodeMemoryPfMap.get(node.capacityMeshNodeId) ?? 0
+      const nodeWithPortPoints = solver.buildNodeWithPortPointsForCrossing(node)
+      crossings = getIntraNodeCrossings(nodeWithPortPoints)
+    } else {
+      // For MultiSectionPortPointOptimizer, use nodePfMap
+      pf = solver.nodePfMap.get(node.capacityMeshNodeId) ?? 0
+      const portPoints =
+        solver.nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
+      const nodeWithPortPoints = {
+        capacityMeshNodeId: node.capacityMeshNodeId,
+        center: node.center,
+        width: node.width,
+        height: node.height,
+        portPoints,
+        availableZ: node.availableZ,
+      }
+      crossings = getIntraNodeCrossings(nodeWithPortPoints)
+    }
+
     const red = Math.min(255, Math.floor(pf * 512))
     const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512))
     let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, 0.3)`
@@ -32,9 +66,6 @@ export function visualizePointPathSolver(
       color = "rgba(255, 165, 0, 0.3)"
     }
 
-    const nodeWithPortPoints = solver.buildNodeWithPortPointsForCrossing(node)
-    const crossings = getIntraNodeCrossings(nodeWithPortPoints)
-
     graphics.rects!.push({
       center: node.center,
       width: node.width * 0.9,
@@ -45,32 +76,37 @@ export function visualizePointPathSolver(
     })
   }
 
-  // Draw all input port points
-  for (const [portPointId, portPoint] of solver.portPointMap) {
-    const assignment = solver.assignedPortPoints.get(portPointId)
-    const color = assignment
-      ? (solver.colorMap[assignment.connectionName] ?? "blue")
-      : "rgba(150, 150, 150, 0.5)"
+  // Draw all input port points (only for PortPointPathingSolver which has portPointMap)
+  if (isPortPointPathingSolver(solver)) {
+    for (const [portPointId, portPoint] of solver.portPointMap) {
+      const assignment = solver.assignedPortPoints.get(portPointId)
+      const color = assignment
+        ? (solver.colorMap[assignment.connectionName] ?? "blue")
+        : "rgba(150, 150, 150, 0.5)"
 
-    graphics.circles!.push({
-      center: { x: portPoint.x, y: portPoint.y },
-      radius: 0.05,
-      fill: color,
-      layer: `z${portPoint.z}`,
-      label: [
-        portPointId,
-        `conn: ${assignment?.connectionName}`,
-        `cd: ${portPoint.distToCentermostPortOnZ}`,
-        `connects: ${portPoint.connectionNodeIds.join(",")}`,
-        `rootConn: ${assignment?.rootConnectionName}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    })
+      graphics.circles!.push({
+        center: { x: portPoint.x, y: portPoint.y },
+        radius: 0.05,
+        fill: color,
+        layer: `z${portPoint.z}`,
+        label: [
+          portPointId,
+          `conn: ${assignment?.connectionName}`,
+          `cd: ${portPoint.distToCentermostPortOnZ}`,
+          `connects: ${portPoint.connectionNodeIds.join(",")}`,
+          `rootConn: ${assignment?.rootConnectionName}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      })
+    }
   }
 
   // Draw solved paths
-  for (const result of solver.connectionsWithResults) {
+  const connectionResults = isPortPointPathingSolver(solver)
+    ? solver.connectionsWithResults
+    : solver.connectionResults
+  for (const result of connectionResults) {
     if (!result.path) continue
 
     const connection = result.connection
@@ -117,7 +153,13 @@ export function visualizePointPathSolver(
   }
 
   // While actively solving, draw the top 10 most promising candidates
-  if (!solver.solved && solver.candidates && solver.candidates.length > 0) {
+  // This only applies to PortPointPathingSolver which has candidates
+  if (
+    isPortPointPathingSolver(solver) &&
+    !solver.solved &&
+    solver.candidates &&
+    solver.candidates.length > 0
+  ) {
     const currentConnection =
       solver.connectionsWithResults[solver.currentConnectionIndex]
     const connectionColor = currentConnection

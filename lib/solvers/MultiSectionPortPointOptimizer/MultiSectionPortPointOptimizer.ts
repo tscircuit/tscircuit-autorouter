@@ -29,6 +29,7 @@ import type {
 import { computeSectionScore, computeNodePf } from "./computeSectionScore"
 import { visualizeSection } from "./visualizeSection"
 import { HyperPortPointPathingSolver } from "../PortPointPathingSolver/HyperPortPointPathingSolver"
+import { visualizePointPathSolver } from "../PortPointPathingSolver/visualizePointPathSolver"
 
 export interface MultiSectionPortPointOptimizerParams {
   simpleRouteJson: SimpleRouteJson
@@ -906,72 +907,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       return visualizeSection(this.currentSection, this.colorMap)
     }
 
-    const graphics: GraphicsObject = {
-      lines: [],
-      points: [],
-      rects: [],
-      circles: [],
-    }
-
-    // Draw all nodes with Pf coloring
-    for (const node of this.inputNodes) {
-      const pf = this.nodePfMap.get(node.capacityMeshNodeId) ?? 0
-
-      // Color based on Pf - red for high, green for low
-      const red = Math.floor(255 * Math.min(pf, 1))
-      const green = Math.floor(255 * (1 - Math.min(pf, 1)))
-      const color = `rgba(${red}, ${green}, 0, 0.3)`
-
-      graphics.rects!.push({
-        center: node.center,
-        width: node.width * 0.9,
-        height: node.height * 0.9,
-        fill: color,
-        label: `${node.capacityMeshNodeId}\nPf: ${pf.toFixed(3)}`,
-      })
-    }
-
-    // Draw solved paths from connection results
-    for (const result of this.connectionResults) {
-      if (!result.path) continue
-
-      const connection = result.connection
-      const color = this.colorMap[connection.name] ?? "blue"
-
-      const segmentPoints: Array<{ x: number; y: number; z: number }> = []
-      for (const candidate of result.path) {
-        segmentPoints.push({
-          x: candidate.point.x,
-          y: candidate.point.y,
-          z: candidate.z,
-        })
-      }
-
-      for (let i = 0; i < segmentPoints.length - 1; i++) {
-        const pointA = segmentPoints[i]
-        const pointB = segmentPoints[i + 1]
-
-        const sameLayer = pointA.z === pointB.z
-        const commonLayer = pointA.z
-
-        let strokeDash: string | undefined
-        if (sameLayer) {
-          strokeDash = commonLayer === 0 ? undefined : "10 5"
-        } else {
-          strokeDash = "3 3 10"
-        }
-
-        graphics.lines!.push({
-          points: [
-            { x: pointA.x, y: pointA.y },
-            { x: pointB.x, y: pointB.y },
-          ],
-          strokeColor: color,
-          strokeDash,
-        })
-      }
-    }
-
-    return graphics
+    // Use the shared visualizer
+    return visualizePointPathSolver(this)
   }
 }
