@@ -50,12 +50,29 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
         name: "SHUFFLE_SEED",
         possibleValues: shuffleSeeds,
       },
+      // {
+      //   name: "RANDOM_WALK_DISTANCE",
+      //   possibleValues: [
+      //     {
+      //       RANDOM_WALK_DISTANCE: 0,
+      //     },
+      //     // {
+      //     //   RANDOM_WALK_DISTANCE: 5,
+      //     // },
+      //     {
+      //       RANDOM_WALK_DISTANCE: 20,
+      //     },
+      //   ],
+      // },
     ]
   }
 
-  generateSolver(hyperParameters: {
-    SHUFFLE_SEED: number
-  }): PortPointPathingSolver {
+  override getCombinationDefs(): Array<string[]> {
+    return [["SHUFFLE_SEED"]]
+    // return [["SHUFFLE_SEED", "RANDOM_WALK_DISTANCE"]]
+  }
+
+  generateSolver(hyperParameters: any): PortPointPathingSolver {
     return new PortPointPathingSolver({
       simpleRouteJson: this.params.simpleRouteJson,
       capacityMeshNodes: this.params.capacityMeshNodes,
@@ -64,7 +81,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
       nodeMemoryPfMap: this.params.nodeMemoryPfMap,
       hyperParameters: {
         ...this.params.hyperParameters,
-        SHUFFLE_SEED: hyperParameters.SHUFFLE_SEED,
+        ...hyperParameters,
       },
     })
   }
@@ -211,6 +228,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   onSolve(solver: SupervisedSolver<PortPointPathingSolver>) {
     this.stats = {
       ...solver.solver.stats,
+      winningHyperParameters: this.winningSolver?.hyperParameters,
     }
   }
 

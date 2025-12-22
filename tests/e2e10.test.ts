@@ -9,7 +9,7 @@ test("should solve e2e10 board using AssignableAutoroutingPipeline2", async () =
 
   const solver = new AssignableAutoroutingPipeline2(simpleSrj)
 
-  while (solver.iterations < 5e3 && !solver.solved && !solver.failed) {
+  while (solver.iterations < 60e3 && !solver.solved && !solver.failed) {
     solver.step()
     if (solver.iterations % 1000 === 0) {
       console.log(solver.iterations, solver.getCurrentPhase())

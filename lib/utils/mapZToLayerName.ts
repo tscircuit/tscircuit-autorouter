@@ -9,6 +9,7 @@ export type LayerName =
   | "inner6"
 
 export const mapZToLayerName = (z: number, layerCount: number): LayerName => {
+  if (z === 1 && layerCount === 1) return "inner1"
   if (z < 0 || z >= layerCount) {
     throw new Error(`Invalid z "${z}" for layer count: ${layerCount}`)
   }

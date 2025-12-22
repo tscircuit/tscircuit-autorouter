@@ -617,9 +617,9 @@ export class PortPointPathingSolver extends BaseSolver {
       return 0
     }
 
-    if (point.connectsToOffBoardNode) {
-      return 0
-    }
+    // if (point.connectsToOffBoardNode) {
+    //   return 0
+    // }
 
     const endNode = this.nodeMap.get(endGoalNodeId)
     if (!endNode) return 0
