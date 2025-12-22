@@ -7,49 +7,134 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { safeTransparentize } from "../../solvers/colors"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
+const STEPS_PER_NODE = 100
+const BORDER_MARGIN = 0.3
+const FORCE_STRENGTH = 0.01
+const BORDER_FORCE_STRENGTH = 0.05
+const MOVABLE_POINT_OFFSET = 0.1
+
+interface MovablePoint {
+  x: number
+  y: number
+  z: number
+  rootConnectionName?: string
+  connectionName: string
+}
+
+interface RouteInProgress {
+  connectionName: string
+  rootConnectionName?: string
+  startPoint: { x: number; y: number; z: number }
+  endPoint: { x: number; y: number; z: number }
+  movablePoints: MovablePoint[]
+}
+
 /**
  * A simplified high density solver that directly connects port points
  * within each node without considering intersections or vias.
  *
- * This is useful when the input is guaranteed to have no crossings
- * (e.g. from a well-assigned port point pathing solver).
+ * This solver creates 3-segment lines (4 points) for each connection and uses
+ * a force-directed approach to push movable points away from borders and
+ * other movable points with different rootConnectionName.
  *
  * Only solves intra-node routing - connecting port points within a single node.
  */
 export class SimpleHighDensitySolver extends BaseSolver {
   unsolvedNodes: NodeWithPortPoints[]
+  allNodes: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
   traceWidth: number
   viaDiameter: number
+  numMovablePoints: number
+
+  // State for current node being processed
+  currentNode: NodeWithPortPoints | null = null
+  currentNodeStep: number = 0
+  routesInProgress: RouteInProgress[] = []
+  pushMargin: number
+  currentNodeBounds: {
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  } | null = null
 
   constructor({
     nodePortPoints,
     colorMap,
-    traceWidth = 0.15,
+    traceWidth = 0.1,
     viaDiameter = 0.6,
+    pushMargin = 0.2,
+    numMovablePoints = 2,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     traceWidth?: number
     viaDiameter?: number
+    numMovablePoints?: number
+    pushMargin?: number
   }) {
     super()
+    if (numMovablePoints < 1 || numMovablePoints > 3) {
+      throw new Error(
+        `numMovablePoints must be 1, 2, or 3, got ${numMovablePoints}`,
+      )
+    }
+    this.allNodes = [...nodePortPoints]
     this.unsolvedNodes = [...nodePortPoints]
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth
     this.viaDiameter = viaDiameter
-    this.MAX_ITERATIONS = nodePortPoints.length + 1
+    this.numMovablePoints = numMovablePoints
+    this.pushMargin = pushMargin
+    this.MAX_ITERATIONS = nodePortPoints.length * STEPS_PER_NODE + 1
   }
 
   _step() {
-    if (this.unsolvedNodes.length === 0) {
-      this.solved = true
-      return
+    // If no current node, get the next one
+    if (this.currentNode === null) {
+      if (this.unsolvedNodes.length === 0) {
+        this.solved = true
+        return
+      }
+
+      this.currentNode = this.unsolvedNodes.pop()!
+      this.currentNodeStep = 0
+      this.routesInProgress = []
+      this._initializeRoutesForCurrentNode()
     }
 
-    const node = this.unsolvedNodes.pop()!
+    // First step initializes, remaining steps run force-directed solver
+    if (this.currentNodeStep > 0) {
+      this._runForceDirectedStep()
+    }
+
+    this.currentNodeStep++
+
+    // Check if we've spent enough steps on this node
+    if (this.currentNodeStep >= STEPS_PER_NODE) {
+      this._finalizeRoutesForCurrentNode()
+      this.currentNode = null
+    }
+  }
+
+  _initializeRoutesForCurrentNode() {
+    const node = this.currentNode!
+
+    // Compute node bounds from port points
+    let minX = Infinity
+    let maxX = -Infinity
+    let minY = Infinity
+    let maxY = -Infinity
+    for (const pt of node.portPoints) {
+      minX = Math.min(minX, pt.x)
+      maxX = Math.max(maxX, pt.x)
+      minY = Math.min(minY, pt.y)
+      maxY = Math.max(maxY, pt.y)
+    }
+    this.currentNodeBounds = { minX, maxX, minY, maxY }
 
     // Group port points within this node by connectionName
     const connectionGroups = new Map<
@@ -69,24 +154,217 @@ export class SimpleHighDensitySolver extends BaseSolver {
       })
     }
 
-    // Create routes for connections with 2+ port points in this node
+    // Create routes in progress for connections with 2+ port points
     for (const [connectionName, points] of connectionGroups) {
       if (points.length < 2) continue
 
-      // Use the z from the first point (all should be same since no vias)
-      const z = points[0].z
+      const startPoint = points[0]
+      const endPoint = points[points.length - 1]
+      const z = startPoint.z
+
+      // Calculate direction vector and length
+      const dx = endPoint.x - startPoint.x
+      const dy = endPoint.y - startPoint.y
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const unitX = length > 0 ? dx / length : 0
+      const unitY = length > 0 ? dy / length : 0
+
+      // Create movable points based on numMovablePoints
+      const movablePoints: MovablePoint[] = []
+
+      if (this.numMovablePoints >= 1) {
+        // First movable point: start + 0.1mm along line
+        movablePoints.push({
+          x: startPoint.x + unitX * MOVABLE_POINT_OFFSET,
+          y: startPoint.y + unitY * MOVABLE_POINT_OFFSET,
+          z,
+          rootConnectionName: startPoint.rootConnectionName,
+          connectionName,
+        })
+      }
+
+      if (this.numMovablePoints >= 2) {
+        // Second movable point: end - 0.1mm along line
+        movablePoints.push({
+          x: endPoint.x - unitX * MOVABLE_POINT_OFFSET,
+          y: endPoint.y - unitY * MOVABLE_POINT_OFFSET,
+          z,
+          rootConnectionName: startPoint.rootConnectionName,
+          connectionName,
+        })
+      }
+
+      if (this.numMovablePoints >= 3) {
+        // Third movable point: centered
+        movablePoints.push({
+          x: startPoint.x + dx / 2,
+          y: startPoint.y + dy / 2,
+          z,
+          rootConnectionName: startPoint.rootConnectionName,
+          connectionName,
+        })
+      }
+
+      this.routesInProgress.push({
+        connectionName,
+        rootConnectionName: startPoint.rootConnectionName,
+        startPoint: { x: startPoint.x, y: startPoint.y, z },
+        endPoint: { x: endPoint.x, y: endPoint.y, z },
+        movablePoints,
+      })
+    }
+  }
+
+  _runForceDirectedStep() {
+    const bounds = this.currentNodeBounds!
+
+    // Collect all movable points
+    const allMovablePoints: MovablePoint[] = []
+    for (const route of this.routesInProgress) {
+      allMovablePoints.push(...route.movablePoints)
+    }
+
+    const forceEffectMargin = BORDER_MARGIN + this.pushMargin
+
+    // Apply forces to each movable point
+    for (const point of allMovablePoints) {
+      let forceX = 0
+      let forceY = 0
+
+      // 1. Border repulsion forces
+      const distToLeft = point.x - bounds.minX
+      const distToRight = bounds.maxX - point.x
+      const distToTop = bounds.maxY - point.y
+      const distToBottom = point.y - bounds.minY
+
+      if (distToLeft < forceEffectMargin) {
+        forceX += BORDER_FORCE_STRENGTH * (forceEffectMargin - distToLeft)
+      }
+      if (distToRight < forceEffectMargin) {
+        forceX -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToRight)
+      }
+      if (distToBottom < forceEffectMargin) {
+        forceY += BORDER_FORCE_STRENGTH * (forceEffectMargin - distToBottom)
+      }
+      if (distToTop < forceEffectMargin) {
+        forceY -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToTop)
+      }
+
+      // 2. Repulsion from other movable points with different rootConnectionName
+      for (const otherPoint of allMovablePoints) {
+        if (otherPoint === point) continue
+        if (otherPoint.rootConnectionName === point.rootConnectionName) continue
+
+        const dx = point.x - otherPoint.x
+        const dy = point.y - otherPoint.y
+        const distSq = dx * dx + dy * dy
+        const dist = Math.sqrt(distSq)
+
+        if (dist > 0 && dist < forceEffectMargin * 2) {
+          const force = FORCE_STRENGTH / distSq
+          forceX += force * dx
+          forceY += force * dy
+        }
+      }
+
+      // Apply forces
+      point.x += forceX
+      point.y += forceY
+
+      // Clamp to bounds
+      point.x = Math.max(bounds.minX, Math.min(bounds.maxX, point.x))
+      point.y = Math.max(bounds.minY, Math.min(bounds.maxY, point.y))
+    }
+  }
+
+  _finalizeRoutesForCurrentNode() {
+    for (const routeInProgress of this.routesInProgress) {
+      const {
+        connectionName,
+        rootConnectionName,
+        startPoint,
+        endPoint,
+        movablePoints,
+      } = routeInProgress
+
+      // Build route: start -> movable points (in order) -> end
+      const routePointList: Array<{ x: number; y: number; z: number }> = [
+        { x: startPoint.x, y: startPoint.y, z: startPoint.z },
+      ]
+
+      // Add movable points in the correct order for the path
+      // For 1 point: start -> M1 -> end
+      // For 2 points: start -> M1 -> M2 -> end
+      // For 3 points: start -> M1 -> M3 (center) -> M2 -> end
+      if (movablePoints.length === 1) {
+        routePointList.push({
+          x: movablePoints[0].x,
+          y: movablePoints[0].y,
+          z: movablePoints[0].z,
+        })
+      } else if (movablePoints.length === 2) {
+        routePointList.push({
+          x: movablePoints[0].x,
+          y: movablePoints[0].y,
+          z: movablePoints[0].z,
+        })
+        routePointList.push({
+          x: movablePoints[1].x,
+          y: movablePoints[1].y,
+          z: movablePoints[1].z,
+        })
+      } else if (movablePoints.length === 3) {
+        routePointList.push({
+          x: movablePoints[0].x,
+          y: movablePoints[0].y,
+          z: movablePoints[0].z,
+        })
+        routePointList.push({
+          x: movablePoints[2].x,
+          y: movablePoints[2].y,
+          z: movablePoints[2].z,
+        }) // center
+        routePointList.push({
+          x: movablePoints[1].x,
+          y: movablePoints[1].y,
+          z: movablePoints[1].z,
+        })
+      }
+
+      routePointList.push({ x: endPoint.x, y: endPoint.y, z: endPoint.z })
 
       const route: HighDensityIntraNodeRoute = {
         connectionName,
-        rootConnectionName: points[0].rootConnectionName,
+        rootConnectionName,
         traceThickness: this.traceWidth,
         viaDiameter: this.viaDiameter,
-        route: points.map((p) => ({ x: p.x, y: p.y, z })),
-        vias: [], // No vias needed
+        route: routePointList,
+        vias: [],
       }
 
       this.routes.push(route)
     }
+
+    this.routesInProgress = []
+  }
+
+  _getNodeBounds(node: NodeWithPortPoints): {
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  } {
+    let minX = Infinity
+    let maxX = -Infinity
+    let minY = Infinity
+    let maxY = -Infinity
+    for (const pt of node.portPoints) {
+      minX = Math.min(minX, pt.x)
+      maxX = Math.max(maxX, pt.x)
+      minY = Math.min(minY, pt.y)
+      maxY = Math.max(maxY, pt.y)
+    }
+    return { minX, maxX, minY, maxY }
   }
 
   visualize(): GraphicsObject {
@@ -97,6 +375,48 @@ export class SimpleHighDensitySolver extends BaseSolver {
       circles: [],
     }
 
+    // Draw unsolved nodes in gray
+    for (const node of this.unsolvedNodes) {
+      // Group port points by connectionName
+      const connectionGroups = new Map<
+        string,
+        Array<{ x: number; y: number }>
+      >()
+      for (const pt of node.portPoints) {
+        if (!connectionGroups.has(pt.connectionName)) {
+          connectionGroups.set(pt.connectionName, [])
+        }
+        connectionGroups.get(pt.connectionName)!.push({ x: pt.x, y: pt.y })
+      }
+
+      // Draw gray lines for each connection
+      for (const [connectionName, points] of connectionGroups) {
+        if (points.length < 2) continue
+        graphics.lines!.push({
+          points: points.map((p) => ({ x: p.x, y: p.y })),
+          label: connectionName,
+          strokeColor: "gray",
+          strokeWidth: this.traceWidth,
+        })
+      }
+    }
+
+    // Draw current node bounds with gray stroke
+    if (this.currentNode && this.currentNodeBounds) {
+      const bounds = this.currentNodeBounds
+      graphics.rects!.push({
+        center: {
+          x: (bounds.minX + bounds.maxX) / 2,
+          y: (bounds.minY + bounds.maxY) / 2,
+        },
+        width: bounds.maxX - bounds.minX,
+        height: bounds.maxY - bounds.minY,
+        stroke: "gray",
+        label: "current node",
+      })
+    }
+
+    // Visualize completed routes
     for (const route of this.routes) {
       const mergedSegments = mergeRouteSegments(
         route.route,
@@ -117,6 +437,83 @@ export class SimpleHighDensitySolver extends BaseSolver {
           strokeDash: segment.z !== 0 ? "10, 5" : undefined,
         })
       }
+
+      // Add points with labels for each route point
+      const routePoints = route.route
+      for (let i = 0; i < routePoints.length; i++) {
+        const pt = routePoints[i]
+        const isStart = i === 0
+        const isEnd = i === routePoints.length - 1
+        const isMovable = !isStart && !isEnd
+        let label: string
+        if (isStart) {
+          label = "start"
+        } else if (isEnd) {
+          label = "end"
+        } else {
+          label = `M${i}`
+        }
+        graphics.points!.push({
+          x: pt.x,
+          y: pt.y,
+          label,
+          color: isMovable ? "orange" : "blue",
+        })
+      }
+    }
+
+    // Visualize routes in progress (during force-directed solving)
+    for (const routeInProgress of this.routesInProgress) {
+      const { startPoint, endPoint, movablePoints, connectionName } =
+        routeInProgress
+      const color = this.colorMap[connectionName] ?? "gray"
+
+      // Build line points in correct order
+      const linePoints: Array<{ x: number; y: number }> = [
+        { x: startPoint.x, y: startPoint.y },
+      ]
+
+      if (movablePoints.length === 1) {
+        linePoints.push({ x: movablePoints[0].x, y: movablePoints[0].y })
+      } else if (movablePoints.length === 2) {
+        linePoints.push({ x: movablePoints[0].x, y: movablePoints[0].y })
+        linePoints.push({ x: movablePoints[1].x, y: movablePoints[1].y })
+      } else if (movablePoints.length === 3) {
+        linePoints.push({ x: movablePoints[0].x, y: movablePoints[0].y })
+        linePoints.push({ x: movablePoints[2].x, y: movablePoints[2].y }) // center
+        linePoints.push({ x: movablePoints[1].x, y: movablePoints[1].y })
+      }
+
+      linePoints.push({ x: endPoint.x, y: endPoint.y })
+
+      graphics.lines!.push({
+        points: linePoints,
+        label: connectionName,
+        strokeColor: color,
+        strokeWidth: this.traceWidth,
+      })
+
+      // Add labeled points
+      graphics.points!.push({
+        x: startPoint.x,
+        y: startPoint.y,
+        label: "start",
+        color: "blue",
+      })
+      for (let i = 0; i < movablePoints.length; i++) {
+        graphics.points!.push({
+          x: movablePoints[i].x,
+          y: movablePoints[i].y,
+          label: `M${i + 1}`,
+          color: "orange",
+        })
+      }
+      graphics.points!.push({
+        x: endPoint.x,
+        y: endPoint.y,
+        label: "end",
+        color: "blue",
+      })
     }
 
     return graphics
