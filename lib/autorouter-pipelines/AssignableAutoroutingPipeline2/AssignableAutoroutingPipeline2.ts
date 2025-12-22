@@ -284,35 +284,37 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         traceWidth: cms.minTraceWidth,
       },
     ]),
-    definePipelineStep(
-      "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver,
-      (cms) => [
-        {
-          connections: cms.srjWithPointPairs!.connections,
-          hdRoutes: cms.highDensityRouteSolver!.routes,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-          defaultViaDiameter: cms.viaDiameter,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "traceSimplificationSolver",
-      TraceSimplificationSolver,
-      (cms) => [
-        {
-          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
-          obstacles: cms.srj.obstacles,
-          connMap: cms.connMap,
-          colorMap: cms.colorMap,
-          outline: cms.srj.outline,
-          defaultViaDiameter: cms.viaDiameter,
-          layerCount: cms.srj.layerCount,
-          iterations: 2,
-        },
-      ],
-    ),
+    // definePipelineStep(
+    //   "highDensityStitchSolver",
+    //   MultipleHighDensityRouteStitchSolver,
+    //   (cms) => [
+    //     {
+    //       connections: cms.srjWithPointPairs!.connections,
+    //       hdRoutes: cms.highDensityRouteSolver!.routes,
+    //       colorMap: cms.colorMap,
+    //       layerCount: cms.srj.layerCount,
+    //       defaultViaDiameter: cms.viaDiameter,
+    //     },
+    //   ],
+    // ),
+    // definePipelineStep(
+    //   "traceSimplificationSolver",
+    //   TraceSimplificationSolver,
+    //   (cms) => [
+    //     {
+    //       hdRoutes:
+    //         cms.highDensityStitchSolver!.mergedHdRoutes ??
+    //         cms.highDensityRouteSolver?.routes,
+    //       obstacles: cms.srj.obstacles,
+    //       connMap: cms.connMap,
+    //       colorMap: cms.colorMap,
+    //       outline: cms.srj.outline,
+    //       defaultViaDiameter: cms.viaDiameter,
+    //       layerCount: cms.srj.layerCount,
+    //       iterations: 2,
+    //     },
+    //   ],
+    // ),
   ]
 
   constructor(
@@ -561,7 +563,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
-      this.highDensityStitchSolver!.mergedHdRoutes
+      this.highDensityStitchSolver?.mergedHdRoutes ??
+      this.highDensityRouteSolver?.routes!
     )
   }
 
