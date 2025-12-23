@@ -267,6 +267,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             colorMap: cms.colorMap,
             hyperParameters: {
               NODE_PF_MAX_PENALTY: 10,
+              FORCE_OFF_BOARD_FREQUENCY: 0,
             },
           },
         ]

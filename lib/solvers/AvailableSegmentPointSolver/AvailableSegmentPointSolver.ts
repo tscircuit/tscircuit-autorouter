@@ -147,7 +147,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     const edgeMargin = this.edgeMargin + segmentLength * 0.1
     const effectiveLength = Math.max(0, segmentLength - 2 * edgeMargin)
 
-    if (effectiveLength <= 0) {
+    if (
+      effectiveLength <= 0 &&
+      !node1._containsTarget &&
+      !node2._containsTarget
+    ) {
       return null
     }
 
