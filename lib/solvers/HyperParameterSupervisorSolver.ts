@@ -133,7 +133,11 @@ export class HyperParameterSupervisorSolver<
   }
 
   getFailureMessage() {
-    return "All solvers failed in hyper solver."
+    return `All solvers failed in hyper solver. Example failures: ${this.supervisedSolvers
+      ?.sort((a, b) => b.f - a.f)
+      ?.slice(0, 5)
+      .map((s) => s.solver.error)
+      .join(", ")}`
   }
 
   _step() {

@@ -52,6 +52,21 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
         possibleValues: shuffleSeeds,
       },
       // {
+      //   name: "MORE_GREEDY",
+      //   possibleValues: [
+      //     {
+      //       GREEDY_MULTIPLIER: 5,
+      //     },
+      //     {
+      //       GREEDY_MULTIPLIER: 20,
+      //     },
+      //   ],
+      // },
+      // {
+      //   name: "SHUFFLE_SEED_SMALL",
+      //   possibleValues: shuffleSeeds.slice(0, Math.min(10, numSeeds / 5)),
+      // },
+      // {
       //   name: "RANDOM_WALK_DISTANCE",
       //   possibleValues: [
       //     {
@@ -70,6 +85,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
 
   override getCombinationDefs(): Array<string[]> {
     return [["SHUFFLE_SEED"]]
+    // return [["GREEDY_MULTIPLIER", "SHUFFLE_SEED_SMALL"], ["SHUFFLE_SEED"]]
     // return [["SHUFFLE_SEED", "RANDOM_WALK_DISTANCE"]]
   }
 
