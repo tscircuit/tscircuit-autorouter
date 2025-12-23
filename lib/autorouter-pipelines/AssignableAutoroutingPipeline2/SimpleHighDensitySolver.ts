@@ -13,6 +13,45 @@ const FORCE_STRENGTH = 0.01 * 10
 const BORDER_FORCE_STRENGTH = 0.05 * 10
 const MOVABLE_POINT_OFFSET = 0.1
 
+/**
+ * Find the closest point on line segment AB to point P
+ * Returns the closest point and the squared distance to it
+ */
+function closestPointOnSegment(
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): { x: number; y: number; distSq: number } {
+  const abx = bx - ax
+  const aby = by - ay
+  const apx = px - ax
+  const apy = py - ay
+
+  const abLenSq = abx * abx + aby * aby
+
+  if (abLenSq === 0) {
+    // Segment is a point
+    const distSq = apx * apx + apy * apy
+    return { x: ax, y: ay, distSq }
+  }
+
+  // Project P onto line AB, clamped to [0, 1]
+  let t = (apx * abx + apy * aby) / abLenSq
+  t = Math.max(0, Math.min(1, t))
+
+  const closestX = ax + t * abx
+  const closestY = ay + t * aby
+
+  const dx = px - closestX
+  const dy = py - closestY
+  const distSq = dx * dx + dy * dy
+
+  return { x: closestX, y: closestY, distSq }
+}
+
 interface MovablePoint {
   x: number
   y: number
@@ -252,20 +291,72 @@ export class SimpleHighDensitySolver extends BaseSolver {
         forceY -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToTop)
       }
 
-      // 2. Repulsion from other movable points with different rootConnectionName
-      for (const otherPoint of allMovablePoints) {
-        if (otherPoint === point) continue
-        if (otherPoint.rootConnectionName === point.rootConnectionName) continue
+      // 2. Repulsion from segments of other connections (different rootConnectionName)
+      for (const otherRoute of this.routesInProgress) {
+        if (otherRoute.rootConnectionName === point.rootConnectionName) continue
 
-        const dx = point.x - otherPoint.x
-        const dy = point.y - otherPoint.y
-        const distSq = dx * dx + dy * dy
-        const dist = Math.sqrt(distSq)
+        // Build the segment list for this route
+        const segmentPoints: Array<{ x: number; y: number }> = [
+          { x: otherRoute.startPoint.x, y: otherRoute.startPoint.y },
+        ]
 
-        if (dist > 0 && dist < forceEffectMargin * 2) {
-          const force = FORCE_STRENGTH / distSq
-          forceX += force * dx
-          forceY += force * dy
+        if (otherRoute.movablePoints.length === 1) {
+          segmentPoints.push({
+            x: otherRoute.movablePoints[0].x,
+            y: otherRoute.movablePoints[0].y,
+          })
+        } else if (otherRoute.movablePoints.length === 2) {
+          segmentPoints.push({
+            x: otherRoute.movablePoints[0].x,
+            y: otherRoute.movablePoints[0].y,
+          })
+          segmentPoints.push({
+            x: otherRoute.movablePoints[1].x,
+            y: otherRoute.movablePoints[1].y,
+          })
+        } else if (otherRoute.movablePoints.length === 3) {
+          segmentPoints.push({
+            x: otherRoute.movablePoints[0].x,
+            y: otherRoute.movablePoints[0].y,
+          })
+          segmentPoints.push({
+            x: otherRoute.movablePoints[2].x,
+            y: otherRoute.movablePoints[2].y,
+          }) // center
+          segmentPoints.push({
+            x: otherRoute.movablePoints[1].x,
+            y: otherRoute.movablePoints[1].y,
+          })
+        }
+
+        segmentPoints.push({
+          x: otherRoute.endPoint.x,
+          y: otherRoute.endPoint.y,
+        })
+
+        // Find closest point on any segment of this route
+        for (let i = 0; i < segmentPoints.length - 1; i++) {
+          const segA = segmentPoints[i]
+          const segB = segmentPoints[i + 1]
+
+          const closest = closestPointOnSegment(
+            point.x,
+            point.y,
+            segA.x,
+            segA.y,
+            segB.x,
+            segB.y,
+          )
+
+          const dist = Math.sqrt(closest.distSq)
+
+          if (dist > 0 && dist < forceEffectMargin * 2) {
+            const dx = point.x - closest.x
+            const dy = point.y - closest.y
+            const force = FORCE_STRENGTH / closest.distSq
+            forceX += force * dx
+            forceY += force * dy
+          }
         }
       }
 
