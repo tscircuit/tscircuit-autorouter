@@ -411,8 +411,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
         },
         width: bounds.maxX - bounds.minX,
         height: bounds.maxY - bounds.minY,
-        stroke: "gray",
-        label: "current node",
+        fill: "rgba(0, 0, 0, 0.5)",
       })
     }
 
