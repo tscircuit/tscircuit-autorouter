@@ -198,6 +198,7 @@ export class PortPointPathingSolver extends BaseSolver {
   }
 
   get FORCE_OFF_BOARD_FREQUENCY() {
+    if (this.offBoardNodes.length === 0) return 0
     return this.hyperParameters.FORCE_OFF_BOARD_FREQUENCY ?? 0
   }
 

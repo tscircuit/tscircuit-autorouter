@@ -7,10 +7,10 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { safeTransparentize } from "../../solvers/colors"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
-const STEPS_PER_NODE = 100
+const STEPS_PER_NODE = 5
 const BORDER_MARGIN = 0.3
-const FORCE_STRENGTH = 0.01
-const BORDER_FORCE_STRENGTH = 0.05
+const FORCE_STRENGTH = 0.01 * 10
+const BORDER_FORCE_STRENGTH = 0.05 * 10
 const MOVABLE_POINT_OFFSET = 0.1
 
 interface MovablePoint {
