@@ -78,8 +78,10 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
   pathFragments: OffboardPathFragment[] = []
 
   /** Map from offBoardConnectionId to port points that share it */
-  offBoardConnectionToPortPoints: Map<OffBoardConnectionId, OffboardPortPoint[]> =
-    new Map()
+  offBoardConnectionToPortPoints: Map<
+    OffBoardConnectionId,
+    OffboardPortPoint[]
+  > = new Map()
 
   /** Pending path fragments to create (computed after obstacle phase) */
   pendingFragments: PendingFragment[] = []
@@ -116,7 +118,10 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
     for (let i = 0; i < obstacles.length; i++) {
       const obstacle = obstacles[i]
-      if (obstacle.offBoardConnectsTo && obstacle.offBoardConnectsTo.length > 0) {
+      if (
+        obstacle.offBoardConnectsTo &&
+        obstacle.offBoardConnectsTo.length > 0
+      ) {
         this.offboardObstacles.push({ obstacle, index: i })
         for (const id of obstacle.offBoardConnectsTo) {
           uniqueOffBoardIds.add(id)
@@ -155,7 +160,8 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
       return
     }
 
-    const { obstacle, index } = this.offboardObstacles[this.currentObstacleIndex]
+    const { obstacle, index } =
+      this.offboardObstacles[this.currentObstacleIndex]
     this.lastProcessedObstacle = { obstacle, index }
 
     // Compute available Z from obstacle layers
@@ -188,7 +194,8 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
   private computePendingFragments() {
     // For each offBoardConnectionId, create edges between all port points that share it
-    for (const [offBoardId, portPoints] of this.offBoardConnectionToPortPoints) {
+    for (const [offBoardId, portPoints] of this
+      .offBoardConnectionToPortPoints) {
       for (let i = 0; i < portPoints.length; i++) {
         for (let j = i + 1; j < portPoints.length; j++) {
           this.pendingFragments.push({
