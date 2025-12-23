@@ -54,12 +54,30 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
 })[] = [
   {
     SHUFFLE_SEED: 100,
-    MEMORY_PF_FACTOR: 10,
+    NODE_PF_FACTOR: 100,
+    MEMORY_PF_FACTOR: 0,
+    EXPANSION_DEGREES: 3,
+    FORCE_CENTER_FIRST: true,
+    CENTER_OFFSET_DIST_PENALTY_FACTOR: 10,
+    MAX_ITERATIONS_PER_PATH: 300,
+  },
+  {
+    SHUFFLE_SEED: 200,
+    NODE_PF_FACTOR: 100,
+    MEMORY_PF_FACTOR: 0,
+    EXPANSION_DEGREES: 4,
+    FORCE_CENTER_FIRST: true,
+    CENTER_OFFSET_DIST_PENALTY_FACTOR: 10,
+    MAX_ITERATIONS_PER_PATH: 500,
+  },
+  {
+    SHUFFLE_SEED: 300,
+    NODE_PF_FACTOR: 100,
+    MEMORY_PF_FACTOR: 0,
     EXPANSION_DEGREES: 5,
     FORCE_CENTER_FIRST: true,
     CENTER_OFFSET_DIST_PENALTY_FACTOR: 10,
-    MAX_ITERATIONS_PER_PATH: 1000,
-    RANDOM_WALK_DISTANCE: 10,
+    MAX_ITERATIONS_PER_PATH: 1600,
   },
 ]
 
@@ -126,10 +144,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   sectionAttempts: number = 0
 
   /** Maximum number of attempts per node */
-  MAX_ATTEMPTS_PER_NODE = 1000
+  MAX_ATTEMPTS_PER_NODE = OPTIMIZATION_SCHEDULE.length
 
   /** Maximum total number of section optimization attempts */
-  MAX_SECTION_ATTEMPTS = 1000
+  MAX_SECTION_ATTEMPTS = 50
 
   /** Acceptable probability of failure threshold */
   ACCEPTABLE_PF = 0.05
@@ -485,13 +503,13 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     const sectionSrj = this.createSectionSimpleRouteJson(section)
     const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(section)
 
-    return new PortPointPathingSolver({
+    return new HyperPortPointPathingSolver({
       simpleRouteJson: sectionSrj,
       inputNodes: preparedInputNodes,
       capacityMeshNodes: section.capacityMeshNodes,
       colorMap: this.colorMap,
       nodeMemoryPfMap: this.nodePfMap,
-      // numShuffleSeeds: 10,
+      numShuffleSeeds: 20,
       hyperParameters: this.getHyperParametersForScheduleIndex(
         this.currentScheduleIndex,
         this.sectionAttempts,
@@ -794,7 +812,6 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           // Record the board score after this attempt
           ;(this.stats.sectionScores as Record<string, number>)[attemptKey] =
             newBoardScore
-          console.log("newBoardScore:", newBoardScore.toFixed(2))
 
           // Only count as successful if the BOARD score actually improved (higher is better)
           if (newBoardScore > previousBoardScore) {

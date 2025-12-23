@@ -265,6 +265,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
+            numShuffleSeeds: 200,
             hyperParameters: {
               NODE_PF_MAX_PENALTY: 10,
               FORCE_OFF_BOARD_FREQUENCY: 0,
@@ -273,26 +274,26 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         ]
       },
     ),
-    // definePipelineStep(
-    //   "multiSectionPortPointOptimizer",
-    //   MultiSectionPortPointOptimizer,
-    //   (cms) => {
-    //     const portPointSolver = cms.portPointPathingSolver!
-    //     return [
-    //       {
-    //         simpleRouteJson: cms.srjWithPointPairs!,
-    //         inputNodes: portPointSolver.inputNodes,
-    //         capacityMeshNodes: cms.capacityNodes!,
-    //         capacityMeshEdges: cms.capacityEdges!,
-    //         colorMap: cms.colorMap,
-    //         initialConnectionResults: portPointSolver.connectionsWithResults,
-    //         initialAssignedPortPoints: portPointSolver.assignedPortPoints,
-    //         initialNodeAssignedPortPoints:
-    //           portPointSolver.nodeAssignedPortPoints,
-    //       },
-    //     ]
-    //   },
-    // ),
+    definePipelineStep(
+      "multiSectionPortPointOptimizer",
+      MultiSectionPortPointOptimizer,
+      (cms) => {
+        const portPointSolver = cms.portPointPathingSolver!
+        return [
+          {
+            simpleRouteJson: cms.srjWithPointPairs!,
+            inputNodes: portPointSolver.inputNodes,
+            capacityMeshNodes: cms.capacityNodes!,
+            capacityMeshEdges: cms.capacityEdges!,
+            colorMap: cms.colorMap,
+            initialConnectionResults: portPointSolver.connectionsWithResults,
+            initialAssignedPortPoints: portPointSolver.assignedPortPoints,
+            initialNodeAssignedPortPoints:
+              portPointSolver.nodeAssignedPortPoints,
+          },
+        ]
+      },
+    ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints:

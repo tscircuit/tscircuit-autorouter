@@ -23,6 +23,7 @@ export interface HyperPortPointPathingSolverParams {
   colorMap?: Record<string, string>
   nodeMemoryPfMap?: Map<CapacityMeshNodeId, number>
   numShuffleSeeds?: number
+  minAllowedBoardScore?: number
   hyperParameters?: Partial<PortPointPathingHyperParameters>
 }
 
@@ -42,7 +43,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   getHyperParameterDefs(): Array<HyperParameterDef> {
     const numSeeds = this.params.numShuffleSeeds ?? 50
     const shuffleSeeds = Array.from({ length: numSeeds }, (_, i) => ({
-      SHUFFLE_SEED: i + (this.params.hyperParameters?.SHUFFLE_SEED ?? 0),
+      SHUFFLE_SEED: i + (this.params.hyperParameters?.SHUFFLE_SEED ?? 0) * 1700,
     }))
 
     return [
@@ -82,6 +83,9 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
       hyperParameters: {
         ...this.params.hyperParameters,
         ...hyperParameters,
+        MIN_ALLOWED_BOARD_SCORE:
+          hyperParameters.MIN_ALLOWED_BOARD_SCORE ??
+          this.params.minAllowedBoardScore,
       },
     })
   }
