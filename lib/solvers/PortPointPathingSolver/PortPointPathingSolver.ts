@@ -225,7 +225,7 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.GREEDY_MULTIPLIER ?? 1.3
   }
 
-  MAX_CANDIDATES_IN_MEMORY = 50_000
+  MAX_CANDIDATES_IN_MEMORY = 1000
 
   get MAX_ITERATIONS_PER_PATH() {
     return this.hyperParameters.MAX_ITERATIONS_PER_PATH ?? 4000
@@ -254,8 +254,6 @@ export class PortPointPathingSolver extends BaseSolver {
 
   /** Cache of base node cost (cost of node in current committed state) */
   private baseNodeCostCache = new Map<CapacityMeshNodeId, number>()
-  /** Cache of delta cost for a specific node segment (entry->exit) for a specific connection */
-  private segmentDeltaCostCache = new Map<string, number>()
 
   constructor({
     simpleRouteJson,
@@ -330,7 +328,6 @@ export class PortPointPathingSolver extends BaseSolver {
 
   private clearCostCaches() {
     this.baseNodeCostCache.clear()
-    this.segmentDeltaCostCache.clear()
   }
 
   private clampPf(pf: number): number {
@@ -345,14 +342,6 @@ export class PortPointPathingSolver extends BaseSolver {
     if (p >= this.NODE_MAX_PF) return this.NODE_PF_MAX_PENALTY
     // -log(1-p) is 0 at p=0 and increases quickly as p->1
     return -Math.log(1 - p)
-  }
-
-  private round3(n: number): number {
-    return Math.round(n * 1000) / 1000
-  }
-
-  private pointKey(p: { x: number; y: number }, z: number): string {
-    return `${this.round3(p.x)},${this.round3(p.y)},${z}`
   }
 
   /** Base node cost with the currently-committed port points (no candidate additions) */
@@ -387,17 +376,6 @@ export class PortPointPathingSolver extends BaseSolver {
     entry: PortPoint,
     exit: PortPoint,
   ): number {
-    const key = `${nodeId}|${this.pointKey(
-      { x: entry.x, y: entry.y },
-      entry.z,
-    )}|${this.pointKey(
-      { x: exit.x, y: exit.y },
-      exit.z,
-    )}|${entry.connectionName}|${entry.rootConnectionName ?? ""}`
-
-    const cached = this.segmentDeltaCostCache.get(key)
-    if (cached != null) return cached
-
     const node = this.nodeMap.get(nodeId)
     if (!node) return 0
 
@@ -411,7 +389,6 @@ export class PortPointPathingSolver extends BaseSolver {
 
     if (pfAfter >= this.NODE_MAX_PF) return this.NODE_PF_MAX_PENALTY
 
-    this.segmentDeltaCostCache.set(key, delta)
     return delta * this.NODE_PF_FACTOR
   }
 
