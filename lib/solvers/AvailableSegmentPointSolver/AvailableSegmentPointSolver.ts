@@ -65,7 +65,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
 
-  edgeMargin = 0.25
+  // edgeMargin = 0.25
 
   constructor({
     nodes,
@@ -144,7 +144,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     // Apply edge margin to avoid placing points too close to corners
     // The margin is half the port spacing to ensure points are at least that far from edges
-    const edgeMargin = this.edgeMargin + segmentLength * 0.1
+    const edgeMargin = this.minPortSpacing / 2 // this.edgeMargin + segmentLength * 0.1
     const effectiveLength = Math.max(0, segmentLength - 2 * edgeMargin)
 
     if (
