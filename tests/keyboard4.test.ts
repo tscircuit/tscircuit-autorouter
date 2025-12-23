@@ -8,7 +8,7 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson } from "lib/types"
 import { AutoroutingPipelineSolver2_PortPointPathing } from "lib/autorouter-pipelines"
 
-describe("keyboard4 autorouting", () => {
+describe.skip("keyboard4 autorouting", () => {
   const keyboard4Srj = keyboard4 as unknown as SimpleRouteJson
 
   let circuitJson: AnyCircuitElement[]

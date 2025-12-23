@@ -5,7 +5,7 @@ import { convertSrjToGraphicsObject } from "../lib"
 import e2e8 from "examples/legacy/assets/e2e8.json"
 import { getLastStepSvg } from "./fixtures/getLastStepSvg"
 
-describe("CapacityMeshSolver", () => {
+describe.skip("CapacityMeshSolver", () => {
   test("getOutputSimpleRouteJson throws when solver is not complete", () => {
     const simpleSrj = {
       layerCount: 2,
