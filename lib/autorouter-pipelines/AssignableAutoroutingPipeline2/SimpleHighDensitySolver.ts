@@ -9,8 +9,8 @@ import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
 const STEPS_PER_NODE = 10
 const BORDER_MARGIN = 0.3
-const FORCE_STRENGTH = 0.01 * 10
-const BORDER_FORCE_STRENGTH = 0.05 * 10
+const POINT_FORCE_STRENGTH = 0.002
+const BORDER_FORCE_STRENGTH = 0.1
 const MOVABLE_POINT_OFFSET = 0.1
 
 /**
@@ -106,8 +106,8 @@ export class SimpleHighDensitySolver extends BaseSolver {
     colorMap,
     traceWidth = 0.1,
     viaDiameter = 0.6,
-    pushMargin = 0.2,
-    numMovablePoints = 3,
+    pushMargin = 0.3,
+    numMovablePoints = 2,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -265,12 +265,74 @@ export class SimpleHighDensitySolver extends BaseSolver {
       allMovablePoints.push(...route.movablePoints)
     }
 
+    // Initialize force accumulators
+    const forces = new Map<MovablePoint, { fx: number; fy: number }>()
+    for (const point of allMovablePoints) {
+      forces.set(point, { fx: 0, fy: 0 })
+    }
+
     const forceEffectMargin = BORDER_MARGIN + this.pushMargin
 
-    // Apply forces to each movable point
+    // Build segment info for each route (with references to movable points)
+    type SegmentInfo = {
+      x: number
+      y: number
+      movablePoint: MovablePoint | null // null if this is a fixed point (start/end)
+    }
+
+    const routeSegments = new Map<RouteInProgress, SegmentInfo[]>()
+    for (const route of this.routesInProgress) {
+      const segmentPoints: SegmentInfo[] = [
+        { x: route.startPoint.x, y: route.startPoint.y, movablePoint: null },
+      ]
+
+      if (route.movablePoints.length === 1) {
+        segmentPoints.push({
+          x: route.movablePoints[0].x,
+          y: route.movablePoints[0].y,
+          movablePoint: route.movablePoints[0],
+        })
+      } else if (route.movablePoints.length === 2) {
+        segmentPoints.push({
+          x: route.movablePoints[0].x,
+          y: route.movablePoints[0].y,
+          movablePoint: route.movablePoints[0],
+        })
+        segmentPoints.push({
+          x: route.movablePoints[1].x,
+          y: route.movablePoints[1].y,
+          movablePoint: route.movablePoints[1],
+        })
+      } else if (route.movablePoints.length === 3) {
+        segmentPoints.push({
+          x: route.movablePoints[0].x,
+          y: route.movablePoints[0].y,
+          movablePoint: route.movablePoints[0],
+        })
+        segmentPoints.push({
+          x: route.movablePoints[2].x,
+          y: route.movablePoints[2].y,
+          movablePoint: route.movablePoints[2],
+        }) // center
+        segmentPoints.push({
+          x: route.movablePoints[1].x,
+          y: route.movablePoints[1].y,
+          movablePoint: route.movablePoints[1],
+        })
+      }
+
+      segmentPoints.push({
+        x: route.endPoint.x,
+        y: route.endPoint.y,
+        movablePoint: null,
+      })
+
+      routeSegments.set(route, segmentPoints)
+    }
+
+    // Calculate forces for each movable point
     for (const point of allMovablePoints) {
-      let forceX = 0
-      let forceY = 0
+      const pointForce = forces.get(point)!
 
       // 1. Border repulsion forces
       const distToLeft = point.x - bounds.minX
@@ -279,60 +341,26 @@ export class SimpleHighDensitySolver extends BaseSolver {
       const distToBottom = point.y - bounds.minY
 
       if (distToLeft < forceEffectMargin) {
-        forceX += BORDER_FORCE_STRENGTH * (forceEffectMargin - distToLeft)
+        pointForce.fx +=
+          BORDER_FORCE_STRENGTH * (forceEffectMargin - distToLeft)
       }
       if (distToRight < forceEffectMargin) {
-        forceX -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToRight)
+        pointForce.fx -=
+          BORDER_FORCE_STRENGTH * (forceEffectMargin - distToRight)
       }
       if (distToBottom < forceEffectMargin) {
-        forceY += BORDER_FORCE_STRENGTH * (forceEffectMargin - distToBottom)
+        pointForce.fy +=
+          BORDER_FORCE_STRENGTH * (forceEffectMargin - distToBottom)
       }
       if (distToTop < forceEffectMargin) {
-        forceY -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToTop)
+        pointForce.fy -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToTop)
       }
 
       // 2. Repulsion from segments of other connections (different rootConnectionName)
       for (const otherRoute of this.routesInProgress) {
         if (otherRoute.rootConnectionName === point.rootConnectionName) continue
 
-        // Build the segment list for this route
-        const segmentPoints: Array<{ x: number; y: number }> = [
-          { x: otherRoute.startPoint.x, y: otherRoute.startPoint.y },
-        ]
-
-        if (otherRoute.movablePoints.length === 1) {
-          segmentPoints.push({
-            x: otherRoute.movablePoints[0].x,
-            y: otherRoute.movablePoints[0].y,
-          })
-        } else if (otherRoute.movablePoints.length === 2) {
-          segmentPoints.push({
-            x: otherRoute.movablePoints[0].x,
-            y: otherRoute.movablePoints[0].y,
-          })
-          segmentPoints.push({
-            x: otherRoute.movablePoints[1].x,
-            y: otherRoute.movablePoints[1].y,
-          })
-        } else if (otherRoute.movablePoints.length === 3) {
-          segmentPoints.push({
-            x: otherRoute.movablePoints[0].x,
-            y: otherRoute.movablePoints[0].y,
-          })
-          segmentPoints.push({
-            x: otherRoute.movablePoints[2].x,
-            y: otherRoute.movablePoints[2].y,
-          }) // center
-          segmentPoints.push({
-            x: otherRoute.movablePoints[1].x,
-            y: otherRoute.movablePoints[1].y,
-          })
-        }
-
-        segmentPoints.push({
-          x: otherRoute.endPoint.x,
-          y: otherRoute.endPoint.y,
-        })
+        const segmentPoints = routeSegments.get(otherRoute)!
 
         // Find closest point on any segment of this route
         for (let i = 0; i < segmentPoints.length - 1; i++) {
@@ -353,20 +381,54 @@ export class SimpleHighDensitySolver extends BaseSolver {
           if (dist > 0 && dist < forceEffectMargin * 2) {
             const dx = point.x - closest.x
             const dy = point.y - closest.y
-            const force = FORCE_STRENGTH / closest.distSq
-            forceX += force * dx
-            forceY += force * dy
+            const force = POINT_FORCE_STRENGTH / closest.distSq
+            const forceX = force * dx
+            const forceY = force * dy
+
+            // Apply force to the point being pushed
+            pointForce.fx += forceX
+            pointForce.fy += forceY
+
+            // Apply reciprocal force to the movable points on the segment
+            const movableA = segA.movablePoint
+            const movableB = segB.movablePoint
+
+            if (movableA && movableB) {
+              // Both endpoints are movable - distribute force equally
+              const forceA = forces.get(movableA)!
+              const forceB = forces.get(movableB)!
+              forceA.fx -= forceX / 2
+              forceA.fy -= forceY / 2
+              forceB.fx -= forceX / 2
+              forceB.fy -= forceY / 2
+            } else if (movableA) {
+              // Only A is movable - all reciprocal force goes to A
+              const forceA = forces.get(movableA)!
+              forceA.fx -= forceX
+              forceA.fy -= forceY
+            } else if (movableB) {
+              // Only B is movable - all reciprocal force goes to B
+              const forceB = forces.get(movableB)!
+              forceB.fx -= forceX
+              forceB.fy -= forceY
+            }
+            // If both are fixed points, the reciprocal force is absorbed
           }
         }
       }
+    }
+
+    // Apply accumulated forces to all points
+    for (const point of allMovablePoints) {
+      const pointForce = forces.get(point)!
 
       // Store forces for visualization
-      point.forceX = forceX
-      point.forceY = forceY
+      point.forceX = pointForce.fx
+      point.forceY = pointForce.fy
 
       // Apply forces
-      point.x += forceX
-      point.y += forceY
+      point.x += pointForce.fx
+      point.y += pointForce.fy
 
       // Clamp to bounds
       point.x = Math.max(bounds.minX, Math.min(bounds.maxX, point.x))
@@ -663,7 +725,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
                   y: endY - arrowSize * Math.sin(angle + Math.PI / 6),
                 },
               ],
-              strokeColor: "red",
+              strokeColor: "purple",
               strokeWidth: 0.02,
             })
           }
