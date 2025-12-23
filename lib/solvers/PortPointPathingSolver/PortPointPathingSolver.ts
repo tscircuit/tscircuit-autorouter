@@ -31,6 +31,7 @@ export interface PortPointPathingHyperParameters {
 
   MEMORY_PF_FACTOR?: number
   BASE_CANDIDATE_COST?: number
+  MIN_ALLOWED_BOARD_SCORE?: number
 
   MAX_ITERATIONS_PER_PATH?: number
   FORCE_CENTER_FIRST?: boolean
@@ -229,6 +230,10 @@ export class PortPointPathingSolver extends BaseSolver {
 
   get MAX_ITERATIONS_PER_PATH() {
     return this.hyperParameters.MAX_ITERATIONS_PER_PATH ?? 4000
+  }
+
+  get MIN_ALLOWED_BOARD_SCORE() {
+    return this.hyperParameters.MIN_ALLOWED_BOARD_SCORE ?? -10000
   }
 
   nodeMemoryPfMap: Map<CapacityMeshNodeId, number>
@@ -978,10 +983,16 @@ export class PortPointPathingSolver extends BaseSolver {
     const nextConnection =
       this.connectionsWithResults[this.currentConnectionIndex]
     if (!nextConnection) {
-      this.solved = true
+      const boardScore = this.computeBoardScore()
       this.stats = {
-        boardScore: this.computeBoardScore(),
+        boardScore,
       }
+      if (boardScore < this.MIN_ALLOWED_BOARD_SCORE) {
+        this.failed = true
+        this.error = `Board score ${boardScore.toFixed(2)} is less than MIN_ALLOWED_BOARD_SCORE ${this.MIN_ALLOWED_BOARD_SCORE.toFixed(2)}`
+        return
+      }
+      this.solved = true
       return
     }
 
