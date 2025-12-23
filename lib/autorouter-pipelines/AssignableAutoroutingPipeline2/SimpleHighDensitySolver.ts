@@ -7,7 +7,7 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { safeTransparentize } from "../../solvers/colors"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
-const STEPS_PER_NODE = 5
+const STEPS_PER_NODE = 10
 const BORDER_MARGIN = 0.3
 const FORCE_STRENGTH = 0.01 * 10
 const BORDER_FORCE_STRENGTH = 0.05 * 10
@@ -19,6 +19,8 @@ interface MovablePoint {
   z: number
   rootConnectionName?: string
   connectionName: string
+  forceX?: number
+  forceY?: number
 }
 
 interface RouteInProgress {
@@ -66,7 +68,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
     traceWidth = 0.1,
     viaDiameter = 0.6,
     pushMargin = 0.2,
-    numMovablePoints = 2,
+    numMovablePoints = 3,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -267,6 +269,10 @@ export class SimpleHighDensitySolver extends BaseSolver {
         }
       }
 
+      // Store forces for visualization
+      point.forceX = forceX
+      point.forceY = forceY
+
       // Apply forces
       point.x += forceX
       point.y += forceY
@@ -375,6 +381,37 @@ export class SimpleHighDensitySolver extends BaseSolver {
       circles: [],
     }
 
+    // Draw unsolved nodes with faded backgrounds
+    for (const node of this.unsolvedNodes) {
+      if (node === this.currentNode) continue
+      const bounds = this._getNodeBounds(node)
+      graphics.rects!.push({
+        center: {
+          x: (bounds.minX + bounds.maxX) / 2,
+          y: (bounds.minY + bounds.maxY) / 2,
+        },
+        width: bounds.maxX - bounds.minX,
+        height: bounds.maxY - bounds.minY,
+        fill: "rgba(0, 0, 0, 0.08)",
+        stroke: "rgba(0, 0, 0, 0.2)",
+      })
+    }
+
+    // Draw current node in green
+    if (this.currentNode) {
+      const bounds = this._getNodeBounds(this.currentNode)
+      graphics.rects!.push({
+        center: {
+          x: (bounds.minX + bounds.maxX) / 2,
+          y: (bounds.minY + bounds.maxY) / 2,
+        },
+        width: bounds.maxX - bounds.minX,
+        height: bounds.maxY - bounds.minY,
+        fill: "rgba(0, 200, 0, 0.15)",
+        stroke: "rgba(0, 200, 0, 0.6)",
+      })
+    }
+
     // Draw unsolved nodes in gray
     for (const node of this.unsolvedNodes) {
       // Group port points by connectionName
@@ -399,20 +436,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
           strokeWidth: this.traceWidth,
         })
       }
-    }
-
-    // Draw current node bounds with gray stroke
-    if (this.currentNode && this.currentNodeBounds) {
-      const bounds = this.currentNodeBounds
-      graphics.rects!.push({
-        center: {
-          x: (bounds.minX + bounds.maxX) / 2,
-          y: (bounds.minY + bounds.maxY) / 2,
-        },
-        width: bounds.maxX - bounds.minX,
-        height: bounds.maxY - bounds.minY,
-        fill: "rgba(0, 0, 0, 0.5)",
-      })
     }
 
     // Visualize completed routes
@@ -500,12 +523,60 @@ export class SimpleHighDensitySolver extends BaseSolver {
         color: "blue",
       })
       for (let i = 0; i < movablePoints.length; i++) {
+        const mp = movablePoints[i]
         graphics.points!.push({
-          x: movablePoints[i].x,
-          y: movablePoints[i].y,
+          x: mp.x,
+          y: mp.y,
           label: `M${i + 1}`,
           color: "orange",
         })
+
+        // Draw force vectors
+        if (mp.forceX !== undefined && mp.forceY !== undefined) {
+          const forceMagnitude = Math.sqrt(
+            mp.forceX * mp.forceX + mp.forceY * mp.forceY,
+          )
+          if (forceMagnitude > 0.001) {
+            // Scale force for visibility (multiply by a factor to make vectors visible)
+            const scale = 5
+            graphics.lines!.push({
+              points: [
+                { x: mp.x, y: mp.y },
+                { x: mp.x + mp.forceX * scale, y: mp.y + mp.forceY * scale },
+              ],
+              strokeColor: "red",
+              strokeWidth: 0.02,
+              label: `F${i + 1}`,
+            })
+            // Draw arrowhead
+            const arrowSize = 0.05
+            const endX = mp.x + mp.forceX * scale
+            const endY = mp.y + mp.forceY * scale
+            const angle = Math.atan2(mp.forceY, mp.forceX)
+            graphics.lines!.push({
+              points: [
+                { x: endX, y: endY },
+                {
+                  x: endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                  y: endY - arrowSize * Math.sin(angle - Math.PI / 6),
+                },
+              ],
+              strokeColor: "red",
+              strokeWidth: 0.02,
+            })
+            graphics.lines!.push({
+              points: [
+                { x: endX, y: endY },
+                {
+                  x: endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                  y: endY - arrowSize * Math.sin(angle + Math.PI / 6),
+                },
+              ],
+              strokeColor: "red",
+              strokeWidth: 0.02,
+            })
+          }
+        }
       }
       graphics.points!.push({
         x: endPoint.x,
