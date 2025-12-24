@@ -2,6 +2,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { $ } from "bun"
 
 const bugReportArg = process.argv[2]
 
@@ -123,3 +124,6 @@ console.log(`Snapshot test created at ${testFilePath}`)
 console.log(
   `\nBug report "${newBugReportNum}-${shortUuid}" successfully downloaded with fixture and test.`,
 )
+
+console.log("Running format...")
+await $`bun run format`

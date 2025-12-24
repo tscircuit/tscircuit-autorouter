@@ -2,6 +2,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { $ } from "bun"
 
 // Get the bug report ID from command line arguments
 const bugReportArg = process.argv[2]
@@ -98,3 +99,6 @@ console.log(`\n\nFixture file created at ${fixtureFilePath}`)
 console.log(
   `Bug report "${newBugReportNum}-${shortUuid}" successfully downloaded and set up`,
 )
+
+console.log("Running format...")
+await $`bun run format`
