@@ -370,6 +370,10 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
     this.timeSpentOnPhase = {}
   }
 
+  getConstructorParams() {
+    return [this.srj, this.opts] as const
+  }
+
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
