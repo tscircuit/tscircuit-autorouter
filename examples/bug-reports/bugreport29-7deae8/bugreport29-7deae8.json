@@ -553,9 +553,7 @@
           "y": -14.460000000000003
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_0",
           "connectivity_net379",
@@ -572,9 +570,7 @@
           "y": -11.920000000000002
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_1",
           "connectivity_net37",
@@ -597,9 +593,7 @@
           "y": -9.38
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_2",
           "connectivity_net39",
@@ -642,9 +636,7 @@
           "y": -6.840000000000001
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_3",
           "connectivity_net380",
@@ -661,9 +653,7 @@
           "y": -4.300000000000001
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_4",
           "connectivity_net381",
@@ -680,9 +670,7 @@
           "y": -1.7600000000000016
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_5",
           "connectivity_net17",
@@ -703,9 +691,7 @@
           "y": 0.7799999999999994
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_6",
           "connectivity_net12",
@@ -726,9 +712,7 @@
           "y": 3.3200000000000003
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_7",
           "connectivity_net382",
@@ -745,9 +729,7 @@
           "y": 5.859999999999998
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_8",
           "connectivity_net383",
@@ -764,9 +746,7 @@
           "y": -14.459999999999999
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_9",
           "connectivity_net41",
@@ -789,9 +769,7 @@
           "y": -11.919999999999998
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_10",
           "connectivity_net43",
@@ -814,9 +792,7 @@
           "y": -9.379999999999999
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_11",
           "connectivity_net384",
@@ -833,9 +809,7 @@
           "y": -6.839999999999999
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_12",
           "connectivity_net27",
@@ -856,9 +830,7 @@
           "y": -4.299999999999999
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_13",
           "connectivity_net32",
@@ -879,9 +851,7 @@
           "y": -1.7599999999999998
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_14",
           "connectivity_net385",
@@ -898,9 +868,7 @@
           "y": 0.7800000000000011
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_15",
           "connectivity_net386",
@@ -917,9 +885,7 @@
           "y": 3.320000000000002
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_16",
           "connectivity_net22",
@@ -940,9 +906,7 @@
           "y": 5.860000000000001
         },
         "height": 1.6,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_17",
           "connectivity_net387",
@@ -959,9 +923,7 @@
           "y": 8.16
         },
         "height": 2,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_18",
           "connectivity_net388",
@@ -978,9 +940,7 @@
           "y": 8.16
         },
         "height": 2,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_19",
           "connectivity_net389",
@@ -997,9 +957,7 @@
           "y": 8.16
         },
         "height": 2,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_20",
           "connectivity_net390",
@@ -1016,9 +974,7 @@
           "y": 8.16
         },
         "height": 2,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_21",
           "connectivity_net391",
@@ -1035,9 +991,7 @@
           "y": 8.16
         },
         "height": 2,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_22",
           "connectivity_net392",
@@ -1054,9 +1008,7 @@
           "y": 2.2500589999999647
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_23",
           "connectivity_net12",
@@ -1077,9 +1029,7 @@
           "y": 2.2500589999999647
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_24",
           "connectivity_net393",
@@ -1096,9 +1046,7 @@
           "y": -2.2500590000000784
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_25",
           "connectivity_net39",
@@ -1141,9 +1089,7 @@
           "y": -2.2500590000000784
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_26",
           "connectivity_net394",
@@ -1160,9 +1106,7 @@
           "y": -7.749941000000035
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_27",
           "connectivity_net17",
@@ -1183,9 +1127,7 @@
           "y": -7.749941000000035
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_28",
           "connectivity_net395",
@@ -1202,9 +1144,7 @@
           "y": -12.250059000000078
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_29",
           "connectivity_net39",
@@ -1247,9 +1187,7 @@
           "y": -12.250059000000078
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_30",
           "connectivity_net396",
@@ -1266,9 +1204,7 @@
           "y": 2.2500589999999647
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_31",
           "connectivity_net397",
@@ -1285,9 +1221,7 @@
           "y": 2.2500589999999647
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_32",
           "connectivity_net22",
@@ -1308,9 +1242,7 @@
           "y": -2.2500590000000784
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_33",
           "connectivity_net398",
@@ -1327,9 +1259,7 @@
           "y": -2.2500590000000784
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_34",
           "connectivity_net39",
@@ -1372,9 +1302,7 @@
           "y": -7.749941000000035
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_35",
           "connectivity_net399",
@@ -1391,9 +1319,7 @@
           "y": -7.749941000000035
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_36",
           "connectivity_net27",
@@ -1414,9 +1340,7 @@
           "y": -12.250059000000078
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_37",
           "connectivity_net400",
@@ -1433,9 +1357,7 @@
           "y": -12.250059000000078
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_38",
           "connectivity_net39",
@@ -1478,9 +1400,7 @@
           "y": 12.250058999999965
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_39",
           "connectivity_net401",
@@ -1497,9 +1417,7 @@
           "y": 12.250058999999965
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_40",
           "connectivity_net32",
@@ -1520,9 +1438,7 @@
           "y": 7.749940999999922
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_41",
           "connectivity_net402",
@@ -1539,9 +1455,7 @@
           "y": 7.749940999999922
         },
         "height": 1.499997,
-        "layers": [
-          "top"
-        ],
+        "layers": ["top"],
         "connectedTo": [
           "pcb_smtpad_42",
           "connectivity_net39",
@@ -1584,12 +1498,7 @@
           "y": 14
         },
         "height": 1.8,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_0",
           "connectivity_net37",
@@ -1612,12 +1521,7 @@
           "y": 14
         },
         "height": 1.8,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_1",
           "connectivity_net39",
@@ -1660,12 +1564,7 @@
           "y": 14
         },
         "height": 1.8,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_2",
           "connectivity_net43",
@@ -1688,12 +1587,7 @@
           "y": 14
         },
         "height": 1.8,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_3",
           "connectivity_net41",
@@ -1716,12 +1610,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_4",
           "connectivity_net403",
@@ -1730,9 +1619,7 @@
           "pcb_port_47"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_0"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_0"]
       },
       {
         "type": "oval",
@@ -1742,12 +1629,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_5",
           "connectivity_net404",
@@ -1756,9 +1638,7 @@
           "pcb_port_48"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_1"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_1"]
       },
       {
         "type": "oval",
@@ -1768,12 +1648,7 @@
           "y": 12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_6",
           "connectivity_net405",
@@ -1782,9 +1657,7 @@
           "pcb_port_49"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_2"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_2"]
       },
       {
         "type": "oval",
@@ -1794,12 +1667,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_7",
           "connectivity_net406",
@@ -1808,9 +1676,7 @@
           "pcb_port_50"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_3"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_3"]
       },
       {
         "type": "oval",
@@ -1820,12 +1686,7 @@
           "y": 7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_8",
           "connectivity_net407",
@@ -1834,9 +1695,7 @@
           "pcb_port_51"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_0"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_0"]
       },
       {
         "type": "oval",
@@ -1846,12 +1705,7 @@
           "y": 5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_9",
           "connectivity_net408",
@@ -1860,9 +1714,7 @@
           "pcb_port_52"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_4"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_4"]
       },
       {
         "type": "oval",
@@ -1872,12 +1724,7 @@
           "y": 2.5400000000000014
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_10",
           "connectivity_net409",
@@ -1886,9 +1733,7 @@
           "pcb_port_53"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_5"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_5"]
       },
       {
         "type": "oval",
@@ -1898,12 +1743,7 @@
           "y": 2.3329521523757077e-16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_11",
           "connectivity_net410",
@@ -1912,9 +1752,7 @@
           "pcb_port_54"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_1"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_1"]
       },
       {
         "type": "oval",
@@ -1924,12 +1762,7 @@
           "y": -2.5399999999999987
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_12",
           "connectivity_net411",
@@ -1938,9 +1771,7 @@
           "pcb_port_55"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_4"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_4"]
       },
       {
         "type": "oval",
@@ -1950,12 +1781,7 @@
           "y": -5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_13",
           "connectivity_net412",
@@ -1964,9 +1790,7 @@
           "pcb_port_56"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_1"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_1"]
       },
       {
         "type": "oval",
@@ -1976,12 +1800,7 @@
           "y": -7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_14",
           "connectivity_net413",
@@ -1990,9 +1809,7 @@
           "pcb_port_57"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_6"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_6"]
       },
       {
         "type": "oval",
@@ -2002,12 +1819,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_15",
           "connectivity_net414",
@@ -2016,9 +1828,7 @@
           "pcb_port_58"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_7"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_7"]
       },
       {
         "type": "oval",
@@ -2028,12 +1838,7 @@
           "y": -12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_16",
           "connectivity_net415",
@@ -2042,9 +1847,7 @@
           "pcb_port_59"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_8"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_8"]
       },
       {
         "type": "oval",
@@ -2054,12 +1857,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_17",
           "connectivity_net416",
@@ -2068,9 +1866,7 @@
           "pcb_port_60"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_9"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_9"]
       },
       {
         "type": "oval",
@@ -2080,12 +1876,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_18",
           "connectivity_net417",
@@ -2094,9 +1885,7 @@
           "pcb_port_61"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_2"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_2"]
       },
       {
         "type": "oval",
@@ -2106,12 +1895,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_19",
           "connectivity_net418",
@@ -2120,9 +1904,7 @@
           "pcb_port_62"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_9"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_9"]
       },
       {
         "type": "oval",
@@ -2132,12 +1914,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_20",
           "connectivity_net419",
@@ -2146,9 +1923,7 @@
           "pcb_port_63"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_6"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_6"]
       },
       {
         "type": "oval",
@@ -2158,12 +1933,7 @@
           "y": 12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_21",
           "connectivity_net420",
@@ -2172,9 +1942,7 @@
           "pcb_port_64"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_10"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_10"]
       },
       {
         "type": "oval",
@@ -2184,12 +1952,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_22",
           "connectivity_net421",
@@ -2198,9 +1961,7 @@
           "pcb_port_65"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_7"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_7"]
       },
       {
         "type": "oval",
@@ -2210,12 +1971,7 @@
           "y": 7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_23",
           "connectivity_net422",
@@ -2224,9 +1980,7 @@
           "pcb_port_66"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_11"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_11"]
       },
       {
         "type": "oval",
@@ -2236,12 +1990,7 @@
           "y": 5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_24",
           "connectivity_net423",
@@ -2250,9 +1999,7 @@
           "pcb_port_67"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_12"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_12"]
       },
       {
         "type": "oval",
@@ -2262,12 +2009,7 @@
           "y": 2.540000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_25",
           "connectivity_net424",
@@ -2276,9 +2018,7 @@
           "pcb_port_68"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_3"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_3"]
       },
       {
         "type": "oval",
@@ -2288,12 +2028,7 @@
           "y": 7.776507174585693e-17
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_26",
           "connectivity_net425",
@@ -2302,9 +2037,7 @@
           "pcb_port_69"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_2"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_2"]
       },
       {
         "type": "oval",
@@ -2314,12 +2047,7 @@
           "y": -2.539999999999999
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_27",
           "connectivity_net426",
@@ -2328,9 +2056,7 @@
           "pcb_port_70"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_10"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_10"]
       },
       {
         "type": "oval",
@@ -2340,12 +2066,7 @@
           "y": -5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_28",
           "connectivity_net427",
@@ -2354,9 +2075,7 @@
           "pcb_port_71"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_8"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_8"]
       },
       {
         "type": "oval",
@@ -2366,12 +2085,7 @@
           "y": -7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_29",
           "connectivity_net428",
@@ -2380,9 +2094,7 @@
           "pcb_port_72"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_3"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_3"]
       },
       {
         "type": "oval",
@@ -2392,12 +2104,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_30",
           "connectivity_net429",
@@ -2406,9 +2113,7 @@
           "pcb_port_73"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_13"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_13"]
       },
       {
         "type": "oval",
@@ -2418,12 +2123,7 @@
           "y": -12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_31",
           "connectivity_net430",
@@ -2432,9 +2132,7 @@
           "pcb_port_74"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_5"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_5"]
       },
       {
         "type": "oval",
@@ -2444,12 +2142,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_32",
           "connectivity_net431",
@@ -2458,9 +2151,7 @@
           "pcb_port_75"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_14"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_14"]
       },
       {
         "type": "oval",
@@ -2470,12 +2161,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_33",
           "connectivity_net432",
@@ -2484,9 +2170,7 @@
           "pcb_port_76"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_0"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_0"]
       },
       {
         "type": "oval",
@@ -2496,12 +2180,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_34",
           "connectivity_net433",
@@ -2510,9 +2189,7 @@
           "pcb_port_77"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_6"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_6"]
       },
       {
         "type": "oval",
@@ -2522,12 +2199,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_35",
           "connectivity_net434",
@@ -2536,9 +2208,7 @@
           "pcb_port_78"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_4"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_4"]
       },
       {
         "type": "oval",
@@ -2548,12 +2218,7 @@
           "y": 12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_36",
           "connectivity_net435",
@@ -2562,9 +2227,7 @@
           "pcb_port_79"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_0"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_0"]
       },
       {
         "type": "oval",
@@ -2574,12 +2237,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_37",
           "connectivity_net436",
@@ -2588,9 +2246,7 @@
           "pcb_port_80"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_12"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_12"]
       },
       {
         "type": "oval",
@@ -2600,12 +2256,7 @@
           "y": 7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_38",
           "connectivity_net437",
@@ -2614,9 +2265,7 @@
           "pcb_port_81"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_6"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_6"]
       },
       {
         "type": "oval",
@@ -2626,12 +2275,7 @@
           "y": 5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_39",
           "connectivity_net438",
@@ -2640,9 +2284,7 @@
           "pcb_port_82"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_5"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_5"]
       },
       {
         "type": "oval",
@@ -2652,12 +2294,7 @@
           "y": 2.540000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_40",
           "connectivity_net439",
@@ -2666,9 +2303,7 @@
           "pcb_port_83"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_9"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_9"]
       },
       {
         "type": "oval",
@@ -2678,12 +2313,7 @@
           "y": -7.776507174585693e-17
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_41",
           "connectivity_net440",
@@ -2692,9 +2322,7 @@
           "pcb_port_84"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_13"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_13"]
       },
       {
         "type": "oval",
@@ -2704,12 +2332,7 @@
           "y": -2.539999999999999
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_42",
           "connectivity_net441",
@@ -2718,9 +2341,7 @@
           "pcb_port_85"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_11"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_11"]
       },
       {
         "type": "oval",
@@ -2730,12 +2351,7 @@
           "y": -5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_43",
           "connectivity_net442",
@@ -2744,9 +2360,7 @@
           "pcb_port_86"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_2"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_2"]
       },
       {
         "type": "oval",
@@ -2756,12 +2370,7 @@
           "y": -7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_44",
           "connectivity_net443",
@@ -2770,9 +2379,7 @@
           "pcb_port_87"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_14"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_14"]
       },
       {
         "type": "oval",
@@ -2782,12 +2389,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_45",
           "connectivity_net444",
@@ -2796,9 +2398,7 @@
           "pcb_port_88"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_1"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_1"]
       },
       {
         "type": "oval",
@@ -2808,12 +2408,7 @@
           "y": -12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_46",
           "connectivity_net445",
@@ -2822,9 +2417,7 @@
           "pcb_port_89"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_10"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_10"]
       },
       {
         "type": "oval",
@@ -2834,12 +2427,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_47",
           "connectivity_net446",
@@ -2848,9 +2436,7 @@
           "pcb_port_90"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_7"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_7"]
       },
       {
         "type": "oval",
@@ -2860,12 +2446,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_48",
           "connectivity_net447",
@@ -2874,9 +2455,7 @@
           "pcb_port_91"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_12"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_12"]
       },
       {
         "type": "oval",
@@ -2886,12 +2465,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_49",
           "connectivity_net448",
@@ -2900,9 +2474,7 @@
           "pcb_port_92"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_14"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_14"]
       },
       {
         "type": "oval",
@@ -2912,12 +2484,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_50",
           "connectivity_net449",
@@ -2926,9 +2493,7 @@
           "pcb_port_93"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_13"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_13"]
       },
       {
         "type": "oval",
@@ -2938,12 +2503,7 @@
           "y": 12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_51",
           "connectivity_net450",
@@ -2952,9 +2512,7 @@
           "pcb_port_94"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_8"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_8"]
       },
       {
         "type": "oval",
@@ -2964,12 +2522,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_52",
           "connectivity_net451",
@@ -2978,9 +2531,7 @@
           "pcb_port_95"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_5"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_5"]
       },
       {
         "type": "oval",
@@ -2990,12 +2541,7 @@
           "y": 7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_53",
           "connectivity_net452",
@@ -3004,9 +2550,7 @@
           "pcb_port_96"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_0"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_0"]
       },
       {
         "type": "oval",
@@ -3016,12 +2560,7 @@
           "y": 5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_54",
           "connectivity_net453",
@@ -3030,9 +2569,7 @@
           "pcb_port_97"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_6"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_6"]
       },
       {
         "type": "oval",
@@ -3042,12 +2579,7 @@
           "y": 2.5400000000000005
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_55",
           "connectivity_net454",
@@ -3056,9 +2588,7 @@
           "pcb_port_98"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_7"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_7"]
       },
       {
         "type": "oval",
@@ -3068,12 +2598,7 @@
           "y": -2.3329521523757077e-16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_56",
           "connectivity_net455",
@@ -3082,9 +2607,7 @@
           "pcb_port_99"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_2"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_2"]
       },
       {
         "type": "oval",
@@ -3094,12 +2617,7 @@
           "y": -2.5399999999999996
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_57",
           "connectivity_net456",
@@ -3108,9 +2626,7 @@
           "pcb_port_100"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_12"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_12"]
       },
       {
         "type": "oval",
@@ -3120,12 +2636,7 @@
           "y": -5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_58",
           "connectivity_net457",
@@ -3134,9 +2645,7 @@
           "pcb_port_101"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_10"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_10"]
       },
       {
         "type": "oval",
@@ -3146,12 +2655,7 @@
           "y": -7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_59",
           "connectivity_net458",
@@ -3160,9 +2664,7 @@
           "pcb_port_102"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_9"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_9"]
       },
       {
         "type": "oval",
@@ -3172,12 +2674,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_60",
           "connectivity_net459",
@@ -3186,9 +2683,7 @@
           "pcb_port_103"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_11"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_11"]
       },
       {
         "type": "oval",
@@ -3198,12 +2693,7 @@
           "y": -12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_61",
           "connectivity_net460",
@@ -3212,9 +2702,7 @@
           "pcb_port_104"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_3"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_3"]
       },
       {
         "type": "oval",
@@ -3224,12 +2712,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_62",
           "connectivity_net461",
@@ -3238,9 +2721,7 @@
           "pcb_port_105"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_4"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_4"]
       },
       {
         "type": "oval",
@@ -3250,12 +2731,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_63",
           "connectivity_net462",
@@ -3264,9 +2740,7 @@
           "pcb_port_106"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_1"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_1"]
       },
       {
         "type": "rect",
@@ -3276,12 +2750,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_64",
           "connectivity_net463",
@@ -3290,9 +2759,7 @@
           "pcb_port_107"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_15"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_15"]
       },
       {
         "type": "oval",
@@ -3302,12 +2769,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_65",
           "connectivity_net464",
@@ -3316,9 +2778,7 @@
           "pcb_port_108"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_16"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_16"]
       },
       {
         "type": "oval",
@@ -3328,12 +2788,7 @@
           "y": -12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_66",
           "connectivity_net465",
@@ -3342,9 +2797,7 @@
           "pcb_port_109"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_17"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_17"]
       },
       {
         "type": "oval",
@@ -3354,12 +2807,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_67",
           "connectivity_net466",
@@ -3368,9 +2816,7 @@
           "pcb_port_110"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_18"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_18"]
       },
       {
         "type": "oval",
@@ -3380,12 +2826,7 @@
           "y": -7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_68",
           "connectivity_net467",
@@ -3394,9 +2835,7 @@
           "pcb_port_111"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_15"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_15"]
       },
       {
         "type": "oval",
@@ -3406,12 +2845,7 @@
           "y": -5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_69",
           "connectivity_net468",
@@ -3420,9 +2854,7 @@
           "pcb_port_112"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_19"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_19"]
       },
       {
         "type": "oval",
@@ -3432,12 +2864,7 @@
           "y": -2.5400000000000005
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_70",
           "connectivity_net469",
@@ -3446,9 +2873,7 @@
           "pcb_port_113"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_20"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_20"]
       },
       {
         "type": "oval",
@@ -3458,12 +2883,7 @@
           "y": 2.3329521523757077e-16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_71",
           "connectivity_net470",
@@ -3472,9 +2892,7 @@
           "pcb_port_114"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_16"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_16"]
       },
       {
         "type": "oval",
@@ -3484,12 +2902,7 @@
           "y": 2.5399999999999996
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_72",
           "connectivity_net471",
@@ -3498,9 +2911,7 @@
           "pcb_port_115"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_19"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_19"]
       },
       {
         "type": "oval",
@@ -3510,12 +2921,7 @@
           "y": 5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_73",
           "connectivity_net472",
@@ -3524,9 +2930,7 @@
           "pcb_port_116"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_16"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_16"]
       },
       {
         "type": "oval",
@@ -3536,12 +2940,7 @@
           "y": 7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_74",
           "connectivity_net473",
@@ -3550,9 +2949,7 @@
           "pcb_port_117"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_21"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_21"]
       },
       {
         "type": "oval",
@@ -3562,12 +2959,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_75",
           "connectivity_net474",
@@ -3576,9 +2968,7 @@
           "pcb_port_118"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_22"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_22"]
       },
       {
         "type": "oval",
@@ -3588,12 +2978,7 @@
           "y": 12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_76",
           "connectivity_net475",
@@ -3602,9 +2987,7 @@
           "pcb_port_119"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_23"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_23"]
       },
       {
         "type": "oval",
@@ -3614,12 +2997,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_77",
           "connectivity_net476",
@@ -3628,9 +3006,7 @@
           "pcb_port_120"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_24"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_24"]
       },
       {
         "type": "oval",
@@ -3640,12 +3016,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_78",
           "connectivity_net477",
@@ -3654,9 +3025,7 @@
           "pcb_port_121"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_17"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_17"]
       },
       {
         "type": "oval",
@@ -3666,12 +3035,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_79",
           "connectivity_net478",
@@ -3680,9 +3044,7 @@
           "pcb_port_122"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_24"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_24"]
       },
       {
         "type": "oval",
@@ -3692,12 +3054,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_80",
           "connectivity_net479",
@@ -3706,9 +3063,7 @@
           "pcb_port_123"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_21"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_21"]
       },
       {
         "type": "oval",
@@ -3718,12 +3073,7 @@
           "y": -12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_81",
           "connectivity_net480",
@@ -3732,9 +3082,7 @@
           "pcb_port_124"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_25"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_25"]
       },
       {
         "type": "oval",
@@ -3744,12 +3092,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_82",
           "connectivity_net481",
@@ -3758,9 +3101,7 @@
           "pcb_port_125"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_22"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_22"]
       },
       {
         "type": "oval",
@@ -3770,12 +3111,7 @@
           "y": -7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_83",
           "connectivity_net482",
@@ -3784,9 +3120,7 @@
           "pcb_port_126"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_26"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_26"]
       },
       {
         "type": "oval",
@@ -3796,12 +3130,7 @@
           "y": -5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_84",
           "connectivity_net483",
@@ -3810,9 +3139,7 @@
           "pcb_port_127"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_27"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_27"]
       },
       {
         "type": "oval",
@@ -3822,12 +3149,7 @@
           "y": -2.540000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_85",
           "connectivity_net484",
@@ -3836,9 +3158,7 @@
           "pcb_port_128"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_18"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_18"]
       },
       {
         "type": "oval",
@@ -3848,12 +3168,7 @@
           "y": 7.776507174585693e-17
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_86",
           "connectivity_net485",
@@ -3862,9 +3177,7 @@
           "pcb_port_129"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_17"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_17"]
       },
       {
         "type": "oval",
@@ -3874,12 +3187,7 @@
           "y": 2.539999999999999
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_87",
           "connectivity_net486",
@@ -3888,9 +3196,7 @@
           "pcb_port_130"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_25"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_25"]
       },
       {
         "type": "oval",
@@ -3900,12 +3206,7 @@
           "y": 5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_88",
           "connectivity_net487",
@@ -3914,9 +3215,7 @@
           "pcb_port_131"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_23"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_23"]
       },
       {
         "type": "oval",
@@ -3926,12 +3225,7 @@
           "y": 7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_89",
           "connectivity_net488",
@@ -3940,9 +3234,7 @@
           "pcb_port_132"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_18"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_18"]
       },
       {
         "type": "oval",
@@ -3952,12 +3244,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_90",
           "connectivity_net489",
@@ -3966,9 +3253,7 @@
           "pcb_port_133"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_28"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_28"]
       },
       {
         "type": "oval",
@@ -3978,12 +3263,7 @@
           "y": 12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_91",
           "connectivity_net490",
@@ -3992,9 +3272,7 @@
           "pcb_port_134"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_20"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_20"]
       },
       {
         "type": "oval",
@@ -4004,12 +3282,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_92",
           "connectivity_net491",
@@ -4018,9 +3291,7 @@
           "pcb_port_135"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_29"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_29"]
       },
       {
         "type": "oval",
@@ -4030,12 +3301,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_93",
           "connectivity_net492",
@@ -4044,9 +3310,7 @@
           "pcb_port_136"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_15"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_15"]
       },
       {
         "type": "oval",
@@ -4056,12 +3320,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_94",
           "connectivity_net493",
@@ -4070,9 +3329,7 @@
           "pcb_port_137"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_21"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_21"]
       },
       {
         "type": "oval",
@@ -4082,12 +3339,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_95",
           "connectivity_net494",
@@ -4096,9 +3348,7 @@
           "pcb_port_138"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_19"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_19"]
       },
       {
         "type": "oval",
@@ -4108,12 +3358,7 @@
           "y": -12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_96",
           "connectivity_net495",
@@ -4122,9 +3367,7 @@
           "pcb_port_139"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_15"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_15"]
       },
       {
         "type": "oval",
@@ -4134,12 +3377,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_97",
           "connectivity_net496",
@@ -4148,9 +3386,7 @@
           "pcb_port_140"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_27"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_27"]
       },
       {
         "type": "oval",
@@ -4160,12 +3396,7 @@
           "y": -7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_98",
           "connectivity_net497",
@@ -4174,9 +3405,7 @@
           "pcb_port_141"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_21"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_21"]
       },
       {
         "type": "oval",
@@ -4186,12 +3415,7 @@
           "y": -5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_99",
           "connectivity_net498",
@@ -4200,9 +3424,7 @@
           "pcb_port_142"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_20"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_20"]
       },
       {
         "type": "oval",
@@ -4212,12 +3434,7 @@
           "y": -2.540000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_100",
           "connectivity_net499",
@@ -4226,9 +3443,7 @@
           "pcb_port_143"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_24"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_24"]
       },
       {
         "type": "oval",
@@ -4238,12 +3453,7 @@
           "y": -7.776507174585693e-17
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_101",
           "connectivity_net500",
@@ -4252,9 +3462,7 @@
           "pcb_port_144"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_28"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_28"]
       },
       {
         "type": "oval",
@@ -4264,12 +3472,7 @@
           "y": 2.539999999999999
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_102",
           "connectivity_net501",
@@ -4278,9 +3481,7 @@
           "pcb_port_145"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_26"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_26"]
       },
       {
         "type": "oval",
@@ -4290,12 +3491,7 @@
           "y": 5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_103",
           "connectivity_net502",
@@ -4304,9 +3500,7 @@
           "pcb_port_146"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_17"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_17"]
       },
       {
         "type": "oval",
@@ -4316,12 +3510,7 @@
           "y": 7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_104",
           "connectivity_net503",
@@ -4330,9 +3519,7 @@
           "pcb_port_147"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_29"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_29"]
       },
       {
         "type": "oval",
@@ -4342,12 +3529,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_105",
           "connectivity_net504",
@@ -4356,9 +3538,7 @@
           "pcb_port_148"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_16"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_16"]
       },
       {
         "type": "oval",
@@ -4368,12 +3548,7 @@
           "y": 12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_106",
           "connectivity_net505",
@@ -4382,9 +3557,7 @@
           "pcb_port_149"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_25"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_25"]
       },
       {
         "type": "oval",
@@ -4394,12 +3567,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_107",
           "connectivity_net506",
@@ -4408,9 +3576,7 @@
           "pcb_port_150"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_22"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_22"]
       },
       {
         "type": "oval",
@@ -4420,12 +3586,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_108",
           "connectivity_net507",
@@ -4434,9 +3595,7 @@
           "pcb_port_151"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_27"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_27"]
       },
       {
         "type": "oval",
@@ -4446,12 +3605,7 @@
           "y": -17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_109",
           "connectivity_net508",
@@ -4460,9 +3614,7 @@
           "pcb_port_152"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_29"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_29"]
       },
       {
         "type": "oval",
@@ -4472,12 +3624,7 @@
           "y": -15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_110",
           "connectivity_net509",
@@ -4486,9 +3633,7 @@
           "pcb_port_153"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_28"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_28"]
       },
       {
         "type": "oval",
@@ -4498,12 +3643,7 @@
           "y": -12.700000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_111",
           "connectivity_net510",
@@ -4512,9 +3652,7 @@
           "pcb_port_154"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_23"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_23"]
       },
       {
         "type": "oval",
@@ -4524,12 +3662,7 @@
           "y": -10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_112",
           "connectivity_net511",
@@ -4538,9 +3671,7 @@
           "pcb_port_155"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_20"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_20"]
       },
       {
         "type": "oval",
@@ -4550,12 +3681,7 @@
           "y": -7.620000000000001
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_113",
           "connectivity_net512",
@@ -4564,9 +3690,7 @@
           "pcb_port_156"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_15"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_15"]
       },
       {
         "type": "oval",
@@ -4576,12 +3700,7 @@
           "y": -5.080000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_114",
           "connectivity_net513",
@@ -4590,9 +3709,7 @@
           "pcb_port_157"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_21"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_21"]
       },
       {
         "type": "oval",
@@ -4602,12 +3719,7 @@
           "y": -2.5400000000000014
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_115",
           "connectivity_net514",
@@ -4616,9 +3728,7 @@
           "pcb_port_158"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_22"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_22"]
       },
       {
         "type": "oval",
@@ -4628,12 +3738,7 @@
           "y": -2.3329521523757077e-16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_116",
           "connectivity_net515",
@@ -4642,9 +3747,7 @@
           "pcb_port_159"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_17"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_17"]
       },
       {
         "type": "oval",
@@ -4654,12 +3757,7 @@
           "y": 2.5399999999999987
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_117",
           "connectivity_net516",
@@ -4668,9 +3766,7 @@
           "pcb_port_160"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_27"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_27"]
       },
       {
         "type": "oval",
@@ -4680,12 +3776,7 @@
           "y": 5.079999999999998
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_118",
           "connectivity_net517",
@@ -4694,9 +3785,7 @@
           "pcb_port_161"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_25"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_25"]
       },
       {
         "type": "oval",
@@ -4706,12 +3795,7 @@
           "y": 7.619999999999997
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_119",
           "connectivity_net518",
@@ -4720,9 +3804,7 @@
           "pcb_port_162"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_24"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_24"]
       },
       {
         "type": "oval",
@@ -4732,12 +3814,7 @@
           "y": 10.16
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_120",
           "connectivity_net519",
@@ -4746,9 +3823,7 @@
           "pcb_port_163"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_26"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_26"]
       },
       {
         "type": "oval",
@@ -4758,12 +3833,7 @@
           "y": 12.7
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_121",
           "connectivity_net520",
@@ -4772,9 +3842,7 @@
           "pcb_port_164"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_18"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_18"]
       },
       {
         "type": "oval",
@@ -4784,12 +3852,7 @@
           "y": 15.240000000000002
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_122",
           "connectivity_net521",
@@ -4798,9 +3861,7 @@
           "pcb_port_165"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_19"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_19"]
       },
       {
         "type": "oval",
@@ -4810,12 +3871,7 @@
           "y": 17.78
         },
         "height": 2,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [
           "pcb_plated_hole_123",
           "connectivity_net522",
@@ -4824,9 +3880,7 @@
           "pcb_port_166"
         ],
         "netIsAssignable": true,
-        "offBoardConnectsTo": [
-          "source_component_internal_connection_16"
-        ]
+        "offBoardConnectsTo": ["source_component_internal_connection_16"]
       },
       {
         "type": "rect",
@@ -4836,12 +3890,7 @@
           "y": -5
         },
         "height": 24,
-        "layers": [
-          "top",
-          "inner1",
-          "inner2",
-          "bottom"
-        ],
+        "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": []
       }
     ],
