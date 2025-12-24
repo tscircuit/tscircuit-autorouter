@@ -12,6 +12,8 @@ Want to understand how the autorouter works? Check out a stage-by-stage breakdow
 2. Run `bun run bug-report <bug-report-url>` to download the report and create a debugging fixture file in the `examples/bug-reports` directory, you can then find the bug report in the server (via `bun run start`)
 3. Or run `bun run bug-report-with-test <bug-report-url>` to download the report, create the fixture, and scaffold a matching snapshot test under `tests/bugs`
 
+Or [run the Create Bug Report workflow](https://github.com/tscircuit/capacity-autorouter/actions/workflows/create-bug-report.yml) to automatically create a PR with the bug report (maintainers only)
+
 ## Installation
 
 ```bash
