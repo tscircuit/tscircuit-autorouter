@@ -45,6 +45,11 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     }
 
     const route = this.routes[0]
+    if (route.A.z === undefined || route.B.z === undefined) {
+      this.failed = true
+      this.error = `Route points should have predefined z values`
+      return
+    }
     if (route.A.z === route.B.z) {
       this.failed = true
       this.error = "Only one route provided, but it has no transition"
@@ -92,8 +97,8 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     for (const [connectionName, points] of connectionGroups.entries()) {
       if (points.length === 2) {
         routes.push({
-          A: { ...points[0], z: points[0].z ?? 0 },
-          B: { ...points[1], z: points[1].z ?? 0 },
+          A: { ...points[0] },
+          B: { ...points[1] },
           connectionName,
         })
       }
@@ -121,10 +126,10 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     connectionName: string,
   ): HighDensityIntraNodeRoute {
     const route = [
-      { x: start.x, y: start.y, z: start.z ?? 0 },
-      { x: via.x, y: via.y, z: start.z ?? 0 },
-      { x: via.x, y: via.y, z: end.z ?? 0 },
-      { x: end.x, y: end.y, z: end.z ?? 0 },
+      { x: start.x, y: start.y, z: start.z! },
+      { x: via.x, y: via.y, z: start.z! },
+      { x: via.x, y: via.y, z: end.z! },
+      { x: end.x, y: end.y, z: end.z! },
     ]
 
     return {
