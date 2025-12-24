@@ -11,11 +11,15 @@ import {
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver"
 import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
+import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
-  IntraNodeRouteSolver | TwoCrossingRoutesHighDensitySolver
+  | IntraNodeRouteSolver
+  | TwoCrossingRoutesHighDensitySolver
+  | SingleTransitionCrossingRouteSolver
+  | SingleTransitionIntraNodeSolver
 > {
   constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -41,6 +45,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       ["noVias"],
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
+      ["closedFormSingleTrace"],
       ["closedFormTwoTrace"],
     ]
   }
@@ -140,6 +145,14 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         ],
       },
       {
+        name: "closedFormSingleTrace",
+        possibleValues: [
+          {
+            CLOSED_FORM_SINGLE_TRANSITION: true,
+          },
+        ],
+      },
+      {
         name: "multiHeadPolyLine",
         possibleValues: [
           {
@@ -186,6 +199,12 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return new SingleTransitionCrossingRouteSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter,
+      }) as any
+    }
+    if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
+      return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
