@@ -103,6 +103,8 @@ export interface PortPointCandidate {
   hasTouchedOffBoardNode?: boolean
 
   lastMoveWasOffBoard?: boolean
+  /** The node we went through when making an off-board move */
+  throughNodeId?: CapacityMeshNodeId
 }
 
 export interface ConnectionPathResult {
@@ -837,7 +839,48 @@ export class PortPointPathingSolver extends BaseSolver {
     const path: PortPointCandidate[] = []
     let current: PortPointCandidate | null = candidate
     while (current) {
-      path.push(current)
+      // If this move was off-board, insert artificial points through the off-board nodes
+      if (current.lastMoveWasOffBoard && current.throughNodeId) {
+        const throughNode = this.nodeMap.get(current.throughNodeId)
+        const prevNode = current.prevCandidate
+          ? this.nodeMap.get(current.prevCandidate.currentNodeId)
+          : null
+
+        // Add the current candidate first
+        path.push(current)
+
+        // Add artificial point at the center of the through node (where we're going through)
+        if (throughNode) {
+          path.push({
+            prevCandidate: null,
+            portPoint: null,
+            currentNodeId: current.throughNodeId,
+            point: throughNode.center,
+            z: current.z,
+            f: 0,
+            g: 0,
+            h: 0,
+            distanceTraveled: 0,
+          })
+        }
+
+        // Add artificial point at the center of the previous off-board node (where we came from)
+        if (prevNode && prevNode._offBoardConnectionId) {
+          path.push({
+            prevCandidate: null,
+            portPoint: null,
+            currentNodeId: current.prevCandidate!.currentNodeId,
+            point: prevNode.center,
+            z: current.z,
+            f: 0,
+            g: 0,
+            h: 0,
+            distanceTraveled: 0,
+          })
+        }
+      } else {
+        path.push(current)
+      }
       current = current.prevCandidate
     }
     return path.reverse()
@@ -853,8 +896,35 @@ export class PortPointPathingSolver extends BaseSolver {
   ): PortPoint[] {
     const assignedPortPoints: PortPoint[] = []
 
-    for (const candidate of path) {
-      if (!candidate.portPoint) continue // Skip start/end target points
+    for (let i = 0; i < path.length; i++) {
+      const candidate = path[i]
+
+      // Handle artificial center points (from off-board connections)
+      // These have portPoint: null but are not start/end points
+      if (!candidate.portPoint) {
+        // Check if this is an artificial off-board center point (not start/end)
+        const isStart = i === 0
+        const isEnd = i === path.length - 1
+        if (!isStart && !isEnd) {
+          // This is an artificial center point for off-board connection
+          const portPoint: PortPoint = {
+            x: candidate.point.x,
+            y: candidate.point.y,
+            z: candidate.z,
+            connectionName,
+            rootConnectionName,
+          }
+
+          assignedPortPoints.push(portPoint)
+
+          // Add to the node this artificial point belongs to
+          const nodePortPoints =
+            this.nodeAssignedPortPoints.get(candidate.currentNodeId) ?? []
+          nodePortPoints.push(portPoint)
+          this.nodeAssignedPortPoints.set(candidate.currentNodeId, nodePortPoints)
+        }
+        continue
+      }
 
       const pp = candidate.portPoint
 
@@ -1251,6 +1321,9 @@ export class PortPointPathingSolver extends BaseSolver {
         h,
         distanceTraveled,
         lastMoveWasOffBoard: lastMoveWasOffBoard,
+        throughNodeId: lastMoveWasOffBoard
+          ? (portPoint as { throughNodeId?: CapacityMeshNodeId }).throughNodeId
+          : undefined,
         hasTouchedOffBoardNode:
           hasTouchedOffBoardNode ||
           Boolean(nextNode._offBoardConnectionId) ||
