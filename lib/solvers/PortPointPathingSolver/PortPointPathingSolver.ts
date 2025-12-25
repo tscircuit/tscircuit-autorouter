@@ -921,7 +921,10 @@ export class PortPointPathingSolver extends BaseSolver {
           const nodePortPoints =
             this.nodeAssignedPortPoints.get(candidate.currentNodeId) ?? []
           nodePortPoints.push(portPoint)
-          this.nodeAssignedPortPoints.set(candidate.currentNodeId, nodePortPoints)
+          this.nodeAssignedPortPoints.set(
+            candidate.currentNodeId,
+            nodePortPoints,
+          )
         }
         continue
       }
