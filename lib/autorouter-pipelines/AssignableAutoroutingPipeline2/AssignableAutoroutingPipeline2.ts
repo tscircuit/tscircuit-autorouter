@@ -3,6 +3,8 @@ import { combineVisualizations } from "../../utils/combineVisualizations"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
+  ObstacleId,
+  RootConnectionName,
   SimpleRouteJson,
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
@@ -49,6 +51,7 @@ import {
   HyperPortPointPathingSolverParams,
 } from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
+import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -261,6 +264,18 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             },
           } as HyperPortPointPathingSolverParams,
         ]
+      },
+      {
+        onSolved: (cms) => {
+          const solver = cms.portPointPathingSolver
+          if (!solver) return
+          updateConnMapWithOffboardObstacleConnections({
+            connMap: cms.connMap,
+            connectionsWithResults: solver.connectionsWithResults,
+            inputNodes: solver.inputNodes,
+            obstacles: cms.srj.obstacles,
+          })
+        },
       },
     ),
     // definePipelineStep(
@@ -605,6 +620,35 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       this.simpleHighDensityRouteSolver?.routes ??
       this.highDensityRouteSolver?.routes!
     )
+  }
+
+  getConnectedOffboardObstacles(): Record<ObstacleId, RootConnectionName> {
+    const connectedOffboardObstacles: Record<ObstacleId, RootConnectionName> =
+      {}
+    const rootConnectionNames = new Set(
+      this.srj.connections.map(
+        (connection) => connection.rootConnectionName ?? connection.name,
+      ),
+    )
+
+    for (const [index, obstacle] of this.srj.obstacles.entries()) {
+      if (!obstacle.offBoardConnectsTo?.length) continue
+      const obstacleId = obstacle.obstacleId ?? `__obs${index}`
+      obstacle.obstacleId = obstacleId
+
+      const netId = this.connMap.getNetConnectedToId(obstacleId)
+      if (!netId) continue
+
+      const connectedIds = this.connMap.getIdsConnectedToNet(netId)
+      const rootConnectionName = connectedIds.find((id) =>
+        rootConnectionNames.has(id),
+      )
+      if (!rootConnectionName) continue
+
+      connectedOffboardObstacles[obstacleId] = rootConnectionName
+    }
+
+    return connectedOffboardObstacles
   }
 
   /**

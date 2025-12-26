@@ -2,6 +2,8 @@ export type TraceId = string
 export type NetId = string
 export type PointId = string
 export type OffBoardConnectionId = string
+export type ObstacleId = string
+export type RootConnectionName = string
 export type SingleLayerConnectionPoint = {
   x: number
   y: number
