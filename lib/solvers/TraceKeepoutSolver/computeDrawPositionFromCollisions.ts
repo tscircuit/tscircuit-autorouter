@@ -1,3 +1,5 @@
+import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
+
 interface Point2D {
   x: number
   y: number
@@ -15,26 +17,38 @@ export interface ComputeDrawPositionInput {
   keepoutRadius: number
 }
 
-function closestPointOnSegment(p: Point2D, a: Point2D, b: Point2D): Point2D {
-  const dx = b.x - a.x,
-    dy = b.y - a.y
-  const lenSq = dx * dx + dy * dy
-  if (lenSq === 0) return { x: a.x, y: a.y }
-  const t = Math.max(
-    0,
-    Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq),
-  )
-  return { x: a.x + t * dx, y: a.y + t * dy }
-}
-
 /**
- * Gets minimum clearance from a point to all segments
+ * Gets minimum clearance from a projected segment to all obstacle segments.
+ * Projects a segment from pos in the direction of dir with length keepoutRadius,
+ * then computes the minimum segment-to-segment distance.
  */
-function getMinClearance(pos: Point2D, segments: Segment[]): number {
+function getMinClearance(params: {
+  pos: Point2D
+  segments: Segment[]
+  dir: { x: number; y: number }
+  keepoutRadius: number
+}): number {
+  const { pos, segments, dir, keepoutRadius } = params
   let minClearance = Infinity
+
+  // Project a segment centered on pos in the direction of dir with length keepoutRadius
+  const halfLength = keepoutRadius / 4
+  const segmentStart = {
+    x: pos.x - dir.x * halfLength,
+    y: pos.y - dir.y * halfLength,
+  }
+  const segmentEnd = {
+    x: pos.x + dir.x * halfLength,
+    y: pos.y + dir.y * halfLength,
+  }
+
   for (const seg of segments) {
-    const closest = closestPointOnSegment(pos, seg.start, seg.end)
-    const dist = Math.sqrt((pos.x - closest.x) ** 2 + (pos.y - closest.y) ** 2)
+    const dist = segmentToSegmentMinDistance(
+      segmentStart,
+      segmentEnd,
+      seg.start,
+      seg.end,
+    )
     minClearance = Math.min(minClearance, dist)
   }
   return minClearance
@@ -141,7 +155,12 @@ export function computeDrawPositionFromCollisions(
   const barrierDir = { x: -traceDir.y, y: traceDir.x }
 
   // Check if cursor position itself is valid
-  const cursorClearance = getMinClearance(cursorPosition, collidingSegments)
+  const cursorClearance = getMinClearance({
+    pos: cursorPosition,
+    segments: collidingSegments,
+    dir: traceDir,
+    keepoutRadius,
+  })
   if (cursorClearance >= keepoutRadius) {
     return null // No adjustment needed
   }
@@ -159,14 +178,24 @@ export function computeDrawPositionFromCollisions(
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
     }
-    const clearancePlus = getMinClearance(posPlus, collidingSegments)
+    const clearancePlus = getMinClearance({
+      pos: posPlus,
+      segments: collidingSegments,
+      dir: traceDir,
+      keepoutRadius,
+    })
 
     // Test negative direction
     const posMinus = {
       x: cursorPosition.x - barrierDir.x * d,
       y: cursorPosition.y - barrierDir.y * d,
     }
-    const clearanceMinus = getMinClearance(posMinus, collidingSegments)
+    const clearanceMinus = getMinClearance({
+      pos: posMinus,
+      segments: collidingSegments,
+      dir: traceDir,
+      keepoutRadius,
+    })
 
     // Return the first valid position found (minimal displacement)
     // Position must have sufficient clearance AND path from cursor must be clear
@@ -190,7 +219,7 @@ export function computeDrawPositionFromCollisions(
   // Strategy: Search outward from cursor in both directions, find the first
   // local maximum in each direction, then pick the better one.
   // Only consider reachable positions (paths that don't cross segments).
-  const searchRange = keepoutRadius * 1.5
+  const searchRange = keepoutRadius
   const searchSteps = 60
 
   // Sample clearance at each position
@@ -207,7 +236,12 @@ export function computeDrawPositionFromCollisions(
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
     }
-    const clearance = getMinClearance(testPos, collidingSegments)
+    const clearance = getMinClearance({
+      pos: testPos,
+      segments: collidingSegments,
+      dir: traceDir,
+      keepoutRadius,
+    })
     const pathClear = isPathClear(cursorPosition, testPos, collidingSegments)
     samples.push({
       pos: testPos,

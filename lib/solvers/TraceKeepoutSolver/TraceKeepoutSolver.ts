@@ -21,7 +21,7 @@ import {
 import { smoothHdRoutes } from "./smoothLines"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 
-const CURSOR_STEP_DISTANCE = 0.5
+const CURSOR_STEP_DISTANCE = 0.25
 const BOARD_OUTLINE_CONNECTION_NAME = "__board_outline__"
 
 interface Point2D {
@@ -726,7 +726,7 @@ export class TraceKeepoutSolver extends BaseSolver {
           center: { x: this.cursorPosition.x, y: this.cursorPosition.y },
           radius: this.currentKeepoutRadius,
           stroke: "orange",
-          label: "Cursor keepout",
+          fill: "none",
         })
 
         visualization.points.push({
@@ -735,6 +735,33 @@ export class TraceKeepoutSolver extends BaseSolver {
           color: "orange",
           label: "Cursor",
         })
+
+        // Draw projected segment (used for clearance calculation)
+        if (this.lastCursorPosition) {
+          const tdx = this.cursorPosition.x - this.lastCursorPosition.x
+          const tdy = this.cursorPosition.y - this.lastCursorPosition.y
+          const tLen = Math.sqrt(tdx * tdx + tdy * tdy)
+          const epsilon = 0.0001
+          const traceDir =
+            tLen > epsilon ? { x: tdx / tLen, y: tdy / tLen } : { x: 1, y: 0 }
+
+          const halfLength = this.currentKeepoutRadius / 4
+          const projectedStart = {
+            x: this.cursorPosition.x - traceDir.x * halfLength,
+            y: this.cursorPosition.y - traceDir.y * halfLength,
+          }
+          const projectedEnd = {
+            x: this.cursorPosition.x + traceDir.x * halfLength,
+            y: this.cursorPosition.y + traceDir.y * halfLength,
+          }
+
+          visualization.lines.push({
+            points: [projectedStart, projectedEnd],
+            strokeColor: "cyan",
+            strokeWidth: 0.05,
+            label: "Projected segment",
+          })
+        }
       }
 
       // Draw draw position
