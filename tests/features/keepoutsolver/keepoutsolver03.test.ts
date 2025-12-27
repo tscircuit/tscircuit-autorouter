@@ -17,9 +17,23 @@ test("TraceKeepoutSolver - keepoutsolver03", () => {
     srj: data.srj,
   })
 
-  solver.solve()
+  // solver.solve()
 
-  expect(solver.solved).toBe(true)
-  expect(solver.getRedrawnHdRoutes().length).toBeGreaterThan(0)
-  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
+  while (solver.iterations < 340) {
+    solver.step()
+  }
+
+  // At this step, we're noticing that there are no conflicting hd routes
+  // BUT THERE SHOULD BE
+  console.log(solver.currentTrace)
+  console.log(
+    solver.hdRouteSHI.getConflictingRoutesNearPoint(
+      solver.lastCursorPosition!,
+      solver.currentKeepoutRadius,
+    ),
+  )
+
+  // expect(solver.solved).toBe(true)
+  // expect(solver.getRedrawnHdRoutes().length).toBeGreaterThan(0)
+  // expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
 })

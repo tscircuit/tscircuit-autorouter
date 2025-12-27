@@ -98,14 +98,12 @@ interface StoredVia {
 export class HighDensityRouteSpatialIndex {
   private segmentBuckets: Map<BucketCoordinate, StoredSegment[]>
   private viaBuckets: Map<BucketCoordinate, StoredVia[]> // New: Store vias
-  private routes: Map<string, HighDensityRoute>
   private CELL_SIZE: number
 
   constructor(routes: HighDensityRoute[], cellSize: number = 1.0) {
     // console.time("HighDensityRouteSpatialIndex Constructor");
     this.segmentBuckets = new Map()
     this.viaBuckets = new Map() // Initialize via buckets
-    this.routes = new Map()
     this.CELL_SIZE = cellSize
     const epsilon = 1e-9 // For segment boundary checks
 
@@ -114,13 +112,6 @@ export class HighDensityRouteSpatialIndex {
         console.warn("Skipping route with missing data:", route)
         continue
       }
-      if (this.routes.has(route.connectionName)) {
-        console.warn(
-          `Skipping duplicate route connectionName: ${route.connectionName}`,
-        )
-        continue
-      }
-      this.routes.set(route.connectionName, route)
 
       // --- Index Segments ---
       if (route.route && route.route.length >= 2) {
