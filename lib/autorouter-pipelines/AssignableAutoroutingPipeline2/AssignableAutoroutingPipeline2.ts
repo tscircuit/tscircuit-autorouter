@@ -58,6 +58,7 @@ interface CapacityMeshSolverOptions {
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
+  effort?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -114,6 +115,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   viaDiameter: number
   minTraceWidth: number
+  effort: number
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -251,7 +253,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
-            numShuffleSeeds: 10000,
+            numShuffleSeeds: 10000 * cms.effort,
             minAllowedBoardScore: -1,
             hyperParameters: {
               // 1 = 60% maximum pf (see computeSectionScore)
@@ -377,6 +379,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = srj.minViaDiameter ?? 0.6
     this.minTraceWidth = srj.minTraceWidth
+    this.effort = opts.effort ?? 1
 
     // If capacityDepth is not provided, calculate it automatically
     if (opts.capacityDepth === undefined) {
