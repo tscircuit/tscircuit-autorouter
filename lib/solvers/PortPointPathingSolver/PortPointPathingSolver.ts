@@ -231,8 +231,11 @@ export class PortPointPathingSolver extends BaseSolver {
   MAX_CANDIDATES_IN_MEMORY = 1000
 
   get MAX_ITERATIONS_PER_PATH() {
-    return this.hyperParameters.MAX_ITERATIONS_PER_PATH ?? 4000
+    return this.hyperParameters.MAX_ITERATIONS_PER_PATH ?? 500
   }
+
+  ITERATIONS_PER_MM_FOR_PATH = 5
+  BASE_ITERATIONS_PER_PATH = 20
 
   get MIN_ALLOWED_BOARD_SCORE() {
     return this.hyperParameters.MIN_ALLOWED_BOARD_SCORE ?? -10000
@@ -255,6 +258,8 @@ export class PortPointPathingSolver extends BaseSolver {
 
   /** Whether the current connection should be forced to route off-board */
   currentConnectionShouldRouteOffBoard = false
+
+  activeCandidateStraightLineDistance?: number
 
   /** Cached list of off-board nodes for computing distance to nearest off-board node */
   offBoardNodes: InputNodeWithPortPoints[] = []
@@ -368,6 +373,15 @@ export class PortPointPathingSolver extends BaseSolver {
   computeBoardScore(): number {
     const allNodesWithPortPoints = this.getNodesWithPortPoints()
     return computeSectionScore(allNodesWithPortPoints, this.capacityMeshNodeMap)
+  }
+
+  getMaxIterationsForCurrentPath() {
+    const straightLineDistance = this.activeCandidateStraightLineDistance ?? 0
+    return Math.min(
+      this.BASE_ITERATIONS_PER_PATH +
+        this.ITERATIONS_PER_MM_FOR_PATH * straightLineDistance,
+      this.MAX_ITERATIONS_PER_PATH,
+    )
   }
 
   /**
@@ -1098,15 +1112,20 @@ export class PortPointPathingSolver extends BaseSolver {
       return
     }
 
+    // Set the straight line distance for dynamic iteration limit (must be before the check)
+    this.activeCandidateStraightLineDistance =
+      nextConnection.straightLineDistance
+
     // Check if we've exceeded max iterations for this path
     this.currentPathIterations++
-    if (this.currentPathIterations > this.MAX_ITERATIONS_PER_PATH) {
+    const maxIterationsForPath = this.getMaxIterationsForCurrentPath()
+    if (this.currentPathIterations > maxIterationsForPath) {
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedPortPoints = null
       this.currentPathIterations = 0
       this.failed = true
-      this.error = `Exceeded MAX_ITERATIONS_PER_PATH (${this.MAX_ITERATIONS_PER_PATH}) on connection ${nextConnection.connection.name}`
+      this.error = `Exceeded max iterations for path (${maxIterationsForPath}) on connection ${nextConnection.connection.name}`
       return
     }
 
