@@ -131,8 +131,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
   computeH(solver: PortPointPathingSolver): number {
     const progress = solver.progress || 0
 
+    const esotericPenalty = (solver.hyperParameters.SHUFFLE_SEED ?? 0) * 0.001
+
     // If very early, don't penalize yet - not enough signal
-    if (progress < 0.1) return 0
+    if (progress < 0.1) return esotericPenalty
 
     const boardScore = solver.computeBoardScore()
     const remainingProgress = 1 - progress
@@ -144,7 +146,7 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     const scorePerProgress = boardScore / progress
     const estimatedRemainingCost = -scorePerProgress * remainingProgress
 
-    return estimatedRemainingCost
+    return estimatedRemainingCost + esotericPenalty
   }
 
   /**
