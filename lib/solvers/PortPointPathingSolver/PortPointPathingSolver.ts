@@ -1315,12 +1315,13 @@ export class PortPointPathingSolver extends BaseSolver {
         "throughNodeId" in portPoint
           ? (portPoint as { throughNodeId?: CapacityMeshNodeId }).throughNodeId
           : undefined
-      const throughNode = throughNodeId
-        ? this.nodeMap.get(throughNodeId)
-        : null
+      const throughNode = throughNodeId ? this.nodeMap.get(throughNodeId) : null
 
       // Prevent throughNodeId cycles (off-board improvement)
-      if (throughNodeId && this.isNodeInPathChain(currentCandidate, throughNodeId)) {
+      if (
+        throughNodeId &&
+        this.isNodeInPathChain(currentCandidate, throughNodeId)
+      ) {
         continue
       }
 
