@@ -51,4 +51,65 @@ describe("getIntraNodeCrossings", () => {
 
     expect(result.numSameLayerCrossings).toBe(1)
   })
+
+  test("detects overlapping horizontal segments with floating point drift", () => {
+    const nodeWithPortPoints = {
+      capacityMeshNodeId: "cmn_6",
+      center: {
+        x: -2.7499999999999956,
+        y: 11.129999999999999,
+      },
+      width: 6.260000000000003,
+      height: 3.9399999999999995,
+      portPoints: [
+        {
+          x: -5.879999999999997,
+          y: 11.030000000000001,
+          z: 0,
+          connectionName: "source_net_1_mst4",
+          rootConnectionName: "source_net_1",
+        },
+        {
+          x: 0.3750000000000031,
+          y: 13.099999999999998,
+          z: 0,
+          connectionName: "source_net_1_mst4",
+          rootConnectionName: "source_net_1",
+        },
+        {
+          x: -5.294999999999999,
+          y: 13.1,
+          z: 0,
+          connectionName: "source_net_3",
+          rootConnectionName: "source_net_3",
+        },
+        {
+          x: -1.27,
+          y: 13.099999999999998,
+          z: 0,
+          connectionName: "source_net_3",
+          rootConnectionName: "source_net_3",
+        },
+        {
+          x: -5.654999999999998,
+          y: 13.1,
+          z: 0,
+          connectionName: "source_net_1_mst2",
+          rootConnectionName: "source_net_1",
+        },
+        {
+          x: -2.54,
+          y: 13.099999999999998,
+          z: 0,
+          connectionName: "source_net_1_mst2",
+          rootConnectionName: "source_net_1",
+        },
+      ],
+      availableZ: [0],
+    }
+
+    const result = getIntraNodeCrossings(nodeWithPortPoints)
+
+    expect(result.numSameLayerCrossings).toBe(1)
+  })
 })
