@@ -681,7 +681,20 @@ export class PortPointPathingSolver extends BaseSolver {
     )
   }
 
-  getAvailableExitPortPoints(nodeId: CapacityMeshNodeId) {
+  getVisitedPortPointKey(
+    portPointId: string,
+    hasTouchedOffBoardNode?: boolean,
+  ): string {
+    if (this.currentConnectionShouldRouteOffBoard && hasTouchedOffBoardNode) {
+      return `${portPointId}:touched_off_board`
+    }
+    return portPointId
+  }
+
+  getAvailableExitPortPoints(
+    nodeId: CapacityMeshNodeId,
+    hasTouchedOffBoardNode?: boolean,
+  ) {
     const currentConnection =
       this.connectionsWithResults[this.currentConnectionIndex]
     const currentRootConnectionName =
@@ -691,7 +704,11 @@ export class PortPointPathingSolver extends BaseSolver {
     const availablePortPoints: InputPortPoint[] = []
 
     for (const pp of portPoints) {
-      if (this.visitedPortPoints?.has(pp.portPointId)) continue
+      const visitedKey = this.getVisitedPortPointKey(
+        pp.portPointId,
+        hasTouchedOffBoardNode,
+      )
+      if (this.visitedPortPoints?.has(visitedKey)) continue
       const assignment = this.assignedPortPoints.get(pp.portPointId)
       if (
         assignment &&
@@ -716,6 +733,7 @@ export class PortPointPathingSolver extends BaseSolver {
   getAvailableExitPortPointsWithOmissions(
     nodeId: CapacityMeshNodeId,
     _endGoalNodeId: CapacityMeshNodeId,
+    hasTouchedOffBoardNode?: boolean,
   ): InputPortPoint[] {
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
     const currentNode = this.nodeMap.get(nodeId)
@@ -728,7 +746,11 @@ export class PortPointPathingSolver extends BaseSolver {
     const portsOnSameEdgeMap = new Map<string, InputPortPoint[]>()
 
     for (const pp of portPoints) {
-      if (this.visitedPortPoints?.has(pp.portPointId)) continue
+      const visitedKey = this.getVisitedPortPointKey(
+        pp.portPointId,
+        hasTouchedOffBoardNode,
+      )
+      if (this.visitedPortPoints?.has(visitedKey)) continue
 
       const otherNodeId = this.getOtherNodeId(pp, nodeId)
       if (!otherNodeId) continue
@@ -775,7 +797,10 @@ export class PortPointPathingSolver extends BaseSolver {
     return result
   }
 
-  getAvailableExitPortPointsForOffboardConnection(nodeId: CapacityMeshNodeId) {
+  getAvailableExitPortPointsForOffboardConnection(
+    nodeId: CapacityMeshNodeId,
+    hasTouchedOffBoardNode?: boolean,
+  ) {
     const currentNode = this.nodeMap.get(nodeId)
     if (!currentNode) return []
     const currentConnection =
@@ -795,7 +820,11 @@ export class PortPointPathingSolver extends BaseSolver {
       if (!otherNode) continue
       const otherPortPoints = this.nodePortPointsMap.get(otherNodeId) ?? []
       for (const pp of otherPortPoints) {
-        if (this.visitedPortPoints?.has(pp.portPointId)) continue
+        const visitedKey = this.getVisitedPortPointKey(
+          pp.portPointId,
+          hasTouchedOffBoardNode,
+        )
+        if (this.visitedPortPoints?.has(visitedKey)) continue
         const assignment = this.assignedPortPoints.get(pp.portPointId)
         if (
           assignment &&
@@ -1227,6 +1256,7 @@ export class PortPointPathingSolver extends BaseSolver {
       availablePortPoints =
         this.getAvailableExitPortPointsForOffboardConnection(
           currentCandidate.currentNodeId,
+          currentCandidate.hasTouchedOffBoardNode,
         )
       // for (const pp of availablePortPoints) {
       //   this.visitedPortPoints?.add(pp.portPointId)
@@ -1235,10 +1265,12 @@ export class PortPointPathingSolver extends BaseSolver {
       availablePortPoints = this.getAvailableExitPortPointsWithOmissions(
         currentCandidate.currentNodeId,
         endNodeId,
+        currentCandidate.hasTouchedOffBoardNode,
       )
     } else {
       availablePortPoints = this.getAvailableExitPortPoints(
         currentCandidate.currentNodeId,
+        currentCandidate.hasTouchedOffBoardNode,
       )
     }
 
@@ -1336,7 +1368,11 @@ export class PortPointPathingSolver extends BaseSolver {
 
     // Mark current port point as visited (if any)
     if (currentCandidate.portPoint && this.visitedPortPoints) {
-      this.visitedPortPoints.add(currentCandidate.portPoint.portPointId)
+      const visitedKey = this.getVisitedPortPointKey(
+        currentCandidate.portPoint.portPointId,
+        currentCandidate.hasTouchedOffBoardNode,
+      )
+      this.visitedPortPoints.add(visitedKey)
     }
   }
 
