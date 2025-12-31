@@ -5,7 +5,7 @@ import type {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "../../types"
-import type { GraphicsObject } from "graphics-debug"
+import { mergeGraphics, type GraphicsObject, type Line } from "graphics-debug"
 import { distance } from "@tscircuit/math-utils"
 import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
 import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle"
@@ -151,6 +151,8 @@ export class PortPointPathingSolver extends BaseSolver {
   portPointMap: Map<string, InputPortPoint>
 
   connectionsWithResults: ConnectionPathResult[] = []
+
+  failedConnection: ConnectionPathResult | null = null
 
   /** Tracks port points that have been assigned to connections */
   assignedPortPoints: Map<
@@ -1095,6 +1097,7 @@ export class PortPointPathingSolver extends BaseSolver {
         boardScore,
       }
       if (boardScore < this.MIN_ALLOWED_BOARD_SCORE) {
+        this.failedConnection = null
         this.failed = true
         this.error = `Board score ${boardScore.toFixed(2)} is less than MIN_ALLOWED_BOARD_SCORE ${this.MIN_ALLOWED_BOARD_SCORE.toFixed(2)}`
         return
@@ -1111,6 +1114,7 @@ export class PortPointPathingSolver extends BaseSolver {
     this.currentPathIterations++
     const maxIterationsForPath = this.getMaxIterationsForCurrentPath()
     if (this.currentPathIterations > maxIterationsForPath) {
+      this.failedConnection = nextConnection
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedPortPoints = null
@@ -1210,6 +1214,7 @@ export class PortPointPathingSolver extends BaseSolver {
 
     if (!currentCandidate) {
       this.error = `Ran out of candidates on connection ${connectionName}`
+      this.failedConnection = nextConnection
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedPortPoints = null
@@ -1440,6 +1445,28 @@ export class PortPointPathingSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    return visualizePointPathSolver(this)
+    let mighbehavingfailedconnectionviz: GraphicsObject = {}
+    if (this.failed) {
+      // draw a line connting which two points failed to connect
+      const startpoint = this.failedConnection?.connection.pointsToConnect[0]
+      const endpoint = this.failedConnection?.connection.pointsToConnect[1]
+      if (startpoint && endpoint) {
+        mighbehavingfailedconnectionviz = {
+          lines: [
+            {
+              points: [startpoint, endpoint],
+              label: `Failed Connection ${this.failedConnection?.connection.name}`,
+              strokeWidth: 1,
+              strokeColor: "red",
+              strokeDash: [2, 2],
+            },
+          ],
+        }
+      }
+    }
+    return mergeGraphics(
+      visualizePointPathSolver(this),
+      mighbehavingfailedconnectionviz,
+    )
   }
 }
