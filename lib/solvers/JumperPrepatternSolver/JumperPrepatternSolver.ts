@@ -126,6 +126,11 @@ export class JumperPrepatternSolver extends BaseSolver {
   // Output
   solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
 
+  // Tracks which jumper off-board connection net IDs are actually used by routes
+  usedJumperOffBoardObstacleIds: Set<string> = new Set()
+  // Connectivity map for off-board obstacles (built once for checking used jumpers)
+  offBoardConnMap: ConnectivityMap | null = null
+
   pipelineDef = [
     definePipelineStep(
       "nodeSolver",
@@ -260,6 +265,46 @@ export class JumperPrepatternSolver extends BaseSolver {
             inputNodes: pathingSolver.inputNodes,
             obstacles: solver.srjWithPointPairs.obstacles,
           })
+
+          // Build off-board connectivity map for checking used jumpers
+          const offBoardObstacles = solver.srjWithPointPairs.obstacles.filter(
+            (o) => o.offBoardConnectsTo?.length,
+          )
+          if (offBoardObstacles.length > 0) {
+            solver.offBoardConnMap = new ConnectivityMap({})
+            solver.offBoardConnMap.addConnections(
+              offBoardObstacles.map((o, i) => [
+                o.obstacleId ?? `__obs${i}`,
+                ...(o.offBoardConnectsTo ?? []),
+              ]),
+            )
+          }
+
+          // Track which jumper off-board connections were used
+          // Use solver.inputNodes which has _offBoardConnectionId populated
+          const nodeMap = new Map(
+            solver.inputNodes.map((node) => [node.capacityMeshNodeId, node]),
+          )
+          for (const connectionResult of pathingSolver.connectionsWithResults) {
+            if (!connectionResult.path) continue
+            for (const candidate of connectionResult.path) {
+              const node = nodeMap.get(candidate.currentNodeId)
+              if (node?._offBoardConnectionId) {
+                solver.usedJumperOffBoardObstacleIds.add(
+                  node._offBoardConnectionId,
+                )
+              }
+              if (candidate.throughNodeId) {
+                const throughNode = nodeMap.get(candidate.throughNodeId)
+                if (throughNode?._offBoardConnectionId) {
+                  solver.usedJumperOffBoardObstacleIds.add(
+                    throughNode._offBoardConnectionId,
+                  )
+                }
+              }
+            }
+          }
+
         },
       },
     ),
@@ -585,7 +630,28 @@ export class JumperPrepatternSolver extends BaseSolver {
       })
     }
 
-    for (const jumper of this.prepatternJumpers) {
+    // Only draw jumpers that are used (if portPointPathingSolver has run)
+    const jumpersToVisualize =
+      this.usedJumperOffBoardObstacleIds.size > 0
+        ? this.prepatternJumpers.filter((jumper) => {
+            // Check if the jumper's offBoardConnectionId maps to a used net ID
+            if (this.offBoardConnMap) {
+              const jumperNet = this.offBoardConnMap.getNetConnectedToId(
+                jumper.offBoardConnectionId,
+              )
+              // The usedJumperOffBoardObstacleIds contains net IDs directly
+              if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
+                return true
+              }
+              return false
+            }
+            // Fallback to direct match if no connectivity map
+            return this.usedJumperOffBoardObstacleIds.has(
+              jumper.offBoardConnectionId,
+            )
+          })
+        : this.prepatternJumpers
+    for (const jumper of jumpersToVisualize) {
       this._drawJumperPads(graphics, jumper, "rgba(128, 128, 128, 0.5)")
     }
 
