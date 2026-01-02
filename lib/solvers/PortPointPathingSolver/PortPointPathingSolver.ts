@@ -50,6 +50,7 @@ export interface PortPointPathingHyperParameters {
   RIPPING_ENABLED?: boolean
   RIPPING_PF_THRESHOLD?: number
   MAX_RIPS?: number
+  RANDOM_RIP_FRACTION?: number
 }
 
 /**
@@ -259,6 +260,10 @@ export class PortPointPathingSolver extends BaseSolver {
 
   get MAX_RIPS() {
     return this.hyperParameters.MAX_RIPS ?? 100
+  }
+
+  get RANDOM_RIP_FRACTION() {
+    return this.hyperParameters.RANDOM_RIP_FRACTION ?? 0
   }
 
   /** Tracks which connections have been test-ripped for each node to avoid retesting */
@@ -1714,6 +1719,9 @@ export class PortPointPathingSolver extends BaseSolver {
     // Get unique nodes in the path
     const nodeIds = Array.from(new Set(path.map((c) => c.currentNodeId)))
 
+    // Track whether we actually ripped any connections
+    let didRipAnyConnection = false
+
     for (const nodeId of nodeIds) {
       // Stop if solver already failed (e.g., MAX_RIPS exceeded)
       if (this.failed) return
@@ -1765,10 +1773,58 @@ export class PortPointPathingSolver extends BaseSolver {
         const success = this.requeueConnection(connResult)
         if (!success) return // MAX_RIPS exceeded, solver failed
         currentPf = pfWithoutConn
+        didRipAnyConnection = true
 
         // Clear cost caches since state changed
         this.clearCostCaches()
       }
+    }
+
+    // If we ripped any connection and RANDOM_RIP_FRACTION > 0, also rip random connections
+    if (didRipAnyConnection && this.RANDOM_RIP_FRACTION > 0) {
+      this.processRandomRipping(justRoutedConnectionName)
+    }
+  }
+
+  /**
+   * Randomly rip a fraction of already-routed connections to help escape local minima.
+   * Rips (RANDOM_RIP_FRACTION * 100)% of processed connections, with a minimum of 1.
+   */
+  private processRandomRipping(justRoutedConnectionName: string): void {
+    // Get eligible connections (processed, with paths, not the one we just routed)
+    const eligibleConnections = this.processedConnectionQueue.filter(
+      (conn) =>
+        conn.path !== undefined &&
+        conn.connection.name !== justRoutedConnectionName,
+    )
+
+    if (eligibleConnections.length === 0) return
+
+    // Calculate how many to rip (at least 1 if RANDOM_RIP_FRACTION > 0)
+    const numToRip = Math.max(
+      1,
+      Math.floor(this.RANDOM_RIP_FRACTION * eligibleConnections.length),
+    )
+
+    // Shuffle to pick random connections
+    const shuffled = cloneAndShuffleArray(
+      eligibleConnections,
+      (this.hyperParameters.SHUFFLE_SEED ?? 0) +
+        this.totalRipCount +
+        this.processedConnectionQueue.length,
+    )
+
+    // Rip the selected number of connections
+    for (let i = 0; i < numToRip && i < shuffled.length; i++) {
+      if (this.failed) return // Stop if MAX_RIPS exceeded
+
+      const connResult = shuffled[i]
+      this.ripConnection(connResult)
+      const success = this.requeueConnection(connResult)
+      if (!success) return // MAX_RIPS exceeded, solver failed
+
+      // Clear cost caches since state changed
+      this.clearCostCaches()
     }
   }
 

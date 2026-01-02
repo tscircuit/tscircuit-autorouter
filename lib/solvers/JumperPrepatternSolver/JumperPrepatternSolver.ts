@@ -234,7 +234,7 @@ export class JumperPrepatternSolver extends BaseSolver {
             inputNodes,
             capacityMeshNodes: solver.capacityNodes,
             colorMap: solver.colorMap,
-            numShuffleSeeds: 100,
+            numShuffleSeeds: 10,
             hyperParameters: {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
@@ -244,6 +244,7 @@ export class JumperPrepatternSolver extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               RIPPING_PF_THRESHOLD: 0.3,
+              RANDOM_RIP_FRACTION: 0.1,
               MAX_RIPS: 1000,
             },
           } as HyperPortPointPathingSolverParams,
