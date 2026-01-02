@@ -35,39 +35,18 @@ import {
   type PatternResult,
   type PrepatternJumper,
 } from "./patterns/alternatingGrid"
+import { staggeredGrid } from "./patterns/staggeredGrid"
+import { JumperFootprint, JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 
-/**
- * 0603 footprint dimensions in mm
- * 0.8mm x 0.95mm pads, 1.65mm center-to-center
- */
-const JUMPER_0603 = {
-  length: 1.65,
-  width: 0.95,
-  padLength: 0.8,
-  padWidth: 0.95,
-}
-
-/**
- * 1206 footprint dimensions in mm
- * Actual 1206: 3.2mm x 1.6mm
- */
-const JUMPER_1206 = {
-  length: 3.2,
-  width: 1.6,
-  padLength: 0.6,
-  padWidth: 1.6,
-}
-
-const JUMPER_DIMENSIONS: Record<JumperFootprint, typeof JUMPER_0603> = {
-  "0603": JUMPER_0603,
-  "1206": JUMPER_1206,
-}
-
-type JumperFootprint = "0603" | "1206"
+export type PatternType = "alternating_grid" | "staggered_grid"
 
 export interface JumperPrepatternSolverHyperParameters {
-  /** 0 = horizontal first, 1 = vertical first */
+  /** Orientation of jumpers - "horizontal" or "vertical" */
   FIRST_ORIENTATION?: "horizontal" | "vertical"
+  /** Jumper footprint size - defaults to "0603" */
+  JUMPER_FOOTPRINT?: JumperFootprint
+  /** Pattern type for jumper placement - defaults to "alternating_grid" */
+  PATTERN_TYPE?: PatternType
 }
 
 export interface JumperPrepatternSolverParams {
@@ -344,12 +323,19 @@ export class JumperPrepatternSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap = params.colorMap ?? {}
     this.traceWidth = params.traceWidth ?? 0.15
-    this.jumperFootprint = params.jumperFootprint ?? "0603"
     this.hyperParameters = params.hyperParameters ?? {}
+    // Use hyperparameter for jumper footprint, fall back to params, then default to "0603"
+    this.jumperFootprint =
+      this.hyperParameters.JUMPER_FOOTPRINT ?? params.jumperFootprint ?? "0603"
     this.MAX_ITERATIONS = 1e6
 
     // Generate jumpers using the pattern function (before creating SimpleRouteJson since it needs the obstacles)
-    this.patternResult = alternatingGrid(this)
+    const patternType = this.hyperParameters.PATTERN_TYPE ?? "alternating_grid"
+    if (patternType === "staggered_grid") {
+      this.patternResult = staggeredGrid(this)
+    } else {
+      this.patternResult = alternatingGrid(this)
+    }
     this.prepatternJumpers = this.patternResult.prepatternJumpers
 
     // Initialize data before pipeline starts
