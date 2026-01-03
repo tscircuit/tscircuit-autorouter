@@ -314,15 +314,17 @@ export class JumperPrepatternSolver extends BaseSolver {
 
           // Track: offBoardConnectionId -> Set of connection names that USE the jumper (go through both pads)
           const jumperUsedByConnections = new Map<string, Set<string>>()
-          // Track: nodeId -> Set of connection names that pass through that node
-          const nodePassthroughConnections = new Map<string, Set<string>>()
+          // Track: connectionName -> array of route points {x, y}
+          const connectionRoutes = new Map<string, Array<{ x: number; y: number }>>()
 
           for (const connectionResult of pathingSolver.connectionsWithResults) {
             if (!connectionResult.path) continue
             const connectionName = connectionResult.connection.name
 
+            // Store the route points for this connection
+            const routePoints: Array<{ x: number; y: number }> = []
             for (const candidate of connectionResult.path) {
-              const currentNode = nodeMap.get(candidate.currentNodeId)
+              routePoints.push({ x: candidate.point.x, y: candidate.point.y })
 
               if (candidate.lastMoveWasOffBoard && candidate.throughNodeId) {
                 // This connection USES the jumper (goes through both pads)
@@ -334,15 +336,38 @@ export class JumperPrepatternSolver extends BaseSolver {
                   jumperUsedByConnections.get(throughNode._offBoardConnectionId)!.add(connectionName)
                 }
               }
+            }
+            connectionRoutes.set(connectionName, routePoints)
+          }
 
-              // Track all nodes this connection passes through (for checking "underneath" later)
-              if (currentNode) {
-                if (!nodePassthroughConnections.has(candidate.currentNodeId)) {
-                  nodePassthroughConnections.set(candidate.currentNodeId, new Set())
-                }
-                nodePassthroughConnections.get(candidate.currentNodeId)!.add(connectionName)
+          // Helper to check if two line segments intersect
+          const segmentsIntersect = (
+            p1: { x: number; y: number },
+            p2: { x: number; y: number },
+            p3: { x: number; y: number },
+            p4: { x: number; y: number },
+          ): boolean => {
+            const ccw = (A: { x: number; y: number }, B: { x: number; y: number }, C: { x: number; y: number }) => {
+              return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x)
+            }
+            return (
+              ccw(p1, p3, p4) !== ccw(p2, p3, p4) &&
+              ccw(p1, p2, p3) !== ccw(p1, p2, p4)
+            )
+          }
+
+          // Helper to check if a route intersects the jumper line
+          const routeIntersectsJumper = (
+            route: Array<{ x: number; y: number }>,
+            jumperStart: { x: number; y: number },
+            jumperEnd: { x: number; y: number },
+          ): boolean => {
+            for (let i = 0; i < route.length - 1; i++) {
+              if (segmentsIntersect(route[i], route[i + 1], jumperStart, jumperEnd)) {
+                return true
               }
             }
+            return false
           }
 
           // Helper to find the node closest to a point (that isn't a pad node)
@@ -369,7 +394,10 @@ export class JumperPrepatternSolver extends BaseSolver {
 
           // A jumper is necessary if:
           // 1. It's used by at least one connection
-          // 2. AND another (different) connection passes through the node underneath (closest to midpoint)
+          // 2. AND another (different) connection's route actually INTERSECTS the jumper line
+          //
+          // For necessary jumpers, we also need to add port points to the underneath node
+          // so the connection that uses the jumper routes through it.
           for (const [offBoardId, usingConnections] of jumperUsedByConnections) {
             const geometry = jumperGeometry.get(offBoardId)
             if (!geometry) continue
@@ -384,17 +412,54 @@ export class JumperPrepatternSolver extends BaseSolver {
             const underneathNode = findClosestNode(midpoint)
             if (!underneathNode) continue
 
-            // Check if any connection passes through this "underneath" node
-            const connectionsThrough = nodePassthroughConnections.get(underneathNode.capacityMeshNodeId)
-            if (!connectionsThrough) continue
+            // Check if any OTHER connection's route intersects the jumper line
+            let isNecessary = false
+            for (const [connName, route] of connectionRoutes) {
+              // Skip connections that use this jumper
+              if (usingConnections.has(connName)) continue
 
-            // Check if any of these connections is different from the ones using the jumper
-            for (const connName of connectionsThrough) {
-              if (!usingConnections.has(connName)) {
-                // Different connection passes underneath - jumper is necessary
+              // Check if this connection's route intersects the jumper line
+              if (routeIntersectsJumper(route, geometry.start, geometry.end)) {
+                // Different connection crosses the jumper - jumper is necessary
                 solver.usedJumperOffBoardObstacleIds.add(offBoardId)
+                isNecessary = true
                 break
               }
+            }
+
+            // For UNNECESSARY jumpers (not necessary), we need to add port points
+            // so the connection that was using the jumper can still route through the area
+            // where the jumper pads were
+            if (!isNecessary) {
+              // Add port points at the pad locations for the connection that used this jumper
+              // This allows the route to connect through the empty area after the jumper is removed
+
+              // Add port point at the start pad location
+              const startPortPoints =
+                pathingSolver.nodeAssignedPortPoints.get(underneathNode.capacityMeshNodeId) ?? []
+
+              for (const connName of usingConnections) {
+                // Add port points at both pad locations
+                startPortPoints.push({
+                  x: geometry.start.x,
+                  y: geometry.start.y,
+                  z: 0,
+                  connectionName: connName,
+                  rootConnectionName: connName,
+                })
+                startPortPoints.push({
+                  x: geometry.end.x,
+                  y: geometry.end.y,
+                  z: 0,
+                  connectionName: connName,
+                  rootConnectionName: connName,
+                })
+              }
+
+              pathingSolver.nodeAssignedPortPoints.set(
+                underneathNode.capacityMeshNodeId,
+                startPortPoints,
+              )
             }
           }
 
