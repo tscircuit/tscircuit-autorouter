@@ -6,6 +6,7 @@ import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/Use
 import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { GraphicsObject } from "graphics-debug"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 type Phase = "via_removal" | "via_merging" | "path_simplification"
 
@@ -241,6 +242,16 @@ export class TraceSimplificationSolver extends BaseSolver {
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
         })
+      }
+
+      // Draw jumpers
+      if (route.jumpers && route.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(route.jumpers, {
+          color: "orange",
+          label: route.connectionName,
+        })
+        visualization.rects.push(...(jumperGraphics.rects ?? []))
+        visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
     }
 

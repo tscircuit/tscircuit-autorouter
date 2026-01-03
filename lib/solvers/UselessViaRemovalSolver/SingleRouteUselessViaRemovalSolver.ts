@@ -320,10 +320,13 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     }
     return {
       connectionName: this.unsimplifiedRoute.connectionName,
+      rootConnectionName: this.unsimplifiedRoute.rootConnectionName,
       route,
       traceThickness: this.unsimplifiedRoute.traceThickness,
       vias,
       viaDiameter: this.unsimplifiedRoute.viaDiameter,
+      // Preserve jumpers from original route
+      jumpers: this.unsimplifiedRoute.jumpers,
     }
   }
   visualize(): GraphicsObject {

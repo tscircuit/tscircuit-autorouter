@@ -21,6 +21,7 @@ import {
 import { smoothHdRoutes } from "./smoothLines"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { removeSelfIntersections } from "./removeSelfIntersections"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 const BOARD_OUTLINE_CONNECTION_NAME = "__board_outline__"
 
@@ -472,6 +473,8 @@ export class TraceKeepoutSolver extends BaseSolver {
       viaDiameter: this.currentTrace.viaDiameter,
       route: cleanedRoute,
       vias: [...this.currentTrace.vias], // Keep vias unchanged
+      // Preserve jumpers from original route
+      jumpers: this.currentTrace.jumpers,
     }
 
     this.processedRoutes.push(redrawnTrace)
@@ -697,6 +700,16 @@ export class TraceKeepoutSolver extends BaseSolver {
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
         })
+      }
+
+      // Draw jumpers
+      if (route.jumpers && route.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(route.jumpers, {
+          color,
+          label: route.connectionName,
+        })
+        visualization.rects.push(...(jumperGraphics.rects ?? []))
+        visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
     }
 

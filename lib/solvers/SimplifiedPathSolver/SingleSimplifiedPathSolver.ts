@@ -60,10 +60,13 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
   get simplifiedRoute(): HighDensityIntraNodeRoute {
     return {
       connectionName: this.inputRoute.connectionName,
+      rootConnectionName: this.inputRoute.rootConnectionName,
       traceThickness: this.inputRoute.traceThickness,
       viaDiameter: this.inputRoute.viaDiameter,
       route: this.newRoute,
       vias: this.newVias,
+      // Preserve jumpers from original route
+      jumpers: this.inputRoute.jumpers,
     }
   }
 

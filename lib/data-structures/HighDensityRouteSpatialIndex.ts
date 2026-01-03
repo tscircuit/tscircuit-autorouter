@@ -1,4 +1,5 @@
 import { doSegmentsIntersect } from "@tscircuit/math-utils" // Assuming this is available and correct
+import type { Jumper } from "lib/types/high-density-types"
 
 // --- Interfaces and Types (Unchanged) ---
 
@@ -19,6 +20,7 @@ export type HighDensityIntraNodeRoute = {
   viaDiameter: number // Now used in conflict calculation
   route: Array<{ x: number; y: number; z: number }>
   vias: Array<{ x: number; y: number }> // Will be indexed
+  jumpers?: Jumper[]
 }
 export type HighDensityRoute = HighDensityIntraNodeRoute
 

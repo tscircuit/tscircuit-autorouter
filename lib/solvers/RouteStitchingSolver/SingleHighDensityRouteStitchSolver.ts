@@ -1,7 +1,8 @@
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { GraphicsObject } from "graphics-debug"
 import { distance } from "@tscircuit/math-utils"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
@@ -47,6 +48,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
         rootConnectionName: opts.hdRoutes[0]?.rootConnectionName,
         route: routePoints,
         vias: vias,
+        jumpers: [],
         viaDiameter: opts.defaultViaDiameter ?? 0.6, // Use default or fallback
         traceThickness: opts.defaultTraceThickness ?? 0.15, // Use default or fallback
       }
@@ -120,6 +122,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
         },
       ],
       vias: [],
+      jumpers: [],
       viaDiameter: firstRoute.viaDiameter,
       traceThickness: firstRoute.traceThickness,
     }
@@ -280,6 +283,11 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     }
 
     this.mergedHdRoute.vias.push(...hdRouteToMerge.vias)
+
+    // Merge jumpers if present
+    if (hdRouteToMerge.jumpers) {
+      this.mergedHdRoute.jumpers!.push(...hdRouteToMerge.jumpers)
+    }
   }
 
   visualize(): GraphicsObject {
@@ -287,6 +295,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       points: [],
       lines: [],
       circles: [],
+      rects: [],
       title: "Single High Density Route Stitch Solver",
     }
 
@@ -333,6 +342,16 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
           fill: "green",
         })
       }
+
+      // Visualize jumpers in the merged route
+      if (this.mergedHdRoute.jumpers && this.mergedHdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(this.mergedHdRoute.jumpers, {
+          color: "green",
+          label: this.mergedHdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
+      }
     }
 
     // Visualize all remaining HD routes using colorMap
@@ -364,6 +383,16 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
           radius: hdRoute.viaDiameter / 2,
           fill: routeColor,
         })
+      }
+
+      // Visualize jumpers
+      if (hdRoute.jumpers && hdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(hdRoute.jumpers, {
+          color: routeColor,
+          label: hdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 

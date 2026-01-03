@@ -8,6 +8,7 @@ import { GraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "../colors"
 import { ConnectivityMap } from "connectivity-map"
 import { distance } from "@tscircuit/math-utils"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 export type UnsolvedRoute = {
   connectionName: string
@@ -185,6 +186,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       points: [],
       lines: [],
       circles: [],
+      rects: [],
       title: "Multiple High Density Route Stitch Solver",
     }
 
@@ -258,6 +260,16 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
           fill: solvedColor, // Keep vias solid color for visibility
         })
       }
+
+      // Visualize jumpers in the merged route
+      if (mergedRoute.jumpers && mergedRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(mergedRoute.jumpers, {
+          color: solvedColor,
+          label: mergedRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
+      }
     }
 
     // Visualize all remaining unsolved routes - start/end points only
@@ -307,6 +319,16 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
             radius: hdRoute.viaDiameter / 2,
             fill: routeColor, // Use routeColor
           })
+        }
+
+        // Visualize jumpers
+        if (hdRoute.jumpers && hdRoute.jumpers.length > 0) {
+          const jumperGraphics = getJumpersGraphics(hdRoute.jumpers, {
+            color: routeColor,
+            label: hdRoute.connectionName,
+          })
+          graphics.rects!.push(...(jumperGraphics.rects ?? []))
+          graphics.lines!.push(...(jumperGraphics.lines ?? []))
         }
       }
     }

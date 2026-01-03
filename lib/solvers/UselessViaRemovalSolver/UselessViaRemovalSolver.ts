@@ -7,6 +7,7 @@ import { GraphicsObject } from "graphics-debug"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
@@ -138,6 +139,16 @@ export class UselessViaRemovalSolver extends BaseSolver {
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
         })
+      }
+
+      // Draw jumpers
+      if (route.jumpers && route.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(route.jumpers, {
+          color,
+          label: route.connectionName,
+        })
+        visualization.rects.push(...(jumperGraphics.rects ?? []))
+        visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
     }
 

@@ -5,6 +5,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { GraphicsObject } from "graphics-debug"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
@@ -380,6 +381,8 @@ export class TraceWidthSolver extends BaseSolver {
       viaDiameter: this.currentTrace.viaDiameter,
       route: [...this.currentTrace.route],
       vias: [...this.currentTrace.vias],
+      // Preserve jumpers from original route
+      jumpers: this.currentTrace.jumpers,
     }
 
     this.processedRoutes.push(routeWithWidth)
@@ -482,6 +485,16 @@ export class TraceWidthSolver extends BaseSolver {
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
         })
+      }
+
+      // Draw jumpers
+      if (route.jumpers && route.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(route.jumpers, {
+          color: strokeColor,
+          label: route.connectionName,
+        })
+        visualization.rects.push(...(jumperGraphics.rects ?? []))
+        visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
     }
 

@@ -8,6 +8,7 @@ import { Obstacle } from "lib/types"
 import { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
@@ -230,6 +231,16 @@ export class SameNetViaMergerSolver extends BaseSolver {
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
         })
+      }
+
+      // Draw jumpers
+      if (route.jumpers && route.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(route.jumpers, {
+          color,
+          label: route.connectionName,
+        })
+        visualization.rects.push(...(jumperGraphics.rects ?? []))
+        visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
     }
 
