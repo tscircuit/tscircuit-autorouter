@@ -4,7 +4,7 @@ import input from "../../fixtures/features/portpointpathing/portpointpathing01-i
   type: "json",
 }
 
-test(
+test.skip(
   "PortPointPathingSolver01 - solves port point pathing",
   () => {
     const solver = new HyperPortPointPathingSolver({

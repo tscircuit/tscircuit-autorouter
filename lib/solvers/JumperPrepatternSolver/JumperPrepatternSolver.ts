@@ -249,7 +249,7 @@ export class JumperPrepatternSolver extends BaseSolver {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-              FORCE_OFF_BOARD_FREQUENCY: 0,
+              FORCE_OFF_BOARD_FREQUENCY: 0.8,
               MIN_ALLOWED_BOARD_SCORE: -1,
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
