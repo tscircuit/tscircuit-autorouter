@@ -37,6 +37,7 @@ import {
 } from "./patterns/alternatingGrid"
 import { staggeredGrid } from "./patterns/staggeredGrid"
 import { JumperFootprint, JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
+import { RemoveUnnecessaryJumpersSolver } from "./RemoveUnnecessaryJumpersSolver"
 
 export type PatternType = "alternating_grid" | "staggered_grid"
 
@@ -113,6 +114,7 @@ export class JumperPrepatternSolver extends BaseSolver {
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: HyperPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
+  removeUnnecessaryJumpersSolver?: RemoveUnnecessaryJumpersSolver
   highDensitySolver?: SimpleHighDensitySolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
 
@@ -280,27 +282,118 @@ export class JumperPrepatternSolver extends BaseSolver {
             )
           }
 
-          // Track which jumper off-board connections were used
-          // Use solver.inputNodes which has _offBoardConnectionId populated
+          // Track which jumpers are NECESSARY (not just used)
+          // A jumper is necessary when:
+          // 1. One connection uses the jumper (goes through both pads via off-board)
+          // 2. AND another connection passes through the "area underneath" the jumper
+          //
+          // The "area underneath" is a separate capacity mesh node that overlaps spatially
+          // with the jumper body but doesn't have _offBoardConnectionId set.
+
+          // IMPORTANT: Use pathingSolver.inputNodes, not solver.inputNodes
+          // pathingSolver.inputNodes has _offBoardConnectionId populated
           const nodeMap = new Map(
-            solver.inputNodes.map((node) => [node.capacityMeshNodeId, node]),
+            pathingSolver.inputNodes.map((node) => [node.capacityMeshNodeId, node]),
           )
+
+          // Build a map from connectivity net ID -> jumper geometry
+          // The jumper.offBoardConnectionId is like "jumper_conn_0"
+          // But node._offBoardConnectionId is the connectivity net ID like "connectivity_net0"
+          // We need to map from the net ID to the jumper geometry
+          const jumperGeometry = new Map<string, { start: { x: number; y: number }; end: { x: number; y: number } }>()
+          for (const jumper of solver.prepatternJumpers) {
+            // Get the connectivity net ID for this jumper
+            const netId = solver.offBoardConnMap?.getNetConnectedToId(jumper.offBoardConnectionId)
+            if (netId) {
+              jumperGeometry.set(netId, {
+                start: jumper.start,
+                end: jumper.end,
+              })
+            }
+          }
+
+          // Track: offBoardConnectionId -> Set of connection names that USE the jumper (go through both pads)
+          const jumperUsedByConnections = new Map<string, Set<string>>()
+          // Track: nodeId -> Set of connection names that pass through that node
+          const nodePassthroughConnections = new Map<string, Set<string>>()
+
           for (const connectionResult of pathingSolver.connectionsWithResults) {
             if (!connectionResult.path) continue
+            const connectionName = connectionResult.connection.name
+
             for (const candidate of connectionResult.path) {
-              const node = nodeMap.get(candidate.currentNodeId)
-              if (node?._offBoardConnectionId) {
-                solver.usedJumperOffBoardObstacleIds.add(
-                  node._offBoardConnectionId,
-                )
-              }
-              if (candidate.throughNodeId) {
+              const currentNode = nodeMap.get(candidate.currentNodeId)
+
+              if (candidate.lastMoveWasOffBoard && candidate.throughNodeId) {
+                // This connection USES the jumper (goes through both pads)
                 const throughNode = nodeMap.get(candidate.throughNodeId)
                 if (throughNode?._offBoardConnectionId) {
-                  solver.usedJumperOffBoardObstacleIds.add(
-                    throughNode._offBoardConnectionId,
-                  )
+                  if (!jumperUsedByConnections.has(throughNode._offBoardConnectionId)) {
+                    jumperUsedByConnections.set(throughNode._offBoardConnectionId, new Set())
+                  }
+                  jumperUsedByConnections.get(throughNode._offBoardConnectionId)!.add(connectionName)
                 }
+              }
+
+              // Track all nodes this connection passes through (for checking "underneath" later)
+              if (currentNode) {
+                if (!nodePassthroughConnections.has(candidate.currentNodeId)) {
+                  nodePassthroughConnections.set(candidate.currentNodeId, new Set())
+                }
+                nodePassthroughConnections.get(candidate.currentNodeId)!.add(connectionName)
+              }
+            }
+          }
+
+          // Helper to find the node closest to a point (that isn't a pad node)
+          const findClosestNode = (
+            point: { x: number; y: number },
+          ): InputNodeWithPortPoints | null => {
+            let closest: InputNodeWithPortPoints | null = null
+            let closestDist = Infinity
+
+            for (const node of pathingSolver.inputNodes) {
+              // Skip pad nodes (they have the off-board connection ID)
+              if (node._offBoardConnectionId) continue
+
+              const dist = Math.sqrt(
+                (node.center.x - point.x) ** 2 + (node.center.y - point.y) ** 2,
+              )
+              if (dist < closestDist) {
+                closestDist = dist
+                closest = node
+              }
+            }
+            return closest
+          }
+
+          // A jumper is necessary if:
+          // 1. It's used by at least one connection
+          // 2. AND another (different) connection passes through the node underneath (closest to midpoint)
+          for (const [offBoardId, usingConnections] of jumperUsedByConnections) {
+            const geometry = jumperGeometry.get(offBoardId)
+            if (!geometry) continue
+
+            // Find the midpoint of the jumper
+            const midpoint = {
+              x: (geometry.start.x + geometry.end.x) / 2,
+              y: (geometry.start.y + geometry.end.y) / 2,
+            }
+
+            // Find the node closest to the midpoint (the "underneath" node)
+            const underneathNode = findClosestNode(midpoint)
+            if (!underneathNode) continue
+
+            // Check if any connection passes through this "underneath" node
+            const connectionsThrough = nodePassthroughConnections.get(underneathNode.capacityMeshNodeId)
+            if (!connectionsThrough) continue
+
+            // Check if any of these connections is different from the ones using the jumper
+            for (const connName of connectionsThrough) {
+              if (!usingConnections.has(connName)) {
+                // Different connection passes underneath - jumper is necessary
+                solver.usedJumperOffBoardObstacleIds.add(offBoardId)
+                break
               }
             }
           }
@@ -328,6 +421,24 @@ export class JumperPrepatternSolver extends BaseSolver {
     //     ]
     //   },
     // ),
+    definePipelineStep(
+      "removeUnnecessaryJumpersSolver",
+      RemoveUnnecessaryJumpersSolver,
+      (solver) => [
+        {
+          inputNodes: solver.inputNodes,
+          usedJumperOffBoardObstacleIds: solver.usedJumperOffBoardObstacleIds,
+          offBoardConnMap: solver.offBoardConnMap,
+        },
+      ],
+      {
+        onSolved: (solver) => {
+          // Update inputNodes with the nodes that have unused jumpers removed
+          solver.inputNodes =
+            solver.removeUnnecessaryJumpersSolver?.getOutput() ?? solver.inputNodes
+        },
+      },
+    ),
     definePipelineStep(
       "highDensitySolver",
       SimpleHighDensitySolver,
@@ -631,26 +742,28 @@ export class JumperPrepatternSolver extends BaseSolver {
     }
 
     // Only draw jumpers that are used (if portPointPathingSolver has run)
-    const jumpersToVisualize =
-      this.usedJumperOffBoardObstacleIds.size > 0
-        ? this.prepatternJumpers.filter((jumper) => {
-            // Check if the jumper's offBoardConnectionId maps to a used net ID
-            if (this.offBoardConnMap) {
-              const jumperNet = this.offBoardConnMap.getNetConnectedToId(
-                jumper.offBoardConnectionId,
-              )
-              // The usedJumperOffBoardObstacleIds contains net IDs directly
-              if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
-                return true
-              }
-              return false
-            }
-            // Fallback to direct match if no connectivity map
-            return this.usedJumperOffBoardObstacleIds.has(
+    // After routing completes, usedJumperOffBoardObstacleIds contains net IDs of used jumpers
+    const hasRunPathing = this.portPointPathingSolver?.solved
+    const jumpersToVisualize = hasRunPathing
+      ? this.prepatternJumpers.filter((jumper) => {
+          // Check if the jumper's offBoardConnectionId maps to a used net ID
+          if (this.offBoardConnMap) {
+            const jumperNet = this.offBoardConnMap.getNetConnectedToId(
               jumper.offBoardConnectionId,
             )
-          })
-        : this.prepatternJumpers
+            // The usedJumperOffBoardObstacleIds contains net IDs directly
+            if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
+              return true
+            }
+            return false
+          }
+          // Fallback to direct match if no connectivity map
+          return this.usedJumperOffBoardObstacleIds.has(
+            jumper.offBoardConnectionId,
+          )
+        })
+      : this.prepatternJumpers
+
     for (const jumper of jumpersToVisualize) {
       this._drawJumperPads(graphics, jumper, "rgba(128, 128, 128, 0.5)")
     }
