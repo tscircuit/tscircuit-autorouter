@@ -16,7 +16,10 @@ test(
       hyperParameters: input.hyperParameters as any,
     })
 
-    solver.solve()
+    while (!solver.solved && !solver.failed) {
+      console.log("iteration", solver.iterations)
+      solver.step()
+    }
 
     console.log("iterations:", solver.iterations)
     console.log("solved:", solver.solved)

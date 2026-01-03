@@ -279,11 +279,11 @@ export class PortPointPathingSolver extends BaseSolver {
   }
 
   get CENTER_APPEAL_DISTANCE_FRACTION() {
-    return this.hyperParameters.CENTER_APPEAL_DISTANCE_FRACTION ?? 0.5
+    return this.hyperParameters.CENTER_APPEAL_DISTANCE_FRACTION ?? 2
   }
 
   get CENTER_APPEAL_FACTOR() {
-    return this.hyperParameters.CENTER_APPEAL_FACTOR ?? 1
+    return this.hyperParameters.CENTER_APPEAL_FACTOR ?? 0
   }
 
   /** Number of jumpers that can fit per mm² of node area */
@@ -361,7 +361,7 @@ export class PortPointPathingSolver extends BaseSolver {
       fixedRoutes,
     } = input
     this.input = structuredClone(input)
-    this.MAX_ITERATIONS = 1e6
+    this.MAX_ITERATIONS = 100e6
     this.simpleRouteJson = simpleRouteJson
     this.inputNodes = inputNodes
     this.colorMap = colorMap ?? {}
@@ -1521,9 +1521,6 @@ export class PortPointPathingSolver extends BaseSolver {
         continue
       }
 
-      // Prevent node cycles (keeps delta-pf accounting correct)
-      if (this.isNodeInPathChain(currentCandidate, nextNodeId)) continue
-
       const nextNode = this.nodeMap.get(nextNodeId)
       if (!nextNode) continue
 
@@ -1548,7 +1545,7 @@ export class PortPointPathingSolver extends BaseSolver {
       )
 
       // Don't add candidates whose g cost would cause the board to drop below MIN_ALLOWED_BOARD_SCORE
-      if (g > -this.MIN_ALLOWED_BOARD_SCORE) {
+      if (!this.RIPPING_ENABLED && g > -this.MIN_ALLOWED_BOARD_SCORE) {
         continue
       }
 
