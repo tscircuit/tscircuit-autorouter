@@ -509,22 +509,59 @@ export class JumperPrepatternSolver extends BaseSolver {
       this.highDensitySolver?.routes ??
       []
 
-    for (const hdRoute of finalRoutes) {
-      const routeJumpers = this._findJumpersForRoute(hdRoute)
+    // Get all used jumpers (converted to Jumper format)
+    const usedJumpers = this._getUsedJumpers()
+
+    for (let i = 0; i < finalRoutes.length; i++) {
+      const hdRoute = finalRoutes[i]
 
       this.solvedRoutes.push({
         connectionName: hdRoute.connectionName,
         rootConnectionName: hdRoute.rootConnectionName,
         traceThickness: hdRoute.traceThickness,
         route: hdRoute.route,
-        jumpers: routeJumpers,
+        // Attach all used jumpers to the first route for visualization
+        // (jumpers in prepattern are shared resources, not per-route)
+        jumpers: i === 0 ? usedJumpers : [],
       })
     }
   }
 
-  _findJumpersForRoute(_hdRoute: HighDensityIntraNodeRoute): Jumper[] {
-    // For now, return empty - jumper assignment logic can be added later
-    return []
+  /**
+   * Get all used jumpers converted to the Jumper type format
+   */
+  _getUsedJumpers(): Jumper[] {
+    const jumpers: Jumper[] = []
+
+    for (const prepatternJumper of this.prepatternJumpers) {
+      // Check if this jumper is used
+      let isUsed = false
+
+      if (this.offBoardConnMap) {
+        const jumperNet = this.offBoardConnMap.getNetConnectedToId(
+          prepatternJumper.offBoardConnectionId,
+        )
+        if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
+          isUsed = true
+        }
+      } else {
+        // Fallback to direct match if no connectivity map
+        isUsed = this.usedJumperOffBoardObstacleIds.has(
+          prepatternJumper.offBoardConnectionId,
+        )
+      }
+
+      if (isUsed) {
+        jumpers.push({
+          route_type: "jumper",
+          start: prepatternJumper.start,
+          end: prepatternJumper.end,
+          footprint: prepatternJumper.footprint as "0603" | "1206",
+        })
+      }
+    }
+
+    return jumpers
   }
 
   getOutput(): HighDensityIntraNodeRouteWithJumpers[] {

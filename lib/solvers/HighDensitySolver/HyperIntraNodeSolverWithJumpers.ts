@@ -92,10 +92,10 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
   }
 
   computeG(solver: JumperSolver) {
-    if ("USE_JUMPER_PREPATTERN" in (solver as any).hyperParameters) {
-      // Give prepattern solver a slight advantage to try it first
-      return 500 + solver.iterations / 10_000
+    if ((solver as any).hyperParameters?.USE_JUMPER_PREPATTERN) {
+      return solver.iterations / 10_000
     }
+    // Give IntraNodeSolverWithJumpers a higher base G so prepattern is tried first
     return solver.iterations / 10_000
   }
 
