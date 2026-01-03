@@ -376,11 +376,20 @@ export class JumperHighDensitySolver extends BaseSolver {
         for (const jumper of route.jumpers) {
           const color = this.colorMap[route.connectionName] ?? "gray"
 
+          // Determine jumper orientation to rotate pad dimensions
+          const dx = jumper.end.x - jumper.start.x
+          const dy = jumper.end.y - jumper.start.y
+          const isHorizontal = Math.abs(dx) > Math.abs(dy)
+          const padLength = 0.8
+          const padWidth = 0.95
+          const rectWidth = isHorizontal ? padLength : padWidth
+          const rectHeight = isHorizontal ? padWidth : padLength
+
           // Draw start pad
           graphics.rects!.push({
             center: jumper.start,
-            width: 0.5,
-            height: 1.25,
+            width: rectWidth,
+            height: rectHeight,
             fill: safeTransparentize(color, 0.5),
             stroke: "rgba(0, 0, 0, 0.5)",
             layer: "jumper",
@@ -389,8 +398,8 @@ export class JumperHighDensitySolver extends BaseSolver {
           // Draw end pad
           graphics.rects!.push({
             center: jumper.end,
-            width: 0.5,
-            height: 1.25,
+            width: rectWidth,
+            height: rectHeight,
             fill: safeTransparentize(color, 0.5),
             stroke: "rgba(0, 0, 0, 0.5)",
             layer: "jumper",
@@ -400,7 +409,7 @@ export class JumperHighDensitySolver extends BaseSolver {
           graphics.lines!.push({
             points: [jumper.start, jumper.end],
             strokeColor: "rgba(100, 100, 100, 0.8)",
-            strokeWidth: 0.375,
+            strokeWidth: padWidth * 0.3,
             layer: "jumper-body",
           })
         }
