@@ -3,11 +3,17 @@ import type { SimpleRouteJson } from "../../../types"
 import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
 
 /**
+ * Maximum number of jumpers allowed. If exceeded, padding and margin are
+ * increased by multiplying by 1.1 until the count is within limits.
+ */
+const MAX_JUMPERS = 100
+
+/**
  * Default margin between jumpers in mm
  */
-const JUMPER_MARGIN = 0.8
+const DEFAULT_JUMPER_MARGIN = 0.8
 
-const BORDER_PADDING = 0.8
+const DEFAULT_BORDER_PADDING = 0.8
 
 export interface Obstacle {
   type: "rect"
@@ -40,15 +46,34 @@ export interface PatternResult {
  * - FIRST_ORIENTATION: "horizontal" (0) or "vertical" (1) - determines which orientation starts at (0,0)
  */
 export function alternatingGrid(jps: JumperPrepatternSolver): PatternResult {
+  let jumperMargin = DEFAULT_JUMPER_MARGIN
+  let borderPadding = DEFAULT_BORDER_PADDING
+
+  while (true) {
+    const result = generateAlternatingGrid(jps, jumperMargin, borderPadding)
+    if (result.prepatternJumpers.length <= MAX_JUMPERS) {
+      return result
+    }
+    // Increase padding and margin by 10%
+    jumperMargin *= 1.1
+    borderPadding *= 1.1
+  }
+}
+
+function generateAlternatingGrid(
+  jps: JumperPrepatternSolver,
+  jumperMargin: number,
+  borderPadding: number,
+): PatternResult {
   const prepatternJumpers: PrepatternJumper[] = []
   const jumperPadObstacles: Obstacle[] = []
 
   const node = jps.nodeWithPortPoints
   const bounds = {
-    minX: node.center.x - node.width / 2 + BORDER_PADDING,
-    maxX: node.center.x + node.width / 2 - BORDER_PADDING,
-    minY: node.center.y - node.height / 2 + BORDER_PADDING,
-    maxY: node.center.y + node.height / 2 - BORDER_PADDING,
+    minX: node.center.x - node.width / 2 + borderPadding,
+    maxX: node.center.x + node.width / 2 - borderPadding,
+    minY: node.center.y - node.height / 2 + borderPadding,
+    maxY: node.center.y + node.height / 2 - borderPadding,
     width: 0,
     height: 0,
   }
@@ -65,7 +90,7 @@ export function alternatingGrid(jps: JumperPrepatternSolver): PatternResult {
 
   // Cell size for the grid - each cell fits one jumper (either orientation)
   // Use the larger dimension plus margin to ensure no overlap
-  const cellSize = jumperLength + JUMPER_MARGIN
+  const cellSize = jumperLength + jumperMargin
 
   const numCols = Math.floor((bounds.maxX - bounds.minX) / cellSize)
   const numRows = Math.floor((bounds.maxY - bounds.minY) / cellSize)

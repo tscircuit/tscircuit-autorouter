@@ -7,18 +7,24 @@ import type {
 } from "./alternatingGrid"
 
 /**
+ * Maximum number of jumpers allowed. If exceeded, padding and margin are
+ * increased by multiplying by 1.1 until the count is within limits.
+ */
+const MAX_JUMPERS = 64
+
+/**
  * Margin between jumpers along their length direction (same row/column)
  * Needs to be larger to allow traces to pass between jumper ends
  */
-const LONG_MARGIN = 1.5
+const DEFAULT_LONG_MARGIN = 1.5
 
 /**
  * Margin between rows/columns (perpendicular to jumper length)
  * Can be smaller since jumpers in adjacent rows are staggered
  */
-const SHORT_MARGIN = 0.5
+const DEFAULT_SHORT_MARGIN = 0.5
 
-const BORDER_PADDING = 0.8
+const DEFAULT_BORDER_PADDING = 0.8
 
 /**
  * Generates a staggered grid of jumpers where all jumpers have the same orientation.
@@ -28,15 +34,42 @@ const BORDER_PADDING = 0.8
  * - FIRST_ORIENTATION: "horizontal" or "vertical" - determines orientation of ALL jumpers
  */
 export function staggeredGrid(jps: JumperPrepatternSolver): PatternResult {
+  let longMargin = DEFAULT_LONG_MARGIN
+  let shortMargin = DEFAULT_SHORT_MARGIN
+  let borderPadding = DEFAULT_BORDER_PADDING
+
+  while (true) {
+    const result = generateStaggeredGrid(
+      jps,
+      longMargin,
+      shortMargin,
+      borderPadding,
+    )
+    if (result.prepatternJumpers.length <= MAX_JUMPERS) {
+      return result
+    }
+    // Increase padding and margin by 10%
+    longMargin *= 1.1
+    shortMargin *= 1.1
+    borderPadding *= 1.1
+  }
+}
+
+function generateStaggeredGrid(
+  jps: JumperPrepatternSolver,
+  longMargin: number,
+  shortMargin: number,
+  borderPadding: number,
+): PatternResult {
   const prepatternJumpers: PrepatternJumper[] = []
   const jumperPadObstacles: Obstacle[] = []
 
   const node = jps.nodeWithPortPoints
   const bounds = {
-    minX: node.center.x - node.width / 2 + BORDER_PADDING,
-    maxX: node.center.x + node.width / 2 - BORDER_PADDING,
-    minY: node.center.y - node.height / 2 + BORDER_PADDING,
-    maxY: node.center.y + node.height / 2 - BORDER_PADDING,
+    minX: node.center.x - node.width / 2 + borderPadding,
+    maxX: node.center.x + node.width / 2 - borderPadding,
+    minY: node.center.y - node.height / 2 + borderPadding,
+    maxY: node.center.y + node.height / 2 - borderPadding,
     width: 0,
     height: 0,
   }
@@ -56,8 +89,8 @@ export function staggeredGrid(jps: JumperPrepatternSolver): PatternResult {
   // Cell sizes differ based on direction
   // longStep: spacing along the jumper's length direction (between jumpers in same row)
   // shortStep: spacing perpendicular to jumper length (between rows)
-  const longStep = jumperLength + LONG_MARGIN
-  const shortStep = jumperWidth + SHORT_MARGIN
+  const longStep = jumperLength + longMargin
+  const shortStep = jumperWidth + shortMargin
 
   // For horizontal jumpers: columns use longStep (X), rows use shortStep (Y)
   // For vertical jumpers: columns use shortStep (X), rows use longStep (Y)

@@ -28,12 +28,17 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     opts: ConstructorParameters<typeof IntraNodeSolverWithJumpers>[0],
   ) {
     super()
+    this.constructorParams = opts
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.MAX_ITERATIONS = 250_000
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
+  }
+
+  getConstructorParams() {
+    return this.constructorParams
   }
 
   getHyperParameterDefs() {
@@ -73,14 +78,25 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           } & JumperPrepatternSolverHyperParameters
         >,
       },
+      {
+        name: "stagger1",
+        possibleValues: [
+          {
+            USE_JUMPER_PREPATTERN: true,
+            FIRST_ORIENTATION: "horizontal",
+            PATTERN_TYPE: "staggered_grid",
+          },
+        ],
+      },
     ]
   }
 
   getCombinationDefs() {
     return [
-      // Try JumperPrepatternSolver first (tends to produce better results for complex patterns)
+      // ["stagger1"],
+      // // Try JumperPrepatternSolver first (tends to produce better results for complex patterns)
       ["jumperPrepattern"],
-      // Fall back to IntraNodeSolverWithJumpers with various orderings
+      // // Fall back to IntraNodeSolverWithJumpers with various orderings
       ["orderings20"],
     ]
   }

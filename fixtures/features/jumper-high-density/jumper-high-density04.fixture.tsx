@@ -1,6 +1,7 @@
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import input from "./jumper-high-density04-input.json"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export default () => {
   const createSolver = () => {
@@ -9,7 +10,7 @@ export default () => {
       colorMap: input[0].colorMap,
       traceWidth: input[0].traceWidth,
       viaDiameter: input[0].viaDiameter,
-      connMap: input[0].connMap as any,
+      connMap: new ConnectivityMap(input[0].connMap.netMap as any),
     })
   }
 

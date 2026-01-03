@@ -341,7 +341,7 @@ export class PortPointPathingSolver extends BaseSolver {
     fixedRoutes?: ConnectionPathResult[]
   }) {
     super()
-    this.MAX_ITERATIONS = 100e3
+    this.MAX_ITERATIONS = 1e6
     this.simpleRouteJson = simpleRouteJson
     this.inputNodes = inputNodes
     this.colorMap = colorMap ?? {}
