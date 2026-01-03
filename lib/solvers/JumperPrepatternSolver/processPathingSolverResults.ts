@@ -1,5 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HyperPortPointPathingSolver } from "../PortPointPathingSolver/HyperPortPointPathingSolver"
+import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import type { PrepatternJumper } from "./patterns/alternatingGrid"
 import type { SimpleRouteJson } from "../../types"
 import { updateConnMapWithOffboardObstacleConnections } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/updateConnMapWithOffboardObstacleConnections"
@@ -219,25 +220,37 @@ export function processPathingSolverResults(
     allUsedJumperOffBoardIds.add(offBoardId)
   }
 
-  // For NECESSARY jumpers, change the artificial midpoint port points
-  // to use each pad's own center instead of the shared midpoint.
-  // This ensures:
-  // 1. Traces go TO the center of each jumper pad
-  // 2. No trace is drawn BETWEEN the two pad centers (they're at different locations)
-  // The physical jumper component bridges the gap between pad centers.
+  // Handle artificial port points for jumpers based on whether they're NECESSARY or not:
   //
-  // We identify artificial midpoint port points as those:
-  // 1. Without a portPointId (artificial points don't have one)
-  // 2. In a node that has _offBoardConnectionId (is a jumper pad)
-  // 3. The _offBoardConnectionId is for a NECESSARY jumper
+  // 1. NECESSARY jumpers (another trace crosses them):
+  //    - Port points should be at each pad's own center
+  //    - No trace is drawn BETWEEN the two pad centers (the physical jumper bridges them)
+  //
+  // 2. USED but NOT NECESSARY jumpers (trace goes through but nothing crosses):
+  //    - Port points should be at a SHARED MIDPOINT between the two pads
+  //    - This allows the stitch solver to connect them as one continuous trace
+  //
+  // We identify artificial port points as those without a portPointId.
+
+  // First, build a map from offBoardConnectionId -> pair of nodes (the two pads)
+  const offBoardIdToNodes = new Map<string, InputNodeWithPortPoints[]>()
+  for (const inputNode of pathingSolver.inputNodes) {
+    if (!inputNode._offBoardConnectionId) continue
+    const existing = offBoardIdToNodes.get(inputNode._offBoardConnectionId)
+    if (existing) {
+      existing.push(inputNode)
+    } else {
+      offBoardIdToNodes.set(inputNode._offBoardConnectionId, [inputNode])
+    }
+  }
+
   for (const inputNode of pathingSolver.inputNodes) {
     if (!inputNode._offBoardConnectionId) continue
 
-    // Check if this node is part of a NECESSARY jumper
+    const isUsed = allUsedJumperOffBoardIds.has(inputNode._offBoardConnectionId)
     const isNecessary = usedJumperOffBoardObstacleIds.has(
       inputNode._offBoardConnectionId,
     )
-    if (!isNecessary) continue
 
     // Get the port points for this node
     const nodePortPoints = pathingSolver.nodeAssignedPortPoints.get(
@@ -245,13 +258,29 @@ export function processPathingSolverResults(
     )
     if (!nodePortPoints) continue
 
-    // Change artificial port points (those without portPointId) to use
-    // this node's own center instead of the shared midpoint
-    for (const pp of nodePortPoints) {
-      if ((pp as any).portPointId === undefined) {
-        // This is an artificial port point - move it to the node's center
-        pp.x = inputNode.center.x
-        pp.y = inputNode.center.y
+    if (isNecessary) {
+      // NECESSARY jumper: use each pad's own center
+      for (const pp of nodePortPoints) {
+        if ((pp as any).portPointId === undefined) {
+          pp.x = inputNode.center.x
+          pp.y = inputNode.center.y
+        }
+      }
+    } else if (isUsed) {
+      // USED but NOT NECESSARY: use shared midpoint between the two pads
+      const pairNodes = offBoardIdToNodes.get(inputNode._offBoardConnectionId)
+      if (pairNodes && pairNodes.length === 2) {
+        const [node1, node2] = pairNodes
+        const midpoint = {
+          x: (node1.center.x + node2.center.x) / 2,
+          y: (node1.center.y + node2.center.y) / 2,
+        }
+        for (const pp of nodePortPoints) {
+          if ((pp as any).portPointId === undefined) {
+            pp.x = midpoint.x
+            pp.y = midpoint.y
+          }
+        }
       }
     }
   }
