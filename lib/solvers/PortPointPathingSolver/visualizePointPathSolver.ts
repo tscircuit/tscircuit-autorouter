@@ -372,9 +372,8 @@ export function visualizePointPathSolver(
       }
     }
 
-    const sortedCandidates = [...solver.candidates]
-      .sort((a, b) => a.f - b.f)
-      .slice(0, 50)
+    const sortedCandidates = [...solver.candidates].sort((a, b) => a.f - b.f)
+    // .slice(0, 50)
 
     for (const candidate of sortedCandidates) {
       const candidatePath: Array<{

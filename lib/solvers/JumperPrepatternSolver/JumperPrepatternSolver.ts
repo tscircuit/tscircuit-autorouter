@@ -187,7 +187,7 @@ export class JumperPrepatternSolver extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HyperPortPointPathingSolver,
+      PortPointPathingSolver,
       (solver) => {
         // Build input nodes with port points from the segment solver
         const inputNodes: InputNodeWithPortPoints[] = solver.capacityNodes.map(
@@ -244,12 +244,12 @@ export class JumperPrepatternSolver extends BaseSolver {
             inputNodes,
             capacityMeshNodes: solver.capacityNodes,
             colorMap: solver.colorMap,
-            numShuffleSeeds: 1,
+            numShuffleSeeds: 10,
             hyperParameters: {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-              FORCE_OFF_BOARD_FREQUENCY: 0.8,
+              FORCE_OFF_BOARD_FREQUENCY: 0,
               MIN_ALLOWED_BOARD_SCORE: -1,
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,

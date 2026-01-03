@@ -54,6 +54,11 @@ export interface PortPointPathingHyperParameters {
 
   /** When enabled, use jumper-based pf calculation for same-layer crossings on single layer nodes */
   JUMPER_PF_FN_ENABLED?: boolean
+
+  /** Fraction of minSideDimension at which center appeal tapers off (default 0.5) */
+  CENTER_APPEAL_DISTANCE_FRACTION?: number
+  /** Factor for center appeal reward; 0 = no effect, > 0 applies reward (default 0) */
+  CENTER_APPEAL_FACTOR?: number
 }
 
 /**
@@ -273,6 +278,14 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.JUMPER_PF_FN_ENABLED ?? false
   }
 
+  get CENTER_APPEAL_DISTANCE_FRACTION() {
+    return this.hyperParameters.CENTER_APPEAL_DISTANCE_FRACTION ?? 0.5
+  }
+
+  get CENTER_APPEAL_FACTOR() {
+    return this.hyperParameters.CENTER_APPEAL_FACTOR ?? 1
+  }
+
   /** Number of jumpers that can fit per mm² of node area */
   jumpersPerMmSquared = 0.1
 
@@ -307,7 +320,10 @@ export class PortPointPathingSolver extends BaseSolver {
   capacityMeshNodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
 
   /** Heuristic scaling: an estimate of "node pitch" used to estimate remaining hops */
-  avgNodePitch = 1
+  avgNodePitch: number
+
+  /** Minimum of board width and height, used for center appeal calculation */
+  minSideDimension: number
 
   /** Whether the current connection should be forced to route off-board */
   currentConnectionShouldRouteOffBoard = false
@@ -350,6 +366,12 @@ export class PortPointPathingSolver extends BaseSolver {
     )
     this.nodeMemoryPfMap = nodeMemoryPfMap ?? new Map()
     this.hyperParameters = hyperParameters ?? {}
+
+    // Compute minSideDimension from bounds
+    const bounds = simpleRouteJson.bounds
+    const boardWidth = bounds.maxX - bounds.minX
+    const boardHeight = bounds.maxY - bounds.minY
+    this.minSideDimension = Math.min(boardWidth, boardHeight)
 
     if (precomputedInitialParams) {
       // Use precomputed params - clone mutable ones
@@ -454,6 +476,17 @@ export class PortPointPathingSolver extends BaseSolver {
       }
     }
     this.totalConnectionCount = this.connectionsWithResults.length
+  }
+
+  getConstructorParams() {
+    return {
+      simpleRouteJson: this.simpleRouteJson,
+      inputNodes: this.inputNodes,
+      capacityMeshNodes: Array.from(this.capacityMeshNodeMap.values()),
+      colorMap: this.colorMap,
+      nodeMemoryPfMap: this.nodeMemoryPfMap,
+      hyperParameters: this.hyperParameters,
+    }
   }
 
   private clearCostCaches() {
@@ -772,8 +805,22 @@ export class PortPointPathingSolver extends BaseSolver {
       this.CENTER_OFFSET_DIST_PENALTY_FACTOR *
       point.distToCentermostPortOnZ ** 2
 
+    // Center appeal reward: when CENTER_APPEAL_FACTOR > 0, apply a reward that
+    // tapers off as distanceTraveled approaches minSideDimension * CENTER_APPEAL_DISTANCE_FRACTION
+    let centerAppealReward = 0
+    if (this.CENTER_APPEAL_FACTOR > 0) {
+      const taperDistance =
+        this.minSideDimension * this.CENTER_APPEAL_DISTANCE_FRACTION
+      const taperFactor = Math.max(0, 1 - distanceTraveled / taperDistance)
+      centerAppealReward = this.CENTER_APPEAL_FACTOR * taperFactor
+    }
+
     return (
-      distanceToGoal + estStepCost + memRiskForHop + centerOffsetDistPenalty
+      distanceToGoal +
+      estStepCost +
+      memRiskForHop +
+      centerOffsetDistPenalty -
+      centerAppealReward
     )
   }
 
@@ -1504,7 +1551,7 @@ export class PortPointPathingSolver extends BaseSolver {
       )
 
       // Don't add candidates whose g cost would cause the board to drop below MIN_ALLOWED_BOARD_SCORE
-      if (!this.RIPPING_ENABLED && g > -this.MIN_ALLOWED_BOARD_SCORE) {
+      if (g > -this.MIN_ALLOWED_BOARD_SCORE) {
         continue
       }
 
