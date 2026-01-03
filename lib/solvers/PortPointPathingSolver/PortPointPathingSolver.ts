@@ -336,27 +336,31 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Cache of base node cost (cost of node in current committed state) */
   private baseNodeCostCache = new Map<CapacityMeshNodeId, number>()
 
-  constructor({
-    simpleRouteJson,
-    inputNodes,
-    capacityMeshNodes,
-    colorMap,
-    nodeMemoryPfMap,
-    hyperParameters,
-    precomputedInitialParams,
-    fixedRoutes,
-  }: {
-    simpleRouteJson: SimpleRouteJson
-    capacityMeshNodes: CapacityMeshNode[]
-    inputNodes: InputNodeWithPortPoints[]
-    colorMap?: Record<string, string>
-    nodeMemoryPfMap?: Map<CapacityMeshNodeId, number>
-    hyperParameters?: Partial<PortPointPathingHyperParameters>
-    precomputedInitialParams?: PrecomputedInitialParams
-    /** Pre-routed connections that should not be re-routed but should appear in results */
-    fixedRoutes?: ConnectionPathResult[]
-  }) {
+  constructor(
+    public input: {
+      simpleRouteJson: SimpleRouteJson
+      capacityMeshNodes: CapacityMeshNode[]
+      inputNodes: InputNodeWithPortPoints[]
+      colorMap?: Record<string, string>
+      nodeMemoryPfMap?: Map<CapacityMeshNodeId, number>
+      hyperParameters?: Partial<PortPointPathingHyperParameters>
+      precomputedInitialParams?: PrecomputedInitialParams
+      /** Pre-routed connections that should not be re-routed but should appear in results */
+      fixedRoutes?: ConnectionPathResult[]
+    },
+  ) {
     super()
+    const {
+      simpleRouteJson,
+      capacityMeshNodes,
+      inputNodes,
+      colorMap,
+      nodeMemoryPfMap,
+      hyperParameters,
+      precomputedInitialParams,
+      fixedRoutes,
+    } = input
+    this.input = structuredClone(input)
     this.MAX_ITERATIONS = 1e6
     this.simpleRouteJson = simpleRouteJson
     this.inputNodes = inputNodes
@@ -479,14 +483,7 @@ export class PortPointPathingSolver extends BaseSolver {
   }
 
   getConstructorParams() {
-    return {
-      simpleRouteJson: this.simpleRouteJson,
-      inputNodes: this.inputNodes,
-      capacityMeshNodes: Array.from(this.capacityMeshNodeMap.values()),
-      colorMap: this.colorMap,
-      nodeMemoryPfMap: this.nodeMemoryPfMap,
-      hyperParameters: this.hyperParameters,
-    }
+    return this.input
   }
 
   private clearCostCaches() {

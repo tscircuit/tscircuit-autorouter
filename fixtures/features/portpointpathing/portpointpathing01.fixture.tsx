@@ -4,14 +4,7 @@ import input from "./portpointpathing01-input.json"
 
 export default () => {
   const createSolver = () => {
-    return new PortPointPathingSolver({
-      simpleRouteJson: input.simpleRouteJson as any,
-      inputNodes: input.inputNodes as any,
-      capacityMeshNodes: input.capacityMeshNodes as any,
-      colorMap: input.colorMap as any,
-      nodeMemoryPfMap: new Map(Object.entries(input.nodeMemoryPfMap ?? {})),
-      hyperParameters: input.hyperParameters as any,
-    })
+    return new PortPointPathingSolver(input as any)
   }
 
   return <GenericSolverDebugger createSolver={createSolver} />
