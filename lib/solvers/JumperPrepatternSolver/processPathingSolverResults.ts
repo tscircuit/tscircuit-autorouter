@@ -146,9 +146,7 @@ export function processPathingSolverResults(
       if (candidate.lastMoveWasOffBoard && candidate.throughNodeId) {
         const throughNode = nodeMap.get(candidate.throughNodeId)
         if (throughNode?._offBoardConnectionId) {
-          if (
-            !jumperUsedByConnections.has(throughNode._offBoardConnectionId)
-          ) {
+          if (!jumperUsedByConnections.has(throughNode._offBoardConnectionId)) {
             jumperUsedByConnections.set(
               throughNode._offBoardConnectionId,
               new Set(),
