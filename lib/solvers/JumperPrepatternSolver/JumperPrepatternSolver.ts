@@ -423,6 +423,32 @@ export class JumperPrepatternSolver extends BaseSolver {
             solver.allUsedJumperOffBoardIds.add(offBoardId)
           }
 
+          // For NECESSARY jumpers, remove the artificial midpoint port points
+          // from nodeAssignedPortPoints. This prevents the high density solver
+          // from drawing traces between the jumper pads - the physical jumper
+          // component will bridge the gap instead.
+          //
+          // We identify artificial midpoint port points as those:
+          // 1. Without a portPointId (artificial points don't have one)
+          // 2. In a node that has _offBoardConnectionId (is a jumper pad)
+          // 3. The _offBoardConnectionId is for a NECESSARY jumper
+          for (const inputNode of pathingSolver.inputNodes) {
+            if (!inputNode._offBoardConnectionId) continue
+
+            // Check if this node is part of a NECESSARY jumper
+            const isNecessary = solver.usedJumperOffBoardObstacleIds.has(inputNode._offBoardConnectionId)
+            if (!isNecessary) continue
+
+            // Get the port points for this node
+            const nodePortPoints = pathingSolver.nodeAssignedPortPoints.get(inputNode.capacityMeshNodeId)
+            if (!nodePortPoints) continue
+
+            // Filter out artificial midpoint port points (those without portPointId)
+            // Keep real port points that have portPointId
+            const filteredPortPoints = nodePortPoints.filter((pp: any) => pp.portPointId !== undefined)
+            pathingSolver.nodeAssignedPortPoints.set(inputNode.capacityMeshNodeId, filteredPortPoints)
+          }
+
         },
       },
     ),
