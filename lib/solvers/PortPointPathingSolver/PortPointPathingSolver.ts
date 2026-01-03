@@ -269,7 +269,7 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.RANDOM_RIP_FRACTION ?? 0
   }
 
-  get jumperPfFnEnabled() {
+  get JUMPER_PF_FN_ENABLED() {
     return this.hyperParameters.JUMPER_PF_FN_ENABLED ?? false
   }
 
@@ -590,7 +590,7 @@ export class PortPointPathingSolver extends BaseSolver {
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
     // Use jumper-based pf calculation for single layer nodes when enabled
-    if (this.jumperPfFnEnabled && node.availableZ.length === 1) {
+    if (this.JUMPER_PF_FN_ENABLED && node.availableZ.length === 1) {
       const nodeArea = node.width * node.height
       const jumpersWeCanFitInNode = nodeArea * this.jumpersPerMmSquared
       const estimatedRequiredJumpers = crossings.numSameLayerCrossings
@@ -781,10 +781,7 @@ export class PortPointPathingSolver extends BaseSolver {
       point.distToCentermostPortOnZ ** 2
 
     return (
-      distanceToGoal +
-      estStepCost +
-      memRiskForHop +
-      centerOffsetDistPenalty
+      distanceToGoal + estStepCost + memRiskForHop + centerOffsetDistPenalty
     )
   }
 
@@ -1473,6 +1470,9 @@ export class PortPointPathingSolver extends BaseSolver {
           currentCandidate.currentNodeId,
       )
       if (!nextNodeId) continue
+
+      if (currentCandidate.currentNodeId === nextNodeId) continue
+      if (currentCandidate.prevCandidate?.currentNodeId === nextNodeId) continue
 
       const throughNodeId =
         "throughNodeId" in portPoint
