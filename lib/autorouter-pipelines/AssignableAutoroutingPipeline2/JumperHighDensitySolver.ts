@@ -47,7 +47,6 @@ interface NodeAnalysis {
   node: NodeWithPortPoints
   hasCrossings: boolean
   numSameLayerCrossings: number
-  isSingleLayer: boolean
 }
 
 /**
@@ -60,9 +59,7 @@ interface NodeAnalysis {
 export class JumperHighDensitySolver extends BaseSolver {
   allNodes: NodeWithPortPoints[]
   nodeAnalyses: NodeAnalysis[]
-  routes: (HighDensityIntraNodeRoute & {
-    jumpers?: HighDensityIntraNodeRouteWithJumpers["jumpers"]
-  })[]
+  routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
   traceWidth: number
   viaDiameter: number
