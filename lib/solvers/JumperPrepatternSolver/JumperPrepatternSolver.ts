@@ -187,7 +187,7 @@ export class JumperPrepatternSolver extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      PortPointPathingSolver,
+      HyperPortPointPathingSolver,
       (solver) => {
         // Build input nodes with port points from the segment solver
         const inputNodes: InputNodeWithPortPoints[] = solver.capacityNodes.map(
