@@ -244,7 +244,7 @@ export class JumperPrepatternSolver extends BaseSolver {
             inputNodes,
             capacityMeshNodes: solver.capacityNodes,
             colorMap: solver.colorMap,
-            numShuffleSeeds: 10,
+            numShuffleSeeds: 1,
             hyperParameters: {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
