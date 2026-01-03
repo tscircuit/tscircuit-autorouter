@@ -265,7 +265,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               // NODE_PF_MAX_PENALTY: 10,
               // RANDOM_WALK_DISTANCE: 50,
               // SHUFFLE_SEED: 275,
-              JUMPER_PF_FN_ENABLED: true,
+              JUMPER_PF_FN_ENABLED: false,
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
               // MIN_ALLOWED_BOARD_SCORE: -1,

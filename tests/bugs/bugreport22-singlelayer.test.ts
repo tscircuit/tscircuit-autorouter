@@ -49,9 +49,7 @@ test("bugreport22 - singlelayer (subset)", () => {
     `Found ${routesWithJumpers.length} routes with jumpers out of ${routes.length} total routes`,
   )
   for (const r of routesWithJumpers) {
-    console.log(
-      `  - ${r.connectionName}: ${r.jumpers?.length} jumper(s)`,
-    )
+    console.log(`  - ${r.connectionName}: ${r.jumpers?.length} jumper(s)`)
   }
 
   expect(solver.solved).toBe(true)
