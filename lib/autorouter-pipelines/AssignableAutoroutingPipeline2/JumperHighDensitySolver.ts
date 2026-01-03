@@ -130,19 +130,17 @@ export class JumperHighDensitySolver extends BaseSolver {
 
       // Check if all port points are on the same layer (single-layer node)
       const layers = new Set(node.portPoints.map((p) => p.z))
-      const isSingleLayer = layers.size === 1
 
       const analysis: NodeAnalysis = {
         node,
         hasCrossings: crossings.numSameLayerCrossings > 0,
         numSameLayerCrossings: crossings.numSameLayerCrossings,
-        isSingleLayer,
       }
 
       this.nodeAnalyses.push(analysis)
 
       // Route to appropriate solver
-      if (crossings.numSameLayerCrossings > 0 && isSingleLayer) {
+      if (crossings.numSameLayerCrossings > 0) {
         // Single-layer with crossings -> use jumpers
         this.nodesWithCrossings.push(node)
       } else {
