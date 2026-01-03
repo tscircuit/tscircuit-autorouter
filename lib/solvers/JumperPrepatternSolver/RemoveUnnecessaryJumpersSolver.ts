@@ -74,10 +74,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
 
   _step(): void {
     // Build a map of off-board connection ID -> list of node IDs
-    const offBoardConnectionToNodeIds = new Map<
-      string,
-      CapacityMeshNodeId[]
-    >()
+    const offBoardConnectionToNodeIds = new Map<string, CapacityMeshNodeId[]>()
 
     for (const node of this.inputNodes) {
       if (node._offBoardConnectionId) {

@@ -296,17 +296,25 @@ export class JumperPrepatternSolver extends BaseSolver {
           // IMPORTANT: Use pathingSolver.inputNodes, not solver.inputNodes
           // pathingSolver.inputNodes has _offBoardConnectionId populated
           const nodeMap = new Map(
-            pathingSolver.inputNodes.map((node) => [node.capacityMeshNodeId, node]),
+            pathingSolver.inputNodes.map((node) => [
+              node.capacityMeshNodeId,
+              node,
+            ]),
           )
 
           // Build a map from connectivity net ID -> jumper geometry
           // The jumper.offBoardConnectionId is like "jumper_conn_0"
           // But node._offBoardConnectionId is the connectivity net ID like "connectivity_net0"
           // We need to map from the net ID to the jumper geometry
-          const jumperGeometry = new Map<string, { start: { x: number; y: number }; end: { x: number; y: number } }>()
+          const jumperGeometry = new Map<
+            string,
+            { start: { x: number; y: number }; end: { x: number; y: number } }
+          >()
           for (const jumper of solver.prepatternJumpers) {
             // Get the connectivity net ID for this jumper
-            const netId = solver.offBoardConnMap?.getNetConnectedToId(jumper.offBoardConnectionId)
+            const netId = solver.offBoardConnMap?.getNetConnectedToId(
+              jumper.offBoardConnectionId,
+            )
             if (netId) {
               jumperGeometry.set(netId, {
                 start: jumper.start,
@@ -318,7 +326,10 @@ export class JumperPrepatternSolver extends BaseSolver {
           // Track: offBoardConnectionId -> Set of connection names that USE the jumper (go through both pads)
           const jumperUsedByConnections = new Map<string, Set<string>>()
           // Track: connectionName -> array of route points {x, y}
-          const connectionRoutes = new Map<string, Array<{ x: number; y: number }>>()
+          const connectionRoutes = new Map<
+            string,
+            Array<{ x: number; y: number }>
+          >()
 
           for (const connectionResult of pathingSolver.connectionsWithResults) {
             if (!connectionResult.path) continue
@@ -333,10 +344,19 @@ export class JumperPrepatternSolver extends BaseSolver {
               if (candidate.lastMoveWasOffBoard && candidate.throughNodeId) {
                 const throughNode = nodeMap.get(candidate.throughNodeId)
                 if (throughNode?._offBoardConnectionId) {
-                  if (!jumperUsedByConnections.has(throughNode._offBoardConnectionId)) {
-                    jumperUsedByConnections.set(throughNode._offBoardConnectionId, new Set())
+                  if (
+                    !jumperUsedByConnections.has(
+                      throughNode._offBoardConnectionId,
+                    )
+                  ) {
+                    jumperUsedByConnections.set(
+                      throughNode._offBoardConnectionId,
+                      new Set(),
+                    )
                   }
-                  jumperUsedByConnections.get(throughNode._offBoardConnectionId)!.add(connectionName)
+                  jumperUsedByConnections
+                    .get(throughNode._offBoardConnectionId)!
+                    .add(connectionName)
                 }
               }
 
@@ -345,10 +365,19 @@ export class JumperPrepatternSolver extends BaseSolver {
               // If we don't track this, the jumper will be removed and the route becomes disjoint
               const currentNode = nodeMap.get(candidate.currentNodeId)
               if (currentNode?._offBoardConnectionId) {
-                if (!jumperUsedByConnections.has(currentNode._offBoardConnectionId)) {
-                  jumperUsedByConnections.set(currentNode._offBoardConnectionId, new Set())
+                if (
+                  !jumperUsedByConnections.has(
+                    currentNode._offBoardConnectionId,
+                  )
+                ) {
+                  jumperUsedByConnections.set(
+                    currentNode._offBoardConnectionId,
+                    new Set(),
+                  )
                 }
-                jumperUsedByConnections.get(currentNode._offBoardConnectionId)!.add(connectionName)
+                jumperUsedByConnections
+                  .get(currentNode._offBoardConnectionId)!
+                  .add(connectionName)
               }
             }
             connectionRoutes.set(connectionName, routePoints)
@@ -361,7 +390,11 @@ export class JumperPrepatternSolver extends BaseSolver {
             p3: { x: number; y: number },
             p4: { x: number; y: number },
           ): boolean => {
-            const ccw = (A: { x: number; y: number }, B: { x: number; y: number }, C: { x: number; y: number }) => {
+            const ccw = (
+              A: { x: number; y: number },
+              B: { x: number; y: number },
+              C: { x: number; y: number },
+            ) => {
               return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x)
             }
             return (
@@ -377,7 +410,14 @@ export class JumperPrepatternSolver extends BaseSolver {
             jumperEnd: { x: number; y: number },
           ): boolean => {
             for (let i = 0; i < route.length - 1; i++) {
-              if (segmentsIntersect(route[i], route[i + 1], jumperStart, jumperEnd)) {
+              if (
+                segmentsIntersect(
+                  route[i],
+                  route[i + 1],
+                  jumperStart,
+                  jumperEnd,
+                )
+              ) {
                 return true
               }
             }
@@ -397,7 +437,10 @@ export class JumperPrepatternSolver extends BaseSolver {
           // - Jumpers that are USED but NOT NECESSARY keep their off-board connections
           //   (routes still go through them) but are not visualized
           // - Jumpers that are NECESSARY are kept AND visualized
-          for (const [offBoardId, usingConnections] of jumperUsedByConnections) {
+          for (const [
+            offBoardId,
+            usingConnections,
+          ] of jumperUsedByConnections) {
             const geometry = jumperGeometry.get(offBoardId)
             if (!geometry) continue
 
@@ -438,11 +481,15 @@ export class JumperPrepatternSolver extends BaseSolver {
             if (!inputNode._offBoardConnectionId) continue
 
             // Check if this node is part of a NECESSARY jumper
-            const isNecessary = solver.usedJumperOffBoardObstacleIds.has(inputNode._offBoardConnectionId)
+            const isNecessary = solver.usedJumperOffBoardObstacleIds.has(
+              inputNode._offBoardConnectionId,
+            )
             if (!isNecessary) continue
 
             // Get the port points for this node
-            const nodePortPoints = pathingSolver.nodeAssignedPortPoints.get(inputNode.capacityMeshNodeId)
+            const nodePortPoints = pathingSolver.nodeAssignedPortPoints.get(
+              inputNode.capacityMeshNodeId,
+            )
             if (!nodePortPoints) continue
 
             // Change artificial port points (those without portPointId) to use
@@ -455,7 +502,6 @@ export class JumperPrepatternSolver extends BaseSolver {
               }
             }
           }
-
         },
       },
     ),
@@ -495,7 +541,8 @@ export class JumperPrepatternSolver extends BaseSolver {
         onSolved: (solver) => {
           // Update inputNodes with the nodes that have unused jumpers removed
           solver.inputNodes =
-            solver.removeUnnecessaryJumpersSolver?.getOutput() ?? solver.inputNodes
+            solver.removeUnnecessaryJumpersSolver?.getOutput() ??
+            solver.inputNodes
         },
       },
     ),
@@ -812,7 +859,10 @@ export class JumperPrepatternSolver extends BaseSolver {
               jumper.offBoardConnectionId,
             )
             // The usedJumperOffBoardObstacleIds contains net IDs directly
-            if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
+            if (
+              jumperNet &&
+              this.usedJumperOffBoardObstacleIds.has(jumperNet)
+            ) {
               return true
             }
             return false

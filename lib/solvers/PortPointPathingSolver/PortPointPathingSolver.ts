@@ -989,7 +989,7 @@ export class PortPointPathingSolver extends BaseSolver {
                 x: (throughNode.center.x + prevNode.center.x) / 2,
                 y: (throughNode.center.y + prevNode.center.y) / 2,
               }
-            : throughNode?.center ?? prevNode?.center ?? current.point
+            : (throughNode?.center ?? prevNode?.center ?? current.point)
 
         // Add artificial point at the midpoint for the through node (where we're going through)
         if (throughNode) {
