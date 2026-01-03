@@ -423,10 +423,12 @@ export class JumperPrepatternSolver extends BaseSolver {
             solver.allUsedJumperOffBoardIds.add(offBoardId)
           }
 
-          // For NECESSARY jumpers, remove the artificial midpoint port points
-          // from nodeAssignedPortPoints. This prevents the high density solver
-          // from drawing traces between the jumper pads - the physical jumper
-          // component will bridge the gap instead.
+          // For NECESSARY jumpers, change the artificial midpoint port points
+          // to use each pad's own center instead of the shared midpoint.
+          // This ensures:
+          // 1. Traces go TO the center of each jumper pad
+          // 2. No trace is drawn BETWEEN the two pad centers (they're at different locations)
+          // The physical jumper component bridges the gap between pad centers.
           //
           // We identify artificial midpoint port points as those:
           // 1. Without a portPointId (artificial points don't have one)
@@ -443,10 +445,15 @@ export class JumperPrepatternSolver extends BaseSolver {
             const nodePortPoints = pathingSolver.nodeAssignedPortPoints.get(inputNode.capacityMeshNodeId)
             if (!nodePortPoints) continue
 
-            // Filter out artificial midpoint port points (those without portPointId)
-            // Keep real port points that have portPointId
-            const filteredPortPoints = nodePortPoints.filter((pp: any) => pp.portPointId !== undefined)
-            pathingSolver.nodeAssignedPortPoints.set(inputNode.capacityMeshNodeId, filteredPortPoints)
+            // Change artificial port points (those without portPointId) to use
+            // this node's own center instead of the shared midpoint
+            for (const pp of nodePortPoints) {
+              if ((pp as any).portPointId === undefined) {
+                // This is an artificial port point - move it to the node's center
+                pp.x = inputNode.center.x
+                pp.y = inputNode.center.y
+              }
+            }
           }
 
         },
