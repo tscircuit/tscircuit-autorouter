@@ -128,8 +128,11 @@ export class JumperPrepatternSolver extends BaseSolver {
   // Output
   solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
 
-  // Tracks which jumper off-board connection net IDs are actually used by routes
+  // Tracks which jumper off-board connection net IDs are NECESSARY (visualized)
   usedJumperOffBoardObstacleIds: Set<string> = new Set()
+  // Tracks ALL jumper off-board connection net IDs that are USED (not removed)
+  // This includes both necessary and unnecessary-but-used jumpers
+  allUsedJumperOffBoardIds: Set<string> = new Set()
   // Connectivity map for off-board obstacles (built once for checking used jumpers)
   offBoardConnMap: ConnectivityMap | null = null
 
@@ -326,8 +329,8 @@ export class JumperPrepatternSolver extends BaseSolver {
             for (const candidate of connectionResult.path) {
               routePoints.push({ x: candidate.point.x, y: candidate.point.y })
 
+              // Track when a path goes through a jumper node (via off-board connection)
               if (candidate.lastMoveWasOffBoard && candidate.throughNodeId) {
-                // This connection USES the jumper (goes through both pads)
                 const throughNode = nodeMap.get(candidate.throughNodeId)
                 if (throughNode?._offBoardConnectionId) {
                   if (!jumperUsedByConnections.has(throughNode._offBoardConnectionId)) {
@@ -335,6 +338,17 @@ export class JumperPrepatternSolver extends BaseSolver {
                   }
                   jumperUsedByConnections.get(throughNode._offBoardConnectionId)!.add(connectionName)
                 }
+              }
+
+              // ALSO track when a path passes through a jumper node WITHOUT using off-board
+              // This can happen when a route uses a jumper pad as a regular waypoint
+              // If we don't track this, the jumper will be removed and the route becomes disjoint
+              const currentNode = nodeMap.get(candidate.currentNodeId)
+              if (currentNode?._offBoardConnectionId) {
+                if (!jumperUsedByConnections.has(currentNode._offBoardConnectionId)) {
+                  jumperUsedByConnections.set(currentNode._offBoardConnectionId, new Set())
+                }
+                jumperUsedByConnections.get(currentNode._offBoardConnectionId)!.add(connectionName)
               }
             }
             connectionRoutes.set(connectionName, routePoints)
@@ -370,50 +384,24 @@ export class JumperPrepatternSolver extends BaseSolver {
             return false
           }
 
-          // Helper to find the node closest to a point (that isn't a pad node)
-          const findClosestNode = (
-            point: { x: number; y: number },
-          ): InputNodeWithPortPoints | null => {
-            let closest: InputNodeWithPortPoints | null = null
-            let closestDist = Infinity
-
-            for (const node of pathingSolver.inputNodes) {
-              // Skip pad nodes (they have the off-board connection ID)
-              if (node._offBoardConnectionId) continue
-
-              const dist = Math.sqrt(
-                (node.center.x - point.x) ** 2 + (node.center.y - point.y) ** 2,
-              )
-              if (dist < closestDist) {
-                closestDist = dist
-                closest = node
-              }
-            }
-            return closest
-          }
-
-          // A jumper is necessary if:
-          // 1. It's used by at least one connection
+          // A jumper is NECESSARY if:
+          // 1. It's used by at least one connection (goes through both pads via off-board)
           // 2. AND another (different) connection's route actually INTERSECTS the jumper line
           //
-          // For necessary jumpers, we also need to add port points to the underneath node
-          // so the connection that uses the jumper routes through it.
+          // We track two sets:
+          // - usedJumperOffBoardObstacleIds: jumpers that are NECESSARY (will be visualized AND kept)
+          // - All jumpers in jumperUsedByConnections are USED but may not be necessary
+          //
+          // For the RemoveUnnecessaryJumpersSolver:
+          // - We only remove jumpers that are NOT USED at all
+          // - Jumpers that are USED but NOT NECESSARY keep their off-board connections
+          //   (routes still go through them) but are not visualized
+          // - Jumpers that are NECESSARY are kept AND visualized
           for (const [offBoardId, usingConnections] of jumperUsedByConnections) {
             const geometry = jumperGeometry.get(offBoardId)
             if (!geometry) continue
 
-            // Find the midpoint of the jumper
-            const midpoint = {
-              x: (geometry.start.x + geometry.end.x) / 2,
-              y: (geometry.start.y + geometry.end.y) / 2,
-            }
-
-            // Find the node closest to the midpoint (the "underneath" node)
-            const underneathNode = findClosestNode(midpoint)
-            if (!underneathNode) continue
-
             // Check if any OTHER connection's route intersects the jumper line
-            let isNecessary = false
             for (const [connName, route] of connectionRoutes) {
               // Skip connections that use this jumper
               if (usingConnections.has(connName)) continue
@@ -422,45 +410,17 @@ export class JumperPrepatternSolver extends BaseSolver {
               if (routeIntersectsJumper(route, geometry.start, geometry.end)) {
                 // Different connection crosses the jumper - jumper is necessary
                 solver.usedJumperOffBoardObstacleIds.add(offBoardId)
-                isNecessary = true
                 break
               }
             }
+          }
 
-            // For UNNECESSARY jumpers (not necessary), we need to add port points
-            // so the connection that was using the jumper can still route through the area
-            // where the jumper pads were
-            if (!isNecessary) {
-              // Add port points at the pad locations for the connection that used this jumper
-              // This allows the route to connect through the empty area after the jumper is removed
-
-              // Add port point at the start pad location
-              const startPortPoints =
-                pathingSolver.nodeAssignedPortPoints.get(underneathNode.capacityMeshNodeId) ?? []
-
-              for (const connName of usingConnections) {
-                // Add port points at both pad locations
-                startPortPoints.push({
-                  x: geometry.start.x,
-                  y: geometry.start.y,
-                  z: 0,
-                  connectionName: connName,
-                  rootConnectionName: connName,
-                })
-                startPortPoints.push({
-                  x: geometry.end.x,
-                  y: geometry.end.y,
-                  z: 0,
-                  connectionName: connName,
-                  rootConnectionName: connName,
-                })
-              }
-
-              pathingSolver.nodeAssignedPortPoints.set(
-                underneathNode.capacityMeshNodeId,
-                startPortPoints,
-              )
-            }
+          // Build a set of ALL used jumper IDs (regardless of necessity)
+          // These should NOT be removed by RemoveUnnecessaryJumpersSolver
+          for (const [offBoardId] of jumperUsedByConnections) {
+            // Mark all used jumpers so they won't be removed
+            // (only truly unused jumpers should be removed)
+            solver.allUsedJumperOffBoardIds.add(offBoardId)
           }
 
         },
@@ -492,7 +452,9 @@ export class JumperPrepatternSolver extends BaseSolver {
       (solver) => [
         {
           inputNodes: solver.inputNodes,
-          usedJumperOffBoardObstacleIds: solver.usedJumperOffBoardObstacleIds,
+          // Pass allUsedJumperOffBoardIds to only remove truly unused jumpers
+          // (jumpers that are used but not necessary keep their off-board connections)
+          usedJumperOffBoardObstacleIds: solver.allUsedJumperOffBoardIds,
           offBoardConnMap: solver.offBoardConnMap,
         },
       ],

@@ -980,13 +980,24 @@ export class PortPointPathingSolver extends BaseSolver {
         // Add the current candidate first
         path.push(current)
 
-        // Add artificial point at the center of the through node (where we're going through)
+        // Calculate the midpoint between the two off-board connected pads
+        // This ensures both pads have a port point at the SAME location,
+        // which allows the stitch solver to connect them
+        const midpoint =
+          throughNode && prevNode
+            ? {
+                x: (throughNode.center.x + prevNode.center.x) / 2,
+                y: (throughNode.center.y + prevNode.center.y) / 2,
+              }
+            : throughNode?.center ?? prevNode?.center ?? current.point
+
+        // Add artificial point at the midpoint for the through node (where we're going through)
         if (throughNode) {
           path.push({
             prevCandidate: null,
             portPoint: null,
             currentNodeId: current.throughNodeId,
-            point: throughNode.center,
+            point: midpoint,
             z: current.z,
             f: 0,
             g: 0,
@@ -995,13 +1006,13 @@ export class PortPointPathingSolver extends BaseSolver {
           })
         }
 
-        // Add artificial point at the center of the previous off-board node (where we came from)
+        // Add artificial point at the midpoint for the previous off-board node (where we came from)
         if (prevNode && prevNode._offBoardConnectionId) {
           path.push({
             prevCandidate: null,
             portPoint: null,
             currentNodeId: current.prevCandidate!.currentNodeId,
-            point: prevNode.center,
+            point: midpoint,
             z: current.z,
             f: 0,
             g: 0,
