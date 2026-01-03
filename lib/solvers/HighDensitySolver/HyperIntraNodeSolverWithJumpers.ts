@@ -10,8 +10,15 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import type { GraphicsObject } from "graphics-debug"
+import {
+  JumperPrepatternSolver,
+  type JumperPrepatternSolverHyperParameters,
+} from "../JumperPrepatternSolver/JumperPrepatternSolver"
+import { BaseSolver } from "../BaseSolver"
 
-export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSolver<IntraNodeSolverWithJumpers> {
+type JumperSolver = IntraNodeSolverWithJumpers | JumperPrepatternSolver
+
+export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSolver<JumperSolver> {
   constructorParams: ConstructorParameters<typeof IntraNodeSolverWithJumpers>[0]
   solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -24,7 +31,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
-    this.MAX_ITERATIONS = 100_000
+    this.MAX_ITERATIONS = 250_000
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
@@ -37,20 +44,45 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           SHUFFLE_SEED: i,
         })),
       },
-      // {
-      //   name: "misc",
-      //   possibleValues: [
-      //     {
-      //       OBSTACLE_PROX_SIGMA: 0,
-      //     },
-      //   ] as Array<HighDensityHyperParameters>,
-      // },
+      {
+        name: "jumperPrepattern",
+        possibleValues: [
+          {
+            USE_JUMPER_PREPATTERN: true,
+            FIRST_ORIENTATION: "horizontal",
+            PATTERN_TYPE: "alternating_grid",
+          },
+          {
+            USE_JUMPER_PREPATTERN: true,
+            FIRST_ORIENTATION: "vertical",
+            PATTERN_TYPE: "alternating_grid",
+          },
+          {
+            USE_JUMPER_PREPATTERN: true,
+            FIRST_ORIENTATION: "horizontal",
+            PATTERN_TYPE: "staggered_grid",
+          },
+          {
+            USE_JUMPER_PREPATTERN: true,
+            FIRST_ORIENTATION: "vertical",
+            PATTERN_TYPE: "staggered_grid",
+          },
+        ] as Array<
+          {
+            USE_JUMPER_PREPATTERN: true
+          } & JumperPrepatternSolverHyperParameters
+        >,
+      },
     ]
   }
 
   getCombinationDefs() {
-    return [["orderings20"]]
-    // return [["orderings20", "misc"]]
+    return [
+      // Try JumperPrepatternSolver first (tends to produce better results for complex patterns)
+      ["jumperPrepattern"],
+      // Fall back to IntraNodeSolverWithJumpers with various orderings
+      ["orderings20"],
+    ]
   }
 
   _step() {
@@ -59,17 +91,41 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
       this.getSupervisedSolverWithBestFitness()?.hyperParameters
   }
 
-  computeG(solver: IntraNodeSolverWithJumpers) {
+  computeG(solver: JumperSolver) {
+    if ("USE_JUMPER_PREPATTERN" in (solver as any).hyperParameters) {
+      // Give prepattern solver a slight advantage to try it first
+      return 500 + solver.iterations / 10_000
+    }
     return solver.iterations / 10_000
   }
 
-  computeH(solver: IntraNodeSolverWithJumpers) {
+  computeH(solver: JumperSolver) {
     return 1 - (solver.progress || 0)
   }
 
   generateSolver(
-    hyperParameters: Partial<HighDensityHyperParameters>,
-  ): IntraNodeSolverWithJumpers {
+    hyperParameters: Partial<HighDensityHyperParameters> & {
+      USE_JUMPER_PREPATTERN?: boolean
+      FIRST_ORIENTATION?: "horizontal" | "vertical"
+      PATTERN_TYPE?: "alternating_grid" | "staggered_grid"
+    },
+  ): JumperSolver {
+    if (hyperParameters.USE_JUMPER_PREPATTERN) {
+      const prepatternSolver = new JumperPrepatternSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        colorMap: this.constructorParams.colorMap,
+        connMap: this.connMap,
+        traceWidth: this.constructorParams.traceWidth,
+        hyperParameters: {
+          FIRST_ORIENTATION: hyperParameters.FIRST_ORIENTATION,
+          PATTERN_TYPE: hyperParameters.PATTERN_TYPE,
+        },
+      })
+      // Store hyperParameters on the solver for computeG reference
+      ;(prepatternSolver as any).hyperParameters = hyperParameters
+      return prepatternSolver as JumperSolver
+    }
+
     return new IntraNodeSolverWithJumpers({
       ...this.constructorParams,
       hyperParameters: {
@@ -79,8 +135,14 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     })
   }
 
-  onSolve(solver: SupervisedSolver<IntraNodeSolverWithJumpers>) {
-    this.solvedRoutes = solver.solver.solvedRoutes
+  onSolve(solver: SupervisedSolver<JumperSolver>) {
+    if (solver.solver instanceof JumperPrepatternSolver) {
+      this.solvedRoutes = solver.solver.getOutput()
+    } else {
+      this.solvedRoutes = (
+        solver.solver as IntraNodeSolverWithJumpers
+      ).solvedRoutes
+    }
   }
 
   visualize(): GraphicsObject {

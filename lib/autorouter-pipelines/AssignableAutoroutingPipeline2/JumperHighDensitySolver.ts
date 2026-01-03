@@ -6,7 +6,7 @@ import type {
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
-import { IntraNodeSolverWithJumpers } from "../../solvers/HighDensitySolver/IntraNodeSolverWithJumpers"
+import { HyperIntraNodeSolverWithJumpers } from "../../solvers/HighDensitySolver/HyperIntraNodeSolverWithJumpers"
 import { getIntraNodeCrossings } from "../../utils/getIntraNodeCrossings"
 import { safeTransparentize } from "../../solvers/colors"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
@@ -75,7 +75,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
   // Sub-solvers
   simpleHighDensitySolver?: SimpleHighDensitySolver
-  jumperSolvers: IntraNodeSolverWithJumpers[]
+  jumperSolvers: HyperIntraNodeSolverWithJumpers[]
   currentJumperSolverIndex: number
 
   // State
@@ -225,7 +225,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
   _initializeJumperSolvers() {
     for (const node of this.nodesWithCrossings) {
-      const solver = new IntraNodeSolverWithJumpers({
+      const solver = new HyperIntraNodeSolverWithJumpers({
         nodeWithPortPoints: node,
         colorMap: this.colorMap,
         connMap: this.connMap,
@@ -270,7 +270,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         this.solved = true
       }
     } else if (currentSolver.failed) {
-      this.error = `IntraNodeSolverWithJumpers failed for node: ${currentSolver.nodeWithPortPoints.capacityMeshNodeId}: ${currentSolver.error}`
+      this.error = `HyperIntraNodeSolverWithJumpers failed for node: ${currentSolver.nodeWithPortPoints.capacityMeshNodeId}: ${currentSolver.error}`
       this.failed = true
     }
   }
