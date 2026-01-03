@@ -51,6 +51,9 @@ export interface PortPointPathingHyperParameters {
   RIPPING_PF_THRESHOLD?: number
   MAX_RIPS?: number
   RANDOM_RIP_FRACTION?: number
+
+  /** When enabled, use jumper-based pf calculation for same-layer crossings on single layer nodes */
+  JUMPER_PF_FN_ENABLED?: boolean
 }
 
 /**
@@ -265,6 +268,13 @@ export class PortPointPathingSolver extends BaseSolver {
   get RANDOM_RIP_FRACTION() {
     return this.hyperParameters.RANDOM_RIP_FRACTION ?? 0
   }
+
+  get jumperPfFnEnabled() {
+    return this.hyperParameters.JUMPER_PF_FN_ENABLED ?? false
+  }
+
+  /** Number of jumpers that can fit per mm² of node area */
+  jumpersPerMmSquared = 0.1
 
   /** Tracks which connections have been test-ripped for each node to avoid retesting */
   testedRipConnections: Map<CapacityMeshNodeId, Set<string>> = new Map()
@@ -570,6 +580,14 @@ export class PortPointPathingSolver extends BaseSolver {
       additionalPortPoints,
     )
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+
+    // Use jumper-based pf calculation for single layer nodes when enabled
+    if (this.jumperPfFnEnabled && node.availableZ.length === 1) {
+      const nodeArea = node.width * node.height
+      const jumpersWeCanFitInNode = nodeArea * this.jumpersPerMmSquared
+      const estimatedRequiredJumpers = crossings.numSameLayerCrossings
+      return Math.min(1, estimatedRequiredJumpers / jumpersWeCanFitInNode)
+    }
 
     return calculateNodeProbabilityOfFailure(
       this.capacityMeshNodeMap.get(node.capacityMeshNodeId)!,

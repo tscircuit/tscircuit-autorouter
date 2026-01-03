@@ -124,7 +124,6 @@ export class JumperHighDensitySolver extends BaseSolver {
   _analyzeNodes() {
     for (const node of this.allNodes) {
       const crossings = getIntraNodeCrossingsUsingCircle(node)
-      console.log(node.capacityMeshNodeId, crossings)
 
       const analysis: NodeAnalysis = {
         node,
