@@ -36,6 +36,7 @@ export interface SimpleRouteJson {
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
+  allowJumpers?: boolean
 }
 
 export interface Obstacle {

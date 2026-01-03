@@ -114,7 +114,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
     // Calculate max iterations
     const simpleIterations = this.nodesWithoutCrossings.length * 10 + 1
-    const jumperIterations = this.nodesWithCrossings.length * 10000
+    const jumperIterations = this.nodesWithCrossings.length * 100000
     this.MAX_ITERATIONS = simpleIterations + jumperIterations + 100
   }
 
@@ -124,9 +124,7 @@ export class JumperHighDensitySolver extends BaseSolver {
   _analyzeNodes() {
     for (const node of this.allNodes) {
       const crossings = getIntraNodeCrossingsUsingCircle(node)
-
-      // Check if all port points are on the same layer (single-layer node)
-      const layers = new Set(node.portPoints.map((p) => p.z))
+      console.log(node.capacityMeshNodeId, crossings)
 
       const analysis: NodeAnalysis = {
         node,
@@ -431,9 +429,12 @@ export class JumperHighDensitySolver extends BaseSolver {
         stroke: analysis.hasCrossings
           ? "rgba(255, 150, 0, 0.5)"
           : "rgba(0, 150, 0, 0.5)",
-        label: analysis.hasCrossings
-          ? `crossings: ${analysis.numSameLayerCrossings}`
-          : "no crossings",
+        label: [
+          node.capacityMeshNodeId,
+          analysis.hasCrossings
+            ? `crossings: ${analysis.numSameLayerCrossings}`
+            : "no crossings",
+        ].join("\n"),
       })
     }
 
