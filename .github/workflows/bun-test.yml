@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [1, 2, 3, 4, 5]
+        node: [1, 2, 3, 4]
 
     steps:
       - name: Checkout code
@@ -32,14 +32,7 @@ jobs:
         run: bun-test-plan
 
       - name: Run tests for node ${{ matrix.node }}
-        run: |
-          if [ "${{ matrix.node }}" = "1" ]; then
-            # Node 1: Run only the long-running test
-            bun test tests/bugs/bugreport23.test.ts --timeout 300000
-          else
-            # Other nodes: Run from generated test plan
-            bash .bun-test-plan/scripts/run-tests-node${{ matrix.node }}.sh
-          fi
+        run: bash .bun-test-plan/scripts/run-tests-node${{ matrix.node }}.sh
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()
