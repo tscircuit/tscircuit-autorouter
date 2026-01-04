@@ -184,3 +184,6 @@ cosmos-export
 .yalc
 yalc.lock
 **/.claude/settings.local.json
+
+# Generated test plans
+.bun-test-plan/
