@@ -38,7 +38,8 @@ jobs:
             bun test tests/bugs/bugreport23.test.ts --timeout 300000
           else
             # Other nodes: Run from generated test plan
-            bash .bun-test-plan/scripts/run-tests-node${{ matrix.node }}.sh
+            mapfile -t test_files < .bun-test-plan/testplans/testplan${{ matrix.node }}.txt
+            bun test "${test_files[@]}" --timeout 300000
           fi
 
       - name: Upload diff PNG and SVG snapshot artifacts
