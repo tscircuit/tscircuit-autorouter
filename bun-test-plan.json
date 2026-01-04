@@ -1,0 +1,7 @@
+{
+  "nodeCount": 5,
+  "globPatterns": [
+    "tests/**/*.test.ts",
+    "tests/**/*.test.tsx"
+  ]
+}
