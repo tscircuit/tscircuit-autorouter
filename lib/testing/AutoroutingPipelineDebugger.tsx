@@ -45,22 +45,57 @@ const PIPELINE_SOLVERS = {
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
 const EFFORT_STORAGE_KEY = "selectedEffort"
 
-const sanitizeParamsForDownload = (value: any): any => {
+const sanitizeParamsForDownload = (
+  value: any,
+  seen = new WeakMap<object, any>(),
+): any => {
+  if (value === null || typeof value !== "object") {
+    return value
+  }
+
+  if (seen.has(value as object)) {
+    return seen.get(value as object)
+  }
+
   if (value instanceof Map) {
-    return Object.fromEntries(
-      Array.from(value.entries(), ([key, val]) => [
-        String(key),
-        sanitizeParamsForDownload(val),
-      ]),
-    )
+    const sanitizedMap: Record<string, any> = {}
+    seen.set(value as object, sanitizedMap)
+    for (const [key, val] of value.entries()) {
+      sanitizedMap[String(key)] = sanitizeParamsForDownload(val, seen)
+    }
+    return sanitizedMap
   }
+
   if (value instanceof Set) {
-    return Array.from(value, (item) => sanitizeParamsForDownload(item))
+    const sanitizedArray: any[] = []
+    seen.set(value as object, sanitizedArray)
+    for (const item of value.values()) {
+      sanitizedArray.push(sanitizeParamsForDownload(item, seen))
+    }
+    return sanitizedArray
   }
+
   if (Array.isArray(value)) {
-    return value.map((item) => sanitizeParamsForDownload(item))
+    const sanitizedArray: any[] = []
+    seen.set(value as object, sanitizedArray)
+    for (const item of value) {
+      sanitizedArray.push(sanitizeParamsForDownload(item, seen))
+    }
+    return sanitizedArray
   }
-  return value
+
+  const sanitizedObject: Record<string, any> = {}
+  seen.set(value as object, sanitizedObject)
+  for (const key of Object.keys(value)) {
+    if (key === "_parent" && value._parent) {
+      sanitizedObject._parent = value._parent.capacityMeshNodeId
+        ? { capacityMeshNodeId: value._parent.capacityMeshNodeId }
+        : sanitizeParamsForDownload(value._parent, seen)
+    } else {
+      sanitizedObject[key] = sanitizeParamsForDownload(value[key], seen)
+    }
+  }
+  return sanitizedObject
 }
 
 interface CapacityMeshPipelineDebuggerProps {
