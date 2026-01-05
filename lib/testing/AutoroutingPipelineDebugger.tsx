@@ -45,6 +45,24 @@ const PIPELINE_SOLVERS = {
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
 const EFFORT_STORAGE_KEY = "selectedEffort"
 
+const sanitizeParamsForDownload = (value: any): any => {
+  if (value instanceof Map) {
+    return Object.fromEntries(
+      Array.from(value.entries(), ([key, val]) => [
+        String(key),
+        sanitizeParamsForDownload(val),
+      ]),
+    )
+  }
+  if (value instanceof Set) {
+    return Array.from(value, (item) => sanitizeParamsForDownload(item))
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeParamsForDownload(item))
+  }
+  return value
+}
+
 interface CapacityMeshPipelineDebuggerProps {
   srj: SimpleRouteJson
   animationSpeed?: number
@@ -1059,52 +1077,18 @@ export const AutoroutingPipelineDebugger = ({
                       <button
                         className="text-blue-600 hover:underline"
                         onClick={() => {
-                          // Get the constructor parameters for this step
-                          const params = step.getConstructorParams(solver)
-                          // Recursively replace _parent: { ... } with _parent: { capacityMeshNodeId: "..." }
-                          // This prevents circular references in the JSON
-                          const replaceParent = (obj: any) => {
-                            if (obj && typeof obj === "object") {
-                              if (obj._parent) {
-                                obj._parent = {
-                                  capacityMeshNodeId:
-                                    obj._parent.capacityMeshNodeId,
-                                }
-                              }
-
-                              // Recursively process all properties
-                              for (const key in obj) {
-                                if (
-                                  Object.prototype.hasOwnProperty.call(obj, key)
-                                ) {
-                                  replaceParent(obj[key])
-                                }
-                              }
-
-                              // Handle arrays
-                              if (Array.isArray(obj)) {
-                                obj.forEach((item) => replaceParent(item))
-                              }
-                            }
-                          }
-                          replaceParent(params[0])
-
-                          // Create a JSON string with proper formatting
+                          const params = sanitizeParamsForDownload(
+                            step.getConstructorParams(solver),
+                          )
                           const paramsJson = JSON.stringify(params, null, 2)
-                          // Create a blob with the JSON data
                           const blob = new Blob([paramsJson], {
                             type: "application/json",
                           })
-                          // Create a URL for the blob
                           const url = URL.createObjectURL(blob)
-                          // Create a temporary anchor element
                           const a = document.createElement("a")
-                          // Set the download filename to the solver name
                           a.download = `${step.solverName}_input.json`
                           a.href = url
-                          // Trigger the download
                           a.click()
-                          // Clean up by revoking the URL
                           URL.revokeObjectURL(url)
                         }}
                         disabled={!stepSolver}
@@ -1137,16 +1121,8 @@ export const AutoroutingPipelineDebugger = ({
               window.alert(`Unable to get constructor params: ${e.toString()}`)
             }
 
-            if (typeof params === "object") {
-              params = { ...params }
-              for (const key in params) {
-                if (params[key] instanceof Map) {
-                  params[key] = Object.fromEntries(params[key])
-                }
-              }
-            }
-
-            const paramsJson = JSON.stringify(params, null, 2)
+            const sanitizedParams = sanitizeParamsForDownload(params)
+            const paramsJson = JSON.stringify(sanitizedParams, null, 2)
             const blob = new Blob([paramsJson], { type: "application/json" })
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
