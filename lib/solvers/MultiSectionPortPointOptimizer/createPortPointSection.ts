@@ -237,8 +237,17 @@ function cutPathsToSection(
     if (indicesInSection.length === 0) continue
 
     // Find the first and last indices that touch the section
-    let firstIndexInSection = indicesInSection[0]
-    let lastIndexInSection = indicesInSection[indicesInSection.length - 1]
+    const firstIndexInSection = indicesInSection[0]
+    const lastIndexInSection = indicesInSection[indicesInSection.length - 1]
+
+    // Calculate entry/exit flags based on ACTUAL section boundaries
+    // (before we potentially extend to include endpoints)
+    const hasEntryFromOutside = firstIndexInSection > 0
+    const hasExitToOutside = lastIndexInSection < result.path.length - 1
+
+    // Determine the actual range to include in the merged segment
+    let segmentStartIndex = firstIndexInSection
+    let segmentEndIndex = lastIndexInSection
 
     // IMPORTANT: If the connection starts/ends OUTSIDE the section, but the adjacent
     // point is inside, we need to include the endpoint to preserve the connection
@@ -250,7 +259,7 @@ function cutPathsToSection(
       const isStartEndpoint =
         result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId
       if (isStartEndpoint) {
-        firstIndexInSection = 0
+        segmentStartIndex = 0
       }
     }
 
@@ -263,15 +272,15 @@ function cutPathsToSection(
       const isEndEndpoint =
         result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId
       if (isEndEndpoint) {
-        lastIndexInSection = lastPathIdx
+        segmentEndIndex = lastPathIdx
       }
     }
 
     // Create a single merged section path that spans from first to last occurrence
     // This includes any points BETWEEN section nodes that might be outside the section
     const mergedSegment = result.path.slice(
-      firstIndexInSection,
-      lastIndexInSection + 1,
+      segmentStartIndex,
+      segmentEndIndex + 1,
     )
 
     sectionPaths.push({
@@ -284,10 +293,10 @@ function cutPathsToSection(
         nodeId: c.currentNodeId,
         portPointId: c.portPoint?.portPointId,
       })),
-      originalStartIndex: firstIndexInSection,
-      originalEndIndex: lastIndexInSection,
-      hasEntryFromOutside: firstIndexInSection > 0,
-      hasExitToOutside: lastIndexInSection < result.path.length - 1,
+      originalStartIndex: segmentStartIndex,
+      originalEndIndex: segmentEndIndex,
+      hasEntryFromOutside,
+      hasExitToOutside,
     })
   }
 
