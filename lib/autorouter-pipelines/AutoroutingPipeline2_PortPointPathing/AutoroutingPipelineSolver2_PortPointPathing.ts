@@ -274,6 +274,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             hyperParameters: {
               NODE_PF_MAX_PENALTY: 100,
               FORCE_OFF_BOARD_FREQUENCY: 0,
+              STRAIGHT_LINE_DEVIATION_FACTOR: 4,
               // MAX_ITERATIONS_PER_PATH: 10e3,
             },
           } as HyperPortPointPathingSolverParams,

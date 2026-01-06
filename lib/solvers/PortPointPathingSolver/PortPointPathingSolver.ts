@@ -54,6 +54,9 @@ export interface PortPointPathingHyperParameters {
 
   /** When enabled, use jumper-based pf calculation for same-layer crossings on single layer nodes */
   JUMPER_PF_FN_ENABLED?: boolean
+
+  /** Factor for penalizing deviation from straight line path */
+  STRAIGHT_LINE_DEVIATION_FACTOR?: number
 }
 
 /**
@@ -236,6 +239,10 @@ export class PortPointPathingSolver extends BaseSolver {
   /** Penalty factor for port points that are far from the center of the segment */
   get CENTER_OFFSET_DIST_PENALTY_FACTOR() {
     return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
+  }
+
+  get STRAIGHT_LINE_DEVIATION_FACTOR() {
+    return this.hyperParameters.STRAIGHT_LINE_DEVIATION_FACTOR ?? 0
   }
 
   colorMap: Record<string, string>
@@ -780,9 +787,60 @@ export class PortPointPathingSolver extends BaseSolver {
       this.CENTER_OFFSET_DIST_PENALTY_FACTOR *
       point.distToCentermostPortOnZ ** 2
 
+    let straightLineDeviationPenalty = 0
+    if (this.STRAIGHT_LINE_DEVIATION_FACTOR > 0 && this.currentConnection) {
+      const startPoint = this.currentConnection.connection.pointsToConnect[0]
+      const endPoint = this.currentConnection.connection.pointsToConnect[1]
+      const deviation = this.distanceToLineSegment(point, startPoint, endPoint)
+      straightLineDeviationPenalty =
+        this.STRAIGHT_LINE_DEVIATION_FACTOR * deviation
+    }
+
     return (
-      distanceToGoal + estStepCost + memRiskForHop + centerOffsetDistPenalty
+      distanceToGoal +
+      estStepCost +
+      memRiskForHop +
+      centerOffsetDistPenalty +
+      straightLineDeviationPenalty
     )
+  }
+
+  private distanceToLineSegment(
+    point: { x: number; y: number },
+    lineStart: { x: number; y: number },
+    lineEnd: { x: number; y: number },
+  ): number {
+    const A = point.x - lineStart.x
+    const B = point.y - lineStart.y
+    const C = lineEnd.x - lineStart.x
+    const D = lineEnd.y - lineStart.y
+
+    const dot = A * C + B * D
+    const lenSq = C * C + D * D
+
+    if (lenSq === 0) {
+      return Math.sqrt(A * A + B * B)
+    }
+
+    const param = dot / lenSq
+
+    let xx: number
+    let yy: number
+
+    if (param < 0) {
+      xx = lineStart.x
+      yy = lineStart.y
+    } else if (param > 1) {
+      xx = lineEnd.x
+      yy = lineEnd.y
+    } else {
+      xx = lineStart.x + param * C
+      yy = lineStart.y + param * D
+    }
+
+    const dx = point.x - xx
+    const dy = point.y - yy
+    return Math.sqrt(dx * dx + dy * dy)
   }
 
   getVisitedPortPointKey(
