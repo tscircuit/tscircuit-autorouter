@@ -207,8 +207,9 @@ export function createPortPointSection(
 
 /**
  * Cut paths from connection results to only include portions within the section.
- * A single connection path may result in multiple SectionPaths if it enters
- * and exits the section multiple times.
+ * When a path enters and exits the section multiple times, all segments are merged
+ * into a single SectionPath that spans from the first entry to the last exit.
+ * This ensures the entire affected portion is re-routed as one unit.
  */
 function cutPathsToSection(
   connectionResults: ConnectionPathResult[],
@@ -222,61 +223,72 @@ function cutPathsToSection(
     const connectionName = result.connection.name
     const rootConnectionName = result.connection.rootConnectionName
 
-    // Find contiguous segments of the path that are within the section
-    let currentSegmentStart: number | null = null
-
+    // Find all indices that are within the section
+    const indicesInSection: number[] = []
     for (let i = 0; i < result.path.length; i++) {
       const candidate = result.path[i]
       const isInSection = sectionNodeIds.has(candidate.currentNodeId)
-
       if (isInSection) {
-        if (currentSegmentStart === null) {
-          currentSegmentStart = i
-        }
-      } else {
-        // We've exited the section
-        if (currentSegmentStart !== null) {
-          // Create a section path for this segment
-          const segment = result.path.slice(currentSegmentStart, i)
-          sectionPaths.push({
-            connectionName,
-            rootConnectionName,
-            points: segment.map((c) => ({
-              x: c.point.x,
-              y: c.point.y,
-              z: c.z,
-              nodeId: c.currentNodeId,
-              portPointId: c.portPoint?.portPointId,
-            })),
-            originalStartIndex: currentSegmentStart,
-            originalEndIndex: i - 1,
-            hasEntryFromOutside: currentSegmentStart > 0,
-            hasExitToOutside: true,
-          })
-          currentSegmentStart = null
-        }
+        indicesInSection.push(i)
       }
     }
 
-    // Handle case where path ends while still in section
-    if (currentSegmentStart !== null) {
-      const segment = result.path.slice(currentSegmentStart)
-      sectionPaths.push({
-        connectionName,
-        rootConnectionName,
-        points: segment.map((c) => ({
-          x: c.point.x,
-          y: c.point.y,
-          z: c.z,
-          nodeId: c.currentNodeId,
-          portPointId: c.portPoint?.portPointId,
-        })),
-        originalStartIndex: currentSegmentStart,
-        originalEndIndex: result.path.length - 1,
-        hasEntryFromOutside: currentSegmentStart > 0,
-        hasExitToOutside: false,
-      })
+    // If no points in section, skip this connection
+    if (indicesInSection.length === 0) continue
+
+    // Find the first and last indices that touch the section
+    let firstIndexInSection = indicesInSection[0]
+    let lastIndexInSection = indicesInSection[indicesInSection.length - 1]
+
+    // IMPORTANT: If the connection starts/ends OUTSIDE the section, but the adjacent
+    // point is inside, we need to include the endpoint to preserve the connection
+    // Check if index 0 (start endpoint) should be included
+    if (firstIndexInSection > 0) {
+      // There are points before the first section point
+      // If index 0 is a connection endpoint, include it
+      const firstNodeId = result.path[0].currentNodeId
+      const isStartEndpoint =
+        result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId
+      if (isStartEndpoint) {
+        firstIndexInSection = 0
+      }
     }
+
+    // Check if last index (end endpoint) should be included
+    if (lastIndexInSection < result.path.length - 1) {
+      // There are points after the last section point
+      // If the last index is a connection endpoint, include it
+      const lastPathIdx = result.path.length - 1
+      const lastNodeId = result.path[lastPathIdx].currentNodeId
+      const isEndEndpoint =
+        result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId
+      if (isEndEndpoint) {
+        lastIndexInSection = lastPathIdx
+      }
+    }
+
+    // Create a single merged section path that spans from first to last occurrence
+    // This includes any points BETWEEN section nodes that might be outside the section
+    const mergedSegment = result.path.slice(
+      firstIndexInSection,
+      lastIndexInSection + 1,
+    )
+
+    sectionPaths.push({
+      connectionName,
+      rootConnectionName,
+      points: mergedSegment.map((c) => ({
+        x: c.point.x,
+        y: c.point.y,
+        z: c.z,
+        nodeId: c.currentNodeId,
+        portPointId: c.portPoint?.portPointId,
+      })),
+      originalStartIndex: firstIndexInSection,
+      originalEndIndex: lastIndexInSection,
+      hasEntryFromOutside: firstIndexInSection > 0,
+      hasExitToOutside: lastIndexInSection < result.path.length - 1,
+    })
   }
 
   return sectionPaths

@@ -97,7 +97,7 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
     NODE_PF_FACTOR: 100,
     NODE_PF_MAX_PENALTY: 100,
     MEMORY_PF_FACTOR: 0,
-    EXPANSION_DEGREES: 10,
+    EXPANSION_DEGREES: 1,
     FORCE_CENTER_FIRST: true,
     FORCE_OFF_BOARD_FREQUENCY: 0,
     CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
@@ -972,6 +972,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           ) {
             // Try next schedule params
             const params = OPTIMIZATION_SCHEDULE[this.currentScheduleIndex]
+
             this.currentSection = this.createSection({
               centerOfSectionCapacityNodeId: this.currentSectionCenterNodeId,
               expansionDegrees: params.EXPANSION_DEGREES,
