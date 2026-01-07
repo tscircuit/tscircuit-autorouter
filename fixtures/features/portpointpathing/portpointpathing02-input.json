@@ -1,0 +1,5981 @@
+[
+  {
+    "simpleRouteJson": {
+      "bounds": {
+        "maxX": 9.75,
+        "maxY": 11.64,
+        "minX": -9.75,
+        "minY": -11.64
+      },
+      "obstacles": [
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": 8.89
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_0",
+            "connectivity_net0",
+            "source_trace_0",
+            "source_port_0",
+            "source_port_8",
+            "pcb_plated_hole_0",
+            "pcb_port_0",
+            "pcb_plated_hole_8",
+            "pcb_port_8"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": 6.3500000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_1",
+            "connectivity_net3",
+            "source_trace_1",
+            "source_port_1",
+            "source_port_9",
+            "pcb_plated_hole_1",
+            "pcb_port_1",
+            "pcb_plated_hole_9",
+            "pcb_port_9"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": 3.8100000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_2",
+            "connectivity_net6",
+            "source_trace_2",
+            "source_port_2",
+            "source_port_10",
+            "pcb_plated_hole_2",
+            "pcb_port_2",
+            "pcb_plated_hole_10",
+            "pcb_port_10"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": 1.2700000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_3",
+            "connectivity_net9",
+            "source_trace_3",
+            "source_port_3",
+            "source_port_11",
+            "pcb_plated_hole_3",
+            "pcb_port_3",
+            "pcb_plated_hole_11",
+            "pcb_port_11"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": -1.2699999999999996
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_4",
+            "connectivity_net12",
+            "source_trace_4",
+            "source_port_4",
+            "source_port_12",
+            "pcb_plated_hole_4",
+            "pcb_port_4",
+            "pcb_plated_hole_12",
+            "pcb_port_12"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": -3.8099999999999987
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_5",
+            "connectivity_net15",
+            "source_trace_5",
+            "source_port_5",
+            "source_port_13",
+            "pcb_plated_hole_5",
+            "pcb_port_5",
+            "pcb_plated_hole_13",
+            "pcb_port_13"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": -6.35
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_6",
+            "connectivity_net18",
+            "source_trace_6",
+            "source_port_6",
+            "source_port_14",
+            "pcb_plated_hole_6",
+            "pcb_port_6",
+            "pcb_plated_hole_14",
+            "pcb_port_14"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": -7,
+            "y": -8.89
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_7",
+            "connectivity_net21",
+            "source_trace_7",
+            "source_port_7",
+            "source_port_15",
+            "pcb_plated_hole_7",
+            "pcb_port_7",
+            "pcb_plated_hole_15",
+            "pcb_port_15"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": -8.89
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_8",
+            "connectivity_net0",
+            "source_trace_0",
+            "source_port_0",
+            "source_port_8",
+            "pcb_plated_hole_0",
+            "pcb_port_0",
+            "pcb_plated_hole_8",
+            "pcb_port_8"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": -6.3500000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_9",
+            "connectivity_net3",
+            "source_trace_1",
+            "source_port_1",
+            "source_port_9",
+            "pcb_plated_hole_1",
+            "pcb_port_1",
+            "pcb_plated_hole_9",
+            "pcb_port_9"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": -3.8100000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_10",
+            "connectivity_net6",
+            "source_trace_2",
+            "source_port_2",
+            "source_port_10",
+            "pcb_plated_hole_2",
+            "pcb_port_2",
+            "pcb_plated_hole_10",
+            "pcb_port_10"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": -1.2700000000000005
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_11",
+            "connectivity_net9",
+            "source_trace_3",
+            "source_port_3",
+            "source_port_11",
+            "pcb_plated_hole_3",
+            "pcb_port_3",
+            "pcb_plated_hole_11",
+            "pcb_port_11"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": 1.2699999999999996
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_12",
+            "connectivity_net12",
+            "source_trace_4",
+            "source_port_4",
+            "source_port_12",
+            "pcb_plated_hole_4",
+            "pcb_port_4",
+            "pcb_plated_hole_12",
+            "pcb_port_12"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": 3.8099999999999987
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_13",
+            "connectivity_net15",
+            "source_trace_5",
+            "source_port_5",
+            "source_port_13",
+            "pcb_plated_hole_5",
+            "pcb_port_5",
+            "pcb_plated_hole_13",
+            "pcb_port_13"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": 6.35
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_14",
+            "connectivity_net18",
+            "source_trace_6",
+            "source_port_6",
+            "source_port_14",
+            "pcb_plated_hole_6",
+            "pcb_port_6",
+            "pcb_plated_hole_14",
+            "pcb_port_14"
+          ],
+          "zLayers": [0]
+        },
+        {
+          "type": "oval",
+          "width": 1.5,
+          "center": {
+            "x": 7,
+            "y": 8.89
+          },
+          "height": 1.5,
+          "layers": ["top", "inner1", "inner2", "bottom"],
+          "connectedTo": [
+            "pcb_plated_hole_15",
+            "connectivity_net21",
+            "source_trace_7",
+            "source_port_7",
+            "source_port_15",
+            "pcb_plated_hole_7",
+            "pcb_port_7",
+            "pcb_plated_hole_15",
+            "pcb_port_15"
+          ],
+          "zLayers": [0]
+        }
+      ],
+      "layerCount": 1,
+      "connections": [
+        {
+          "name": "source_trace_7",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": -8.89,
+              "layer": "top",
+              "pointId": "pcb_port_7",
+              "pcb_port_id": "pcb_port_7"
+            },
+            {
+              "x": 7,
+              "y": 8.89,
+              "layer": "top",
+              "pointId": "pcb_port_15",
+              "pcb_port_id": "pcb_port_15"
+            }
+          ],
+          "source_trace_id": "source_trace_7",
+          "rootConnectionName": "source_trace_7"
+        },
+        {
+          "name": "source_trace_6",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": -6.35,
+              "layer": "top",
+              "pointId": "pcb_port_6",
+              "pcb_port_id": "pcb_port_6"
+            },
+            {
+              "x": 7,
+              "y": 6.35,
+              "layer": "top",
+              "pointId": "pcb_port_14",
+              "pcb_port_id": "pcb_port_14"
+            }
+          ],
+          "source_trace_id": "source_trace_6",
+          "rootConnectionName": "source_trace_6"
+        },
+        {
+          "name": "source_trace_5",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": -3.8099999999999987,
+              "layer": "top",
+              "pointId": "pcb_port_5",
+              "pcb_port_id": "pcb_port_5"
+            },
+            {
+              "x": 7,
+              "y": 3.8099999999999987,
+              "layer": "top",
+              "pointId": "pcb_port_13",
+              "pcb_port_id": "pcb_port_13"
+            }
+          ],
+          "source_trace_id": "source_trace_5",
+          "rootConnectionName": "source_trace_5"
+        },
+        {
+          "name": "source_trace_4",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": -1.2699999999999996,
+              "layer": "top",
+              "pointId": "pcb_port_4",
+              "pcb_port_id": "pcb_port_4"
+            },
+            {
+              "x": 7,
+              "y": 1.2699999999999996,
+              "layer": "top",
+              "pointId": "pcb_port_12",
+              "pcb_port_id": "pcb_port_12"
+            }
+          ],
+          "source_trace_id": "source_trace_4",
+          "rootConnectionName": "source_trace_4"
+        },
+        {
+          "name": "source_trace_3",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": 1.2700000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_3",
+              "pcb_port_id": "pcb_port_3"
+            },
+            {
+              "x": 7,
+              "y": -1.2700000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_11",
+              "pcb_port_id": "pcb_port_11"
+            }
+          ],
+          "source_trace_id": "source_trace_3",
+          "rootConnectionName": "source_trace_3"
+        },
+        {
+          "name": "source_trace_2",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": 3.8100000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_2",
+              "pcb_port_id": "pcb_port_2"
+            },
+            {
+              "x": 7,
+              "y": -3.8100000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_10",
+              "pcb_port_id": "pcb_port_10"
+            }
+          ],
+          "source_trace_id": "source_trace_2",
+          "rootConnectionName": "source_trace_2"
+        },
+        {
+          "name": "source_trace_1",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": 6.3500000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_1",
+              "pcb_port_id": "pcb_port_1"
+            },
+            {
+              "x": 7,
+              "y": -6.3500000000000005,
+              "layer": "top",
+              "pointId": "pcb_port_9",
+              "pcb_port_id": "pcb_port_9"
+            }
+          ],
+          "source_trace_id": "source_trace_1",
+          "rootConnectionName": "source_trace_1"
+        },
+        {
+          "name": "source_trace_0",
+          "pointsToConnect": [
+            {
+              "x": -7,
+              "y": 8.89,
+              "layer": "top",
+              "pointId": "pcb_port_0",
+              "pcb_port_id": "pcb_port_0"
+            },
+            {
+              "x": 7,
+              "y": -8.89,
+              "layer": "top",
+              "pointId": "pcb_port_8",
+              "pcb_port_id": "pcb_port_8"
+            }
+          ],
+          "source_trace_id": "source_trace_0",
+          "rootConnectionName": "source_trace_0"
+        }
+      ],
+      "minTraceWidth": 0.15
+    },
+    "inputNodes": [
+      {
+        "capacityMeshNodeId": "cmn_0",
+        "center": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 12.5,
+        "height": 23.28,
+        "portPoints": [
+          {
+            "portPointId": "ce0_pp0_z0",
+            "x": -6.25,
+            "y": -2.8349999999999986,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_3"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce0_pp1_z0",
+            "x": -6.25,
+            "y": -2.2449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_3"],
+            "distToCentermostPortOnZ": 0.589999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce1_pp0_z0",
+            "x": -6.249999999999999,
+            "y": -0.2949999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_1"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce1_pp1_z0",
+            "x": -6.249999999999999,
+            "y": 0.2950000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_1"],
+            "distToCentermostPortOnZ": 0.5900000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce2_pp0_z0",
+            "x": -6.25,
+            "y": 2.2450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_2"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce2_pp1_z0",
+            "x": -6.25,
+            "y": 2.8350000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_2"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp0_z0",
+            "x": -6.25,
+            "y": -11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp1_z0",
+            "x": -6.25,
+            "y": -11.105,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp2_z0",
+            "x": -6.25,
+            "y": -10.795,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp3_z0",
+            "x": -6.25,
+            "y": -10.485000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp4_z0",
+            "x": -6.25,
+            "y": -10.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce3_pp5_z0",
+            "x": -6.25,
+            "y": -9.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_9"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce4_pp0_z0",
+            "x": -6.25,
+            "y": -9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_46"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce4_pp1_z0",
+            "x": -6.25,
+            "y": -9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_46"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce4_pp2_z0",
+            "x": -6.25,
+            "y": -8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_46"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce4_pp3_z0",
+            "x": -6.25,
+            "y": -8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_46"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce5_pp0_z0",
+            "x": -6.25,
+            "y": -7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_12"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce5_pp1_z0",
+            "x": -6.25,
+            "y": -7.324999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_12"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce6_pp0_z0",
+            "x": -6.25,
+            "y": -6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_45"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce6_pp1_z0",
+            "x": -6.25,
+            "y": -6.5249999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_45"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce6_pp2_z0",
+            "x": -6.25,
+            "y": -6.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_45"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce6_pp3_z0",
+            "x": -6.25,
+            "y": -5.824999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_45"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce7_pp0_z0",
+            "x": -6.25,
+            "y": -5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_35"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce7_pp1_z0",
+            "x": -6.25,
+            "y": -4.784999999999998,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_35"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce8_pp0_z0",
+            "x": -6.25,
+            "y": -4.334999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_44"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce8_pp1_z0",
+            "x": -6.25,
+            "y": -3.9849999999999985,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_44"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce8_pp2_z0",
+            "x": -6.25,
+            "y": -3.634999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_44"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce8_pp3_z0",
+            "x": -6.25,
+            "y": -3.284999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_44"],
+            "distToCentermostPortOnZ": 0.6999999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce9_pp0_z0",
+            "x": -6.25,
+            "y": -1.7949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_43"],
+            "distToCentermostPortOnZ": 0.34999999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce9_pp1_z0",
+            "x": -6.25,
+            "y": -1.4449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_43"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce9_pp2_z0",
+            "x": -6.25,
+            "y": -1.0949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_43"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce9_pp3_z0",
+            "x": -6.25,
+            "y": -0.7449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_43"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce10_pp0_z0",
+            "x": -6.25,
+            "y": 0.7450000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_42"],
+            "distToCentermostPortOnZ": 0.35,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce10_pp1_z0",
+            "x": -6.25,
+            "y": 1.0950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_42"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce10_pp2_z0",
+            "x": -6.25,
+            "y": 1.4450000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_42"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce10_pp3_z0",
+            "x": -6.25,
+            "y": 1.7950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_42"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce11_pp0_z0",
+            "x": -6.25,
+            "y": 3.2850000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_41"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce11_pp1_z0",
+            "x": -6.25,
+            "y": 3.6350000000000007,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_41"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce11_pp2_z0",
+            "x": -6.25,
+            "y": 3.9850000000000003,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_41"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce11_pp3_z0",
+            "x": -6.25,
+            "y": 4.335000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_41"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce12_pp0_z0",
+            "x": -6.25,
+            "y": 4.785,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_32"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce12_pp1_z0",
+            "x": -6.25,
+            "y": 5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_32"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce13_pp0_z0",
+            "x": -6.25,
+            "y": 5.825,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_40"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce13_pp1_z0",
+            "x": -6.25,
+            "y": 6.175000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_40"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce13_pp2_z0",
+            "x": -6.25,
+            "y": 6.525,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_40"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce13_pp3_z0",
+            "x": -6.25,
+            "y": 6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_40"],
+            "distToCentermostPortOnZ": 0.6999999999999993,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce14_pp0_z0",
+            "x": -6.25,
+            "y": 7.325000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_14"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce14_pp1_z0",
+            "x": -6.25,
+            "y": 7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_14"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce15_pp0_z0",
+            "x": -6.25,
+            "y": 8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_39"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce15_pp1_z0",
+            "x": -6.25,
+            "y": 8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_39"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce15_pp2_z0",
+            "x": -6.25,
+            "y": 9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_39"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce15_pp3_z0",
+            "x": -6.25,
+            "y": 9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_39"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp0_z0",
+            "x": -6.25,
+            "y": 9.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp1_z0",
+            "x": -6.25,
+            "y": 10.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp2_z0",
+            "x": -6.25,
+            "y": 10.485000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp3_z0",
+            "x": -6.25,
+            "y": 10.795,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp4_z0",
+            "x": -6.25,
+            "y": 11.105,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce16_pp5_z0",
+            "x": -6.25,
+            "y": 11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_31"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp0_z0",
+            "x": 6.25,
+            "y": -11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp1_z0",
+            "x": 6.25,
+            "y": -11.105,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp2_z0",
+            "x": 6.25,
+            "y": -10.795,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp3_z0",
+            "x": 6.25,
+            "y": -10.485000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp4_z0",
+            "x": 6.25,
+            "y": -10.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce17_pp5_z0",
+            "x": 6.25,
+            "y": -9.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_10"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce18_pp0_z0",
+            "x": 6.25,
+            "y": -9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_47"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce18_pp1_z0",
+            "x": 6.25,
+            "y": -9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_47"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce18_pp2_z0",
+            "x": 6.25,
+            "y": -8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_47"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce18_pp3_z0",
+            "x": 6.25,
+            "y": -8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_47"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce19_pp0_z0",
+            "x": 6.25,
+            "y": -7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_18"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce19_pp1_z0",
+            "x": 6.25,
+            "y": -7.325000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_18"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce20_pp0_z0",
+            "x": 6.25,
+            "y": -6.875000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_48"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce20_pp1_z0",
+            "x": 6.25,
+            "y": -6.525,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_48"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce20_pp2_z0",
+            "x": 6.25,
+            "y": -6.175000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_48"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce20_pp3_z0",
+            "x": 6.25,
+            "y": -5.825000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_48"],
+            "distToCentermostPortOnZ": 0.6999999999999993,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce21_pp0_z0",
+            "x": 6.25,
+            "y": -5.375000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_34"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce21_pp1_z0",
+            "x": 6.25,
+            "y": -4.784999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_34"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce22_pp0_z0",
+            "x": 6.25,
+            "y": -4.335000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_49"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce22_pp1_z0",
+            "x": 6.25,
+            "y": -3.9850000000000003,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_49"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce22_pp2_z0",
+            "x": 6.25,
+            "y": -3.6350000000000007,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_49"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce22_pp3_z0",
+            "x": 6.25,
+            "y": -3.2850000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_49"],
+            "distToCentermostPortOnZ": 0.6999999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce23_pp0_z0",
+            "x": 6.25,
+            "y": -2.8350000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_19"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce23_pp1_z0",
+            "x": 6.25,
+            "y": -2.2450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_19"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce24_pp0_z0",
+            "x": 6.25,
+            "y": -1.7950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_50"],
+            "distToCentermostPortOnZ": 0.34999999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce24_pp1_z0",
+            "x": 6.25,
+            "y": -1.4450000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce24_pp2_z0",
+            "x": 6.25,
+            "y": -1.0950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_50"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce24_pp3_z0",
+            "x": 6.25,
+            "y": -0.7450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_50"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce25_pp0_z0",
+            "x": 6.25,
+            "y": -0.2950000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_20"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce25_pp1_z0",
+            "x": 6.25,
+            "y": 0.2949999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_20"],
+            "distToCentermostPortOnZ": 0.5900000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce26_pp0_z0",
+            "x": 6.25,
+            "y": 0.7449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_51"],
+            "distToCentermostPortOnZ": 0.35,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce26_pp1_z0",
+            "x": 6.25,
+            "y": 1.0949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce26_pp2_z0",
+            "x": 6.25,
+            "y": 1.4449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_51"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce26_pp3_z0",
+            "x": 6.25,
+            "y": 1.7949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_51"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce27_pp0_z0",
+            "x": 6.25,
+            "y": 2.2449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_21"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce27_pp1_z0",
+            "x": 6.25,
+            "y": 2.8349999999999986,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_21"],
+            "distToCentermostPortOnZ": 0.589999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce28_pp0_z0",
+            "x": 6.25,
+            "y": 3.284999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_52"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce28_pp1_z0",
+            "x": 6.25,
+            "y": 3.634999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_52"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce28_pp2_z0",
+            "x": 6.25,
+            "y": 3.9849999999999985,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_52"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce28_pp3_z0",
+            "x": 6.25,
+            "y": 4.334999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_52"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce29_pp0_z0",
+            "x": 6.25,
+            "y": 4.784999999999998,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_33"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce29_pp1_z0",
+            "x": 6.25,
+            "y": 5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_33"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce30_pp0_z0",
+            "x": 6.25,
+            "y": 5.824999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_53"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce30_pp1_z0",
+            "x": 6.25,
+            "y": 6.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_53"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce30_pp2_z0",
+            "x": 6.25,
+            "y": 6.5249999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_53"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce30_pp3_z0",
+            "x": 6.25,
+            "y": 6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_53"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce31_pp0_z0",
+            "x": 6.25,
+            "y": 7.324999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_22"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce31_pp1_z0",
+            "x": 6.25,
+            "y": 7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_22"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce32_pp0_z0",
+            "x": 6.25,
+            "y": 8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_54"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce32_pp1_z0",
+            "x": 6.25,
+            "y": 8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_54"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce32_pp2_z0",
+            "x": 6.25,
+            "y": 9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_54"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce32_pp3_z0",
+            "x": 6.25,
+            "y": 9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_54"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp0_z0",
+            "x": 6.25,
+            "y": 9.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp1_z0",
+            "x": 6.25,
+            "y": 10.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp2_z0",
+            "x": 6.25,
+            "y": 10.485000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp3_z0",
+            "x": 6.25,
+            "y": 10.795,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp4_z0",
+            "x": 6.25,
+            "y": 11.105,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce33_pp5_z0",
+            "x": 6.25,
+            "y": 11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_0", "cmn_23"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_1",
+        "center": {
+          "x": -7.809999999999999,
+          "y": 4.440892098500626e-16
+        },
+        "width": 3.12,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce34_pp0_z0",
+            "x": -9.145,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_6"],
+            "distToCentermostPortOnZ": 0.7799999999999994,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce34_pp1_z0",
+            "x": -8.754999999999999,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_6"],
+            "distToCentermostPortOnZ": 0.3899999999999988,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce34_pp2_z0",
+            "x": -8.365,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_6"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce34_pp3_z0",
+            "x": -7.975,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_6"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce35_pp0_z0",
+            "x": -9.369999999999997,
+            "y": -0.2949999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_37"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce35_pp1_z0",
+            "x": -9.369999999999997,
+            "y": 0.2950000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_37"],
+            "distToCentermostPortOnZ": 0.5900000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce36_pp0_z0",
+            "x": -9.145,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_7"],
+            "distToCentermostPortOnZ": 0.7799999999999994,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce36_pp1_z0",
+            "x": -8.754999999999999,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_7"],
+            "distToCentermostPortOnZ": 0.3899999999999988,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce36_pp2_z0",
+            "x": -8.365,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_7"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce36_pp3_z0",
+            "x": -7.975,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_7"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce37_pp0_z0",
+            "x": -7.525,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_43"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce37_pp1_z0",
+            "x": -7.175,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_43"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce37_pp2_z0",
+            "x": -6.825,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_43"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce37_pp3_z0",
+            "x": -6.475,
+            "y": -0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_43"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce38_pp0_z0",
+            "x": -7.525,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_42"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce38_pp1_z0",
+            "x": -7.175,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_42"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce38_pp2_z0",
+            "x": -6.825,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_42"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce38_pp3_z0",
+            "x": -6.475,
+            "y": 0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_1", "cmn_42"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_2",
+        "center": {
+          "x": -7.8100000000000005,
+          "y": 2.5400000000000005
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce39_pp0_z0",
+            "x": -9.145000000000001,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_7"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce39_pp1_z0",
+            "x": -8.755,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_7"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce39_pp2_z0",
+            "x": -8.365,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_7"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce39_pp3_z0",
+            "x": -7.975,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_7"],
+            "distToCentermostPortOnZ": 0.7800000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce40_pp0_z0",
+            "x": -9.370000000000001,
+            "y": 2.2450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_38"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce40_pp1_z0",
+            "x": -9.370000000000001,
+            "y": 2.8350000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_38"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce41_pp0_z0",
+            "x": -9.145000000000001,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_8"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce41_pp1_z0",
+            "x": -8.755,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_8"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce41_pp2_z0",
+            "x": -8.365,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_8"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce41_pp3_z0",
+            "x": -7.975,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_8"],
+            "distToCentermostPortOnZ": 0.7800000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce42_pp0_z0",
+            "x": -7.525,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_42"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce42_pp1_z0",
+            "x": -7.175,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_42"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce42_pp2_z0",
+            "x": -6.825,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_42"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce42_pp3_z0",
+            "x": -6.475,
+            "y": 2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_42"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce43_pp0_z0",
+            "x": -7.525,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_41"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce43_pp1_z0",
+            "x": -7.175,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_41"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce43_pp2_z0",
+            "x": -6.825,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_41"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce43_pp3_z0",
+            "x": -6.475,
+            "y": 3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_2", "cmn_41"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_3",
+        "center": {
+          "x": -7.809999999999999,
+          "y": -2.539999999999999
+        },
+        "width": 3.1199999999999974,
+        "height": 1.0399999999999991,
+        "portPoints": [
+          {
+            "portPointId": "ce44_pp0_z0",
+            "x": -9.144999999999998,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_4"],
+            "distToCentermostPortOnZ": 0.3899999999999988,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce44_pp1_z0",
+            "x": -8.754999999999999,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_4"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce44_pp2_z0",
+            "x": -8.364999999999998,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_4"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce44_pp3_z0",
+            "x": -7.975,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_4"],
+            "distToCentermostPortOnZ": 0.7799999999999994,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce45_pp0_z0",
+            "x": -9.369999999999997,
+            "y": -2.8349999999999986,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_36"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce45_pp1_z0",
+            "x": -9.369999999999997,
+            "y": -2.2449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_36"],
+            "distToCentermostPortOnZ": 0.589999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce46_pp0_z0",
+            "x": -9.144999999999998,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_6"],
+            "distToCentermostPortOnZ": 0.3899999999999988,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce46_pp1_z0",
+            "x": -8.754999999999999,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_6"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce46_pp2_z0",
+            "x": -8.364999999999998,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_6"],
+            "distToCentermostPortOnZ": 0.39000000000000057,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce46_pp3_z0",
+            "x": -7.975,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_6"],
+            "distToCentermostPortOnZ": 0.7799999999999994,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce47_pp0_z0",
+            "x": -7.525,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_44"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce47_pp1_z0",
+            "x": -7.175,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_44"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce47_pp2_z0",
+            "x": -6.825,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_44"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce47_pp3_z0",
+            "x": -6.475,
+            "y": -3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_44"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce48_pp0_z0",
+            "x": -7.525,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_43"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce48_pp1_z0",
+            "x": -7.175,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_43"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce48_pp2_z0",
+            "x": -6.825,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_43"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce48_pp3_z0",
+            "x": -6.475,
+            "y": -2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_3", "cmn_43"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_4",
+        "center": {
+          "x": -8.75,
+          "y": -6.6225
+        },
+        "width": 2,
+        "height": 7.125000000000002,
+        "portPoints": [
+          {
+            "portPointId": "ce49_pp0_z0",
+            "x": -9.525,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce49_pp1_z0",
+            "x": -9.215,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce49_pp2_z0",
+            "x": -8.905,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce49_pp3_z0",
+            "x": -8.595,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce49_pp4_z0",
+            "x": -8.285,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce49_pp5_z0",
+            "x": -7.975,
+            "y": -10.185000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_26"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce51_pp0_z0",
+            "x": -7.75,
+            "y": -9.912500000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_9"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce52_pp0_z0",
+            "x": -7.75,
+            "y": -9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_46"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce52_pp1_z0",
+            "x": -7.75,
+            "y": -9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_46"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce52_pp2_z0",
+            "x": -7.75,
+            "y": -8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_46"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce52_pp3_z0",
+            "x": -7.75,
+            "y": -8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_46"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce53_pp0_z0",
+            "x": -7.75,
+            "y": -7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_12"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce53_pp1_z0",
+            "x": -7.75,
+            "y": -7.324999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_12"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce54_pp0_z0",
+            "x": -7.75,
+            "y": -6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_45"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce54_pp1_z0",
+            "x": -7.75,
+            "y": -6.5249999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_45"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce54_pp2_z0",
+            "x": -7.75,
+            "y": -6.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_45"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce54_pp3_z0",
+            "x": -7.75,
+            "y": -5.824999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_45"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce55_pp0_z0",
+            "x": -7.75,
+            "y": -5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_35"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce55_pp1_z0",
+            "x": -7.75,
+            "y": -4.784999999999998,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_35"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce56_pp0_z0",
+            "x": -7.75,
+            "y": -4.334999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_44"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce56_pp1_z0",
+            "x": -7.75,
+            "y": -3.9849999999999985,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_44"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce56_pp2_z0",
+            "x": -7.75,
+            "y": -3.634999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_44"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce56_pp3_z0",
+            "x": -7.75,
+            "y": -3.284999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_4", "cmn_44"],
+            "distToCentermostPortOnZ": 0.6999999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_5",
+        "center": {
+          "x": -8.75,
+          "y": 8.64
+        },
+        "width": 2,
+        "height": 6,
+        "portPoints": [
+          {
+            "portPointId": "ce57_pp0_z0",
+            "x": -9.525,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce57_pp1_z0",
+            "x": -9.215,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce57_pp2_z0",
+            "x": -8.905,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce57_pp3_z0",
+            "x": -8.595,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce57_pp4_z0",
+            "x": -8.285,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce57_pp5_z0",
+            "x": -7.975,
+            "y": 5.640000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_8"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce58_pp0_z0",
+            "x": -7.75,
+            "y": 5.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_40"],
+            "distToCentermostPortOnZ": 0.6733333333333338,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce58_pp1_z0",
+            "x": -7.75,
+            "y": 6.201666666666667,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_40"],
+            "distToCentermostPortOnZ": 0.3366666666666669,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce58_pp2_z0",
+            "x": -7.75,
+            "y": 6.538333333333334,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_40"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce58_pp3_z0",
+            "x": -7.75,
+            "y": 6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_40"],
+            "distToCentermostPortOnZ": 0.336666666666666,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce59_pp0_z0",
+            "x": -7.75,
+            "y": 7.325000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_14"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce59_pp1_z0",
+            "x": -7.75,
+            "y": 7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_14"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce60_pp0_z0",
+            "x": -7.75,
+            "y": 8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_39"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce60_pp1_z0",
+            "x": -7.75,
+            "y": 8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_39"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce60_pp2_z0",
+            "x": -7.75,
+            "y": 9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_39"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce60_pp3_z0",
+            "x": -7.75,
+            "y": 9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_39"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp0_z0",
+            "x": -7.75,
+            "y": 9.865,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp1_z0",
+            "x": -7.75,
+            "y": 10.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp2_z0",
+            "x": -7.75,
+            "y": 10.485000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp3_z0",
+            "x": -7.75,
+            "y": 10.795,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp4_z0",
+            "x": -7.75,
+            "y": 11.105,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce61_pp5_z0",
+            "x": -7.75,
+            "y": 11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_5", "cmn_31"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_6",
+        "center": {
+          "x": -8.75,
+          "y": -1.2699999999999996
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce64_pp0_z0",
+            "x": -7.75,
+            "y": -1.7949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_6", "cmn_43"],
+            "distToCentermostPortOnZ": 0.34999999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce64_pp1_z0",
+            "x": -7.75,
+            "y": -1.4449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_6", "cmn_43"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce64_pp2_z0",
+            "x": -7.75,
+            "y": -1.0949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_6", "cmn_43"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce64_pp3_z0",
+            "x": -7.75,
+            "y": -0.7449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_6", "cmn_43"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_7",
+        "center": {
+          "x": -8.75,
+          "y": 1.2700000000000005
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce67_pp0_z0",
+            "x": -7.75,
+            "y": 0.7450000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_7", "cmn_42"],
+            "distToCentermostPortOnZ": 0.35,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce67_pp1_z0",
+            "x": -7.75,
+            "y": 1.0950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_7", "cmn_42"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce67_pp2_z0",
+            "x": -7.75,
+            "y": 1.4450000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_7", "cmn_42"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce67_pp3_z0",
+            "x": -7.75,
+            "y": 1.7950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_7", "cmn_42"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_8",
+        "center": {
+          "x": -8.75,
+          "y": 4.3500000000000005
+        },
+        "width": 2,
+        "height": 2.58,
+        "portPoints": [
+          {
+            "portPointId": "ce69_pp0_z0",
+            "x": -7.75,
+            "y": 3.2850000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_41"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce69_pp1_z0",
+            "x": -7.75,
+            "y": 3.6350000000000007,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_41"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce69_pp2_z0",
+            "x": -7.75,
+            "y": 3.9850000000000003,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_41"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce69_pp3_z0",
+            "x": -7.75,
+            "y": 4.335000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_41"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce70_pp0_z0",
+            "x": -7.75,
+            "y": 4.785,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_32"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce70_pp1_z0",
+            "x": -7.75,
+            "y": 5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_32"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce71_pp0_z0",
+            "x": -7.75,
+            "y": 5.620000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_8", "cmn_40"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_9",
+        "center": {
+          "x": -7,
+          "y": -10.64
+        },
+        "width": 1.5,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "ce72_pp0_z0",
+            "x": -7.75,
+            "y": -11.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_26"],
+            "distToCentermostPortOnZ": 0.3349999999999991,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce72_pp1_z0",
+            "x": -7.75,
+            "y": -11.080000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_26"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce72_pp2_z0",
+            "x": -7.75,
+            "y": -10.745000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_26"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce72_pp3_z0",
+            "x": -7.75,
+            "y": -10.410000000000002,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_26"],
+            "distToCentermostPortOnZ": 0.6699999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce73_pp0_z0",
+            "x": -7.525,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_46"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce73_pp1_z0",
+            "x": -7.175,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_46"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce73_pp2_z0",
+            "x": -6.825,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_46"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce73_pp3_z0",
+            "x": -6.475,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_9", "cmn_46"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_10",
+        "center": {
+          "x": 8,
+          "y": -10.64
+        },
+        "width": 3.5,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "ce74_pp0_z0",
+            "x": 6.475,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_47"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce74_pp1_z0",
+            "x": 6.825,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_47"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce74_pp2_z0",
+            "x": 7.175,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_47"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce74_pp3_z0",
+            "x": 7.525,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_47"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp0_z0",
+            "x": 7.975,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp1_z0",
+            "x": 8.285,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp2_z0",
+            "x": 8.595,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp3_z0",
+            "x": 8.905,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp4_z0",
+            "x": 9.215,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce75_pp5_z0",
+            "x": 9.525,
+            "y": -9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_10", "cmn_28"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_11",
+        "center": {
+          "x": 8.19,
+          "y": -4.440892098500626e-16
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce76_pp0_z0",
+            "x": 6.854999999999999,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_50"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce76_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce76_pp2_z0",
+            "x": 7.525,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_50"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce77_pp0_z0",
+            "x": 6.629999999999999,
+            "y": -0.2950000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_20"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce77_pp1_z0",
+            "x": 6.629999999999999,
+            "y": 0.2949999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_20"],
+            "distToCentermostPortOnZ": 0.5900000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce78_pp0_z0",
+            "x": 6.854999999999999,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_51"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce78_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce78_pp2_z0",
+            "x": 7.525,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_51"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp0_z0",
+            "x": 7.975,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp1_z0",
+            "x": 8.285,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp2_z0",
+            "x": 8.595,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp3_z0",
+            "x": 8.905,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp4_z0",
+            "x": 9.215,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce79_pp5_z0",
+            "x": 9.525,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_30"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp0_z0",
+            "x": 7.975,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp1_z0",
+            "x": 8.285,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp2_z0",
+            "x": 8.595,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp3_z0",
+            "x": 8.905,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp4_z0",
+            "x": 9.215,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce80_pp5_z0",
+            "x": 9.525,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_11", "cmn_29"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_12",
+        "center": {
+          "x": -7,
+          "y": -7.62
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce81_pp0_z0",
+            "x": -7.525,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_46"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce81_pp1_z0",
+            "x": -7.175,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_46"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce81_pp2_z0",
+            "x": -6.825,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_46"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce81_pp3_z0",
+            "x": -6.475,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_46"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce82_pp0_z0",
+            "x": -7.525,
+            "y": -7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_45"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce82_pp1_z0",
+            "x": -7.175,
+            "y": -7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_45"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce82_pp2_z0",
+            "x": -6.825,
+            "y": -7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_45"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce82_pp3_z0",
+            "x": -6.475,
+            "y": -7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_12", "cmn_45"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_13",
+        "center": {
+          "x": 8.189999999999998,
+          "y": 7.62
+        },
+        "width": 3.1200000000000037,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce83_pp0_z0",
+            "x": 6.854999999999995,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_53"],
+            "distToCentermostPortOnZ": 0.33500000000000263,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce83_pp1_z0",
+            "x": 7.189999999999998,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_53"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce83_pp2_z0",
+            "x": 7.525,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_53"],
+            "distToCentermostPortOnZ": 0.33500000000000263,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce84_pp0_z0",
+            "x": 6.629999999999996,
+            "y": 7.324999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_22"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce84_pp1_z0",
+            "x": 6.629999999999996,
+            "y": 7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_22"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce85_pp0_z0",
+            "x": 6.854999999999995,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_54"],
+            "distToCentermostPortOnZ": 0.33500000000000263,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce85_pp1_z0",
+            "x": 7.189999999999998,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_54"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce85_pp2_z0",
+            "x": 7.525,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_54"],
+            "distToCentermostPortOnZ": 0.33500000000000263,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp0_z0",
+            "x": 7.975,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp1_z0",
+            "x": 8.285,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp2_z0",
+            "x": 8.595,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp3_z0",
+            "x": 8.905,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp4_z0",
+            "x": 9.215,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce86_pp5_z0",
+            "x": 9.525,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_24"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp0_z0",
+            "x": 7.975,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp1_z0",
+            "x": 8.285,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp2_z0",
+            "x": 8.595,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp3_z0",
+            "x": 8.905,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp4_z0",
+            "x": 9.215,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce87_pp5_z0",
+            "x": 9.525,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_13", "cmn_27"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_14",
+        "center": {
+          "x": -7,
+          "y": 7.620000000000001
+        },
+        "width": 1.5,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce88_pp0_z0",
+            "x": -7.525,
+            "y": 7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_40"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce88_pp1_z0",
+            "x": -7.175,
+            "y": 7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_40"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce88_pp2_z0",
+            "x": -6.825,
+            "y": 7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_40"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce88_pp3_z0",
+            "x": -6.475,
+            "y": 7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_40"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce89_pp0_z0",
+            "x": -7.525,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_39"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce89_pp1_z0",
+            "x": -7.175,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_39"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce89_pp2_z0",
+            "x": -6.825,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_39"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce89_pp3_z0",
+            "x": -6.475,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_14", "cmn_39"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_15",
+        "center": {
+          "x": 8.19,
+          "y": -7.620000000000001
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce90_pp0_z0",
+            "x": 6.854999999999999,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_47"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce90_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_47"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce90_pp2_z0",
+            "x": 7.525,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_47"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce91_pp0_z0",
+            "x": 6.629999999999999,
+            "y": -7.915000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_18"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce91_pp1_z0",
+            "x": 6.629999999999999,
+            "y": -7.325000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_18"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce92_pp0_z0",
+            "x": 6.854999999999999,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_48"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce92_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_48"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce92_pp2_z0",
+            "x": 7.525,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_48"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp0_z0",
+            "x": 7.975,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp1_z0",
+            "x": 8.285,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp2_z0",
+            "x": 8.595,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp3_z0",
+            "x": 8.905,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp4_z0",
+            "x": 9.215,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce93_pp5_z0",
+            "x": 9.525,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_28"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp0_z0",
+            "x": 7.975,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp1_z0",
+            "x": 8.285,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp2_z0",
+            "x": 8.595,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp3_z0",
+            "x": 8.905,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp4_z0",
+            "x": 9.215,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce94_pp5_z0",
+            "x": 9.525,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_15", "cmn_25"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_16",
+        "center": {
+          "x": 8.19,
+          "y": -2.5400000000000005
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce95_pp0_z0",
+            "x": 6.854999999999999,
+            "y": -3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_49"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce95_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": -3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_49"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce95_pp2_z0",
+            "x": 7.525,
+            "y": -3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_49"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce96_pp0_z0",
+            "x": 6.629999999999999,
+            "y": -2.8350000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_19"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce96_pp1_z0",
+            "x": 6.629999999999999,
+            "y": -2.2450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_19"],
+            "distToCentermostPortOnZ": 0.5899999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce97_pp0_z0",
+            "x": 6.854999999999999,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_50"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce97_pp1_z0",
+            "x": 7.1899999999999995,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce97_pp2_z0",
+            "x": 7.525,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_50"],
+            "distToCentermostPortOnZ": 0.33500000000000085,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp0_z0",
+            "x": 7.975,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp1_z0",
+            "x": 8.285,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp2_z0",
+            "x": 8.595,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp3_z0",
+            "x": 8.905,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp4_z0",
+            "x": 9.215,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce98_pp5_z0",
+            "x": 9.525,
+            "y": -3.06,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_25"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp0_z0",
+            "x": 7.975,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp1_z0",
+            "x": 8.285,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp2_z0",
+            "x": 8.595,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp3_z0",
+            "x": 8.905,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp4_z0",
+            "x": 9.215,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce99_pp5_z0",
+            "x": 9.525,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_16", "cmn_30"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_17",
+        "center": {
+          "x": 8.190000000000001,
+          "y": 2.539999999999999
+        },
+        "width": 3.1199999999999974,
+        "height": 1.0399999999999991,
+        "portPoints": [
+          {
+            "portPointId": "ce100_pp0_z0",
+            "x": 6.855000000000002,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_51"],
+            "distToCentermostPortOnZ": 0.3349999999999991,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce100_pp1_z0",
+            "x": 7.190000000000001,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce100_pp2_z0",
+            "x": 7.525,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_51"],
+            "distToCentermostPortOnZ": 0.3349999999999991,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce101_pp0_z0",
+            "x": 6.630000000000003,
+            "y": 2.2449999999999997,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_21"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce101_pp1_z0",
+            "x": 6.630000000000003,
+            "y": 2.8349999999999986,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_21"],
+            "distToCentermostPortOnZ": 0.589999999999999,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce102_pp0_z0",
+            "x": 6.855000000000002,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_52"],
+            "distToCentermostPortOnZ": 0.3349999999999991,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce102_pp1_z0",
+            "x": 7.190000000000001,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_52"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce102_pp2_z0",
+            "x": 7.525,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_52"],
+            "distToCentermostPortOnZ": 0.3349999999999991,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp0_z0",
+            "x": 7.975,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp1_z0",
+            "x": 8.285,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp2_z0",
+            "x": 8.595,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp3_z0",
+            "x": 8.905,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp4_z0",
+            "x": 9.215,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce103_pp5_z0",
+            "x": 9.525,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_29"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp0_z0",
+            "x": 7.975,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp1_z0",
+            "x": 8.285,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp2_z0",
+            "x": 8.595,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp3_z0",
+            "x": 8.905,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp4_z0",
+            "x": 9.215,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce104_pp5_z0",
+            "x": 9.525,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_17", "cmn_24"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_18",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -7.620000000000001
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce105_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": -8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_18", "cmn_47"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce106_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": -7.100000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_18", "cmn_48"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_19",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -2.5400000000000005
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce107_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": -3.0600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_19", "cmn_49"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce108_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": -2.0200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_19", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_20",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -4.440892098500626e-16
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce109_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": -0.5200000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_20", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce110_pp0_z0",
+            "x": 6.4399999999999995,
+            "y": 0.5199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_20", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_21",
+        "center": {
+          "x": 6.440000000000001,
+          "y": 2.539999999999999
+        },
+        "width": 0.38000000000000256,
+        "height": 1.0399999999999991,
+        "portPoints": [
+          {
+            "portPointId": "ce111_pp0_z0",
+            "x": 6.440000000000001,
+            "y": 2.0199999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_21", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce112_pp0_z0",
+            "x": 6.440000000000001,
+            "y": 3.0599999999999987,
+            "z": 0,
+            "connectionNodeIds": ["cmn_21", "cmn_52"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_22",
+        "center": {
+          "x": 6.439999999999999,
+          "y": 7.62
+        },
+        "width": 0.37999999999999723,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce113_pp0_z0",
+            "x": 6.439999999999999,
+            "y": 7.1,
+            "z": 0,
+            "connectionNodeIds": ["cmn_22", "cmn_53"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce114_pp0_z0",
+            "x": 6.439999999999999,
+            "y": 8.14,
+            "z": 0,
+            "connectionNodeIds": ["cmn_22", "cmn_54"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_23",
+        "center": {
+          "x": 8,
+          "y": 10.64
+        },
+        "width": 3.5,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "ce115_pp0_z0",
+            "x": 6.475,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_54"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce115_pp1_z0",
+            "x": 6.825,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_54"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce115_pp2_z0",
+            "x": 7.175,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_54"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce115_pp3_z0",
+            "x": 7.525,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_54"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp0_z0",
+            "x": 7.975,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0.620000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp1_z0",
+            "x": 8.285,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0.3100000000000005,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp2_z0",
+            "x": 8.595,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp3_z0",
+            "x": 8.905,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0.3099999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp4_z0",
+            "x": 9.215,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0.6199999999999992,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce116_pp5_z0",
+            "x": 9.525,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_23", "cmn_27"],
+            "distToCentermostPortOnZ": 0.9299999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_24",
+        "center": {
+          "x": 8.75,
+          "y": 5.079999999999999
+        },
+        "width": 2,
+        "height": 4.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce117_pp0_z0",
+            "x": 7.75,
+            "y": 3.284999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_52"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce117_pp1_z0",
+            "x": 7.75,
+            "y": 3.634999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_52"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce117_pp2_z0",
+            "x": 7.75,
+            "y": 3.9849999999999985,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_52"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce117_pp3_z0",
+            "x": 7.75,
+            "y": 4.334999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_52"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce118_pp0_z0",
+            "x": 7.75,
+            "y": 4.784999999999998,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_33"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce118_pp1_z0",
+            "x": 7.75,
+            "y": 5.375,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_33"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce119_pp0_z0",
+            "x": 7.75,
+            "y": 5.824999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_53"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce119_pp1_z0",
+            "x": 7.75,
+            "y": 6.175,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_53"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce119_pp2_z0",
+            "x": 7.75,
+            "y": 6.5249999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_53"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce119_pp3_z0",
+            "x": 7.75,
+            "y": 6.875,
+            "z": 0,
+            "connectionNodeIds": ["cmn_24", "cmn_53"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_25",
+        "center": {
+          "x": 8.75,
+          "y": -5.08
+        },
+        "width": 2,
+        "height": 4.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce120_pp0_z0",
+            "x": 7.75,
+            "y": -6.875000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_48"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce120_pp1_z0",
+            "x": 7.75,
+            "y": -6.525,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_48"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce120_pp2_z0",
+            "x": 7.75,
+            "y": -6.175000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_48"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce120_pp3_z0",
+            "x": 7.75,
+            "y": -5.825000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_48"],
+            "distToCentermostPortOnZ": 0.6999999999999993,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce121_pp0_z0",
+            "x": 7.75,
+            "y": -5.375000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_34"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce121_pp1_z0",
+            "x": 7.75,
+            "y": -4.784999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_34"],
+            "distToCentermostPortOnZ": 0.5900000000000016,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce122_pp0_z0",
+            "x": 7.75,
+            "y": -4.335000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_49"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce122_pp1_z0",
+            "x": 7.75,
+            "y": -3.9850000000000003,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_49"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce122_pp2_z0",
+            "x": 7.75,
+            "y": -3.6350000000000007,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_49"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce122_pp3_z0",
+            "x": 7.75,
+            "y": -3.2850000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_25", "cmn_49"],
+            "distToCentermostPortOnZ": 0.6999999999999997,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_26",
+        "center": {
+          "x": -8.75,
+          "y": -10.912500000000001
+        },
+        "width": 2,
+        "height": 1.455,
+        "portPoints": [],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_27",
+        "center": {
+          "x": 8.75,
+          "y": 8.89
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce123_pp0_z0",
+            "x": 7.75,
+            "y": 8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_27", "cmn_54"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce123_pp1_z0",
+            "x": 7.75,
+            "y": 8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_27", "cmn_54"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce123_pp2_z0",
+            "x": 7.75,
+            "y": 9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_27", "cmn_54"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce123_pp3_z0",
+            "x": 7.75,
+            "y": 9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_27", "cmn_54"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_28",
+        "center": {
+          "x": 8.75,
+          "y": -8.89
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce124_pp0_z0",
+            "x": 7.75,
+            "y": -9.415000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_28", "cmn_47"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce124_pp1_z0",
+            "x": 7.75,
+            "y": -9.065000000000001,
+            "z": 0,
+            "connectionNodeIds": ["cmn_28", "cmn_47"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce124_pp2_z0",
+            "x": 7.75,
+            "y": -8.715,
+            "z": 0,
+            "connectionNodeIds": ["cmn_28", "cmn_47"],
+            "distToCentermostPortOnZ": 0.3500000000000014,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce124_pp3_z0",
+            "x": 7.75,
+            "y": -8.365,
+            "z": 0,
+            "connectionNodeIds": ["cmn_28", "cmn_47"],
+            "distToCentermostPortOnZ": 0.7000000000000011,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_29",
+        "center": {
+          "x": 8.75,
+          "y": 1.2699999999999996
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce125_pp0_z0",
+            "x": 7.75,
+            "y": 0.7449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_29", "cmn_51"],
+            "distToCentermostPortOnZ": 0.35,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce125_pp1_z0",
+            "x": 7.75,
+            "y": 1.0949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_29", "cmn_51"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce125_pp2_z0",
+            "x": 7.75,
+            "y": 1.4449999999999996,
+            "z": 0,
+            "connectionNodeIds": ["cmn_29", "cmn_51"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce125_pp3_z0",
+            "x": 7.75,
+            "y": 1.7949999999999995,
+            "z": 0,
+            "connectionNodeIds": ["cmn_29", "cmn_51"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_30",
+        "center": {
+          "x": 8.75,
+          "y": -1.2700000000000005
+        },
+        "width": 2,
+        "height": 1.5,
+        "portPoints": [
+          {
+            "portPointId": "ce126_pp0_z0",
+            "x": 7.75,
+            "y": -1.7950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_30", "cmn_50"],
+            "distToCentermostPortOnZ": 0.34999999999999987,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce126_pp1_z0",
+            "x": 7.75,
+            "y": -1.4450000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_30", "cmn_50"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce126_pp2_z0",
+            "x": 7.75,
+            "y": -1.0950000000000004,
+            "z": 0,
+            "connectionNodeIds": ["cmn_30", "cmn_50"],
+            "distToCentermostPortOnZ": 0.3500000000000001,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce126_pp3_z0",
+            "x": 7.75,
+            "y": -0.7450000000000006,
+            "z": 0,
+            "connectionNodeIds": ["cmn_30", "cmn_50"],
+            "distToCentermostPortOnZ": 0.7,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_31",
+        "center": {
+          "x": -7,
+          "y": 10.64
+        },
+        "width": 1.5,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "ce127_pp0_z0",
+            "x": -7.525,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_31", "cmn_39"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce127_pp1_z0",
+            "x": -7.175,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_31", "cmn_39"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce127_pp2_z0",
+            "x": -6.825,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_31", "cmn_39"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce127_pp3_z0",
+            "x": -6.475,
+            "y": 9.64,
+            "z": 0,
+            "connectionNodeIds": ["cmn_31", "cmn_39"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_32",
+        "center": {
+          "x": -7,
+          "y": 5.08
+        },
+        "width": 1.5,
+        "height": 1.04,
+        "portPoints": [
+          {
+            "portPointId": "ce128_pp0_z0",
+            "x": -7.525,
+            "y": 4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_41"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce128_pp1_z0",
+            "x": -7.175,
+            "y": 4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_41"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce128_pp2_z0",
+            "x": -6.825,
+            "y": 4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_41"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce128_pp3_z0",
+            "x": -6.475,
+            "y": 4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_41"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce129_pp0_z0",
+            "x": -7.525,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_40"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce129_pp1_z0",
+            "x": -7.175,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_40"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce129_pp2_z0",
+            "x": -6.825,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_40"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce129_pp3_z0",
+            "x": -6.475,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_32", "cmn_40"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_33",
+        "center": {
+          "x": 7,
+          "y": 5.079999999999999
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce130_pp0_z0",
+            "x": 6.475,
+            "y": 4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_52"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce130_pp1_z0",
+            "x": 6.825,
+            "y": 4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_52"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce130_pp2_z0",
+            "x": 7.175,
+            "y": 4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_52"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce130_pp3_z0",
+            "x": 7.525,
+            "y": 4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_52"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce131_pp0_z0",
+            "x": 6.475,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_53"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce131_pp1_z0",
+            "x": 6.825,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_53"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce131_pp2_z0",
+            "x": 7.175,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_53"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce131_pp3_z0",
+            "x": 7.525,
+            "y": 5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_33", "cmn_53"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_34",
+        "center": {
+          "x": 7,
+          "y": -5.08
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce132_pp0_z0",
+            "x": 6.475,
+            "y": -5.6000000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_48"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce132_pp1_z0",
+            "x": 6.825,
+            "y": -5.6000000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_48"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce132_pp2_z0",
+            "x": 7.175,
+            "y": -5.6000000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_48"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce132_pp3_z0",
+            "x": 7.525,
+            "y": -5.6000000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_48"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce133_pp0_z0",
+            "x": 6.475,
+            "y": -4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_49"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce133_pp1_z0",
+            "x": 6.825,
+            "y": -4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_49"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce133_pp2_z0",
+            "x": 7.175,
+            "y": -4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_49"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce133_pp3_z0",
+            "x": 7.525,
+            "y": -4.5600000000000005,
+            "z": 0,
+            "connectionNodeIds": ["cmn_34", "cmn_49"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_35",
+        "center": {
+          "x": -7,
+          "y": -5.079999999999999
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "portPoints": [
+          {
+            "portPointId": "ce134_pp0_z0",
+            "x": -7.525,
+            "y": -5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_45"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce134_pp1_z0",
+            "x": -7.175,
+            "y": -5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_45"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce134_pp2_z0",
+            "x": -6.825,
+            "y": -5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_45"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce134_pp3_z0",
+            "x": -6.475,
+            "y": -5.6,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_45"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce135_pp0_z0",
+            "x": -7.525,
+            "y": -4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_44"],
+            "distToCentermostPortOnZ": 0.35000000000000053,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce135_pp1_z0",
+            "x": -7.175,
+            "y": -4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_44"],
+            "distToCentermostPortOnZ": 0,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce135_pp2_z0",
+            "x": -6.825,
+            "y": -4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_44"],
+            "distToCentermostPortOnZ": 0.34999999999999964,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "ce135_pp3_z0",
+            "x": -6.475,
+            "y": -4.559999999999999,
+            "z": 0,
+            "connectionNodeIds": ["cmn_35", "cmn_44"],
+            "distToCentermostPortOnZ": 0.7000000000000002,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_36",
+        "center": {
+          "x": -9.559999999999999,
+          "y": -2.539999999999999
+        },
+        "width": 0.38000000000000256,
+        "height": 1.0399999999999991,
+        "portPoints": [],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_37",
+        "center": {
+          "x": -9.559999999999999,
+          "y": 4.440892098500626e-16
+        },
+        "width": 0.3800000000000008,
+        "height": 1.04,
+        "portPoints": [],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_38",
+        "center": {
+          "x": -9.56,
+          "y": 2.5400000000000005
+        },
+        "width": 0.379999999999999,
+        "height": 1.04,
+        "portPoints": [],
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_39",
+        "center": {
+          "x": -7,
+          "y": 8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_40",
+        "center": {
+          "x": -7,
+          "y": 6.3500000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_41",
+        "center": {
+          "x": -7,
+          "y": 3.8100000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_42",
+        "center": {
+          "x": -7,
+          "y": 1.2700000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_43",
+        "center": {
+          "x": -7,
+          "y": -1.2699999999999996
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_44",
+        "center": {
+          "x": -7,
+          "y": -3.8099999999999987
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_45",
+        "center": {
+          "x": -7,
+          "y": -6.35
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_46",
+        "center": {
+          "x": -7,
+          "y": -8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_47",
+        "center": {
+          "x": 7,
+          "y": -8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_48",
+        "center": {
+          "x": 7,
+          "y": -6.3500000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_49",
+        "center": {
+          "x": 7,
+          "y": -3.8100000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_50",
+        "center": {
+          "x": 7,
+          "y": -1.2700000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_51",
+        "center": {
+          "x": 7,
+          "y": 1.2699999999999996
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_52",
+        "center": {
+          "x": 7,
+          "y": 3.8099999999999987
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_53",
+        "center": {
+          "x": 7,
+          "y": 6.35
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_54",
+        "center": {
+          "x": 7,
+          "y": 8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "portPoints": [],
+        "availableZ": [0],
+        "_containsTarget": true,
+        "_containsObstacle": true
+      }
+    ],
+    "capacityMeshNodes": [
+      {
+        "capacityMeshNodeId": "cmn_0",
+        "center": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 12.5,
+        "height": 23.28,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_1",
+        "center": {
+          "x": -7.809999999999999,
+          "y": 4.440892098500626e-16
+        },
+        "width": 3.12,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_2",
+        "center": {
+          "x": -7.8100000000000005,
+          "y": 2.5400000000000005
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_3",
+        "center": {
+          "x": -7.809999999999999,
+          "y": -2.539999999999999
+        },
+        "width": 3.1199999999999974,
+        "height": 1.0399999999999991,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_4",
+        "center": {
+          "x": -8.75,
+          "y": -6.6225
+        },
+        "width": 2,
+        "height": 7.125000000000002,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_5",
+        "center": {
+          "x": -8.75,
+          "y": 8.64
+        },
+        "width": 2,
+        "height": 6,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_6",
+        "center": {
+          "x": -8.75,
+          "y": -1.2699999999999996
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_7",
+        "center": {
+          "x": -8.75,
+          "y": 1.2700000000000005
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_8",
+        "center": {
+          "x": -8.75,
+          "y": 4.3500000000000005
+        },
+        "width": 2,
+        "height": 2.58,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_9",
+        "center": {
+          "x": -7,
+          "y": -10.64
+        },
+        "width": 1.5,
+        "height": 2,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_10",
+        "center": {
+          "x": 8,
+          "y": -10.64
+        },
+        "width": 3.5,
+        "height": 2,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_11",
+        "center": {
+          "x": 8.19,
+          "y": -4.440892098500626e-16
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_12",
+        "center": {
+          "x": -7,
+          "y": -7.62
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_13",
+        "center": {
+          "x": 8.189999999999998,
+          "y": 7.62
+        },
+        "width": 3.1200000000000037,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_14",
+        "center": {
+          "x": -7,
+          "y": 7.620000000000001
+        },
+        "width": 1.5,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_15",
+        "center": {
+          "x": 8.19,
+          "y": -7.620000000000001
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_16",
+        "center": {
+          "x": 8.19,
+          "y": -2.5400000000000005
+        },
+        "width": 3.120000000000001,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_17",
+        "center": {
+          "x": 8.190000000000001,
+          "y": 2.539999999999999
+        },
+        "width": 3.1199999999999974,
+        "height": 1.0399999999999991,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_18",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -7.620000000000001
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_19",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -2.5400000000000005
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_20",
+        "center": {
+          "x": 6.4399999999999995,
+          "y": -4.440892098500626e-16
+        },
+        "width": 0.3799999999999999,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_21",
+        "center": {
+          "x": 6.440000000000001,
+          "y": 2.539999999999999
+        },
+        "width": 0.38000000000000256,
+        "height": 1.0399999999999991,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_22",
+        "center": {
+          "x": 6.439999999999999,
+          "y": 7.62
+        },
+        "width": 0.37999999999999723,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_23",
+        "center": {
+          "x": 8,
+          "y": 10.64
+        },
+        "width": 3.5,
+        "height": 2,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_24",
+        "center": {
+          "x": 8.75,
+          "y": 5.079999999999999
+        },
+        "width": 2,
+        "height": 4.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_25",
+        "center": {
+          "x": 8.75,
+          "y": -5.08
+        },
+        "width": 2,
+        "height": 4.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_26",
+        "center": {
+          "x": -8.75,
+          "y": -10.912500000000001
+        },
+        "width": 2,
+        "height": 1.455,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_27",
+        "center": {
+          "x": 8.75,
+          "y": 8.89
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_28",
+        "center": {
+          "x": 8.75,
+          "y": -8.89
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_29",
+        "center": {
+          "x": 8.75,
+          "y": 1.2699999999999996
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_30",
+        "center": {
+          "x": 8.75,
+          "y": -1.2700000000000005
+        },
+        "width": 2,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_31",
+        "center": {
+          "x": -7,
+          "y": 10.64
+        },
+        "width": 1.5,
+        "height": 2,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_32",
+        "center": {
+          "x": -7,
+          "y": 5.08
+        },
+        "width": 1.5,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_33",
+        "center": {
+          "x": 7,
+          "y": 5.079999999999999
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_34",
+        "center": {
+          "x": 7,
+          "y": -5.08
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_35",
+        "center": {
+          "x": -7,
+          "y": -5.079999999999999
+        },
+        "width": 1.5,
+        "height": 1.040000000000001,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_36",
+        "center": {
+          "x": -9.559999999999999,
+          "y": -2.539999999999999
+        },
+        "width": 0.38000000000000256,
+        "height": 1.0399999999999991,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_37",
+        "center": {
+          "x": -9.559999999999999,
+          "y": 4.440892098500626e-16
+        },
+        "width": 0.3800000000000008,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_38",
+        "center": {
+          "x": -9.56,
+          "y": 2.5400000000000005
+        },
+        "width": 0.379999999999999,
+        "height": 1.04,
+        "layer": "top",
+        "availableZ": [0]
+      },
+      {
+        "capacityMeshNodeId": "cmn_39",
+        "center": {
+          "x": -7,
+          "y": 8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_40",
+        "center": {
+          "x": -7,
+          "y": 6.3500000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_41",
+        "center": {
+          "x": -7,
+          "y": 3.8100000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_42",
+        "center": {
+          "x": -7,
+          "y": 1.2700000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_43",
+        "center": {
+          "x": -7,
+          "y": -1.2699999999999996
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_44",
+        "center": {
+          "x": -7,
+          "y": -3.8099999999999987
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_45",
+        "center": {
+          "x": -7,
+          "y": -6.35
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_46",
+        "center": {
+          "x": -7,
+          "y": -8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_47",
+        "center": {
+          "x": 7,
+          "y": -8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_48",
+        "center": {
+          "x": 7,
+          "y": -6.3500000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_49",
+        "center": {
+          "x": 7,
+          "y": -3.8100000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_50",
+        "center": {
+          "x": 7,
+          "y": -1.2700000000000005
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_51",
+        "center": {
+          "x": 7,
+          "y": 1.2699999999999996
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_52",
+        "center": {
+          "x": 7,
+          "y": 3.8099999999999987
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_53",
+        "center": {
+          "x": 7,
+          "y": 6.35
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      },
+      {
+        "capacityMeshNodeId": "cmn_54",
+        "center": {
+          "x": 7,
+          "y": 8.89
+        },
+        "width": 1.5,
+        "height": 1.5,
+        "layer": "top",
+        "availableZ": [0],
+        "_containsObstacle": true,
+        "_containsTarget": true
+      }
+    ],
+    "colorMap": {
+      "connectivity_net7": "hsl(0, 100%, 50%)",
+      "source_trace_7": "hsl(0, 100%, 50%)",
+      "connectivity_net6": "hsl(37.5, 100%, 50%)",
+      "source_trace_6": "hsl(37.5, 100%, 50%)",
+      "connectivity_net5": "hsl(75, 100%, 50%)",
+      "source_trace_5": "hsl(75, 100%, 50%)",
+      "connectivity_net4": "hsl(112.5, 100%, 50%)",
+      "source_trace_4": "hsl(112.5, 100%, 50%)",
+      "connectivity_net3": "hsl(150, 100%, 50%)",
+      "source_trace_3": "hsl(150, 100%, 50%)",
+      "connectivity_net2": "hsl(187.5, 100%, 50%)",
+      "source_trace_2": "hsl(187.5, 100%, 50%)",
+      "connectivity_net1": "hsl(225, 100%, 50%)",
+      "source_trace_1": "hsl(225, 100%, 50%)",
+      "connectivity_net0": "hsl(262.5, 100%, 50%)",
+      "source_trace_0": "hsl(262.5, 100%, 50%)"
+    },
+    "numShuffleSeeds": 100,
+    "hyperParameters": {
+      "JUMPER_PF_FN_ENABLED": false,
+      "NODE_PF_FACTOR": 100,
+      "NODE_PF_MAX_PENALTY": 100,
+      "CENTER_OFFSET_DIST_PENALTY_FACTOR": 0,
+      "FORCE_CENTER_FIRST": true
+    }
+  }
+]

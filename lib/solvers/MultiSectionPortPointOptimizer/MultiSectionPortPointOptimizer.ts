@@ -972,6 +972,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           ) {
             // Try next schedule params
             const params = OPTIMIZATION_SCHEDULE[this.currentScheduleIndex]
+
             this.currentSection = this.createSection({
               centerOfSectionCapacityNodeId: this.currentSectionCenterNodeId,
               expansionDegrees: params.EXPANSION_DEGREES,

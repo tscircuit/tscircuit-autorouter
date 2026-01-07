@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.234",
+  "version": "0.0.237",
   "type": "module",
   "files": [
     "dist"
@@ -26,6 +26,7 @@
     "@tscircuit/checks": "^0.0.75",
     "@tscircuit/circuit-json-util": "^0.0.46",
     "@tscircuit/core": "^0.0.337",
+    "@tscircuit/hypergraph": "^0.0.3",
     "@tscircuit/math-utils": "^0.0.27",
     "@tscircuit/rectdiff": "^0.0.20",
     "@tscircuit/solver-utils": "^0.0.9",
