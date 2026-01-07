@@ -6,7 +6,7 @@ import type {
   SimpleRouteJson,
 } from "../../types"
 import { mergeGraphics, type GraphicsObject, type Line } from "graphics-debug"
-import { distance } from "@tscircuit/math-utils"
+import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
 import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle"
 import type {
@@ -799,7 +799,7 @@ export class PortPointPathingSolver extends BaseSolver {
     if (this.STRAIGHT_LINE_DEVIATION_FACTOR > 0 && this.currentConnection) {
       const startPoint = this.currentConnection.connection.pointsToConnect[0]
       const endPoint = this.currentConnection.connection.pointsToConnect[1]
-      const deviation = this.distanceToLineSegment(point, startPoint, endPoint)
+      const deviation = pointToSegmentDistance(point, startPoint, endPoint)
       straightLineDeviationPenalty =
         this.STRAIGHT_LINE_DEVIATION_FACTOR * deviation
     }
@@ -811,44 +811,6 @@ export class PortPointPathingSolver extends BaseSolver {
       centerOffsetDistPenalty +
       straightLineDeviationPenalty
     )
-  }
-
-  private distanceToLineSegment(
-    point: { x: number; y: number },
-    lineStart: { x: number; y: number },
-    lineEnd: { x: number; y: number },
-  ): number {
-    const A = point.x - lineStart.x
-    const B = point.y - lineStart.y
-    const C = lineEnd.x - lineStart.x
-    const D = lineEnd.y - lineStart.y
-
-    const dot = A * C + B * D
-    const lenSq = C * C + D * D
-
-    if (lenSq === 0) {
-      return Math.sqrt(A * A + B * B)
-    }
-
-    const param = dot / lenSq
-
-    let xx: number
-    let yy: number
-
-    if (param < 0) {
-      xx = lineStart.x
-      yy = lineStart.y
-    } else if (param > 1) {
-      xx = lineEnd.x
-      yy = lineEnd.y
-    } else {
-      xx = lineStart.x + param * C
-      yy = lineStart.y + param * D
-    }
-
-    const dx = point.x - xx
-    const dy = point.y - yy
-    return Math.sqrt(dx * dx + dy * dy)
   }
 
   getVisitedPortPointKey(
