@@ -58,7 +58,7 @@ export interface PortPointPathingHyperParameters {
   JUMPER_PF_FN_ENABLED?: boolean
 
   /** Factor for penalizing deviation from straight line path */
-  STRAIGHT_LINE_DEVIATION_FACTOR?: number
+  STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR?: number
 }
 
 /**
@@ -243,8 +243,8 @@ export class PortPointPathingSolver extends BaseSolver {
     return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
   }
 
-  get STRAIGHT_LINE_DEVIATION_FACTOR() {
-    return this.hyperParameters.STRAIGHT_LINE_DEVIATION_FACTOR ?? 0
+  get STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR() {
+    return this.hyperParameters.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR ?? 0
   }
 
   colorMap: Record<string, string>
@@ -796,12 +796,15 @@ export class PortPointPathingSolver extends BaseSolver {
       point.distToCentermostPortOnZ ** 2
 
     let straightLineDeviationPenalty = 0
-    if (this.STRAIGHT_LINE_DEVIATION_FACTOR > 0 && this.currentConnection) {
+    if (
+      this.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR > 0 &&
+      this.currentConnection
+    ) {
       const startPoint = this.currentConnection.connection.pointsToConnect[0]
       const endPoint = this.currentConnection.connection.pointsToConnect[1]
       const deviation = pointToSegmentDistance(point, startPoint, endPoint)
       straightLineDeviationPenalty =
-        this.STRAIGHT_LINE_DEVIATION_FACTOR * deviation
+        this.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR * deviation
     }
 
     return (
