@@ -34,11 +34,13 @@ import {
   type EffortLevel,
 } from "./AutoroutingPipelineMenuBar"
 import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
+import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
   AssignableAutoroutingPipeline1Solver,
   AssignableAutoroutingPipeline2,
+  AssignableAutoroutingPipeline3,
   AutoroutingPipeline1_OriginalUnravel,
 } as const
 

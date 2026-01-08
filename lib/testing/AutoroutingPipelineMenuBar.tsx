@@ -43,6 +43,10 @@ export const PIPELINE_OPTIONS = [
     id: "AssignableAutoroutingPipeline2",
     label: "Assignable Pipeline 2",
   },
+  {
+    id: "AssignableAutoroutingPipeline3",
+    label: "Assignable Pipeline 3 (Jumpers)",
+  },
 ] as const
 
 export type PipelineId = (typeof PIPELINE_OPTIONS)[number]["id"]
