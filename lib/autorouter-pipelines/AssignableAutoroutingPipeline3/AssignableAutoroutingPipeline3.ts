@@ -51,7 +51,10 @@ import {
   InputPortPoint,
 } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
-import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import {
+  MultiSectionPortPointOptimizer,
+  MultiSectionPortPointOptimizerParams,
+} from "../../solvers/MultiSectionPortPointOptimizer"
 import { PortPointOffboardPathFragmentSolver } from "../AssignableAutoroutingPipeline2/PortPointOffboardPathFragmentSolver"
 import {
   HyperPortPointPathingSolver,
@@ -261,7 +264,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
-            numShuffleSeeds: 100 * cms.effort,
+            numShuffleSeeds: 10 * cms.effort,
             // minAllowedBoardScore: -1,
             hyperParameters: {
               // 1 = 60% maximum pf (see computeSectionScore)
@@ -314,6 +317,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
             FRACTION_TO_REPLACE: 0.2,
             MAX_ATTEMPTS_PER_NODE: 3 * this.effort,
             MAX_SECTION_ATTEMPTS: 30 * this.effort,
+            JUMPER_PF_FN_ENABLED: true,
             HYPERPARAMETER_SCHEDULE: [
               {
                 EXPANSION_DEGREES: 10,
@@ -323,7 +327,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
                 NODE_PF_MAX_PENALTY: 300,
               },
             ],
-          },
+          } as MultiSectionPortPointOptimizerParams,
         ]
       },
     ),

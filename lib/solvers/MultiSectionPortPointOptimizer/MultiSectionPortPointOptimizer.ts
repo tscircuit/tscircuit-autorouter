@@ -318,7 +318,15 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         availableZ: node.availableZ,
       }
 
-      const pf = computeNodePf(nodeWithPortPoints, node)
+      // Use jumper-based pf calculation for single layer nodes when enabled
+      const pf =
+        this.JUMPER_PF_FN_ENABLED && node.availableZ.length === 1
+          ? calculateNodeProbabilityOfFailureWithJumpers(
+              node,
+              getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+                .numSameLayerCrossings,
+            )
+          : computeNodePf(nodeWithPortPoints, node)
       pfMap.set(node.capacityMeshNodeId, pf)
     }
 
@@ -330,13 +338,21 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   computeBoardScore(): number {
     const allNodesWithPortPoints = this.getNodesWithPortPoints()
+    return this.computeScoreForNodes(allNodesWithPortPoints)
+  }
+
+  /**
+   * Compute score for a set of nodes, using the appropriate scoring function
+   * based on JUMPER_PF_FN_ENABLED.
+   */
+  computeScoreForNodes(nodesWithPortPoints: NodeWithPortPoints[]): number {
     if (this.JUMPER_PF_FN_ENABLED) {
       return computeSectionScoreWithJumpers(
-        allNodesWithPortPoints,
+        nodesWithPortPoints,
         this.capacityMeshNodeMap,
       )
     }
-    return computeSectionScore(allNodesWithPortPoints, this.capacityMeshNodeMap)
+    return computeSectionScore(nodesWithPortPoints, this.capacityMeshNodeMap)
   }
 
   /**
@@ -362,13 +378,15 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         availableZ: node.availableZ,
       }
 
-      const pf = this.JUMPER_PF_FN_ENABLED
-        ? calculateNodeProbabilityOfFailureWithJumpers(
-            node,
-            getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-              .numSameLayerCrossings,
-          )
-        : computeNodePf(nodeWithPortPoints, node)
+      // Use jumper-based pf calculation for single layer nodes when enabled
+      const pf =
+        this.JUMPER_PF_FN_ENABLED && node.availableZ.length === 1
+          ? calculateNodeProbabilityOfFailureWithJumpers(
+              node,
+              getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+                .numSameLayerCrossings,
+            )
+          : computeNodePf(nodeWithPortPoints, node)
       this.nodePfMap.set(nodeId, pf)
     }
   }
@@ -1085,14 +1103,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           }))
           .filter((node) => node.portPoints.length > 0)
 
-        const filteredBeforeScore = computeSectionScore(
-          filteredBeforeNodes,
-          this.capacityMeshNodeMap,
-        )
-        const newSectionScore = computeSectionScore(
-          newNodesWithPortPoints,
-          this.capacityMeshNodeMap,
-        )
+        const filteredBeforeScore = this.computeScoreForNodes(filteredBeforeNodes)
+        const newSectionScore = this.computeScoreForNodes(newNodesWithPortPoints)
 
         const attemptKey = `attempt${this.sectionAttempts}`
         this.stats.lastSectionScore = newSectionScore
@@ -1219,10 +1231,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     const sectionNodesWithPortPoints = this.getSectionNodesWithPortPoints(
       this.currentSection,
     )
-    this.sectionScoreBeforeOptimization = computeSectionScore(
-      sectionNodesWithPortPoints,
-      this.capacityMeshNodeMap,
-    )
+    this.sectionScoreBeforeOptimization =
+      this.computeScoreForNodes(sectionNodesWithPortPoints)
 
     // Check if section has connections to optimize (create temp SimpleRouteJson to check)
     const sectionSrj = this.createSectionSimpleRouteJson(this.currentSection)

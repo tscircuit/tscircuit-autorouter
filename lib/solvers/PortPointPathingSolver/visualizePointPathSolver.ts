@@ -5,6 +5,7 @@ import { safeTransparentize } from "../colors"
 import type { PortPointCandidate } from "./PortPointPathingSolver"
 import type { PortPoint } from "../../types/high-density-types"
 import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
+import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
 import type { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 
@@ -507,12 +508,23 @@ export function visualizePointPathSolver(
             targetNode.capacityMeshNodeId,
           )
           if (capacityMeshNode) {
-            pf = calculateNodeProbabilityOfFailure(
-              capacityMeshNode,
-              xSame,
-              xLC,
-              xTransition,
-            )
+            // Use jumper-based pf calculation for single layer nodes when enabled
+            if (
+              solver.JUMPER_PF_FN_ENABLED &&
+              targetNode.availableZ.length === 1
+            ) {
+              pf = calculateNodeProbabilityOfFailureWithJumpers(
+                capacityMeshNode,
+                xSame,
+              )
+            } else {
+              pf = calculateNodeProbabilityOfFailure(
+                capacityMeshNode,
+                xSame,
+                xLC,
+                xTransition,
+              )
+            }
             costPf = pf ** 2 * solver.NODE_PF_FACTOR
           }
 
