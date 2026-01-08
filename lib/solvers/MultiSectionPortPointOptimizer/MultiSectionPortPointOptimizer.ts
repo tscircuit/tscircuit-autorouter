@@ -1103,8 +1103,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           }))
           .filter((node) => node.portPoints.length > 0)
 
-        const filteredBeforeScore = this.computeScoreForNodes(filteredBeforeNodes)
-        const newSectionScore = this.computeScoreForNodes(newNodesWithPortPoints)
+        const filteredBeforeScore =
+          this.computeScoreForNodes(filteredBeforeNodes)
+        const newSectionScore = this.computeScoreForNodes(
+          newNodesWithPortPoints,
+        )
 
         const attemptKey = `attempt${this.sectionAttempts}`
         this.stats.lastSectionScore = newSectionScore
@@ -1231,8 +1234,9 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     const sectionNodesWithPortPoints = this.getSectionNodesWithPortPoints(
       this.currentSection,
     )
-    this.sectionScoreBeforeOptimization =
-      this.computeScoreForNodes(sectionNodesWithPortPoints)
+    this.sectionScoreBeforeOptimization = this.computeScoreForNodes(
+      sectionNodesWithPortPoints,
+    )
 
     // Check if section has connections to optimize (create temp SimpleRouteJson to check)
     const sectionSrj = this.createSectionSimpleRouteJson(this.currentSection)
