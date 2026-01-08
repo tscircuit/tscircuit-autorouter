@@ -32,8 +32,16 @@ import { visualizeSection } from "./visualizeSection"
 import { findConnectionIntersectionPairs } from "./findConnectionIntersectionPairs"
 import { visualizePointPathSolver } from "../PortPointPathingSolver/visualizePointPathSolver"
 import { HyperPortPointPathingSolver } from "../PortPointPathingSolver/HyperPortPointPathingSolver"
+import { computeSectionScoreWithJumpers } from "./computeSectionScoreWithJumpers"
+import { calculateNodeProbabilityOfFailureWithJumpers } from "./calculateNodeProbabilityOfFailureWithJumpers"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+
+export type HyperParameterScheduleEntry = PortPointPathingHyperParameters & {
+  EXPANSION_DEGREES: number
+}
 
 export interface MultiSectionPortPointOptimizerParams {
+  JUMPER_PF_FN_ENABLED?: boolean
   simpleRouteJson: SimpleRouteJson
   inputNodes: InputNodeWithPortPoints[]
   capacityMeshNodes: CapacityMeshNode[]
@@ -59,6 +67,21 @@ export interface MultiSectionPortPointOptimizerParams {
    * even if they would otherwise be kept due to FRACTION_TO_REPLACE.
    */
   ALWAYS_RIP_INTERSECTIONS?: boolean
+  /**
+   * Maximum number of attempts to fix a single node before moving on.
+   * Default is 100.
+   */
+  MAX_ATTEMPTS_PER_NODE?: number
+  /**
+   * Maximum total number of section optimization attempts.
+   * Default is 500.
+   */
+  MAX_SECTION_ATTEMPTS?: number
+  /**
+   * Custom hyperparameter schedule for optimization.
+   * Each entry defines parameters for one optimization attempt.
+   */
+  HYPERPARAMETER_SCHEDULE?: HyperParameterScheduleEntry[]
 }
 
 /**
@@ -89,9 +112,7 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 }
 
 // Generate optimization schedule with multiple shuffle seeds per expansion degree
-const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
-  EXPANSION_DEGREES: number
-})[] = [
+const DEFAULT_HYPERPARAMETER_SCHEDULE: HyperParameterScheduleEntry[] = [
   {
     SHUFFLE_SEED: 100,
     NODE_PF_FACTOR: 100,
@@ -125,7 +146,7 @@ const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
 ]
 
 // for (let seed = 0; seed < 30; seed++) {
-//   OPTIMIZATION_SCHEDULE.push({
+//   DEFAULT_HYPERPARAMETER_SCHEDULE.push({
 //     SHUFFLE_SEED: seed * 100,
 //     EXPANSION_DEGREES: 3,
 //     CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
@@ -201,6 +222,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   FRACTION_TO_REPLACE = 0.2
 
+  JUMPER_PF_FN_ENABLED = false
+
   /**
    * If true, always rip connections that have same-layer intersections,
    * even if they would otherwise be kept due to FRACTION_TO_REPLACE.
@@ -212,6 +235,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   ALWAYS_RIP_INTERSECTIONS = true
 
   effort: number = 1
+
+  /** Hyperparameter schedule for optimization attempts */
+  HYPERPARAMETER_SCHEDULE: HyperParameterScheduleEntry[] =
+    DEFAULT_HYPERPARAMETER_SCHEDULE
 
   constructor(params: MultiSectionPortPointOptimizerParams) {
     super()
@@ -228,6 +255,17 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     if (params.ALWAYS_RIP_INTERSECTIONS !== undefined) {
       this.ALWAYS_RIP_INTERSECTIONS = params.ALWAYS_RIP_INTERSECTIONS
     }
+    if (params.MAX_ATTEMPTS_PER_NODE !== undefined) {
+      this.MAX_ATTEMPTS_PER_NODE = params.MAX_ATTEMPTS_PER_NODE
+    }
+    if (params.MAX_SECTION_ATTEMPTS !== undefined) {
+      this.MAX_SECTION_ATTEMPTS = params.MAX_SECTION_ATTEMPTS
+    }
+    if (params.HYPERPARAMETER_SCHEDULE !== undefined) {
+      this.HYPERPARAMETER_SCHEDULE = params.HYPERPARAMETER_SCHEDULE
+    }
+    this.JUMPER_PF_FN_ENABLED =
+      params.JUMPER_PF_FN_ENABLED ?? this.JUMPER_PF_FN_ENABLED
 
     this.MAX_SECTION_ATTEMPTS *= this.effort
 
@@ -292,6 +330,12 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   computeBoardScore(): number {
     const allNodesWithPortPoints = this.getNodesWithPortPoints()
+    if (this.JUMPER_PF_FN_ENABLED) {
+      return computeSectionScoreWithJumpers(
+        allNodesWithPortPoints,
+        this.capacityMeshNodeMap,
+      )
+    }
     return computeSectionScore(allNodesWithPortPoints, this.capacityMeshNodeMap)
   }
 
@@ -318,7 +362,13 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         availableZ: node.availableZ,
       }
 
-      const pf = computeNodePf(nodeWithPortPoints, node)
+      const pf = this.JUMPER_PF_FN_ENABLED
+        ? calculateNodeProbabilityOfFailureWithJumpers(
+            node,
+            getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+              .numSameLayerCrossings,
+          )
+        : computeNodePf(nodeWithPortPoints, node)
       this.nodePfMap.set(nodeId, pf)
     }
   }
@@ -729,7 +779,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     scheduleIndex: number,
     sectionAttempt: number,
   ): PortPointPathingHyperParameters {
-    const scheduleParams = OPTIMIZATION_SCHEDULE[scheduleIndex]
+    const scheduleParams = this.HYPERPARAMETER_SCHEDULE[scheduleIndex]
     return {
       ...scheduleParams,
       // Use the schedule's seed plus an offset based on section attempt
@@ -967,11 +1017,12 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           }
 
           if (
-            this.currentScheduleIndex < OPTIMIZATION_SCHEDULE.length &&
+            this.currentScheduleIndex < this.HYPERPARAMETER_SCHEDULE.length &&
             this.currentSectionCenterNodeId
           ) {
             // Try next schedule params
-            const params = OPTIMIZATION_SCHEDULE[this.currentScheduleIndex]
+            const params =
+              this.HYPERPARAMETER_SCHEDULE[this.currentScheduleIndex]
 
             this.currentSection = this.createSection({
               centerOfSectionCapacityNodeId: this.currentSectionCenterNodeId,
@@ -1103,11 +1154,12 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           this.currentScheduleIndex++
 
           if (
-            this.currentScheduleIndex < OPTIMIZATION_SCHEDULE.length &&
+            this.currentScheduleIndex < this.HYPERPARAMETER_SCHEDULE.length &&
             this.currentSectionCenterNodeId
           ) {
             // Try next schedule params
-            const params = OPTIMIZATION_SCHEDULE[this.currentScheduleIndex]
+            const params =
+              this.HYPERPARAMETER_SCHEDULE[this.currentScheduleIndex]
             this.currentSection = this.createSection({
               centerOfSectionCapacityNodeId: this.currentSectionCenterNodeId,
               expansionDegrees: params.EXPANSION_DEGREES,
@@ -1156,7 +1208,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     // Create section centered on highest Pf node
     this.currentSectionCenterNodeId = highestPfNodeId
     this.currentScheduleIndex = 0
-    const params = OPTIMIZATION_SCHEDULE[this.currentScheduleIndex]
+    const params = this.HYPERPARAMETER_SCHEDULE[this.currentScheduleIndex]
 
     this.currentSection = this.createSection({
       centerOfSectionCapacityNodeId: highestPfNodeId,
