@@ -17,8 +17,8 @@ type Phase = "via_removal" | "via_merging" | "path_simplification"
  *
  * The solver operates in three alternating phases per iteration:
  * 1. "via_removal" - Removes unnecessary vias from routes using UselessViaRemovalSolver
- * 2. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
- * 3. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
+ * 2. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
+ * 3. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
  *
  * Each iteration consists of all phases executed sequentially.
  */
@@ -29,7 +29,7 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
 
-  PHASE_ORDER: Phase[] = ["via_removal", "via_merging", "path_simplification"]
+  PHASE_ORDER: Phase[] = ["via_removal", "path_simplification", "via_merging"]
 
   currentPhase: Phase = "via_removal"
 
@@ -96,12 +96,11 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.extractResult = null
 
         // Advance phase
-        if (this.currentPhase === "via_removal") {
-          this.currentPhase = "via_merging"
-        } else if (this.currentPhase === "via_merging") {
-          this.currentPhase = "path_simplification"
+        const currentPhaseIndex = this.PHASE_ORDER.indexOf(this.currentPhase)
+        if (currentPhaseIndex < this.PHASE_ORDER.length - 1) {
+          this.currentPhase = this.PHASE_ORDER[currentPhaseIndex + 1]
         } else {
-          this.currentPhase = "via_removal"
+          this.currentPhase = this.PHASE_ORDER[0]
           this.simplificationPipelineLoops++
         }
 
