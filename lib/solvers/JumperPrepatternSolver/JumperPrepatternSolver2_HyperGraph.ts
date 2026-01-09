@@ -517,6 +517,11 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           OFFSET_DISTANCE,
         )
 
+        // Skip adding midpoints if the segment is inside jumper pads
+        if (outerSeg.isInsideJumperPad) {
+          continue
+        }
+
         // Add to insertions for the outer route (using Map to dedupe by segment index)
         if (!insertions.has(outerSeg.routeIndex)) {
           insertions.set(outerSeg.routeIndex, new Map())
