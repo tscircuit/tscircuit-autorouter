@@ -315,6 +315,113 @@ export class HighDensityRouteSpatialIndex {
   }
 
   /**
+   * Removes a route from the spatial index by connection name.
+   * @param connectionName The connection name of the route to remove.
+   */
+  removeRoute(connectionName: string): void {
+    // Remove segments belonging to this route
+    for (const [bucketKey, segments] of this.segmentBuckets) {
+      const filtered = segments.filter(
+        (seg) => seg.parentRoute.connectionName !== connectionName,
+      )
+      if (filtered.length === 0) {
+        this.segmentBuckets.delete(bucketKey)
+      } else if (filtered.length !== segments.length) {
+        this.segmentBuckets.set(bucketKey, filtered)
+      }
+    }
+
+    // Remove vias belonging to this route
+    for (const [bucketKey, vias] of this.viaBuckets) {
+      const filtered = vias.filter(
+        (via) => via.parentRoute.connectionName !== connectionName,
+      )
+      if (filtered.length === 0) {
+        this.viaBuckets.delete(bucketKey)
+      } else if (filtered.length !== vias.length) {
+        this.viaBuckets.set(bucketKey, filtered)
+      }
+    }
+  }
+
+  /**
+   * Adds a single route to the spatial index.
+   * @param route The route to add.
+   */
+  addRoute(route: HighDensityRoute): void {
+    if (!route || !route.connectionName) {
+      console.warn("Skipping route with missing data:", route)
+      return
+    }
+
+    const epsilon = 1e-9
+
+    // --- Index Segments ---
+    if (route.route && route.route.length >= 2) {
+      for (let i = 0; i < route.route.length - 1; i++) {
+        const p1 = route.route[i]
+        const p2 = route.route[i + 1]
+        // Skip zero-length segments
+        if (p1.x === p2.x && p1.y === p2.y) continue
+        // Skip segments inside jumper pads (jumper wires are not collidable)
+        if (p1.insideJumperPad && p2.insideJumperPad) continue
+
+        const segment: Segment = [p1, p2]
+        const bounds = getSegmentBounds(segment)
+
+        const segmentInfo: StoredSegment = {
+          segmentId: `${route.connectionName}-seg-${i}`,
+          segment: segment,
+          parentRoute: route,
+        }
+
+        const minIndexX = Math.floor(bounds.minX / this.CELL_SIZE)
+        const maxIndexX = Math.floor((bounds.maxX + epsilon) / this.CELL_SIZE)
+        const minIndexY = Math.floor(bounds.minY / this.CELL_SIZE)
+        const maxIndexY = Math.floor((bounds.maxY + epsilon) / this.CELL_SIZE)
+
+        for (let ix = minIndexX; ix <= maxIndexX; ix++) {
+          for (let iy = minIndexY; iy <= maxIndexY; iy++) {
+            const bucketKey = `${ix}x${iy}` as BucketCoordinate
+            let bucketList = this.segmentBuckets.get(bucketKey)
+            if (!bucketList) {
+              bucketList = []
+              this.segmentBuckets.set(bucketKey, bucketList)
+            }
+            bucketList.push(segmentInfo)
+          }
+        }
+      }
+    }
+
+    // --- Index Vias ---
+    if (route.vias && route.vias.length > 0) {
+      for (let i = 0; i < route.vias.length; i++) {
+        const via = route.vias[i]
+        if (via === undefined || via === null) continue
+
+        const storedVia: StoredVia = {
+          viaId: `${route.connectionName}-via-${i}`,
+          x: via.x,
+          y: via.y,
+          parentRoute: route,
+        }
+
+        const ix = Math.floor(via.x / this.CELL_SIZE)
+        const iy = Math.floor(via.y / this.CELL_SIZE)
+        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+
+        let bucketList = this.viaBuckets.get(bucketKey)
+        if (!bucketList) {
+          bucketList = []
+          this.viaBuckets.set(bucketKey, bucketList)
+        }
+        bucketList.push(storedVia)
+      }
+    }
+  }
+
+  /**
    * Finds routes that pass near a given point within a margin.
    * Checks both segments and vias.
    * @param point The query point {x, y}. Z is ignored.

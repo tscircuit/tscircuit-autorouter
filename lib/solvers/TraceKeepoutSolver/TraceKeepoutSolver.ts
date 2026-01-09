@@ -778,6 +778,10 @@ export class TraceKeepoutSolver extends BaseSolver {
     }
 
     this.processedRoutes.push(redrawnTrace)
+    // Remove the old route and add the redrawn one to spatial index
+    // so subsequent routes can detect collisions with the updated geometry
+    this.hdRouteSHI.removeRoute(this.currentTrace.connectionName)
+    this.hdRouteSHI.addRoute(redrawnTrace)
     this.currentTrace = null
     this.cursorPosition = null
     this.lastCursorPosition = null
