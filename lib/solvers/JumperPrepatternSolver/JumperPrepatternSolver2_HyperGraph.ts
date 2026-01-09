@@ -609,27 +609,32 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       return this.jumpers
     }
 
-    // Build a map of jumper center -> connection names that use it
-    // by examining the solved routes' jumpers
-    const jumperUsageMap = new Map<string, string[]>()
+    // Build a map of pad center -> connection names that use it
+    // by examining the solved routes' jumpers.
+    // Route jumpers have start/end at individual pad positions, so we use those
+    // directly as keys rather than the jumperLocation center.
+    const padUsageMap = new Map<string, string[]>()
+    const TOLERANCE = 0.01
+
     for (const route of this.solvedRoutes) {
       for (const jumper of route.jumpers) {
-        const centerX = (jumper.start.x + jumper.end.x) / 2
-        const centerY = (jumper.start.y + jumper.end.y) / 2
-        const key = `${centerX.toFixed(3)},${centerY.toFixed(3)}`
+        // Both start and end of a route jumper are pad positions
+        const positions = [jumper.start, jumper.end]
 
-        const connectedTo = jumperUsageMap.get(key) ?? []
-        // Add both connectionName and rootConnectionName if available
-        if (
-          route.rootConnectionName &&
-          !connectedTo.includes(route.rootConnectionName)
-        ) {
-          connectedTo.push(route.rootConnectionName)
+        for (const pos of positions) {
+          const key = `${pos.x.toFixed(3)},${pos.y.toFixed(3)}`
+          const connectedTo = padUsageMap.get(key) ?? []
+          if (
+            route.rootConnectionName &&
+            !connectedTo.includes(route.rootConnectionName)
+          ) {
+            connectedTo.push(route.rootConnectionName)
+          }
+          if (!connectedTo.includes(route.connectionName)) {
+            connectedTo.push(route.connectionName)
+          }
+          padUsageMap.set(key, connectedTo)
         }
-        if (!connectedTo.includes(route.connectionName)) {
-          connectedTo.push(route.connectionName)
-        }
-        jumperUsageMap.set(key, connectedTo)
       }
     }
 
@@ -638,15 +643,17 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
     for (const jumperLoc of this.jumperLocations) {
       const isHorizontal = jumperLoc.orientation === "horizontal"
-      const key = `${jumperLoc.center.x.toFixed(3)},${jumperLoc.center.y.toFixed(3)}`
-      const connectedTo = jumperUsageMap.get(key) ?? []
 
-      // Get pad obstacles from padRegions
+      // Get pad obstacles from padRegions, matching each pad to its connectedTo
       const pads: Obstacle[] = jumperLoc.padRegions.map((padRegion) => {
         const bounds = padRegion.d.bounds
         const padCenter = padRegion.d.center
         const padWidth = bounds.maxX - bounds.minX
         const padHeight = bounds.maxY - bounds.minY
+
+        // Look up connections for this specific pad position
+        const padKey = `${padCenter.x.toFixed(3)},${padCenter.y.toFixed(3)}`
+        const connectedTo = padUsageMap.get(padKey) ?? []
 
         return {
           type: "rect" as const,
