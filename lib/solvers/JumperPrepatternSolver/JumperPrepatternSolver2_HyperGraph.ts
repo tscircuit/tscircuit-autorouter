@@ -22,6 +22,7 @@ import {
 import { areSegmentsCollinear } from "./areSegmentsCollinear"
 import { getCollinearOverlapInfo } from "./getCollinearOverlapInfo"
 import { computeOffsetMidpoint } from "./computeOffsetMidpoint"
+import { doBoundsOverlap } from "@tscircuit/math-utils"
 
 export type Point2D = { x: number; y: number }
 
@@ -195,6 +196,39 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       orientation,
       bounds: nodeBounds,
     })
+
+    // Check if baseGraph bounds exceed node bounds - fail immediately if so
+    // Compute bounds from regions since JumperGraph doesn't have a bounds property
+    if (baseGraph.regions.length > 0) {
+      // TODO import calculateGraphBounds from @tscircuit/hypergraph (when
+      // exported)
+      let bgMinX = Infinity
+      let bgMaxX = -Infinity
+      let bgMinY = Infinity
+      let bgMaxY = -Infinity
+      for (const region of baseGraph.regions) {
+        const bounds = region.d?.bounds
+        if (bounds) {
+          bgMinX = Math.min(bgMinX, bounds.minX)
+          bgMaxX = Math.max(bgMaxX, bounds.maxX)
+          bgMinY = Math.min(bgMinY, bounds.minY)
+          bgMaxY = Math.max(bgMaxY, bounds.maxY)
+        }
+      }
+
+      const margin = 0.4
+
+      if (
+        bgMinX < nodeBounds.minX - margin ||
+        bgMaxX > nodeBounds.maxX + margin ||
+        bgMinY < nodeBounds.minY - margin ||
+        bgMaxY > nodeBounds.maxY + margin
+      ) {
+        this.error = `baseGraph bounds (${bgMinX.toFixed(2)}, ${bgMinY.toFixed(2)}, ${bgMaxX.toFixed(2)}, ${bgMaxY.toFixed(2)}) exceed node bounds (${nodeBounds.minX.toFixed(2)}, ${nodeBounds.minY.toFixed(2)}, ${nodeBounds.maxX.toFixed(2)}, ${nodeBounds.maxY.toFixed(2)})`
+        this.failed = true
+        return false
+      }
+    }
 
     // Store all jumper positions from the baseGraph (including padRegions for obstacle generation)
     this.jumperLocations =
