@@ -23,7 +23,7 @@ import { areSegmentsCollinear } from "./areSegmentsCollinear"
 import { getCollinearOverlapInfo } from "./getCollinearOverlapInfo"
 import { computeOffsetMidpoint } from "./computeOffsetMidpoint"
 import { createRegionOffsetPoints } from "./createRegionOffsetPoints"
-import { doBoundsOverlap } from "@tscircuit/math-utils"
+import { doBoundsOverlap, doSegmentsIntersect } from "@tscircuit/math-utils"
 
 export type Point2D = { x: number; y: number }
 
@@ -519,6 +519,50 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
         // Skip adding midpoints if the segment is inside jumper pads
         if (outerSeg.isInsideJumperPad) {
+          continue
+        }
+
+        // Check if adding this midpoint would cause new intersections with other routes
+        // The new segments would be: (outerStart -> offsetMidpoint) and (offsetMidpoint -> outerEnd)
+        let wouldCauseIntersection = false
+        for (const otherSeg of allSegments) {
+          // Skip the outer segment itself and adjacent segments in the same route
+          if (
+            otherSeg.routeIndex === outerSeg.routeIndex &&
+            Math.abs(otherSeg.segmentIndex - outerSeg.segmentIndex) <= 1
+          ) {
+            continue
+          }
+
+          // Check if the new segment from start to midpoint intersects with other segment
+          if (
+            doSegmentsIntersect(
+              overlapInfo.outerStart,
+              offsetMidpoint,
+              otherSeg.start,
+              otherSeg.end,
+            )
+          ) {
+            wouldCauseIntersection = true
+            break
+          }
+
+          // Check if the new segment from midpoint to end intersects with other segment
+          if (
+            doSegmentsIntersect(
+              offsetMidpoint,
+              overlapInfo.outerEnd,
+              otherSeg.start,
+              otherSeg.end,
+            )
+          ) {
+            wouldCauseIntersection = true
+            break
+          }
+        }
+
+        // Skip adding this midpoint if it would cause new intersections
+        if (wouldCauseIntersection) {
           continue
         }
 
