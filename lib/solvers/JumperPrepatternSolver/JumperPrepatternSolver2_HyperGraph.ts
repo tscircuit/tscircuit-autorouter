@@ -22,6 +22,7 @@ import {
 import { areSegmentsCollinear } from "./areSegmentsCollinear"
 import { getCollinearOverlapInfo } from "./getCollinearOverlapInfo"
 import { computeOffsetMidpoint } from "./computeOffsetMidpoint"
+import { createRegionOffsetPoints } from "./createRegionOffsetPoints"
 import { doBoundsOverlap } from "@tscircuit/math-utils"
 
 export type Point2D = { x: number; y: number }
@@ -321,6 +322,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
   private _processResults() {
     if (!this.jumperGraphSolver) return
 
+    // Offset distance to push points slightly inside regions (mm)
+    // This helps subsequent force-directed solvers understand segment lies within region
+    const OFFSET_POINT_INSIDE_REGION = 0.02
+
     // Track which throughjumpers have been used to avoid duplicates
     const usedThroughJumpers = new Set<string>()
 
@@ -339,15 +344,21 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
       for (const candidate of solvedRoute.path) {
         const port = candidate.port
-        const point = {
-          x: port.d.x,
-          y: port.d.y,
-          z: 0,
-          insideJumperPad: Boolean(
-            port.region1?.d.isPad || port.region2?.d.isPad,
-          ),
-        }
-        routePoints.push(point)
+        const r1 = port.region1 as any
+        const r2 = port.region2 as any
+        const lastRegion = candidate.lastRegion as any
+
+        // Create two offset points entering each adjacent region
+        const offsetPoints = createRegionOffsetPoints({
+          baseX: port.d.x,
+          baseY: port.d.y,
+          r1Center: r1?.d?.center,
+          r2Center: r2?.d?.center,
+          cameFromRegion1: lastRegion?.regionId === r1?.regionId,
+          insideJumperPad: Boolean(r1?.d.isPad || r2?.d.isPad),
+          offsetDistance: OFFSET_POINT_INSIDE_REGION,
+        })
+        routePoints.push(...offsetPoints)
 
         // Check if we crossed through a jumper (lastRegion is a throughjumper)
         const region = candidate.lastRegion as any
