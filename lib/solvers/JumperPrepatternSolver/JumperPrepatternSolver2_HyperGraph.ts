@@ -677,6 +677,11 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       this.jumpers.push(srjJumper)
     }
 
+    // Filter out unused jumpers (those where no pads have any connections)
+    this.jumpers = this.jumpers.filter((jumper) =>
+      jumper.pads.some((pad) => pad.connectedTo.length > 0),
+    )
+
     return this.jumpers
   }
 
