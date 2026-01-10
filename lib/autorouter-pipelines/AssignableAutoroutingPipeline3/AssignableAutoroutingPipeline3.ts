@@ -42,7 +42,6 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
-import { TraceKeepoutSolver } from "../../solvers/TraceKeepoutSolver/TraceKeepoutSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import {
@@ -119,7 +118,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  traceKeepoutSolver?: TraceKeepoutSolver
   traceWidthSolver?: TraceWidthSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: PortPointPathingSolver
@@ -393,22 +391,12 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //     },
     //   ],
     // ),
-    definePipelineStep("traceKeepoutSolver", TraceKeepoutSolver, (cms) => [
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes:
           cms.traceSimplificationSolver?.simplifiedHdRoutes ??
           cms?.highDensityStitchSolver?.mergedHdRoutes ??
           [],
-        obstacles: cms.srj.obstacles,
-        jumpers: cms.highDensitySolver?.getOutputJumpers() ?? [],
-        connMap: cms.connMap,
-        colorMap: cms.colorMap,
-        srj: cms.srj,
-      },
-    ]),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
-      {
-        hdRoutes: cms.traceKeepoutSolver?.redrawnHdRoutes ?? [],
         obstacles: [
           ...cms.srj.obstacles,
           ...(cms.highDensitySolver?.getOutputJumpers() ?? []).flatMap(
@@ -530,7 +518,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     const simpleHighDensityViz = this.simpleHighDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const traceKeepoutViz = this.traceKeepoutSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
@@ -621,7 +608,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         : null,
       highDensityStitchViz,
       traceSimplificationViz,
-      traceKeepoutViz,
       traceWidthViz,
       this.solved
         ? combineVisualizations(
@@ -691,7 +677,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.traceWidthSolver?.hdRoutesWithWidths ??
-      this.traceKeepoutSolver?.redrawnHdRoutes ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver?.mergedHdRoutes ??
       this.highDensitySolver?.routes ??
