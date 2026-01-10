@@ -391,25 +391,25 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //     },
     //   ],
     // ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
-      {
-        hdRoutes:
-          cms.traceSimplificationSolver?.simplifiedHdRoutes ??
-          cms?.highDensityStitchSolver?.mergedHdRoutes ??
-          [],
-        obstacles: [
-          ...cms.srj.obstacles,
-          ...(cms.highDensitySolver?.getOutputJumpers() ?? []).flatMap(
-            (jumper) => jumper.pads,
-          ),
-        ] as Obstacle[],
-        connMap: cms.connMap,
-        colorMap: cms.colorMap,
-        nominalTraceWidth: cms.srj.nominalTraceWidth,
-        minTraceWidth: cms.minTraceWidth,
-        obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-      },
-    ]),
+    // definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+    //   {
+    //     hdRoutes:
+    //       cms.traceSimplificationSolver?.simplifiedHdRoutes ??
+    //       cms?.highDensityStitchSolver?.mergedHdRoutes ??
+    //       [],
+    //     obstacles: [
+    //       ...cms.srj.obstacles,
+    //       ...(cms.highDensitySolver?.getOutputJumpers() ?? []).flatMap(
+    //         (jumper) => jumper.pads,
+    //       ),
+    //     ] as Obstacle[],
+    //     connMap: cms.connMap,
+    //     colorMap: cms.colorMap,
+    //     nominalTraceWidth: cms.srj.nominalTraceWidth,
+    //     minTraceWidth: cms.minTraceWidth,
+    //     obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+    //   },
+    // ]),
   ]
 
   constructor(

@@ -62,7 +62,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     this.baseHyperParameters = params.hyperParameters ?? {}
     this.MAX_ITERATIONS = 1e6
     this.GREEDY_MULTIPLIER = 1
-    this.MIN_SUBSTEPS = 1000
+    this.MIN_SUBSTEPS = 1
   }
 
   getConstructorParams(): HyperJumperPrepatternSolver2Params {
@@ -140,13 +140,14 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     return [
       {
         name: "pattern",
-        possibleValues: patternValues,
+        // possibleValues: patternValues,
+        possibleValues: [{ PATTERN_TYPE: "1x2_1206x4" }],
       },
       {
         name: "orientation",
         possibleValues: [
           { ORIENTATION: "vertical" },
-          { ORIENTATION: "horizontal" },
+          // { ORIENTATION: "horizontal" },
         ],
       },
     ]

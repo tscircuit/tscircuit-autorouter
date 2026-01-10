@@ -138,12 +138,20 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       return
     }
 
-    // CurvyTraceSolver.solve() completes synchronously
-    this.curvyTraceSolver.solve()
+    // Set activeSubSolver so visualizations show the curvy trace solver
+    this.activeSubSolver = this.curvyTraceSolver
 
-    // Convert output traces to HighDensityIntraNodeRoute format
-    this._convertOutputTraces()
-    this.phase = "done"
+    // Step the curvy trace solver incrementally
+    this.curvyTraceSolver.step()
+
+    if (this.curvyTraceSolver.solved) {
+      // Convert output traces to HighDensityIntraNodeRoute format
+      this._convertOutputTraces()
+      this.phase = "done"
+    } else if (this.curvyTraceSolver.failed) {
+      this.error = this.curvyTraceSolver.error
+      this.failed = true
+    }
   }
 
   _convertOutputTraces() {
