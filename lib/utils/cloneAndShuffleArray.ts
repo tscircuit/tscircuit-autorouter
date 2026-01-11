@@ -79,6 +79,7 @@ const PRESHUFFLED_CASES = {
 
 export function cloneAndShuffleArray<T>(arr: T[], seed: number): T[] {
   if (seed === 0) return arr
+  if (arr.length === 0) return arr
 
   if (arr.length <= 4) {
     const preshuffledOptions =
