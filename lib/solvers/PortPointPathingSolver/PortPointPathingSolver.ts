@@ -1739,13 +1739,6 @@ export class PortPointPathingSolver extends BaseSolver {
   requeueConnection(connectionResult: ConnectionPathResult): boolean {
     this.totalRipCount++
 
-    // Check if we've exceeded MAX_RIPS
-    if (this.totalRipCount > this.MAX_RIPS) {
-      this.failed = true
-      this.error = `Exceeded MAX_RIPS (${this.MAX_RIPS}) - too many connections ripped`
-      return false
-    }
-
     // Check if this connection is in the processed queue (already routed)
     const processedIndex =
       this.processedConnectionQueue.indexOf(connectionResult)
