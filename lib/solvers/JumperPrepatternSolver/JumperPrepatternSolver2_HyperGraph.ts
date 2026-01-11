@@ -243,29 +243,30 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     if (baseGraph.regions.length > 0) {
       // TODO import calculateGraphBounds from @tscircuit/hypergraph (when
       // exported)
-      let bgMinX = Infinity
-      let bgMaxX = -Infinity
-      let bgMinY = Infinity
-      let bgMaxY = -Infinity
+      let padMinX = Infinity
+      let padMaxX = -Infinity
+      let padMinY = Infinity
+      let padMaxY = -Infinity
       for (const region of baseGraph.regions) {
+        if (!region.d?.isPad) continue
         const bounds = region.d?.bounds
         if (bounds) {
-          bgMinX = Math.min(bgMinX, bounds.minX)
-          bgMaxX = Math.max(bgMaxX, bounds.maxX)
-          bgMinY = Math.min(bgMinY, bounds.minY)
-          bgMaxY = Math.max(bgMaxY, bounds.maxY)
+          padMinX = Math.min(padMinX, bounds.minX)
+          padMaxX = Math.max(padMaxX, bounds.maxX)
+          padMinY = Math.min(padMinY, bounds.minY)
+          padMaxY = Math.max(padMaxY, bounds.maxY)
         }
       }
 
-      const margin = 0.1
+      const paddingAroundPads = 1
 
       if (
-        bgMinX < nodeBounds.minX - margin ||
-        bgMaxX > nodeBounds.maxX + margin ||
-        bgMinY < nodeBounds.minY - margin ||
-        bgMaxY > nodeBounds.maxY + margin
+        padMinX - paddingAroundPads < nodeBounds.minX ||
+        padMaxX + paddingAroundPads > nodeBounds.maxX ||
+        padMinY - paddingAroundPads < nodeBounds.minY ||
+        padMaxY + paddingAroundPads > nodeBounds.maxY
       ) {
-        this.error = `baseGraph bounds (${bgMinX.toFixed(2)}, ${bgMinY.toFixed(2)}, ${bgMaxX.toFixed(2)}, ${bgMaxY.toFixed(2)}) exceed node bounds (${nodeBounds.minX.toFixed(2)}, ${nodeBounds.minY.toFixed(2)}, ${nodeBounds.maxX.toFixed(2)}, ${nodeBounds.maxY.toFixed(2)})`
+        this.error = `baseGraph bounds (${padMinX.toFixed(2)}, ${padMinY.toFixed(2)}, ${padMaxX.toFixed(2)}, ${padMaxY.toFixed(2)}) exceed node bounds (${nodeBounds.minX.toFixed(2)}, ${nodeBounds.minY.toFixed(2)}, ${nodeBounds.maxX.toFixed(2)}, ${nodeBounds.maxY.toFixed(2)})`
         this.failed = true
         return false
       }

@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test"
-import { HyperJumperPrepatternSolver2 } from "lib/solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2"
+import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import input from "../../fixtures/features/jumper-high-density/jumper-high-density09-input.json" with {
+import input from "../../fixtures/features/jumper-high-density/jumper-high-density08-input.json" with {
   type: "json",
 }
 
 test(
-  "HyperJumperPrepatternSolver2_09 - solves high density routes with jumpers",
+  "JumperHighDensitySolver08 - solves high density routes with jumpers",
   () => {
     const nodePortPoints = (input as any[]).flatMap(
       (item: any) => item.nodePortPoints,
@@ -20,8 +20,8 @@ test(
       }
     }
 
-    const solver = new HyperJumperPrepatternSolver2({
-      nodeWithPortPoints: nodePortPoints[0],
+    const solver = new JumperHighDensitySolver({
+      nodePortPoints,
       colorMap,
     })
 

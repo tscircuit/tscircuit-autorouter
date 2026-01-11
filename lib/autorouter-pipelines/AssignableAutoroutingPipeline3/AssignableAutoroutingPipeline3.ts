@@ -272,7 +272,11 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
               // RANDOM_WALK_DISTANCE: 50,
               // SHUFFLE_SEED: 275,
               JUMPER_PF_FN_ENABLED: true,
-              NODE_PF_FACTOR: 1000,
+              NODE_PF_FACTOR: 100,
+              MAX_RIPS: 100,
+              RIPPING_ENABLED: true,
+              RIPPING_PF_THRESHOLD: 0.9,
+              RANDOM_RIP_FRACTION: 0.05,
               NODE_PF_MAX_PENALTY: 1000,
               STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
               // MIN_ALLOWED_BOARD_SCORE: -1,
@@ -296,41 +300,41 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         },
       },
     ),
-    definePipelineStep(
-      "multiSectionPortPointOptimizer",
-      MultiSectionPortPointOptimizer,
-      (cms) => {
-        const portPointSolver = cms.portPointPathingSolver!
-        return [
-          {
-            simpleRouteJson: cms.srjWithPointPairs!,
-            inputNodes: portPointSolver.inputNodes,
-            capacityMeshNodes: cms.capacityNodes!,
-            capacityMeshEdges: cms.capacityEdges!,
-            colorMap: cms.colorMap,
-            initialConnectionResults: portPointSolver.connectionsWithResults,
-            initialAssignedPortPoints: portPointSolver.assignedPortPoints,
-            initialNodeAssignedPortPoints:
-              portPointSolver.nodeAssignedPortPoints,
-            ALWAYS_RIP_INTERSECTIONS: true,
-            FRACTION_TO_REPLACE: 0.2,
-            MAX_ATTEMPTS_PER_NODE: 3 * this.effort,
-            MAX_SECTION_ATTEMPTS: 30 * this.effort,
-            JUMPER_PF_FN_ENABLED: true,
-            HYPERPARAMETER_SCHEDULE: [
-              {
-                EXPANSION_DEGREES: 10,
-                MAX_RIPS: 100,
-                JUMPER_PF_FN_ENABLED: true,
-                NODE_PF_FACTOR: 100,
-                STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
-                NODE_PF_MAX_PENALTY: 300,
-              },
-            ],
-          } as MultiSectionPortPointOptimizerParams,
-        ]
-      },
-    ),
+    // definePipelineStep(
+    //   "multiSectionPortPointOptimizer",
+    //   MultiSectionPortPointOptimizer,
+    //   (cms) => {
+    //     const portPointSolver = cms.portPointPathingSolver!
+    //     return [
+    //       {
+    //         simpleRouteJson: cms.srjWithPointPairs!,
+    //         inputNodes: portPointSolver.inputNodes,
+    //         capacityMeshNodes: cms.capacityNodes!,
+    //         capacityMeshEdges: cms.capacityEdges!,
+    //         colorMap: cms.colorMap,
+    //         initialConnectionResults: portPointSolver.connectionsWithResults,
+    //         initialAssignedPortPoints: portPointSolver.assignedPortPoints,
+    //         initialNodeAssignedPortPoints:
+    //           portPointSolver.nodeAssignedPortPoints,
+    //         ALWAYS_RIP_INTERSECTIONS: true,
+    //         FRACTION_TO_REPLACE: 0.1,
+    //         MAX_ATTEMPTS_PER_NODE: 3 * this.effort,
+    //         MAX_SECTION_ATTEMPTS: 30 * this.effort,
+    //         JUMPER_PF_FN_ENABLED: true,
+    //         HYPERPARAMETER_SCHEDULE: [
+    //           {
+    //             ...this.portPointPathingSolver?.hyperParameters,
+    //             EXPANSION_DEGREES: 10,
+    //             MAX_RIPS: 10,
+    //             RANDOM_RIP_FRACTION: 0.1,
+    //             RIPPING_PF_THRESHOLD: 0.9,
+    //             STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
+    //           },
+    //         ],
+    //       } as MultiSectionPortPointOptimizerParams,
+    //     ]
+    //   },
+    // ),
     // definePipelineStep("highDensitySolver", SimpleHighDensitySolver, (cms) => [
     //   {
     //     nodePortPoints:

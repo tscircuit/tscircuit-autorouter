@@ -27,7 +27,7 @@
     "@tscircuit/circuit-json-util": "^0.0.46",
     "@tscircuit/core": "^0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
-    "@tscircuit/hypergraph": "^0.0.10",
+    "@tscircuit/hypergraph": "^0.0.13",
     "@tscircuit/math-utils": "^0.0.27",
     "@tscircuit/rectdiff": "^0.0.20",
     "@tscircuit/solver-utils": "^0.0.9",

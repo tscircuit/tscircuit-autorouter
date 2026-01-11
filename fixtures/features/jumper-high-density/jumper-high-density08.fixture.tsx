@@ -1,7 +1,7 @@
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
-import { HyperJumperPrepatternSolver2 } from "lib/solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2"
+import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import input from "./jumper-high-density09-input.json"
+import input from "./jumper-high-density08-input.json"
 
 export default () => {
   const createSolver = () => {
@@ -17,8 +17,8 @@ export default () => {
       }
     }
 
-    return new HyperJumperPrepatternSolver2({
-      nodeWithPortPoints: nodePortPoints[0],
+    return new JumperHighDensitySolver({
+      nodePortPoints,
       colorMap,
     })
   }
