@@ -257,7 +257,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         }
       }
 
-      const margin = 0.4
+      const margin = 0.1
 
       if (
         bgMinX < nodeBounds.minX - margin ||

@@ -140,14 +140,13 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     return [
       {
         name: "pattern",
-        // possibleValues: patternValues,
-        possibleValues: [{ PATTERN_TYPE: "1x2_1206x4" }],
+        possibleValues: patternValues,
       },
       {
         name: "orientation",
         possibleValues: [
           { ORIENTATION: "vertical" },
-          // { ORIENTATION: "horizontal" },
+          { ORIENTATION: "horizontal" },
         ],
       },
     ]
