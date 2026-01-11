@@ -740,7 +740,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         waypointPairs,
         obstacles: regionObstacles,
         preferredTraceToTraceSpacing: this.traceWidth * 2,
-        preferredObstacleToTraceSpacing: this.traceWidth,
+        preferredObstacleToTraceSpacing: this.traceWidth * 2,
       }
 
       const curvySolver = new CurvyTraceSolver(problem)

@@ -122,7 +122,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       waypointPairs,
       obstacles,
       preferredTraceToTraceSpacing: this.traceWidth * 2,
-      preferredObstacleToTraceSpacing: this.traceWidth,
+      preferredObstacleToTraceSpacing: this.traceWidth * 2,
     }
 
     this.curvyTraceSolver = new CurvyTraceSolver(problem)
