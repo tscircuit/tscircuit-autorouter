@@ -355,7 +355,6 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       this._initializeGraph()
       if (this.solved) return
       if (!this.jumperGraphSolver) {
-        this.error = "Failed to initialize hypergraph solver"
         this.failed = true
         return
       }
