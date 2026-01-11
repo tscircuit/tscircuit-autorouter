@@ -506,13 +506,35 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
             nextRegion = r2
           }
         } else {
-          // First port - pick one of the regions (prefer non-pad if possible)
-          if (r1 && !r1.d?.isPad && !r1.d?.isThroughJumper) {
-            nextRegion = r1
-          } else if (r2 && !r2.d?.isPad && !r2.d?.isThroughJumper) {
-            nextRegion = r2
-          } else {
-            nextRegion = r1 || r2
+          // First port - look ahead to find which region we're entering
+          // The next port's lastRegion tells us which region we're actually traversing
+          const nextCandidate = solvedRoute.path[i + 1]
+          const nextLastRegion = nextCandidate?.lastRegion as JRegion | undefined
+
+          if (nextLastRegion) {
+            // Pick the region that matches what we'll be coming from at the next port
+            if (r1 && r1.regionId === nextLastRegion.regionId) {
+              nextRegion = r1
+            } else if (r2 && r2.regionId === nextLastRegion.regionId) {
+              nextRegion = r2
+            }
+          }
+
+          // Fallback: prefer non-connection regions over conn:* pseudo-regions
+          if (!nextRegion) {
+            const isConnRegion = (r: JRegion | undefined) =>
+              r?.regionId?.startsWith("conn:")
+            if (r1 && !isConnRegion(r1) && !r1.d?.isPad && !r1.d?.isThroughJumper) {
+              nextRegion = r1
+            } else if (r2 && !isConnRegion(r2) && !r2.d?.isPad && !r2.d?.isThroughJumper) {
+              nextRegion = r2
+            } else if (r1 && !r1.d?.isPad && !r1.d?.isThroughJumper) {
+              nextRegion = r1
+            } else if (r2 && !r2.d?.isPad && !r2.d?.isThroughJumper) {
+              nextRegion = r2
+            } else {
+              nextRegion = r1 || r2
+            }
           }
         }
 
