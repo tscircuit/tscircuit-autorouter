@@ -563,10 +563,11 @@ export class JumperHighDensitySolver extends BaseSolver {
 
     // Show completed routes
     for (const route of this.routes) {
+      const colorKey = route.rootConnectionName ?? route.connectionName
       const mergedSegments = mergeRouteSegments(
         route.route,
         route.connectionName,
-        this.colorMap[route.connectionName],
+        this.colorMap[colorKey],
       )
 
       for (const segment of mergedSegments) {
@@ -588,10 +589,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         graphics.circles!.push({
           center: via,
           radius: route.viaDiameter / 2,
-          fill: safeTransparentize(
-            this.colorMap[route.connectionName] ?? "gray",
-            0.5,
-          ),
+          fill: safeTransparentize(this.colorMap[colorKey] ?? "gray", 0.5),
           layer: "via",
         })
       }
@@ -599,7 +597,7 @@ export class JumperHighDensitySolver extends BaseSolver {
       // Draw jumpers if present
       if ("jumpers" in route && route.jumpers) {
         for (const jumper of route.jumpers) {
-          const color = this.colorMap[route.connectionName] ?? "gray"
+          const color = this.colorMap[colorKey] ?? "gray"
 
           // Get dimensions based on jumper footprint (default to 1206 for hypergraph solver)
           const footprint = jumper.footprint ?? "1206"
