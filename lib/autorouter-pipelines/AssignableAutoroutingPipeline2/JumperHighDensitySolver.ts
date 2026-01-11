@@ -108,7 +108,7 @@ export class JumperHighDensitySolver extends BaseSolver {
   constructor({
     nodePortPoints,
     colorMap,
-    traceWidth = 0.1,
+    traceWidth = 0.15,
     viaDiameter = 0.6,
     connMap,
     hyperParameters,
