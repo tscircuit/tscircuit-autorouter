@@ -152,7 +152,7 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     // If we have node order, use it to sort routes
     let orderedRoutes: HighDensityIntraNodeRoute[]
     if (nodeOrder.length > 0) {
-      orderedRoutes = this.orderRoutesByNodePath(hdRoutes, nodeOrder, start)
+      orderedRoutes = this.orderRoutesByNodePath(hdRoutes, nodeOrder, start, connectionName)
     } else {
       // Fallback: order by proximity starting from start point
       orderedRoutes = this.orderRoutesByProximity(hdRoutes, start)
@@ -162,10 +162,13 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     const mergedVias: Array<{ x: number; y: number }> = []
     const mergedJumpers: HighDensityIntraNodeRoute["jumpers"] = []
 
-    // Add start point
+    // Always add start point - it's where the connection begins
     mergedRoute.push({ x: start.x, y: start.y, z: start.z })
 
     // Process each route segment in order
+    // Maximum allowed gap between consecutive route segments
+    const MAX_SEGMENT_GAP = 1.0
+
     for (let i = 0; i < orderedRoutes.length; i++) {
       const hdRoute = orderedRoutes[i]
 
@@ -177,6 +180,12 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
       const distToStart = distance(lastPoint, routeStart)
       const distToEnd = distance(lastPoint, routeEnd)
+      const minDist = Math.min(distToStart, distToEnd)
+
+      // Skip this route if it would create too large a gap (but not for the first route)
+      if (i > 0 && minDist > MAX_SEGMENT_GAP) {
+        continue
+      }
 
       let pointsToAdd: Array<{ x: number; y: number; z: number }>
       if (distToStart <= distToEnd) {
@@ -230,61 +239,226 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
    * Order routes based on the node traversal path.
    * Each node in nodeOrder may have one or more routes.
    * Returns routes in the order they should be stitched.
+   *
+   * Uses a two-phase approach:
+   * 1. Find the route closest to start, build chain forward
+   * 2. From the connection point of first route, build chain backward
+   *    to catch any routes that come before
    */
   private orderRoutesByNodePath(
     hdRoutes: HighDensityIntraNodeRoute[],
     nodeOrder: string[],
     start: { x: number; y: number; z: number },
+    connectionName: string,
   ): HighDensityIntraNodeRoute[] {
-    // Create a set for quick lookup of remaining routes
-    const remainingRoutes = new Set(hdRoutes)
-    const orderedRoutes: HighDensityIntraNodeRoute[] = []
-    let currentPoint = start
+    if (hdRoutes.length === 0) return []
 
-    // Keep picking routes by proximity until we can't find any more within threshold
-    // This handles cases where there are more routes than nodes in the path
+    const remainingRoutes = new Set(hdRoutes)
+    const CHAIN_THRESHOLD = 10
+
+    // Phase 1: Find the first route (closest to start)
+    let firstRoute: HighDensityIntraNodeRoute | null = null
+    let firstRouteDist = Infinity
+    for (const route of remainingRoutes) {
+      const routeStart = route.route[0]
+      const routeEnd = route.route[route.route.length - 1]
+      const minDist = Math.min(
+        distance(start, routeStart),
+        distance(start, routeEnd),
+      )
+      if (minDist < firstRouteDist) {
+        firstRouteDist = minDist
+        firstRoute = route
+      }
+    }
+
+    if (!firstRoute) return []
+
+    remainingRoutes.delete(firstRoute)
+
+    // Determine which end of first route connects to start vs chain continuation
+    const firstStart = firstRoute.route[0]
+    const firstEnd = firstRoute.route[firstRoute.route.length - 1]
+    const distStartToFirst = distance(start, firstStart)
+    const distStartToEnd = distance(start, firstEnd)
+
+    // connectionPoint is where start connects, chainPoint is where chain continues
+    let connectionPoint: { x: number; y: number; z: number }
+    let chainPoint: { x: number; y: number; z: number }
+    if (distStartToFirst <= distStartToEnd) {
+      connectionPoint = firstStart
+      chainPoint = firstEnd
+    } else {
+      connectionPoint = firstEnd
+      chainPoint = firstStart
+    }
+
+    // Helper to count how many remaining routes connect to a point
+    const countConnections = (point: { x: number; y: number }, excludeRoute: HighDensityIntraNodeRoute) => {
+      let count = 0
+      for (const r of remainingRoutes) {
+        if (r === excludeRoute) continue
+        const rs = r.route[0]
+        const re = r.route[r.route.length - 1]
+        if (distance(point, rs) < CHAIN_THRESHOLD || distance(point, re) < CHAIN_THRESHOLD) {
+          count++
+        }
+      }
+      return count
+    }
+
+    // Phase 2: Build chain forward from chainPoint
+    const forwardRoutes: HighDensityIntraNodeRoute[] = [firstRoute]
+    let currentPoint = chainPoint
+
     while (remainingRoutes.size > 0) {
-      // Find the route segment that starts/ends closest to current point
-      // among the remaining routes
       let bestRoute: HighDensityIntraNodeRoute | null = null
       let bestDist = Infinity
+      let bestContinuationConnections = -1
 
       for (const route of remainingRoutes) {
         const routeStart = route.route[0]
         const routeEnd = route.route[route.route.length - 1]
-
         const distToStart = distance(currentPoint, routeStart)
         const distToEnd = distance(currentPoint, routeEnd)
         const minDist = Math.min(distToStart, distToEnd)
 
-        if (minDist < bestDist) {
+        if (minDist >= CHAIN_THRESHOLD) continue
+
+        // Determine which end we'd move to (the continuation)
+        const continuation = distToStart <= distToEnd ? routeEnd : routeStart
+        const continuationConnections = countConnections(continuation, route)
+
+        // Prefer closer routes, but avoid dead ends (0 continuation connections)
+        // when there's a non-dead-end alternative within a reasonable distance
+        const isDeadEnd = continuationConnections === 0
+        const bestIsDeadEnd = bestContinuationConnections === 0
+        const distDiff = minDist - bestDist
+
+        let isBetter = false
+        if (bestRoute === null) {
+          // No previous best, this is better
+          isBetter = true
+        } else if (!isDeadEnd && bestIsDeadEnd && distDiff < 5) {
+          // Prefer non-dead-end over dead-end if within 5 units
+          isBetter = true
+        } else if (isDeadEnd && !bestIsDeadEnd && distDiff > -5) {
+          // Don't prefer dead-end over non-dead-end unless much closer
+          isBetter = false
+        } else {
+          // Otherwise, prefer closer routes
+          isBetter = minDist < bestDist
+        }
+
+        if (isBetter) {
           bestDist = minDist
           bestRoute = route
+          bestContinuationConnections = continuationConnections
         }
       }
 
-      // Use a threshold to avoid wild jumps across the board
-      // If the closest route is too far, stop adding routes
-      if (bestRoute && bestDist < 10) {
-        orderedRoutes.push(bestRoute)
+      if (bestRoute) {
+        forwardRoutes.push(bestRoute)
         remainingRoutes.delete(bestRoute)
 
-        // Update current point to the far end of this route
         const routeStart = bestRoute.route[0]
         const routeEnd = bestRoute.route[bestRoute.route.length - 1]
         const distToStart = distance(currentPoint, routeStart)
-        const distToEnd = distance(currentPoint, routeEnd)
-        currentPoint = distToStart <= distToEnd ? routeEnd : routeStart
+        currentPoint = distToStart <= distance(currentPoint, routeEnd)
+          ? routeEnd
+          : routeStart
       } else {
-        // No more routes within threshold - stop to avoid wild jumps
         break
       }
     }
 
+    // Phase 3: Build chain backward from connectionPoint
+    // (to catch routes that come before the first route we picked)
+    const backwardRoutes: HighDensityIntraNodeRoute[] = []
+    currentPoint = connectionPoint
+
+    while (remainingRoutes.size > 0) {
+      let bestRoute: HighDensityIntraNodeRoute | null = null
+      let bestDist = Infinity
+      let bestContinuationConns = -1
+
+      // Distance from currentPoint to start (we want to move closer to start)
+      const currentDistToStart = distance(currentPoint, start)
+
+      for (const route of remainingRoutes) {
+        const routeStart = route.route[0]
+        const routeEnd = route.route[route.route.length - 1]
+        const distToStart = distance(currentPoint, routeStart)
+        const distToEnd = distance(currentPoint, routeEnd)
+        const minDist = Math.min(distToStart, distToEnd)
+
+        if (minDist >= CHAIN_THRESHOLD) continue
+
+        // Determine which end we'd move to (the continuation)
+        const continuation = distToStart <= distToEnd ? routeEnd : routeStart
+
+        // In backward phase, only accept routes where continuation is closer to start
+        // (or at most slightly farther - allow small tolerance for routes that don't
+        // significantly move away from start)
+        const continuationDistToStart = distance(continuation, start)
+        const BACKWARD_TOLERANCE = 2.0 // Allow up to 2 units movement away from start
+        if (continuationDistToStart > currentDistToStart + BACKWARD_TOLERANCE) {
+          // This route moves significantly away from start, skip it
+          continue
+        }
+
+        const continuationConns = countConnections(continuation, route)
+
+        // Apply same dead-end avoidance logic as forward phase
+        const isDeadEnd = continuationConns === 0
+        const bestIsDeadEnd = bestContinuationConns === 0
+        const distDiff = minDist - bestDist
+
+        let isBetter = false
+        if (bestRoute === null) {
+          isBetter = true
+        } else if (!isDeadEnd && bestIsDeadEnd && distDiff < 5) {
+          isBetter = true
+        } else if (isDeadEnd && !bestIsDeadEnd && distDiff > -5) {
+          isBetter = false
+        } else {
+          isBetter = minDist < bestDist
+        }
+
+        if (isBetter) {
+          bestDist = minDist
+          bestRoute = route
+          bestContinuationConns = continuationConns
+        }
+      }
+
+      if (bestRoute) {
+        backwardRoutes.unshift(bestRoute) // prepend to maintain order
+        remainingRoutes.delete(bestRoute)
+
+        const routeStart = bestRoute.route[0]
+        const routeEnd = bestRoute.route[bestRoute.route.length - 1]
+        const distToStart = distance(currentPoint, routeStart)
+        currentPoint = distToStart <= distance(currentPoint, routeEnd)
+          ? routeEnd
+          : routeStart
+      } else {
+        break
+      }
+    }
+
+    // Combine: backward routes + forward routes (first route is in forward)
+    const orderedRoutes = [...backwardRoutes, ...forwardRoutes]
+
     // Log warning if routes were skipped (indicates a routing gap)
     if (remainingRoutes.size > 0) {
+      const skippedInfo = [...remainingRoutes].map((r) => {
+        const rs = r.route[0]
+        const re = r.route[r.route.length - 1]
+        return `start=(${rs.x.toFixed(2)},${rs.y.toFixed(2)}) end=(${re.x.toFixed(2)},${re.y.toFixed(2)})`
+      })
       console.warn(
-        `[StitchSolver] Skipped ${remainingRoutes.size} routes for connection that were too far from the path`,
+        `[StitchSolver] Skipped ${remainingRoutes.size} routes for connection ${hdRoutes[0]?.connectionName ?? "?"}, skipped routes: ${skippedInfo.join("; ")}`,
       )
     }
 

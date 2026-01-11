@@ -84,6 +84,8 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     }
 
     // Convert port point pairs to waypoint pairs
+    // Use connectionName (not rootConnectionName) as networkId to keep different
+    // MST connections separate, even if they share the same root connection
     const waypointPairs: CurvyTraceProblem["waypointPairs"] = []
     for (const [connectionName, points] of connectionGroups) {
       if (points.length < 2) continue
@@ -95,7 +97,8 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       waypointPairs.push({
         start: { x: startPoint.x, y: startPoint.y },
         end: { x: endPoint.x, y: endPoint.y },
-        networkId: startPoint.rootConnectionName ?? connectionName,
+        // Use connectionName to keep different MST connections separate
+        networkId: connectionName,
       })
     }
 
@@ -156,13 +159,15 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
     const node = this.nodeWithPortPoints
 
-    // Build a map from networkId to connectionName and rootConnectionName
+    // Build a map from networkId (connectionName) to connection info
+    // We use connectionName as networkId to keep different MST connections separate
     const connectionInfo = new Map<
       string,
       { connectionName: string; rootConnectionName?: string; z: number }
     >()
     for (const pt of node.portPoints) {
-      const networkId = pt.rootConnectionName ?? pt.connectionName
+      // Use connectionName as networkId (matching waypointPairs above)
+      const networkId = pt.connectionName
       if (!connectionInfo.has(networkId)) {
         connectionInfo.set(networkId, {
           connectionName: pt.connectionName,
