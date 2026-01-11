@@ -94,10 +94,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
   jumpers: SrjJumper[] = []
 
   // Phase tracking for multi-step solving
-  private phase: "jumperGraph" | "curvyTrace" | "done" = "jumperGraph"
+  phase: "jumperGraph" | "curvyTrace" | "done" = "jumperGraph"
 
   // Curvy trace solver state (populated after jumperGraph phase completes)
-  private curvySolvers: Array<{
+  curvySolvers: Array<{
     solver: CurvyTraceSolver
     regionId: string
     traversals: Array<{
@@ -106,8 +106,8 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       rootConnectionName?: string
     }>
   }> = []
-  private currentCurvySolverIndex = 0
-  private routeInfos: Array<{
+  currentCurvySolverIndex = 0
+  routeInfos: Array<{
     connectionId: string
     rootConnectionName?: string
     jumpers: Jumper[]
@@ -118,10 +118,8 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       exitPort: JPort | null
     }>
   }> = []
-  private regionCurvedPaths: Map<
-    string,
-    Map<string, Array<{ x: number; y: number }>>
-  > = new Map()
+  regionCurvedPaths: Map<string, Map<string, Array<{ x: number; y: number }>>> =
+    new Map()
 
   constructor(params: JumperPrepatternSolver2Params) {
     super()
@@ -401,12 +399,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
       for (const outputTrace of solver.outputTraces) {
         const networkId = outputTrace.networkId ?? ""
-        this.regionCurvedPaths
-          .get(regionId)!
-          .set(
-            networkId,
-            outputTrace.points.map((p) => ({ x: p.x, y: p.y })),
-          )
+        this.regionCurvedPaths.get(regionId)!.set(
+          networkId,
+          outputTrace.points.map((p) => ({ x: p.x, y: p.y })),
+        )
       }
 
       // Move to next solver
@@ -521,7 +517,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         }
 
         // Check if we're entering a new region
-        if (nextRegion && (!currentRegion || nextRegion.regionId !== currentRegion.regionId)) {
+        if (
+          nextRegion &&
+          (!currentRegion || nextRegion.regionId !== currentRegion.regionId)
+        ) {
           // If we were in a region, record the exit
           if (currentRegion && currentEntryPort) {
             traversals.push({
@@ -589,7 +588,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           regionId: currentRegion.regionId,
           region: currentRegion,
           entryPort: currentEntryPort,
-          exitPort: lastCandidate?.port as JPort || null,
+          exitPort: (lastCandidate?.port as JPort) || null,
         })
       }
 
@@ -649,14 +648,16 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       }
 
       // Build obstacles for this region with proper networkIds
-      // Filter to pads that overlap with this region's bounds
+      // Filter to pads that overlap or are adjacent to this region's bounds
+      // Use a small margin to catch pads that touch the region boundary
+      const padMargin = 0.01
       const regionObstacles: CurvyObstacle[] = padObstacleInfos
         .filter(
           (padInfo) =>
-            padInfo.minX < bounds.maxX &&
-            padInfo.maxX > bounds.minX &&
-            padInfo.minY < bounds.maxY &&
-            padInfo.maxY > bounds.minY,
+            padInfo.minX <= bounds.maxX + padMargin &&
+            padInfo.maxX >= bounds.minX - padMargin &&
+            padInfo.minY <= bounds.maxY + padMargin &&
+            padInfo.maxY >= bounds.minY - padMargin,
         )
         .map((padInfo) => {
           // If any of the routes passing through this region connect to this pad,
