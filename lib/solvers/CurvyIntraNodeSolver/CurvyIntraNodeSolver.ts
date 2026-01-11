@@ -23,8 +23,6 @@ export interface CurvyIntraNodeSolverParams {
   viaDiameter?: number
   /** Obstacles from adjacent/solved nodes that might affect routing */
   adjacentObstacles?: AdjacentObstacle[]
-  /** Preferred spacing between traces */
-  preferredSpacing?: number
 }
 
 /**
@@ -38,7 +36,6 @@ export class CurvyIntraNodeSolver extends BaseSolver {
   traceWidth: number
   viaDiameter: number
   adjacentObstacles: AdjacentObstacle[]
-  preferredSpacing: number
 
   routes: HighDensityIntraNodeRoute[] = []
   curvyTraceSolver?: CurvyTraceSolver
@@ -51,7 +48,6 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.viaDiameter = params.viaDiameter ?? 0.6
     this.adjacentObstacles = params.adjacentObstacles ?? []
-    this.preferredSpacing = params.preferredSpacing ?? 0.5
     this.MAX_ITERATIONS = 1000
   }
 
@@ -125,7 +121,8 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       bounds,
       waypointPairs,
       obstacles,
-      preferredSpacing: this.preferredSpacing,
+      preferredTraceToTraceSpacing: this.traceWidth * 2,
+      preferredObstacleToTraceSpacing: this.traceWidth,
     }
 
     this.curvyTraceSolver = new CurvyTraceSolver(problem)
@@ -205,7 +202,6 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       traceWidth: this.traceWidth,
       viaDiameter: this.viaDiameter,
       adjacentObstacles: this.adjacentObstacles,
-      preferredSpacing: this.preferredSpacing,
     }
   }
 

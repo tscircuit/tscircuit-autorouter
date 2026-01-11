@@ -118,8 +118,19 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       exitPort: JPort | null
     }>
   }> = []
-  regionCurvedPaths: Map<string, Map<string, Array<{ x: number; y: number }>>> =
-    new Map()
+  // Stores curved paths per region and networkId
+  // Each (regionId, networkId) pair can have multiple paths if the route traverses the region multiple times
+  regionCurvedPaths: Map<
+    string,
+    Map<
+      string,
+      Array<{
+        path: Array<{ x: number; y: number }>
+        start: { x: number; y: number }
+        end: { x: number; y: number }
+      }>
+    >
+  > = new Map()
 
   constructor(params: JumperPrepatternSolver2Params) {
     super()
@@ -399,10 +410,20 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
       for (const outputTrace of solver.outputTraces) {
         const networkId = outputTrace.networkId ?? ""
-        this.regionCurvedPaths.get(regionId)!.set(
-          networkId,
-          outputTrace.points.map((p) => ({ x: p.x, y: p.y })),
-        )
+        const points = outputTrace.points.map((p) => ({ x: p.x, y: p.y }))
+
+        // Store path with start/end points for matching during reconstruction
+        const pathEntry = {
+          path: points,
+          start: points[0] ?? { x: 0, y: 0 },
+          end: points[points.length - 1] ?? { x: 0, y: 0 },
+        }
+
+        // Append to array (don't overwrite) since a route can traverse the same region multiple times
+        if (!this.regionCurvedPaths.get(regionId)!.has(networkId)) {
+          this.regionCurvedPaths.get(regionId)!.set(networkId, [])
+        }
+        this.regionCurvedPaths.get(regionId)!.get(networkId)!.push(pathEntry)
       }
 
       // Move to next solver
@@ -509,7 +530,9 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           // First port - look ahead to find which region we're entering
           // The next port's lastRegion tells us which region we're actually traversing
           const nextCandidate = solvedRoute.path[i + 1]
-          const nextLastRegion = nextCandidate?.lastRegion as JRegion | undefined
+          const nextLastRegion = nextCandidate?.lastRegion as
+            | JRegion
+            | undefined
 
           if (nextLastRegion) {
             // Pick the region that matches what we'll be coming from at the next port
@@ -524,9 +547,19 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           if (!nextRegion) {
             const isConnRegion = (r: JRegion | undefined) =>
               r?.regionId?.startsWith("conn:")
-            if (r1 && !isConnRegion(r1) && !r1.d?.isPad && !r1.d?.isThroughJumper) {
+            if (
+              r1 &&
+              !isConnRegion(r1) &&
+              !r1.d?.isPad &&
+              !r1.d?.isThroughJumper
+            ) {
               nextRegion = r1
-            } else if (r2 && !isConnRegion(r2) && !r2.d?.isPad && !r2.d?.isThroughJumper) {
+            } else if (
+              r2 &&
+              !isConnRegion(r2) &&
+              !r2.d?.isPad &&
+              !r2.d?.isThroughJumper
+            ) {
               nextRegion = r2
             } else if (r1 && !r1.d?.isPad && !r1.d?.isThroughJumper) {
               nextRegion = r1
@@ -706,7 +739,8 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         bounds,
         waypointPairs,
         obstacles: regionObstacles,
-        preferredSpacing: this.traceWidth * 2,
+        preferredTraceToTraceSpacing: this.traceWidth * 2,
+        preferredObstacleToTraceSpacing: this.traceWidth,
       }
 
       const curvySolver = new CurvyTraceSolver(problem)
@@ -728,6 +762,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
    * Assembles final routes using curved paths where available.
    */
   private _finalizeCurvyTraceResults() {
+    // Helper to find distance between two points
+    const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
+      Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+
     // Build final routes using curved paths where available
     for (let routeIdx = 0; routeIdx < this.routeInfos.length; routeIdx++) {
       const routeInfo = this.routeInfos[routeIdx]
@@ -737,15 +775,48 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         const regionId = traversal.regionId
         const networkId = routeInfo.rootConnectionName ?? routeInfo.connectionId
 
-        // Check if we have a curved path for this region traversal
-        const curvedPath = this.regionCurvedPaths.get(regionId)?.get(networkId)
+        // Check if we have curved paths for this region and networkId
+        const curvedPaths = this.regionCurvedPaths.get(regionId)?.get(networkId)
 
-        if (curvedPath && curvedPath.length > 0) {
+        // Find the curved path that matches this traversal's entry/exit points
+        let matchedPath: Array<{ x: number; y: number }> | null = null
+        if (curvedPaths && curvedPaths.length > 0) {
+          const entryPoint = {
+            x: traversal.entryPort.d.x,
+            y: traversal.entryPort.d.y,
+          }
+          const exitPoint = traversal.exitPort
+            ? { x: traversal.exitPort.d.x, y: traversal.exitPort.d.y }
+            : null
+
+          // Find the path that best matches entry/exit points
+          let bestMatch: (typeof curvedPaths)[0] | null = null
+          let bestScore = Infinity
+
+          for (const pathEntry of curvedPaths) {
+            // Calculate how well this path matches the traversal
+            const startDist = dist(pathEntry.start, entryPoint)
+            const endDist = exitPoint ? dist(pathEntry.end, exitPoint) : 0
+            const score = startDist + endDist
+
+            if (score < bestScore) {
+              bestScore = score
+              bestMatch = pathEntry
+            }
+          }
+
+          // Use a tolerance for matching (points should be very close)
+          if (bestMatch && bestScore < 0.5) {
+            matchedPath = bestMatch.path
+          }
+        }
+
+        if (matchedPath && matchedPath.length > 0) {
           // Use the curved path
           // Skip the first point if we already have points (to avoid duplicates)
           const startIdx = routePoints.length > 0 ? 1 : 0
-          for (let i = startIdx; i < curvedPath.length; i++) {
-            routePoints.push({ x: curvedPath[i].x, y: curvedPath[i].y, z: 0 })
+          for (let i = startIdx; i < matchedPath.length; i++) {
+            routePoints.push({ x: matchedPath[i].x, y: matchedPath[i].y, z: 0 })
           }
         } else {
           // Use straight line for pad regions, through-jumper regions, or fallback
