@@ -206,10 +206,12 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       }
     }
 
-    // Add end point if not already there
+    // Add end point if not already there and within reasonable distance
     const lastMergedPoint = mergedRoute[mergedRoute.length - 1]
     const TOLERANCE = 0.001
-    if (distance(lastMergedPoint, end) > TOLERANCE) {
+    const MAX_END_JUMP_DISTANCE = 5 // Don't add end point if it would create a wild jump
+    const distToEnd = distance(lastMergedPoint, end)
+    if (distToEnd > TOLERANCE && distToEnd < MAX_END_JUMP_DISTANCE) {
       mergedRoute.push({ x: end.x, y: end.y, z: end.z })
     }
 
@@ -239,13 +241,9 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     const orderedRoutes: HighDensityIntraNodeRoute[] = []
     let currentPoint = start
 
-    // Walk through the node order and pick the best matching route
-    // for each node visit
-    for (
-      let nodeIdx = 0;
-      nodeIdx < nodeOrder.length && remainingRoutes.size > 0;
-      nodeIdx++
-    ) {
+    // Keep picking routes by proximity until we can't find any more within threshold
+    // This handles cases where there are more routes than nodes in the path
+    while (remainingRoutes.size > 0) {
       // Find the route segment that starts/ends closest to current point
       // among the remaining routes
       let bestRoute: HighDensityIntraNodeRoute | null = null
@@ -265,8 +263,9 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         }
       }
 
+      // Use a threshold to avoid wild jumps across the board
+      // If the closest route is too far, stop adding routes
       if (bestRoute && bestDist < 10) {
-        // Use a reasonable threshold
         orderedRoutes.push(bestRoute)
         remainingRoutes.delete(bestRoute)
 
@@ -276,12 +275,17 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         const distToStart = distance(currentPoint, routeStart)
         const distToEnd = distance(currentPoint, routeEnd)
         currentPoint = distToStart <= distToEnd ? routeEnd : routeStart
+      } else {
+        // No more routes within threshold - stop to avoid wild jumps
+        break
       }
     }
 
-    // Add any remaining routes (shouldn't normally happen)
-    for (const route of remainingRoutes) {
-      orderedRoutes.push(route)
+    // Log warning if routes were skipped (indicates a routing gap)
+    if (remainingRoutes.size > 0) {
+      console.warn(
+        `[StitchSolver] Skipped ${remainingRoutes.size} routes for connection that were too far from the path`,
+      )
     }
 
     return orderedRoutes
