@@ -1,16 +1,26 @@
 import { CapacityMeshNode } from "lib/types"
 
-const JUMPERS_PER_MM_SQUARED = 0.1
+// 1206x4
+const JUMPER_SIZE_WIDTH_WITH_PADDING = 5
+const JUMPER_SIZE_HEIGHT_WITH_PADDING = 5.5
+
+const CROSSINGS_PER_JUMPER_BEFORE_50_PERCENT_FAILURE = 7
+
 export const calculateNodeProbabilityOfFailureWithJumpers = (
   node: CapacityMeshNode,
   numSameLayerCrossings: number,
 ) => {
-  const minDimension = Math.min(node.width, node.height)
-  const jumpersWeCanFitInNode = minDimension ** 2 * JUMPERS_PER_MM_SQUARED
-  const estimatedRequiredJumpers = numSameLayerCrossings ** 2
+  const jumpersRequired = Math.ceil(
+    numSameLayerCrossings / CROSSINGS_PER_JUMPER_BEFORE_50_PERCENT_FAILURE,
+  )
 
-  // Temporary fix to prevent putting jumpers in nodes that are too small
-  if (minDimension < 6 && estimatedRequiredJumpers > 1) return 1
+  const jumpersWeCanFitInNodeWide =
+    Math.floor(node.width / JUMPER_SIZE_WIDTH_WITH_PADDING) + 0.1
+  const jumpersWeCanFitInNodeTall =
+    Math.floor(node.height / JUMPER_SIZE_HEIGHT_WITH_PADDING) + 0.1
 
-  return Math.min(1, estimatedRequiredJumpers / jumpersWeCanFitInNode)
+  const jumpersWeCanFitInNode =
+    jumpersWeCanFitInNodeWide * jumpersWeCanFitInNodeTall
+
+  return Math.min(1, jumpersRequired / jumpersWeCanFitInNode)
 }

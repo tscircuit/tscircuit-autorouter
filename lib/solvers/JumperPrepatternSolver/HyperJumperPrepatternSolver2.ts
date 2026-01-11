@@ -11,7 +11,6 @@ import {
 import {
   JumperPrepatternSolver2_HyperGraph,
   type JumperPrepatternSolver2Params,
-  type HyperGraphPatternType,
   JumperPrepatternSolver2HyperParameters,
 } from "./JumperPrepatternSolver2_HyperGraph"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -25,7 +24,8 @@ export interface HyperJumperPrepatternSolver2Params {
 }
 
 type VariantHyperParameters = {
-  PATTERN_TYPE: HyperGraphPatternType
+  COLS: number
+  ROWS: number
   ORIENTATION: "horizontal" | "vertical"
 }
 
@@ -62,7 +62,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     this.baseHyperParameters = params.hyperParameters ?? {}
     this.MAX_ITERATIONS = 1e6
     this.GREEDY_MULTIPLIER = 1
-    this.MIN_SUBSTEPS = 1
+    this.MIN_SUBSTEPS = 1000
   }
 
   getConstructorParams(): HyperJumperPrepatternSolver2Params {
@@ -70,32 +70,21 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
   }
 
   getHyperParameterDefs() {
-    const minDimension = Math.min(
-      this.nodeWithPortPoints.width,
-      this.nodeWithPortPoints.height,
-    )
-    const maxDimension = Math.max(
-      this.nodeWithPortPoints.width,
-      this.nodeWithPortPoints.height,
-    )
-
-    const patternValues: Array<{ PATTERN_TYPE: HyperGraphPatternType }> = [
-      { PATTERN_TYPE: "single_1206x4" },
-      { PATTERN_TYPE: "1x2_1206x4" },
-      // { PATTERN_TYPE: "1x3_1206x4" },
-      { PATTERN_TYPE: "2x2_1206x4" },
-      { PATTERN_TYPE: "3x1_1206x4" },
-      { PATTERN_TYPE: "3x2_1206x4" },
-      { PATTERN_TYPE: "3x3_1206x4" },
-      { PATTERN_TYPE: "4x4_1206x4" },
-      { PATTERN_TYPE: "6x4_1206x4" },
-      { PATTERN_TYPE: "8x4_1206x4" },
-    ]
-
     return [
       {
-        name: "pattern",
-        possibleValues: patternValues,
+        name: "cols",
+        possibleValues: [
+          { COLS: 1 },
+          { COLS: 2 },
+          { COLS: 3 },
+          { COLS: 4 },
+          { COLS: 6 },
+          { COLS: 8 },
+        ],
+      },
+      {
+        name: "rows",
+        possibleValues: [{ ROWS: 1 }, { ROWS: 2 }, { ROWS: 3 }, { ROWS: 4 }],
       },
       {
         name: "orientation",
@@ -108,8 +97,8 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
   }
 
   getCombinationDefs() {
-    // Try all combinations of pattern and orientation
-    return [["pattern", "orientation"]]
+    // Try all combinations of cols, rows, and orientation
+    return [["cols", "rows", "orientation"]]
   }
 
   generateSolver(
@@ -120,7 +109,8 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       colorMap: this.colorMap,
       traceWidth: this.traceWidth,
       hyperParameters: {
-        PATTERN_TYPE: hyperParameters.PATTERN_TYPE,
+        COLS: hyperParameters.COLS,
+        ROWS: hyperParameters.ROWS,
         ORIENTATION: hyperParameters.ORIENTATION,
       },
     })

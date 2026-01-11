@@ -28,20 +28,11 @@ import type {
 
 export type Point2D = { x: number; y: number }
 
-export type HyperGraphPatternType =
-  | "single_1206x4"
-  | "1x2_1206x4"
-  | "2x2_1206x4"
-  | "3x1_1206x4"
-  | "3x2_1206x4"
-  | "3x3_1206x4"
-  | "4x4_1206x4"
-  | "6x4_1206x4"
-  | "8x4_1206x4"
-
 export interface JumperPrepatternSolver2HyperParameters {
-  /** Pattern type for jumper placement - "single_1206x4" (~8x8mm) or "2x2_1206x4" (~14x14mm) */
-  PATTERN_TYPE?: HyperGraphPatternType
+  /** Number of columns in the jumper grid */
+  COLS?: number
+  /** Number of rows in the jumper grid */
+  ROWS?: number
   /** Orientation of jumpers - "horizontal" or "vertical" */
   ORIENTATION?: "horizontal" | "vertical"
 }
@@ -178,32 +169,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
   }
 
   private _getPatternConfig(): { cols: number; rows: number } {
-    const patternType = this.hyperParameters.PATTERN_TYPE ?? "single_1206x4"
-    if (patternType === "8x4_1206x4") {
-      return { cols: 8, rows: 4 }
+    return {
+      cols: this.hyperParameters.COLS ?? 1,
+      rows: this.hyperParameters.ROWS ?? 1,
     }
-    if (patternType === "6x4_1206x4") {
-      return { cols: 6, rows: 4 }
-    }
-    if (patternType === "4x4_1206x4") {
-      return { cols: 4, rows: 4 }
-    }
-    if (patternType === "3x3_1206x4") {
-      return { cols: 3, rows: 3 }
-    }
-    if (patternType === "3x2_1206x4") {
-      return { cols: 3, rows: 2 }
-    }
-    if (patternType === "3x1_1206x4") {
-      return { cols: 3, rows: 1 }
-    }
-    if (patternType === "2x2_1206x4") {
-      return { cols: 2, rows: 2 }
-    }
-    if (patternType === "1x2_1206x4") {
-      return { cols: 1, rows: 2 }
-    }
-    return { cols: 1, rows: 1 }
   }
 
   private _initializeGraph(): boolean {
