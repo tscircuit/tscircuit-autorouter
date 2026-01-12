@@ -323,11 +323,12 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //         MAX_ATTEMPTS_PER_NODE: 3 * this.effort,
     //         MAX_SECTION_ATTEMPTS: 30 * this.effort,
     //         JUMPER_PF_FN_ENABLED: true,
+    //         SHUFFLE_SEEDS_PER_SECTION: 1,
     //         HYPERPARAMETER_SCHEDULE: [
     //           {
     //             ...this.portPointPathingSolver?.hyperParameters,
     //             EXPANSION_DEGREES: 10,
-    //             MAX_RIPS: 10,
+    //             MAX_RIPS: 10 * cms.effort,
     //             RANDOM_RIP_FRACTION: 0.1,
     //             RIPPING_PF_THRESHOLD: 0.9,
     //             STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
