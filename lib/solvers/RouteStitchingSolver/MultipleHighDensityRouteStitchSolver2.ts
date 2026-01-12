@@ -152,7 +152,12 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     // If we have node order, use it to sort routes
     let orderedRoutes: HighDensityIntraNodeRoute[]
     if (nodeOrder.length > 0) {
-      orderedRoutes = this.orderRoutesByNodePath(hdRoutes, nodeOrder, start, connectionName)
+      orderedRoutes = this.orderRoutesByNodePath(
+        hdRoutes,
+        nodeOrder,
+        start,
+        connectionName,
+      )
     } else {
       // Fallback: order by proximity starting from start point
       orderedRoutes = this.orderRoutesByProximity(hdRoutes, start)
@@ -294,13 +299,19 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     }
 
     // Helper to count how many remaining routes connect to a point
-    const countConnections = (point: { x: number; y: number }, excludeRoute: HighDensityIntraNodeRoute) => {
+    const countConnections = (
+      point: { x: number; y: number },
+      excludeRoute: HighDensityIntraNodeRoute,
+    ) => {
       let count = 0
       for (const r of remainingRoutes) {
         if (r === excludeRoute) continue
         const rs = r.route[0]
         const re = r.route[r.route.length - 1]
-        if (distance(point, rs) < CHAIN_THRESHOLD || distance(point, re) < CHAIN_THRESHOLD) {
+        if (
+          distance(point, rs) < CHAIN_THRESHOLD ||
+          distance(point, re) < CHAIN_THRESHOLD
+        ) {
           count++
         }
       }
@@ -364,9 +375,10 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         const routeStart = bestRoute.route[0]
         const routeEnd = bestRoute.route[bestRoute.route.length - 1]
         const distToStart = distance(currentPoint, routeStart)
-        currentPoint = distToStart <= distance(currentPoint, routeEnd)
-          ? routeEnd
-          : routeStart
+        currentPoint =
+          distToStart <= distance(currentPoint, routeEnd)
+            ? routeEnd
+            : routeStart
       } else {
         break
       }
@@ -439,9 +451,10 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         const routeStart = bestRoute.route[0]
         const routeEnd = bestRoute.route[bestRoute.route.length - 1]
         const distToStart = distance(currentPoint, routeStart)
-        currentPoint = distToStart <= distance(currentPoint, routeEnd)
-          ? routeEnd
-          : routeStart
+        currentPoint =
+          distToStart <= distance(currentPoint, routeEnd)
+            ? routeEnd
+            : routeStart
       } else {
         break
       }

@@ -18,7 +18,8 @@ test("JumperPrepatternSolver2_HyperGraph - single_1206x4 pattern simple route", 
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
       ORIENTATION: "vertical",
     },
   })
@@ -46,7 +47,8 @@ test("JumperPrepatternSolver2_HyperGraph - 2x2_1206x4 pattern simple route", () 
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "2x2_1206x4",
+      COLS: 2,
+      ROWS: 2,
       ORIENTATION: "vertical",
     },
   })
@@ -77,7 +79,8 @@ test("JumperPrepatternSolver2_HyperGraph - multiple connections", () => {
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
     },
   })
 
@@ -102,7 +105,8 @@ test("JumperPrepatternSolver2_HyperGraph - horizontal orientation", () => {
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
       ORIENTATION: "horizontal",
     },
   })
@@ -128,7 +132,8 @@ test("JumperPrepatternSolver2_HyperGraph - visualize() returns valid graphics", 
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
     },
   })
 
@@ -163,7 +168,8 @@ test("JumperPrepatternSolver2_HyperGraph - no connections needed for single port
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
     },
   })
 
@@ -219,7 +225,8 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
       ORIENTATION: "vertical",
     },
   })
@@ -287,7 +294,8 @@ test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps det
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
-      PATTERN_TYPE: "single_1206x4",
+      COLS: 1,
+      ROWS: 1,
       ORIENTATION: "vertical",
     },
   })
