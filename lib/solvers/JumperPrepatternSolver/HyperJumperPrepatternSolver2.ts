@@ -117,8 +117,10 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
   }
 
   computeG(solver: JumperPrepatternSolver2_HyperGraph): number {
-    // Prefer solutions with fewer iterations
-    return solver.iterations / 10000
+    const jumperCount =
+      solver.hyperParameters.COLS! * solver.hyperParameters.ROWS!
+    // Prefer solutions with fewer iterations, or fewer jumpers
+    return solver.iterations / 10000 + jumperCount * 0.25
   }
 
   computeH(solver: JumperPrepatternSolver2_HyperGraph): number {
