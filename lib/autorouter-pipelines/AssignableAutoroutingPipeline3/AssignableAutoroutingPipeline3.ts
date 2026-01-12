@@ -61,6 +61,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "../AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
 import { updateConnMapWithOffboardObstacleConnections } from "../AssignableAutoroutingPipeline2/updateConnMapWithOffboardObstacleConnections"
+import { TraceKeepoutSolver } from "lib/solvers/TraceKeepoutSolver/TraceKeepoutSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -103,6 +104,7 @@ function definePipelineStep<
 export class AssignableAutoroutingPipeline3 extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   // nodeSolver?: CapacityMeshNodeSolver2_NodeUnderObstacle
+  traceKeepoutSolver?: TraceKeepoutSolver
   nodeSolver?: RectDiffPipeline
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -397,6 +399,18 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //     },
     //   ],
     // ),
+    // definePipelineStep("traceKeepoutSolver", TraceKeepoutSolver, (cms) => [
+    //   {
+    //     hdRoutes:
+    //       cms.traceSimplificationSolver?.simplifiedHdRoutes ??
+    //       cms.highDensityStitchSolver?.mergedHdRoutes ??
+    //       [],
+    //     obstacles: cms.srj.obstacles,
+    //     connMap: cms.connMap,
+    //     colorMap: cms.colorMap,
+    //     srj: cms.srj,
+    //   },
+    // ]),
     // definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
     //   {
     //     hdRoutes:
@@ -513,6 +527,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
+    const traceKeepoutViz = this.traceKeepoutSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
@@ -614,6 +629,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         : null,
       highDensityStitchViz,
       traceSimplificationViz,
+      traceKeepoutViz,
       traceWidthViz,
       this.solved
         ? combineVisualizations(
@@ -683,6 +699,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
       this.traceWidthSolver?.hdRoutesWithWidths ??
+      this.traceKeepoutSolver?.redrawnHdRoutes ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver?.mergedHdRoutes ??
       this.highDensitySolver?.routes ??
