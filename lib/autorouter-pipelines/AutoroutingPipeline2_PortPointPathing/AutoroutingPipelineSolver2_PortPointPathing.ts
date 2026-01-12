@@ -45,6 +45,7 @@ import {
 } from "../../solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import { MuchBetterDistributionOfPortPointsSolver } from "lib/solvers/BetterDistributionOfPortPoints/MuchBetterDistributionOfPortPoints.ts"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -102,6 +103,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: HyperPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
+  betterDistributionOfPortPoints?: MuchBetterDistributionOfPortPointsSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -115,9 +117,9 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
+  inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
 
   cacheProvider: CacheProvider | null = null
-
   pipelineDef = [
     definePipelineStep(
       "netToPointPairsSolver",
@@ -223,22 +225,20 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       HyperPortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
-        const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
-          (node) => ({
-            capacityMeshNodeId: node.capacityMeshNodeId,
-            center: node.center,
-            width: node.width,
-            height: node.height,
-            portPoints: [] as InputPortPoint[],
-            availableZ: node.availableZ,
-            _containsTarget: node._containsTarget,
-            _containsObstacle: node._containsObstacle,
-          }),
-        )
+        this.inputNodeWithPortPoints = cms.capacityNodes!.map((node) => ({
+          capacityMeshNodeId: node.capacityMeshNodeId,
+          center: node.center,
+          width: node.width,
+          height: node.height,
+          portPoints: [] as InputPortPoint[],
+          availableZ: node.availableZ,
+          _containsTarget: node._containsTarget,
+          _containsObstacle: node._containsObstacle,
+        }))
 
         // Build a map for quick lookup
         const nodeMap = new Map(
-          inputNodes.map((n) => [n.capacityMeshNodeId, n]),
+          this.inputNodeWithPortPoints.map((n) => [n.capacityMeshNodeId, n]),
         )
 
         // Add port points from the available segment point solver
@@ -267,7 +267,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         return [
           {
             simpleRouteJson: cms.srjWithPointPairs!,
-            inputNodes,
+            inputNodes: this.inputNodeWithPortPoints,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
             numShuffleSeeds: 200,
@@ -302,9 +302,26 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "betterDistributionOfPortPoints",
+      MuchBetterDistributionOfPortPointsSolver,
+      (cms) => [
+        {
+          nodeWithPortPoints:
+            cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
+            cms.portPointPathingSolver?.getNodesWithPortPoints() ??
+            [],
+          inputNodWithPortPoints: this.inputNodeWithPortPoints,
+          minTraceWidth: cms.minTraceWidth,
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+    ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints:
+          cms.betterDistributionOfPortPoints?.getOutput() ??
           cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
           cms.portPointPathingSolver?.getNodesWithPortPoints() ??
           [],
@@ -445,6 +462,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       this.availableSegmentPointSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
+    const betterDistributionViz =
+      this.betterDistributionOfPortPoints?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
@@ -519,6 +538,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       availableSegmentPointViz,
       portPointPathingViz,
       multiSectionOptViz,
+      betterDistributionViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
       highDensityStitchViz,
       traceSimplificationViz,
