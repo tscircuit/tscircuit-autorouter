@@ -17,6 +17,7 @@ import {
 } from "@tscircuit/math-utils"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 interface Point {
   x: number
@@ -304,7 +305,182 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     // Compute path segments and total length
+    this.preprocessRoutePoints()
     this.computePathSegments()
+  }
+
+  /**
+   * Pre-process route points to nudge any that are too close to obstacle edges.
+   * This prevents the simplification algorithm from receiving invalid waypoints
+   * that cannot be reached without violating clearance constraints.
+   */
+  private preprocessRoutePoints() {
+    const requiredClearance = this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2
+    // Use a larger zone for corner detection to catch diagonal approach paths
+    const cornerDetectionRadius = requiredClearance * 2.5
+    const route = this.inputRoute.route
+
+    for (let i = 1; i < route.length - 1; i++) {
+      // Skip first and last points (endpoints must be preserved exactly)
+      // Also skip jumper pad points
+      if (this.jumperPadPointIndices.has(i)) {
+        continue
+      }
+
+      const point = route[i]
+      const prevPoint = route[i - 1]
+      let nudgeX = 0
+      let nudgeY = 0
+
+      for (const obstacle of this.filteredObstacles) {
+        if (!this.isObstacleOnLayer(obstacle, point.z)) {
+          continue
+        }
+
+        // Calculate obstacle bounds
+        const left = obstacle.center.x - obstacle.width / 2
+        const right = obstacle.center.x + obstacle.width / 2
+        const top = obstacle.center.y + obstacle.height / 2
+        const bottom = obstacle.center.y - obstacle.height / 2
+
+        // Check if point is within the danger zone (inside or very close to edge)
+        const isWithinX =
+          point.x >= left - requiredClearance &&
+          point.x <= right + requiredClearance
+        const isWithinY =
+          point.y >= bottom - requiredClearance &&
+          point.y <= top + requiredClearance
+
+        // Also check for corner proximity with larger radius
+        const corners = [
+          { x: right, y: top },
+          { x: right, y: bottom },
+          { x: left, y: top },
+          { x: left, y: bottom },
+        ]
+
+        // Check if point is near any corner (even if outside the direct edge zones)
+        for (const corner of corners) {
+          const distToCorner = Math.sqrt(
+            (point.x - corner.x) ** 2 + (point.y - corner.y) ** 2,
+          )
+
+          if (distToCorner < cornerDetectionRadius) {
+            // Check if the approaching path would pass too close to this corner
+            // by checking if the previous point is on the opposite side of the corner
+            const approachFromRight = prevPoint.x > corner.x
+            const approachFromAbove = prevPoint.y > corner.y
+            const pointToRight = point.x >= corner.x
+            const pointAbove = point.y >= corner.y
+
+            // Determine if this is a diagonal approach that could graze the corner
+            const isDiagonalApproach =
+              approachFromRight !== pointToRight ||
+              approachFromAbove !== pointAbove ||
+              (prevPoint.x > corner.x &&
+                point.x <= corner.x + requiredClearance &&
+                point.y > corner.y) ||
+              (prevPoint.x < corner.x &&
+                point.x >= corner.x - requiredClearance &&
+                point.y > corner.y) ||
+              (prevPoint.y > corner.y &&
+                point.y <= corner.y + requiredClearance &&
+                point.x > corner.x) ||
+              (prevPoint.y < corner.y &&
+                point.y >= corner.y - requiredClearance &&
+                point.x > corner.x)
+
+            // If we're close to a corner and approaching diagonally, nudge away
+            if (distToCorner < requiredClearance * 1.5 || isDiagonalApproach) {
+              // Calculate nudge direction - away from corner
+              const angle = Math.atan2(point.y - corner.y, point.x - corner.x)
+              const targetDist = requiredClearance * 1.5
+
+              if (distToCorner < targetDist) {
+                const nudgeDist = targetDist - distToCorner + 0.01
+                const candidateNudgeX = Math.cos(angle) * nudgeDist
+                const candidateNudgeY = Math.sin(angle) * nudgeDist
+
+                // Only apply if this is a larger nudge than previous
+                if (Math.abs(candidateNudgeX) > Math.abs(nudgeX)) {
+                  nudgeX = candidateNudgeX
+                }
+                if (Math.abs(candidateNudgeY) > Math.abs(nudgeY)) {
+                  nudgeY = candidateNudgeY
+                }
+              }
+            }
+          }
+        }
+
+        if (!isWithinX || !isWithinY) {
+          continue
+        }
+
+        // Calculate distances to each edge
+        const distToRight = point.x - right
+        const distToLeft = left - point.x
+        const distToTop = point.y - top
+        const distToBottom = bottom - point.y
+
+        // Determine if we're in the horizontal or vertical zone
+        const inHorizontalZone = point.y > bottom && point.y < top
+        const inVerticalZone = point.x > left && point.x < right
+
+        // Handle edge proximity
+        if (inHorizontalZone) {
+          // Point is in the horizontal zone (level with the obstacle)
+          if (distToRight >= 0 && distToRight < requiredClearance) {
+            // Too close to right edge - nudge right
+            nudgeX = Math.max(nudgeX, requiredClearance - distToRight + 0.01)
+          } else if (distToLeft >= 0 && distToLeft < requiredClearance) {
+            // Too close to left edge - nudge left
+            nudgeX = Math.min(nudgeX, -(requiredClearance - distToLeft + 0.01))
+          }
+        }
+
+        if (inVerticalZone) {
+          // Point is in the vertical zone (above/below the obstacle)
+          if (distToTop >= 0 && distToTop < requiredClearance) {
+            // Too close to top edge - nudge up
+            nudgeY = Math.max(nudgeY, requiredClearance - distToTop + 0.01)
+          } else if (distToBottom >= 0 && distToBottom < requiredClearance) {
+            // Too close to bottom edge - nudge down
+            nudgeY = Math.min(
+              nudgeY,
+              -(requiredClearance - distToBottom + 0.01),
+            )
+          }
+        }
+
+        // Handle corner cases - point is near a corner of the obstacle
+        if (!inHorizontalZone && !inVerticalZone) {
+          // We're in a corner region
+          const cornerX = point.x < left ? left : right
+          const cornerY = point.y < bottom ? bottom : top
+          const cornerDist = Math.sqrt(
+            (point.x - cornerX) ** 2 + (point.y - cornerY) ** 2,
+          )
+
+          if (cornerDist < requiredClearance) {
+            // Nudge away from corner
+            const angle = Math.atan2(point.y - cornerY, point.x - cornerX)
+            const nudgeDist = requiredClearance - cornerDist + 0.01
+            nudgeX += Math.cos(angle) * nudgeDist
+            nudgeY += Math.sin(angle) * nudgeDist
+          }
+        }
+      }
+
+      // Apply the nudge if any
+      if (nudgeX !== 0 || nudgeY !== 0) {
+        route[i] = {
+          x: point.x + nudgeX,
+          y: point.y + nudgeY,
+          z: point.z,
+        }
+      }
+    }
   }
 
   // Compute the path segments and their distances
@@ -384,11 +560,172 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     return distance > midDistance ? segmentIndex + 1 : segmentIndex
   }
 
+  /**
+   * Check if an obstacle is on the given z-layer.
+   * Uses zLayers if available, otherwise falls back to checking layer names.
+   */
+  private isObstacleOnLayer(obstacle: Obstacle, z: number): boolean {
+    if (obstacle.zLayers) {
+      return obstacle.zLayers.includes(z)
+    }
+    // Fallback: check layer names for common cases
+    // z=0 corresponds to "top", z=1 corresponds to "bottom" for 2-layer boards
+    // For boards with more layers, inner layers would be "inner1", "inner2", etc.
+    if (obstacle.layers) {
+      if (z === 0 && obstacle.layers.includes("top")) {
+        return true
+      }
+      // For bottom layer, we assume z=1 for 2-layer boards
+      // This is a simplification; a more robust solution would pass layerCount
+      if (z === 1 && obstacle.layers.includes("bottom")) {
+        return true
+      }
+      // Check inner layers
+      if (z > 0 && obstacle.layers.includes(`inner${z}`)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Nudge a point away from nearby obstacles to maintain clearance.
+   * Returns a new point that is at least OBSTACLE_MARGIN + TRACE_THICKNESS/2 away from all obstacles.
+   * Also handles corner cases where the point is near obstacle corners.
+   */
+  private nudgePointFromObstacles(point: Point): Point {
+    const requiredClearance = this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2
+    let nudgedPoint = { ...point }
+
+    for (const obstacle of this.filteredObstacles) {
+      if (!this.isObstacleOnLayer(obstacle, point.z)) {
+        continue
+      }
+
+      // Calculate obstacle bounds
+      const left = obstacle.center.x - obstacle.width / 2
+      const right = obstacle.center.x + obstacle.width / 2
+      const top = obstacle.center.y + obstacle.height / 2
+      const bottom = obstacle.center.y - obstacle.height / 2
+
+      // Check distance to each corner and edge
+      const distToRight = nudgedPoint.x - right
+      const distToLeft = left - nudgedPoint.x
+      const distToTop = nudgedPoint.y - top
+      const distToBottom = bottom - nudgedPoint.y
+
+      // Handle right edge (point is to the right of obstacle)
+      if (distToRight >= 0 && distToRight < requiredClearance) {
+        // Point is close to right edge - check if it's near the obstacle vertically
+        if (
+          nudgedPoint.y >= bottom - requiredClearance &&
+          nudgedPoint.y <= top + requiredClearance
+        ) {
+          nudgedPoint.x = right + requiredClearance
+        }
+      }
+
+      // Handle left edge (point is to the left of obstacle)
+      if (distToLeft >= 0 && distToLeft < requiredClearance) {
+        if (
+          nudgedPoint.y >= bottom - requiredClearance &&
+          nudgedPoint.y <= top + requiredClearance
+        ) {
+          nudgedPoint.x = left - requiredClearance
+        }
+      }
+
+      // Handle top edge (point is above obstacle)
+      if (distToTop >= 0 && distToTop < requiredClearance) {
+        if (
+          nudgedPoint.x >= left - requiredClearance &&
+          nudgedPoint.x <= right + requiredClearance
+        ) {
+          nudgedPoint.y = top + requiredClearance
+        }
+      }
+
+      // Handle bottom edge (point is below obstacle)
+      if (distToBottom >= 0 && distToBottom < requiredClearance) {
+        if (
+          nudgedPoint.x >= left - requiredClearance &&
+          nudgedPoint.x <= right + requiredClearance
+        ) {
+          nudgedPoint.y = bottom - requiredClearance
+        }
+      }
+
+      // Handle corners - if point is near a corner, nudge diagonally
+      // Top-right corner
+      if (
+        distToRight >= 0 &&
+        distToRight < requiredClearance &&
+        distToTop >= 0 &&
+        distToTop < requiredClearance
+      ) {
+        const cornerDist = Math.sqrt(distToRight ** 2 + distToTop ** 2)
+        if (cornerDist < requiredClearance) {
+          // Nudge diagonally away from corner
+          const scale = requiredClearance / cornerDist
+          nudgedPoint.x = right + distToRight * scale
+          nudgedPoint.y = top + distToTop * scale
+        }
+      }
+
+      // Top-left corner
+      if (
+        distToLeft >= 0 &&
+        distToLeft < requiredClearance &&
+        distToTop >= 0 &&
+        distToTop < requiredClearance
+      ) {
+        const cornerDist = Math.sqrt(distToLeft ** 2 + distToTop ** 2)
+        if (cornerDist < requiredClearance) {
+          const scale = requiredClearance / cornerDist
+          nudgedPoint.x = left - distToLeft * scale
+          nudgedPoint.y = top + distToTop * scale
+        }
+      }
+
+      // Bottom-right corner
+      if (
+        distToRight >= 0 &&
+        distToRight < requiredClearance &&
+        distToBottom >= 0 &&
+        distToBottom < requiredClearance
+      ) {
+        const cornerDist = Math.sqrt(distToRight ** 2 + distToBottom ** 2)
+        if (cornerDist < requiredClearance) {
+          const scale = requiredClearance / cornerDist
+          nudgedPoint.x = right + distToRight * scale
+          nudgedPoint.y = bottom - distToBottom * scale
+        }
+      }
+
+      // Bottom-left corner
+      if (
+        distToLeft >= 0 &&
+        distToLeft < requiredClearance &&
+        distToBottom >= 0 &&
+        distToBottom < requiredClearance
+      ) {
+        const cornerDist = Math.sqrt(distToLeft ** 2 + distToBottom ** 2)
+        if (cornerDist < requiredClearance) {
+          const scale = requiredClearance / cornerDist
+          nudgedPoint.x = left - distToLeft * scale
+          nudgedPoint.y = bottom - distToBottom * scale
+        }
+      }
+    }
+
+    return nudgedPoint
+  }
+
   // Check if a path segment is valid
   isValidPathSegment(start: Point, end: Point): boolean {
     // Check if the segment intersects with any obstacle
     for (const obstacle of this.filteredObstacles) {
-      if (!obstacle.zLayers?.includes(start.z)) {
+      if (!this.isObstacleOnLayer(obstacle, start.z)) {
         continue
       }
 
@@ -553,8 +890,18 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.newRoute.length === 0 ||
         !this.arePointsEqual(this.newRoute[this.newRoute.length - 1], lastPoint)
       ) {
-        // TODO find path from tail to end w/ 45 degree paths
-        this.newRoute.push(lastPoint)
+        // Try to find a valid 45-degree path to the end
+        const prevPoint =
+          this.newRoute.length > 0
+            ? this.newRoute[this.newRoute.length - 1]
+            : lastPoint
+        const path45 = this.find45DegreePath(prevPoint, lastPoint)
+        if (path45 && path45.length > 0) {
+          this.addPathToResult(path45)
+        } else {
+          // Fall back to direct connection
+          this.newRoute.push(lastPoint)
+        }
       }
       this.solved = true
       return
@@ -574,28 +921,53 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         return
       }
 
-      // No valid 45-degree path to the end. Revert to the original
-      // geometry for this segment to guarantee connectivity.
+      // No valid 45-degree path to the end.
+      // Instead of reverting the entire route, try to add remaining points
+      // with validation, preserving the simplification work done so far.
       this.lastValidPath = null
-      this.tailDistanceAlongPath = this.totalPathLength
-      this.headDistanceAlongPath = this.totalPathLength
 
-      const dedupedOriginalRoute: Point[] = []
-      for (const point of this.inputRoute.route) {
+      // Get the tail index in the original route
+      const tailIndex = this.getNearestIndexForDistance(
+        this.tailDistanceAlongPath,
+      )
+
+      // Add remaining points from tail to end, validating each segment
+      for (let i = tailIndex; i < this.inputRoute.route.length; i++) {
+        const point = this.inputRoute.route[i]
         if (
-          dedupedOriginalRoute.length === 0 ||
-          !this.arePointsEqual(
-            dedupedOriginalRoute[dedupedOriginalRoute.length - 1],
-            point,
-          )
+          this.newRoute.length === 0 ||
+          !this.arePointsEqual(this.newRoute[this.newRoute.length - 1], point)
         ) {
-          dedupedOriginalRoute.push(point)
+          // Try to find a valid path to this point
+          if (this.newRoute.length > 0) {
+            const lastPoint = this.newRoute[this.newRoute.length - 1]
+            const segmentPath = this.find45DegreePath(lastPoint, point)
+            if (segmentPath && segmentPath.length > 0) {
+              // Add the valid path (skipping first point if duplicate)
+              for (let j = 0; j < segmentPath.length; j++) {
+                if (
+                  j === 0 &&
+                  this.arePointsEqual(
+                    this.newRoute[this.newRoute.length - 1],
+                    segmentPath[j],
+                  )
+                ) {
+                  continue
+                }
+                this.newRoute.push(segmentPath[j])
+              }
+            } else {
+              // No valid path found, add point directly to maintain connectivity
+              this.newRoute.push(point)
+            }
+          } else {
+            this.newRoute.push(point)
+          }
         }
       }
 
-      this.newRoute = dedupedOriginalRoute
-      this.newVias = [...this.inputRoute.vias]
-
+      this.tailDistanceAlongPath = this.totalPathLength
+      this.headDistanceAlongPath = this.totalPathLength
       this.solved = true
       return
     }
@@ -825,7 +1197,119 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         !this.arePointsEqual(oldTailPoint, newTailPoint) &&
         !this.arePointsEqual(newTailPoint, lastRoutePoint)
       ) {
-        this.newRoute.push(newTailPoint)
+        // Validate the segment before adding - check if it violates obstacle clearance
+        const lastPoint =
+          this.newRoute.length > 0
+            ? this.newRoute[this.newRoute.length - 1]
+            : oldTailPoint
+
+        if (this.isValidPathSegment(lastPoint, newTailPoint)) {
+          this.newRoute.push(newTailPoint)
+        } else {
+          // Segment is invalid - try to find a 45-degree path around the obstacle
+          const detourPath = this.find45DegreePath(lastPoint, newTailPoint)
+          if (detourPath && detourPath.length > 0) {
+            // Found a valid detour, add it (skipping first point if it matches last)
+            for (let i = 0; i < detourPath.length; i++) {
+              if (
+                i === 0 &&
+                this.newRoute.length > 0 &&
+                this.arePointsEqual(
+                  this.newRoute[this.newRoute.length - 1],
+                  detourPath[i],
+                )
+              ) {
+                continue
+              }
+              this.newRoute.push(detourPath[i])
+            }
+          } else {
+            // No valid path found - try nudging the point away from obstacles
+            const nudgedPoint = this.nudgePointFromObstacles(newTailPoint)
+
+            // Check if the nudged point gives us a valid path
+            if (!this.arePointsEqual(nudgedPoint, newTailPoint)) {
+              const nudgedPath = this.find45DegreePath(lastPoint, nudgedPoint)
+              if (nudgedPath && nudgedPath.length > 0) {
+                // Found a valid path to nudged point
+                for (let i = 0; i < nudgedPath.length; i++) {
+                  if (
+                    i === 0 &&
+                    this.newRoute.length > 0 &&
+                    this.arePointsEqual(
+                      this.newRoute[this.newRoute.length - 1],
+                      nudgedPath[i],
+                    )
+                  ) {
+                    continue
+                  }
+                  this.newRoute.push(nudgedPath[i])
+                }
+              } else if (this.isValidPathSegment(lastPoint, nudgedPoint)) {
+                // Direct path to nudged point is valid
+                this.newRoute.push(nudgedPoint)
+              } else {
+                // Still no valid path - add nudged point as last resort
+                this.newRoute.push(nudgedPoint)
+              }
+            } else {
+              // Nudging didn't change the point - try skipping to future waypoints
+              // Look for valid paths to subsequent points in the input route
+              let foundValidSkip = false
+              const maxSkipAttempts = Math.min(
+                5,
+                this.inputRoute.route.length - newTailIndex - 1,
+              )
+
+              for (
+                let skipOffset = 1;
+                skipOffset <= maxSkipAttempts;
+                skipOffset++
+              ) {
+                const skipIndex = newTailIndex + skipOffset
+                if (skipIndex >= this.inputRoute.route.length) break
+
+                const skipPoint = this.inputRoute.route[skipIndex]
+                // Skip points that are on different layers
+                if (skipPoint.z !== lastPoint.z) continue
+
+                // Try to find a valid path directly to this future point
+                const skipPath = this.find45DegreePath(lastPoint, skipPoint)
+                if (skipPath && skipPath.length > 0) {
+                  // Found a valid path, skip the problematic waypoints
+                  for (let i = 0; i < skipPath.length; i++) {
+                    if (
+                      i === 0 &&
+                      this.newRoute.length > 0 &&
+                      this.arePointsEqual(
+                        this.newRoute[this.newRoute.length - 1],
+                        skipPath[i],
+                      )
+                    ) {
+                      continue
+                    }
+                    this.newRoute.push(skipPath[i])
+                  }
+                  // Update tail distance to skip the problematic points
+                  if (
+                    skipIndex < this.pathSegments.length &&
+                    this.pathSegments[skipIndex]
+                  ) {
+                    this.tailDistanceAlongPath =
+                      this.pathSegments[skipIndex].startDistance
+                  }
+                  foundValidSkip = true
+                  break
+                }
+              }
+
+              if (!foundValidSkip) {
+                // No valid skip path found - add original as last resort
+                this.newRoute.push(newTailPoint)
+              }
+            }
+          }
+        }
       }
 
       return

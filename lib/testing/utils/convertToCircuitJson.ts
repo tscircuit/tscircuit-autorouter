@@ -317,9 +317,40 @@ function createPcbSmtPads(srj: SimpleRouteJson): AnyCircuitElement[] {
     const padId: string | undefined = connectedTo.find((id) =>
       id.startsWith("pcb_smtpad_"),
     )
-    const pcbPortId: string | undefined = connectedTo.find((id) =>
-      id.startsWith("pcb_port_"),
-    )
+
+    // Find the pcb_port_id that corresponds to THIS obstacle's pad
+    // When multiple ports are listed (because they share a net), we need to find
+    // the one that actually belongs to this specific obstacle/pad
+    let pcbPortId: string | undefined
+
+    if (padId) {
+      // Try to find a matching port ID with the same numeric suffix as the pad
+      // e.g., pcb_smtpad_21 should match pcb_port_24 if it's associated with this obstacle
+      // Actually, we need to find the port that's at this obstacle's location
+      // The safest approach is to look at the connection points in srj
+      const obstacleX = obstacle.center?.x ?? obstacle.x
+      const obstacleY = obstacle.center?.y ?? obstacle.y
+
+      // Find a connection point at this location to get the correct port ID
+      for (const conn of srj.connections) {
+        for (const point of conn.pointsToConnect ?? []) {
+          if (
+            point.pcb_port_id &&
+            Math.abs(point.x - obstacleX) < 0.01 &&
+            Math.abs(point.y - obstacleY) < 0.01
+          ) {
+            pcbPortId = point.pcb_port_id
+            break
+          }
+        }
+        if (pcbPortId) break
+      }
+    }
+
+    // Fallback to finding any pcb_port in connectedTo if location match didn't work
+    if (!pcbPortId) {
+      pcbPortId = connectedTo.find((id) => id.startsWith("pcb_port_"))
+    }
 
     // Construct only when we have at least a port or pad hint
     if (!padId && !pcbPortId) continue
@@ -450,7 +481,8 @@ export function convertToCircuitJson(
   const circuitJson: AnyCircuitElement[] = []
 
   // Add source traces from connection information
-  circuitJson.push(...createSourceTraces(srjWithPointPairs, routes))
+  const sourceTraces = createSourceTraces(srjWithPointPairs, routes)
+  circuitJson.push(...sourceTraces)
 
   // Add PCB ports for connection points
   circuitJson.push(...createPcbPorts(srjWithPointPairs))
@@ -469,6 +501,50 @@ export function convertToCircuitJson(
       conn.netConnectionName || conn.rootConnectionName || conn.name,
     )
   })
+
+  // Build a map of source_trace_id -> connected_source_port_ids for merging
+  const sourceTracePortsMap = new Map<string, string[]>()
+  for (const st of sourceTraces) {
+    if (st.type === "source_trace") {
+      const stAny = st as any
+      sourceTracePortsMap.set(
+        stAny.source_trace_id,
+        stAny.connected_source_port_ids || [],
+      )
+    }
+  }
+
+  // Find merged connection names (containing '__') and create merged source_traces
+  const mergedSourceTraceIds = new Set<string>()
+  for (const route of routes) {
+    const connName =
+      (route as any).connection_name ?? (route as any).connectionName
+    if (connName?.includes("__")) {
+      mergedSourceTraceIds.add(connName)
+    }
+  }
+
+  // Create merged source_trace elements for merged connection names
+  for (const mergedId of mergedSourceTraceIds) {
+    // Split by '__' to get constituent source trace names
+    const parts = mergedId.split("__")
+    const allPortIds: string[] = []
+
+    for (const part of parts) {
+      const portIds = sourceTracePortsMap.get(part)
+      if (portIds) {
+        allPortIds.push(...portIds)
+      }
+    }
+
+    // Create merged source_trace with combined port IDs
+    circuitJson.push({
+      type: "source_trace",
+      source_trace_id: mergedId,
+      connected_source_port_ids: [...new Set(allPortIds)],
+      connected_source_net_ids: [],
+    } as any)
+  }
 
   // Process routes based on their type
   if (routes.length > 0) {
