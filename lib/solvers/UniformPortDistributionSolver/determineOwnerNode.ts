@@ -18,7 +18,9 @@ export const determineOwnerNode = ({
   nodeBounds,
   sideLengths,
 }: DetermineOwnerNodeParams): string => {
-  const inputNode = inputNodes.find((n) => n.capacityMeshNodeId === currentNodeId)
+  const inputNode = inputNodes.find(
+    (n) => n.capacityMeshNodeId === currentNodeId,
+  )
   const inputPortPoint = inputNode?.portPoints.find(
     (p) => p.portPointId === portPoint.portPointId,
   )

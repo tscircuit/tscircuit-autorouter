@@ -26,12 +26,25 @@ export const redistributePortPointsOnSide = ({
     const count = portsOnZ.length
     for (let i = 0; i < count; i++) {
       const fraction = (2 * i + 1) / (2 * count)
-      let x = 0, y = 0
+      let x = 0,
+        y = 0
       switch (side) {
-        case "top": x = bounds.minX + sideLength * fraction; y = bounds.maxY; break
-        case "bottom": x = bounds.minX + sideLength * fraction; y = bounds.minY; break
-        case "left": x = bounds.minX; y = bounds.minY + sideLength * fraction; break
-        case "right": x = bounds.maxX; y = bounds.minY + sideLength * fraction; break
+        case "top":
+          x = bounds.minX + sideLength * fraction
+          y = bounds.maxY
+          break
+        case "bottom":
+          x = bounds.minX + sideLength * fraction
+          y = bounds.minY
+          break
+        case "left":
+          x = bounds.minX
+          y = bounds.minY + sideLength * fraction
+          break
+        case "right":
+          x = bounds.maxX
+          y = bounds.minY + sideLength * fraction
+          break
       }
       redistributed.push({ ...portsOnZ[i], x, y })
     }

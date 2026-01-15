@@ -35,11 +35,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
     for (const node of input.nodeWithPortPoints) {
       const { width, height, center } = node
       this.mapOfNodeIdToLengthOfEachSide.set(node.capacityMeshNodeId, {
-        left: height, right: height, top: width, bottom: width,
+        left: height,
+        right: height,
+        top: width,
+        bottom: width,
       })
       this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
-        minX: center.x - width / 2, maxX: center.x + width / 2,
-        minY: center.y - height / 2, maxY: center.y + height / 2,
+        minX: center.x - width / 2,
+        maxX: center.x + width / 2,
+        minY: center.y - height / 2,
+        maxY: center.y + height / 2,
       })
     }
 
@@ -65,7 +70,11 @@ export class UniformPortDistributionSolver extends BaseSolver {
         existing.push({ ...portPoint, side, ownerNodeId })
         this.mapOfNodeAndSideToPortPoints.set(key, existing)
 
-        if (!this.nodeAndSideQueue.some(ns => ns.nodeId === ownerNodeId && ns.side === side)) {
+        if (
+          !this.nodeAndSideQueue.some(
+            (ns) => ns.nodeId === ownerNodeId && ns.side === side,
+          )
+        ) {
           this.nodeAndSideQueue.push(nodeAndSide)
         }
       }
@@ -98,7 +107,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     const key = this.getNodeAndSideKey(this.currentNodeAndSide)
-    const portPoints = (this.mapOfNodeAndSideToPortPoints.get(key) ?? []).filter(
+    const portPoints = (
+      this.mapOfNodeAndSideToPortPoints.get(key) ?? []
+    ).filter(
       (p) =>
         !shouldIgnorePortPoint({
           portPoint: p,
@@ -212,23 +223,77 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
     for (const { nodeId, side } of this.nodeAndSideQueue) {
       const b = this.mapOfNodeIdToBounds.get(nodeId)!
-      let x1 = 0, y1 = 0, x2 = 0, y2 = 0
-      if (side === "top") { x1 = b.minX; y1 = b.maxY; x2 = b.maxX; y2 = b.maxY }
-      else if (side === "bottom") { x1 = b.minX; y1 = b.minY; x2 = b.maxX; y2 = b.minY }
-      else if (side === "left") { x1 = b.minX; y1 = b.minY; x2 = b.minX; y2 = b.maxY }
-      else if (side === "right") { x1 = b.maxX; y1 = b.minY; x2 = b.maxX; y2 = b.maxY }
-      lines.push({ points: [{ x: x1, y: y1 }, { x: x2, y: y2 }], strokeColor: "orange", strokeWidth: 0.01 })
+      let x1 = 0,
+        y1 = 0,
+        x2 = 0,
+        y2 = 0
+      if (side === "top") {
+        x1 = b.minX
+        y1 = b.maxY
+        x2 = b.maxX
+        y2 = b.maxY
+      } else if (side === "bottom") {
+        x1 = b.minX
+        y1 = b.minY
+        x2 = b.maxX
+        y2 = b.minY
+      } else if (side === "left") {
+        x1 = b.minX
+        y1 = b.minY
+        x2 = b.minX
+        y2 = b.maxY
+      } else if (side === "right") {
+        x1 = b.maxX
+        y1 = b.minY
+        x2 = b.maxX
+        y2 = b.maxY
+      }
+      lines.push({
+        points: [
+          { x: x1, y: y1 },
+          { x: x2, y: y2 },
+        ],
+        strokeColor: "orange",
+        strokeWidth: 0.01,
+      })
     }
 
     if (this.currentNodeAndSide) {
       const { nodeId, side } = this.currentNodeAndSide
       const b = this.mapOfNodeIdToBounds.get(nodeId)!
-      let x1 = 0, y1 = 0, x2 = 0, y2 = 0
-      if (side === "top") { x1 = b.minX; y1 = b.maxY; x2 = b.maxX; y2 = b.maxY }
-      else if (side === "bottom") { x1 = b.minX; y1 = b.minY; x2 = b.maxX; y2 = b.minY }
-      else if (side === "left") { x1 = b.minX; y1 = b.minY; x2 = b.minX; y2 = b.maxY }
-      else if (side === "right") { x1 = b.maxX; y1 = b.minY; x2 = b.maxX; y2 = b.maxY }
-      lines.push({ points: [{ x: x1, y: y1 }, { x: x2, y: y2 }], strokeColor: "red", strokeWidth: 0.03 })
+      let x1 = 0,
+        y1 = 0,
+        x2 = 0,
+        y2 = 0
+      if (side === "top") {
+        x1 = b.minX
+        y1 = b.maxY
+        x2 = b.maxX
+        y2 = b.maxY
+      } else if (side === "bottom") {
+        x1 = b.minX
+        y1 = b.minY
+        x2 = b.maxX
+        y2 = b.minY
+      } else if (side === "left") {
+        x1 = b.minX
+        y1 = b.minY
+        x2 = b.minX
+        y2 = b.maxY
+      } else if (side === "right") {
+        x1 = b.maxX
+        y1 = b.minY
+        x2 = b.maxX
+        y2 = b.maxY
+      }
+      lines.push({
+        points: [
+          { x: x1, y: y1 },
+          { x: x2, y: y2 },
+        ],
+        strokeColor: "red",
+        strokeWidth: 0.03,
+      })
     }
     return { rects, lines, points }
   }
