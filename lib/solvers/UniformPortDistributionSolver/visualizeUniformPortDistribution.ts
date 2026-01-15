@@ -2,6 +2,7 @@ import { GraphicsObject, Line } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { NodeAndSide, NodeBounds, PortPointWithSide } from "./types"
+import { getSideLineCoordinates } from "./getSideLineCoordinates"
 
 export const visualizeUniformPortDistribution = ({
   obstacles,
@@ -24,7 +25,6 @@ export const visualizeUniformPortDistribution = ({
 
   const portPointMap = new Map<string, { x: number; y: number }>()
 
-  // Initialize with original positions
   for (const node of nodeWithPortPoints) {
     for (const pp of node.portPoints) {
       if (pp.portPointId) {
@@ -33,7 +33,6 @@ export const visualizeUniformPortDistribution = ({
     }
   }
 
-  // Update with redistributed positions
   for (const portPoints of mapOfNodeAndSideToPortPoints.values()) {
     for (const pp of portPoints) {
       if (pp.portPointId) {
@@ -42,9 +41,7 @@ export const visualizeUniformPortDistribution = ({
     }
   }
 
-  for (const pos of portPointMap.values()) {
-    points.push(pos)
-  }
+  points.push(...portPointMap.values())
 
   nodeWithPortPoints.forEach((element) => {
     element.portPoints.forEach((e) => {
@@ -65,37 +62,10 @@ export const visualizeUniformPortDistribution = ({
   })
 
   for (const { nodeId, side } of sidesToProcess) {
-    const b = mapOfNodeIdToBounds.get(nodeId)!
-    let x1 = 0,
-      y1 = 0,
-      x2 = 0,
-      y2 = 0
-    if (side === "top") {
-      x1 = b.minX
-      y1 = b.maxY
-      x2 = b.maxX
-      y2 = b.maxY
-    } else if (side === "bottom") {
-      x1 = b.minX
-      y1 = b.minY
-      x2 = b.maxX
-      y2 = b.minY
-    } else if (side === "left") {
-      x1 = b.minX
-      y1 = b.minY
-      x2 = b.minX
-      y2 = b.maxY
-    } else if (side === "right") {
-      x1 = b.maxX
-      y1 = b.minY
-      x2 = b.maxX
-      y2 = b.maxY
-    }
+    const bounds = mapOfNodeIdToBounds.get(nodeId)!
+    const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
     lines.push({
-      points: [
-        { x: x1, y: y1 },
-        { x: x2, y: y2 },
-      ],
+      points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
       strokeColor: "orange",
       strokeWidth: 0.01,
     })
@@ -103,37 +73,10 @@ export const visualizeUniformPortDistribution = ({
 
   if (currentSideBeingProcessed) {
     const { nodeId, side } = currentSideBeingProcessed
-    const b = mapOfNodeIdToBounds.get(nodeId)!
-    let x1 = 0,
-      y1 = 0,
-      x2 = 0,
-      y2 = 0
-    if (side === "top") {
-      x1 = b.minX
-      y1 = b.maxY
-      x2 = b.maxX
-      y2 = b.maxY
-    } else if (side === "bottom") {
-      x1 = b.minX
-      y1 = b.minY
-      x2 = b.maxX
-      y2 = b.minY
-    } else if (side === "left") {
-      x1 = b.minX
-      y1 = b.minY
-      x2 = b.minX
-      y2 = b.maxY
-    } else if (side === "right") {
-      x1 = b.maxX
-      y1 = b.minY
-      x2 = b.maxX
-      y2 = b.maxY
-    }
+    const bounds = mapOfNodeIdToBounds.get(nodeId)!
+    const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
     lines.push({
-      points: [
-        { x: x1, y: y1 },
-        { x: x2, y: y2 },
-      ],
+      points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
       strokeColor: "red",
       strokeWidth: 0.03,
     })
