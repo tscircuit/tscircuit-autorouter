@@ -7,15 +7,15 @@ export const visualizeUniformPortDistribution = ({
   obstacles,
   nodeWithPortPoints,
   mapOfNodeAndSideToPortPoints,
-  nodeAndSideQueue,
-  currentNodeAndSide,
+  sidesToProcess,
+  currentSideBeingProcessed,
   mapOfNodeIdToBounds,
 }: {
   obstacles: Obstacle[]
   nodeWithPortPoints: NodeWithPortPoints[]
   mapOfNodeAndSideToPortPoints: Map<string, PortPointWithSide[]>
-  nodeAndSideQueue: NodeAndSide[]
-  currentNodeAndSide: NodeAndSide | null
+  sidesToProcess: NodeAndSide[]
+  currentSideBeingProcessed: NodeAndSide | null
   mapOfNodeIdToBounds: Map<string, NodeBounds>
 }): GraphicsObject => {
   const rects = obstacles.map((o) => ({ ...o, fill: "#00000037" }))
@@ -64,7 +64,7 @@ export const visualizeUniformPortDistribution = ({
     })
   })
 
-  for (const { nodeId, side } of nodeAndSideQueue) {
+  for (const { nodeId, side } of sidesToProcess) {
     const b = mapOfNodeIdToBounds.get(nodeId)!
     let x1 = 0,
       y1 = 0,
@@ -101,8 +101,8 @@ export const visualizeUniformPortDistribution = ({
     })
   }
 
-  if (currentNodeAndSide) {
-    const { nodeId, side } = currentNodeAndSide
+  if (currentSideBeingProcessed) {
+    const { nodeId, side } = currentSideBeingProcessed
     const b = mapOfNodeIdToBounds.get(nodeId)!
     let x1 = 0,
       y1 = 0,

@@ -21,10 +21,10 @@ export interface UniformPortDistributionSolverInput {
 
 export class UniformPortDistributionSolver extends BaseSolver {
   mapOfNodeIdToLengthOfEachSide = new Map<string, Record<Side, number>>()
-  nodeAndSideQueue: NodeAndSide[] = []
+  sidesToProcess: NodeAndSide[] = []
   mapOfNodeIdToBounds = new Map<string, NodeBounds>()
   mapOfNodeAndSideToPortPoints = new Map<string, PortPointWithSide[]>()
-  currentNodeAndSide: NodeAndSide | null = null
+  currentSideBeingProcessed: NodeAndSide | null = null
   redistributedNodes: NodeWithPortPoints[] = []
 
   private getNodeAndSideKey({ nodeId, side }: NodeAndSide): string {
@@ -72,15 +72,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
         this.mapOfNodeAndSideToPortPoints.set(key, existing)
 
         if (
-          !this.nodeAndSideQueue.some(
+          !this.sidesToProcess.some(
             (ns) => ns.nodeId === ownerNodeId && ns.side === side,
           )
         ) {
-          this.nodeAndSideQueue.push(nodeAndSide)
+          this.sidesToProcess.push(nodeAndSide)
         }
       }
     }
-    this.nodeAndSideQueue.sort((a, b) => {
+    this.sidesToProcess.sort((a, b) => {
       const bA = this.mapOfNodeIdToBounds.get(a.nodeId)!
       const bB = this.mapOfNodeIdToBounds.get(b.nodeId)!
       return bA.minX - bB.minX || bA.minY - bB.minY
@@ -88,13 +88,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
   }
 
   step(): void {
-    if (this.nodeAndSideQueue.length === 0) {
+    if (this.sidesToProcess.length === 0) {
       this.rebuildNodes()
       this.solved = true
       return
     }
-    this.currentNodeAndSide = this.nodeAndSideQueue.shift()!
-    const { nodeId, side } = this.currentNodeAndSide
+    this.currentSideBeingProcessed = this.sidesToProcess.shift()!
+    const { nodeId, side } = this.currentSideBeingProcessed
 
     if (
       shouldIgnoreSide({
@@ -107,7 +107,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       return
     }
 
-    const key = this.getNodeAndSideKey(this.currentNodeAndSide)
+    const key = this.getNodeAndSideKey(this.currentSideBeingProcessed)
     const portPoints = (
       this.mapOfNodeAndSideToPortPoints.get(key) ?? []
     ).filter(
@@ -177,8 +177,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       obstacles: this.input.obstacles,
       nodeWithPortPoints: this.input.nodeWithPortPoints,
       mapOfNodeAndSideToPortPoints: this.mapOfNodeAndSideToPortPoints,
-      nodeAndSideQueue: this.nodeAndSideQueue,
-      currentNodeAndSide: this.currentNodeAndSide,
+      sidesToProcess: this.sidesToProcess,
+      currentSideBeingProcessed: this.currentSideBeingProcessed,
       mapOfNodeIdToBounds: this.mapOfNodeIdToBounds,
     })
   }
