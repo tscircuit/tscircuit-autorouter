@@ -1,7 +1,7 @@
 import { SimpleRouteConnection } from "lib/types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { MultipleHighDensityRouteStitchSolver } from "./MultipleHighDensityRouteStitchSolver"
 
 /**
  * A simplified version of MultipleHighDensityRouteStitchSolver that doesn't handle

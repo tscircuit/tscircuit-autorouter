@@ -23,7 +23,7 @@ import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointO
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/NoOffBoardMultipleHighDensityRouteStitchSolver"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
 import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
@@ -93,7 +93,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   unravelMultiSectionSolver?: UnravelMultiSectionSolver
   segmentToPointOptimizer?: CapacitySegmentPointOptimizer
   highDensityRouteSolver?: HighDensitySolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
+  highDensityStitchSolver?: NoOffBoardMultipleHighDensityRouteStitchSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets
   mergeAssignableViaNodes?: AssignableViaNodeMergerSolver
   offboardCapacityNodeSolver?: OffboardCapacityNodeSolver
@@ -356,7 +356,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     ]),
     definePipelineStep(
       "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver,
+      NoOffBoardMultipleHighDensityRouteStitchSolver,
       (cms) => [
         {
           connections: cms.srjWithPointPairs!.connections,

@@ -35,7 +35,6 @@ import {
 } from "./AutoroutingPipelineMenuBar"
 import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
-import { AutoroutingPipeline4 } from "lib/autorouter-pipelines/AutoroutingPipeline4/AutoroutingPipeline4"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -43,7 +42,6 @@ const PIPELINE_SOLVERS = {
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,
   AutoroutingPipeline1_OriginalUnravel,
-  AutoroutingPipeline4,
 } as const
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
