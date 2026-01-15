@@ -6,6 +6,9 @@ import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPath
 import { NodeBounds, PortPointWithSide, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
 import { redistributePortPointsOnSide } from "./redistributePortPointsOnSide"
+import { determineOwnerNode } from "./determineOwnerNode"
+import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
+import { shouldIgnoreSide } from "./shouldIgnoreSide"
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -42,10 +45,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
         if (!portPoint.portPointId) continue
         const side = classifyPortPointSide({ portPoint, bounds })
         if (!side) continue
-        const ownerNodeId = this.determineOwnerNode(
+        const ownerNodeId = determineOwnerNode({
           portPoint,
-          node.capacityMeshNodeId,
-        )
+          currentNodeId: node.capacityMeshNodeId,
+          inputNodes: input.inputNodWithPortPoints,
+          nodeBounds: this.mapOfNodeIdToBounds,
+          sideLengths: this.mapOfNodeIdToLengthOfEachSide,
+        })
 
         if (ownerNodeId !== node.capacityMeshNodeId) continue
 
@@ -66,72 +72,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
     })
   }
 
-  determineOwnerNode(portPoint: PortPoint, currentNodeId: string): string {
-    const inputNode = this.input.inputNodWithPortPoints.find(n => n.capacityMeshNodeId === currentNodeId)
-    const inputPortPoint = inputNode?.portPoints.find(p => p.portPointId === portPoint.portPointId)
-    if (!inputPortPoint?.connectionNodeIds || inputPortPoint.connectionNodeIds.length !== 2) return currentNodeId
-    const [n1, n2] = inputPortPoint.connectionNodeIds
-    const b1 = this.mapOfNodeIdToBounds.get(n1), b2 = this.mapOfNodeIdToBounds.get(n2)
-    if (!b1 || !b2) return currentNodeId
-    const s1 = classifyPortPointSide({ portPoint, bounds: b1 }), s2 = classifyPortPointSide({ portPoint, bounds: b2 })
-    if (!s1 || !s2) return currentNodeId
-    return this.mapOfNodeIdToLengthOfEachSide.get(n1)![s1] <= this.mapOfNodeIdToLengthOfEachSide.get(n2)![s2] ? n1 : n2
-  }
-
-  shouldIgnorePortPoint(portPoint: PortPoint, nodeId: string): boolean {
-    const inputNode = this.input.inputNodWithPortPoints.find(n => n.capacityMeshNodeId === nodeId)
-    if (inputNode?._containsTarget) return true
-    const ipp = inputNode?.portPoints.find(p => p.portPointId === portPoint.portPointId)
-    return ipp?.connectionNodeIds?.some(id => this.input.inputNodWithPortPoints.find(n => n.capacityMeshNodeId === id)?._containsTarget) ?? false
-  }
-
-  shouldIgnoreSide(nodeId: string, side: Side): boolean {
-    const bounds = this.mapOfNodeIdToBounds.get(nodeId)!
-
-    for (const obstacle of this.input.obstacles) {
-      const margin = 0.001
-      const obsMinX = obstacle.center.x - obstacle.width / 2
-      const obsMaxX = obstacle.center.x + obstacle.width / 2
-      const obsMinY = obstacle.center.y - obstacle.height / 2
-      const obsMaxY = obstacle.center.y + obstacle.height / 2
-
-      // Check if the side is fully or partially inside the obstacle
-      // A side is ignored only if it's strictly inside the obstacle bounds
-      switch (side) {
-        case "top":
-          if (Math.abs(bounds.maxY - obsMinY) < margin || Math.abs(bounds.maxY - obsMaxY) < margin) {
-            // Check if the side segment overlaps with the obstacle segment
-            const overlapMinX = Math.max(bounds.minX, obsMinX)
-            const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
-            if (overlapMaxX - overlapMinX > margin) return true
-          }
-          break
-        case "bottom":
-          if (Math.abs(bounds.minY - obsMinY) < margin || Math.abs(bounds.minY - obsMaxY) < margin) {
-            const overlapMinX = Math.max(bounds.minX, obsMinX)
-            const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
-            if (overlapMaxX - overlapMinX > margin) return true
-          }
-          break
-        case "left":
-          if (Math.abs(bounds.minX - obsMinX) < margin || Math.abs(bounds.minX - obsMaxX) < margin) {
-            const overlapMinY = Math.max(bounds.minY, obsMinY)
-            const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
-            if (overlapMaxY - overlapMinY > margin) return true
-          }
-          break
-        case "right":
-          if (Math.abs(bounds.maxX - obsMinX) < margin || Math.abs(bounds.maxX - obsMaxX) < margin) {
-            const overlapMinY = Math.max(bounds.minY, obsMinY)
-            const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
-            if (overlapMaxY - overlapMinY > margin) return true
-          }
-          break
-      }
-    }
-    return false
-  }
-
   step(): void {
     if (this.nodeAndSideKeyQueue.length === 0) {
       this.rebuildNodes()
@@ -144,13 +84,27 @@ export class UniformPortDistributionSolver extends BaseSolver {
       Side,
     ]
 
-    if (this.shouldIgnoreSide(nodeId, side)) {
+    if (
+      shouldIgnoreSide({
+        nodeId,
+        side,
+        nodeBounds: this.mapOfNodeIdToBounds,
+        obstacles: this.input.obstacles,
+      })
+    ) {
       return
     }
 
     const portPoints = (
       this.mapOfNodeAndSideToPortPoints.get(this.currentNodeAndSideKey) ?? []
-    ).filter((p) => !this.shouldIgnorePortPoint(p, nodeId))
+    ).filter(
+      (p) =>
+        !shouldIgnorePortPoint({
+          portPoint: p,
+          nodeId,
+          inputNodes: this.input.inputNodWithPortPoints,
+        }),
+    )
     this.mapOfNodeAndSideToPortPoints.set(
       this.currentNodeAndSideKey,
       redistributePortPointsOnSide({
