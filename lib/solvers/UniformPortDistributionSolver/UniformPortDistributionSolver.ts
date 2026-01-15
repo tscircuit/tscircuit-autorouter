@@ -1,7 +1,7 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { GraphicsObject, Line } from "graphics-debug"
+import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
-import { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { NodeAndSide, NodeBounds, PortPointWithSide, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
@@ -9,6 +9,7 @@ import { redistributePortPointsOnSide } from "./redistributePortPointsOnSide"
 import { determineOwnerNode } from "./determineOwnerNode"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSide } from "./shouldIgnoreSide"
+import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -172,129 +173,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
   getOutput = () => this.redistributedNodes
 
   visualize(): GraphicsObject {
-    const rects = this.input.obstacles.map((o) => ({ ...o, fill: "#00000037" }))
-    const points: { x: number; y: number }[] = []
-    const lines: Line[] = []
-
-    // Create a map of portPointId to its most current position
-    const portPointMap = new Map<string, { x: number; y: number }>()
-
-    // Initialize with original positions
-    for (const node of this.input.nodeWithPortPoints) {
-      for (const pp of node.portPoints) {
-        if (pp.portPointId) {
-          portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
-        }
-      }
-    }
-
-    // Update with redistributed positions
-    for (const portPoints of this.mapOfNodeAndSideToPortPoints.values()) {
-      for (const pp of portPoints) {
-        if (pp.portPointId) {
-          portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
-        }
-      }
-    }
-
-    // Collect all points for visualization
-    for (const pos of portPointMap.values()) {
-      points.push(pos)
-    }
-
-    // Draw connection lines using the updated positions
-    this.input.nodeWithPortPoints.forEach((element) => {
-      element.portPoints.forEach((e) => {
-        if (!e.portPointId) return
-        const posE = portPointMap.get(e.portPointId)!
-
-        element.portPoints.forEach((f) => {
-          if (!f.portPointId || e === f) return
-          if (e.connectionName === f.connectionName) {
-            const posF = portPointMap.get(f.portPointId)!
-            lines.push({
-              points: [posE, posF],
-              strokeColor: "#fff822c9",
-            })
-          }
-        })
-      })
+    return visualizeUniformPortDistribution({
+      obstacles: this.input.obstacles,
+      nodeWithPortPoints: this.input.nodeWithPortPoints,
+      mapOfNodeAndSideToPortPoints: this.mapOfNodeAndSideToPortPoints,
+      nodeAndSideQueue: this.nodeAndSideQueue,
+      currentNodeAndSide: this.currentNodeAndSide,
+      mapOfNodeIdToBounds: this.mapOfNodeIdToBounds,
     })
-
-    for (const { nodeId, side } of this.nodeAndSideQueue) {
-      const b = this.mapOfNodeIdToBounds.get(nodeId)!
-      let x1 = 0,
-        y1 = 0,
-        x2 = 0,
-        y2 = 0
-      if (side === "top") {
-        x1 = b.minX
-        y1 = b.maxY
-        x2 = b.maxX
-        y2 = b.maxY
-      } else if (side === "bottom") {
-        x1 = b.minX
-        y1 = b.minY
-        x2 = b.maxX
-        y2 = b.minY
-      } else if (side === "left") {
-        x1 = b.minX
-        y1 = b.minY
-        x2 = b.minX
-        y2 = b.maxY
-      } else if (side === "right") {
-        x1 = b.maxX
-        y1 = b.minY
-        x2 = b.maxX
-        y2 = b.maxY
-      }
-      lines.push({
-        points: [
-          { x: x1, y: y1 },
-          { x: x2, y: y2 },
-        ],
-        strokeColor: "orange",
-        strokeWidth: 0.01,
-      })
-    }
-
-    if (this.currentNodeAndSide) {
-      const { nodeId, side } = this.currentNodeAndSide
-      const b = this.mapOfNodeIdToBounds.get(nodeId)!
-      let x1 = 0,
-        y1 = 0,
-        x2 = 0,
-        y2 = 0
-      if (side === "top") {
-        x1 = b.minX
-        y1 = b.maxY
-        x2 = b.maxX
-        y2 = b.maxY
-      } else if (side === "bottom") {
-        x1 = b.minX
-        y1 = b.minY
-        x2 = b.maxX
-        y2 = b.minY
-      } else if (side === "left") {
-        x1 = b.minX
-        y1 = b.minY
-        x2 = b.minX
-        y2 = b.maxY
-      } else if (side === "right") {
-        x1 = b.maxX
-        y1 = b.minY
-        x2 = b.maxX
-        y2 = b.maxY
-      }
-      lines.push({
-        points: [
-          { x: x1, y: y1 },
-          { x: x2, y: y2 },
-        ],
-        strokeColor: "red",
-        strokeWidth: 0.03,
-      })
-    }
-    return { rects, lines, points }
   }
 }
