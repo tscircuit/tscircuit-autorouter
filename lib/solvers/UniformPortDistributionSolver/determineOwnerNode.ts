@@ -1,13 +1,13 @@
 import { PortPoint } from "lib/types/high-density-types"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { NodeBounds, Side } from "./types"
+import { Bounds, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
 
 interface DetermineOwnerNodeParams {
   portPoint: PortPoint
   currentNodeId: string
   inputNodes: InputNodeWithPortPoints[]
-  nodeBounds: Map<string, NodeBounds>
+  nodeBounds: Map<string, Bounds>
   sideLengths: Map<string, Record<Side, number>>
 }
 

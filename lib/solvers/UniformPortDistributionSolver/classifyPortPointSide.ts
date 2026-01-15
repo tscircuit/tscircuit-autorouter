@@ -1,12 +1,12 @@
 import { PortPoint } from "lib/types/high-density-types"
-import { NodeBounds, Side } from "./types"
+import { Bounds, Side } from "./types"
 
 export const classifyPortPointSide = ({
   portPoint,
   bounds,
 }: {
   portPoint: PortPoint
-  bounds: NodeBounds
+  bounds: Bounds
 }): Side | null => {
   const tolerance = 0.001
   const isOnTop = Math.abs(portPoint.y - bounds.maxY) < tolerance

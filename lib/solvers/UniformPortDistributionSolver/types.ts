@@ -2,7 +2,7 @@ import { PortPoint } from "lib/types/high-density-types"
 
 export type Side = "left" | "right" | "top" | "bottom"
 
-export type NodeBounds = {
+export type Bounds = {
   minX: number
   maxX: number
   minY: number

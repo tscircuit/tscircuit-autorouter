@@ -1,10 +1,10 @@
 import { Obstacle } from "lib/types"
-import { NodeBounds, Side } from "./types"
+import { Bounds, Side } from "./types"
 
 interface ShouldIgnoreSideParams {
   nodeId: string
   side: Side
-  nodeBounds: Map<string, NodeBounds>
+  nodeBounds: Map<string, Bounds>
   obstacles: Obstacle[]
 }
 

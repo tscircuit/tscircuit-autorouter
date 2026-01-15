@@ -1,7 +1,7 @@
 import { GraphicsObject, Line } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { NodeAndSide, NodeBounds, PortPointWithSide } from "./types"
+import { NodeAndSide, Bounds, PortPointWithSide } from "./types"
 import { getSideLineCoordinates } from "./getSideLineCoordinates"
 
 export const visualizeUniformPortDistribution = ({
@@ -17,7 +17,7 @@ export const visualizeUniformPortDistribution = ({
   mapOfNodeAndSideToPortPoints: Map<string, PortPointWithSide[]>
   sidesToProcess: NodeAndSide[]
   currentSideBeingProcessed: NodeAndSide | null
-  mapOfNodeIdToBounds: Map<string, NodeBounds>
+  mapOfNodeIdToBounds: Map<string, Bounds>
 }): GraphicsObject => {
   const rects = obstacles.map((o) => ({ ...o, fill: "#00000037" }))
   const points: { x: number; y: number }[] = []

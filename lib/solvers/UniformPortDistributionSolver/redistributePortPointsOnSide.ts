@@ -1,4 +1,4 @@
-import { NodeBounds, PortPointWithSide, Side } from "./types"
+import { Bounds, PortPointWithSide, Side } from "./types"
 
 export const redistributePortPointsOnSide = ({
   side,
@@ -8,7 +8,7 @@ export const redistributePortPointsOnSide = ({
 }: {
   side: Side
   portPoints: PortPointWithSide[]
-  bounds: NodeBounds
+  bounds: Bounds
   sideLength: number
 }): PortPointWithSide[] => {
   if (portPoints.length === 0) return []

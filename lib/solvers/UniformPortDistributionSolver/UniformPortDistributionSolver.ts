@@ -3,7 +3,7 @@ import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { NodeAndSide, NodeBounds, PortPointWithSide, Side } from "./types"
+import { NodeAndSide, Bounds, PortPointWithSide, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
 import { redistributePortPointsOnSide } from "./redistributePortPointsOnSide"
 import { determineOwnerNode } from "./determineOwnerNode"
@@ -20,7 +20,7 @@ export interface UniformPortDistributionSolverInput {
 export class UniformPortDistributionSolver extends BaseSolver {
   mapOfNodeIdToLengthOfEachSide = new Map<string, Record<Side, number>>()
   sidesToProcess: NodeAndSide[] = []
-  mapOfNodeIdToBounds = new Map<string, NodeBounds>()
+  mapOfNodeIdToBounds = new Map<string, Bounds>()
   mapOfNodeAndSideToPortPoints = new Map<string, PortPointWithSide[]>()
   currentSideBeingProcessed: NodeAndSide | null = null
   redistributedNodes: NodeWithPortPoints[] = []
