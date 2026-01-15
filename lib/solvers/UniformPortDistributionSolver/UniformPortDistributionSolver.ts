@@ -18,6 +18,15 @@ export interface UniformPortDistributionSolverInput {
   obstacles: Obstacle[]
 }
 
+/**
+ * Redistributes port points uniformly along the sides of nodes to optimize
+ * routing density and prevent congestion.
+ *
+ * This solver:
+ * 1. Classifies which side of a node each port point belongs to.
+ * 2. Determines the "owner" node for port points shared between nodes.
+ * 3. Evenly spaces port points along their assigned side.
+ */
 export class UniformPortDistributionSolver extends BaseSolver {
   mapOfNodeIdToLengthOfEachSide = new Map<string, Record<Side, number>>()
   sidesToProcess: NodeAndSide[] = []
