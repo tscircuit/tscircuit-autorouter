@@ -85,6 +85,53 @@ export class UniformPortDistributionSolver extends BaseSolver {
     return ipp?.connectionNodeIds?.some(id => this.input.inputNodWithPortPoints.find(n => n.capacityMeshNodeId === id)?._containsTarget) ?? false
   }
 
+  shouldIgnoreSide(nodeId: string, side: Side): boolean {
+    const bounds = this.mapOfNodeIdToBounds.get(nodeId)!
+
+    for (const obstacle of this.input.obstacles) {
+      const margin = 0.001
+      const obsMinX = obstacle.center.x - obstacle.width / 2
+      const obsMaxX = obstacle.center.x + obstacle.width / 2
+      const obsMinY = obstacle.center.y - obstacle.height / 2
+      const obsMaxY = obstacle.center.y + obstacle.height / 2
+
+      // Check if the side is fully or partially inside the obstacle
+      // A side is ignored only if it's strictly inside the obstacle bounds
+      switch (side) {
+        case "top":
+          if (Math.abs(bounds.maxY - obsMinY) < margin || Math.abs(bounds.maxY - obsMaxY) < margin) {
+            // Check if the side segment overlaps with the obstacle segment
+            const overlapMinX = Math.max(bounds.minX, obsMinX)
+            const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
+            if (overlapMaxX - overlapMinX > margin) return true
+          }
+          break
+        case "bottom":
+          if (Math.abs(bounds.minY - obsMinY) < margin || Math.abs(bounds.minY - obsMaxY) < margin) {
+            const overlapMinX = Math.max(bounds.minX, obsMinX)
+            const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
+            if (overlapMaxX - overlapMinX > margin) return true
+          }
+          break
+        case "left":
+          if (Math.abs(bounds.minX - obsMinX) < margin || Math.abs(bounds.minX - obsMaxX) < margin) {
+            const overlapMinY = Math.max(bounds.minY, obsMinY)
+            const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
+            if (overlapMaxY - overlapMinY > margin) return true
+          }
+          break
+        case "right":
+          if (Math.abs(bounds.maxX - obsMinX) < margin || Math.abs(bounds.maxX - obsMaxX) < margin) {
+            const overlapMinY = Math.max(bounds.minY, obsMinY)
+            const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
+            if (overlapMaxY - overlapMinY > margin) return true
+          }
+          break
+      }
+    }
+    return false
+  }
+
   step(): void {
     if (this.nodeAndSideKeyQueue.length === 0) {
       this.rebuildNodes()
@@ -92,14 +139,27 @@ export class UniformPortDistributionSolver extends BaseSolver {
       return
     }
     this.currentNodeAndSideKey = this.nodeAndSideKeyQueue.shift()!
-    const [nodeId, side] = this.currentNodeAndSideKey.split(":") as [string, Side]
-    // TODO: i think this is a todo skip port points if they are on obstical or allow entry exti to a obsitlca
-    const portPoints = (this.mapOfNodeAndSideToPortPoints.get(this.currentNodeAndSideKey) ?? [])
-      .filter(p => !this.shouldIgnorePortPoint(p, nodeId))
-    this.mapOfNodeAndSideToPortPoints.set(this.currentNodeAndSideKey, redistributePortPointsOnSide({
-      side, portPoints, bounds: this.mapOfNodeIdToBounds.get(nodeId)!,
-      sideLength: this.mapOfNodeIdToLengthOfEachSide.get(nodeId)![side]
-    }))
+    const [nodeId, side] = this.currentNodeAndSideKey.split(":") as [
+      string,
+      Side,
+    ]
+
+    if (this.shouldIgnoreSide(nodeId, side)) {
+      return
+    }
+
+    const portPoints = (
+      this.mapOfNodeAndSideToPortPoints.get(this.currentNodeAndSideKey) ?? []
+    ).filter((p) => !this.shouldIgnorePortPoint(p, nodeId))
+    this.mapOfNodeAndSideToPortPoints.set(
+      this.currentNodeAndSideKey,
+      redistributePortPointsOnSide({
+        side,
+        portPoints,
+        bounds: this.mapOfNodeIdToBounds.get(nodeId)!,
+        sideLength: this.mapOfNodeIdToLengthOfEachSide.get(nodeId)![side],
+      }),
+    )
   }
 
   rebuildNodes(): void {
@@ -140,9 +200,54 @@ export class UniformPortDistributionSolver extends BaseSolver {
   getOutput = () => this.redistributedNodes
 
   visualize(): GraphicsObject {
-    const rects = this.input.obstacles.map(o => ({ ...o, fill: "#00000037" }))
-    const points = Array.from(this.mapOfNodeAndSideToPortPoints.values()).flat().map(p => ({ x: p.x, y: p.y }))
+    const rects = this.input.obstacles.map((o) => ({ ...o, fill: "#00000037" }))
+    const points: { x: number; y: number }[] = []
     const lines: Line[] = []
+
+    // Create a map of portPointId to its most current position
+    const portPointMap = new Map<string, { x: number; y: number }>()
+
+    // Initialize with original positions
+    for (const node of this.input.nodeWithPortPoints) {
+      for (const pp of node.portPoints) {
+        if (pp.portPointId) {
+          portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
+        }
+      }
+    }
+
+    // Update with redistributed positions
+    for (const portPoints of this.mapOfNodeAndSideToPortPoints.values()) {
+      for (const pp of portPoints) {
+        if (pp.portPointId) {
+          portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
+        }
+      }
+    }
+
+    // Collect all points for visualization
+    for (const pos of portPointMap.values()) {
+      points.push(pos)
+    }
+
+    // Draw connection lines using the updated positions
+    this.input.nodeWithPortPoints.forEach((element) => {
+      element.portPoints.forEach((e) => {
+        if (!e.portPointId) return
+        const posE = portPointMap.get(e.portPointId)!
+
+        element.portPoints.forEach((f) => {
+          if (!f.portPointId || e === f) return
+          if (e.connectionName === f.connectionName) {
+            const posF = portPointMap.get(f.portPointId)!
+            lines.push({
+              points: [posE, posF],
+              strokeColor: "#fff822c9",
+            })
+          }
+        })
+      })
+    })
 
     for (const key of this.nodeAndSideKeyQueue) {
       const [id, side] = key.split(":")
