@@ -292,6 +292,7 @@ export class MuchBetterDistributionOfPortPointsSolver extends BaseSolver {
 
   /**
    * Redistribute port points on a single side of a node to have better spacing
+   * Uses a "space-around" distribution similar to CSS flexbox
    */
   redistributePortPointsOnSide(
     nodeId: string,
@@ -309,11 +310,6 @@ export class MuchBetterDistributionOfPortPointsSolver extends BaseSolver {
     if (!bounds || !sides) return portPoints
 
     const sideLength = sides[side]
-    const minSpacing = this.input.minTraceWidth + 0.15 // Add margin
-    const edgeMargin = (minSpacing * 3) / 4
-
-    // Calculate effective length (excluding margins)
-    const effectiveLength = Math.max(0, sideLength - 2 * edgeMargin)
 
     // Group by z-layer
     const portsByZ = new Map<number, PortPointWithSide[]>()
@@ -332,14 +328,11 @@ export class MuchBetterDistributionOfPortPointsSolver extends BaseSolver {
       for (let i = 0; i < count; i++) {
         const originalPort = portsOnZ[i]
 
-        // Calculate new position along the side
-        let fraction: number
-        if (count === 1) {
-          fraction = 0.5
-        } else {
-          fraction =
-            (edgeMargin + (effectiveLength * i) / (count - 1)) / sideLength
-        }
+        // Calculate new position along the side using "space-around" logic
+        // Each item gets equal space around it: [ space | item | space | space | item | space ]
+        // Total spaces = 2 * count
+        // Position of i-th item = (2*i + 1) / (2*count)
+        const fraction = (2 * i + 1) / (2 * count)
 
         // Calculate new x, y based on side
         let newX: number
@@ -469,6 +462,36 @@ export class MuchBetterDistributionOfPortPointsSolver extends BaseSolver {
         points.push({
           x: portPoint.x,
           y: portPoint.y,
+        })
+      }
+    }
+
+    // Draw unprocessed edges
+    for (const key of this.nodeAndSideKeyQueue) {
+      const [nodeId, side] = key.split(":")
+      const bounds = this.mapOfNodeIdToBounds.get(nodeId)
+      if (bounds) {
+        let x1: number, y1: number, x2: number, y2: number
+        switch (side) {
+          case "top":
+            x1 = bounds.minX; y1 = bounds.maxY; x2 = bounds.maxX; y2 = bounds.maxY
+            break
+          case "bottom":
+            x1 = bounds.minX; y1 = bounds.minY; x2 = bounds.maxX; y2 = bounds.minY
+            break
+          case "left":
+            x1 = bounds.minX; y1 = bounds.minY; x2 = bounds.minX; y2 = bounds.maxY
+            break
+          case "right":
+            x1 = bounds.maxX; y1 = bounds.minY; x2 = bounds.maxX; y2 = bounds.maxY
+            break
+          default:
+            x1 = y1 = x2 = y2 = 0
+        }
+        lines.push({
+          points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
+          strokeColor: "orange",
+          strokeWidth: 0.01,
         })
       }
     }
