@@ -45,7 +45,7 @@ import {
 } from "../../solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
-import { MuchBetterDistributionOfPortPointsSolver } from "lib/solvers/BetterDistributionOfPortPoints/MuchBetterDistributionOfPortPoints.ts"
+import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -103,7 +103,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: HyperPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
-  betterDistributionOfPortPoints?: MuchBetterDistributionOfPortPointsSolver
+  uniformPortDistributionSolver?: UniformPortDistributionSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -303,8 +303,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "betterDistributionOfPortPoints",
-      MuchBetterDistributionOfPortPointsSolver,
+      "uniformPortDistributionSolver",
+      UniformPortDistributionSolver,
       (cms) => [
         {
           nodeWithPortPoints:
@@ -321,7 +321,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints:
-          cms.betterDistributionOfPortPoints?.getOutput() ??
+          cms.uniformPortDistributionSolver?.getOutput() ??
           cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
           cms.portPointPathingSolver?.getNodesWithPortPoints() ??
           [],
@@ -462,8 +462,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       this.availableSegmentPointSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-    const betterDistributionViz =
-      this.betterDistributionOfPortPoints?.visualize()
+    const uniformPortDistributionViz =
+      this.uniformPortDistributionSolver?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
@@ -538,7 +538,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       availableSegmentPointViz,
       portPointPathingViz,
       multiSectionOptViz,
-      betterDistributionViz,
+      uniformPortDistributionViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
       highDensityStitchViz,
       traceSimplificationViz,
