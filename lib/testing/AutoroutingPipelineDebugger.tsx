@@ -43,7 +43,7 @@ const PIPELINE_SOLVERS = {
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,
   AutoroutingPipeline1_OriginalUnravel,
-  AutoroutingPipeline4: AutoroutingPipeline4,
+  AutoroutingPipeline4,
 } as const
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
@@ -233,6 +233,21 @@ export const AutoroutingPipelineDebugger = ({
       ? (parseInt(storedEffort, 10) as EffortLevel)
       : 1
     const SolverClass = PIPELINE_SOLVERS[initialPipelineId]
+    
+    if (!SolverClass) {
+      // Fallback to default pipeline if stored ID is invalid
+      const fallbackClass = PIPELINE_SOLVERS["AutoroutingPipelineSolver2_PortPointPathing"]
+      return createSolverProp
+        ? createSolverProp(srj, {
+            cacheProvider: initialCacheProvider,
+            effort: initialEffort,
+          })
+        : new fallbackClass(srj, {
+            cacheProvider: initialCacheProvider,
+            effort: initialEffort,
+          })
+    }
+    
     return createSolverProp
       ? createSolverProp(srj, {
           cacheProvider: initialCacheProvider,
