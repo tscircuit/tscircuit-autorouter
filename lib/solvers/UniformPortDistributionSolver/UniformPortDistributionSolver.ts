@@ -125,26 +125,30 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ]),
     )
 
-    const redistributedPortPoints = new Map<string, PortPoint>()
+    // Map portPointId to its redistributed position (x, y only)
+    const redistributedPositions = new Map<string, { x: number; y: number }>()
     for (const points of this.mapOfNodeAndSideToPortPoints.values()) {
       for (const p of points) {
         if (p.portPointId) {
-          const { side, ownerNodeId, ...cleanPortPoint } = p as any
-          redistributedPortPoints.set(p.portPointId, cleanPortPoint)
+          redistributedPositions.set(p.portPointId, { x: p.x, y: p.y })
         }
       }
     }
 
+    // Rebuild nodes, preserving all port points but updating positions
     for (const node of this.input.nodeWithPortPoints) {
       const targetNode = nodeMap.get(node.capacityMeshNodeId)!
       for (const portPoint of node.portPoints) {
         if (
           portPoint.portPointId &&
-          redistributedPortPoints.has(portPoint.portPointId)
+          redistributedPositions.has(portPoint.portPointId)
         ) {
-          targetNode.portPoints.push(
-            redistributedPortPoints.get(portPoint.portPointId)!,
-          )
+          const newPos = redistributedPositions.get(portPoint.portPointId)!
+          targetNode.portPoints.push({
+            ...portPoint,
+            x: newPos.x,
+            y: newPos.y,
+          })
         } else {
           targetNode.portPoints.push(portPoint)
         }
