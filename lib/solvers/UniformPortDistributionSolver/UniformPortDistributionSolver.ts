@@ -3,7 +3,7 @@ import { GraphicsObject, Line } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { NodeBounds, PortPointWithSide, Side } from "./types"
+import { NodeAndSide, NodeBounds, PortPointWithSide, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
 import { redistributePortPointsOnSide } from "./redistributePortPointsOnSide"
 import { determineOwnerNode } from "./determineOwnerNode"
@@ -20,11 +20,15 @@ export interface UniformPortDistributionSolverInput {
 
 export class UniformPortDistributionSolver extends BaseSolver {
   mapOfNodeIdToLengthOfEachSide = new Map<string, Record<Side, number>>()
-  nodeAndSideKeyQueue: string[] = []
+  nodeAndSideQueue: NodeAndSide[] = []
   mapOfNodeIdToBounds = new Map<string, NodeBounds>()
   mapOfNodeAndSideToPortPoints = new Map<string, PortPointWithSide[]>()
-  currentNodeAndSideKey: string | null = null
+  currentNodeAndSide: NodeAndSide | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+
+  private getNodeAndSideKey({ nodeId, side }: NodeAndSide): string {
+    return `${nodeId}:${side}`
+  }
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -55,34 +59,32 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
         if (ownerNodeId !== node.capacityMeshNodeId) continue
 
-        const key = `${ownerNodeId}:${side}`
+        const nodeAndSide: NodeAndSide = { nodeId: ownerNodeId, side }
+        const key = this.getNodeAndSideKey(nodeAndSide)
         const existing = this.mapOfNodeAndSideToPortPoints.get(key) ?? []
         existing.push({ ...portPoint, side, ownerNodeId })
         this.mapOfNodeAndSideToPortPoints.set(key, existing)
+
+        if (!this.nodeAndSideQueue.some(ns => ns.nodeId === ownerNodeId && ns.side === side)) {
+          this.nodeAndSideQueue.push(nodeAndSide)
+        }
       }
     }
-    this.nodeAndSideKeyQueue = Array.from(
-      this.mapOfNodeAndSideToPortPoints.keys(),
-    ).sort((a, b) => {
-      const [idA] = a.split(":")
-      const [idB] = b.split(":")
-      const bA = this.mapOfNodeIdToBounds.get(idA)!
-      const bB = this.mapOfNodeIdToBounds.get(idB)!
+    this.nodeAndSideQueue.sort((a, b) => {
+      const bA = this.mapOfNodeIdToBounds.get(a.nodeId)!
+      const bB = this.mapOfNodeIdToBounds.get(b.nodeId)!
       return bA.minX - bB.minX || bA.minY - bB.minY
     })
   }
 
   step(): void {
-    if (this.nodeAndSideKeyQueue.length === 0) {
+    if (this.nodeAndSideQueue.length === 0) {
       this.rebuildNodes()
       this.solved = true
       return
     }
-    this.currentNodeAndSideKey = this.nodeAndSideKeyQueue.shift()!
-    const [nodeId, side] = this.currentNodeAndSideKey.split(":") as [
-      string,
-      Side,
-    ]
+    this.currentNodeAndSide = this.nodeAndSideQueue.shift()!
+    const { nodeId, side } = this.currentNodeAndSide
 
     if (
       shouldIgnoreSide({
@@ -95,9 +97,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       return
     }
 
-    const portPoints = (
-      this.mapOfNodeAndSideToPortPoints.get(this.currentNodeAndSideKey) ?? []
-    ).filter(
+    const key = this.getNodeAndSideKey(this.currentNodeAndSide)
+    const portPoints = (this.mapOfNodeAndSideToPortPoints.get(key) ?? []).filter(
       (p) =>
         !shouldIgnorePortPoint({
           portPoint: p,
@@ -106,7 +107,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         }),
     )
     this.mapOfNodeAndSideToPortPoints.set(
-      this.currentNodeAndSideKey,
+      key,
       redistributePortPointsOnSide({
         side,
         portPoints,
@@ -205,9 +206,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       })
     })
 
-    for (const key of this.nodeAndSideKeyQueue) {
-      const [id, side] = key.split(":")
-      const b = this.mapOfNodeIdToBounds.get(id)!
+    for (const { nodeId, side } of this.nodeAndSideQueue) {
+      const b = this.mapOfNodeIdToBounds.get(nodeId)!
       let x1 = 0, y1 = 0, x2 = 0, y2 = 0
       if (side === "top") { x1 = b.minX; y1 = b.maxY; x2 = b.maxX; y2 = b.maxY }
       else if (side === "bottom") { x1 = b.minX; y1 = b.minY; x2 = b.maxX; y2 = b.minY }
@@ -216,9 +216,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
       lines.push({ points: [{ x: x1, y: y1 }, { x: x2, y: y2 }], strokeColor: "orange", strokeWidth: 0.01 })
     }
 
-    if (this.currentNodeAndSideKey) {
-      const [id, side] = this.currentNodeAndSideKey.split(":")
-      const b = this.mapOfNodeIdToBounds.get(id)!
+    if (this.currentNodeAndSide) {
+      const { nodeId, side } = this.currentNodeAndSide
+      const b = this.mapOfNodeIdToBounds.get(nodeId)!
       let x1 = 0, y1 = 0, x2 = 0, y2 = 0
       if (side === "top") { x1 = b.minX; y1 = b.maxY; x2 = b.maxX; y2 = b.maxY }
       else if (side === "bottom") { x1 = b.minX; y1 = b.minY; x2 = b.maxX; y2 = b.minY }

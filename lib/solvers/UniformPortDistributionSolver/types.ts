@@ -9,6 +9,11 @@ export type NodeBounds = {
   maxY: number
 }
 
+export interface NodeAndSide {
+  nodeId: string
+  side: Side
+}
+
 export type PortPointWithSide = PortPoint & {
   side: Side
   ownerNodeId: string
