@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { NodeAndSide, Bounds, PortPointWithSide, Side } from "./types"
 import { classifyPortPointSide } from "./classifyPortPointSide"
@@ -32,19 +33,17 @@ export class UniformPortDistributionSolver extends BaseSolver {
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
     for (const node of input.nodeWithPortPoints) {
-      const { width, height, center } = node
+      const { width, height } = node
       this.mapOfNodeIdToLengthOfEachSide.set(node.capacityMeshNodeId, {
         left: height,
         right: height,
         top: width,
         bottom: width,
       })
-      this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
-        minX: center.x - width / 2,
-        maxX: center.x + width / 2,
-        minY: center.y - height / 2,
-        maxY: center.y + height / 2,
-      })
+      this.mapOfNodeIdToBounds.set(
+        node.capacityMeshNodeId,
+        getBoundsFromNodeWithPortPoints(node),
+      )
     }
 
     for (const node of input.nodeWithPortPoints) {
