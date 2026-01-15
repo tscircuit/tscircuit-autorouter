@@ -42,7 +42,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
         if (!portPoint.portPointId) continue
         const side = classifyPortPointSide({ portPoint, bounds })
         if (!side) continue
-        const ownerNodeId = this.determineOwnerNode(portPoint, node.capacityMeshNodeId)
+        const ownerNodeId = this.determineOwnerNode(
+          portPoint,
+          node.capacityMeshNodeId,
+        )
+
+        if (ownerNodeId !== node.capacityMeshNodeId) continue
+
         const key = `${ownerNodeId}:${side}`
         const existing = this.mapOfNodeAndSideToPortPoints.get(key) ?? []
         existing.push({ ...portPoint, side, ownerNodeId })
@@ -103,12 +109,29 @@ export class UniformPortDistributionSolver extends BaseSolver {
         { ...n, portPoints: [] },
       ]),
     )
+
+    // Add all port points from the input that were NOT redistributed
+    // (e.g. those in target nodes or those that weren't "owned" by any side)
+    for (const node of this.input.nodeWithPortPoints) {
+      const targetNode = nodeMap.get(node.capacityMeshNodeId)!
+      for (const portPoint of node.portPoints) {
+        const bounds = this.mapOfNodeIdToBounds.get(node.capacityMeshNodeId)!
+        const side = classifyPortPointSide({ portPoint, bounds })
+        const ownerNodeId = side
+          ? this.determineOwnerNode(portPoint, node.capacityMeshNodeId)
+          : null
+
+        if (!side || ownerNodeId !== node.capacityMeshNodeId) {
+          targetNode.portPoints.push(portPoint)
+        }
+      }
+    }
+
+    // Add redistributed port points
     for (const [key, points] of this.mapOfNodeAndSideToPortPoints) {
       const node = nodeMap.get(key.split(":")[0])
       if (node) {
-        node.portPoints.push(
-          ...points.map(({ side, ownerNodeId, ...p }) => p),
-        )
+        node.portPoints.push(...points.map(({ side, ownerNodeId, ...p }) => p))
       }
     }
     this.redistributedNodes = Array.from(nodeMap.values())
