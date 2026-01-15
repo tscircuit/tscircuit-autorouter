@@ -49,7 +49,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
         this.mapOfNodeAndSideToPortPoints.set(key, existing)
       }
     }
-    this.nodeAndSideKeyQueue = Array.from(this.mapOfNodeAndSideToPortPoints.keys())
+    this.nodeAndSideKeyQueue = Array.from(
+      this.mapOfNodeAndSideToPortPoints.keys(),
+    ).sort((a, b) => {
+      const [idA] = a.split(":")
+      const [idB] = b.split(":")
+      const bA = this.mapOfNodeIdToBounds.get(idA)!
+      const bB = this.mapOfNodeIdToBounds.get(idB)!
+      return bA.minX - bB.minX || bA.minY - bB.minY
+    })
   }
 
   determineOwnerNode(portPoint: PortPoint, currentNodeId: string): string {
@@ -73,10 +81,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   step(): void {
     if (this.nodeAndSideKeyQueue.length === 0) {
-      this.rebuildNodes(); this.solved = true; return
+      this.rebuildNodes()
+      this.solved = true
+      return
     }
     this.currentNodeAndSideKey = this.nodeAndSideKeyQueue.shift()!
     const [nodeId, side] = this.currentNodeAndSideKey.split(":") as [string, Side]
+    // TODO: i think this is a todo skip port points if they are on obstical or allow entry exti to a obsitlca
     const portPoints = (this.mapOfNodeAndSideToPortPoints.get(this.currentNodeAndSideKey) ?? [])
       .filter(p => !this.shouldIgnorePortPoint(p, nodeId))
     this.mapOfNodeAndSideToPortPoints.set(this.currentNodeAndSideKey, redistributePortPointsOnSide({
@@ -109,6 +120,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const rects = this.input.obstacles.map(o => ({ ...o, fill: "#00000037" }))
     const points = Array.from(this.mapOfNodeAndSideToPortPoints.values()).flat().map(p => ({ x: p.x, y: p.y }))
     const lines: Line[] = []
+
+    for (const key of this.nodeAndSideKeyQueue) {
+      const [id, side] = key.split(":")
+      const b = this.mapOfNodeIdToBounds.get(id)!
+      let x1 = 0, y1 = 0, x2 = 0, y2 = 0
+      if (side === "top") { x1 = b.minX; y1 = b.maxY; x2 = b.maxX; y2 = b.maxY }
+      else if (side === "bottom") { x1 = b.minX; y1 = b.minY; x2 = b.maxX; y2 = b.minY }
+      else if (side === "left") { x1 = b.minX; y1 = b.minY; x2 = b.minX; y2 = b.maxY }
+      else if (side === "right") { x1 = b.maxX; y1 = b.minY; x2 = b.maxX; y2 = b.maxY }
+      lines.push({ points: [{ x: x1, y: y1 }, { x: x2, y: y2 }], strokeColor: "orange", strokeWidth: 0.01 })
+    }
+
     if (this.currentNodeAndSideKey) {
       const [id, side] = this.currentNodeAndSideKey.split(":")
       const b = this.mapOfNodeIdToBounds.get(id)!
