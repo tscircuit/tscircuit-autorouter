@@ -311,7 +311,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
             cms.portPointPathingSolver?.getNodesWithPortPoints() ??
             [],
-          inputNodWithPortPoints: this.inputNodeWithPortPoints,
+          inputNodesWithPortPoints: this.inputNodeWithPortPoints,
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,

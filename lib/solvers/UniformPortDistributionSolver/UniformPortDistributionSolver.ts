@@ -13,7 +13,7 @@ import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribu
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
-  inputNodWithPortPoints: InputNodeWithPortPoints[]
+  inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
 }
 
@@ -56,7 +56,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         const ownerNodeId = determineOwnerNode({
           portPoint,
           currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodWithPortPoints,
+          inputNodes: input.inputNodesWithPortPoints,
           nodeBounds: this.mapOfNodeIdToBounds,
           sideLengths: this.mapOfNodeIdToLengthOfEachSide,
         })
@@ -113,7 +113,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         !shouldIgnorePortPoint({
           portPoint: p,
           nodeId,
-          inputNodes: this.input.inputNodWithPortPoints,
+          inputNodes: this.input.inputNodesWithPortPoints,
         }),
     )
     this.mapOfNodeAndSideToPortPoints.set(
