@@ -65,7 +65,10 @@ export const visualizeUniformPortDistribution = ({
     const bounds = mapOfNodeIdToBounds.get(nodeId)!
     const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
     lines.push({
-      points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
+      points: [
+        { x: x1, y: y1 },
+        { x: x2, y: y2 },
+      ],
       strokeColor: "orange",
       strokeWidth: 0.01,
     })
@@ -76,7 +79,10 @@ export const visualizeUniformPortDistribution = ({
     const bounds = mapOfNodeIdToBounds.get(nodeId)!
     const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
     lines.push({
-      points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
+      points: [
+        { x: x1, y: y1 },
+        { x: x2, y: y2 },
+      ],
       strokeColor: "red",
       strokeWidth: 0.03,
     })
