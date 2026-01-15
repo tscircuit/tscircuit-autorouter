@@ -49,7 +49,7 @@ import { CapacityPathingSolver5 } from "../../solvers/CapacityPathingSolver/Capa
 import { CapacityPathingGreedySolver } from "../../solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "./NoOffBoardMultipleHighDensityRouteStitchSolver extends BaseSolver"
+import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "./NoOffBoardMultipleHighDensityRouteStitchSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
