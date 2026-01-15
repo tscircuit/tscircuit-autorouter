@@ -109,7 +109,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
-    traceSimplificationSolver?: TraceSimplificationSolver
+  traceSimplificationSolver?: TraceSimplificationSolver
   viaDiameter: number
   minTraceWidth: number
 
@@ -294,25 +294,25 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
       "unravelMultiSectionSolver",
       UnravelMultiSectionSolver,
       (cms) => [
-          {
-            assignedSegments: cms.segmentToPointSolver?.solvedSegments || [],
-            colorMap: cms.colorMap,
-            nodes: cms.capacityNodes!,
-            cacheProvider: this.cacheProvider,
-          },
+        {
+          assignedSegments: cms.segmentToPointSolver?.solvedSegments || [],
+          colorMap: cms.colorMap,
+          nodes: cms.capacityNodes!,
+          cacheProvider: this.cacheProvider,
+        },
       ],
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
-        {
-          nodePortPoints:
-          cms.unravelMultiSectionSolver?.getNodesWithPortPoints() ?? 
+      {
+        nodePortPoints:
+          cms.unravelMultiSectionSolver?.getNodesWithPortPoints() ??
           cms.segmentToPointOptimizer?.getNodesWithPortPoints() ??
           [],
-          colorMap: cms.colorMap,
-          connMap: cms.connMap,
+        colorMap: cms.colorMap,
+        connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
         traceWidth: cms.minTraceWidth,
-        },
+      },
     ]),
     definePipelineStep(
       "highDensityStitchSolver",
