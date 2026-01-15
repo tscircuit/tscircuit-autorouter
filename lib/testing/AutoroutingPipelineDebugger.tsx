@@ -43,7 +43,7 @@ const PIPELINE_SOLVERS = {
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,
   AutoroutingPipeline1_OriginalUnravel,
-  AutoroutingPipeline4: AssignableAutoroutingPipeline4,
+  AutoroutingPipeline4: AutoroutingPipeline4,
 } as const
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"

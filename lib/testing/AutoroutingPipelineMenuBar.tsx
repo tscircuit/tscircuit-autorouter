@@ -48,8 +48,8 @@ export const PIPELINE_OPTIONS = [
     label: "Assignable Pipeline 3 (Jumpers)",
   },
   {
-    id: "AssignableAutoroutingPipeline4",
-    label: "Assignable Pipeline 4 (Pre RectDiff)",
+    id: "AutoroutingPipeline4",
+    label: "Pipeline 4 (Pre RectDiff)",
   },
 ] as const
 
