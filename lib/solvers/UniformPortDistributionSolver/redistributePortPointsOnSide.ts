@@ -27,6 +27,15 @@ export const redistributePortPointsOnSide = ({
   for (const z of zLayers) {
     const portsOnZ = portsByZ.get(z)!
     const count = portsOnZ.length
+
+    // Sort ports by their original position to maintain relative order and prevent crossings
+    portsOnZ.sort((a, b) => {
+      if (side === "top" || side === "bottom") {
+        return a.x - b.x
+      }
+      return a.y - b.y
+    })
+
     for (let i = 0; i < count; i++) {
       const fraction = (2 * i + 1) / (2 * count)
       let x = 0,
