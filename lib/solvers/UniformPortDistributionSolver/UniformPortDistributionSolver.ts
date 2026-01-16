@@ -55,6 +55,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
 
+    const processedSides = new Set<string>()
     for (const node of input.nodeWithPortPoints) {
       const bounds = this.mapOfNodeIdToBounds.get(node.capacityMeshNodeId)!
       for (const portPoint of node.portPoints) {
@@ -77,11 +78,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
         existing.push({ ...portPoint, side, ownerNodeId })
         this.mapOfNodeAndSideToPortPoints.set(key, existing)
 
-        if (
-          !this.sidesToProcess.some(
-            (ns) => ns.nodeId === ownerNodeId && ns.side === side,
-          )
-        ) {
+        if (!processedSides.has(key)) {
+          processedSides.add(key)
           this.sidesToProcess.push(nodeAndSide)
         }
       }
@@ -102,6 +100,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.currentSideBeingProcessed = this.sidesToProcess.shift()!
     const { nodeId, side } = this.currentSideBeingProcessed
 
+    const bounds = this.mapOfNodeIdToBounds.get(nodeId)!
+    const sideLengthRecord = this.mapOfNodeIdToLengthOfEachSide.get(nodeId)!
+    const sideLength = sideLengthRecord[side]
+
     if (
       shouldIgnoreSide({
         nodeId,
@@ -114,23 +116,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     const key = this.getNodeAndSideKey(this.currentSideBeingProcessed)
-    const portPoints = (
-      this.mapOfNodeAndSideToPortPoints.get(key) ?? []
-    ).filter(
-      (p) =>
+    const portPointsRaw = this.mapOfNodeAndSideToPortPoints.get(key) ?? []
+    const portPoints: PortPointWithSide[] = []
+
+    for (const p of portPointsRaw) {
+      if (
         !shouldIgnorePortPoint({
           portPoint: p,
           nodeId,
           inputNodes: this.input.inputNodesWithPortPoints,
-        }),
-    )
+        })
+      ) {
+        portPoints.push(p)
+      }
+    }
+
     this.mapOfNodeAndSideToPortPoints.set(
       key,
       redistributePortPointsOnSide({
         side,
         portPoints,
-        bounds: this.mapOfNodeIdToBounds.get(nodeId)!,
-        sideLength: this.mapOfNodeIdToLengthOfEachSide.get(nodeId)![side],
+        bounds,
+        sideLength,
       }),
     )
   }
