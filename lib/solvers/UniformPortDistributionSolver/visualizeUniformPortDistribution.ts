@@ -1,4 +1,4 @@
-import { GraphicsObject, Line } from "graphics-debug"
+import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { NodeAndSide, Bounds, PortPointWithSide } from "./types"
@@ -19,16 +19,19 @@ export const visualizeUniformPortDistribution = ({
   currentSideBeingProcessed: NodeAndSide | null
   mapOfNodeIdToBounds: Map<string, Bounds>
 }): GraphicsObject => {
-  const rects = obstacles.map((o) => ({ ...o, fill: "#00000037" }))
-  const points: { x: number; y: number }[] = []
+  const rects: Rect[] = obstacles.map((o) => ({ ...o, fill: "#ec000070" }))
+  const points: Array<{ x: number; y: number; label?: string }> = []
   const lines: Line[] = []
 
   const portPointMap = new Map<string, { x: number; y: number }>()
+  const portPointZMap = new Map<string, number>()
+  const portPointOwnerMap = new Map<string, string>()
 
   for (const node of nodeWithPortPoints) {
     for (const pp of node.portPoints) {
       if (pp.portPointId) {
         portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
+        portPointZMap.set(pp.portPointId, pp.z ?? 0)
       }
     }
   }
@@ -37,16 +40,40 @@ export const visualizeUniformPortDistribution = ({
     for (const pp of portPoints) {
       if (pp.portPointId) {
         portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
+        portPointZMap.set(pp.portPointId, pp.z ?? 0)
+        portPointOwnerMap.set(pp.portPointId, pp.ownerNodeId)
       }
     }
   }
 
-  points.push(...portPointMap.values())
-
   nodeWithPortPoints.forEach((element) => {
+    const bounds = mapOfNodeIdToBounds.get(element.capacityMeshNodeId)
+    if (bounds) {
+      const centerX = (bounds.minX + bounds.maxX) / 2
+      const centerY = (bounds.minY + bounds.maxY) / 2
+      const width = bounds.maxX - bounds.minX
+      const height = bounds.maxY - bounds.minY
+      rects.push({
+        center: { x: centerX, y: centerY },
+        width,
+        height,
+        fill: "#00000030",
+        label: `${element.capacityMeshNodeId}`,
+      })
+    }
+
     element.portPoints.forEach((e) => {
       if (!e.portPointId) return
       const posE = portPointMap.get(e.portPointId)!
+      const zLayer = portPointZMap.get(e.portPointId) ?? 0
+      const owner =
+        portPointOwnerMap.get(e.portPointId) ?? element.capacityMeshNodeId
+
+      points.push({
+        x: posE.x,
+        y: posE.y,
+        label: `z:${zLayer}\no:${owner}`,
+      })
 
       element.portPoints.forEach((f) => {
         if (!f.portPointId || e === f) return
