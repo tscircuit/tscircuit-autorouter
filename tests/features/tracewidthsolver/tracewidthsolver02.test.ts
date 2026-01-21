@@ -7,8 +7,7 @@ import input from "../../../fixtures/features/tracewidthsolver/tracewidthsolver0
 
 test("TraceWidthSolver02 - trace width with jumpers", () => {
   const data = (input as any)[0]
-  const nominalTraceWidth =
-    data.nominalTraceWidth ?? data.minTraceWidth * 2
+  const nominalTraceWidth = data.nominalTraceWidth ?? data.minTraceWidth * 2
   const connectionByName = new Map<string, SimpleRouteConnection>()
   for (const route of data.hdRoutes) {
     if (connectionByName.has(route.connectionName)) {
