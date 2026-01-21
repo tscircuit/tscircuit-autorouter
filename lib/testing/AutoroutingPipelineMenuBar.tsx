@@ -36,6 +36,10 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline2 Port Point Pathing (Default)",
   },
   {
+    id: "AutoroutingPipelineSolver3_HgPortPointPathing",
+    label: "Pipeline3 Hypergraph Port Point Pathing",
+  },
+  {
     id: "AssignableAutoroutingPipeline1Solver",
     label: "Assignable Pipeline 1",
   },

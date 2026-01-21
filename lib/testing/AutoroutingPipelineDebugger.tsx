@@ -10,6 +10,7 @@ import {
   AutoroutingPipelineSolver2_PortPointPathing,
   CapacityMeshSolver,
 } from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing"
+import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
 import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
 import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
 import { GraphicsObject, Line, Point, Rect } from "graphics-debug"
@@ -38,6 +39,7 @@ import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/Assigna
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
+  AutoroutingPipelineSolver3_HgPortPointPathing,
   AssignableAutoroutingPipeline1Solver,
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,
@@ -656,7 +658,9 @@ export const AutoroutingPipelineDebugger = ({
       // Check if the target solver became active *after* the step
       if (
         solver?.[
-          targetSolverStageKey as keyof AutoroutingPipelineSolver2_PortPointPathing
+          targetSolverStageKey as
+            | keyof AutoroutingPipelineSolver2_PortPointPathing
+            | keyof AutoroutingPipelineSolver3_HgPortPointPathing
         ]
       ) {
         break
