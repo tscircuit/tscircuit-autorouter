@@ -47,6 +47,8 @@ import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/Capacit
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -362,15 +364,18 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => {
+      return [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        connection: cms.srj.connections
       },
-    ]),
+    ]}
+  ),
   ]
 
   constructor(

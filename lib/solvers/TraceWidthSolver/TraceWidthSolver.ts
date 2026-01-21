@@ -1,6 +1,6 @@
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
-import { Obstacle } from "lib/types"
+import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
@@ -20,10 +20,10 @@ interface Point3D extends Point2D {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
+  connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
-  nominalTraceWidth?: number
   minTraceWidth: number
   obstacleMargin?: number
 }
@@ -37,7 +37,9 @@ export interface TraceWidthSolverInput {
  * If clearance is insufficient for the current width, it tries the next
  * narrower width in the schedule.
  *
- * nominalTraceWidth defaults to minTraceWidth * 2 if not specified.
+ * It only runs width adjustments for routes whose connection provides a
+ * nominalTraceWidth; routes without one are passed through unchanged.
+ * The schedule is built per-route from that connection's nominalTraceWidth.
  */
 export class TraceWidthSolver extends BaseSolver {
   hdRoutes: HighDensityRoute[]
@@ -47,6 +49,7 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceWidth: number
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
+  connectionNominalTraceWidthMap: Map<string, number>
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -77,18 +80,25 @@ export class TraceWidthSolver extends BaseSolver {
 
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
-    this.nominalTraceWidth = input.nominalTraceWidth ?? input.minTraceWidth * 2
     this.obstacleMargin = input.obstacleMargin ?? 0.15
-
-    // Build the width schedule: [nominal, mid]
-    // minTraceWidth is not in schedule - it's the fallback when all schedule options fail
-    const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-    this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+    this.nominalTraceWidth = 0
+    this.TRACE_WIDTH_SCHEDULE = []
 
     this.unprocessedRoutes = [...this.hdRoutes]
     this.connMap = input.connMap
     this.colorMap = input.colorMap
     this.obstacles = input.obstacles ?? []
+    this.connectionNominalTraceWidthMap = new Map()
+
+    for (const connection of input.connection) {
+      if (connection.nominalTraceWidth === undefined) {
+        continue
+      }
+      this.connectionNominalTraceWidthMap.set(
+        connection.name,
+        connection.nominalTraceWidth,
+      )
+    }
 
     if (this.obstacles.length > 0) {
       this.obstacleSHI = new ObstacleSpatialHashIndex(
@@ -98,6 +108,19 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+  }
+
+  private getNominalTraceWidthForRoute(
+    route: HighDensityRoute,
+  ): number | undefined {
+    const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
+    if (byName !== undefined) {
+      return byName
+    }
+    if (route.rootConnectionName) {
+      return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
+    }
+    return undefined
   }
 
   _step() {
@@ -113,7 +136,17 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       // Initialize the new trace processing
+      const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
+      if (nominalTraceWidth === undefined) {
+        this.processedRoutes.push({ ...nextTrace })
+        this.currentTrace = null
+        return
+      }
+
       this.currentTrace = nextTrace
+      this.nominalTraceWidth = nominalTraceWidth
+      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
+      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push({
