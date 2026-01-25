@@ -102,6 +102,10 @@ function definePipelineStep<
 }
 
 export class AssignableAutoroutingPipeline3 extends BaseSolver {
+  override getSolverName(): string {
+    return "AssignableAutoroutingPipeline3"
+  }
+
   netToPointPairsSolver?: NetToPointPairsSolver
   // nodeSolver?: CapacityMeshNodeSolver2_NodeUnderObstacle
   traceKeepoutSolver?: TraceKeepoutSolver

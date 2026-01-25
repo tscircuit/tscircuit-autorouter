@@ -19,6 +19,10 @@ type AnimationState = "showing_nodes" | "showing_edges" | "done"
  * connections as if the obstacles were directly connected.
  */
 export class OffboardCapacityNodeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "OffboardCapacityNodeSolver"
+  }
+
   capacityNodes: CapacityMeshNode[]
   capacityEdges: CapacityMeshEdge[]
 

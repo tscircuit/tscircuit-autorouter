@@ -93,6 +93,10 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
+  override getSolverName(): string {
+    return "AutoroutingPipeline1_OriginalUnravel"
+  }
+
   netToPointPairsSolver?: NetToPointPairsSolver
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger

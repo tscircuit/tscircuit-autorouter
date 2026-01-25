@@ -149,6 +149,10 @@ interface RouteInProgress {
  * Only solves intra-node routing - connecting port points within a single node.
  */
 export class SimpleHighDensitySolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SimpleHighDensitySolver"
+  }
+
   unsolvedNodes: NodeWithPortPoints[]
   allNodes: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]

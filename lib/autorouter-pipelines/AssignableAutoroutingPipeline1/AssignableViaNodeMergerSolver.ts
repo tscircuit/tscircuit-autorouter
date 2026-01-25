@@ -13,6 +13,10 @@ import type { Obstacle } from "lib/types"
  * - Each step handles one assignable obstacle
  */
 export class AssignableViaNodeMergerSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "AssignableViaNodeMergerSolver"
+  }
+
   newNodes: CapacityMeshNode[]
 
   // Map of obstacle to list of nodes assigned to it

@@ -19,6 +19,9 @@ export class BaseSolver {
   cacheHit?: boolean
   cacheKey?: string
   cacheToSolveSpaceTransform?: any
+  getSolverName(): string {
+    return this.constructor.name
+  }
 
   /** DO NOT OVERRIDE! Override _step() instead */
   step() {
@@ -28,7 +31,7 @@ export class BaseSolver {
     try {
       this._step()
     } catch (e) {
-      this.error = `${this.constructor.name} error: ${e}`
+      this.error = `${this.getSolverName()} error: ${e}`
       console.error(this.error)
       this.failed = true
       throw e
@@ -37,7 +40,7 @@ export class BaseSolver {
       this.tryFinalAcceptance()
     }
     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
-      this.error = `${this.constructor.name} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
+      this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
       this.failed = true
     }
     if ("computeProgress" in this) {

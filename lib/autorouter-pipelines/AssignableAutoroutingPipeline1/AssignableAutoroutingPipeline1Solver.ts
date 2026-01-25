@@ -80,6 +80,10 @@ function definePipelineStep<
 }
 
 export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
+  override getSolverName(): string {
+    return "AssignableAutoroutingPipeline1Solver"
+  }
+
   netToPointPairsSolver?: NetToPointPairsSolver
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger

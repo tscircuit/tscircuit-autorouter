@@ -56,6 +56,10 @@ interface PendingFragment {
  * 3. Phase "done": Solver complete
  */
 export class PortPointOffboardPathFragmentSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "PortPointOffboardPathFragmentSolver"
+  }
+
   srj: SimpleRouteJson
   colorMap: Record<string, string>
 

@@ -71,6 +71,10 @@ export type ConnectionPathWithNodes = {
  * See description in the prompt
  */
 export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends BaseSolver {
+  override getSolverName(): string {
+    return "AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
+  }
+
   /**
    * Bias toward greedier choices (f = g + GREEDY_MULTIPLIER * h)
    */

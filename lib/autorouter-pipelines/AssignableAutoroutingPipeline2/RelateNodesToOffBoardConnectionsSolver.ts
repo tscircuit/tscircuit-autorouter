@@ -18,6 +18,10 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
  * mutually connected via off board connections
  */
 export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "RelateNodesToOffBoardConnectionsSolver"
+  }
+
   unprocessedObstacles: Obstacle[]
   nodeTree: CapacityNodeTree
 

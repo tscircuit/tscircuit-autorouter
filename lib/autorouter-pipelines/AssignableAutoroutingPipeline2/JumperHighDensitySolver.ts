@@ -70,6 +70,10 @@ interface NodeAnalysis {
  * already-solved routes to maximize trace spacing.
  */
 export class JumperHighDensitySolver extends BaseSolver {
+  override getSolverName(): string {
+    return "JumperHighDensitySolver"
+  }
+
   allNodes: NodeWithPortPoints[]
   nodeAnalyses: NodeAnalysis[]
   routes: HighDensityIntraNodeRoute[]

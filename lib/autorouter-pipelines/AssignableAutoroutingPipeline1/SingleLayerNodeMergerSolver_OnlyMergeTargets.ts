@@ -12,6 +12,10 @@ const EPSILON = 0.005
  * Nodes without targets are passed through unchanged.
  */
 export class SingleLayerNodeMergerSolver_OnlyMergeTargets extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleLayerNodeMergerSolver_OnlyMergeTargets"
+  }
+
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   currentBatchNodeIds: CapacityMeshNodeId[]
 

@@ -12,6 +12,10 @@ type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
 }
 
 export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingSolver_DirectiveSubOptimal> {
+  override getSolverName(): string {
+    return "HyperAssignableViaCapacityPathingSolver"
+  }
+
   constructorParams: AssignableViaCapacityPathingParams
 
   constructor(opts: AssignableViaCapacityPathingParams) {

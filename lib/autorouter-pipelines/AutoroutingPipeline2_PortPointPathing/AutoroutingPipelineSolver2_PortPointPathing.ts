@@ -91,6 +91,10 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
+  override getSolverName(): string {
+    return "AutoroutingPipelineSolver2_PortPointPathing"
+  }
+
   netToPointPairsSolver?: NetToPointPairsSolver
   // nodeSolver?: CapacityMeshNodeSolver2_NodeUnderObstacle
   nodeSolver?: RectDiffPipeline

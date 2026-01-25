@@ -26,6 +26,10 @@ type AnimationState = "showing_original_path" | "showing_fragment" | "done"
  * treating them as separate traces that terminate at off-board connection points.
  */
 export class OffboardPathFragmentSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "OffboardPathFragmentSolver"
+  }
+
   private inputPaths: CapacityPath[]
   private capacityEdges: CapacityMeshEdge[]
   private originalConnections: SimpleRouteConnection[]
