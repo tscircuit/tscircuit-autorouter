@@ -17,7 +17,7 @@ import type {
   InputPortPoint,
 } from "../PortPointPathingSolver"
 import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
-import { buildAssignmentsIfSolved } from "./buildAssignmentsIfSolved"
+import { buildPortPointAssignmentsFromSolvedRoutes } from "./buildPortPointAssignmentsFromSolvedRoutes"
 import { visualizeHgPortPointPathingSolver } from "./visualizeHgPortPointPathingSolver"
 import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
 
@@ -177,7 +177,22 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override _step(): void {
     super._step()
-    buildAssignmentsIfSolved({ solver: this })
+    this.buildAssignmentsIfSolved()
+  }
+
+  private buildAssignmentsIfSolved(): void {
+    if (!this.solved || this.assignmentsBuilt) {
+      return
+    }
+    const assignments = buildPortPointAssignmentsFromSolvedRoutes({
+      solvedRoutes: this.solvedRoutes,
+      connectionResults: this.connectionsWithResults,
+      inputNodes: this.inputNodes,
+    })
+    this.connectionsWithResults = assignments.connectionsWithResults
+    this.assignedPortPoints = assignments.assignedPortPoints
+    this.nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
+    this.assignmentsBuilt = true
   }
 
   getNodesWithPortPoints(): NodeWithPortPoints[] {

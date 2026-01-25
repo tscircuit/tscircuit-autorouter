@@ -5,36 +5,11 @@ import type {
   PortPointCandidate,
 } from "../PortPointPathingSolver"
 import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
+import { getCandidateRegionId } from "./getCandidateRegionId"
+import { getLayerFromPoint } from "../../../utils/getLayerFromPoint"
+import { getZFromLayer } from "./getZFromLayer"
 
 const DEFAULT_Z = 0
-
-function getZFromLayer(layer?: string): number {
-  if (!layer) return DEFAULT_Z
-  const match = layer.match(/\d+/)
-  if (!match) return DEFAULT_Z
-  const index = Number.parseInt(match[0], 10) - 1
-  return Number.isFinite(index) && index >= 0 ? index : DEFAULT_Z
-}
-
-function getLayerFromPoint(
-  point: { layer?: string; layers?: string[] } | null | undefined,
-): string | undefined {
-  if (!point) return undefined
-  if ("layers" in point && Array.isArray(point.layers)) {
-    return point.layers[0]
-  }
-  return point.layer
-}
-
-function getCandidateRegionId(candidate: Candidate<HgRegion, HgPort>): string {
-  if (candidate.nextRegion?.regionId) {
-    return candidate.nextRegion.regionId
-  }
-  if (candidate.port.region2?.regionId) {
-    return candidate.port.region2.regionId
-  }
-  return candidate.port.region1.regionId
-}
 
 /**
  * Build a PortPointCandidate path from a solved hypergraph route.
@@ -51,8 +26,14 @@ export function buildPortPointPathFromSolvedRoute({
   const startPoint = connection.pointsToConnect[0]
   const endPoint =
     connection.pointsToConnect[connection.pointsToConnect.length - 1]
-  const startZ = getZFromLayer(getLayerFromPoint(startPoint))
-  const endZ = getZFromLayer(getLayerFromPoint(endPoint))
+  const startZ = getZFromLayer({
+    layer: getLayerFromPoint({ point: startPoint }),
+    defaultZ: DEFAULT_Z,
+  })
+  const endZ = getZFromLayer({
+    layer: getLayerFromPoint({ point: endPoint }),
+    defaultZ: DEFAULT_Z,
+  })
 
   const startCandidate: PortPointCandidate = {
     prevCandidate: null,
@@ -73,7 +54,7 @@ export function buildPortPointPathFromSolvedRoute({
     const nextCandidate: PortPointCandidate = {
       prevCandidate: prev,
       portPoint,
-      currentNodeId: getCandidateRegionId(candidate),
+      currentNodeId: getCandidateRegionId({ candidate }),
       point: { x: portPoint.x, y: portPoint.y },
       z: portPoint.z,
       f: 0,
