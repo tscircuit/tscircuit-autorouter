@@ -14,6 +14,10 @@ type Route = {
 }
 
 export class SingleTransitionIntraNodeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleTransitionIntraNodeSolver"
+  }
+
   nodeWithPortPoints: NodeWithPortPoints
   routes: Route[]
   viaDiameter: number

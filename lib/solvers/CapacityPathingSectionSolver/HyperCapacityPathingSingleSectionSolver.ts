@@ -12,6 +12,10 @@ import {
 const range = (n: number) => Array.from({ length: n }, (_, i) => i)
 
 export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSupervisorSolver<CapacityPathingSingleSectionPathingSolver> {
+  override getSolverName(): string {
+    return "HyperCapacityPathingSingleSectionSolver"
+  }
+
   constructorParams: CapacityPathingSingleSectionPathingSolverParams
 
   declare winningSolver?: CapacityPathingSingleSectionPathingSolver

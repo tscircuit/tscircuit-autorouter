@@ -19,6 +19,10 @@ export type FutureConnection = {
 }
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleHighDensityRouteSolver"
+  }
+
   obstacleRoutes: HighDensityIntraNodeRoute[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }

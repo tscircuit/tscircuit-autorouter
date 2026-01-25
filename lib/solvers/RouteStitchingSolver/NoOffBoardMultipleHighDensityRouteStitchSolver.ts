@@ -9,6 +9,10 @@ import { MultipleHighDensityRouteStitchSolver } from "./MultipleHighDensityRoute
  * instead of analyzing possible endpoints from route islands.
  */
 export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHighDensityRouteStitchSolver {
+  override getSolverName(): string {
+    return "NoOffBoardMultipleHighDensityRouteStitchSolver"
+  }
+
   constructor(params: {
     connections: SimpleRouteConnection[]
     hdRoutes: any[]

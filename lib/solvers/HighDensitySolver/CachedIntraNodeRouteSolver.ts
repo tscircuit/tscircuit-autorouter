@@ -32,6 +32,10 @@ export class CachedIntraNodeRouteSolver
       CachedSolvedIntraNodeRouteSolver
     >
 {
+  override getSolverName(): string {
+    return "CachedIntraNodeRouteSolver"
+  }
+
   cacheProvider: CacheProvider | null
   cacheHit = false
   hasAttemptedToUseCache = false

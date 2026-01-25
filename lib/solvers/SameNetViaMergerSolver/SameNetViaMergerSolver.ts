@@ -29,6 +29,10 @@ type Via = {
 }
 
 export class SameNetViaMergerSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SameNetViaMergerSolver"
+  }
+
   inputHdRoutes: HighDensityRoute[]
   mergedViaHdRoutes: HighDensityRoute[]
   unprocessedRoutes: HighDensityRoute[]

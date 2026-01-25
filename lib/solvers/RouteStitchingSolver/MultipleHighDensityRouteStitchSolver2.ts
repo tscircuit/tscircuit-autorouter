@@ -27,6 +27,10 @@ export type UnsolvedRouteWithOrder = {
  * this version uses the node traversal order from the pathing solver.
  */
 export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
+  override getSolverName(): string {
+    return "MultipleHighDensityRouteStitchSolver2"
+  }
+
   unsolvedRoutes: UnsolvedRouteWithOrder[]
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []
   colorMap: Record<string, string> = {}

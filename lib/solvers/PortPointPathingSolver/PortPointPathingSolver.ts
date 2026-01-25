@@ -154,6 +154,10 @@ export interface ConnectionPathResult {
  *  - prevents node cycles in a candidate chain (keeps Pf math correct without needing per-node multi-visit tracking)
  */
 export class PortPointPathingSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "PortPointPathingSolver"
+  }
+
   hyperParameters: Partial<PortPointPathingHyperParameters>
 
   simpleRouteJson: SimpleRouteJson

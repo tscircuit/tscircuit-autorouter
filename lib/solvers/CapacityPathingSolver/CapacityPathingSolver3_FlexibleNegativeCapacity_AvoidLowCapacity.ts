@@ -2,6 +2,10 @@ import type { CapacityMeshNode } from "lib/types"
 import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver"
 
 export class CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity extends CapacityPathingSolver {
+  override getSolverName(): string {
+    return "CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity"
+  }
+
   /**
    * In the FlexibleNegativeCapacity mode, we allow negative capacity
    */

@@ -12,6 +12,10 @@ const EPSILON = 0.005
  * for "strawing".
  */
 export class SingleLayerNodeMergerSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleLayerNodeMergerSolver"
+  }
+
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   currentBatchNodeIds: CapacityMeshNodeId[]
 

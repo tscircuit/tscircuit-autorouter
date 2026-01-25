@@ -37,6 +37,10 @@ export interface HyperPortPointPathingSolverParams {
 }
 
 export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<PortPointPathingSolver> {
+  override getSolverName(): string {
+    return "HyperPortPointPathingSolver"
+  }
+
   private params: HyperPortPointPathingSolverParams
   private precomputedInitialParams: PrecomputedInitialParams
 

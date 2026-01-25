@@ -16,6 +16,10 @@ import { safeTransparentize } from "../colors"
  * will take for each node.
  */
 export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityEdgeToPortSegmentSolver"
+  }
+
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
   capacityPaths: CapacityPath[]

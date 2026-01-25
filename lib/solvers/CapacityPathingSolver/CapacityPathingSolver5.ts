@@ -3,6 +3,10 @@ import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 
 export class CapacityPathingSolver5 extends CapacityPathingSolver {
+  override getSolverName(): string {
+    return "CapacityPathingSolver5"
+  }
+
   NEGATIVE_CAPACITY_PENALTY_FACTOR = 1
   REDUCED_CAPACITY_PENALTY_FACTOR = 1
 

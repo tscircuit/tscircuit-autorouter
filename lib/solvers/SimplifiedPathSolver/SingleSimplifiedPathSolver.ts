@@ -12,6 +12,10 @@ interface Point {
 }
 
 export class SingleSimplifiedPathSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleSimplifiedPathSolver"
+  }
+
   newRoute: HighDensityIntraNodeRoute["route"]
   newVias: HighDensityIntraNodeRoute["vias"]
 

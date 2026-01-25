@@ -15,6 +15,10 @@ interface RouteSection {
 }
 
 export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleRouteUselessViaRemovalSolver"
+  }
+
   obstacleSHI: ObstacleSpatialHashIndex
   hdRouteSHI: HighDensityRouteSpatialIndex
   unsimplifiedRoute: HighDensityRoute

@@ -13,6 +13,10 @@ import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 
 export class HighDensitySolver extends BaseSolver {
+  override getSolverName(): string {
+    return "HighDensitySolver"
+  }
+
   unsolvedNodePortPoints: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>

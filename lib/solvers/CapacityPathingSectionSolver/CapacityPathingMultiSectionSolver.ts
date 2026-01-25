@@ -39,6 +39,10 @@ type CapacityMeshEdgeId = string
  * solver.
  */
 export class CapacityPathingMultiSectionSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityPathingMultiSectionSolver"
+  }
+
   simpleRouteJson: SimpleRouteJson
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]

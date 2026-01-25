@@ -8,6 +8,10 @@ import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export class MultiSimplifiedPathSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "MultiSimplifiedPathSolver"
+  }
+
   simplifiedHdRoutes: HighDensityIntraNodeRoute[]
 
   currentUnsimplifiedHdRouteIndex = 0

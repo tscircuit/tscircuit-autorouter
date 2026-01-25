@@ -28,6 +28,10 @@ export interface UniformPortDistributionSolverInput {
  * 3. Evenly spaces port points along their assigned side.
  */
 export class UniformPortDistributionSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "UniformPortDistributionSolver"
+  }
+
   mapOfNodeIdToLengthOfEachSide = new Map<string, Record<Side, number>>()
   sidesToProcess: NodeAndSide[] = []
   mapOfNodeIdToBounds = new Map<string, Bounds>()

@@ -42,6 +42,10 @@ export interface TraceWidthSolverInput {
  * The schedule is built per-route from that connection's nominalTraceWidth.
  */
 export class TraceWidthSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "TraceWidthSolver"
+  }
+
   hdRoutes: HighDensityRoute[]
   hdRoutesWithWidths: HighDensityRoute[] = []
 

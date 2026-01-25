@@ -162,6 +162,10 @@ const DEFAULT_HYPERPARAMETER_SCHEDULE: HyperParameterScheduleEntry[] = [
  * This phase runs after portPointPathingSolver to refine routes in problematic areas.
  */
 export class MultiSectionPortPointOptimizer extends BaseSolver {
+  override getSolverName(): string {
+    return "MultiSectionPortPointOptimizer"
+  }
+
   simpleRouteJson: SimpleRouteJson
   inputNodes: InputNodeWithPortPoints[]
   capacityMeshNodes: CapacityMeshNode[]

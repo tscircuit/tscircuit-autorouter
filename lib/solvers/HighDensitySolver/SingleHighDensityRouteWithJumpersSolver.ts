@@ -88,6 +88,10 @@ type JumperNode = Node & {
 }
 
 export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleHighDensityRouteWithJumpersSolver"
+  }
+
   obstacleRoutes: HighDensityIntraNodeRouteWithJumpers[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }

@@ -21,6 +21,10 @@ const roundedPointHash = (p: { x: number; y: number; z: number }) =>
   `${Math.round(p.x * 100)},${Math.round(p.y * 100)},${Math.round(p.z * 100)}`
 
 export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "MultipleHighDensityRouteStitchSolver"
+  }
+
   unsolvedRoutes: UnsolvedRoute[]
   activeSolver: SingleHighDensityRouteStitchSolver | null = null
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []

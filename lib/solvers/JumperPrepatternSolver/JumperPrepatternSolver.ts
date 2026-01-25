@@ -90,6 +90,10 @@ function definePipelineStep<
 }
 
 export class JumperPrepatternSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "JumperPrepatternSolver"
+  }
+
   // Input parameters
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>

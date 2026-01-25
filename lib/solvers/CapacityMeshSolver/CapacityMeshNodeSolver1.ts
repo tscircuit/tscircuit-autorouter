@@ -42,6 +42,10 @@ interface Target {
 }
 
 export class CapacityMeshNodeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityMeshNodeSolver"
+  }
+
   unfinishedNodes: CapacityMeshNode[]
   finishedNodes: CapacityMeshNode[]
 

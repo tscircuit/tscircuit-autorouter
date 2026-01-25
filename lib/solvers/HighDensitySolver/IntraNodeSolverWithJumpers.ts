@@ -32,6 +32,10 @@ const JUMPER_0603 = {
  * to handle trace crossings.
  */
 export class IntraNodeSolverWithJumpers extends BaseSolver {
+  override getSolverName(): string {
+    return "IntraNodeSolverWithJumpers"
+  }
+
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {

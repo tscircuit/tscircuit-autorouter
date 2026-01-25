@@ -23,6 +23,10 @@ type Phase = "via_removal" | "via_merging" | "path_simplification"
  * Each iteration consists of all phases executed sequentially.
  */
 export class TraceSimplificationSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "TraceSimplificationSolver"
+  }
+
   hdRoutes: HighDensityRoute[] = []
 
   simplificationPipelineLoops = 0

@@ -4,6 +4,10 @@ import { GraphicsObject } from "graphics-debug"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 
 export class StrawSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "StrawSolver"
+  }
+
   multiLayerNodes: CapacityMeshNode[]
 
   strawNodes: CapacityMeshNode[]

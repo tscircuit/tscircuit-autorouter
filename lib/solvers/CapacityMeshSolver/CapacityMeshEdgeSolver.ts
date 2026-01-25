@@ -9,6 +9,10 @@ import { distance } from "@tscircuit/math-utils"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityMeshEdgeSolver"
+  }
+
   public edges: Array<CapacityMeshEdge>
 
   /** Only used for visualization, dynamically instantiated if necessary */

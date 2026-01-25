@@ -52,6 +52,10 @@ interface XYConnection {
 }
 
 export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
+  override getSolverName(): string {
+    return "JumperPrepatternSolver2_HyperGraph"
+  }
+
   // Input parameters
   constructorParams: JumperPrepatternSolver2Params
   nodeWithPortPoints: NodeWithPortPoints

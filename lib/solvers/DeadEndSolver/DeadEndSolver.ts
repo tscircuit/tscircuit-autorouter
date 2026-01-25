@@ -8,6 +8,10 @@ import { GraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "../colors"
 
 export class DeadEndSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "DeadEndSolver"
+  }
+
   public removedNodeIds: Set<string>
 
   private targetNodeIds: Set<string>

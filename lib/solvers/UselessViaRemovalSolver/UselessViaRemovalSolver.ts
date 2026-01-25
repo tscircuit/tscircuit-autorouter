@@ -17,6 +17,10 @@ export interface UselessViaRemovalSolverInput {
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "UselessViaRemovalSolver"
+  }
+
   unsimplifiedHdRoutes: HighDensityRoute[]
   optimizedHdRoutes: HighDensityRoute[]
   unprocessedRoutes: HighDensityRoute[]

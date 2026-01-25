@@ -56,6 +56,10 @@ type Operation = ChangeLayerOperation | SwitchOperation | CombinedOperation
  *   annealing function to determine if we should perform the operation
  */
 export class CapacitySegmentPointOptimizer extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacitySegmentPointOptimizer"
+  }
+
   assignedSegments: SegmentWithAssignedPoints[]
   colorMap: Record<string, string>
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>

@@ -47,6 +47,10 @@ STEP LOOP:
 6. When there are no more unprocessed connections, we set this.solved = true
 */
 export class ViaPossibilitiesSolver2 extends BaseSolver {
+  override getSolverName(): string {
+    return "ViaPossibilitiesSolver2"
+  }
+
   bounds: Bounds
   maxViaCount: number
   portPairMap: PortPairMap

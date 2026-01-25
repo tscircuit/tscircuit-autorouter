@@ -29,6 +29,10 @@ export interface RemoveUnnecessaryJumpersSolverParams {
  * This solver runs after PortPointPathingSolver and before HighDensitySolver.
  */
 export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "RemoveUnnecessaryJumpersSolver"
+  }
+
   inputNodes: InputNodeWithPortPoints[]
   usedJumperOffBoardObstacleIds: Set<string>
   offBoardConnMap: ConnectivityMap | null

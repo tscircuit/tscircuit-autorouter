@@ -9,6 +9,10 @@ const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 
 export class SingleHighDensityRouteStitchSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleHighDensityRouteStitchSolver"
+  }
+
   mergedHdRoute: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
   start: { x: number; y: number; z: number }

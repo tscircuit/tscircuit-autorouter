@@ -21,6 +21,10 @@ type Route = {
 }
 
 export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
+  override getSolverName(): string {
+    return "TwoCrossingRoutesHighDensitySolver"
+  }
+
   // Input parameters
   nodeWithPortPoints: NodeWithPortPoints
   routes: Route[]

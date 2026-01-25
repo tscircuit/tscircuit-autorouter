@@ -25,6 +25,10 @@ import { CacheProvider } from "lib/cache/types"
 import { doSegmentsIntersect, distance } from "@tscircuit/math-utils"
 
 export class UnravelMultiSectionSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "UnravelMultiSectionSolver"
+  }
+
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   dedupedSegmentMap: Map<SegmentId, SegmentWithAssignedPoints>
   dedupedSegments: SegmentWithAssignedPoints[]

@@ -19,6 +19,10 @@ import { seededRandom } from "lib/utils/cloneAndShuffleArray"
  * distribute load effectively. In this version we don't do that!
  */
 export class NetToPointPairsSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "NetToPointPairsSolver"
+  }
+
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
 

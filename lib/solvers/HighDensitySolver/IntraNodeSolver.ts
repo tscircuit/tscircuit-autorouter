@@ -14,6 +14,10 @@ import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWith
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 
 export class IntraNodeRouteSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "IntraNodeRouteSolver"
+  }
+
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {

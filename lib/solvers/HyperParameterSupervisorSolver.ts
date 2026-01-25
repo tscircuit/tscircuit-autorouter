@@ -24,6 +24,10 @@ export type HyperParameterDef = {
 export class HyperParameterSupervisorSolver<
   T extends BaseSolver,
 > extends BaseSolver {
+  override getSolverName(): string {
+    return "HyperParameterSupervisorSolver"
+  }
+
   GREEDY_MULTIPLIER = 1.2
   MIN_SUBSTEPS = 1
 

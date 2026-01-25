@@ -50,6 +50,10 @@ export interface CapacityPathingSingleSectionPathingSolverParams {
 }
 
 export class CapacityPathingSingleSectionSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityPathingSingleSectionSolver"
+  }
+
   GREEDY_MULTIPLIER = 1.5
   sectionNodes: CapacityMeshNode[]
   sectionEdges: CapacityMeshEdge[]

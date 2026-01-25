@@ -6,6 +6,10 @@ import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
 export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNodeSolver {
+  override getSolverName(): string {
+    return "MultiHeadPolyLineIntraNodeSolver2"
+  }
+
   computeG(polyLines: any, candidate: any) {
     return candidate.g + 0.000005 + candidate.viaCount * 0.000005 * 100
   }

@@ -30,6 +30,10 @@ export type ConnectionPathWithNodes = {
 }
 
 export class CapacityPathingSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityPathingSolver"
+  }
+
   connectionsWithNodes: Array<ConnectionPathWithNodes>
 
   usedNodeCapacityMap: Map<CapacityMeshNodeId, number>

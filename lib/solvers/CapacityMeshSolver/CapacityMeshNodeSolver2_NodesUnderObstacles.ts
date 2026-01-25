@@ -29,6 +29,10 @@ interface Target {
 }
 
 export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeSolver {
+  override getSolverName(): string {
+    return "CapacityMeshNodeSolver2_NodeUnderObstacle"
+  }
+
   VIA_DIAMETER = 0.6
   OBSTACLE_MARGIN = 0.1
   /**

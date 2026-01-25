@@ -24,6 +24,10 @@ import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumS
  * equivalent point.
  */
 export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSolver {
+  override getSolverName(): string {
+    return "NetToPointPairsSolver2_OffBoardConnection"
+  }
+
   connectionPointDsu: DSU
   connectionPointMap: Map<string, ConnectionPoint>
 

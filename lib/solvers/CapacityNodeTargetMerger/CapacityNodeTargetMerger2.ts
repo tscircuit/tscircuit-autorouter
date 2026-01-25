@@ -13,6 +13,10 @@ import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 export class CapacityNodeTargetMerger2 extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityNodeTargetMerger2"
+  }
+
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   currentBatchNodeIds: CapacityMeshNodeId[]
   nextBatchNodeIds: CapacityMeshNodeId[]

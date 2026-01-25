@@ -10,6 +10,10 @@ import { isPointInRect } from "lib/utils/isPointInRect"
  * Merge targets that are close to each other into a single target
  */
 export class CapacityNodeTargetMerger extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacityNodeTargetMerger"
+  }
+
   unprocessedObstacles: Obstacle[]
   newNodes: CapacityMeshNode[]
   removedNodeIds: Set<string>

@@ -2,6 +2,10 @@ import { CapacityMeshNode } from "lib/types"
 import { CapacityPathingSolver5 } from "../CapacityPathingSolver/CapacityPathingSolver5"
 
 export class CapacityPathingGreedySolver extends CapacityPathingSolver5 {
+  override getSolverName(): string {
+    return "CapacityPathingGreedySolver"
+  }
+
   doesNodeHaveCapacityForTrace(
     node: CapacityMeshNode,
     prevNode: CapacityMeshNode,

@@ -29,6 +29,10 @@ import { withinBounds } from "./withinBounds"
 import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnectionClosedFacesWithoutVias"
 
 export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "MultiHeadPolyLineIntraNodeSolver"
+  }
+
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   hyperParameters: Partial<HighDensityHyperParameters>

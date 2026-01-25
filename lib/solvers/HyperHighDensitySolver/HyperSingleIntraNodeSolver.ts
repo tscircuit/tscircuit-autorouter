@@ -21,6 +21,10 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | SingleTransitionCrossingRouteSolver
   | SingleTransitionIntraNodeSolver
 > {
+  override getSolverName(): string {
+    return "HyperSingleIntraNodeSolver"
+  }
+
   constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints

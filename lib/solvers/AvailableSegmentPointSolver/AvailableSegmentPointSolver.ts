@@ -45,6 +45,10 @@ export interface SharedEdgeSegment {
  * as paths are routed through them.
  */
 export class AvailableSegmentPointSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "AvailableSegmentPointSolver"
+  }
+
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
   traceWidth: number

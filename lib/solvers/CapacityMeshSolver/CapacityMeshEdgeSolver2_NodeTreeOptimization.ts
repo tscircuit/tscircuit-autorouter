@@ -10,6 +10,10 @@ import { CapacityMeshEdgeSolver } from "./CapacityMeshEdgeSolver"
 import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
 
 export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEdgeSolver {
+  override getSolverName(): string {
+    return "CapacityMeshEdgeSolver2_NodeTreeOptimization"
+  }
+
   private nodeTree: CapacityNodeTree
   private currentNodeIndex: number
   private edgeSet: Set<string>

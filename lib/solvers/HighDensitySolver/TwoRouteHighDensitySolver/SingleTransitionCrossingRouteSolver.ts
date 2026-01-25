@@ -30,6 +30,10 @@ type Route = {
 }
 
 export class SingleTransitionCrossingRouteSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "SingleTransitionCrossingRouteSolver"
+  }
+
   // Input parameters
   nodeWithPortPoints: NodeWithPortPoints
   routes: Route[]

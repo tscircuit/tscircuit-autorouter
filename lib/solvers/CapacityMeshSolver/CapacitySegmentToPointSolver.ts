@@ -27,6 +27,10 @@ export interface SegmentWithAssignedPoints extends NodePortSegment {
  * ordering them alphabetically.
  */
 export class CapacitySegmentToPointSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CapacitySegmentToPointSolver"
+  }
+
   unsolvedSegments: SegmentWithAssignedPoints[]
   solvedSegments: (NodePortSegment & {
     assignedPoints: {

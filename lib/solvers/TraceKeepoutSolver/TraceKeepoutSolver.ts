@@ -60,6 +60,10 @@ export interface TraceKeepoutSolverInput {
  * radii as defined by KEEPOUT_RADIUS_SCHEDULE.
  */
 export class TraceKeepoutSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "TraceKeepoutSolver"
+  }
+
   originalHdRoutes: HighDensityRoute[]
   hdRoutes: HighDensityRoute[]
   redrawnHdRoutes: HighDensityRoute[] = []

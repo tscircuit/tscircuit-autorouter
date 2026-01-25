@@ -75,6 +75,10 @@ export interface FaceEdge {
 }
 
 export class ViaPossibilitiesSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "ViaPossibilitiesSolver"
+  }
+
   candidates: Candidate[]
   faces: Map<FaceId, FaceWithSegments>
   faceEdges: Map<FaceId, FaceEdge[]> // Keep the type definition as is

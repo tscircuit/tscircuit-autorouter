@@ -31,6 +31,10 @@ export interface CurvyIntraNodeSolverParams {
  * that maximize distance between traces and obstacles.
  */
 export class CurvyIntraNodeSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "CurvyIntraNodeSolver"
+  }
+
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   traceWidth: number

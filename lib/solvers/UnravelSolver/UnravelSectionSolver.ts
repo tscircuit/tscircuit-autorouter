@@ -74,6 +74,10 @@ interface UnravelSectionSolverParams {
  *
  */
 export class UnravelSectionSolver extends BaseSolver {
+  override getSolverName(): string {
+    return "UnravelSectionSolver"
+  }
+
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   dedupedSegments: SegmentWithAssignedPoints[]
   dedupedSegmentMap: Map<SegmentId, SegmentWithAssignedPoints>
