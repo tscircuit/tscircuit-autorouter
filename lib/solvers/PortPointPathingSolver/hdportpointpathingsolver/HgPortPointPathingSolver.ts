@@ -25,9 +25,7 @@ const MAX_CANDIDATES_PER_REGION = 2
 
 export const SOLVER_DEFAULTS = {
   portUsagePenalty: 0.15,
-  // portUsagePenaltySq: 0,
   crossingPenalty: 0.6,
-  // crossingPenaltySq: 0,
   ripCost: 8.5,
   greedyMultiplier: 0.7,
 }
