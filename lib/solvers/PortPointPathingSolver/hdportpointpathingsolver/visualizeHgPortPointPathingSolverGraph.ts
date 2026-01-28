@@ -1,5 +1,5 @@
 import type { Circle, GraphicsObject, Line, Point, Rect } from "graphics-debug"
-import type { HgPortPointPathingSolver } from "./HgPortPointPathingSolver"
+import type { HgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver"
 
 /**
  * Visualize the hypergraph port point graph.

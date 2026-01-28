@@ -6,19 +6,19 @@ import {
 } from "@tscircuit/hypergraph"
 import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { CapacityMeshNodeId } from "../../../types"
+import type { CapacityMeshNodeId } from "lib/types"
 import type {
   NodeWithPortPoints,
   PortPoint,
-} from "../../../types/high-density-types"
+} from "lib/types/high-density-types"
 import type {
   ConnectionPathResult,
   InputNodeWithPortPoints,
   InputPortPoint,
-} from "../PortPointPathingSolver"
-import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
-import { buildPortPointAssignmentsFromSolvedRoutes } from "./buildPortPointAssignmentsFromSolvedRoutes"
-import { visualizeHgPortPointPathingSolver } from "./visualizeHgPortPointPathingSolver"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type { HgPort, HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import { buildPortPointAssignmentsFromSolvedRoutes } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildPortPointAssignmentsFromSolvedRoutes"
+import { visualizeHgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/visualizeHgPortPointPathingSolver"
 import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
 
 const MAX_CANDIDATES_PER_REGION = 2

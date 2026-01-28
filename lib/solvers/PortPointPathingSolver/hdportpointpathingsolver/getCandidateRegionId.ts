@@ -1,5 +1,5 @@
 import type { Candidate } from "@tscircuit/hypergraph"
-import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
+import type { HgPort, HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
 
 export function getCandidateRegionId({
   candidate,

@@ -1,13 +1,13 @@
 import type { SolvedRoute } from "@tscircuit/hypergraph"
-import type { CapacityMeshNodeId } from "../../../types"
-import type { PortPoint } from "../../../types/high-density-types"
+import type { CapacityMeshNodeId } from "lib/types"
+import type { PortPoint } from "lib/types/high-density-types"
 import type {
   ConnectionPathResult,
   InputNodeWithPortPoints,
-} from "../PortPointPathingSolver"
-import { assignPortPointsForPath } from "./assignPortPointsForPath"
-import { addConnectionEndpointsToNodeAssignments } from "./addConnectionEndpointsToNodeAssignments"
-import { buildPortPointPathFromSolvedRoute } from "./buildPortPointPathFromSolvedRoute"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import { assignPortPointsForPath } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/assignPortPointsForPath"
+import { addConnectionEndpointsToNodeAssignments } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/addConnectionEndpointsToNodeAssignments"
+import { buildPortPointPathFromSolvedRoute } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildPortPointPathFromSolvedRoute"
 
 /**
  * Build port point assignments from solved hypergraph routes.

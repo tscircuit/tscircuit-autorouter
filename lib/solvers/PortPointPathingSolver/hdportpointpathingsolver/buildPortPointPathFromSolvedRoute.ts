@@ -3,11 +3,11 @@ import { distance } from "@tscircuit/math-utils"
 import type {
   ConnectionPathResult,
   PortPointCandidate,
-} from "../PortPointPathingSolver"
-import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
-import { getCandidateRegionId } from "./getCandidateRegionId"
-import { getLayerFromPoint } from "../../../utils/getLayerFromPoint"
-import { getZFromLayer } from "./getZFromLayer"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type { HgPort, HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import { getCandidateRegionId } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/getCandidateRegionId"
+import { getLayerFromPoint } from "lib/utils/getLayerFromPoint"
+import { getZFromLayer } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/getZFromLayer"
 
 const DEFAULT_Z = 0
 

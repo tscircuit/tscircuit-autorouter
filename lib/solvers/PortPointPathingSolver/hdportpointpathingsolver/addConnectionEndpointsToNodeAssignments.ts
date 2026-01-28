@@ -1,6 +1,6 @@
-import type { CapacityMeshNodeId, SimpleRouteConnection } from "../../../types"
-import type { PortPoint } from "../../../types/high-density-types"
-import type { PortPointCandidate } from "../PortPointPathingSolver"
+import type { CapacityMeshNodeId, SimpleRouteConnection } from "lib/types"
+import type { PortPoint } from "lib/types/high-density-types"
+import type { PortPointCandidate } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 
 /**
  * Add connection endpoint points to node assignments for crossing calculations.

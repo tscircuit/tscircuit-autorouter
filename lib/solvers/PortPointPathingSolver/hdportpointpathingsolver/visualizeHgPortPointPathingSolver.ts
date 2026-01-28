@@ -1,9 +1,9 @@
 import type { Candidate } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
-import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
-import type { HgPortPointPathingSolver } from "./HgPortPointPathingSolver"
-import { getStringColor } from "../../colors"
-import { visualizeHgPortPointPathingSolverGraph } from "./visualizeHgPortPointPathingSolverGraph"
+import type { HgPort, HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import type { HgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver"
+import { getStringColor } from "lib/solvers/colors"
+import { visualizeHgPortPointPathingSolverGraph } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/visualizeHgPortPointPathingSolverGraph"
 
 export const visualizeHgPortPointPathingSolver = (
   solver: HgPortPointPathingSolver,

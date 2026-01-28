@@ -1,11 +1,11 @@
 import type { Connection } from "@tscircuit/hypergraph"
-import type { SimpleRouteJson } from "../../../types"
+import type { SimpleRouteJson } from "lib/types"
 import type {
   ConnectionPathResult,
   InputNodeWithPortPoints,
-} from "../PortPointPathingSolver"
-import type { HgRegion } from "./buildHyperGraphFromInputNodes"
-import { getConnectionsWithNodes } from "../getConnectionsWithNodes"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type { HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import { getConnectionsWithNodes } from "lib/solvers/PortPointPathingSolver/getConnectionsWithNodes"
 
 /**
  * Build hypergraph connections from a SimpleRouteJson and input nodes.

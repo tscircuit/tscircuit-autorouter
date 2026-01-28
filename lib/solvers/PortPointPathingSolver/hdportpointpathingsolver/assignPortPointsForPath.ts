@@ -1,6 +1,6 @@
-import type { CapacityMeshNodeId, SimpleRouteConnection } from "../../../types"
-import type { PortPoint } from "../../../types/high-density-types"
-import type { PortPointCandidate } from "../PortPointPathingSolver"
+import type { CapacityMeshNodeId, SimpleRouteConnection } from "lib/types"
+import type { PortPoint } from "lib/types/high-density-types"
+import type { PortPointCandidate } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 
 /**
  * Assign port points for a solved path and update port point maps.

@@ -2,8 +2,8 @@ import type { HyperGraph, Region, RegionPort } from "@tscircuit/hypergraph"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
-} from "../PortPointPathingSolver"
-import type { CapacityMeshNodeId } from "../../../types"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type { CapacityMeshNodeId } from "lib/types"
 
 export type HgRegion = Region & {
   d: {
