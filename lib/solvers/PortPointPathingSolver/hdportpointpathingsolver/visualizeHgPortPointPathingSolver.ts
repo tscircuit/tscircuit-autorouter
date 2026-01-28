@@ -2,7 +2,7 @@ import type { Candidate } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { HgPort, HgRegion } from "./buildHyperGraphFromInputNodes"
 import type { HgPortPointPathingSolver } from "./HgPortPointPathingSolver"
-import { getConnectionColor } from "./getConnectionColor"
+import { getStringColor } from "../../colors"
 import { visualizeHgPortPointPathingSolverGraph } from "./visualizeHgPortPointPathingSolverGraph"
 
 export const visualizeHgPortPointPathingSolver = (
@@ -13,8 +13,9 @@ export const visualizeHgPortPointPathingSolver = (
   }) as Required<GraphicsObject>
 
   if (solver.currentConnection && !solver.solved) {
-    const connectionColor = getConnectionColor(
+    const connectionColor = getStringColor(
       solver.currentConnection.connectionId,
+      0.8,
     )
     const startRegion = solver.currentConnection.startRegion as HgRegion
     const endRegion = solver.currentConnection.endRegion as HgRegion
@@ -44,8 +45,9 @@ export const visualizeHgPortPointPathingSolver = (
   }
 
   for (const solvedRoute of solver.solvedRoutes) {
-    const connectionColor = getConnectionColor(
+    const connectionColor = getStringColor(
       solvedRoute.connection.connectionId,
+      0.8,
     )
     const pathPoints: { x: number; y: number }[] = []
 
@@ -92,8 +94,9 @@ export const visualizeHgPortPointPathingSolver = (
 
   const nextCandidate = candidates[0] as Candidate<HgRegion, HgPort> | undefined
   if (!solver.solved && nextCandidate && solver.currentConnection) {
-    const connectionColor = getConnectionColor(
+    const connectionColor = getStringColor(
       solver.currentConnection.connectionId,
+      0.8,
     )
     const activePath: { x: number; y: number }[] = []
     let cursor: Candidate<HgRegion, HgPort> | undefined = nextCandidate
