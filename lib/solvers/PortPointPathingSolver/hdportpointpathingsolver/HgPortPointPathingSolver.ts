@@ -16,7 +16,10 @@ import type {
   InputNodeWithPortPoints,
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import type { HgPort, HgRegion } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import type {
+  HgPort,
+  HgRegion,
+} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
 import { buildPortPointAssignmentsFromSolvedRoutes } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildPortPointAssignmentsFromSolvedRoutes"
 import { visualizeHgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/visualizeHgPortPointPathingSolver"
 import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
