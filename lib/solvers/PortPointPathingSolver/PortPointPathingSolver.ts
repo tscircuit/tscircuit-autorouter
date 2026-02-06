@@ -1,32 +1,33 @@
-import { BaseSolver } from "../BaseSolver"
+import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
+import { type GraphicsObject, type Line, mergeGraphics } from "graphics-debug"
+import {
+  cloneAndShuffleArray,
+  seededRandom,
+} from "lib/utils/cloneAndShuffleArray"
+import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { applyObstacleProximityWeighting } from "lib/utils/getIntraNodeCrossingsWithObstacleProximity"
 import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "../../types"
-import { mergeGraphics, type GraphicsObject, type Line } from "graphics-debug"
-import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
-import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
-import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle"
 import type {
-  PortPoint,
   NodeWithPortPoints,
+  PortPoint,
 } from "../../types/high-density-types"
-import { visualizePointPathSolver } from "./visualizePointPathSolver"
-import {
-  cloneAndShuffleArray,
-  seededRandom,
-} from "lib/utils/cloneAndShuffleArray"
+import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle"
+import { BaseSolver } from "../BaseSolver"
 import { computeSectionScore } from "../MultiSectionPortPointOptimizer"
+import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
+import { computeSectionScoreWithJumpers } from "../MultiSectionPortPointOptimizer/computeSectionScoreWithJumpers"
+import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
+import { getConnectionsWithNodes as getConnectionsWithNodesShared } from "./getConnectionsWithNodes"
 import {
   type PrecomputedInitialParams,
   clonePrecomputedMutableParams,
 } from "./precomputeSharedParams"
-import { getConnectionsWithNodes as getConnectionsWithNodesShared } from "./getConnectionsWithNodes"
-import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { computeSectionScoreWithJumpers } from "../MultiSectionPortPointOptimizer/computeSectionScoreWithJumpers"
-import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
+import { visualizePointPathSolver } from "./visualizePointPathSolver"
 
 export interface PortPointPathingHyperParameters {
   SHUFFLE_SEED?: number
@@ -604,19 +605,38 @@ export class PortPointPathingSolver extends BaseSolver {
     )
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
+    const capacityMeshNode = this.capacityMeshNodeMap.get(
+      node.capacityMeshNodeId,
+    )!
+
+    // Apply obstacle proximity weighting (enabled by default)
+    const weightedCrossings = applyObstacleProximityWeighting(
+      capacityMeshNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+      this.simpleRouteJson,
+    )
+    const numSameLayerCrossings =
+      weightedCrossings.numProximityWeightedSameLayerCrossings
+    const numEntryExitLayerChanges =
+      weightedCrossings.numProximityWeightedEntryExitLayerChanges
+    const numTransitionPairCrossings =
+      weightedCrossings.numProximityWeightedTransitionPairCrossings
+
     // Use jumper-based pf calculation for single layer nodes when enabled
     if (this.JUMPER_PF_FN_ENABLED && node.availableZ.length === 1) {
       return calculateNodeProbabilityOfFailureWithJumpers(
-        this.capacityMeshNodeMap.get(node.capacityMeshNodeId)!,
-        crossings.numSameLayerCrossings,
+        capacityMeshNode,
+        numSameLayerCrossings,
       )
     }
 
     return calculateNodeProbabilityOfFailure(
-      this.capacityMeshNodeMap.get(node.capacityMeshNodeId)!,
-      crossings.numSameLayerCrossings,
-      crossings.numEntryExitLayerChanges,
-      crossings.numTransitionPairCrossings,
+      capacityMeshNode,
+      numSameLayerCrossings,
+      numEntryExitLayerChanges,
+      numTransitionPairCrossings,
     )
   }
 
@@ -1053,7 +1073,7 @@ export class PortPointPathingSolver extends BaseSolver {
         }
 
         // Add artificial point at the center of the previous off-board node (where we came from)
-        if (prevNode && prevNode._offBoardConnectionId) {
+        if (prevNode?._offBoardConnectionId) {
           path.push({
             prevCandidate: null,
             portPoint: null,
