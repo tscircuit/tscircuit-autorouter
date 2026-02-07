@@ -54,6 +54,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
 import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
+import { addPortIdsToRoute } from "lib/utils/addPortIdsToRoute"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -725,6 +726,14 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const route = convertHdRouteToSimplifiedRoute(
+          hdRoute,
+          this.srj.layerCount,
+        )
+
+        // Add port IDs to the first and last wire segments
+        addPortIdsToRoute(route, connection.pointsToConnect)
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -732,7 +741,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             netConnectionName ??
             connection.rootConnectionName ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route,
         }
 
         traces.push(simplifiedPcbTrace)

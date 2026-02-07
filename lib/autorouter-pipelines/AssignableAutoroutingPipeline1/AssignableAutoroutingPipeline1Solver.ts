@@ -41,6 +41,7 @@ import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCap
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
 import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
+import { addPortIdsToRoute } from "lib/utils/addPortIdsToRoute"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -713,12 +714,20 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const route = convertHdRouteToSimplifiedRoute(
+          hdRoute,
+          this.srj.layerCount,
+        )
+
+        // Add port IDs to the first and last wire segments
+        addPortIdsToRoute(route, connection.pointsToConnect)
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ?? rootConnectionName ?? connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route,
         }
 
         traces.push(simplifiedPcbTrace)

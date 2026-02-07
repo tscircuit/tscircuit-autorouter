@@ -49,6 +49,7 @@ import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributi
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { addPortIdsToRoute } from "lib/utils/addPortIdsToRoute"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -655,6 +656,14 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const route = convertHdRouteToSimplifiedRoute(
+          hdRoute,
+          this.srj.layerCount,
+        )
+
+        // Add port IDs to the first and last wire segments
+        addPortIdsToRoute(route, connection.pointsToConnect)
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -662,7 +671,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             netConnectionName ??
             connection.rootConnectionName ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route,
         }
 
         traces.push(simplifiedPcbTrace)

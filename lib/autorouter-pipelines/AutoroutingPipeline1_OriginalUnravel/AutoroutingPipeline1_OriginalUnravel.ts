@@ -54,6 +54,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPoin
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/NoOffBoardMultipleHighDensityRouteStitchSolver"
+import { addPortIdsToRoute } from "lib/utils/addPortIdsToRoute"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -620,6 +621,14 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const route = convertHdRouteToSimplifiedRoute(
+          hdRoute,
+          this.srj.layerCount,
+        )
+
+        // Add port IDs to the first and last wire segments
+        addPortIdsToRoute(route, connection.pointsToConnect)
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -627,7 +636,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
             netConnectionName ??
             connection.rootConnectionName ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route,
         }
 
         traces.push(simplifiedPcbTrace)

@@ -90,6 +90,10 @@ export interface SimplifiedPcbTrace {
         y: number
         width: number
         layer: string
+        /** ID of the pcb_port this wire segment starts from (only on first wire segment) */
+        start_pcb_port_id?: string
+        /** ID of the pcb_port this wire segment ends at (only on last wire segment) */
+        end_pcb_port_id?: string
       }
     | {
         route_type: "via"
