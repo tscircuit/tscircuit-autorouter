@@ -79,6 +79,7 @@ export class JumperHighDensitySolver extends BaseSolver {
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
   traceWidth: number
+  connectionTraceWidthMap?: Map<string, number>
   viaDiameter: number
   connMap?: ConnectivityMap
   hyperParameters?: Partial<HighDensityHyperParameters>
@@ -114,6 +115,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     nodePortPoints,
     colorMap,
     traceWidth = 0.15,
+    connectionTraceWidthMap,
     viaDiameter = 0.6,
     connMap,
     hyperParameters,
@@ -124,6 +126,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     traceWidth?: number
+    connectionTraceWidthMap?: Map<string, number>
     viaDiameter?: number
     connMap?: ConnectivityMap
     hyperParameters?: Partial<HighDensityHyperParameters>
@@ -137,6 +140,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth
+    this.connectionTraceWidthMap = connectionTraceWidthMap
     this.viaDiameter = viaDiameter
     this.connMap = connMap
     this.hyperParameters = hyperParameters
@@ -345,6 +349,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         nodeWithPortPoints: node,
         colorMap: this.colorMap,
         traceWidth: this.traceWidth,
+        connectionTraceWidthMap: this.connectionTraceWidthMap,
         viaDiameter: this.viaDiameter,
         adjacentObstacles,
       })
@@ -400,6 +405,7 @@ export class JumperHighDensitySolver extends BaseSolver {
           nodeWithPortPoints: node,
           colorMap: this.colorMap,
           traceWidth: this.traceWidth,
+          connectionTraceWidthMap: this.connectionTraceWidthMap,
           viaDiameter: this.viaDiameter,
           adjacentObstacles: additionalObstacles,
         })

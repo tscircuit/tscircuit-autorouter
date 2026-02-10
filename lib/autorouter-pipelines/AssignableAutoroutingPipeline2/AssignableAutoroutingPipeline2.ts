@@ -322,6 +322,10 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         colorMap: cms.colorMap,
         viaDiameter: cms.viaDiameter,
         traceWidth: cms.minTraceWidth,
+        connectionTraceWidthMap: getConnectionTraceWidthMap(
+          cms.srj.connections,
+          cms.srj.nominalTraceWidth ?? cms.minTraceWidth,
+        ),
         connMap: cms.connMap,
       },
     ]),

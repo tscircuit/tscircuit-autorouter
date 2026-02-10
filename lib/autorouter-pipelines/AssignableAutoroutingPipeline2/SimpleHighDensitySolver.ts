@@ -158,6 +158,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
   traceWidth: number
+  connectionTraceWidthMap?: Map<string, number>
   viaDiameter: number
   numMovablePoints: number
 
@@ -178,6 +179,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
     nodePortPoints,
     colorMap,
     traceWidth = 0.1,
+    connectionTraceWidthMap,
     viaDiameter = 0.6,
     pushMargin = 0.3,
     numMovablePoints = 2,
@@ -185,6 +187,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     traceWidth?: number
+    connectionTraceWidthMap?: Map<string, number>
     viaDiameter?: number
     numMovablePoints?: number
     pushMargin?: number
@@ -200,6 +203,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth
+    this.connectionTraceWidthMap = connectionTraceWidthMap
     this.viaDiameter = viaDiameter
     this.numMovablePoints = numMovablePoints
     this.pushMargin = pushMargin
@@ -666,10 +670,21 @@ export class SimpleHighDensitySolver extends BaseSolver {
 
       routePointList.push({ x: endPoint.x, y: endPoint.y, z: endPoint.z })
 
+
+      // Look up trace width for this connection
+      let connectionTraceWidth = this.traceWidth
+      if (this.connectionTraceWidthMap) {
+        const widthByName = this.connectionTraceWidthMap.get(connectionName)
+        const widthByRoot = rootConnectionName
+          ? this.connectionTraceWidthMap.get(rootConnectionName)
+          : undefined
+        connectionTraceWidth = widthByName ?? widthByRoot ?? this.traceWidth
+      }
+
       const route: HighDensityIntraNodeRoute = {
         connectionName,
         rootConnectionName,
-        traceThickness: this.traceWidth,
+        traceThickness: connectionTraceWidth,
         viaDiameter: this.viaDiameter,
         route: routePointList,
         vias: [],

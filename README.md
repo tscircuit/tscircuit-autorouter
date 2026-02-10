@@ -123,6 +123,52 @@ const solver = new CapacityMeshSolver(simpleRouteJson, {
 
 By default, the solver will automatically calculate the optimal `capacityDepth` to achieve a target minimum capacity of 0.5 based on the board dimensions. This automatic calculation ensures that the smallest subdivision cells have an appropriate capacity for routing.
 
+### Trace Thickness Control
+
+The autorouter supports parameterized trace thickness for individual connections. You can specify different trace widths for power, ground, and signal traces:
+
+```typescript
+const input: SimpleRouteJson = {
+  layerCount: 2,
+  minTraceWidth: 0.15, // Minimum trace width (1x)
+  connections: [
+    {
+      name: "VCC",
+      nominalTraceWidth: 0.6, // 4x multiple for power (0.6mm)
+      pointsToConnect: [
+        { x: 0, y: 0, layer: "top" },
+        { x: 10, y: 10, layer: "top" },
+      ],
+    },
+    {
+      name: "GND",
+      nominalTraceWidth: 1.2, // 8x multiple for ground (1.2mm)
+      pointsToConnect: [/* ... */],
+    },
+    {
+      name: "DATA",
+      // No nominalTraceWidth specified, uses minTraceWidth
+      pointsToConnect: [/* ... */],
+    },
+  ],
+  obstacles: [],
+  bounds: { minX: -5, maxX: 15, minY: -5, maxY: 20 },
+}
+
+const solver = new CapacityMeshSolver(input)
+solver.solve()
+const output = solver.getOutputSimpleRouteJson()
+// Output traces will have appropriate widths based on nominalTraceWidth
+```
+
+Common trace width multiples:
+- **1x (0.15mm)**: Standard data lines
+- **2x (0.3mm)**: Light power or high-speed signals
+- **4x (0.6mm)**: Medium power traces
+- **8x (1.2mm)**: Heavy power traces
+
+See [docs/trace-thickness-guide.md](./docs/trace-thickness-guide.md) for detailed information.
+
 ### Visualization Support
 
 For debugging or interactive applications, you can use the `visualize()` method to get a visualization of the current routing state:

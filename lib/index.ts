@@ -26,3 +26,4 @@ export type {
   Jumper,
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
+export { getConnectionTraceWidthMap } from "./utils/getConnectionTraceWidthMap"

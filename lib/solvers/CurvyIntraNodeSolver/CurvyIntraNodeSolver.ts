@@ -20,6 +20,7 @@ export interface CurvyIntraNodeSolverParams {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap?: Record<string, string>
   traceWidth?: number
+  connectionTraceWidthMap?: Map<string, number>
   viaDiameter?: number
   /** Obstacles from adjacent/solved nodes that might affect routing */
   adjacentObstacles?: AdjacentObstacle[]
@@ -38,6 +39,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   traceWidth: number
+  connectionTraceWidthMap?: Map<string, number>
   viaDiameter: number
   adjacentObstacles: AdjacentObstacle[]
 
@@ -50,6 +52,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap = params.colorMap ?? {}
     this.traceWidth = params.traceWidth ?? 0.15
+    this.connectionTraceWidthMap = params.connectionTraceWidthMap
     this.viaDiameter = params.viaDiameter ?? 0.6
     this.adjacentObstacles = params.adjacentObstacles ?? []
     this.MAX_ITERATIONS = 1000
