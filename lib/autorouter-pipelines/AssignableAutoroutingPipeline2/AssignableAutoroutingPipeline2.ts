@@ -72,6 +72,22 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AssignableAutoroutingPipeline2) => void
 }
 
+/**
+ * Helper function to create a map of connection names to their nominal trace widths
+ */
+function getConnectionTraceWidthMap(
+  connections: Array<{ name: string; nominalTraceWidth?: number }>,
+  defaultWidth: number,
+): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const conn of connections) {
+    if (conn.nominalTraceWidth !== undefined) {
+      map.set(conn.name, conn.nominalTraceWidth)
+    }
+  }
+  return map
+}
+
 function definePipelineStep<
   T extends new (
     ...args: any[]

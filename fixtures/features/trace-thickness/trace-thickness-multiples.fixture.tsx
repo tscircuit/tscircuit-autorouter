@@ -5,7 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 export default () => {
   const createSolver = () => {
     const minTraceWidth = 0.15
-    
+
     const input: SimpleRouteJson = {
       layerCount: 2,
       minTraceWidth,

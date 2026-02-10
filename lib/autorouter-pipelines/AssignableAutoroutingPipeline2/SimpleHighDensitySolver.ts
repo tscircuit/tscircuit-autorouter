@@ -670,7 +670,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
 
       routePointList.push({ x: endPoint.x, y: endPoint.y, z: endPoint.z })
 
-
       // Look up trace width for this connection
       let connectionTraceWidth = this.traceWidth
       if (this.connectionTraceWidthMap) {
