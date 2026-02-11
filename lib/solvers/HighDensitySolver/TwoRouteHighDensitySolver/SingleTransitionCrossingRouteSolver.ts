@@ -8,6 +8,7 @@ import {
   pointToSegmentDistance,
   doSegmentsIntersect,
   clamp,
+  pointToBoundsDistance,
 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
@@ -83,7 +84,9 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     }
 
     const hasInteriorPoint = this.routes.some(
-      (route) => !this.isOnBoundary(route.A) || !this.isOnBoundary(route.B),
+      (route) =>
+        pointToBoundsDistance(route.A, this.bounds) > 1e-6 ||
+        pointToBoundsDistance(route.B, this.bounds) > 1e-6,
     )
     if (hasInteriorPoint) {
       this.failed = true
@@ -155,16 +158,6 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
     }
-  }
-
-  private isOnBoundary(point: Point): boolean {
-    const epsilon = 1e-6
-    return (
-      Math.abs(point.x - this.bounds.minX) < epsilon ||
-      Math.abs(point.x - this.bounds.maxX) < epsilon ||
-      Math.abs(point.y - this.bounds.minY) < epsilon ||
-      Math.abs(point.y - this.bounds.maxY) < epsilon
-    )
   }
 
   /**
