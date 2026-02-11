@@ -6,12 +6,7 @@ import type {
 import type { CapacityMeshNodeId } from "lib/types"
 
 export type HgRegion = Region & {
-  d: {
-    center: { x: number; y: number }
-    width: number
-    height: number
-    availableZ?: number[]
-  }
+  d: InputNodeWithPortPoints
 }
 
 export type HgPort = RegionPort & {
@@ -40,12 +35,7 @@ export function buildHyperGraphFromInputNodes({
       regionId: node.capacityMeshNodeId,
       ports: [],
       assignments: [],
-      d: {
-        center: node.center,
-        width: node.width,
-        height: node.height,
-        availableZ: node.availableZ,
-      },
+      d: node
     }
     regions.push(region)
     regionMap.set(node.capacityMeshNodeId, region)

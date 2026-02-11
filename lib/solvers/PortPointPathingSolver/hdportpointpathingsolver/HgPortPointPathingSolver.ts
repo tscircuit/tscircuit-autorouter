@@ -183,8 +183,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override selectCandidatesForEnteringRegion(
     candidates: Candidate<HgRegion, HgPort>[],
   ): Candidate<HgRegion, HgPort>[] {
-    if (candidates.length <= MAX_CANDIDATES_PER_REGION) return candidates
-    return candidates
+    const startRegion = this.currentConnection?.startRegion
+    const endRegion = this.currentConnection?.endRegion
+
+    const filteredCandidates = candidates.filter((candidate) => {
+      const nextRegion = candidate.nextRegion
+      if (!nextRegion?.d._containsObstacle) return true
+      return nextRegion === startRegion || nextRegion === endRegion
+    })
+
+    if (filteredCandidates.length <= MAX_CANDIDATES_PER_REGION) {
+      return filteredCandidates
+    }
+
+    return filteredCandidates
       .slice()
       .sort((a, b) => a.g + a.h - (b.g + b.h))
       .slice(0, MAX_CANDIDATES_PER_REGION)
