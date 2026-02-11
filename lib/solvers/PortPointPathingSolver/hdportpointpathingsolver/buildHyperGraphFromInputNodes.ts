@@ -35,7 +35,7 @@ export function buildHyperGraphFromInputNodes({
       regionId: node.capacityMeshNodeId,
       ports: [],
       assignments: [],
-      d: node
+      d: node,
     }
     regions.push(region)
     regionMap.set(node.capacityMeshNodeId, region)
