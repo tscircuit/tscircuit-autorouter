@@ -82,6 +82,16 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       return
     }
 
+    const hasInteriorPoint = this.routes.some(
+      (route) => !this.isOnBoundary(route.A) || !this.isOnBoundary(route.B),
+    )
+    if (hasInteriorPoint) {
+      this.failed = true
+      this.error =
+        "SingleTransitionCrossingRouteSolver only supports boundary port points"
+      return
+    }
+
     const [routeA, routeB] = this.routes
 
     // Check if one route has a layer transition and the other doesn't
@@ -145,6 +155,16 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
     }
+  }
+
+  private isOnBoundary(point: Point): boolean {
+    const epsilon = 1e-6
+    return (
+      Math.abs(point.x - this.bounds.minX) < epsilon ||
+      Math.abs(point.x - this.bounds.maxX) < epsilon ||
+      Math.abs(point.y - this.bounds.minY) < epsilon ||
+      Math.abs(point.y - this.bounds.maxY) < epsilon
+    )
   }
 
   /**
