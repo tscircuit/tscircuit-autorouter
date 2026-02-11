@@ -15,12 +15,26 @@ export function visualizeHgPortPointPathingSolverGraph({
   const rects: Rect[] = []
 
   for (const node of solver.inputNodes) {
+    const pf = solver.computeNodePf(node)
+    const red = Math.min(255, Math.floor(pf * 512))
+    const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512))
+    let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, ${pf < 0.001 ? "0.1" : "0.3"})`
+
+    if (node._containsObstacle) {
+      color = "rgba(255, 0, 0, 0.3)"
+    }
+
+    if (node._offBoardConnectedCapacityMeshNodeIds?.length) {
+      color = "rgba(255, 165, 0, 0.3)"
+    }
+
     rects.push({
       center: node.center,
       width: node.width,
       height: node.height,
       stroke: "rgba(80, 80, 120, 0.15)",
-      fill: "rgba(120, 120, 200, 0.08)",
+      fill: color,
+      label: `${node.capacityMeshNodeId}\npf: ${pf.toFixed(3)}`,
     })
   }
 

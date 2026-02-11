@@ -6,7 +6,7 @@ import {
 } from "@tscircuit/hypergraph"
 import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { CapacityMeshNodeId } from "lib/types"
+import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import type {
   NodeWithPortPoints,
   PortPoint,
@@ -24,6 +24,8 @@ import { buildPortPointAssignmentsFromSolvedRoutes } from "lib/solvers/PortPoint
 import { visualizeHgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/visualizeHgPortPointPathingSolver"
 import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 
 const MAX_CANDIDATES_PER_REGION = 2
 
@@ -32,9 +34,8 @@ export const SOLVER_DEFAULTS = {
   crossingPenalty: 0.6,
   ripCost: 8.5,
   greedyMultiplier: 0.7,
-  randomRipProbabilityPerConnectionStart: 0,
-  randomRipProbabilityPerConnectionEnd: 100,
-  randomRipsPerConnectionIncrementBeforeReachingEnd: 1,
+  ripNodePfThresholdStart: 0.3,
+  maxNodeRips: 100,
 }
 
 export interface HgPortPointPathingSolverParams {
@@ -48,9 +49,8 @@ export interface HgPortPointPathingSolverParams {
   rippingEnabled?: boolean
   portUsagePenalty?: number
   regionTransitionPenalty?: number
-  randomRipProbabilityPerConnectionStart?: number
-  randomRipProbabilityPerConnectionEnd?: number
-  randomRipsPerConnectionIncrementBeforeReachingEnd?: number
+  ripNodePfThresholdStart?: number
+  maxNodeRips?: number
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -59,6 +59,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 > {
   inputNodes: InputNodeWithPortPoints[]
   nodeMap: Map<CapacityMeshNodeId, InputNodeWithPortPoints>
+  regionMap: Map<CapacityMeshNodeId, HgRegion>
   portPointMap: Map<string, InputPortPoint>
   connectionsWithResults: ConnectionPathResult[] = []
   assignedPortPoints: Map<
@@ -70,11 +71,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   portUsagePenalty: number
   regionTransitionPenalty: number
-  randomRipProbabilityPerConnectionStart: number
-  randomRipProbabilityPerConnectionEnd: number
-  randomRipsPerConnectionIncrementBeforeReachingEnd: number
-
-  private connectionRipState: Map<string, number> = new Map()
+  ripNodePfThresholdStart: number
+  maxNodeRips: number
+  nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
 
   constructor({
     inputGraph,
@@ -87,9 +86,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     rippingEnabled,
     portUsagePenalty,
     regionTransitionPenalty,
-    randomRipProbabilityPerConnectionStart,
-    randomRipProbabilityPerConnectionEnd,
-    randomRipsPerConnectionIncrementBeforeReachingEnd,
+    ripNodePfThresholdStart,
+    maxNodeRips,
   }: HgPortPointPathingSolverParams) {
     super({
       inputGraph,
@@ -102,21 +100,21 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.nodeMap = new Map(
       inputNodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    this.regionMap = new Map(
+      this.graph.regions.map((region) => [
+        region.regionId as CapacityMeshNodeId,
+        region as HgRegion,
+      ]),
+    )
     this.portPointMap = portPointMap
     this.connectionsWithResults = connectionsWithResults
 
     this.portUsagePenalty = portUsagePenalty ?? SOLVER_DEFAULTS.portUsagePenalty
     this.regionTransitionPenalty =
       regionTransitionPenalty ?? SOLVER_DEFAULTS.crossingPenalty
-    this.randomRipProbabilityPerConnectionStart =
-      randomRipProbabilityPerConnectionStart ??
-      SOLVER_DEFAULTS.randomRipProbabilityPerConnectionStart
-    this.randomRipProbabilityPerConnectionEnd =
-      randomRipProbabilityPerConnectionEnd ??
-      SOLVER_DEFAULTS.randomRipProbabilityPerConnectionEnd
-    this.randomRipsPerConnectionIncrementBeforeReachingEnd =
-      randomRipsPerConnectionIncrementBeforeReachingEnd ??
-      SOLVER_DEFAULTS.randomRipsPerConnectionIncrementBeforeReachingEnd
+    this.ripNodePfThresholdStart =
+      ripNodePfThresholdStart ?? SOLVER_DEFAULTS.ripNodePfThresholdStart
+    this.maxNodeRips = maxNodeRips ?? SOLVER_DEFAULTS.maxNodeRips
     this.MAX_ITERATIONS = 200000
   }
 
@@ -219,53 +217,255 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.assignmentsBuilt = true
   }
 
-  override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
-    const portReuseRoutesToRip = super.computePortOverlapRoutes(
-      newlySolvedRoute,
+  private getNodeRippingPfThreshold(nodeId: CapacityMeshNodeId): number {
+    const nodeRipCount = this.nodeRipCountMap.get(nodeId) ?? 0
+    const nodeRipFraction = Math.min(1, nodeRipCount / this.maxNodeRips)
+    const startRippingPfThreshold = this.ripNodePfThresholdStart
+    const endRippingPfThreshold = 1
+    return (
+      startRippingPfThreshold * nodeRipFraction +
+      endRippingPfThreshold * (1 - nodeRipFraction)
     )
-    const crossingRoutesToRip = super.computeCrossingRoutes(newlySolvedRoute)
+  }
 
-    const routesToRip = new Set<SolvedRoute>(portReuseRoutesToRip)
+  private getPortPointsFromRegionAssignments(
+    assignments: RegionPortAssignment[],
+  ): PortPoint[] {
+    return assignments.flatMap((assignment) => {
+      const regionPort1 = assignment.regionPort1 as HgPort
+      const regionPort2 = assignment.regionPort2 as HgPort
+      const connectionName = assignment.connection.connectionId
+      const rootConnectionName =
+        assignment.connection.mutuallyConnectedNetworkId
 
-    const clamp = (value: number): number => Math.min(1, Math.max(0, value))
+      return [
+        {
+          x: regionPort1.d.x,
+          y: regionPort1.d.y,
+          z: regionPort1.d.z,
+          connectionName,
+          rootConnectionName,
+        },
+        {
+          x: regionPort2.d.x,
+          y: regionPort2.d.y,
+          z: regionPort2.d.z,
+          connectionName,
+          rootConnectionName,
+        },
+      ]
+    })
+  }
 
-    const start = this.randomRipProbabilityPerConnectionStart
-    const end = this.randomRipProbabilityPerConnectionEnd
-    let existingRipProbability = this.connectionRipState.get(
-      newlySolvedRoute.connection.connectionId,
+  private getPortPointsFromNewlySolvedRouteInRegion(
+    newlySolvedRoute: SolvedRoute,
+    region: HgRegion,
+  ): PortPoint[] {
+    return newlySolvedRoute.path.flatMap((candidate) => {
+      if (!candidate.lastPort || candidate.lastRegion !== region) {
+        return []
+      }
+
+      const lastPort = candidate.lastPort as HgPort
+      const currentPort = candidate.port as HgPort
+
+      return [
+        {
+          x: lastPort.d.x,
+          y: lastPort.d.y,
+          z: lastPort.d.z,
+          connectionName: newlySolvedRoute.connection.connectionId,
+          rootConnectionName:
+            newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+        },
+        {
+          x: currentPort.d.x,
+          y: currentPort.d.y,
+          z: currentPort.d.z,
+          connectionName: newlySolvedRoute.connection.connectionId,
+          rootConnectionName:
+            newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+        },
+      ]
+    })
+  }
+
+  private computeNodePfForRegion({
+    region,
+    newlySolvedRoute,
+    routesToRip,
+  }: {
+    region: HgRegion
+    newlySolvedRoute: SolvedRoute
+    routesToRip: Set<SolvedRoute>
+  }): number {
+    const node = this.nodeMap.get(region.regionId)
+    if (!node || node._containsTarget) {
+      return 0
+    }
+
+    const existingAssignments = (region.assignments ?? []).filter(
+      (assignment) => !routesToRip.has(assignment.solvedRoute),
     )
-    if (existingRipProbability === undefined) {
-      existingRipProbability = start
-      this.connectionRipState.set(
-        newlySolvedRoute.connection.connectionId,
-        existingRipProbability,
-      )
+    const existingPortPoints =
+      this.getPortPointsFromRegionAssignments(existingAssignments)
+    const newlySolvedRoutePortPoints =
+      this.getPortPointsFromNewlySolvedRouteInRegion(newlySolvedRoute, region)
+    const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints]
+
+    const nodeWithPortPoints: NodeWithPortPoints = {
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      portPoints,
+      availableZ: node.availableZ,
     }
-    let ripProbabilityNormalized = 1
-    if (end !== start) {
-      ripProbabilityNormalized = clamp(
-        (existingRipProbability - start) / (end - start),
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
+
+    return calculateNodeProbabilityOfFailure(
+      capacityMeshNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
+  }
+
+  private getDerivedCapacityMeshNode(
+    node: InputNodeWithPortPoints,
+  ): CapacityMeshNode {
+    return {
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      availableZ: node.availableZ,
+      layer: `z${node.availableZ.join(",")}`,
+      _containsObstacle: node._containsObstacle,
+      _containsTarget: node._containsTarget,
+      _offBoardConnectionId: node._offBoardConnectionId,
+      _offBoardConnectedCapacityMeshNodeIds:
+        node._offBoardConnectedCapacityMeshNodeIds,
+    }
+  }
+
+  private getCrossingRoutesByNodeForPath(
+    newlySolvedRoute: SolvedRoute,
+  ): Map<CapacityMeshNodeId, Set<SolvedRoute>> {
+    const crossingRoutesByNode = new Map<CapacityMeshNodeId, Set<SolvedRoute>>()
+
+    for (const candidate of newlySolvedRoute.path) {
+      if (!candidate.lastPort || !candidate.lastRegion) continue
+      const region = candidate.lastRegion as HgRegion
+      const nodeId = region.regionId as CapacityMeshNodeId
+
+      const crossingAssignments = this.getRipsRequiredForPortUsage(
+        region,
+        candidate.lastPort as HgPort,
+        candidate.port as HgPort,
       )
+      if (crossingAssignments.length === 0) continue
+
+      const crossingRoutesInNode = crossingRoutesByNode.get(nodeId) ?? new Set()
+      for (const assignment of crossingAssignments) {
+        crossingRoutesInNode.add(assignment.solvedRoute)
+      }
+      crossingRoutesByNode.set(nodeId, crossingRoutesInNode)
     }
 
-    for (const route of crossingRoutesToRip) {
-      const seed = this.iterations
-      const rand = seededRandom(seed)
-      if (rand() > ripProbabilityNormalized) {
-        routesToRip.add(route)
+    return crossingRoutesByNode
+  }
+
+  private selectNodeForRipping({
+    candidateNodesForRipping,
+    random,
+  }: {
+    candidateNodesForRipping: Array<{
+      nodeId: CapacityMeshNodeId
+      pf: number
+      routesInNode: SolvedRoute[]
+    }>
+    random: () => number
+  }) {
+    const totalPfWeight = candidateNodesForRipping.reduce(
+      (weightSum, node) => weightSum + Math.max(0, node.pf),
+      0,
+    )
+    if (totalPfWeight <= 0) return null
+
+    let remainingWeight = random() * totalPfWeight
+    for (const node of candidateNodesForRipping) {
+      remainingWeight -= Math.max(0, node.pf)
+      if (remainingWeight <= 0) {
+        return node
       }
     }
 
-    if (routesToRip.size - portReuseRoutesToRip.size > 0) {
-      this.connectionRipState.set(
-        newlySolvedRoute.connection.connectionId,
-        Math.min(
-          this.randomRipProbabilityPerConnectionEnd,
-          existingRipProbability +
-            this.randomRipsPerConnectionIncrementBeforeReachingEnd,
-        ),
+    return candidateNodesForRipping[candidateNodesForRipping.length - 1] ?? null
+  }
+
+  override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
+    const portOverlapRoutesToRip = super.computePortOverlapRoutes(
+      newlySolvedRoute,
+    )
+    const routesToRip = new Set<SolvedRoute>(portOverlapRoutesToRip)
+    const crossingRoutesByNode =
+      this.getCrossingRoutesByNodeForPath(newlySolvedRoute)
+    const rippingRandomSeed = this.iterations + this.solvedRoutes.length
+    const random = seededRandom(rippingRandomSeed)
+
+    const candidateNodesForRipping = Array.from(crossingRoutesByNode.entries())
+      .map(([nodeId, crossingRoutes]) => {
+        const region = this.regionMap.get(nodeId)
+        if (!region) return null
+
+        const availableRoutesInNode = Array.from(crossingRoutes).filter(
+          (route) => !routesToRip.has(route),
+        )
+        if (availableRoutesInNode.length === 0) return null
+
+        const currentPf = this.computeNodePfForRegion({
+          region,
+          newlySolvedRoute,
+          routesToRip,
+        })
+        const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
+        if (currentPf <= rippingPfThreshold) return null
+
+        return {
+          nodeId,
+          pf: currentPf,
+          routesInNode: availableRoutesInNode,
+        }
+      })
+      .filter(
+        (
+          node,
+        ): node is {
+          nodeId: CapacityMeshNodeId
+          pf: number
+          routesInNode: SolvedRoute[]
+        } => Boolean(node),
       )
+
+    const selectedNode = this.selectNodeForRipping({
+      candidateNodesForRipping,
+      random,
+    })
+    if (!selectedNode) {
+      return routesToRip
     }
+
+    const selectedRouteIndex = Math.min(
+      selectedNode.routesInNode.length - 1,
+      Math.floor(random() * selectedNode.routesInNode.length),
+    )
+    const selectedRoute = selectedNode.routesInNode[selectedRouteIndex]
+    routesToRip.add(selectedRoute)
+
+    const nodeRipCount = this.nodeRipCountMap.get(selectedNode.nodeId) ?? 0
+    this.nodeRipCountMap.set(selectedNode.nodeId, nodeRipCount + 1)
 
     return routesToRip
   }
@@ -288,6 +488,29 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       })
     }
     return nodesWithPortPoints
+  }
+
+  computeNodePf(node: InputNodeWithPortPoints): number {
+    const portPoints = this.nodeAssignedPortPoints.get(node.capacityMeshNodeId)
+    if (!portPoints || portPoints.length === 0) return 0
+
+    const nodeWithPortPoints: NodeWithPortPoints = {
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      portPoints,
+      availableZ: node.availableZ,
+    }
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
+
+    return calculateNodeProbabilityOfFailure(
+      capacityMeshNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
   }
 
   visualize(): GraphicsObject {
