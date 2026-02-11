@@ -233,10 +233,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const nodeRipCount = this.nodeRipCountMap.get(nodeId) ?? 0
     const nodeRipFraction = Math.min(1, nodeRipCount / this.maxNodeRips)
     const startRippingPfThreshold = this.ripNodePfThresholdStart
-    const endRippingPfThreshold = 1
     return (
       startRippingPfThreshold * nodeRipFraction +
-      endRippingPfThreshold * (1 - nodeRipFraction)
+      1 * (1 - nodeRipFraction)
     )
   }
 
