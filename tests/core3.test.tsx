@@ -45,7 +45,7 @@ test.skip("core3 - 0402 columns", async () => {
 
   const circuitJson = circuit.getCircuitJson()
 
-  expect(convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[])).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expect(
+    convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[]),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
