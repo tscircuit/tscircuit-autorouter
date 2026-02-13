@@ -2,6 +2,7 @@ import { RootCircuit, sel } from "@tscircuit/core"
 import { test, expect } from "bun:test"
 import { CapacityMeshAutorouterCoreBinding } from "./fixtures/CapacityMeshAutorouterCoreBinding"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import type { AnyCircuitElement } from "circuit-json"
 import { Fragment } from "react/jsx-runtime"
 
 test.skip("core3 - 0402 columns", async () => {
@@ -44,7 +45,7 @@ test.skip("core3 - 0402 columns", async () => {
 
   const circuitJson = circuit.getCircuitJson()
 
-  expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
+  expect(convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[])).toMatchSvgSnapshot(
     import.meta.path,
   )
 })

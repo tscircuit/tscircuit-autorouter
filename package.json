@@ -23,6 +23,7 @@
     "@radix-ui/react-menubar": "^1.1.14",
     "@react-hook/resize-observer": "^2.0.2",
     "@resvg/resvg-js": "^2.6.2",
+    "@tscircuit/autorouting-dataset-01": "^1.0.30",
     "@tscircuit/checks": "^0.0.75",
     "@tscircuit/circuit-json-util": "^0.0.46",
     "@tscircuit/core": "^0.0.337",

@@ -2,6 +2,7 @@ import { RootCircuit, sel } from "@tscircuit/core"
 import { test, expect } from "bun:test"
 import { CapacityMeshAutorouterCoreBinding } from "./fixtures/CapacityMeshAutorouterCoreBinding"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import type { AnyCircuitElement } from "circuit-json"
 
 test("core1 - simple circuit", async () => {
   const circuit = new RootCircuit()
@@ -28,7 +29,7 @@ test("core1 - simple circuit", async () => {
 
   const circuitJson = circuit.getCircuitJson()
 
-  expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
+  expect(convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[])).toMatchSvgSnapshot(
     import.meta.path,
   )
 })
