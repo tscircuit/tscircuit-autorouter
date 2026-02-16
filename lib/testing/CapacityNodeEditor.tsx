@@ -174,7 +174,7 @@ export default function CapacityNodeEditor({
             // Clamp t
             t = Math.max(0.05, Math.min(0.95, t))
 
-            return { edge, t, layers: [p.z] } // Single layer per port, can merge if multiples exist at same pos
+            return { edge, t, layers: [p.z], portPointId: p.portPointId } // Single layer per port, can merge if multiples exist at same pos
           }
 
           const entryDef = mapPortToEditorPoint(entryPort)
@@ -794,6 +794,12 @@ export default function CapacityNodeEditor({
             <div className="mb-3">
               <div className="text-xs text-gray-400 mb-1">Edge</div>
               <div className="text-sm capitalize">{selectedPoint.edge}</div>
+            </div>
+            <div className="mb-3">
+              <div className="text-xs text-gray-400 mb-1">Port Point</div>
+              <div className="text-sm">
+                {selectedPoint.portPointId ?? "no portid found"}
+              </div>
             </div>
             <div className="mb-3">
               <div className="text-xs text-gray-400 mb-1">Position</div>

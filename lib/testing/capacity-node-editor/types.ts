@@ -11,6 +11,7 @@ export interface PointDef {
   edge: Edge
   t: number
   layers: number[]
+  portPointId?: string
 }
 
 export interface PairDef {
