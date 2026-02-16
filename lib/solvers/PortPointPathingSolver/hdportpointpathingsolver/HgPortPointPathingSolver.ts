@@ -31,6 +31,7 @@ import type {
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { FileLogger } from "lib/utils/fileLogger"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { computeSectionScore } from "lib/solvers/MultiSectionPortPointOptimizer"
 
 const MAX_CANDIDATES_PER_REGION = 2
 
@@ -55,6 +56,7 @@ export interface HgPortPointPathingSolverParams {
     randomRipFraction: number
     maxRips: number
   }
+  MIN_ALLOWED_BOARD_SCORE: number
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -87,6 +89,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   randomRipFraction: number
   maxRips: number
   logger: FileLogger
+  MIN_ALLOWED_BOARD_SCORE: number
 
   constructor({
     inputGraph,
@@ -98,6 +101,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     rippingEnabled,
     weights,
     forceCenterFirst,
+    MIN_ALLOWED_BOARD_SCORE,
   }: HgPortPointPathingSolverParams) {
     const {
       greedyMultiplier,
@@ -141,6 +145,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.nodeMemoryPfMap = nodeMemoryPfMap
     this.randomRipFraction = randomRipFraction
     this.maxRips = maxRips
+    this.MIN_ALLOWED_BOARD_SCORE = MIN_ALLOWED_BOARD_SCORE
     this.MAX_ITERATIONS = 200000
     this.connectionResultByConnectionId = new Map(
       connectionsWithResults.map((result) => [result.connection.name, result]),
@@ -163,6 +168,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       forceCenterFirst: this.forceCenterFirst,
       randomRipFraction: this.randomRipFraction,
       maxRips: this.maxRips,
+      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
     })
   }
 
@@ -441,6 +447,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override _step(): void {
     super._step()
+    if (this.enforceBoardScoreGuardrail()) return
     this.buildAssignmentsIfSolved()
 
     // Log every 10000 iterations (reduced frequency to avoid performance impact)
@@ -451,6 +458,36 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         unprocessedConnectionsCount: this.unprocessedConnections.length,
       })
     }
+  }
+
+  private enforceBoardScoreGuardrail(): boolean {
+    if (!this.solved || this.failed) return false
+
+    const boardScore = this.computeBoardScore()
+    this.stats = {
+      ...this.stats,
+      boardScore,
+      totalRipCount: this.totalRipCount,
+    }
+
+    this.logger.info("Board score guardrail evaluated", {
+      boardScore,
+      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
+    })
+
+    if (boardScore >= this.MIN_ALLOWED_BOARD_SCORE) return false
+
+    this.error = `Board score ${boardScore.toFixed(2)} is less than MIN_ALLOWED_BOARD_SCORE ${this.MIN_ALLOWED_BOARD_SCORE.toFixed(2)}`
+    this.failed = true
+    this.solved = false
+
+    this.logger.error("Board score guardrail failed", {
+      boardScore,
+      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
+      error: this.error,
+    })
+    this.logger.close()
+    return true
   }
 
   private buildAssignmentsIfSolved(): void {
@@ -970,6 +1007,41 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       totalInputNodes: this.inputNodes.length,
     })
     return nodesWithPortPoints
+  }
+
+  computeBoardScore(): number {
+    let nodeAssignedPortPoints = this.nodeAssignedPortPoints
+    if (!this.assignmentsBuilt) {
+      const assignments = buildPortPointAssignmentsFromSolvedRoutes({
+        solvedRoutes: this.solvedRoutes,
+        connectionResults: this.connectionsWithResults,
+        inputNodes: this.inputNodes,
+      })
+      nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
+    }
+
+    const nodesWithPortPoints: NodeWithPortPoints[] = []
+    for (const node of this.inputNodes) {
+      const assignedPortPoints =
+        nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
+      if (assignedPortPoints.length === 0) continue
+      nodesWithPortPoints.push({
+        capacityMeshNodeId: node.capacityMeshNodeId,
+        center: node.center,
+        width: node.width,
+        height: node.height,
+        portPoints: assignedPortPoints,
+        availableZ: node.availableZ,
+      })
+    }
+
+    const capacityMeshNodeMap = new Map(
+      this.inputNodes.map((node) => [
+        node.capacityMeshNodeId,
+        this.getDerivedCapacityMeshNode(node),
+      ]),
+    )
+    return computeSectionScore(nodesWithPortPoints, capacityMeshNodeMap)
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number {

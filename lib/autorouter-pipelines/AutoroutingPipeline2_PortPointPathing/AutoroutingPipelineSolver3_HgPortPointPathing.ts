@@ -300,6 +300,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               maxRips: 1000,
               randomRipFraction: 0.3,
             },
+            MIN_ALLOWED_BOARD_SCORE: -10000,
             forceCenterFirst: true,
             nodeMemoryPfMap: new Map(),
           },
