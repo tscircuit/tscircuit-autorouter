@@ -38,9 +38,11 @@ jobs:
 
   benchmark:
     name: Run autorouting benchmark
-    # Only run on PR comments with /benchmark command from maintainers
+    # Only run on PR comments with /benchmark command from maintainers (not bots)
     if: |
+      github.event_name == 'issue_comment' &&
       github.event.issue.pull_request &&
+      github.event.comment.user.type != 'Bot' &&
       contains(github.event.comment.body, '/benchmark') &&
       (
         github.event.comment.author_association == 'OWNER' ||
