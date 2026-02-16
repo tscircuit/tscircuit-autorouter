@@ -28,7 +28,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { FileLogger } from "lib/utils/fileLogger"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 
@@ -52,6 +52,8 @@ export interface HgPortPointPathingSolverParams {
     straightLineDeviationPenaltyFactor: number
     ripNodePfThresholdStart: number
     maxNodeRips: number
+    randomRipFraction: number
+    maxRips: number
   }
 }
 
@@ -81,6 +83,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   connectionResultByConnectionId: Map<string, ConnectionPathResult>
   nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
   nodeMemoryPfMap: Map<CapacityMeshNodeId, number> = new Map()
+  totalRipCount = 0
+  randomRipFraction: number
+  maxRips: number
   logger: FileLogger
 
   constructor({
@@ -103,6 +108,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       straightLineDeviationPenaltyFactor,
       ripCost,
       ripNodePfThresholdStart,
+      randomRipFraction,
+      maxRips,
     } = weights
     super({
       inputGraph,
@@ -132,6 +139,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.forceCenterFirst = forceCenterFirst
     this.straightLineDeviationPenaltyFactor = straightLineDeviationPenaltyFactor
     this.nodeMemoryPfMap = nodeMemoryPfMap
+    this.randomRipFraction = randomRipFraction
+    this.maxRips = maxRips
     this.MAX_ITERATIONS = 200000
     this.connectionResultByConnectionId = new Map(
       connectionsWithResults.map((result) => [result.connection.name, result]),
@@ -152,6 +161,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       straightLineDeviationPenaltyFactor:
         this.straightLineDeviationPenaltyFactor,
       forceCenterFirst: this.forceCenterFirst,
+      randomRipFraction: this.randomRipFraction,
+      maxRips: this.maxRips,
     })
   }
 
@@ -474,7 +485,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const nodeRipFraction = Math.min(1, nodeRipCount / this.maxNodeRips)
     const startRippingPfThreshold = this.ripNodePfThresholdStart
     const threshold =
-      startRippingPfThreshold * nodeRipFraction + 1 * (1 - nodeRipFraction)
+      startRippingPfThreshold * (1 - nodeRipFraction) + 1 * nodeRipFraction
 
     this.logger.debug("Node ripping threshold calculated", {
       nodeId,
@@ -679,42 +690,95 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return crossingRoutesByNode
   }
 
-  private selectNodeForRipping({
-    candidateNodesForRipping,
-    random,
+  private getCandidateRoutesForNodeRipping({
+    nodeId,
+    routesToRip,
+    newlySolvedRoute,
   }: {
-    candidateNodesForRipping: Array<{
-      nodeId: CapacityMeshNodeId
-      pf: number
-      routesInNode: SolvedRoute[]
-    }>
-    random: () => number
-  }) {
-    const totalPfWeight = candidateNodesForRipping.reduce(
-      (weightSum, node) => weightSum + Math.max(0, node.pf),
-      0,
-    )
-    if (totalPfWeight <= 0) {
-      this.logger.debug("No nodes eligible for ripping", {
-        candidatesCount: candidateNodesForRipping.length,
-      })
-      return null
-    }
+    nodeId: CapacityMeshNodeId
+    routesToRip: Set<SolvedRoute>
+    newlySolvedRoute: SolvedRoute
+  }): SolvedRoute[] {
+    const region = this.regionMap.get(nodeId)
+    if (!region?.assignments?.length) return []
 
-    let remainingWeight = random() * totalPfWeight
-    for (const node of candidateNodesForRipping) {
-      remainingWeight -= Math.max(0, node.pf)
-      if (remainingWeight <= 0) {
-        this.logger.debug("Node selected for ripping", {
-          nodeId: node.nodeId,
-          pf: node.pf,
-          routesInNode: node.routesInNode.length,
-        })
-        return node
+    const routeMap = new Map<string, SolvedRoute>()
+    for (const assignment of region.assignments) {
+      const route = assignment.solvedRoute
+      const routeConnectionId = route.connection.connectionId
+      if (routeConnectionId === newlySolvedRoute.connection.connectionId) {
+        continue
       }
+      if (routesToRip.has(route)) continue
+      routeMap.set(routeConnectionId, route)
     }
 
-    return candidateNodesForRipping[candidateNodesForRipping.length - 1] ?? null
+    return [...routeMap.values()]
+  }
+
+  private getNodeIdsTraversedByRoute(
+    route: SolvedRoute,
+  ): Array<CapacityMeshNodeId> {
+    const nodeIdSet = new Set<CapacityMeshNodeId>()
+    for (const candidate of route.path) {
+      const region = candidate.lastRegion as HgRegion | undefined
+      if (!region) continue
+      nodeIdSet.add(region.regionId as CapacityMeshNodeId)
+    }
+    return [...nodeIdSet]
+  }
+
+  private maybeAddRandomRips({
+    routesToRip,
+    newlySolvedRoute,
+    randomSeed,
+  }: {
+    routesToRip: Set<SolvedRoute>
+    newlySolvedRoute: SolvedRoute
+    randomSeed: number
+  }): void {
+    if (this.randomRipFraction <= 0) return
+    if (this.totalRipCount >= this.maxRips) return
+
+    const eligibleRoutes = this.solvedRoutes.filter((route) => {
+      if (routesToRip.has(route)) return false
+      return (
+        route.connection.connectionId !==
+        newlySolvedRoute.connection.connectionId
+      )
+    })
+
+    if (eligibleRoutes.length === 0) return
+
+    const randomRipCount = Math.max(
+      1,
+      Math.floor(this.randomRipFraction * eligibleRoutes.length),
+    )
+    const shuffledEligibleRoutes = cloneAndShuffleArray(
+      eligibleRoutes,
+      randomSeed,
+    )
+
+    let addedRandomRips = 0
+    for (const route of shuffledEligibleRoutes) {
+      if (addedRandomRips >= randomRipCount) break
+      if (this.totalRipCount >= this.maxRips) break
+      if (routesToRip.has(route)) continue
+
+      routesToRip.add(route)
+      addedRandomRips++
+      this.totalRipCount++
+    }
+
+    if (addedRandomRips > 0) {
+      this.logger.info("Random ripping applied", {
+        addedRandomRips,
+        eligibleRoutes: eligibleRoutes.length,
+        randomRipFraction: this.randomRipFraction,
+        totalRipCount: this.totalRipCount,
+        maxRips: this.maxRips,
+      })
+    }
   }
 
   override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
@@ -726,102 +790,160 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.logger.debug("Computing routes to rip", {
       connectionId: newlySolvedRoute.connection.connectionId,
       portOverlapRips: portOverlapRoutesToRip.size,
+      totalRipCount: this.totalRipCount,
+      maxRips: this.maxRips,
     })
 
     const crossingRoutesByNode =
       this.getCrossingRoutesByNodeForPath(newlySolvedRoute)
-    const rippingRandomSeed = this.iterations + this.solvedRoutes.length
-    const random = seededRandom(rippingRandomSeed)
+    const rippingRandomSeed =
+      this.iterations + this.solvedRoutes.length + this.totalRipCount
 
-    const candidateNodesForRipping = Array.from(crossingRoutesByNode.entries())
-      .map(([nodeId, crossingRoutes]) => {
-        const region = this.regionMap.get(nodeId)
-        if (!region) {
-          this.logger.debug("Region not found for ripping candidate", {
-            nodeId,
-          })
-          return null
-        }
+    const traversedNodeIds = this.getNodeIdsTraversedByRoute(newlySolvedRoute)
+    const allNodeIdsForRipping = Array.from(
+      new Set([...traversedNodeIds, ...crossingRoutesByNode.keys()]),
+    )
+    const orderedNodeIds = cloneAndShuffleArray(
+      allNodeIdsForRipping,
+      rippingRandomSeed,
+    )
 
-        const availableRoutesInNode = Array.from(crossingRoutes).filter(
-          (route) => !routesToRip.has(route),
+    this.logger.debug("Starting Solver2-style ripping loop", {
+      connectionId: newlySolvedRoute.connection.connectionId,
+      traversedNodes: traversedNodeIds.length,
+      crossingNodes: crossingRoutesByNode.size,
+      candidateNodes: orderedNodeIds.length,
+    })
+
+    for (const nodeId of orderedNodeIds) {
+      if (this.totalRipCount >= this.maxRips) {
+        this.logger.info("Stopping ripping loop at max rip limit", {
+          nodeId,
+          totalRipCount: this.totalRipCount,
+          maxRips: this.maxRips,
+        })
+        break
+      }
+
+      const region = this.regionMap.get(nodeId)
+      if (!region) {
+        this.logger.debug("Region not found for ripping candidate", {
+          nodeId,
+        })
+        continue
+      }
+
+      const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
+      let currentPf = this.computeNodePfForRegion({
+        region,
+        newlySolvedRoute,
+        routesToRip,
+      })
+      this.recordNodeMemoryPf(nodeId, currentPf)
+
+      if (currentPf <= rippingPfThreshold) {
+        this.logger.debug("Node PF below ripping threshold", {
+          nodeId,
+          currentPf,
+          threshold: rippingPfThreshold,
+        })
+        continue
+      }
+
+      const testedConnectionIds = new Set<string>()
+      let ripCountForNodeLoop = 0
+
+      while (currentPf > rippingPfThreshold) {
+        if (this.totalRipCount >= this.maxRips) break
+
+        const availableRoutesInNode = this.getCandidateRoutesForNodeRipping({
+          nodeId,
+          routesToRip,
+          newlySolvedRoute,
+        }).filter(
+          (route) =>
+            !testedConnectionIds.has(route.connection.connectionId) &&
+            !routesToRip.has(route),
         )
+
         if (availableRoutesInNode.length === 0) {
-          this.logger.debug("No available routes for ripping", { nodeId })
-          return null
+          this.logger.debug("No available routes for iterative node ripping", {
+            nodeId,
+            currentPf,
+            threshold: rippingPfThreshold,
+            testedConnections: testedConnectionIds.size,
+          })
+          break
         }
 
-        const currentPf = this.computeNodePfForRegion({
+        const shuffledRoutesInNode = cloneAndShuffleArray(
+          availableRoutesInNode,
+          rippingRandomSeed + ripCountForNodeLoop + testedConnectionIds.size,
+        )
+        const routeToRip = shuffledRoutesInNode[0]
+        if (!routeToRip) break
+        testedConnectionIds.add(routeToRip.connection.connectionId)
+
+        const pfBeforeRip = currentPf
+        routesToRip.add(routeToRip)
+        this.totalRipCount++
+        ripCountForNodeLoop++
+        this.nodeRipCountMap.set(
+          nodeId,
+          (this.nodeRipCountMap.get(nodeId) ?? 0) + 1,
+        )
+
+        currentPf = this.computeNodePfForRegion({
           region,
           newlySolvedRoute,
           routesToRip,
         })
         this.recordNodeMemoryPf(nodeId, currentPf)
-        const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
-        if (currentPf <= rippingPfThreshold) {
-          this.logger.debug("Node PF below ripping threshold", {
-            nodeId,
-            currentPf,
-            threshold: rippingPfThreshold,
-          })
-          return null
-        }
 
-        this.logger.debug("Node qualifies for ripping", {
+        this.logger.info("Solver2-style node rip iteration", {
           nodeId,
-          currentPf,
+          rippedConnectionId: routeToRip.connection.connectionId,
+          pfBeforeRip,
+          pfAfterRip: currentPf,
           threshold: rippingPfThreshold,
-          availableRoutes: availableRoutesInNode.length,
+          ripCountForNodeLoop,
+          totalRipCount: this.totalRipCount,
+          maxRips: this.maxRips,
         })
+      }
 
-        return {
+      if (ripCountForNodeLoop > 0) {
+        this.logger.debug("Solver2-style node loop complete", {
           nodeId,
-          pf: currentPf,
-          routesInNode: availableRoutesInNode,
-        }
-      })
-      .filter(
-        (
-          node,
-        ): node is {
-          nodeId: CapacityMeshNodeId
-          pf: number
-          routesInNode: SolvedRoute[]
-        } => Boolean(node),
-      )
-
-    this.logger.debug("Candidate nodes for ripping", {
-      totalCandidates: candidateNodesForRipping.length,
-    })
-
-    const selectedNode = this.selectNodeForRipping({
-      candidateNodesForRipping,
-      random,
-    })
-    if (!selectedNode) {
-      return routesToRip
+          ripCountForNodeLoop,
+          finalPf: currentPf,
+          threshold: rippingPfThreshold,
+          totalRoutesToRip: routesToRip.size,
+        })
+      }
     }
 
-    const selectedRouteIndex = Math.min(
-      selectedNode.routesInNode.length - 1,
-      Math.floor(random() * selectedNode.routesInNode.length),
-    )
-    const selectedRoute = selectedNode.routesInNode[selectedRouteIndex]
-    routesToRip.add(selectedRoute)
+    const didRipAnyInLoop = routesToRip.size > portOverlapRoutesToRip.size
+    if (didRipAnyInLoop) {
+      this.maybeAddRandomRips({
+        routesToRip,
+        newlySolvedRoute,
+        randomSeed: rippingRandomSeed + 10_000,
+      })
+    }
 
-    const nodeRipCount = this.nodeRipCountMap.get(selectedNode.nodeId) ?? 0
-    this.nodeRipCountMap.set(selectedNode.nodeId, nodeRipCount + 1)
-
-    this.logger.info("Route ripping selected", {
-      nodeId: selectedNode.nodeId,
-      nodePf: selectedNode.pf,
-      nodeRipCount: nodeRipCount + 1,
-      rippedConnectionId: selectedRoute.connection.connectionId,
-      selectedRouteIndex,
-      totalAvailableRoutes: selectedNode.routesInNode.length,
-      totalRoutesToRip: routesToRip.size,
-      rippingEnabled: this.rippingEnabled,
-    })
+    if (routesToRip.size > 0) {
+      this.logger.info("Route ripping loop selected routes", {
+        connectionId: newlySolvedRoute.connection.connectionId,
+        totalRoutesToRip: routesToRip.size,
+        totalRipCount: this.totalRipCount,
+        rippingEnabled: this.rippingEnabled,
+      })
+    } else {
+      this.logger.debug("No nodes eligible for ripping", {
+        candidatesCount: orderedNodeIds.length,
+      })
+    }
 
     return routesToRip
   }

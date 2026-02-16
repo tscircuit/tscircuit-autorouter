@@ -297,6 +297,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               greedyMultiplier: 0.7,
               ripNodePfThresholdStart: 0.3,
               maxNodeRips: 100,
+              maxRips: 1000,
+              randomRipFraction: 0.3,
             },
             forceCenterFirst: true,
             nodeMemoryPfMap: new Map(),
