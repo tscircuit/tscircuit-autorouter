@@ -3,8 +3,39 @@ name: Autorouting Benchmark
 on:
   issue_comment:
     types: [created]
+  pull_request:
+    types: [opened]
 
 jobs:
+  post-instructions:
+    name: Post benchmark instructions
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post comment with benchmark instructions
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## 🏃 Benchmark This PR
+
+            Maintainers can run benchmarks on this PR by commenting:
+
+            \`\`\`
+            /benchmark [SolverName] [scenario-limit]
+            \`\`\`
+
+            **Examples:**
+            - \`/benchmark\` - Run with default solver, all scenarios
+            - \`/benchmark AutoroutingPipelineSolver3_HgPortPointPathing\` - Run with specific solver
+            - \`/benchmark AutoroutingPipelineSolver3_HgPortPointPathing 10\` - Run with specific solver, 10 scenarios
+            - \`/benchmark _ 20\` - Run with default solver, 20 scenarios`
+            });
+
   benchmark:
     name: Run autorouting benchmark
     # Only run on PR comments with /benchmark command from maintainers
