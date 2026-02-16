@@ -291,6 +291,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             weights: {
               portUsagePenalty: 0.15,
               regionTransitionPenalty: 0.6,
+              straightLineDeviationPenaltyFactor: 4,
               ripCost: 8.5,
               greedyMultiplier: 0.7,
               ripNodePfThresholdStart: 0.3,

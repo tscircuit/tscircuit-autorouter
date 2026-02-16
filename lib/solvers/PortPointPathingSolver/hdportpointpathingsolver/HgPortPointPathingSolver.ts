@@ -5,7 +5,11 @@ import {
   type SolvedRoute,
 } from "@tscircuit/hypergraph"
 import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
-import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
+import {
+  distance,
+  doSegmentsIntersect,
+  pointToSegmentDistance,
+} from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   ConnectionPathResult,
@@ -43,6 +47,7 @@ export interface HgPortPointPathingSolverParams {
     ripCost: number
     portUsagePenalty: number
     regionTransitionPenalty: number
+    straightLineDeviationPenaltyFactor: number
     ripNodePfThresholdStart: number
     maxNodeRips: number
   }
@@ -69,6 +74,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ripNodePfThresholdStart: number
   maxNodeRips: number
   forceCenterFirst: boolean
+  straightLineDeviationPenaltyFactor: number
+  connectionResultByConnectionId: Map<string, ConnectionPathResult>
   nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
   logger: FileLogger
 
@@ -87,6 +94,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       maxNodeRips,
       portUsagePenalty,
       regionTransitionPenalty,
+      straightLineDeviationPenaltyFactor,
       ripCost,
       ripNodePfThresholdStart,
     } = weights
@@ -115,7 +123,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.ripNodePfThresholdStart = ripNodePfThresholdStart
     this.maxNodeRips = maxNodeRips
     this.forceCenterFirst = forceCenterFirst
+    this.straightLineDeviationPenaltyFactor =
+      straightLineDeviationPenaltyFactor
     this.MAX_ITERATIONS = 200000
+    this.connectionResultByConnectionId = new Map(
+      connectionsWithResults.map((result) => [
+        result.connection.name,
+        result,
+      ]),
+    )
 
     // Initialize file logger
     this.logger = new FileLogger({
@@ -128,6 +144,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ripCost,
       portUsagePenalty,
       regionTransitionPenalty,
+      straightLineDeviationPenaltyFactor: this.straightLineDeviationPenaltyFactor,
       forceCenterFirst: this.forceCenterFirst,
     })
   }
@@ -144,7 +161,29 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override computeH(candidate: Candidate<HgRegion, HgPort>): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
     const centerBias = candidate.port.d.distToCentermostPortOnZ ?? 0
-    return distanceToEnd + centerBias * 0.05
+    const straightLineDeviationPenalty =
+      this.getStraightLineDeviationPenalty(candidate)
+    return distanceToEnd + centerBias * 0.05 + straightLineDeviationPenalty
+  }
+
+  private getStraightLineDeviationPenalty(
+    candidate: Candidate<HgRegion, HgPort>,
+  ): number {
+    if (this.straightLineDeviationPenaltyFactor <= 0) return 0
+
+    const connectionId = this.currentConnection?.connectionId
+    if (!connectionId) return 0
+
+    const connectionResult =
+      this.connectionResultByConnectionId.get(connectionId)
+    const pointsToConnect = connectionResult?.connection.pointsToConnect
+    if (!pointsToConnect || pointsToConnect.length < 2) return 0
+
+    const startPoint = pointsToConnect[0]
+    const endPoint = pointsToConnect[1]
+    const candidatePoint = { x: candidate.port.d.x, y: candidate.port.d.y }
+    const deviation = pointToSegmentDistance(candidatePoint, startPoint, endPoint)
+    return this.straightLineDeviationPenaltyFactor * deviation
   }
 
   override computeIncreasedRegionCostIfPortsAreUsed(
