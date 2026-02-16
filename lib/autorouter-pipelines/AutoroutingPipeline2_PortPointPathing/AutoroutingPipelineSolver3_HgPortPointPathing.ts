@@ -291,6 +291,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             weights: {
               portUsagePenalty: 0.15,
               regionTransitionPenalty: 0.6,
+              memoryPfFactor: 4,
               straightLineDeviationPenaltyFactor: 4,
               ripCost: 8.5,
               greedyMultiplier: 0.7,
@@ -298,6 +299,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               maxNodeRips: 100,
             },
             forceCenterFirst: true,
+            nodeMemoryPfMap: new Map(),
           },
         ]
       },

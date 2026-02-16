@@ -40,6 +40,7 @@ export interface HgPortPointPathingSolverParams {
   connectionsWithResults: ConnectionPathResult[]
   inputNodes: InputNodeWithPortPoints[]
   portPointMap: Map<string, InputPortPoint>
+  nodeMemoryPfMap: Map<CapacityMeshNodeId, number>
   rippingEnabled: boolean
   forceCenterFirst: boolean
   weights: {
@@ -47,6 +48,7 @@ export interface HgPortPointPathingSolverParams {
     ripCost: number
     portUsagePenalty: number
     regionTransitionPenalty: number
+    memoryPfFactor: number
     straightLineDeviationPenaltyFactor: number
     ripNodePfThresholdStart: number
     maxNodeRips: number
@@ -73,10 +75,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   regionTransitionPenalty: number
   ripNodePfThresholdStart: number
   maxNodeRips: number
+  memoryPfFactor: number
   forceCenterFirst: boolean
   straightLineDeviationPenaltyFactor: number
   connectionResultByConnectionId: Map<string, ConnectionPathResult>
   nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
+  nodeMemoryPfMap: Map<CapacityMeshNodeId, number> = new Map()
   logger: FileLogger
 
   constructor({
@@ -85,6 +89,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     connectionsWithResults,
     inputNodes,
     portPointMap,
+    nodeMemoryPfMap,
     rippingEnabled,
     weights,
     forceCenterFirst,
@@ -92,6 +97,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const {
       greedyMultiplier,
       maxNodeRips,
+      memoryPfFactor,
       portUsagePenalty,
       regionTransitionPenalty,
       straightLineDeviationPenaltyFactor,
@@ -122,15 +128,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.regionTransitionPenalty = regionTransitionPenalty
     this.ripNodePfThresholdStart = ripNodePfThresholdStart
     this.maxNodeRips = maxNodeRips
+    this.memoryPfFactor = memoryPfFactor
     this.forceCenterFirst = forceCenterFirst
-    this.straightLineDeviationPenaltyFactor =
-      straightLineDeviationPenaltyFactor
+    this.straightLineDeviationPenaltyFactor = straightLineDeviationPenaltyFactor
+    this.nodeMemoryPfMap = nodeMemoryPfMap
     this.MAX_ITERATIONS = 200000
     this.connectionResultByConnectionId = new Map(
-      connectionsWithResults.map((result) => [
-        result.connection.name,
-        result,
-      ]),
+      connectionsWithResults.map((result) => [result.connection.name, result]),
     )
 
     // Initialize file logger
@@ -144,9 +148,27 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ripCost,
       portUsagePenalty,
       regionTransitionPenalty,
-      straightLineDeviationPenaltyFactor: this.straightLineDeviationPenaltyFactor,
+      memoryPfFactor: this.memoryPfFactor,
+      straightLineDeviationPenaltyFactor:
+        this.straightLineDeviationPenaltyFactor,
       forceCenterFirst: this.forceCenterFirst,
     })
+  }
+
+  private clampPf(pf: number): number {
+    if (!Number.isFinite(pf)) return 0
+    return Math.max(0, Math.min(0.9999, pf))
+  }
+
+  private pfToFailureCost(pf: number): number {
+    return -Math.log(1 - this.clampPf(pf))
+  }
+
+  private recordNodeMemoryPf(nodeId: CapacityMeshNodeId, pf: number): void {
+    const clampedPf = this.clampPf(pf)
+    const prevPf = this.nodeMemoryPfMap.get(nodeId) ?? 0
+    const updatedPf = Math.max(clampedPf, prevPf * 0.98)
+    this.nodeMemoryPfMap.set(nodeId, updatedPf)
   }
 
   override estimateCostToEnd(port: HgPort): number {
@@ -161,9 +183,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override computeH(candidate: Candidate<HgRegion, HgPort>): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
     const centerBias = candidate.port.d.distToCentermostPortOnZ ?? 0
+    const regionIdForMemory =
+      candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
+    const memoryPf = regionIdForMemory
+      ? (this.nodeMemoryPfMap.get(regionIdForMemory) ?? 0)
+      : 0
+    const memoryPfPenalty = this.pfToFailureCost(memoryPf) * this.memoryPfFactor
     const straightLineDeviationPenalty =
       this.getStraightLineDeviationPenalty(candidate)
-    return distanceToEnd + centerBias * 0.05 + straightLineDeviationPenalty
+    return (
+      distanceToEnd +
+      centerBias * 0.05 +
+      memoryPfPenalty +
+      straightLineDeviationPenalty
+    )
   }
 
   private getStraightLineDeviationPenalty(
@@ -182,7 +215,11 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const startPoint = pointsToConnect[0]
     const endPoint = pointsToConnect[1]
     const candidatePoint = { x: candidate.port.d.x, y: candidate.port.d.y }
-    const deviation = pointToSegmentDistance(candidatePoint, startPoint, endPoint)
+    const deviation = pointToSegmentDistance(
+      candidatePoint,
+      startPoint,
+      endPoint,
+    )
     return this.straightLineDeviationPenaltyFactor * deviation
   }
 
@@ -360,6 +397,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override routeSolvedHook(solvedRoute: SolvedRoute): void {
+    const traversedRegions = new Set<HgRegion>()
+    for (const candidate of solvedRoute.path) {
+      const region = candidate.lastRegion as HgRegion | undefined
+      if (region) traversedRegions.add(region)
+    }
+    for (const region of traversedRegions) {
+      const regionPf = this.computeNodePfFromAssignments(region)
+      this.recordNodeMemoryPf(region.regionId as CapacityMeshNodeId, regionPf)
+    }
+
     // Only log if ripping was required (less frequent, more important)
     if (solvedRoute.requiredRip) {
       this.logger.info("Route solved with ripping", {
@@ -553,6 +600,35 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return pf
   }
 
+  private computeNodePfFromAssignments(region: HgRegion): number {
+    const node = this.nodeMap.get(region.regionId)
+    if (!node || node._containsTarget) {
+      return 0
+    }
+
+    const existingAssignments = region.assignments ?? []
+    const existingPortPoints =
+      this.getPortPointsFromRegionAssignments(existingAssignments)
+
+    const nodeWithPortPoints: NodeWithPortPoints = {
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      portPoints: existingPortPoints,
+      availableZ: node.availableZ,
+    }
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
+
+    return calculateNodeProbabilityOfFailure(
+      capacityMeshNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
+  }
+
   private getDerivedCapacityMeshNode(
     node: InputNodeWithPortPoints,
   ): CapacityMeshNode {
@@ -680,6 +756,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           newlySolvedRoute,
           routesToRip,
         })
+        this.recordNodeMemoryPf(nodeId, currentPf)
         const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
         if (currentPf <= rippingPfThreshold) {
           this.logger.debug("Node PF below ripping threshold", {
