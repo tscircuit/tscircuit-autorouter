@@ -29,28 +29,21 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 
 const MAX_CANDIDATES_PER_REGION = 2
 
-export const SOLVER_DEFAULTS = {
-  portUsagePenalty: 0.15,
-  crossingPenalty: 0.6,
-  ripCost: 8.5,
-  greedyMultiplier: 0.7,
-  ripNodePfThresholdStart: 0.3,
-  maxNodeRips: 100,
-}
-
 export interface HgPortPointPathingSolverParams {
   inputGraph: HyperGraph
   inputConnections: Connection[]
   connectionsWithResults: ConnectionPathResult[]
   inputNodes: InputNodeWithPortPoints[]
   portPointMap: Map<string, InputPortPoint>
-  greedyMultiplier?: number
-  ripCost?: number
-  rippingEnabled?: boolean
-  portUsagePenalty?: number
-  regionTransitionPenalty?: number
-  ripNodePfThresholdStart?: number
-  maxNodeRips?: number
+  rippingEnabled: boolean
+  weights: {
+    greedyMultiplier: number
+    ripCost: number
+    portUsagePenalty: number
+    regionTransitionPenalty: number
+    ripNodePfThresholdStart: number
+    maxNodeRips: number
+  }
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -81,20 +74,23 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     connectionsWithResults,
     inputNodes,
     portPointMap,
-    greedyMultiplier,
-    ripCost,
     rippingEnabled,
-    portUsagePenalty,
-    regionTransitionPenalty,
-    ripNodePfThresholdStart,
-    maxNodeRips,
+    weights,
   }: HgPortPointPathingSolverParams) {
+    const {
+      greedyMultiplier,
+      maxNodeRips,
+      portUsagePenalty,
+      regionTransitionPenalty,
+      ripCost,
+      ripNodePfThresholdStart,
+    } = weights
     super({
       inputGraph,
       inputConnections,
-      greedyMultiplier: greedyMultiplier ?? SOLVER_DEFAULTS.greedyMultiplier,
+      greedyMultiplier: greedyMultiplier,
       rippingEnabled: rippingEnabled ?? true,
-      ripCost: ripCost ?? SOLVER_DEFAULTS.ripCost,
+      ripCost: ripCost,
     })
     this.inputNodes = inputNodes
     this.nodeMap = new Map(
@@ -109,12 +105,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.portPointMap = portPointMap
     this.connectionsWithResults = connectionsWithResults
 
-    this.portUsagePenalty = portUsagePenalty ?? SOLVER_DEFAULTS.portUsagePenalty
-    this.regionTransitionPenalty =
-      regionTransitionPenalty ?? SOLVER_DEFAULTS.crossingPenalty
-    this.ripNodePfThresholdStart =
-      ripNodePfThresholdStart ?? SOLVER_DEFAULTS.ripNodePfThresholdStart
-    this.maxNodeRips = maxNodeRips ?? SOLVER_DEFAULTS.maxNodeRips
+    this.portUsagePenalty = portUsagePenalty
+    this.regionTransitionPenalty = regionTransitionPenalty
+    this.ripNodePfThresholdStart = ripNodePfThresholdStart
+    this.maxNodeRips = maxNodeRips
     this.MAX_ITERATIONS = 200000
   }
 

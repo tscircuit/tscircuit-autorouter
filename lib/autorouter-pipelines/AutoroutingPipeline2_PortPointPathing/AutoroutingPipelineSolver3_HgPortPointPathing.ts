@@ -287,7 +287,16 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             connectionsWithResults,
             inputNodes: this.inputNodeWithPortPoints,
             portPointMap,
-          } as HgPortPointPathingSolverParams,
+            rippingEnabled: true,
+            weights: {
+              portUsagePenalty: 0.15,
+              regionTransitionPenalty: 0.6,
+              ripCost: 8.5,
+              greedyMultiplier: 0.7,
+              ripNodePfThresholdStart: 0.3,
+              maxNodeRips: 100,
+            }
+          },
         ]
       },
     ),
