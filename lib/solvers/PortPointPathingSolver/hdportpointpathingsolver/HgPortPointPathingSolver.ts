@@ -37,6 +37,7 @@ export interface HgPortPointPathingSolverParams {
   inputNodes: InputNodeWithPortPoints[]
   portPointMap: Map<string, InputPortPoint>
   rippingEnabled: boolean
+  forceCenterFirst: boolean
   weights: {
     greedyMultiplier: number
     ripCost: number
@@ -67,6 +68,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   regionTransitionPenalty: number
   ripNodePfThresholdStart: number
   maxNodeRips: number
+  forceCenterFirst: boolean
   nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
   logger: FileLogger
 
@@ -78,6 +80,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     portPointMap,
     rippingEnabled,
     weights,
+    forceCenterFirst,
   }: HgPortPointPathingSolverParams) {
     const {
       greedyMultiplier,
@@ -111,6 +114,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.regionTransitionPenalty = regionTransitionPenalty
     this.ripNodePfThresholdStart = ripNodePfThresholdStart
     this.maxNodeRips = maxNodeRips
+    this.forceCenterFirst = forceCenterFirst
     this.MAX_ITERATIONS = 200000
 
     // Initialize file logger
@@ -124,6 +128,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ripCost,
       portUsagePenalty,
       regionTransitionPenalty,
+      forceCenterFirst: this.forceCenterFirst,
     })
   }
 
@@ -212,6 +217,75 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return ripsRequired
   }
 
+  private isPortAvailableForCurrentNet(port: HgPort): boolean {
+    const assignment = port.assignment
+    if (!assignment) return true
+
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
+    return assignment.connection.mutuallyConnectedNetworkId === currentNetId
+  }
+
+  private getCenterFirstCandidatesForRegion(
+    candidates: Candidate<HgRegion, HgPort>[],
+  ): Candidate<HgRegion, HgPort>[] {
+    const byZ = new Map<number, Candidate<HgRegion, HgPort>[]>()
+
+    for (const candidate of candidates) {
+      const z = candidate.port.d.z ?? 0
+      const candidatesOnZ = byZ.get(z) ?? []
+      candidatesOnZ.push(candidate)
+      byZ.set(z, candidatesOnZ)
+    }
+
+    const selected: Candidate<HgRegion, HgPort>[] = []
+
+    for (const candidatesOnZ of byZ.values()) {
+      const sortedByCenterOffset = candidatesOnZ
+        .slice()
+        .sort(
+          (a, b) =>
+            a.port.d.distToCentermostPortOnZ - b.port.d.distToCentermostPortOnZ,
+        )
+      const centerCandidate = sortedByCenterOffset[0]
+      if (!centerCandidate) continue
+
+      if (this.isPortAvailableForCurrentNet(centerCandidate.port)) {
+        selected.push(centerCandidate)
+        continue
+      }
+
+      const sortedByPosition = candidatesOnZ.slice().sort((a, b) => {
+        if (a.port.d.x !== b.port.d.x) return a.port.d.x - b.port.d.x
+        return a.port.d.y - b.port.d.y
+      })
+
+      const availableRanges: Candidate<HgRegion, HgPort>[][] = []
+      let currentRange: Candidate<HgRegion, HgPort>[] = []
+
+      for (const candidate of sortedByPosition) {
+        if (this.isPortAvailableForCurrentNet(candidate.port)) {
+          currentRange.push(candidate)
+          continue
+        }
+
+        if (currentRange.length > 0) {
+          availableRanges.push(currentRange)
+          currentRange = []
+        }
+      }
+
+      if (currentRange.length > 0) {
+        availableRanges.push(currentRange)
+      }
+
+      for (const range of availableRanges) {
+        selected.push(range[Math.floor(range.length / 2)])
+      }
+    }
+
+    return selected
+  }
+
   override selectCandidatesForEnteringRegion(
     candidates: Candidate<HgRegion, HgPort>[],
   ): Candidate<HgRegion, HgPort>[] {
@@ -224,17 +298,23 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       return nextRegion === startRegion || nextRegion === endRegion
     })
 
+    const centerFirstCandidates = this.forceCenterFirst
+      ? this.getCenterFirstCandidatesForRegion(filteredCandidates)
+      : filteredCandidates
+
     this.logger.debug("Candidate selection", {
       totalCandidates: candidates.length,
       afterFiltering: filteredCandidates.length,
+      afterCenterFirst: centerFirstCandidates.length,
       maxAllowed: MAX_CANDIDATES_PER_REGION,
+      forceCenterFirst: this.forceCenterFirst,
     })
 
-    if (filteredCandidates.length <= MAX_CANDIDATES_PER_REGION) {
-      return filteredCandidates
+    if (centerFirstCandidates.length <= MAX_CANDIDATES_PER_REGION) {
+      return centerFirstCandidates
     }
 
-    return filteredCandidates
+    return centerFirstCandidates
       .slice()
       .sort((a, b) => a.g + a.h - (b.g + b.h))
       .slice(0, MAX_CANDIDATES_PER_REGION)
