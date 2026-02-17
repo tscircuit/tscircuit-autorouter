@@ -36,6 +36,9 @@ export function buildPortPointAssignmentsFromSolvedRoutes({
     { connectionName: string; rootConnectionName?: string }
   >()
   const nodeAssignedPortPoints = new Map<CapacityMeshNodeId, PortPoint[]>()
+  const inputNodeMap = new Map(
+    inputNodes.map((node) => [node.capacityMeshNodeId, node] as const),
+  )
 
   for (const node of inputNodes) {
     nodeAssignedPortPoints.set(node.capacityMeshNodeId, [])
@@ -61,6 +64,7 @@ export function buildPortPointAssignmentsFromSolvedRoutes({
     addConnectionEndpointsToNodeAssignments({
       path,
       connection: connectionResult.connection,
+      inputNodeMap,
       nodeAssignedPortPoints,
     })
   }

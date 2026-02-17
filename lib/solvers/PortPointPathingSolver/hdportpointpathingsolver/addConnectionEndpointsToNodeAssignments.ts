@@ -1,6 +1,10 @@
 import type { CapacityMeshNodeId, SimpleRouteConnection } from "lib/types"
 import type { PortPoint } from "lib/types/high-density-types"
-import type { PortPointCandidate } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type {
+  InputNodeWithPortPoints,
+  PortPointCandidate,
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import { toCenteredEndpoint } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/defensive/toCenteredEndpoint"
 
 /**
  * Add connection endpoint points to node assignments for crossing calculations.
@@ -8,10 +12,12 @@ import type { PortPointCandidate } from "lib/solvers/PortPointPathingSolver/Port
 export function addConnectionEndpointsToNodeAssignments({
   path,
   connection,
+  inputNodeMap,
   nodeAssignedPortPoints,
 }: {
   path: PortPointCandidate[]
   connection: SimpleRouteConnection
+  inputNodeMap: Map<CapacityMeshNodeId, InputNodeWithPortPoints>
   nodeAssignedPortPoints: Map<CapacityMeshNodeId, PortPoint[]>
 }): void {
   if (path.length === 0) {
@@ -25,12 +31,20 @@ export function addConnectionEndpointsToNodeAssignments({
     connection.pointsToConnect[connection.pointsToConnect.length - 1]
 
   if (startPoint) {
+    const startNode = inputNodeMap.get(startCandidate.currentNodeId)
+    const startPosition = toCenteredEndpoint({
+      connectionPoint: startPoint,
+      candidate: startCandidate,
+      node: startNode,
+      endpointName: "start",
+      connection,
+    })
     const startNodePortPoints =
       nodeAssignedPortPoints.get(startCandidate.currentNodeId) ?? []
     startNodePortPoints.push({
-      x: startPoint.x,
-      y: startPoint.y,
-      z: startCandidate.z,
+      x: startPosition.x,
+      y: startPosition.y,
+      z: startPosition.z,
       connectionName: connection.name,
       rootConnectionName: connection.rootConnectionName,
     })
@@ -41,12 +55,20 @@ export function addConnectionEndpointsToNodeAssignments({
   }
 
   if (endPoint) {
+    const endNode = inputNodeMap.get(endCandidate.currentNodeId)
+    const endPosition = toCenteredEndpoint({
+      connectionPoint: endPoint,
+      candidate: endCandidate,
+      node: endNode,
+      endpointName: "end",
+      connection,
+    })
     const endNodePortPoints =
       nodeAssignedPortPoints.get(endCandidate.currentNodeId) ?? []
     endNodePortPoints.push({
-      x: endPoint.x,
-      y: endPoint.y,
-      z: endCandidate.z,
+      x: endPosition.x,
+      y: endPosition.y,
+      z: endPosition.z,
       connectionName: connection.name,
       rootConnectionName: connection.rootConnectionName,
     })
