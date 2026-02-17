@@ -17,6 +17,10 @@ import { calculatePerpendicularPointsAtDistance } from "lib/utils/calculatePoint
 import { snapToNearestBound } from "lib/utils/snapToNearestBound"
 import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle"
 import {
+  classifyPointInBounds,
+  type PointBoundsPosition,
+} from "lib/utils/classifyPointInBounds"
+import {
   calculateTraversalPercentages,
   pointToAngle,
 } from "./calculateSideTraversal"
@@ -29,7 +33,7 @@ type Route = {
   connectionName: string
 }
 
-type PortPointBoundsPosition = "on-boundary" | "inside" | "outside"
+type PortPointBoundsPosition = PointBoundsPosition
 
 /**
  * Solver for exactly two crossing routes where exactly one route transitions
@@ -182,33 +186,11 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     point: Point,
     epsilon = 1e-6,
   ): PortPointBoundsPosition {
-    const { minX, maxX, minY, maxY } = this.bounds
-
-    if (
-      !Number.isFinite(point.x) ||
-      !Number.isFinite(point.y) ||
-      !Number.isFinite(minX) ||
-      !Number.isFinite(maxX) ||
-      !Number.isFinite(minY) ||
-      !Number.isFinite(maxY)
-    ) {
-      return "outside"
-    }
-
-    const isOutside =
-      point.x < minX - epsilon ||
-      point.x > maxX + epsilon ||
-      point.y < minY - epsilon ||
-      point.y > maxY + epsilon
-    if (isOutside) return "outside"
-
-    const isOnBoundary =
-      Math.abs(point.x - minX) <= epsilon ||
-      Math.abs(point.x - maxX) <= epsilon ||
-      Math.abs(point.y - minY) <= epsilon ||
-      Math.abs(point.y - maxY) <= epsilon
-
-    return isOnBoundary ? "on-boundary" : "inside"
+    return classifyPointInBounds({
+      point,
+      bounds: this.bounds,
+      epsilon,
+    })
   }
 
   /**
