@@ -78,11 +78,7 @@ export const classifyPointInBounds = ({
   const isNearCorner = isNearVerticalEdge && isNearHorizontalEdge
 
   if (isNearCorner) {
-    const isAtExactCorner =
-      (point.x === bounds.minX || point.x === bounds.maxX) &&
-      (point.y === bounds.minY || point.y === bounds.maxY)
-
-    return isAtExactCorner ? "on-boundary" : "inside"
+    return "on-boundary"
   }
 
   const isWithinYRange = isWithinRange({
