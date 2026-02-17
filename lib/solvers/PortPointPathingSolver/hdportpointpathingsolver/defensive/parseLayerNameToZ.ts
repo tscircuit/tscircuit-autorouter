@@ -1,6 +1,7 @@
 import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
+/** Converts a layer label into a numeric z index using shared mapping plus a defensive alias fallback. */
 export function parseLayerNameToZ({
   layerName,
   node,

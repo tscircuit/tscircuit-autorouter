@@ -5,6 +5,7 @@ import type {
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { getAllowedZForEndpoint } from "./getAllowedZForEndpoint"
 
+/** Resolves the endpoint z layer by preferring the candidate z and falling back to the nearest allowed endpoint layer on mismatch. */
 export function resolveEndpointZ({
   connectionPoint,
   candidate,

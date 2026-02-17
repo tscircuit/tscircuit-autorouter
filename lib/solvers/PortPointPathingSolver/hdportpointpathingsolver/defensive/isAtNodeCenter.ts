@@ -2,6 +2,7 @@ import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver
 
 const CENTER_EPSILON = 1e-6
 
+/** Checks whether a point is effectively at node center within a small floating-point tolerance. */
 export function isAtNodeCenter({
   point,
   node,

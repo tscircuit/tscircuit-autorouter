@@ -3,10 +3,12 @@ import type {
   InputNodeWithPortPoints,
   PortPointCandidate,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import { isAtNodeCenter } from "./isAtNodeCenter"
+import { clampPointToNodeBounds } from "./clampPointToNodeBounds"
+import { isPointInsideOrOnNodeBounds } from "./isPointInsideOrOnNodeBounds"
 import { resolveEndpointZ } from "./resolveEndpointZ"
 
-export function toCenteredEndpoint({
+/** Normalizes an endpoint by resolving its z layer and ensuring its x/y lies within node bounds, clamping when needed. */
+export function toEndpointWithinBounds({
   connectionPoint,
   candidate,
   node,
@@ -20,7 +22,7 @@ export function toCenteredEndpoint({
   connection: SimpleRouteConnection
 }): { x: number; y: number; z: number } {
   if (!node) {
-    // Defensive fallback: without node geometry we cannot center-correct or parse
+    // Defensive fallback: without node geometry we cannot bounds-check or parse
     // "bottom" relative to availableZ, so preserve endpoint coordinates and candidate z.
     console.error(
       `[addConnectionEndpointsToNodeAssignments] ${endpointName} endpoint for "${connection.name}" missing node; using raw endpoint/candidate values`,
@@ -40,18 +42,26 @@ export function toCenteredEndpoint({
     connection,
   })
 
-  const centered = isAtNodeCenter({ point: connectionPoint, node })
-  console.assert(
-    centered,
-    `[addConnectionEndpointsToNodeAssignments] ${endpointName} endpoint for "${connection.name}" is not at node center; replacing with node center`,
-  )
-  if (!centered) {
+  const insideOrOnBounds = isPointInsideOrOnNodeBounds({
+    point: connectionPoint,
+    node,
+  })
+  if (!insideOrOnBounds) {
+    const clampedPoint = clampPointToNodeBounds({
+      point: connectionPoint,
+      node,
+    })
+    console.assert(
+      insideOrOnBounds,
+      `[addConnectionEndpointsToNodeAssignments] ${endpointName} endpoint for "${connection.name}" connectionPoint outside obstacle/node bounds; original=(${connectionPoint.x}, ${connectionPoint.y}) clamped=(${clampedPoint.x}, ${clampedPoint.y})`,
+    )
     return {
-      x: node.center.x,
-      y: node.center.y,
+      x: clampedPoint.x,
+      y: clampedPoint.y,
       z: resolvedZ,
     }
   }
+
   return {
     x: connectionPoint.x,
     y: connectionPoint.y,

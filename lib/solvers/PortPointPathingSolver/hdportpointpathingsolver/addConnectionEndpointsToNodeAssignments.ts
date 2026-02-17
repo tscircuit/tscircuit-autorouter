@@ -4,7 +4,7 @@ import type {
   InputNodeWithPortPoints,
   PortPointCandidate,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import { toCenteredEndpoint } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/defensive/toCenteredEndpoint"
+import { toEndpointWithinBounds } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/defensive/toEndpointWithinBounds"
 
 /**
  * Add connection endpoint points to node assignments for crossing calculations.
@@ -32,7 +32,7 @@ export function addConnectionEndpointsToNodeAssignments({
 
   if (startPoint) {
     const startNode = inputNodeMap.get(startCandidate.currentNodeId)
-    const startPosition = toCenteredEndpoint({
+    const startPosition = toEndpointWithinBounds({
       connectionPoint: startPoint,
       candidate: startCandidate,
       node: startNode,
@@ -56,7 +56,7 @@ export function addConnectionEndpointsToNodeAssignments({
 
   if (endPoint) {
     const endNode = inputNodeMap.get(endCandidate.currentNodeId)
-    const endPosition = toCenteredEndpoint({
+    const endPosition = toEndpointWithinBounds({
       connectionPoint: endPoint,
       candidate: endCandidate,
       node: endNode,

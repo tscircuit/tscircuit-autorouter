@@ -3,6 +3,7 @@ import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver
 import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { parseLayerNameToZ } from "./parseLayerNameToZ"
 
+/** Produces the list of valid z indices declared by a connection endpoint, logging when layers are missing or unparseable. */
 export function getAllowedZForEndpoint({
   connectionPoint,
   node,
