@@ -8,7 +8,6 @@ import {
   pointToSegmentDistance,
   doSegmentsIntersect,
   clamp,
-  pointToBoundsDistance,
 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
@@ -30,6 +29,16 @@ type Route = {
   connectionName: string
 }
 
+type PortPointBoundsPosition = "on-boundary" | "inside" | "outside"
+
+/**
+ * Solver for exactly two crossing routes where exactly one route transitions
+ * between layers.
+ *
+ * This solver only handles port points that lie on node bounds.
+ * - Outside node bounds: treated as invalid input and reported as an error.
+ * - Strictly inside node bounds: solver marks itself as failed (out of scope).
+ */
 export class SingleTransitionCrossingRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleTransitionCrossingRouteSolver"
@@ -83,15 +92,20 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       return
     }
 
-    const hasInteriorPoint = this.routes.some(
-      (route) =>
-        pointToBoundsDistance(route.A, this.bounds) > 1e-6 ||
-        pointToBoundsDistance(route.B, this.bounds) > 1e-6,
+    const routePoints = this.routes.flatMap((route) => [route.A, route.B])
+    const pointPositions = routePoints.map((point) =>
+      this.getPortPointBoundsPosition(point),
     )
-    if (hasInteriorPoint) {
+
+    if (pointPositions.includes("outside")) {
       this.failed = true
       this.error =
-        "SingleTransitionCrossingRouteSolver only supports boundary port points"
+        "Invalid route input: SingleTransitionCrossingRouteSolver received port point(s) outside node bounds"
+      return
+    }
+
+    if (pointPositions.includes("inside")) {
+      this.failed = true
       return
     }
 
@@ -158,6 +172,43 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
     }
+  }
+
+  /**
+   * Classifies a point relative to this node's bounds.
+   * Uses epsilon to tolerate floating-point noise on boundary coordinates.
+   */
+  private getPortPointBoundsPosition(
+    point: Point,
+    epsilon = 1e-6,
+  ): PortPointBoundsPosition {
+    const { minX, maxX, minY, maxY } = this.bounds
+
+    if (
+      !Number.isFinite(point.x) ||
+      !Number.isFinite(point.y) ||
+      !Number.isFinite(minX) ||
+      !Number.isFinite(maxX) ||
+      !Number.isFinite(minY) ||
+      !Number.isFinite(maxY)
+    ) {
+      return "outside"
+    }
+
+    const isOutside =
+      point.x < minX - epsilon ||
+      point.x > maxX + epsilon ||
+      point.y < minY - epsilon ||
+      point.y > maxY + epsilon
+    if (isOutside) return "outside"
+
+    const isOnBoundary =
+      Math.abs(point.x - minX) <= epsilon ||
+      Math.abs(point.x - maxX) <= epsilon ||
+      Math.abs(point.y - minY) <= epsilon ||
+      Math.abs(point.y - maxY) <= epsilon
+
+    return isOnBoundary ? "on-boundary" : "inside"
   }
 
   /**
