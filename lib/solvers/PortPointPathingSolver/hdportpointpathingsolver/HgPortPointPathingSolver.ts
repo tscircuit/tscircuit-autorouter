@@ -29,7 +29,6 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { FileLogger } from "lib/utils/fileLogger"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { computeSectionScore } from "lib/solvers/MultiSectionPortPointOptimizer"
 
@@ -88,7 +87,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   totalRipCount = 0
   randomRipFraction: number
   maxRips: number
-  logger: FileLogger
   MIN_ALLOWED_BOARD_SCORE: number
 
   constructor({
@@ -150,26 +148,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.connectionResultByConnectionId = new Map(
       connectionsWithResults.map((result) => [result.connection.name, result]),
     )
-
-    // Initialize file logger
-    this.logger = new FileLogger({
-      logFileName: `hg-port-point-pathing-${Date.now()}.log`,
-    })
-    this.logger.info("HgPortPointPathingSolver initialized", {
-      inputNodesCount: inputNodes.length,
-      inputConnectionsCount: inputConnections.length,
-      greedyMultiplier,
-      ripCost,
-      portUsagePenalty,
-      regionTransitionPenalty,
-      memoryPfFactor: this.memoryPfFactor,
-      straightLineDeviationPenaltyFactor:
-        this.straightLineDeviationPenaltyFactor,
-      forceCenterFirst: this.forceCenterFirst,
-      randomRipFraction: this.randomRipFraction,
-      maxRips: this.maxRips,
-      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
-    })
   }
 
   private clampPf(pf: number): number {
@@ -190,10 +168,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override estimateCostToEnd(port: HgPort): number {
     const endCenter = this.currentEndRegion?.d?.center
-    if (!endCenter) {
-      this.logger.debug("No end center for cost estimation")
-      return 0
-    }
+    if (!endCenter) return 0
     return distance({ x: port.d.x, y: port.d.y }, endCenter)
   }
 
@@ -255,17 +230,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override getPortUsagePenalty(port: HgPort): number {
     const ripCount = port.ripCount ?? 0
-    const penalty = ripCount * this.portUsagePenalty
-
-    if (ripCount > 0) {
-      this.logger.debug("Port usage penalty applied", {
-        portId: port.portId,
-        ripCount,
-        penalty,
-      })
-    }
-
-    return penalty
+    return ripCount * this.portUsagePenalty
   }
 
   override getRipsRequiredForPortUsage(
@@ -298,14 +263,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         existingEnd,
       )
     })
-
-    if (ripsRequired.length > 0) {
-      this.logger.debug("Rips required for port usage", {
-        regionId: region.regionId,
-        ripsCount: ripsRequired.length,
-        totalAssignments: assignments.length,
-      })
-    }
 
     return ripsRequired
   }
@@ -395,14 +352,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ? this.getCenterFirstCandidatesForRegion(filteredCandidates)
       : filteredCandidates
 
-    this.logger.debug("Candidate selection", {
-      totalCandidates: candidates.length,
-      afterFiltering: filteredCandidates.length,
-      afterCenterFirst: centerFirstCandidates.length,
-      maxAllowed: MAX_CANDIDATES_PER_REGION,
-      forceCenterFirst: this.forceCenterFirst,
-    })
-
     if (centerFirstCandidates.length <= MAX_CANDIDATES_PER_REGION) {
       return centerFirstCandidates
     }
@@ -424,40 +373,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       this.recordNodeMemoryPf(region.regionId as CapacityMeshNodeId, regionPf)
     }
 
-    // Only log if ripping was required (less frequent, more important)
-    if (solvedRoute.requiredRip) {
-      this.logger.info("Route solved with ripping", {
-        connectionId: solvedRoute.connection.connectionId,
-        pathLength: solvedRoute.path.length,
-        unprocessedConnectionsRemaining: this.unprocessedConnections.length,
-      })
-    }
-
     if (!solvedRoute.requiredRip) return
     if (this.unprocessedConnections.length < 2) return
 
     const [next, ...rest] = this.unprocessedConnections
     this.unprocessedConnections = [...rest, next]
-
-    this.logger.debug("Connection reordered after ripping", {
-      movedConnectionId: next.connectionId,
-      newQueueLength: this.unprocessedConnections.length,
-    })
   }
 
   override _step(): void {
     super._step()
     if (this.enforceBoardScoreGuardrail()) return
     this.buildAssignmentsIfSolved()
-
-    // Log every 10000 iterations (reduced frequency to avoid performance impact)
-    if (this.iterations % 10000 === 0 && this.iterations > 0) {
-      this.logger.debug("Solver step progress", {
-        iterations: this.iterations,
-        solvedRoutesCount: this.solvedRoutes.length,
-        unprocessedConnectionsCount: this.unprocessedConnections.length,
-      })
-    }
   }
 
   private enforceBoardScoreGuardrail(): boolean {
@@ -470,23 +396,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       totalRipCount: this.totalRipCount,
     }
 
-    this.logger.info("Board score guardrail evaluated", {
-      boardScore,
-      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
-    })
-
     if (boardScore >= this.MIN_ALLOWED_BOARD_SCORE) return false
 
     this.error = `Board score ${boardScore.toFixed(2)} is less than MIN_ALLOWED_BOARD_SCORE ${this.MIN_ALLOWED_BOARD_SCORE.toFixed(2)}`
     this.failed = true
     this.solved = false
 
-    this.logger.error("Board score guardrail failed", {
-      boardScore,
-      minAllowedBoardScore: this.MIN_ALLOWED_BOARD_SCORE,
-      error: this.error,
-    })
-    this.logger.close()
     return true
   }
 
@@ -494,10 +409,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     if (!this.solved || this.assignmentsBuilt) {
       return
     }
-    this.logger.info("Building port point assignments", {
-      solvedRoutesCount: this.solvedRoutes.length,
-    })
-
     const assignments = buildPortPointAssignmentsFromSolvedRoutes({
       solvedRoutes: this.solvedRoutes,
       connectionResults: this.connectionsWithResults,
@@ -507,14 +418,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.assignedPortPoints = assignments.assignedPortPoints
     this.nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
     this.assignmentsBuilt = true
-
-    this.logger.info("Port point assignments complete", {
-      assignedPortPointsCount: this.assignedPortPoints.size,
-      nodesWithAssignments: this.nodeAssignedPortPoints.size,
-    })
-
-    // Close logger to flush remaining logs
-    this.logger.close()
   }
 
   private getNodeRippingPfThreshold(nodeId: CapacityMeshNodeId): number {
@@ -523,13 +426,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const startRippingPfThreshold = this.ripNodePfThresholdStart
     const threshold =
       startRippingPfThreshold * (1 - nodeRipFraction) + 1 * nodeRipFraction
-
-    this.logger.debug("Node ripping threshold calculated", {
-      nodeId,
-      nodeRipCount,
-      nodeRipFraction,
-      threshold,
-    })
 
     return threshold
   }
@@ -637,14 +533,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       crossings.numTransitionPairCrossings,
     )
 
-    this.logger.debug("Node PF for region computed", {
-      regionId: region.regionId,
-      pf,
-      existingAssignments: existingAssignments.length,
-      routesToRipCount: routesToRip.size,
-      sameLayerCrossings: crossings.numSameLayerCrossings,
-    })
-
     return pf
   }
 
@@ -718,11 +606,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       }
       crossingRoutesByNode.set(nodeId, crossingRoutesInNode)
     }
-
-    this.logger.debug("Crossing routes analysis", {
-      connectionId: newlySolvedRoute.connection.connectionId,
-      nodesWithCrossings: crossingRoutesByNode.size,
-    })
 
     return crossingRoutesByNode
   }
@@ -806,16 +689,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       addedRandomRips++
       this.totalRipCount++
     }
-
-    if (addedRandomRips > 0) {
-      this.logger.info("Random ripping applied", {
-        addedRandomRips,
-        eligibleRoutes: eligibleRoutes.length,
-        randomRipFraction: this.randomRipFraction,
-        totalRipCount: this.totalRipCount,
-        maxRips: this.maxRips,
-      })
-    }
   }
 
   override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
@@ -823,13 +696,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       newlySolvedRoute,
     )
     const routesToRip = new Set<SolvedRoute>(portOverlapRoutesToRip)
-
-    this.logger.debug("Computing routes to rip", {
-      connectionId: newlySolvedRoute.connection.connectionId,
-      portOverlapRips: portOverlapRoutesToRip.size,
-      totalRipCount: this.totalRipCount,
-      maxRips: this.maxRips,
-    })
 
     const crossingRoutesByNode =
       this.getCrossingRoutesByNodeForPath(newlySolvedRoute)
@@ -845,30 +711,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       rippingRandomSeed,
     )
 
-    this.logger.debug("Starting Solver2-style ripping loop", {
-      connectionId: newlySolvedRoute.connection.connectionId,
-      traversedNodes: traversedNodeIds.length,
-      crossingNodes: crossingRoutesByNode.size,
-      candidateNodes: orderedNodeIds.length,
-    })
-
     for (const nodeId of orderedNodeIds) {
       if (this.totalRipCount >= this.maxRips) {
-        this.logger.info("Stopping ripping loop at max rip limit", {
-          nodeId,
-          totalRipCount: this.totalRipCount,
-          maxRips: this.maxRips,
-        })
         break
       }
 
       const region = this.regionMap.get(nodeId)
-      if (!region) {
-        this.logger.debug("Region not found for ripping candidate", {
-          nodeId,
-        })
-        continue
-      }
+      if (!region) continue
 
       const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
       let currentPf = this.computeNodePfForRegion({
@@ -878,14 +727,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       })
       this.recordNodeMemoryPf(nodeId, currentPf)
 
-      if (currentPf <= rippingPfThreshold) {
-        this.logger.debug("Node PF below ripping threshold", {
-          nodeId,
-          currentPf,
-          threshold: rippingPfThreshold,
-        })
-        continue
-      }
+      if (currentPf <= rippingPfThreshold) continue
 
       const testedConnectionIds = new Set<string>()
       let ripCountForNodeLoop = 0
@@ -903,15 +745,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
             !routesToRip.has(route),
         )
 
-        if (availableRoutesInNode.length === 0) {
-          this.logger.debug("No available routes for iterative node ripping", {
-            nodeId,
-            currentPf,
-            threshold: rippingPfThreshold,
-            testedConnections: testedConnectionIds.size,
-          })
-          break
-        }
+        if (availableRoutesInNode.length === 0) break
 
         const shuffledRoutesInNode = cloneAndShuffleArray(
           availableRoutesInNode,
@@ -921,7 +755,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         if (!routeToRip) break
         testedConnectionIds.add(routeToRip.connection.connectionId)
 
-        const pfBeforeRip = currentPf
         routesToRip.add(routeToRip)
         this.totalRipCount++
         ripCountForNodeLoop++
@@ -936,27 +769,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           routesToRip,
         })
         this.recordNodeMemoryPf(nodeId, currentPf)
-
-        this.logger.info("Solver2-style node rip iteration", {
-          nodeId,
-          rippedConnectionId: routeToRip.connection.connectionId,
-          pfBeforeRip,
-          pfAfterRip: currentPf,
-          threshold: rippingPfThreshold,
-          ripCountForNodeLoop,
-          totalRipCount: this.totalRipCount,
-          maxRips: this.maxRips,
-        })
-      }
-
-      if (ripCountForNodeLoop > 0) {
-        this.logger.debug("Solver2-style node loop complete", {
-          nodeId,
-          ripCountForNodeLoop,
-          finalPf: currentPf,
-          threshold: rippingPfThreshold,
-          totalRoutesToRip: routesToRip.size,
-        })
       }
     }
 
@@ -966,19 +778,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         routesToRip,
         newlySolvedRoute,
         randomSeed: rippingRandomSeed + 10_000,
-      })
-    }
-
-    if (routesToRip.size > 0) {
-      this.logger.info("Route ripping loop selected routes", {
-        connectionId: newlySolvedRoute.connection.connectionId,
-        totalRoutesToRip: routesToRip.size,
-        totalRipCount: this.totalRipCount,
-        rippingEnabled: this.rippingEnabled,
-      })
-    } else {
-      this.logger.debug("No nodes eligible for ripping", {
-        candidatesCount: orderedNodeIds.length,
       })
     }
 
@@ -1002,10 +801,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         availableZ: node.availableZ,
       })
     }
-    this.logger.debug("Nodes with port points retrieved", {
-      nodesCount: nodesWithPortPoints.length,
-      totalInputNodes: this.inputNodes.length,
-    })
     return nodesWithPortPoints
   }
 
@@ -1065,14 +860,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
     )
-
-    this.logger.debug("Node PF computed", {
-      nodeId: node.capacityMeshNodeId,
-      pf,
-      portPointsCount: portPoints.length,
-      sameLayerCrossings: crossings.numSameLayerCrossings,
-      layerChanges: crossings.numEntryExitLayerChanges,
-    })
 
     return pf
   }
