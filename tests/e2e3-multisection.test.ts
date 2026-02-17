@@ -2,18 +2,29 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
-import e2e3 from "fixtures/legacy/assets/e2e3.json" with { type: "json" }
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import {
   createPortPointSection,
   visualizeSection,
 } from "../lib/solvers/MultiSectionPortPointOptimizer"
 import { MultiSectionPortPointOptimizer } from "../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer"
+import { getFreshE2e3 } from "./fixtures/getFreshE2e3"
 
 test("should solve e2e3 board and produce valid SimpleRouteJson output", async () => {
-  const simpleSrj: SimpleRouteJson = e2e3 as any
+  /**
+   * Load a fresh `e2e3` fixture instance for each test.
+   *
+   * Why: Bun caches JSON module imports by path. We previously imported
+   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
+   * mutated the SRJ object (connection point ordering + obstacle fields). That
+   * leaked into later tests and caused order-dependent snapshot failures
+   * (single-file pass vs full-suite fail).
+   */
+  const simpleSrj: SimpleRouteJson = getFreshE2e3()
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj)
+  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+    cacheProvider: null,
+  })
 
   solver.solve()
 
@@ -31,9 +42,20 @@ test("should solve e2e3 board and produce valid SimpleRouteJson output", async (
 }, 20_000)
 
 test("createPortPointSection creates valid section from center node", async () => {
-  const simpleSrj: SimpleRouteJson = e2e3 as any
+  /**
+   * Load a fresh `e2e3` fixture instance for each test.
+   *
+   * Why: Bun caches JSON module imports by path. We previously imported
+   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
+   * mutated the SRJ object (connection point ordering + obstacle fields). That
+   * leaked into later tests and caused order-dependent snapshot failures
+   * (single-file pass vs full-suite fail).
+   */
+  const simpleSrj: SimpleRouteJson = getFreshE2e3()
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj)
+  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+    cacheProvider: null,
+  })
 
   // Solve until we have the port point pathing solver ready
   solver.solveUntilPhase("multiSectionPortPointOptimizer")
@@ -98,9 +120,20 @@ test("createPortPointSection creates valid section from center node", async () =
 }, 20_000)
 
 test("createPortPointSection with different expansion degrees", async () => {
-  const simpleSrj: SimpleRouteJson = e2e3 as any
+  /**
+   * Load a fresh `e2e3` fixture instance for each test.
+   *
+   * Why: Bun caches JSON module imports by path. We previously imported
+   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
+   * mutated the SRJ object (connection point ordering + obstacle fields). That
+   * leaked into later tests and caused order-dependent snapshot failures
+   * (single-file pass vs full-suite fail).
+   */
+  const simpleSrj: SimpleRouteJson = getFreshE2e3()
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj)
+  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+    cacheProvider: null,
+  })
 
   // Solve until we have the port point pathing solver ready
   solver.solveUntilPhase("multiSectionPortPointOptimizer")
@@ -179,9 +212,20 @@ test("createPortPointSection with different expansion degrees", async () => {
 }, 20_000)
 
 test("createSectionSimpleRouteJson includes cut paths with low expansion degrees", async () => {
-  const simpleSrj: SimpleRouteJson = e2e3 as any
+  /**
+   * Load a fresh `e2e3` fixture instance for each test.
+   *
+   * Why: Bun caches JSON module imports by path. We previously imported
+   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
+   * mutated the SRJ object (connection point ordering + obstacle fields). That
+   * leaked into later tests and caused order-dependent snapshot failures
+   * (single-file pass vs full-suite fail).
+   */
+  const simpleSrj: SimpleRouteJson = getFreshE2e3()
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj)
+  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+    cacheProvider: null,
+  })
 
   // Solve until we have the port point pathing solver ready
   solver.solveUntilPhase("multiSectionPortPointOptimizer")
@@ -284,4 +328,4 @@ test("createSectionSimpleRouteJson includes cut paths with low expansion degrees
   expect(visualizeSection(testSection, solver.colorMap)).toMatchGraphicsSvg(
     `${import.meta.path}-section-with-cut-paths`,
   )
-}, 20_000)
+})
