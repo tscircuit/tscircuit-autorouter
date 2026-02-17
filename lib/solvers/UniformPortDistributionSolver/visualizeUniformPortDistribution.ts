@@ -1,22 +1,32 @@
 import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { NodeAndSide, Bounds, PortPointWithSide } from "./types"
-import { getSideLineCoordinates } from "./getSideLineCoordinates"
+import {
+  Bounds,
+  OwnerPairKey,
+  PortPointWithOwnerPair,
+  SharedEdge,
+} from "./types"
 
+/**
+ * Renders a debug view of owner-pair families, redistributed port points,
+ * and precomputed shared edges to make solver decisions visually inspectable.
+ */
 export const visualizeUniformPortDistribution = ({
   obstacles,
   nodeWithPortPoints,
-  mapOfNodeAndSideToPortPoints,
-  sidesToProcess,
-  currentSideBeingProcessed,
+  mapOfOwnerPairToPortPoints,
+  mapOfOwnerPairToSharedEdge,
+  ownerPairsToProcess,
+  currentOwnerPairBeingProcessed,
   mapOfNodeIdToBounds,
 }: {
   obstacles: Obstacle[]
   nodeWithPortPoints: NodeWithPortPoints[]
-  mapOfNodeAndSideToPortPoints: Map<string, PortPointWithSide[]>
-  sidesToProcess: NodeAndSide[]
-  currentSideBeingProcessed: NodeAndSide | null
+  mapOfOwnerPairToPortPoints: Map<OwnerPairKey, PortPointWithOwnerPair[]>
+  mapOfOwnerPairToSharedEdge: Map<OwnerPairKey, SharedEdge>
+  ownerPairsToProcess: OwnerPairKey[]
+  currentOwnerPairBeingProcessed: OwnerPairKey | null
   mapOfNodeIdToBounds: Map<string, Bounds>
 }): GraphicsObject => {
   const rects: Rect[] = obstacles.map((o) => ({ ...o, fill: "#ec000070" }))
@@ -25,7 +35,7 @@ export const visualizeUniformPortDistribution = ({
 
   const portPointMap = new Map<string, { x: number; y: number }>()
   const portPointZMap = new Map<string, number>()
-  const portPointOwnerMap = new Map<string, string>()
+  const portPointOwnerPairMap = new Map<string, string>()
 
   for (const node of nodeWithPortPoints) {
     for (const pp of node.portPoints) {
@@ -36,12 +46,15 @@ export const visualizeUniformPortDistribution = ({
     }
   }
 
-  for (const portPoints of mapOfNodeAndSideToPortPoints.values()) {
+  for (const portPoints of mapOfOwnerPairToPortPoints.values()) {
     for (const pp of portPoints) {
       if (pp.portPointId) {
         portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
         portPointZMap.set(pp.portPointId, pp.z ?? 0)
-        portPointOwnerMap.set(pp.portPointId, pp.ownerNodeId)
+        portPointOwnerPairMap.set(
+          pp.portPointId,
+          `${pp.ownerNodeIds[0]}&${pp.ownerNodeIds[1]}`,
+        )
       }
     }
   }
@@ -66,13 +79,14 @@ export const visualizeUniformPortDistribution = ({
       if (!e.portPointId) return
       const posE = portPointMap.get(e.portPointId)!
       const zLayer = portPointZMap.get(e.portPointId) ?? 0
-      const owner =
-        portPointOwnerMap.get(e.portPointId) ?? element.capacityMeshNodeId
+      const ownerPair =
+        portPointOwnerPairMap.get(e.portPointId) ??
+        `${element.capacityMeshNodeId}&${element.capacityMeshNodeId}`
 
       points.push({
         x: posE.x,
         y: posE.y,
-        label: `z:${zLayer}\no:${owner}`,
+        label: `z:${zLayer}\no:${ownerPair}`,
       })
 
       element.portPoints.forEach((f) => {
@@ -88,30 +102,48 @@ export const visualizeUniformPortDistribution = ({
     })
   })
 
-  for (const { nodeId, side } of sidesToProcess) {
-    const bounds = mapOfNodeIdToBounds.get(nodeId)!
-    const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
+  for (const ownerPairKey of ownerPairsToProcess) {
+    const sharedEdge = mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+    if (!sharedEdge) continue
     lines.push({
       points: [
-        { x: x1, y: y1 },
-        { x: x2, y: y2 },
+        { x: sharedEdge.x1, y: sharedEdge.y1 },
+        { x: sharedEdge.x2, y: sharedEdge.y2 },
       ],
       strokeColor: "orange",
       strokeWidth: 0.01,
     })
   }
 
-  if (currentSideBeingProcessed) {
-    const { nodeId, side } = currentSideBeingProcessed
-    const bounds = mapOfNodeIdToBounds.get(nodeId)!
-    const { x1, y1, x2, y2 } = getSideLineCoordinates({ bounds, side })
+  if (currentOwnerPairBeingProcessed) {
+    const sharedEdge = mapOfOwnerPairToSharedEdge.get(
+      currentOwnerPairBeingProcessed,
+    )
+    if (sharedEdge) {
+      lines.push({
+        points: [
+          { x: sharedEdge.x1, y: sharedEdge.y1 },
+          { x: sharedEdge.x2, y: sharedEdge.y2 },
+        ],
+        strokeColor: "red",
+        strokeWidth: 0.03,
+      })
+      points.push({
+        x: sharedEdge.center.x,
+        y: sharedEdge.center.y,
+        label: sharedEdge.ownerPairKey,
+      })
+    }
+  }
+
+  for (const sharedEdge of mapOfOwnerPairToSharedEdge.values()) {
     lines.push({
       points: [
-        { x: x1, y: y1 },
-        { x: x2, y: y2 },
+        { x: sharedEdge.x1, y: sharedEdge.y1 },
+        { x: sharedEdge.x2, y: sharedEdge.y2 },
       ],
-      strokeColor: "red",
-      strokeWidth: 0.03,
+      strokeColor: "#33b5ff80",
+      strokeWidth: 0.006,
     })
   }
   return { rects, lines, points }
