@@ -284,7 +284,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return assignment.connection.mutuallyConnectedNetworkId === currentNetId
   }
 
-  private getCenterFirstCandidatesForRegion(
+  private getCenterFirstEnteringRegionCandidates(
     candidates: Candidate<HgRegion, HgPort>[],
   ): Candidate<HgRegion, HgPort>[] {
     const byZ = new Map<number, Candidate<HgRegion, HgPort>[]>()
@@ -358,7 +358,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     })
 
     const centerFirstCandidates = this.forceCenterFirst
-      ? this.getCenterFirstCandidatesForRegion(filteredCandidates)
+      ? this.getCenterFirstEnteringRegionCandidates(filteredCandidates)
       : filteredCandidates
 
     if (centerFirstCandidates.length <= MAX_CANDIDATES_PER_REGION) {
@@ -593,7 +593,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
   }
 
-  private getCrossingRoutesByRegionForPath(
+  private getCrossingRoutesByRegionForRoute(
     newlySolvedRoute: SolvedRoute,
   ): Map<RegionId, Set<SolvedRoute>> {
     const crossingRoutesByRegion = new Map<RegionId, Set<SolvedRoute>>()
@@ -621,7 +621,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return crossingRoutesByRegion
   }
 
-  private getCandidateRoutesForRegionRipping({
+  private getRoutesInRegionForRipping({
     regionId,
     routesToRip,
     newlySolvedRoute,
@@ -647,7 +647,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return [...routeMap.values()]
   }
 
-  private getRegionIdsTraversedByRoute(route: SolvedRoute): Array<RegionId> {
+  private getTraversedRegionIds(route: SolvedRoute): Array<RegionId> {
     const regionIdSet = new Set<RegionId>()
     for (const candidate of route.path) {
       const region = candidate.lastRegion as HgRegion | undefined
@@ -657,7 +657,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return [...regionIdSet]
   }
 
-  private maybeAddRandomRips({
+  private processRandomRips({
     routesToRip,
     newlySolvedRoute,
     randomSeed,
@@ -700,18 +700,18 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
   }
 
-  override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
+  private processRippingForRoute(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
     const portOverlapRoutesToRip = super.computePortOverlapRoutes(
       newlySolvedRoute,
     )
     const routesToRip = new Set<SolvedRoute>(portOverlapRoutesToRip)
 
     const crossingRoutesByRegion =
-      this.getCrossingRoutesByRegionForPath(newlySolvedRoute)
+      this.getCrossingRoutesByRegionForRoute(newlySolvedRoute)
     const rippingRandomSeed =
       this.iterations + this.solvedRoutes.length + this.totalRipCount
 
-    const traversedRegionIds = this.getRegionIdsTraversedByRoute(newlySolvedRoute)
+    const traversedRegionIds = this.getTraversedRegionIds(newlySolvedRoute)
     const allRegionIdsForRipping = Array.from(
       new Set([...traversedRegionIds, ...crossingRoutesByRegion.keys()]),
     )
@@ -739,12 +739,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       if (currentPf <= rippingPfThreshold) continue
 
       const testedConnectionIds = new Set<string>()
-      let ripCountForNodeLoop = 0
+      let ripCountForRegionLoop = 0
 
       while (currentPf > rippingPfThreshold) {
         if (this.totalRipCount >= this.maxRips) break
 
-        const availableRoutesInNode = this.getCandidateRoutesForRegionRipping({
+        const availableRoutesInRegion = this.getRoutesInRegionForRipping({
           regionId,
           routesToRip,
           newlySolvedRoute,
@@ -754,19 +754,19 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
             !routesToRip.has(route),
         )
 
-        if (availableRoutesInNode.length === 0) break
+        if (availableRoutesInRegion.length === 0) break
 
-        const shuffledRoutesInNode = cloneAndShuffleArray(
-          availableRoutesInNode,
-          rippingRandomSeed + ripCountForNodeLoop + testedConnectionIds.size,
+        const shuffledRoutesInRegion = cloneAndShuffleArray(
+          availableRoutesInRegion,
+          rippingRandomSeed + ripCountForRegionLoop + testedConnectionIds.size,
         )
-        const routeToRip = shuffledRoutesInNode[0]
+        const routeToRip = shuffledRoutesInRegion[0]
         if (!routeToRip) break
         testedConnectionIds.add(routeToRip.connection.connectionId)
 
         routesToRip.add(routeToRip)
         this.totalRipCount++
-        ripCountForNodeLoop++
+        ripCountForRegionLoop++
         this.regionRipCountMap.set(
           regionId,
           (this.regionRipCountMap.get(regionId) ?? 0) + 1,
@@ -783,7 +783,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const didRipAnyInLoop = routesToRip.size > portOverlapRoutesToRip.size
     if (didRipAnyInLoop) {
-      this.maybeAddRandomRips({
+      this.processRandomRips({
         routesToRip,
         newlySolvedRoute,
         randomSeed: rippingRandomSeed + 10_000,
@@ -791,6 +791,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
 
     return routesToRip
+  }
+
+  override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
+    return this.processRippingForRoute(newlySolvedRoute)
   }
 
   getNodesWithPortPoints(): NodeWithPortPoints[] {
