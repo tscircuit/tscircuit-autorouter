@@ -34,13 +34,17 @@ import { computeSectionScore } from "lib/solvers/MultiSectionPortPointOptimizer"
 
 const MAX_CANDIDATES_PER_REGION = 2
 
+type RegionId = CapacityMeshNodeId
+type RegionMemoryPfMap = Map<RegionId, number>
+type RegionRipCountMap = Map<RegionId, number>
+
 export interface HgPortPointPathingSolverParams {
   inputGraph: HyperGraph
   inputConnections: Connection[]
   connectionsWithResults: ConnectionPathResult[]
   inputNodes: InputNodeWithPortPoints[]
   portPointMap: Map<string, InputPortPoint>
-  nodeMemoryPfMap: Map<CapacityMeshNodeId, number>
+  regionMemoryPfMap: RegionMemoryPfMap
   rippingEnabled: boolean
   forceCenterFirst: boolean
   weights: {
@@ -50,8 +54,8 @@ export interface HgPortPointPathingSolverParams {
     REGION_TRANSITION_PENALTY: number
     MEMORY_PF_FACTOR: number
     STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: number
-    RIP_NODE_PF_THRESHOLD_START: number
-    MAX_NODE_RIPS: number
+    RIP_REGION_PF_THRESHOLD_START: number
+    MAX_REGION_RIPS: number
     RANDOM_RIP_FRACTION: number
     MAX_RIPS: number
   }
@@ -63,8 +67,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   HgPort
 > {
   inputNodes: InputNodeWithPortPoints[]
-  nodeMap: Map<CapacityMeshNodeId, InputNodeWithPortPoints>
-  regionMap: Map<CapacityMeshNodeId, HgRegion>
+  regionNodeMap: Map<RegionId, InputNodeWithPortPoints>
+  regionById: Map<RegionId, HgRegion>
   portPointMap: Map<string, InputPortPoint>
   connectionsWithResults: ConnectionPathResult[] = []
   assignedPortPoints: Map<
@@ -76,14 +80,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   portUsagePenalty: number
   regionTransitionPenalty: number
-  ripNodePfThresholdStart: number
-  maxNodeRips: number
+  ripRegionPfThresholdStart: number
+  maxRegionRips: number
   memoryPfFactor: number
   forceCenterFirst: boolean
   straightLineDeviationPenaltyFactor: number
   connectionResultByConnectionId: Map<string, ConnectionPathResult>
-  nodeRipCountMap: Map<CapacityMeshNodeId, number> = new Map()
-  nodeMemoryPfMap: Map<CapacityMeshNodeId, number> = new Map()
+  regionRipCountMap: RegionRipCountMap = new Map()
+  regionMemoryPfMap: RegionMemoryPfMap = new Map()
   totalRipCount = 0
   randomRipFraction: number
   maxRips: number
@@ -95,7 +99,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     connectionsWithResults,
     inputNodes,
     portPointMap,
-    nodeMemoryPfMap,
+    regionMemoryPfMap,
     rippingEnabled,
     weights,
     forceCenterFirst,
@@ -103,13 +107,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }: HgPortPointPathingSolverParams) {
     const {
       GREEDY_MULTIPLIER: greedyMultiplier,
-      MAX_NODE_RIPS: maxNodeRips,
+      MAX_REGION_RIPS: maxRegionRips,
       MEMORY_PF_FACTOR: memoryPfFactor,
       PORT_USAGE_PENALTY: portUsagePenalty,
       REGION_TRANSITION_PENALTY: regionTransitionPenalty,
       STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: straightLineDeviationPenaltyFactor,
       RIP_COST: ripCost,
-      RIP_NODE_PF_THRESHOLD_START: ripNodePfThresholdStart,
+      RIP_REGION_PF_THRESHOLD_START: ripRegionPfThresholdStart,
       RANDOM_RIP_FRACTION: randomRipFraction,
       MAX_RIPS: maxRips,
     } = weights
@@ -121,10 +125,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ripCost: ripCost,
     })
     this.inputNodes = inputNodes
-    this.nodeMap = new Map(
+    this.regionNodeMap = new Map(
       inputNodes.map((node) => [node.capacityMeshNodeId, node]),
     )
-    this.regionMap = new Map(
+    this.regionById = new Map(
       this.graph.regions.map((region) => [
         region.regionId as CapacityMeshNodeId,
         region as HgRegion,
@@ -135,12 +139,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     this.portUsagePenalty = portUsagePenalty
     this.regionTransitionPenalty = regionTransitionPenalty
-    this.ripNodePfThresholdStart = ripNodePfThresholdStart
-    this.maxNodeRips = maxNodeRips
+    this.ripRegionPfThresholdStart = ripRegionPfThresholdStart
+    this.maxRegionRips = maxRegionRips
     this.memoryPfFactor = memoryPfFactor
     this.forceCenterFirst = forceCenterFirst
     this.straightLineDeviationPenaltyFactor = straightLineDeviationPenaltyFactor
-    this.nodeMemoryPfMap = nodeMemoryPfMap
+    this.regionMemoryPfMap = regionMemoryPfMap
     this.randomRipFraction = randomRipFraction
     this.maxRips = maxRips
     this.MIN_ALLOWED_BOARD_SCORE = MIN_ALLOWED_BOARD_SCORE
@@ -159,11 +163,11 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return -Math.log(1 - this.clampPf(pf))
   }
 
-  private recordNodeMemoryPf(nodeId: CapacityMeshNodeId, pf: number): void {
+  private recordRegionMemoryPf(regionId: RegionId, pf: number): void {
     const clampedPf = this.clampPf(pf)
-    const prevPf = this.nodeMemoryPfMap.get(nodeId) ?? 0
+    const prevPf = this.regionMemoryPfMap.get(regionId) ?? 0
     const updatedPf = Math.max(clampedPf, prevPf * 0.98)
-    this.nodeMemoryPfMap.set(nodeId, updatedPf)
+    this.regionMemoryPfMap.set(regionId, updatedPf)
   }
 
   override estimateCostToEnd(port: HgPort): number {
@@ -178,7 +182,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const regionIdForMemory =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
     const memoryPf = regionIdForMemory
-      ? (this.nodeMemoryPfMap.get(regionIdForMemory) ?? 0)
+      ? (this.regionMemoryPfMap.get(regionIdForMemory) ?? 0)
       : 0
     const memoryPfPenalty = this.pfToFailureCost(memoryPf) * this.memoryPfFactor
     const straightLineDeviationPenalty =
@@ -369,8 +373,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       if (region) traversedRegions.add(region)
     }
     for (const region of traversedRegions) {
-      const regionPf = this.computeNodePfFromAssignments(region)
-      this.recordNodeMemoryPf(region.regionId as CapacityMeshNodeId, regionPf)
+      const regionPf = this.computeRegionPfFromAssignments(region)
+      this.recordRegionMemoryPf(region.regionId as RegionId, regionPf)
     }
 
     if (!solvedRoute.requiredRip) return
@@ -420,12 +424,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.assignmentsBuilt = true
   }
 
-  private getNodeRippingPfThreshold(nodeId: CapacityMeshNodeId): number {
-    const nodeRipCount = this.nodeRipCountMap.get(nodeId) ?? 0
-    const nodeRipFraction = Math.min(1, nodeRipCount / this.maxNodeRips)
-    const startRippingPfThreshold = this.ripNodePfThresholdStart
+  private getRegionRippingPfThreshold(regionId: RegionId): number {
+    const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
+    const regionRipFraction = Math.min(1, regionRipCount / this.maxRegionRips)
+    const startRippingPfThreshold = this.ripRegionPfThresholdStart
     const threshold =
-      startRippingPfThreshold * (1 - nodeRipFraction) + 1 * nodeRipFraction
+      startRippingPfThreshold * (1 - regionRipFraction) +
+      1 * regionRipFraction
 
     return threshold
   }
@@ -492,7 +497,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     })
   }
 
-  private computeNodePfForRegion({
+  private computeRegionPf({
     region,
     newlySolvedRoute,
     routesToRip,
@@ -501,7 +506,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     newlySolvedRoute: SolvedRoute
     routesToRip: Set<SolvedRoute>
   }): number {
-    const node = this.nodeMap.get(region.regionId)
+    const node = this.regionNodeMap.get(region.regionId)
     if (!node || node._containsTarget) {
       return 0
     }
@@ -536,8 +541,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return pf
   }
 
-  private computeNodePfFromAssignments(region: HgRegion): number {
-    const node = this.nodeMap.get(region.regionId)
+  private computeRegionPfFromAssignments(region: HgRegion): number {
+    const node = this.regionNodeMap.get(region.regionId)
     if (!node || node._containsTarget) {
       return 0
     }
@@ -583,15 +588,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
   }
 
-  private getCrossingRoutesByNodeForPath(
+  private getCrossingRoutesByRegionForPath(
     newlySolvedRoute: SolvedRoute,
-  ): Map<CapacityMeshNodeId, Set<SolvedRoute>> {
-    const crossingRoutesByNode = new Map<CapacityMeshNodeId, Set<SolvedRoute>>()
+  ): Map<RegionId, Set<SolvedRoute>> {
+    const crossingRoutesByRegion = new Map<RegionId, Set<SolvedRoute>>()
 
     for (const candidate of newlySolvedRoute.path) {
       if (!candidate.lastPort || !candidate.lastRegion) continue
       const region = candidate.lastRegion as HgRegion
-      const nodeId = region.regionId as CapacityMeshNodeId
+      const regionId = region.regionId as RegionId
 
       const crossingAssignments = this.getRipsRequiredForPortUsage(
         region,
@@ -600,26 +605,27 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       )
       if (crossingAssignments.length === 0) continue
 
-      const crossingRoutesInNode = crossingRoutesByNode.get(nodeId) ?? new Set()
+      const crossingRoutesInRegion =
+        crossingRoutesByRegion.get(regionId) ?? new Set()
       for (const assignment of crossingAssignments) {
-        crossingRoutesInNode.add(assignment.solvedRoute)
+        crossingRoutesInRegion.add(assignment.solvedRoute)
       }
-      crossingRoutesByNode.set(nodeId, crossingRoutesInNode)
+      crossingRoutesByRegion.set(regionId, crossingRoutesInRegion)
     }
 
-    return crossingRoutesByNode
+    return crossingRoutesByRegion
   }
 
-  private getCandidateRoutesForNodeRipping({
-    nodeId,
+  private getCandidateRoutesForRegionRipping({
+    regionId,
     routesToRip,
     newlySolvedRoute,
   }: {
-    nodeId: CapacityMeshNodeId
+    regionId: RegionId
     routesToRip: Set<SolvedRoute>
     newlySolvedRoute: SolvedRoute
   }): SolvedRoute[] {
-    const region = this.regionMap.get(nodeId)
+    const region = this.regionById.get(regionId)
     if (!region?.assignments?.length) return []
 
     const routeMap = new Map<string, SolvedRoute>()
@@ -636,16 +642,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return [...routeMap.values()]
   }
 
-  private getNodeIdsTraversedByRoute(
-    route: SolvedRoute,
-  ): Array<CapacityMeshNodeId> {
-    const nodeIdSet = new Set<CapacityMeshNodeId>()
+  private getRegionIdsTraversedByRoute(route: SolvedRoute): Array<RegionId> {
+    const regionIdSet = new Set<RegionId>()
     for (const candidate of route.path) {
       const region = candidate.lastRegion as HgRegion | undefined
       if (!region) continue
-      nodeIdSet.add(region.regionId as CapacityMeshNodeId)
+      regionIdSet.add(region.regionId as RegionId)
     }
-    return [...nodeIdSet]
+    return [...regionIdSet]
   }
 
   private maybeAddRandomRips({
@@ -697,35 +701,35 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
     const routesToRip = new Set<SolvedRoute>(portOverlapRoutesToRip)
 
-    const crossingRoutesByNode =
-      this.getCrossingRoutesByNodeForPath(newlySolvedRoute)
+    const crossingRoutesByRegion =
+      this.getCrossingRoutesByRegionForPath(newlySolvedRoute)
     const rippingRandomSeed =
       this.iterations + this.solvedRoutes.length + this.totalRipCount
 
-    const traversedNodeIds = this.getNodeIdsTraversedByRoute(newlySolvedRoute)
-    const allNodeIdsForRipping = Array.from(
-      new Set([...traversedNodeIds, ...crossingRoutesByNode.keys()]),
+    const traversedRegionIds = this.getRegionIdsTraversedByRoute(newlySolvedRoute)
+    const allRegionIdsForRipping = Array.from(
+      new Set([...traversedRegionIds, ...crossingRoutesByRegion.keys()]),
     )
-    const orderedNodeIds = cloneAndShuffleArray(
-      allNodeIdsForRipping,
+    const orderedRegionIds = cloneAndShuffleArray(
+      allRegionIdsForRipping,
       rippingRandomSeed,
     )
 
-    for (const nodeId of orderedNodeIds) {
+    for (const regionId of orderedRegionIds) {
       if (this.totalRipCount >= this.maxRips) {
         break
       }
 
-      const region = this.regionMap.get(nodeId)
+      const region = this.regionById.get(regionId)
       if (!region) continue
 
-      const rippingPfThreshold = this.getNodeRippingPfThreshold(nodeId)
-      let currentPf = this.computeNodePfForRegion({
+      const rippingPfThreshold = this.getRegionRippingPfThreshold(regionId)
+      let currentPf = this.computeRegionPf({
         region,
         newlySolvedRoute,
         routesToRip,
       })
-      this.recordNodeMemoryPf(nodeId, currentPf)
+      this.recordRegionMemoryPf(regionId, currentPf)
 
       if (currentPf <= rippingPfThreshold) continue
 
@@ -735,8 +739,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       while (currentPf > rippingPfThreshold) {
         if (this.totalRipCount >= this.maxRips) break
 
-        const availableRoutesInNode = this.getCandidateRoutesForNodeRipping({
-          nodeId,
+        const availableRoutesInNode = this.getCandidateRoutesForRegionRipping({
+          regionId,
           routesToRip,
           newlySolvedRoute,
         }).filter(
@@ -758,17 +762,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         routesToRip.add(routeToRip)
         this.totalRipCount++
         ripCountForNodeLoop++
-        this.nodeRipCountMap.set(
-          nodeId,
-          (this.nodeRipCountMap.get(nodeId) ?? 0) + 1,
+        this.regionRipCountMap.set(
+          regionId,
+          (this.regionRipCountMap.get(regionId) ?? 0) + 1,
         )
 
-        currentPf = this.computeNodePfForRegion({
+        currentPf = this.computeRegionPf({
           region,
           newlySolvedRoute,
           routesToRip,
         })
-        this.recordNodeMemoryPf(nodeId, currentPf)
+        this.recordRegionMemoryPf(regionId, currentPf)
       }
     }
 
