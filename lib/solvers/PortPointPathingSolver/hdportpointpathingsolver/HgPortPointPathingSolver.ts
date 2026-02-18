@@ -113,7 +113,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       CENTER_OFFSET_DIST_PENALTY_FACTOR: centerOffsetDistPenaltyFactor,
       PORT_USAGE_PENALTY: portUsagePenalty,
       REGION_TRANSITION_PENALTY: regionTransitionPenalty,
-      STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: straightLineDeviationPenaltyFactor,
+      STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:
+        straightLineDeviationPenaltyFactor,
       RIP_COST: ripCost,
       RIP_REGION_PF_THRESHOLD_START: ripRegionPfThresholdStart,
       RANDOM_RIP_FRACTION: randomRipFraction,
@@ -208,8 +209,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const connectionId = this.currentConnection?.connectionId
     if (!connectionId) return 0
 
-    const connectionResult =
-      this.connectionResultByName.get(connectionId)
+    const connectionResult = this.connectionResultByName.get(connectionId)
     const pointsToConnect = connectionResult?.connection.pointsToConnect
     if (!pointsToConnect || pointsToConnect.length < 2) return 0
 
@@ -434,8 +434,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const regionRipFraction = Math.min(1, regionRipCount / this.maxRegionRips)
     const startRippingPfThreshold = this.ripRegionPfThresholdStart
     const threshold =
-      startRippingPfThreshold * (1 - regionRipFraction) +
-      1 * regionRipFraction
+      startRippingPfThreshold * (1 - regionRipFraction) + 1 * regionRipFraction
 
     return threshold
   }
@@ -700,7 +699,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
   }
 
-  private processRippingForRoute(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
+  private processRippingForRoute(
+    newlySolvedRoute: SolvedRoute,
+  ): Set<SolvedRoute> {
     const portOverlapRoutesToRip = super.computePortOverlapRoutes(
       newlySolvedRoute,
     )
