@@ -58,8 +58,8 @@ export interface HgPortPointPathingSolverParams {
     MAX_REGION_RIPS: number
     RANDOM_RIP_FRACTION: number
     MAX_RIPS: number
+    MIN_ALLOWED_BOARD_SCORE: number
   }
-  MIN_ALLOWED_BOARD_SCORE: number
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -103,7 +103,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     rippingEnabled,
     weights,
     forceCenterFirst,
-    MIN_ALLOWED_BOARD_SCORE,
   }: HgPortPointPathingSolverParams) {
     const {
       GREEDY_MULTIPLIER: greedyMultiplier,
@@ -116,6 +115,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       RIP_REGION_PF_THRESHOLD_START: ripRegionPfThresholdStart,
       RANDOM_RIP_FRACTION: randomRipFraction,
       MAX_RIPS: maxRips,
+      MIN_ALLOWED_BOARD_SCORE,
     } = weights
     super({
       inputGraph,
