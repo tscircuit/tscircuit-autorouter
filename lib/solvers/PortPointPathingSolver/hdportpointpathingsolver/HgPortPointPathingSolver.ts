@@ -44,16 +44,16 @@ export interface HgPortPointPathingSolverParams {
   rippingEnabled: boolean
   forceCenterFirst: boolean
   weights: {
-    greedyMultiplier: number
-    ripCost: number
-    portUsagePenalty: number
-    regionTransitionPenalty: number
-    memoryPfFactor: number
-    straightLineDeviationPenaltyFactor: number
-    ripNodePfThresholdStart: number
-    maxNodeRips: number
-    randomRipFraction: number
-    maxRips: number
+    GREEDY_MULTIPLIER: number
+    RIP_COST: number
+    PORT_USAGE_PENALTY: number
+    REGION_TRANSITION_PENALTY: number
+    MEMORY_PF_FACTOR: number
+    STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: number
+    RIP_NODE_PF_THRESHOLD_START: number
+    MAX_NODE_RIPS: number
+    RANDOM_RIP_FRACTION: number
+    MAX_RIPS: number
   }
   MIN_ALLOWED_BOARD_SCORE: number
 }
@@ -102,16 +102,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     MIN_ALLOWED_BOARD_SCORE,
   }: HgPortPointPathingSolverParams) {
     const {
-      greedyMultiplier,
-      maxNodeRips,
-      memoryPfFactor,
-      portUsagePenalty,
-      regionTransitionPenalty,
-      straightLineDeviationPenaltyFactor,
-      ripCost,
-      ripNodePfThresholdStart,
-      randomRipFraction,
-      maxRips,
+      GREEDY_MULTIPLIER: greedyMultiplier,
+      MAX_NODE_RIPS: maxNodeRips,
+      MEMORY_PF_FACTOR: memoryPfFactor,
+      PORT_USAGE_PENALTY: portUsagePenalty,
+      REGION_TRANSITION_PENALTY: regionTransitionPenalty,
+      STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: straightLineDeviationPenaltyFactor,
+      RIP_COST: ripCost,
+      RIP_NODE_PF_THRESHOLD_START: ripNodePfThresholdStart,
+      RANDOM_RIP_FRACTION: randomRipFraction,
+      MAX_RIPS: maxRips,
     } = weights
     super({
       inputGraph,
