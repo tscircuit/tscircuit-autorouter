@@ -445,34 +445,37 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     public opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    this.srj = structuredClone(srj)
+    this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    this.viaDiameter = srj.minViaDiameter ?? 0.6
-    this.minTraceWidth = srj.minTraceWidth
-    this.effort = opts.effort ?? 1
+    this.viaDiameter = this.srj.minViaDiameter ?? 0.6
+    this.minTraceWidth = this.srj.minTraceWidth
+    const mutableOpts = this.opts
+    this.effort = mutableOpts.effort ?? 1
 
     // If capacityDepth is not provided, calculate it automatically
-    if (opts.capacityDepth === undefined) {
+    if (mutableOpts.capacityDepth === undefined) {
       // Calculate max width/height from bounds for initial node size
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
+      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
+      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
-      const targetMinCapacity = opts.targetMinCapacity ?? 0.5
-      opts.capacityDepth = calculateOptimalCapacityDepth(
+      const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5
+      mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
         maxWidthHeight,
         targetMinCapacity,
       )
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
-    this.colorMap = getColorMap(srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.colorMap = getColorMap(this.srj, this.connMap)
     this.cacheProvider =
-      opts.cacheProvider === undefined
+      mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
-        : opts.cacheProvider === null
+        : mutableOpts.cacheProvider === null
           ? null
-          : opts.cacheProvider
+          : mutableOpts.cacheProvider
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
