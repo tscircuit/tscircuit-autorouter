@@ -292,6 +292,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               PORT_USAGE_PENALTY: 0.15,
               REGION_TRANSITION_PENALTY: 0.6,
               MEMORY_PF_FACTOR: 4,
+              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0.05,
               STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
               RIP_COST: 8.5,
               GREEDY_MULTIPLIER: 0.7,

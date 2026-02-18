@@ -53,6 +53,7 @@ export interface HgPortPointPathingSolverParams {
     PORT_USAGE_PENALTY: number
     REGION_TRANSITION_PENALTY: number
     MEMORY_PF_FACTOR: number
+    CENTER_OFFSET_DIST_PENALTY_FACTOR: number
     STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: number
     RIP_REGION_PF_THRESHOLD_START: number
     MAX_REGION_RIPS: number
@@ -83,6 +84,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ripRegionPfThresholdStart: number
   maxRegionRips: number
   memoryPfFactor: number
+  centerOffsetDistPenaltyFactor: number
   forceCenterFirst: boolean
   straightLineDeviationPenaltyFactor: number
   connectionResultByName: Map<string, ConnectionPathResult>
@@ -108,6 +110,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       GREEDY_MULTIPLIER: greedyMultiplier,
       MAX_REGION_RIPS: maxRegionRips,
       MEMORY_PF_FACTOR: memoryPfFactor,
+      CENTER_OFFSET_DIST_PENALTY_FACTOR: centerOffsetDistPenaltyFactor,
       PORT_USAGE_PENALTY: portUsagePenalty,
       REGION_TRANSITION_PENALTY: regionTransitionPenalty,
       STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: straightLineDeviationPenaltyFactor,
@@ -142,6 +145,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.ripRegionPfThresholdStart = ripRegionPfThresholdStart
     this.maxRegionRips = maxRegionRips
     this.memoryPfFactor = memoryPfFactor
+    this.centerOffsetDistPenaltyFactor = centerOffsetDistPenaltyFactor
     this.forceCenterFirst = forceCenterFirst
     this.straightLineDeviationPenaltyFactor = straightLineDeviationPenaltyFactor
     this.regionMemoryPfMap = regionMemoryPfMap
@@ -178,7 +182,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override computeH(candidate: Candidate<HgRegion, HgPort>): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
-    const centerBias = candidate.port.d.distToCentermostPortOnZ ?? 0
+    const centerOffsetPenaltyInput =
+      candidate.port.d.distToCentermostPortOnZ ?? 0
     const regionIdForMemory =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
     const memoryPf = regionIdForMemory
@@ -189,7 +194,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       this.getStraightLineDeviationPenalty(candidate)
     return (
       distanceToEnd +
-      centerBias * 0.05 +
+      centerOffsetPenaltyInput * this.centerOffsetDistPenaltyFactor +
       memoryPfPenalty +
       straightLineDeviationPenalty
     )
