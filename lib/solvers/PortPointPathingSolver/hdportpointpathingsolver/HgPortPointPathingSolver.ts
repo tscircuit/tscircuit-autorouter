@@ -85,7 +85,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   memoryPfFactor: number
   forceCenterFirst: boolean
   straightLineDeviationPenaltyFactor: number
-  connectionResultByConnectionId: Map<string, ConnectionPathResult>
+  connectionResultByName: Map<string, ConnectionPathResult>
   regionRipCountMap: RegionRipCountMap = new Map()
   regionMemoryPfMap: RegionMemoryPfMap = new Map()
   totalRipCount = 0
@@ -149,7 +149,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.maxRips = maxRips
     this.MIN_ALLOWED_BOARD_SCORE = MIN_ALLOWED_BOARD_SCORE
     this.MAX_ITERATIONS = 200000
-    this.connectionResultByConnectionId = new Map(
+    this.connectionResultByName = new Map(
       connectionsWithResults.map((result) => [result.connection.name, result]),
     )
   }
@@ -204,7 +204,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     if (!connectionId) return 0
 
     const connectionResult =
-      this.connectionResultByConnectionId.get(connectionId)
+      this.connectionResultByName.get(connectionId)
     const pointsToConnect = connectionResult?.connection.pointsToConnect
     if (!pointsToConnect || pointsToConnect.length < 2) return 0
 
