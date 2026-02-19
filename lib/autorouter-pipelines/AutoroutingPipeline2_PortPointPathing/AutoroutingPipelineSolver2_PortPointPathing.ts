@@ -455,9 +455,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
-    this.activeSubSolver = new (pipelineStepDef.solverClass as any)(
-      ...constructorParams,
-    )
+    // @ts-ignore
+    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
