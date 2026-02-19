@@ -23,6 +23,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { TargetTree } from "lib/data-structures/TargetTree"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 interface CapacityMeshNodeSolverOptions {
   capacityDepth?: number
@@ -60,6 +61,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
   targets: Target[]
   targetTree: TargetTree
   obstacleTree: ObstacleSpatialHashIndex
+  readonly normalizedObstacles: Obstacle[]
 
   constructor(
     public srj: SimpleRouteJson,
@@ -71,16 +73,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     this.layerCount = srj.layerCount ?? 2
     this.outlinePolygon =
       srj.outline && srj.outline.length >= 3 ? srj.outline : undefined
-
-    for (const obstacle of srj.obstacles) {
-      if (!obstacle.zLayers) {
-        const zLayers: number[] = []
-        for (const layer of obstacle.layers) {
-          zLayers.push(mapLayerNameToZ(layer, srj.layerCount))
-        }
-        obstacle.zLayers = zLayers
-      }
-    }
 
     const boundsCenter = {
       x: (srj.bounds.minX + srj.bounds.maxX) / 2,
@@ -107,9 +99,13 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     ]
     this.finishedNodes = []
     this.nodeToXYOverlappingObstaclesMap = new Map()
+    this.normalizedObstacles = createObjectsWithZLayers(
+      this.srj.obstacles,
+      this.layerCount,
+    )
     this.obstacleTree = new ObstacleSpatialHashIndex(
       "flatbush",
-      this.srj.obstacles,
+      this.normalizedObstacles,
     )
     this.targets = this.computeTargets()
     this.targetTree = new TargetTree(this.targets)
@@ -123,7 +119,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         const obstacles = this.obstacleTree
           .searchArea(ptc.x, ptc.y, 0.01, 0.01)
           .filter((o) =>
-            o.zLayers!.some((z) =>
+            (o.zLayers ?? []).some((z) =>
               ptcLayers.some(
                 (layer) => z === mapLayerNameToZ(layer, this.layerCount),
               ),
@@ -233,7 +229,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     const obstacles = node._parent
       ? this.getXYOverlappingObstacles(node._parent)
-      : this.srj.obstacles
+      : this.normalizedObstacles
     for (const obstacle of obstacles) {
       const obsLeft = obstacle.center.x - obstacle.width / 2
       const obsRight = obstacle.center.x + obstacle.width / 2
@@ -288,7 +284,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     // For each obstacle, check if it has any overlap in the z-axis
     const xyzOverlappingObstacles: Obstacle[] = []
     for (const obstacle of xyOverlappingObstacles) {
-      if (node.availableZ.some((z) => obstacle.zLayers!.includes(z))) {
+      if (node.availableZ.some((z) => (obstacle.zLayers ?? []).includes(z))) {
         xyzOverlappingObstacles.push(obstacle)
       }
     }
@@ -511,7 +507,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     }
 
     // Draw obstacles
-    for (const obstacle of this.srj.obstacles) {
+    for (const obstacle of this.normalizedObstacles) {
       graphics.rects!.push({
         center: obstacle.center,
         width: obstacle.width,
@@ -521,7 +517,9 @@ export class CapacityMeshNodeSolver extends BaseSolver {
             ? "rgba(0,0,255,0.3)"
             : "rgba(255,0,0,0.3)",
         stroke: "red",
-        label: ["obstacle", `z: ${obstacle.zLayers!.join(",")}`].join("\n"),
+        label: ["obstacle", `z: ${(obstacle.zLayers ?? []).join(",")}`].join(
+          "\n",
+        ),
       })
     }
 

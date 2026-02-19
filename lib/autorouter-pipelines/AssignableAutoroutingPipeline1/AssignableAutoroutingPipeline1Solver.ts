@@ -427,11 +427,11 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   ]
 
   constructor(
-    public srj: SimpleRouteJson,
-    public opts: CapacityMeshSolverOptions = {},
+    public readonly srj: SimpleRouteJson,
+    public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = structuredClone(srj)
+    this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     const mutableOpts = this.opts

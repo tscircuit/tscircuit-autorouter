@@ -8,6 +8,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
@@ -32,12 +33,19 @@ export class UselessViaRemovalSolver extends BaseSolver {
 
   constructor(private input: UselessViaRemovalSolverInput) {
     super()
+    this.input = {
+      ...input,
+      obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
+    }
     this.MAX_ITERATIONS = 1e6
     this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes
     this.optimizedHdRoutes = []
     this.unprocessedRoutes = [...input.unsimplifiedHdRoutes]
 
-    this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", input.obstacles)
+    this.obstacleSHI = new ObstacleSpatialHashIndex(
+      "flatbush",
+      this.input.obstacles,
+    )
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(
       this.unsimplifiedHdRoutes,
     )

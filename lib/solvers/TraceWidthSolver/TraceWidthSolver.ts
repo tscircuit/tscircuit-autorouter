@@ -6,6 +6,7 @@ import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
@@ -26,6 +27,7 @@ export interface TraceWidthSolverInput {
   colorMap?: Record<string, string>
   minTraceWidth: number
   obstacleMargin?: number
+  layerCount: number
 }
 
 /**
@@ -91,7 +93,11 @@ export class TraceWidthSolver extends BaseSolver {
     this.unprocessedRoutes = [...this.hdRoutes]
     this.connMap = input.connMap
     this.colorMap = input.colorMap
-    this.obstacles = input.obstacles ?? []
+    const inferredLayerCount = input.layerCount
+    this.obstacles = createObjectsWithZLayers(
+      input.obstacles ?? [],
+      inferredLayerCount,
+    )
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {

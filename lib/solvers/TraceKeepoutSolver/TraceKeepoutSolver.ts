@@ -23,6 +23,7 @@ import { smoothHdRoutes } from "./smoothLines"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { removeSelfIntersections } from "./removeSelfIntersections"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 /** Tolerance for comparing floating point coordinates */
 const COORD_TOLERANCE = 0.0001
@@ -94,14 +95,19 @@ export class TraceKeepoutSolver extends BaseSolver {
 
   constructor(private input: TraceKeepoutSolverInput) {
     super()
+    const layerCount = input.srj?.layerCount ?? 2
+    this.input = {
+      ...input,
+      obstacles: createObjectsWithZLayers(input.obstacles, layerCount),
+    }
     this.MAX_ITERATIONS = 1e6
 
     // Store original routes for visualization
-    this.originalHdRoutes = [...input.hdRoutes]
+    this.originalHdRoutes = [...this.input.hdRoutes]
 
     // Apply smoothing to routes
     // this.hdRoutes = smoothHdRoutes(input.hdRoutes, this.getSmoothDistance())
-    this.hdRoutes = input.hdRoutes
+    this.hdRoutes = this.input.hdRoutes
 
     this.KEEPOUT_RADIUS_SCHEDULE = input.keepoutRadiusSchedule ?? [
       0.3, 0.5, 0.5,
@@ -112,7 +118,7 @@ export class TraceKeepoutSolver extends BaseSolver {
 
     // Create obstacles including jumper pads from passed-in SRJ jumpers
     const obstaclesWithJumperPads = [
-      ...input.obstacles,
+      ...this.input.obstacles,
       ...this.getJumperPadObstacles(),
     ]
     this.obstacleSHI = new ObstacleSpatialHashIndex(

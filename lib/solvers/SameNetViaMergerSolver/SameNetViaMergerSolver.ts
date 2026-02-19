@@ -9,6 +9,7 @@ import { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
@@ -50,15 +51,22 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
   constructor(private input: SameNetViaMergerSolverInput) {
     super()
+    this.input = {
+      ...input,
+      obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
+    }
     this.MAX_ITERATIONS = 1e6
-    this.inputHdRoutes = input.inputHdRoutes
+    this.inputHdRoutes = this.input.inputHdRoutes
     this.mergedViaHdRoutes = structuredClone(this.inputHdRoutes)
-    this.unprocessedRoutes = [...input.inputHdRoutes]
-    this.colorMap = input.colorMap
-    this.outline = input.outline
-    this.obstacles = input.obstacles
+    this.unprocessedRoutes = [...this.input.inputHdRoutes]
+    this.colorMap = this.input.colorMap
+    this.outline = this.input.outline
+    this.obstacles = this.input.obstacles
 
-    this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", input.obstacles)
+    this.obstacleSHI = new ObstacleSpatialHashIndex(
+      "flatbush",
+      this.input.obstacles,
+    )
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.inputHdRoutes)
     this.vias = []
     this.offendingVias = []

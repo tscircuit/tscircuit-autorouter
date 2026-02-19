@@ -29,6 +29,7 @@ test("TraceWidthSolver02 - trace width with jumpers", () => {
     hdRoutes: data.hdRoutes,
     minTraceWidth: data.minTraceWidth,
     connection: Array.from(connectionByName.values()),
+    layerCount: 1,
   })
 
   solver.solve()

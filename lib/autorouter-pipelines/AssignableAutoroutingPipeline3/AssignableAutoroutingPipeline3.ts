@@ -441,11 +441,11 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   ]
 
   constructor(
-    public srj: SimpleRouteJson,
-    public opts: CapacityMeshSolverOptions = {},
+    public readonly srj: SimpleRouteJson,
+    public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = structuredClone(srj)
+    this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = this.srj.minViaDiameter ?? 0.6
@@ -512,8 +512,9 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
-    // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    this.activeSubSolver = new (pipelineStepDef.solverClass as any)(
+      ...constructorParams,
+    )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
