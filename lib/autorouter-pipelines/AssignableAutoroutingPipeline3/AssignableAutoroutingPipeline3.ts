@@ -448,16 +448,16 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    this.viaDiameter = this.srj.minViaDiameter ?? 0.6
-    this.minTraceWidth = this.srj.minTraceWidth
+    this.viaDiameter = srj.minViaDiameter ?? 0.6
+    this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
 
     // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
       // Calculate max width/height from bounds for initial node size
-      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
-      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
+      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
+      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
@@ -468,8 +468,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
       )
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
-    this.colorMap = getColorMap(this.srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
+    this.colorMap = getColorMap(srj, this.connMap)
     this.cacheProvider =
       mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
