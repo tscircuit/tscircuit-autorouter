@@ -2,8 +2,8 @@ import {
   type XYConnection as HgXYConnection,
   type JPort,
   type JRegion,
+  type ViaByNet,
   ViaGraphSolver,
-  type ViasByNet,
   createViaGraphWithConnections,
   generateDefaultViaTopologyGrid,
 } from "@tscircuit/hypergraph"
@@ -58,7 +58,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
   solvedRoutes: HighDensityIntraNodeRouteWithVias[] = []
   vias: ViaRegion[] = []
-  tiledViasByNet: ViasByNet = {}
+  tiledViasByNet: ViaByNet = {}
 
   constructor(params: FixedTopologyHighDensityIntraNodeSolverParams) {
     super()
@@ -129,7 +129,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       },
       inputConnections,
     )
-    this.tiledViasByNet = viaTopology.tiledViasByNet
+    this.tiledViasByNet = viaTopology.viaTile.viasByNet ?? {}
 
     return new ViaGraphSolver({
       inputGraph: {
@@ -137,7 +137,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
         ports: result.ports,
       },
       inputConnections: result.connections,
-      viasByNet: this.tiledViasByNet,
+      viaTile: viaTopology.viaTile,
     })
   }
 
@@ -177,7 +177,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       diameter: number
     }> = []
 
-    for (const vias of Object.values(this.tiledViasByNet)) {
+    for (const vias of Object.values(this.tiledViasByNet ?? {})) {
       for (const via of vias) {
         allViaPositions.push({
           position: via.position,
