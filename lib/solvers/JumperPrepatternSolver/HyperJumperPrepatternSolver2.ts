@@ -31,6 +31,7 @@ type VariantHyperParameters = {
   ROWS: number
   ORIENTATION: "horizontal" | "vertical"
   JUMPER_TYPE: JumperType
+  PATTERN?: "grid" | "staggered"
   TRACE_CHANNELS_BETWEEN_JUMPERS?: number
 }
 
@@ -93,13 +94,36 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       1,
     )
     defs.push({
-      name: "0603_max_rows_and_cols_vert_1trace",
+      name: "0603_max_rows_and_cols_vert_1trace_grid",
       possibleValues: [
         {
           JUMPER_TYPE: "0603" as JumperType,
           COLS: max0603VertOneTrace.cols,
           ROWS: max0603VertOneTrace.rows,
           ORIENTATION: "vertical" as const,
+          PATTERN: "grid" as const,
+          TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
+        },
+      ],
+    })
+
+    const max0603VertOneTraceStaggered =
+      this.calculateMax0603ConfigWithTraceChannels(
+        node.width,
+        node.height,
+        "vertical",
+        1,
+        "staggered",
+      )
+    defs.push({
+      name: "0603_max_rows_and_cols_vert_1trace_staggered",
+      possibleValues: [
+        {
+          JUMPER_TYPE: "0603" as JumperType,
+          COLS: max0603VertOneTraceStaggered.cols,
+          ROWS: max0603VertOneTraceStaggered.rows,
+          ORIENTATION: "vertical" as const,
+          PATTERN: "staggered" as const,
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
@@ -112,13 +136,36 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       2,
     )
     defs.push({
-      name: "0603_max_rows_and_cols_vert_2trace",
+      name: "0603_max_rows_and_cols_vert_2trace_grid",
       possibleValues: [
         {
           JUMPER_TYPE: "0603" as JumperType,
           COLS: max0603VertTwoTrace.cols,
           ROWS: max0603VertTwoTrace.rows,
           ORIENTATION: "vertical" as const,
+          PATTERN: "grid" as const,
+          TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
+        },
+      ],
+    })
+
+    const max0603VertTwoTraceStaggered =
+      this.calculateMax0603ConfigWithTraceChannels(
+        node.width,
+        node.height,
+        "vertical",
+        2,
+        "staggered",
+      )
+    defs.push({
+      name: "0603_max_rows_and_cols_vert_2trace_staggered",
+      possibleValues: [
+        {
+          JUMPER_TYPE: "0603" as JumperType,
+          COLS: max0603VertTwoTraceStaggered.cols,
+          ROWS: max0603VertTwoTraceStaggered.rows,
+          ORIENTATION: "vertical" as const,
+          PATTERN: "staggered" as const,
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
@@ -131,13 +178,36 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       1,
     )
     defs.push({
-      name: "0603_max_rows_and_cols_horz_1trace",
+      name: "0603_max_rows_and_cols_horz_1trace_grid",
       possibleValues: [
         {
           JUMPER_TYPE: "0603" as JumperType,
           COLS: max0603HorzOneTrace.cols,
           ROWS: max0603HorzOneTrace.rows,
           ORIENTATION: "horizontal" as const,
+          PATTERN: "grid" as const,
+          TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
+        },
+      ],
+    })
+
+    const max0603HorzOneTraceStaggered =
+      this.calculateMax0603ConfigWithTraceChannels(
+        node.width,
+        node.height,
+        "horizontal",
+        1,
+        "staggered",
+      )
+    defs.push({
+      name: "0603_max_rows_and_cols_horz_1trace_staggered",
+      possibleValues: [
+        {
+          JUMPER_TYPE: "0603" as JumperType,
+          COLS: max0603HorzOneTraceStaggered.cols,
+          ROWS: max0603HorzOneTraceStaggered.rows,
+          ORIENTATION: "horizontal" as const,
+          PATTERN: "staggered" as const,
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
@@ -150,13 +220,36 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       2,
     )
     defs.push({
-      name: "0603_max_rows_and_cols_horz_2trace",
+      name: "0603_max_rows_and_cols_horz_2trace_grid",
       possibleValues: [
         {
           JUMPER_TYPE: "0603" as JumperType,
           COLS: max0603HorzTwoTrace.cols,
           ROWS: max0603HorzTwoTrace.rows,
           ORIENTATION: "horizontal" as const,
+          PATTERN: "grid" as const,
+          TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
+        },
+      ],
+    })
+
+    const max0603HorzTwoTraceStaggered =
+      this.calculateMax0603ConfigWithTraceChannels(
+        node.width,
+        node.height,
+        "horizontal",
+        2,
+        "staggered",
+      )
+    defs.push({
+      name: "0603_max_rows_and_cols_horz_2trace_staggered",
+      possibleValues: [
+        {
+          JUMPER_TYPE: "0603" as JumperType,
+          COLS: max0603HorzTwoTraceStaggered.cols,
+          ROWS: max0603HorzTwoTraceStaggered.rows,
+          ORIENTATION: "horizontal" as const,
+          PATTERN: "staggered" as const,
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
@@ -215,10 +308,14 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
   getCombinationDefs() {
     // Try all combinations of jumperType, cols, rows, and orientation
     return [
-      ["0603_max_rows_and_cols_vert_1trace"],
-      ["0603_max_rows_and_cols_horz_1trace"],
-      ["0603_max_rows_and_cols_vert_2trace"],
-      ["0603_max_rows_and_cols_horz_2trace"],
+      ["0603_max_rows_and_cols_vert_1trace_grid"],
+      ["0603_max_rows_and_cols_vert_1trace_staggered"],
+      ["0603_max_rows_and_cols_horz_1trace_grid"],
+      ["0603_max_rows_and_cols_horz_1trace_staggered"],
+      ["0603_max_rows_and_cols_vert_2trace_grid"],
+      ["0603_max_rows_and_cols_vert_2trace_staggered"],
+      ["0603_max_rows_and_cols_horz_2trace_grid"],
+      ["0603_max_rows_and_cols_horz_2trace_staggered"],
       ["1206x4", "1206x4_cols", "1206x4_rows", "orientation"],
     ]
   }
@@ -228,6 +325,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     nodeHeight: number,
     orientation: "horizontal" | "vertical",
     traceChannelsBetweenJumpers: number,
+    pattern: "grid" | "staggered" = "grid",
   ): { cols: number; rows: number } {
     const padWidth = 0.9
     const padHeight = 1.0
@@ -240,20 +338,37 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       orientation === "horizontal" ? padWidth * 2 + padGap : padHeight
     const bodyHeight =
       orientation === "horizontal" ? padHeight : padWidth * 2 + padGap
+    const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y"
+    const staggerOffset =
+      pattern === "staggered" && staggerAxis === "x"
+        ? bodyWidth / 2
+        : pattern === "staggered"
+          ? bodyHeight / 2
+          : 0
 
     const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2)
     const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2)
+    const effectiveAvailableWidth = Math.max(
+      0,
+      availableWidth -
+        (pattern === "staggered" && staggerAxis === "x" ? staggerOffset : 0),
+    )
+    const effectiveAvailableHeight = Math.max(
+      0,
+      availableHeight -
+        (pattern === "staggered" && staggerAxis === "y" ? staggerOffset : 0),
+    )
 
     const pitchX = bodyWidth + clearance
     const pitchY = bodyHeight + clearance
 
     const effectiveCols = Math.max(
       1,
-      Math.floor(1 + (availableWidth - bodyWidth) / pitchX),
+      Math.floor(1 + (effectiveAvailableWidth - bodyWidth) / pitchX),
     )
     const effectiveRows = Math.max(
       1,
-      Math.floor(1 + (availableHeight - bodyHeight) / pitchY),
+      Math.floor(1 + (effectiveAvailableHeight - bodyHeight) / pitchY),
     )
 
     if (orientation === "vertical") {
@@ -265,8 +380,9 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
 
   /**
    * Override initializeSolvers to use getCombinationDefs for both 0603 and 1206x4.
-   * For 0603: uses pre-calculated max rows/cols per orientation (2 configs total)
-   * For 1206x4: uses full combination of cols, rows, and orientation
+   * For 0603: uses pre-calculated max rows/cols for each orientation, trace channel count,
+   * and pattern (grid/staggered).
+   * For 1206x4: uses full combination of cols, rows, and orientation.
    */
   initializeSolvers() {
     const hyperParameterDefs = this.getHyperParameterDefs()
@@ -317,6 +433,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         ROWS: hyperParameters.ROWS,
         ORIENTATION: hyperParameters.ORIENTATION,
         JUMPER_TYPE: hyperParameters.JUMPER_TYPE,
+        PATTERN: hyperParameters.PATTERN,
         TRACE_CHANNELS_BETWEEN_JUMPERS:
           hyperParameters.TRACE_CHANNELS_BETWEEN_JUMPERS,
       },

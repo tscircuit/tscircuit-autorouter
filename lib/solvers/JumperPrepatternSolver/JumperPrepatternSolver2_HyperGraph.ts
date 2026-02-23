@@ -47,6 +47,8 @@ export interface JumperPrepatternSolver2HyperParameters {
   JUMPER_TYPE?: JumperType
   /** Number of traces to reserve space for between adjacent jumpers (0603 only) */
   TRACE_CHANNELS_BETWEEN_JUMPERS?: number
+  /** 0603 topology pattern. Defaults to "grid" */
+  PATTERN?: "grid" | "staggered"
 }
 
 export interface JumperPrepatternSolver2Params {
@@ -203,6 +205,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
   private _generate0603Grid(
     patternConfig: { cols: number; rows: number },
     orientation: "horizontal" | "vertical",
+    pattern: "grid" | "staggered",
     nodeBounds: { minX: number; maxX: number; minY: number; maxY: number },
   ): JumperGraph | null {
     // For horizontal orientation, swap cols and rows
@@ -225,23 +228,40 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       orientation === "horizontal" ? padWidth * 2 + padGap : padHeight
     const bodyHeight =
       orientation === "horizontal" ? padHeight : padWidth * 2 + padGap
+    const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y"
+    const isStaggered = pattern === "staggered"
+    const staggerOffset =
+      isStaggered && staggerAxis === "x"
+        ? bodyWidth / 2
+        : isStaggered
+          ? bodyHeight / 2
+          : 0
 
     const paddingAroundPads = 0.5
     const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2)
     const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2)
+    const effectiveAvailableWidth = Math.max(
+      0,
+      availableWidth - (isStaggered && staggerAxis === "x" ? staggerOffset : 0),
+    )
+    const effectiveAvailableHeight = Math.max(
+      0,
+      availableHeight -
+        (isStaggered && staggerAxis === "y" ? staggerOffset : 0),
+    )
 
     const colSpacing =
       effectiveCols > 1
         ? Math.max(
             bodyWidth + clearance,
-            (availableWidth - bodyWidth) / (effectiveCols - 1),
+            (effectiveAvailableWidth - bodyWidth) / (effectiveCols - 1),
           )
         : bodyWidth
     const rowSpacing =
       effectiveRows > 1
         ? Math.max(
             bodyHeight + clearance,
-            (availableHeight - bodyHeight) / (effectiveRows - 1),
+            (effectiveAvailableHeight - bodyHeight) / (effectiveRows - 1),
           )
         : bodyHeight
 
@@ -249,6 +269,8 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       cols: effectiveCols,
       rows: effectiveRows,
       orientation,
+      pattern,
+      staggerAxis,
       colSpacing,
       rowSpacing,
       padWidth,
@@ -281,6 +303,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     const patternConfig = this._getPatternConfig()
     const orientation = this.hyperParameters.ORIENTATION ?? "vertical"
     const jumperType = this.hyperParameters.JUMPER_TYPE ?? "1206x4"
+    const pattern = this.hyperParameters.PATTERN ?? "grid"
 
     // Calculate node bounds
     const nodeBounds = {
@@ -298,6 +321,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       const graph = this._generate0603Grid(
         patternConfig,
         orientation,
+        pattern,
         nodeBounds,
       )
       if (!graph) {
