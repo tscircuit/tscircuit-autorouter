@@ -3,17 +3,17 @@ import bugReport from "fixtures/bug-reports/missing-port-points-001/missing-port
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { AutoroutingPipelineSolver } from "lib/index"
+import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/index"
+import { getLastStepSvg } from "tests/fixtures/getLastStepSvg"
 
 const srj = bugReport as SimpleRouteJson
 
 test("missing-port-points-001", () => {
-  const solver = new AutoroutingPipelineSolver(srj)
+  const solver = new AutoroutingPipelineSolver3_HgPortPointPathing(srj)
   solver.solve()
   expect(solver.solved).toBe(false)
 
-  // TODO: Seeing different svg in server and local, so skipping snapshot test for now i need to work, will get back to this later
-  // expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-  //   import.meta.path,
-  // )
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
