@@ -1,30 +1,30 @@
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import { BaseSolver } from "../../solvers/BaseSolver"
+import {
+  type AdjacentObstacle,
+  CurvyIntraNodeSolver,
+} from "../../solvers/CurvyIntraNodeSolver/CurvyIntraNodeSolver"
+import { HighDensityHyperParameters } from "../../solvers/HighDensitySolver/HighDensityHyperParameters"
+// import { HyperIntraNodeSolverWithJumpers } from "../../solvers/HighDensitySolver/HyperIntraNodeSolverWithJumpers"
+// import { JumperPrepatternSolver2_HyperGraph } from "../../solvers/JumperPrepatternSolver/JumperPrepatternSolver2_HyperGraph"
+import { HyperJumperPrepatternSolver2 } from "../../solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2"
+import { safeTransparentize } from "../../solvers/colors"
+import type {
+  CapacityMeshEdge,
+  CapacityMeshNode,
+} from "../../types/capacity-mesh-types"
 import type {
   HighDensityIntraNodeRoute,
   HighDensityIntraNodeRouteWithJumpers,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../../solvers/BaseSolver"
-import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
-// import { HyperIntraNodeSolverWithJumpers } from "../../solvers/HighDensitySolver/HyperIntraNodeSolverWithJumpers"
-// import { JumperPrepatternSolver2_HyperGraph } from "../../solvers/JumperPrepatternSolver/JumperPrepatternSolver2_HyperGraph"
-import { HyperJumperPrepatternSolver2 } from "../../solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2"
+import type { JumperType, Jumper as SrjJumper } from "../../types/srj-types"
 import { getIntraNodeCrossings } from "../../utils/getIntraNodeCrossings"
-import { safeTransparentize } from "../../solvers/colors"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { HighDensityHyperParameters } from "../../solvers/HighDensitySolver/HighDensityHyperParameters"
-import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { JUMPER_DIMENSIONS } from "../../utils/jumperSizes"
-import type { Jumper as SrjJumper, JumperType } from "../../types/srj-types"
-import type {
-  CapacityMeshNode,
-  CapacityMeshEdge,
-} from "../../types/capacity-mesh-types"
-import {
-  CurvyIntraNodeSolver,
-  type AdjacentObstacle,
-} from "../../solvers/CurvyIntraNodeSolver/CurvyIntraNodeSolver"
+import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
 
 /**
  * A unified route type that can represent both regular routes (with vias)
@@ -79,6 +79,7 @@ export class JumperHighDensitySolver extends BaseSolver {
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
   traceWidth: number
+  obstacleMargin: number
   viaDiameter: number
   connMap?: ConnectivityMap
   hyperParameters?: Partial<HighDensityHyperParameters>
@@ -114,6 +115,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     nodePortPoints,
     colorMap,
     traceWidth = 0.15,
+    obstacleMargin = 0.15,
     viaDiameter = 0.6,
     connMap,
     hyperParameters,
@@ -124,6 +126,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     traceWidth?: number
+    obstacleMargin?: number
     viaDiameter?: number
     connMap?: ConnectivityMap
     hyperParameters?: Partial<HighDensityHyperParameters>
@@ -137,6 +140,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth
+    this.obstacleMargin = obstacleMargin
     this.viaDiameter = viaDiameter
     this.connMap = connMap
     this.hyperParameters = hyperParameters
@@ -441,6 +445,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         nodeWithPortPoints: node,
         colorMap: this.colorMap,
         traceWidth: this.traceWidth,
+        obstacleMargin: this.obstacleMargin,
         connMap: this.connMap,
         availableJumperTypes: this.availableJumperTypes,
       })
@@ -523,6 +528,7 @@ export class JumperHighDensitySolver extends BaseSolver {
       nodePortPoints: this.allNodes,
       colorMap: this.colorMap,
       traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
       viaDiameter: this.viaDiameter,
       connMap: this.connMap,
       hyperParameters: this.hyperParameters,

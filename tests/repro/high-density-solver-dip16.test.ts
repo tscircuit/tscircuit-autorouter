@@ -1,8 +1,8 @@
-import { test, expect } from "bun:test"
-import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
+import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const nodePortPoints: NodeWithPortPoints[] = [
   {
@@ -1679,4 +1679,13 @@ test("high density solver with dip16-crossing data", () => {
   })
 
   expect(svgResult).toMatchSvgSnapshot(import.meta.path)
+
+  const hypergraphVisualization =
+    solver.jumperSolvers[0]?.winningSolver?.jumperGraphSolver?.visualize()
+  if (hypergraphVisualization) {
+    const hypergraphSvg = getSvgFromGraphicsObject(hypergraphVisualization, {
+      backgroundColor: "white",
+    })
+    expect(hypergraphSvg).toMatchSvgSnapshot(`${import.meta.path}-hypergraph`)
+  }
 })
