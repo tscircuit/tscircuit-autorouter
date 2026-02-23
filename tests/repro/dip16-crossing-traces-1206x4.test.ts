@@ -4,7 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import { AssignableAutoroutingPipeline3 } from "lib/index"
 
-test("dip16 crossing traces", () => {
+test("dip16 crossing traces 1206x4", () => {
   const solver = new AssignableAutoroutingPipeline3({
     ...(reproJson as SimpleRouteJson),
     availableJumperTypes: ["1206x4"],

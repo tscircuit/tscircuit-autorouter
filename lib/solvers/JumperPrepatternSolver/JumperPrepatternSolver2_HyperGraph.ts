@@ -189,6 +189,38 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     return colorMap
   }
 
+  private _normalizeRegionPolygonsToBounds(graph: JumperGraph): JumperGraph {
+    for (const region of graph.regions) {
+      const d = region.d
+      const polygon = d?.polygon
+      const bounds = d?.bounds
+      if (!polygon || polygon.length === 0 || !bounds) continue
+
+      let polyMinX = Infinity
+      let polyMinY = Infinity
+      for (const point of polygon) {
+        polyMinX = Math.min(polyMinX, point.x)
+        polyMinY = Math.min(polyMinY, point.y)
+      }
+
+      const dx = bounds.minX - polyMinX
+      const dy = bounds.minY - polyMinY
+
+      if (Math.abs(dx) > 1e-12 || Math.abs(dy) > 1e-12) {
+        d.polygon = polygon.map((point) => ({
+          x: point.x + dx,
+          y: point.y + dy,
+        }))
+      }
+
+      if (d.polygonPerimeterCache) {
+        d.polygonPerimeterCache = undefined
+      }
+    }
+
+    return graph
+  }
+
   private _getPatternConfig(): { cols: number; rows: number } {
     return {
       cols: this.hyperParameters.COLS ?? 1,
@@ -294,8 +326,11 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       nodeCenterY - graphCenterY,
     )
 
-    // Apply transformation to the graph
-    return applyTransformToGraph(baseGraph, transformMatrix)
+    // Apply transformation to the graph and normalize transformed polygons so
+    // they remain aligned with transformed bounds.
+    return this._normalizeRegionPolygonsToBounds(
+      applyTransformToGraph(baseGraph, transformMatrix),
+    )
   }
 
   private _initializeGraph(): boolean {
