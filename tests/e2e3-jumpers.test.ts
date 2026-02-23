@@ -2,20 +2,11 @@ import { expect, test } from "bun:test"
 import { AssignableAutoroutingPipeline3 } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
-import { getFreshE2e3 } from "./fixtures/getFreshE2e3"
+import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"
 
 test("should solve e2e3 single-layer with 0603 jumpers available", async () => {
-  /**
-   * Load a fresh `e2e3` fixture instance for each test.
-   *
-   * Why: Bun caches JSON module imports by path. We previously imported
-   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
-   * mutated the SRJ object (connection point ordering + obstacle fields). That
-   * leaked into later tests and caused order-dependent snapshot failures
-   * (single-file pass vs full-suite fail).
-   */
   const simpleSrj: SimpleRouteJson = {
-    ...getFreshE2e3(),
+    ...(e2e3Fixture as SimpleRouteJson),
     layerCount: 1,
     availableJumperTypes: ["0603"],
   }

@@ -8,19 +8,10 @@ import {
   visualizeSection,
 } from "../lib/solvers/MultiSectionPortPointOptimizer"
 import { MultiSectionPortPointOptimizer } from "../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer"
-import { getFreshE2e3 } from "./fixtures/getFreshE2e3"
+import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"
 
 test("should solve e2e3 board and produce valid SimpleRouteJson output", async () => {
-  /**
-   * Load a fresh `e2e3` fixture instance for each test.
-   *
-   * Why: Bun caches JSON module imports by path. We previously imported
-   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
-   * mutated the SRJ object (connection point ordering + obstacle fields). That
-   * leaked into later tests and caused order-dependent snapshot failures
-   * (single-file pass vs full-suite fail).
-   */
-  const simpleSrj: SimpleRouteJson = getFreshE2e3()
+  const simpleSrj = e2e3Fixture as SimpleRouteJson
 
   const solver = new AutoroutingPipelineSolver(simpleSrj, {
     cacheProvider: null,
@@ -42,16 +33,7 @@ test("should solve e2e3 board and produce valid SimpleRouteJson output", async (
 }, 20_000)
 
 test("createPortPointSection creates valid section from center node", async () => {
-  /**
-   * Load a fresh `e2e3` fixture instance for each test.
-   *
-   * Why: Bun caches JSON module imports by path. We previously imported
-   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
-   * mutated the SRJ object (connection point ordering + obstacle fields). That
-   * leaked into later tests and caused order-dependent snapshot failures
-   * (single-file pass vs full-suite fail).
-   */
-  const simpleSrj: SimpleRouteJson = getFreshE2e3()
+  const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
   const solver = new AutoroutingPipelineSolver(simpleSrj, {
     cacheProvider: null,
@@ -120,16 +102,7 @@ test("createPortPointSection creates valid section from center node", async () =
 }, 20_000)
 
 test("createPortPointSection with different expansion degrees", async () => {
-  /**
-   * Load a fresh `e2e3` fixture instance for each test.
-   *
-   * Why: Bun caches JSON module imports by path. We previously imported
-   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
-   * mutated the SRJ object (connection point ordering + obstacle fields). That
-   * leaked into later tests and caused order-dependent snapshot failures
-   * (single-file pass vs full-suite fail).
-   */
-  const simpleSrj: SimpleRouteJson = getFreshE2e3()
+  const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
   const solver = new AutoroutingPipelineSolver(simpleSrj, {
     cacheProvider: null,
@@ -212,16 +185,7 @@ test("createPortPointSection with different expansion degrees", async () => {
 }, 20_000)
 
 test("createSectionSimpleRouteJson includes cut paths with low expansion degrees", async () => {
-  /**
-   * Load a fresh `e2e3` fixture instance for each test.
-   *
-   * Why: Bun caches JSON module imports by path. We previously imported
-   * `fixtures/legacy/assets/e2e3.json` directly in multiple tests, and one test
-   * mutated the SRJ object (connection point ordering + obstacle fields). That
-   * leaked into later tests and caused order-dependent snapshot failures
-   * (single-file pass vs full-suite fail).
-   */
-  const simpleSrj: SimpleRouteJson = getFreshE2e3()
+  const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
   const solver = new AutoroutingPipelineSolver(simpleSrj, {
     cacheProvider: null,

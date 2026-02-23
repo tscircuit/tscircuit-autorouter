@@ -1,0 +1,86 @@
+{
+  "nodeWithPortPoints": {
+    "capacityMeshNodeId": "cmn_via_03",
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "width": 20,
+    "height": 20,
+    "portPoints": [
+      {
+        "portPointId": "pp1",
+        "x": -10,
+        "y": -8,
+        "z": 0,
+        "connectionName": "power",
+        "rootConnectionName": "power"
+      },
+      {
+        "portPointId": "pp2",
+        "x": 10,
+        "y": 8,
+        "z": 0,
+        "connectionName": "power",
+        "rootConnectionName": "power"
+      },
+      {
+        "portPointId": "pp3",
+        "x": -10,
+        "y": 0,
+        "z": 0,
+        "connectionName": "ground",
+        "rootConnectionName": "ground"
+      },
+      {
+        "portPointId": "pp4",
+        "x": 10,
+        "y": 0,
+        "z": 0,
+        "connectionName": "ground",
+        "rootConnectionName": "ground"
+      },
+      {
+        "portPointId": "pp5",
+        "x": -10,
+        "y": 8,
+        "z": 0,
+        "connectionName": "data_0",
+        "rootConnectionName": "data_0"
+      },
+      {
+        "portPointId": "pp6",
+        "x": 10,
+        "y": -8,
+        "z": 0,
+        "connectionName": "data_0",
+        "rootConnectionName": "data_0"
+      },
+      {
+        "portPointId": "pp7",
+        "x": 0,
+        "y": -10,
+        "z": 0,
+        "connectionName": "data_1",
+        "rootConnectionName": "data_1"
+      },
+      {
+        "portPointId": "pp8",
+        "x": 0,
+        "y": 10,
+        "z": 0,
+        "connectionName": "data_1",
+        "rootConnectionName": "data_1"
+      }
+    ],
+    "availableZ": [0, 1]
+  },
+  "colorMap": {
+    "power": "#e6194b",
+    "ground": "#3cb44b",
+    "data_0": "#4363d8",
+    "data_1": "#f58231"
+  },
+  "traceWidth": 0.15,
+  "hyperParameters": {}
+}

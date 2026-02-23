@@ -255,15 +255,18 @@ export function buildMinimumSpanningTree<T extends Point>(
     return []
   }
 
+  // Prevent in-place KD-tree sorting from mutating caller-owned arrays.
+  const pointsCopy = [...points]
+
   // Build KD-Tree for efficient nearest neighbor search
-  const kdTree = new KDTree(points)
+  const kdTree = new KDTree(pointsCopy)
 
   // Generate edges with k-nearest neighbors for each point
   // This is an optimization to avoid generating all possible n(n-1)/2 edges
   const edges: Edge<T>[] = []
   const k = Math.min(10, points.length - 1) // Consider k nearest neighbors
 
-  for (const point of points) {
+  for (const point of pointsCopy) {
     const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
 
     for (const neighbor of neighbors) {
@@ -288,7 +291,7 @@ export function buildMinimumSpanningTree<T extends Point>(
   edges.sort((a, b) => a.weight - b.weight)
 
   // Apply Kruskal's algorithm
-  const disjointSet = new DisjointSet(points)
+  const disjointSet = new DisjointSet(pointsCopy)
   const mstEdges: Edge<T>[] = []
 
   for (const edge of edges) {
@@ -296,7 +299,7 @@ export function buildMinimumSpanningTree<T extends Point>(
       mstEdges.push(edge)
 
       // MST has n-1 edges for n points
-      if (mstEdges.length === points.length - 1) {
+      if (mstEdges.length === pointsCopy.length - 1) {
         break
       }
     }

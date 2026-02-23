@@ -1,0 +1,52 @@
+{
+  "nodeWithPortPoints": {
+    "capacityMeshNodeId": "cmn_via_01",
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "width": 10,
+    "height": 10,
+    "portPoints": [
+      {
+        "portPointId": "pp1",
+        "x": -5,
+        "y": -3,
+        "z": 0,
+        "connectionName": "net_1",
+        "rootConnectionName": "net_1"
+      },
+      {
+        "portPointId": "pp2",
+        "x": 5,
+        "y": 3,
+        "z": 0,
+        "connectionName": "net_1",
+        "rootConnectionName": "net_1"
+      },
+      {
+        "portPointId": "pp3",
+        "x": -5,
+        "y": 3,
+        "z": 0,
+        "connectionName": "net_2",
+        "rootConnectionName": "net_2"
+      },
+      {
+        "portPointId": "pp4",
+        "x": 5,
+        "y": -3,
+        "z": 0,
+        "connectionName": "net_2",
+        "rootConnectionName": "net_2"
+      }
+    ],
+    "availableZ": [0, 1]
+  },
+  "colorMap": {
+    "net_1": "#e6194b",
+    "net_2": "#3cb44b"
+  },
+  "traceWidth": 0.15,
+  "hyperParameters": {}
+}

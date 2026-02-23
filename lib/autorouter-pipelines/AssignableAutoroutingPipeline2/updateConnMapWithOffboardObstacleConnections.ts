@@ -27,7 +27,6 @@ export const updateConnMapWithOffboardObstacleConnections = ({
   offBoardConnMap.addConnections(
     offBoardObstacles.map((obstacle, index) => {
       const obstacleId = obstacle.obstacleId ?? `__obs${index}`
-      obstacle.obstacleId = obstacleId
       return [obstacleId, ...(obstacle.offBoardConnectsTo ?? [])]
     }),
   )

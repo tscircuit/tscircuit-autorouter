@@ -6,6 +6,7 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
 import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 export class MultiSimplifiedPathSolver extends BaseSolver {
   override getSolverName(): string {
@@ -37,7 +38,17 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
 
     this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
-    this.obstacles = params.obstacles
+    const inferredLayerCount =
+      Math.max(
+        2,
+        ...params.unsimplifiedHdRoutes.flatMap((r) =>
+          r.route.map((p) => p.z + 1),
+        ),
+      ) || 2
+    this.obstacles = createObjectsWithZLayers(
+      params.obstacles,
+      inferredLayerCount,
+    )
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
     this.outline = params.outline

@@ -10,7 +10,7 @@ import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { getStringColor } from "lib/solvers/colors"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 /**
  * This solver looks at every obstacle with off board connections (one per step),
@@ -39,18 +39,16 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
   ) {
     super()
 
-    this.unprocessedObstacles = this.input.srj.obstacles.filter(
+    this.unprocessedObstacles = createObjectsWithZLayers(
+      this.input.srj.obstacles,
+      this.input.srj.layerCount,
+    ).filter(
       (obstacle) =>
         obstacle.offBoardConnectsTo && obstacle.offBoardConnectsTo.length > 0,
     )
 
     this.unprocessedObstacles.forEach((o, i) => {
       o.obstacleId = o.obstacleId ?? `__obs${i}`
-      o.zLayers =
-        o.zLayers ??
-        o.layers.map((layer) =>
-          mapLayerNameToZ(layer, this.input.srj.layerCount),
-        )
     })
 
     this.offBoardConnMap = new ConnectivityMap({})

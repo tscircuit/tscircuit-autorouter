@@ -7,6 +7,7 @@ import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/Mult
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 type Phase = "via_removal" | "via_merging" | "path_simplification"
 
@@ -58,17 +59,24 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
-    private simplificationConfig: {
-      hdRoutes: HighDensityRoute[]
-      obstacles: Obstacle[]
-      connMap: ConnectivityMap
-      colorMap: Record<string, string>
-      outline?: Array<{ x: number; y: number }>
-      defaultViaDiameter: number
-      layerCount: number
+    private readonly simplificationConfig: {
+      readonly hdRoutes: ReadonlyArray<HighDensityRoute>
+      readonly obstacles: ReadonlyArray<Obstacle>
+      readonly connMap: ConnectivityMap
+      readonly colorMap: Readonly<Record<string, string>>
+      readonly outline?: ReadonlyArray<{ x: number; y: number }>
+      readonly defaultViaDiameter: number
+      readonly layerCount: number
     },
   ) {
     super()
+    this.simplificationConfig = {
+      ...simplificationConfig,
+      obstacles: createObjectsWithZLayers(
+        simplificationConfig.obstacles,
+        simplificationConfig.layerCount,
+      ),
+    }
     this.hdRoutes = [...simplificationConfig.hdRoutes]
     this.MAX_ITERATIONS = 100e6
   }
@@ -132,8 +140,8 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_removal":
           this.activeSubSolver = new UselessViaRemovalSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
-            obstacles: this.simplificationConfig.obstacles,
-            colorMap: this.simplificationConfig.colorMap,
+            obstacles: [...this.simplificationConfig.obstacles],
+            colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
           })
           this.extractResult = (s) =>
@@ -143,11 +151,13 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_merging":
           this.activeSubSolver = new SameNetViaMergerSolver({
             inputHdRoutes: this.hdRoutes,
-            obstacles: this.simplificationConfig.obstacles,
-            colorMap: this.simplificationConfig.colorMap,
+            obstacles: [...this.simplificationConfig.obstacles],
+            colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
             connMap: this.simplificationConfig.connMap,
-            outline: this.simplificationConfig.outline,
+            outline: this.simplificationConfig.outline
+              ? [...this.simplificationConfig.outline]
+              : undefined,
           })
           this.extractResult = (s) =>
             (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []
@@ -156,10 +166,12 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
-            obstacles: this.simplificationConfig.obstacles,
+            obstacles: [...this.simplificationConfig.obstacles],
             connMap: this.simplificationConfig.connMap,
-            colorMap: this.simplificationConfig.colorMap,
-            outline: this.simplificationConfig.outline,
+            colorMap: { ...this.simplificationConfig.colorMap },
+            outline: this.simplificationConfig.outline
+              ? [...this.simplificationConfig.outline]
+              : undefined,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
           })
           this.extractResult = (s) =>

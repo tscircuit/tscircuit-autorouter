@@ -94,9 +94,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   }
 
   getNewSimpleRouteJson(): SimpleRouteJson {
+    const detachedSrj = structuredClone(this.ogSrj)
     return {
-      ...this.ogSrj,
-      connections: this.newConnections,
+      ...detachedSrj,
+      connections: structuredClone(this.newConnections),
     }
   }
 
