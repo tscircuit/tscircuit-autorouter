@@ -8,9 +8,7 @@
   "obstacles": [
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": -11.49,
         "y": -4
@@ -41,9 +39,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": -12.51,
         "y": -4
@@ -66,9 +62,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": -2.49,
         "y": 10
@@ -91,9 +85,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": -3.51,
         "y": 10
@@ -116,9 +108,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 11.584574766052903,
         "y": -9.751300955010706
@@ -145,9 +135,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 11.248699044989294,
         "y": -9.415425233947097
@@ -174,9 +162,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 12.751300955010706,
         "y": -8.584574766052903
@@ -199,9 +185,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 12.415425233947097,
         "y": -8.248699044989294
@@ -224,9 +208,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -13.9125,
         "y": -6
@@ -257,9 +239,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -12.0875,
         "y": -6
@@ -290,9 +270,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -8.51,
         "y": 9
@@ -319,9 +297,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -7.49,
         "y": 9
@@ -348,9 +324,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -11.3622221848584,
         "y": 5.902942858086554
@@ -381,9 +355,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -11.623022157956449,
         "y": 5.833061715908874
@@ -414,9 +386,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -10.376977842043551,
         "y": 6.166938284091126
@@ -443,9 +413,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -10.6377778151416,
         "y": 6.097057141913446
@@ -472,9 +440,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -15.9125,
         "y": -1
@@ -505,9 +471,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -14.0875,
         "y": -1
@@ -538,9 +502,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": 3.51,
         "y": 1
@@ -571,9 +533,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "bottom"
-      ],
+      "layers": ["bottom"],
       "center": {
         "x": 2.49,
         "y": 1
@@ -604,9 +564,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -0.51,
         "y": -10
@@ -637,9 +595,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 0.51,
         "y": -10
@@ -666,9 +622,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -5.51,
         "y": 5
@@ -699,9 +653,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -4.49,
         "y": 5
@@ -724,9 +676,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -8.05,
         "y": -2
@@ -753,9 +703,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -5.95,
         "y": -2
@@ -782,9 +730,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 3.35,
         "y": 5
@@ -811,9 +757,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": 6.65,
         "y": 5
@@ -840,9 +784,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -8.3,
         "y": -14.05
@@ -869,9 +811,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -8.3,
         "y": -15
@@ -902,9 +842,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -8.3,
         "y": -15.95
@@ -935,9 +873,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -5.7,
         "y": -15.95
@@ -954,9 +890,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -5.7,
         "y": -15
@@ -973,9 +907,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top"
-      ],
+      "layers": ["top"],
       "center": {
         "x": -5.7,
         "y": -14.05
@@ -992,12 +924,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 6.1899999999999995,
         "y": 15.81
@@ -1020,12 +947,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 6.1899999999999995,
         "y": 13.27
@@ -1056,12 +978,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 6.1899999999999995,
         "y": 10.73
@@ -1088,12 +1005,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 6.1899999999999995,
         "y": 8.19
@@ -1120,12 +1032,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 13.81,
         "y": 8.19
@@ -1152,12 +1059,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 13.81,
         "y": 10.73
@@ -1184,12 +1086,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 13.81,
         "y": 13.27
@@ -1220,12 +1117,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 13.81,
         "y": 15.81
@@ -1256,12 +1148,7 @@
     },
     {
       "type": "rect",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 0.8663710030644163,
         "y": -2.643500936401007
@@ -1292,12 +1179,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 3.3198226018386503,
         "y": -1.9861005618406038
@@ -1324,12 +1206,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 5.773274200612883,
         "y": -1.3287001872802011
@@ -1360,12 +1237,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 8.226725799387117,
         "y": -0.6712998127197985
@@ -1396,12 +1268,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 10.680177398161351,
         "y": -0.013899438159395872
@@ -1432,12 +1299,7 @@
     },
     {
       "type": "oval",
-      "layers": [
-        "top",
-        "inner1",
-        "inner2",
-        "bottom"
-      ],
+      "layers": ["top", "inner1", "inner2", "bottom"],
       "center": {
         "x": 13.133628996935585,
         "y": 0.6435009364010067
