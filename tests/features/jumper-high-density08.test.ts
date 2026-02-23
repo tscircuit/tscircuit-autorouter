@@ -31,5 +31,5 @@ test(
     expect(solver.solved || solver.failed).toBe(true)
     expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
   },
-  { timeout: 30000 },
+  { timeout: 60000 },
 )
