@@ -29,7 +29,7 @@
     "@tscircuit/core": "^0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/hypergraph": "^0.0.35",
-    "@tscircuit/jumper-topology-generator": "^0.0.2",
+    "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/math-utils": "^0.0.27",
     "@tscircuit/rectdiff": "0.0.22",
     "@tscircuit/solver-utils": "^0.0.14",

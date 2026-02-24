@@ -310,6 +310,8 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       padGap,
       clearance,
       boundsPadding: 0,
+      maxNeckRatio: 0.4,
+      minSplitBalanceRatio: 0.2,
     })
 
     const graphBounds = baseGraph.bounds
