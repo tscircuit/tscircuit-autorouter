@@ -46,9 +46,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       (cm) => cm._containsObstacle,
     )
     this.obstacleCapacityMeshesNodeQueue = [...this.obstacleCapacityMeshesNode]
-    this.obstacleCapacityMeshesNodeQueue.sort(
-      (a, b) => a.center.x - b.center.x,
-    )
+    this.obstacleCapacityMeshesNodeQueue.sort((a, b) => a.center.x - b.center.x)
 
     for (const cmNode of this.input.capacityMeshNodes) {
       this.mapOfCapacityMeshNodeIdToRef.set(cmNode.capacityMeshNodeId, cmNode)
@@ -109,6 +107,8 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
           const capacityMeshNodes = port.nodeIds.map((nodeId) => {
             const cmNode = this.mapOfCapacityMeshNodeIdToRef.get(nodeId)
             if (!cmNode) {
+              this.failed = true
+              this.error = `Could not find capacity mesh node for id ${nodeId}`
               throw new Error(
                 `Could not find capacity mesh node for id ${nodeId}`,
               )
@@ -118,6 +118,17 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
           return capacityMeshNodes.some((cmNode) => !cmNode._containsObstacle)
         })
 
+      const areAllCandidatesIncludingCrampedBlocked =
+        isAllCandidatesBlockedByObstacles({
+          candidates: candidatesAtDepthIncludingCramped,
+          mapOfCapacityMeshNodeIdToRef: this.mapOfCapacityMeshNodeIdToRef,
+        })
+
+      if (areAllCandidatesIncludingCrampedBlocked) {
+        this.solved = false
+        this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentCapacityMeshNode.capacityMeshNodeId}`
+      }
+
       candidatesAtDepthIncludingCramped.sort(
         (a, b) => costFunction(a) - costFunction(b),
       )
@@ -125,9 +136,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       this.candidatesAtDepth = candidatesAtDepthIncludingCramped
       if (!bestCandidate) {
         this.solved = false
-        throw new Error(
-          "No candidates found even after including cramped port points",
-        )
+        this.error = `No candidates found for capacity mesh node ${this.currentCapacityMeshNode.capacityMeshNodeId} even after including cramped port points`
       }
 
       this.crampedPortPointsToKeep.add(bestCandidate.port)
@@ -173,7 +182,9 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
           },
           width: 0.1,
           height: 0.1,
-          fill: "rgba(0, 255, 0, 1)",
+          fill: this.crampedPortPointsToKeep.has(candidate.port)
+            ? "rgba(0, 255, 0, 1)"
+            : "rgba(0, 0, 0, 0.2)",
         })
       } else {
         graphics.points!.push({
