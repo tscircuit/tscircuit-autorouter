@@ -157,22 +157,10 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
     }
 
     for (const candidate of this.visitedExploredPortPoints) {
-      if (!candidate.cramped) {
-        graphics.points!.push({
-          ...candidate,
-          color: "green",
-        })
-      } else {
-        graphics.rects!.push({
-          center: {
-            x: candidate.x,
-            y: candidate.y,
-          },
-          width: 0.1,
-          height: 0.1,
-          fill: "green",
-        })
-      }
+      graphics.points!.push({
+        ...candidate,
+        color: candidate.cramped ? "blue" : "green",
+      })
     }
 
     return graphics

@@ -238,33 +238,16 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     }
 
     for (const candidate of this.candidatesAtDepth) {
-      if (!candidate.port.cramped) {
-        graphics.points!.push({
-          ...candidate.port,
-          color: "green",
-        })
-      } else {
-        graphics.rects!.push({
-          center: {
-            x: candidate.port.x,
-            y: candidate.port.y,
-          },
-          width: 0.1,
-          height: 0.1,
-          fill: "green",
-        })
-      }
+      graphics.points!.push({
+        ...candidate.port,
+        color: candidate.port.cramped ? "blue" : "green",
+      })
     }
 
     for (const crampedPortPoint of this.crampedPortPointsToKeep) {
-      graphics.rects!.push({
-        center: {
-          x: crampedPortPoint.x,
-          y: crampedPortPoint.y,
-        },
-        width: 0.1,
-        height: 0.1,
-        fill: "green",
+      graphics.points!.push({
+        ...crampedPortPoint,
+        color: "blue",
       })
     }
 
