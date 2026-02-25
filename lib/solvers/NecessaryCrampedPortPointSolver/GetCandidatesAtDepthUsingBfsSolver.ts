@@ -20,10 +20,10 @@ type GetCandidatesAtDepthUsingBfsSolverInput = {
 
 export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
   private queue: ExploredPortPoint[] = []
-  private resultCandidates: ExploredPortPoint[] = []
-  private currentCandidate: ExploredPortPoint | null = null
-  private visitedPortPoints: SegmentPortPoint[] = []
-  private bestCandidateForPort = new Map<
+  private resultExploredPortPoints: ExploredPortPoint[] = []
+  private currentExploredPortPoints: ExploredPortPoint | null = null
+  private visitedExploredPortPoints: SegmentPortPoint[] = []
+  private bestExploredPortPoints = new Map<
     ExploredPortPoint["port"],
     ExploredPortPoint
   >()
@@ -37,7 +37,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
   }
 
   override getSolverName() {
-    return "GetCandidatesAtDepthUsingBfsSolver"
+    return "getCandidatesAtDepthUsingBfsSolver"
   }
 
   override setup(): void {
@@ -53,17 +53,17 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
         parent: null,
         countOfCrampedPortPointsInPath: seedPort.cramped ? 1 : 0,
       }
-      this.bestCandidateForPort.set(seedPort, initialCandidate)
+      this.bestExploredPortPoints.set(seedPort, initialCandidate)
       this.queue.push(initialCandidate)
     }
-    this.visitedPortPoints = [
+    this.visitedExploredPortPoints = [
       ...new Set(this.queue.map((candidate) => candidate.port)),
     ]
   }
 
   override step() {
     if (this.queue.length === 0) {
-      this.currentCandidate = null
+      this.currentExploredPortPoints = null
       this.solved = true
       return
     }
@@ -75,20 +75,24 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       this.queue[0]!.depth === depthInThisStep &&
       !this.solved
     ) {
-      this.currentCandidate = this.queue.shift()!
+      this.currentExploredPortPoints = this.queue.shift()!
 
-      if (this.currentCandidate.depth === this.input.depthLimit) {
-        this.resultCandidates.push(this.currentCandidate)
+      if (this.currentExploredPortPoints.depth === this.input.depthLimit) {
+        this.resultExploredPortPoints.push(this.currentExploredPortPoints)
         continue
       }
 
-      const nextNodes = this.currentCandidate.port.nodeIds.map((nodeId) => {
-        const cmNode = this.input.mapOfCapacityMeshNodeIdToRef.get(nodeId)
-        if (!cmNode) {
-          throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
-        }
-        return cmNode
-      })
+      const nextNodes = this.currentExploredPortPoints.port.nodeIds.map(
+        (nodeId) => {
+          const cmNode = this.input.mapOfCapacityMeshNodeIdToRef.get(nodeId)
+          if (!cmNode) {
+            throw new Error(
+              `Could not find capacity mesh node for id ${nodeId}`,
+            )
+          }
+          return cmNode
+        },
+      )
 
       const nextPorts = nextNodes.flatMap(
         (node) =>
@@ -104,13 +108,13 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
 
         const nextCandidate: ExploredPortPoint = {
           port: nextPort,
-          depth: this.currentCandidate.depth + 1,
-          parent: this.currentCandidate,
+          depth: this.currentExploredPortPoints.depth + 1,
+          parent: this.currentExploredPortPoints,
           countOfCrampedPortPointsInPath:
-            this.currentCandidate.countOfCrampedPortPointsInPath +
+            this.currentExploredPortPoints.countOfCrampedPortPointsInPath +
             (nextPort.cramped ? 1 : 0),
         }
-        const existingCandidate = this.bestCandidateForPort.get(nextPort)
+        const existingCandidate = this.bestExploredPortPoints.get(nextPort)
 
         if (
           existingCandidate &&
@@ -127,7 +131,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
           continue
         }
 
-        this.bestCandidateForPort.set(nextPort, nextCandidate)
+        this.bestExploredPortPoints.set(nextPort, nextCandidate)
         this.queue.push(nextCandidate)
       }
     }
@@ -136,14 +140,14 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       this.solved = true
     }
 
-    this.visitedPortPoints = [
+    this.visitedExploredPortPoints = [
       ...new Set(this.queue.map((candidate) => candidate.port)),
-      ...this.visitedPortPoints,
+      ...this.visitedExploredPortPoints,
     ]
   }
 
   getOutput() {
-    return this.resultCandidates
+    return this.resultExploredPortPoints
   }
 
   override visualize(): GraphicsObject {
@@ -152,7 +156,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       rects: [],
     }
 
-    for (const candidate of this.visitedPortPoints) {
+    for (const candidate of this.visitedExploredPortPoints) {
       if (!candidate.cramped) {
         graphics.points!.push({
           ...candidate,
