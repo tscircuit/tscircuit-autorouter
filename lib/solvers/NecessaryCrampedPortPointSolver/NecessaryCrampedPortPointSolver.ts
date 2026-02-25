@@ -115,7 +115,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
             }
             return cmNode
           })
-          return capacityMeshNodes.some((cmNode) => !cmNode._containsObstacle)
+          return capacityMeshNodes.every((cmNode) => !cmNode._containsObstacle) && port.cramped
         })
 
       const areAllCandidatesIncludingCrampedBlocked =
