@@ -1,8 +1,8 @@
 import { CapacityMeshNodeId, CapacityMeshNode } from "lib/types"
-import { DepthLimitedBfsCandidate } from "./types"
+import { ExploredPortPoint } from "./types"
 
 type Input = {
-  candidates: DepthLimitedBfsCandidate[]
+  candidates: ExploredPortPoint[]
   mapOfCapacityMeshNodeIdToRef: Map<CapacityMeshNodeId, CapacityMeshNode>
 }
 

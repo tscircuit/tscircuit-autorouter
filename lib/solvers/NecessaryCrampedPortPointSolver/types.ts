@@ -1,8 +1,8 @@
 import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
-export type DepthLimitedBfsCandidate = {
+export type ExploredPortPoint = {
   port: SegmentPortPoint
   depth: number
-  parent: DepthLimitedBfsCandidate | null
+  parent: ExploredPortPoint | null
   countOfCrampedPortPointsInPath: number
 }
