@@ -176,9 +176,10 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentTarget.capacityMeshNodeId}`
       }
 
-      crampedCandidates.sort((a, b) => costFunction(a) - costFunction(b))
-      this.candidatesAtDepth = crampedCandidates
-      const bestCandidate = crampedCandidates[0]
+      this.candidatesAtDepth = [...crampedCandidates].sort(
+        (a, b) => costFunction(a) - costFunction(b),
+      )
+      const bestCandidate = this.candidatesAtDepth[0]
       if (!bestCandidate || crampedCandidates.length === 0) {
         this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
       } else {

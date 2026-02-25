@@ -23,10 +23,6 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private resultExploredPortPoints: ExploredPortPoint[] = []
   private currentExploredPortPoints: ExploredPortPoint | null = null
   private visitedExploredPortPoints: SegmentPortPoint[] = []
-  private bestExploredPortPoints = new Map<
-    ExploredPortPoint["port"],
-    ExploredPortPoint
-  >()
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
@@ -53,7 +49,6 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         parent: null,
         countOfCrampedPortPointsInPath: seedPort.cramped ? 1 : 0,
       }
-      this.bestExploredPortPoints.set(seedPort, initialCandidate)
       this.queue.push(initialCandidate)
     }
     this.visitedExploredPortPoints = [
@@ -68,13 +63,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return
     }
 
-    const depthInThisStep = this.queue[0]!.depth
-
-    while (
-      this.queue.length > 0 &&
-      this.queue[0]!.depth === depthInThisStep &&
-      !this.solved
-    ) {
+    while (this.queue.length > 0) {
       this.currentExploredPortPoints = this.queue.shift()!
 
       if (this.currentExploredPortPoints.depth === this.input.depthLimit) {
@@ -106,44 +95,22 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           continue
         }
 
-        const nextCandidate: ExploredPortPoint = {
+        this.queue.push({
           port: nextPort,
           depth: this.currentExploredPortPoints.depth + 1,
           parent: this.currentExploredPortPoints,
           countOfCrampedPortPointsInPath:
             this.currentExploredPortPoints.countOfCrampedPortPointsInPath +
             (nextPort.cramped ? 1 : 0),
-        }
-        const existingCandidate = this.bestExploredPortPoints.get(nextPort)
-
-        if (
-          existingCandidate &&
-          existingCandidate.depth < nextCandidate.depth
-        ) {
-          continue
-        }
-        if (
-          existingCandidate &&
-          existingCandidate.depth === nextCandidate.depth &&
-          existingCandidate.countOfCrampedPortPointsInPath <=
-            nextCandidate.countOfCrampedPortPointsInPath
-        ) {
-          continue
-        }
-
-        this.bestExploredPortPoints.set(nextPort, nextCandidate)
-        this.queue.push(nextCandidate)
+        })
       }
-    }
-
-    if (this.queue.length === 0) {
-      this.solved = true
     }
 
     this.visitedExploredPortPoints = [
       ...new Set(this.queue.map((candidate) => candidate.port)),
       ...this.visitedExploredPortPoints,
     ]
+    this.solved = true
   }
 
   getOutput() {
