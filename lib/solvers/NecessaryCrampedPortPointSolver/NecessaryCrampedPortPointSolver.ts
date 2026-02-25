@@ -1,5 +1,5 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import { CapacityMeshNode, CapacityMeshNodeId, SimpleRouteJson } from "lib/types"
 import {
   SegmentPortPoint,
   SharedEdgeSegment,
@@ -9,10 +9,12 @@ import { getCandidatesAtDepthUsingBfs } from "./getCandidatesAtDepthUsingBfs"
 import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObstacles"
 import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 
 export type NecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
+  simpleRouteJson: SimpleRouteJson
 }
 
 /**
@@ -20,7 +22,7 @@ export type NecessaryCrampedPortPointSolverInput = {
  */
 export class NecessaryCrampedPortPointSolver extends BaseSolver {
   private unprocessedTargets: CapacityMeshNode[] = []
-  private obstacleCapacityMeshesNode: CapacityMeshNode[] = []
+  private targetNode: CapacityMeshNode[] = []
 
   private currentCapacityMeshNode: CapacityMeshNode | undefined
 
@@ -53,11 +55,26 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override setup(): void {
-    this.obstacleCapacityMeshesNode = this.input.capacityMeshNodes.filter(
+    this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
-    this.unprocessedTargets = [...this.obstacleCapacityMeshesNode]
+    const collectPointsToConnect = this.input.simpleRouteJson.connections.flatMap((connection) => connection.pointsToConnect)
+    this.targetNode = this.targetNode.filter((cmNode) => {
+      let pointIsInsideObstacle = false
+      collectPointsToConnect.forEach((point) => {
+        const distance = pointToBoxDistance(
+          point,
+          cmNode
+        )
+        if(distance <= 0){
+          pointIsInsideObstacle = true
+        }
+      })
+      return pointIsInsideObstacle
+    })
+    this.unprocessedTargets = [...this.targetNode]
     this.unprocessedTargets.sort((a, b) => a.center.x - b.center.x)
+
 
     for (const cmNode of this.input.capacityMeshNodes) {
       this.nodeMap.set(cmNode.capacityMeshNodeId, cmNode)
@@ -177,7 +194,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       points: [],
     }
 
-    for (const obstacleCmNode of this.obstacleCapacityMeshesNode) {
+    for (const obstacleCmNode of this.targetNode) {
       graphics.rects!.push({
         ...obstacleCmNode,
         fill:
