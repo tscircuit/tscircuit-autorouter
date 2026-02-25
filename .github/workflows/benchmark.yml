@@ -50,7 +50,7 @@ jobs:
         github.event.comment.author_association == 'COLLABORATOR'
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30
 
     steps:
       - name: React to comment and post running status
@@ -99,7 +99,7 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr-info.outputs.ref }}
+          ref: refs/pull/${{ github.event.issue.number }}/head
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
