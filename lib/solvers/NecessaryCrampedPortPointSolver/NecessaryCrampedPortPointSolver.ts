@@ -104,7 +104,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       mapOfCapacityMeshNodeIdToRef: this.mapOfCapacityMeshNodeIdToRef,
     })
 
-    if (areAllCandidatesBlocked) {
+    if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
       let candidatesAtDepthIncludingCramped = getCandidatesAtDepthUsingBfs({
         target: this.currentCapacityMeshNode,
         depthLimit: 2,
@@ -150,7 +150,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       )
       const bestCandidate = candidatesAtDepthIncludingCramped[0]
       this.candidatesAtDepth = candidatesAtDepthIncludingCramped
-      if (!bestCandidate) {
+      if (!bestCandidate || this.candidatesAtDepth.length === 0) {
         this.solved = false
         this.error = `No candidates found for capacity mesh node ${this.currentCapacityMeshNode.capacityMeshNodeId} even after including cramped port points`
       }
