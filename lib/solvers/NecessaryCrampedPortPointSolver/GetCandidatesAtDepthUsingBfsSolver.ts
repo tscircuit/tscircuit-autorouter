@@ -22,7 +22,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
   private queue: ExploredPortPoint[] = []
   private resultCandidates: ExploredPortPoint[] = []
   private currentCandidate: ExploredPortPoint | null = null
-  private visiblePortPoints: SegmentPortPoint[] = []
+  private visitedPortPoints: SegmentPortPoint[] = []
   private bestCandidateForPort = new Map<
     ExploredPortPoint["port"],
     ExploredPortPoint
@@ -56,7 +56,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       this.bestCandidateForPort.set(seedPort, initialCandidate)
       this.queue.push(initialCandidate)
     }
-    this.visiblePortPoints = [
+    this.visitedPortPoints = [
       ...new Set(this.queue.map((candidate) => candidate.port)),
     ]
   }
@@ -136,9 +136,9 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       this.solved = true
     }
 
-    this.visiblePortPoints = [
+    this.visitedPortPoints = [
       ...new Set(this.queue.map((candidate) => candidate.port)),
-      ...this.visiblePortPoints,
+      ...this.visitedPortPoints,
     ]
   }
 
@@ -152,7 +152,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
       rects: [],
     }
 
-    for (const candidate of this.visiblePortPoints) {
+    for (const candidate of this.visitedPortPoints) {
       if (!candidate.cramped) {
         graphics.points!.push({
           ...candidate,
