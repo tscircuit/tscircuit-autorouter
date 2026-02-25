@@ -1,8 +1,12 @@
-import { IsAllCandidatesBlockedByObstaclesInput } from "./types"
+import { CapacityMeshNodeId, CapacityMeshNode } from "lib/types"
+import { DepthLimitedBfsCandidate } from "./types"
 
-export const isAllCandidatesBlockedByObstacles = (
-  params: IsAllCandidatesBlockedByObstaclesInput,
-): boolean => {
+type Input = {
+  candidates: DepthLimitedBfsCandidate[]
+  mapOfCapacityMeshNodeIdToRef: Map<CapacityMeshNodeId, CapacityMeshNode>
+}
+
+export const isAllCandidatesBlockedByObstacles = (params: Input): boolean => {
   const { candidates, mapOfCapacityMeshNodeIdToRef } = params
   let allCandidatesBlocked = true
   for (const candidate of candidates) {

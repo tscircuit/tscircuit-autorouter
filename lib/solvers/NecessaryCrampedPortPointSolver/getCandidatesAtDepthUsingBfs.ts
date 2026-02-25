@@ -1,6 +1,22 @@
-import { DepthLimitedBfsCandidate, DepthTestInput } from "./types"
+import {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+} from "lib/types/capacity-mesh-types"
+import { DepthLimitedBfsCandidate } from "./types"
+import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
-export const getCandidatesAtDepthUsingBfs = (params: DepthTestInput) => {
+type Input = {
+  target: CapacityMeshNode
+  mapOfCapacityMeshNodeIdToSegmentPortPoints: Map<
+    CapacityMeshNodeId,
+    SegmentPortPoint[]
+  >
+  mapOfCapacityMeshNodeIdToRef: Map<CapacityMeshNodeId, CapacityMeshNode>
+  depthLimit: number
+  shouldIgnoreCrampedPortPoints: boolean
+}
+
+export const getCandidatesAtDepthUsingBfs = (params: Input) => {
   const resultCandidates = []
   const bestCandidateForPort = new Map<
     DepthLimitedBfsCandidate["port"],
