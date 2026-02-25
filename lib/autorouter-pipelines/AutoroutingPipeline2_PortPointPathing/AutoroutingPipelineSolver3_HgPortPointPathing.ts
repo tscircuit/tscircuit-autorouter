@@ -516,6 +516,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const necessaryCrampedPortPointSolverViz = this.necessaryCrampedPortPointSolver?.visualize()
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
 
@@ -591,6 +592,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
       highDensityStitchViz,
       traceSimplificationViz,
+      necessaryCrampedPortPointSolverViz,
       this.solved
         ? combineVisualizations(
             problemViz,

@@ -225,6 +225,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           edges: cms.capacityEdges || [],
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
+          shouldReturnCrampedPortPoints: false,
         },
       ],
     ),

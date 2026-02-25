@@ -36,6 +36,10 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   >()
   constructor(private input: NecessaryCrampedPortPointSolverInput) {
     super()
+    /**
+     * TODO: AutoroutingPipeline2_HgPortPointSolver does not call setup
+     * Add support for calling setup in the pipeline runner and remove this call to setup in the constructor.
+     */
     this.setup()
   }
 

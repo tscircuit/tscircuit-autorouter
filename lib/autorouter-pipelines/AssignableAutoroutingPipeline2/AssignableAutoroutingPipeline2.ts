@@ -199,6 +199,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           edges: cms.capacityEdges || [],
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
+          shouldReturnCrampedPortPoints: false,
         },
       ],
     ),

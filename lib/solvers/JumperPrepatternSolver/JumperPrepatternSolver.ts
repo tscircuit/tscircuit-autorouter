@@ -186,6 +186,7 @@ export class JumperPrepatternSolver extends BaseSolver {
           edges: solver.capacityEdges,
           traceWidth: solver.traceWidth,
           colorMap: solver.colorMap,
+          shouldReturnCrampedPortPoints: false,
         },
       ],
     ),
