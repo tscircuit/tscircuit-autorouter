@@ -1,14 +1,19 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
-import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import {
+  SegmentPortPoint,
+  SharedEdgeSegment,
+} from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { GraphicsObject } from "graphics-debug"
 import { getCandidatesAtDepthUsingBfs } from "./getCandidatesAtDepthUsingBfs"
 import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObstacles"
 import { costFunction } from "./costFunction"
-import {
-  DepthLimitedBfsCandidate,
-  NecessaryCrampedPortPointSolverInput,
-} from "./types"
+import { DepthLimitedBfsCandidate } from "./types"
+
+export type NecessaryCrampedPortPointSolverInput = {
+  segmentPortPoints: SharedEdgeSegment[]
+  capacityMeshNodes: CapacityMeshNode[]
+}
 
 /**
  * This solver filters out cramped port points that are not necessary.
@@ -58,19 +63,21 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       this.mapOfCapacityMeshNodeIdToRef.set(cmNode.capacityMeshNodeId, cmNode)
     }
 
-    for (const segmentPortPoint of this.input.segmentPortPoints) {
-      const cmNodeIds = segmentPortPoint.nodeIds
-      for (const id of cmNodeIds) {
-        const cmNode = this.mapOfCapacityMeshNodeIdToRef.get(id)
-        if (!cmNode) {
-          throw new Error(`Could not find capacity mesh node for id ${id}`)
+    for (const sharedEdgeSegment of this.input.segmentPortPoints) {
+      for (const segmentPortPoint of sharedEdgeSegment.portPoints) {
+        const cmNodeIds = segmentPortPoint.nodeIds
+        for (const id of cmNodeIds) {
+          const cmNode = this.mapOfCapacityMeshNodeIdToRef.get(id)
+          if (!cmNode) {
+            throw new Error(`Could not find capacity mesh node for id ${id}`)
+          }
+          const existingSegmentPortPoints =
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
+          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
+            ...existingSegmentPortPoints,
+            segmentPortPoint,
+          ])
         }
-        const existingSegmentPortPoints =
-          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
-        this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
-          ...existingSegmentPortPoints,
-          segmentPortPoint,
-        ])
       }
     }
   }
@@ -152,17 +159,16 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     }
   }
 
-  override getOutput(): SegmentPortPoint[] {
-    const allPortPoints = this.input.segmentPortPoints
-    const portPointsIncludingCrampedPortPointsToKeep = allPortPoints.filter(
-      (portPoint) => {
+  override getOutput(): SharedEdgeSegment[] {
+    return this.input.segmentPortPoints.map((segment) => ({
+      ...segment,
+      portPoints: segment.portPoints.filter((portPoint) => {
         if (portPoint.cramped) {
           return this.crampedPortPointsToKeep.has(portPoint)
         }
         return true
-      },
-    )
-    return portPointsIncludingCrampedPortPointsToKeep
+      }),
+    }))
   }
 
   override visualize(): GraphicsObject {

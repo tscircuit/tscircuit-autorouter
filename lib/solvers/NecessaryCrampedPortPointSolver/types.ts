@@ -1,8 +1,11 @@
 import { CapacityMeshNode } from "lib/types"
-import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import {
+  SegmentPortPoint,
+  SharedEdgeSegment,
+} from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 export type NecessaryCrampedPortPointSolverInput = {
-  segmentPortPoints: SegmentPortPoint[]
+  segmentPortPoints: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
 }
 

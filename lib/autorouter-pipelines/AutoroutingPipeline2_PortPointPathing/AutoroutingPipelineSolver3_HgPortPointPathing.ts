@@ -253,8 +253,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         )
 
         // Add port points from the available segment point solver
-        const segmentPointSolver = cms.availableSegmentPointSolver!
-        for (const segment of segmentPointSolver.sharedEdgeSegments) {
+        const segmentPointSolver = cms.necessaryCrampedPortPointSolver!
+        for (const segment of segmentPointSolver.getOutput()) {
           for (const segmentPortPoint of segment.portPoints) {
             const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
             const inputPortPoint: InputPortPoint = {

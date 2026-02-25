@@ -469,8 +469,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     return this.getAvailablePortPointsBetweenNodes(nodeId1, nodeId2).length
   }
 
-  getOutput(): SegmentPortPoint[] {
-    return this.portPoints
+  getOutput(): SharedEdgeSegment[] {
+    return this.sharedEdgeSegments
   }
 
   visualize(): GraphicsObject {
