@@ -13,9 +13,9 @@ import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObs
 import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
-import { GetCandidatesAtDepthUsingBfsSolver } from "./GetCandidatesAtDepthUsingBfsSolver"
+import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
-export type NecessaryCrampedPortPointSolverInput = {
+export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
@@ -24,7 +24,7 @@ export type NecessaryCrampedPortPointSolverInput = {
 /**
  * This solver filters out cramped port points that are not necessary.
  */
-export class NecessaryCrampedPortPointSolver extends BaseSolver {
+export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private unprocessedTargets: CapacityMeshNode[] = []
   private targetNode: CapacityMeshNode[] = []
 
@@ -34,7 +34,8 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
 
-  override activeSubSolver: GetCandidatesAtDepthUsingBfsSolver | null = null
+  override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
+    null
 
   /**
    * NOTE: I do not like maps, add a capacityMeshNode ref inside SegmentPortPoints
@@ -45,7 +46,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     CapacityMeshNodeId,
     SegmentPortPoint[]
   >()
-  constructor(private input: NecessaryCrampedPortPointSolverInput) {
+  constructor(private input: MultiTargetNecessaryCrampedPortPointSolverInput) {
     super()
     /**
      * TODO: AutoroutingPipeline2_HgPortPointSolver does not call setup
@@ -55,7 +56,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   getSolverName(): string {
-    return "necessaryCrampedPortPointSolver"
+    return "multiTargetNecessaryCrampedPortPointSolver"
   }
 
   override _setup(): void {
@@ -131,14 +132,15 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
 
         if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
           this.isRunningCrampedPass = true
-          this.activeSubSolver = new GetCandidatesAtDepthUsingBfsSolver({
-            target: this.currentTarget,
-            depthLimit: 2,
-            shouldIgnoreCrampedPortPoints: false,
-            mapOfCapacityMeshNodeIdToSegmentPortPoints:
-              this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
-            mapOfCapacityMeshNodeIdToRef: this.nodeMap,
-          })
+          this.activeSubSolver =
+            new SingleTargetNecessaryCrampedPortPointSolver({
+              target: this.currentTarget,
+              depthLimit: 2,
+              shouldIgnoreCrampedPortPoints: false,
+              mapOfCapacityMeshNodeIdToSegmentPortPoints:
+                this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+              mapOfCapacityMeshNodeIdToRef: this.nodeMap,
+            })
           return
         }
 
@@ -196,7 +198,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       }
       this.isRunningCrampedPass = false
       this.candidatesAtDepth = []
-      this.activeSubSolver = new GetCandidatesAtDepthUsingBfsSolver({
+      this.activeSubSolver = new SingleTargetNecessaryCrampedPortPointSolver({
         target: this.currentTarget,
         depthLimit: 2,
         shouldIgnoreCrampedPortPoints: true,

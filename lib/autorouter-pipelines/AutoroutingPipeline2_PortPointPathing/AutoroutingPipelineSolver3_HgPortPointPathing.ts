@@ -39,8 +39,11 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { NecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/NecessaryCrampedPortPointSolver"
 import { calculateOptimalCapacityDepth } from "dist"
+import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
 import { SimpleRouteJson, CapacityMeshNode, CapacityMeshEdge, SimplifiedPcbTraces, SimplifiedPcbTrace } from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
@@ -103,7 +106,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
-  necessaryCrampedPortPointSolver?: NecessaryCrampedPortPointSolver
+  necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -223,7 +226,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep(
       "necessaryCrampedPortPointSolver",
-      NecessaryCrampedPortPointSolver,
+      MultiTargetNecessaryCrampedPortPointSolver,
       (cms) => [
         {
           capacityMeshNodes: cms.capacityNodes!,

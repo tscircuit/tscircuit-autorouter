@@ -7,7 +7,7 @@ import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmen
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 
-type GetCandidatesAtDepthUsingBfsSolverInput = {
+type SingleTargetNecessaryCrampedPortPointSolverInput = {
   target: CapacityMeshNode
   mapOfCapacityMeshNodeIdToSegmentPortPoints: Map<
     CapacityMeshNodeId,
@@ -18,7 +18,7 @@ type GetCandidatesAtDepthUsingBfsSolverInput = {
   shouldIgnoreCrampedPortPoints: boolean
 }
 
-export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
+export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private queue: ExploredPortPoint[] = []
   private resultExploredPortPoints: ExploredPortPoint[] = []
   private currentExploredPortPoints: ExploredPortPoint | null = null
@@ -28,7 +28,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
     ExploredPortPoint
   >()
 
-  constructor(private input: GetCandidatesAtDepthUsingBfsSolverInput) {
+  constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
     if (this.input.depthLimit < 1) {
       throw new Error("Depth limit must be at least 1")
@@ -37,7 +37,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
   }
 
   override getSolverName() {
-    return "getCandidatesAtDepthUsingBfsSolver"
+    return "singleTargetNecessaryCrampedPortPointSolver"
   }
 
   override _setup(): void {
