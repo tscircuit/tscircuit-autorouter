@@ -165,6 +165,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       !node1._containsTarget &&
       !node2._containsTarget
     ) {
+      if (!this.shouldReturnCrampedPortPoints) {
+        return null
+      }
       const crampedPortPoints: SegmentPortPoint[] = []
       for (const z of availableZ) {
         crampedPortPoints.push({
@@ -178,9 +181,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           distToCentermostPortOnZ: 0,
           cramped: true,
         })
-      }
-      if (!this.shouldReturnCrampedPortPoints) {
-        return null
       }
       return {
         edgeId: edge.capacityMeshEdgeId,
