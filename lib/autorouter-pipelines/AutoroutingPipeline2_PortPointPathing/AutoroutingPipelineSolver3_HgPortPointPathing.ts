@@ -39,17 +39,11 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { getColorMap } from "../../solvers/colors"
-import type {
-  CapacityMeshEdge,
-  CapacityMeshNode,
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-  SimplifiedPcbTraces,
-  TraceId,
-} from "../../types"
-import { combineVisualizations } from "../../utils/combineVisualizations"
-import { calculateOptimalCapacityDepth } from "../../utils/getTunedTotalCapacity1"
+import { NecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/NecessaryCrampedPortPointSolver"
+import { calculateOptimalCapacityDepth } from "dist"
+import { getColorMap } from "lib/solvers/colors"
+import { SimpleRouteJson, CapacityMeshNode, CapacityMeshEdge, SimplifiedPcbTraces, SimplifiedPcbTrace } from "lib/types"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -109,6 +103,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
+  necessaryCrampedPortPointSolver?: NecessaryCrampedPortPointSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -222,6 +217,17 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           edges: cms.capacityEdges || [],
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
+          shouldReturnCrampedPortPoints: true,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "necessaryCrampedPortPointSolver",
+      NecessaryCrampedPortPointSolver,
+      (cms) => [
+        {
+          capacityMeshNodes: cms.capacityNodes!,
+          segmentPortPoints: cms.availableSegmentPointSolver!.getOutput(),
         },
       ],
     ),

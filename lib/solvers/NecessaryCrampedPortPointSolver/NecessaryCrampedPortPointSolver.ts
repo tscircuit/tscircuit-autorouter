@@ -1,0 +1,325 @@
+import { BaseSolver } from "@tscircuit/solver-utils"
+import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { GraphicsObject } from "graphics-debug"
+
+type NecessaryCrampedPortPointSolverInput = {
+  segmentPortPoints: SegmentPortPoint[]
+  capacityMeshNodes: CapacityMeshNode[]
+}
+
+/**
+ * This solver filters out cramped port points that are not necessary.
+ */
+export class NecessaryCrampedPortPointSolver extends BaseSolver {
+  private obstacleCapacityMeshesNodeQueue: CapacityMeshNode[] = []
+  private obstacleCapacityMeshesNode: CapacityMeshNode[] = []
+
+  private currentCapacityMeshNode: CapacityMeshNode | undefined
+
+  private crampedPortPointsToKeep: Set<SegmentPortPoint> = new Set()
+  private candidatesAtDepth: DepthLimitedBfsCandidate[] = []
+
+  /**
+   * NOTE: I do not like maps, add a capacityMeshNode ref inside SegmentPortPoints
+   * in future so we do not need the capacityMeshNodeId
+   */
+  private mapOfCapacityMeshNodeIdToRef = new Map<
+    CapacityMeshNodeId,
+    CapacityMeshNode
+  >()
+  private mapOfCapacityMeshNodeIdToSegmentPortPoints = new Map<
+    CapacityMeshNodeId,
+    SegmentPortPoint[]
+  >()
+  constructor(private input: NecessaryCrampedPortPointSolverInput) {
+    super()
+    this.setup()
+  }
+
+  getSolverName(): string {
+    return "necessaryCrampedPortPointSolver"
+  }
+
+  override setup(): void {
+    this.obstacleCapacityMeshesNode = this.input.capacityMeshNodes.filter(
+      (cm) => cm._containsObstacle,
+    )
+    this.obstacleCapacityMeshesNodeQueue = [...this.obstacleCapacityMeshesNode]
+    this.obstacleCapacityMeshesNodeQueue.sort(
+      (a, b) => a.center.x - b.center.x,
+    )
+
+    for (const cmNode of this.input.capacityMeshNodes) {
+      this.mapOfCapacityMeshNodeIdToRef.set(cmNode.capacityMeshNodeId, cmNode)
+    }
+
+    for (const segmentPortPoint of this.input.segmentPortPoints) {
+      const cmNodeIds = segmentPortPoint.nodeIds
+      for (const id of cmNodeIds) {
+        const cmNode = this.mapOfCapacityMeshNodeIdToRef.get(id)
+        if (!cmNode) {
+          throw new Error(`Could not find capacity mesh node for id ${id}`)
+        }
+        const existingSegmentPortPoints =
+          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
+        this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
+          ...existingSegmentPortPoints,
+          segmentPortPoint,
+        ])
+      }
+    }
+  }
+
+  override step(): void {
+    this.currentCapacityMeshNode = this.obstacleCapacityMeshesNodeQueue.shift()
+
+    if (!this.currentCapacityMeshNode) {
+      this.solved = true
+      return
+    }
+
+    this.candidatesAtDepth = getCandidatesAtDepthUsingBfs({
+      target: this.currentCapacityMeshNode,
+      depthLimit: 2,
+      shouldIgnoreCrampedPortPoints: true,
+      mapOfCapacityMeshNodeIdToSegmentPortPoints:
+        this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+      mapOfCapacityMeshNodeIdToRef: this.mapOfCapacityMeshNodeIdToRef,
+    })
+
+    const areAllCandidatesBlocked = isAllCandidatesBlockedByObstacles({
+      candidates: this.candidatesAtDepth,
+      mapOfCapacityMeshNodeIdToRef: this.mapOfCapacityMeshNodeIdToRef,
+    })
+
+    if (areAllCandidatesBlocked) {
+      let candidatesAtDepthIncludingCramped = getCandidatesAtDepthUsingBfs({
+        target: this.currentCapacityMeshNode,
+        depthLimit: 2,
+        shouldIgnoreCrampedPortPoints: false,
+        mapOfCapacityMeshNodeIdToSegmentPortPoints:
+          this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+        mapOfCapacityMeshNodeIdToRef: this.mapOfCapacityMeshNodeIdToRef,
+      })
+
+      candidatesAtDepthIncludingCramped =
+        candidatesAtDepthIncludingCramped.filter((candidates) => {
+          const port = candidates.port
+          const capacityMeshNodes = port.nodeIds.map((nodeId) => {
+            const cmNode = this.mapOfCapacityMeshNodeIdToRef.get(nodeId)
+            if (!cmNode) {
+              throw new Error(
+                `Could not find capacity mesh node for id ${nodeId}`,
+              )
+            }
+            return cmNode
+          })
+          return capacityMeshNodes.some((cmNode) => !cmNode._containsObstacle)
+        })
+
+      candidatesAtDepthIncludingCramped.sort(
+        (a, b) => costFunction(a) - costFunction(b),
+      )
+      const bestCandidate = candidatesAtDepthIncludingCramped[0]
+      this.candidatesAtDepth = candidatesAtDepthIncludingCramped
+      if (!bestCandidate) {
+        this.solved = false
+        throw new Error(
+          "No candidates found even after including cramped port points",
+        )
+      }
+
+      this.crampedPortPointsToKeep.add(bestCandidate.port)
+    }
+  }
+
+  override getOutput(): SegmentPortPoint[] {
+    const allPortPoints = this.input.segmentPortPoints
+    const portPointsIncludingCrampedPortPointsToKeep = allPortPoints.filter(
+      (portPoint) => {
+        if (portPoint.cramped) {
+          return this.crampedPortPointsToKeep.has(portPoint)
+        }
+        return true
+      },
+    )
+    return portPointsIncludingCrampedPortPointsToKeep
+  }
+
+  override visualize(): GraphicsObject {
+    const graphics: GraphicsObject = {
+      rects: [],
+      points: [],
+    }
+
+    for (const obstacleCmNode of this.obstacleCapacityMeshesNode) {
+      graphics.rects!.push({
+        ...obstacleCmNode,
+        fill:
+          this.currentCapacityMeshNode?.capacityMeshNodeId ===
+          obstacleCmNode.capacityMeshNodeId
+            ? "rgba(255, 0, 0, 0.5)"
+            : "rgba(255, 0, 0, 0.2)",
+      })
+    }
+
+    for (const candidate of this.candidatesAtDepth) {
+      if (candidate.port.cramped) {
+        graphics.rects!.push({
+          center: {
+            x: candidate.port.x,
+            y: candidate.port.y,
+          },
+          width: 0.1,
+          height: 0.1,
+          fill: "rgba(0, 255, 0, 1)",
+        })
+      } else {
+        graphics.points!.push({
+          ...candidate.port,
+          color: "rgba(0, 255, 0, 1)",
+        })
+      }
+    }
+
+    return graphics
+  }
+}
+
+type DepthTestInput = {
+  target: CapacityMeshNode
+  mapOfCapacityMeshNodeIdToSegmentPortPoints: Map<
+    CapacityMeshNodeId,
+    SegmentPortPoint[]
+  >
+  mapOfCapacityMeshNodeIdToRef: Map<CapacityMeshNodeId, CapacityMeshNode>
+  depthLimit: number
+  shouldIgnoreCrampedPortPoints: boolean
+}
+
+type DepthLimitedBfsCandidate = {
+  port: SegmentPortPoint
+  depth: number
+  parent: DepthLimitedBfsCandidate | null
+  countOfCrampedPortPointsInPath: number
+}
+
+const getCandidatesAtDepthUsingBfs = (params: DepthTestInput) => {
+  const resultCandidates = []
+  const bestCandidateForPort = new Map<
+    SegmentPortPoint,
+    DepthLimitedBfsCandidate
+  >()
+  const {
+    target,
+    depthLimit,
+    mapOfCapacityMeshNodeIdToSegmentPortPoints,
+    mapOfCapacityMeshNodeIdToRef,
+    shouldIgnoreCrampedPortPoints,
+  } = params
+  if (depthLimit < 1) {
+    throw new Error("Depth limit must be at least 1")
+  }
+
+  const queue: DepthLimitedBfsCandidate[] =
+    mapOfCapacityMeshNodeIdToSegmentPortPoints
+      .get(target.capacityMeshNodeId)!
+      .filter((e) => !shouldIgnoreCrampedPortPoints || !e.cramped)
+      .map((spp) => {
+        const initialCandidate = {
+          port: spp,
+          depth: 1,
+          parent: null,
+          countOfCrampedPortPointsInPath: spp.cramped ? 1 : 0,
+        }
+        bestCandidateForPort.set(spp, initialCandidate)
+        return initialCandidate
+      })
+
+  while (queue.length > 0) {
+    const currentCandidate = queue.shift()!
+    const { port, depth } = currentCandidate
+
+    if (depth === depthLimit) {
+      resultCandidates.push(currentCandidate)
+      continue
+    }
+
+    const nextNodes = port.nodeIds.map((nodeId) => {
+      const cmNode = mapOfCapacityMeshNodeIdToRef.get(nodeId)
+      if (!cmNode) {
+        throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
+      }
+      return cmNode
+    })
+
+    const nextPorts = nextNodes.flatMap(
+      (node) =>
+        mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
+          node.capacityMeshNodeId,
+        )!,
+    )
+
+    for (const nextPort of nextPorts) {
+      if (shouldIgnoreCrampedPortPoints && nextPort.cramped) {
+        continue
+      }
+      const nextCandidate: DepthLimitedBfsCandidate = {
+        port: nextPort,
+        depth: depth + 1,
+        parent: currentCandidate,
+        countOfCrampedPortPointsInPath:
+          currentCandidate.countOfCrampedPortPointsInPath +
+          (nextPort.cramped ? 1 : 0),
+      }
+      const existingCandidate = bestCandidateForPort.get(nextPort)
+
+      if (existingCandidate && existingCandidate.depth < nextCandidate.depth) {
+        continue
+      }
+      if (
+        existingCandidate &&
+        existingCandidate.depth === nextCandidate.depth &&
+        existingCandidate.countOfCrampedPortPointsInPath <=
+          nextCandidate.countOfCrampedPortPointsInPath
+      ) {
+        continue
+      }
+
+      bestCandidateForPort.set(nextPort, nextCandidate)
+      queue.push(nextCandidate)
+    }
+  }
+
+  return resultCandidates
+}
+
+const costFunction = (candidate: DepthLimitedBfsCandidate): number => {
+  return candidate.depth + candidate.countOfCrampedPortPointsInPath * 1000
+}
+
+const isAllCandidatesBlockedByObstacles = (params: {
+  candidates: DepthLimitedBfsCandidate[]
+  mapOfCapacityMeshNodeIdToRef: Map<CapacityMeshNodeId, CapacityMeshNode>
+}): boolean => {
+  const { candidates, mapOfCapacityMeshNodeIdToRef } = params
+  let allCandidatesBlocked = true
+  for (const candidate of candidates) {
+    let isCurrentCandidateBlocked = false
+    const port = candidate.port
+    port.nodeIds.forEach((nodeId) => {
+      const cmNode = mapOfCapacityMeshNodeIdToRef.get(nodeId)
+      if (!cmNode) {
+        throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
+      }
+      if (cmNode._containsObstacle) {
+        isCurrentCandidateBlocked = true
+      }
+    })
+    if (!isCurrentCandidateBlocked) {
+      allCandidatesBlocked = false
+    }
+  }
+  return allCandidatesBlocked
+}

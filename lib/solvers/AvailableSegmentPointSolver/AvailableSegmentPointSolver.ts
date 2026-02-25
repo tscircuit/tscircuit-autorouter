@@ -20,6 +20,11 @@ export interface SegmentPortPoint {
   rootConnectionName?: string
   /** XY distance to the centermost port on this Z level (centermost port has distance 0) */
   distToCentermostPortOnZ: number
+  /**
+   * This is special port point that is created in narrow gaps, and only kept when otherwise reaching the obstacle is impossible
+   * ideally this port points should be discarded but we need them in some cases
+   */
+  cramped: boolean
 }
 
 export interface SharedEdgeSegment {
@@ -63,11 +68,13 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   /** Map from edgeId to SharedEdgeSegment for quick lookup */
   edgeSegmentMap: Map<string, SharedEdgeSegment> = new Map()
+  portPoints: SegmentPortPoint[]
 
   /** Map from segmentPortPointId to SegmentPortPoint */
   portPointMap: Map<string, SegmentPortPoint> = new Map()
 
   colorMap: Record<string, string>
+  shouldReturnCrampedPortPoints: boolean
 
   // edgeMargin = 0.25
 
@@ -77,18 +84,21 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     traceWidth,
     obstacleMargin,
     colorMap,
+    shouldReturnCrampedPortPoints,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
     traceWidth: number
     obstacleMargin?: number
     colorMap?: Record<string, string>
+    shouldReturnCrampedPortPoints: boolean
   }) {
     super()
     this.nodes = nodes
     this.edges = edges
     this.traceWidth = traceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
+    this.shouldReturnCrampedPortPoints = shouldReturnCrampedPortPoints
     // Port spacing: each trace extends traceWidth/2 from center, plus obstacleMargin clearance
     // Center-to-center distance = traceWidth + obstacleMargin
     this.minPortSpacing = this.traceWidth + this.obstacleMargin
@@ -96,6 +106,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
     this.nodeEdgeMap = getNodeEdgeMap(edges)
+
+    this.portPoints = []
 
     // This solver completes in a single step
     this.MAX_ITERATIONS = 1
@@ -118,6 +130,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       if (segment) {
         this.sharedEdgeSegments.push(segment)
         this.edgeSegmentMap.set(edge.capacityMeshEdgeId, segment)
+        this.portPoints.push(...segment.portPoints)
 
         for (const portPoint of segment.portPoints) {
           this.portPointMap.set(portPoint.segmentPortPointId, portPoint)
@@ -156,9 +169,32 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       !node1._containsTarget &&
       !node2._containsTarget
     ) {
-      return null
+      const crampedPortPoints: SegmentPortPoint[] = []
+      for (const z of availableZ) {
+        crampedPortPoints.push({
+          segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}_cramped`,
+          x: (overlap.start.x + overlap.end.x) / 2,
+          y: (overlap.start.y + overlap.end.y) / 2,
+          availableZ: [z],
+          nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
+          edgeId: edge.capacityMeshEdgeId,
+          connectionName: null,
+          distToCentermostPortOnZ: 0,
+          cramped: true,
+        })
+      }
+      if (!this.shouldReturnCrampedPortPoints) {
+        return null
+      }
+      return {
+        edgeId: edge.capacityMeshEdgeId,
+        nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
+        start: overlap.start,
+        end: overlap.end,
+        availableZ,
+        portPoints: crampedPortPoints,
+      }
     }
-
     // At minimum we need 1 port point, at maximum we space them minPortSpacing apart
     let maxPortPoints = Math.max(
       1,
@@ -239,6 +275,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ,
+          cramped: false,
         }
         portPoints.push(portPoint)
       }
@@ -432,6 +469,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     return this.getAvailablePortPointsBetweenNodes(nodeId1, nodeId2).length
   }
 
+  getOutput(): SegmentPortPoint[] {
+    return this.portPoints
+  }
+
   visualize(): GraphicsObject {
     const graphics: GraphicsObject = {
       lines: [],
@@ -453,21 +494,32 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           ? (this.colorMap[portPoint.connectionName] ?? "blue")
           : "rgba(0, 200, 0, 0.7)"
 
-        graphics.circles!.push({
-          center: { x: portPoint.x, y: portPoint.y },
-          radius: this.traceWidth / 2,
-          fill: color,
-          layer: `z${portPoint.availableZ.join(",")}`,
-          label: [
-            portPoint.segmentPortPointId,
-            portPoint.connectionName,
-            portPoint.availableZ.join(","),
-            `cd: ${portPoint.distToCentermostPortOnZ}`,
-            `connects: ${portPoint.nodeIds.join(",")}`,
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        })
+        if (!portPoint.cramped) {
+          graphics.circles!.push({
+            center: { x: portPoint.x, y: portPoint.y },
+            radius: this.traceWidth / 2,
+            fill: color,
+            layer: `z${portPoint.availableZ.join(",")}`,
+            label: [
+              portPoint.segmentPortPointId,
+              portPoint.connectionName,
+              portPoint.availableZ.join(","),
+              `cd: ${portPoint.distToCentermostPortOnZ}`,
+              `connects: ${portPoint.nodeIds.join(",")}`,
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          })
+        } else {
+          graphics.rects!.push({
+            center: { x: portPoint.x, y: portPoint.y },
+            width: 0.1,
+            height: 0.1,
+            fill: color,
+            layer: `z${portPoint.availableZ.join(",")}`,
+            label: `cramped ${portPoint.segmentPortPointId}`,
+          })
+        }
       }
     }
 
