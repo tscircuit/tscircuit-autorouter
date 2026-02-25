@@ -68,7 +68,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   /** Map from edgeId to SharedEdgeSegment for quick lookup */
   edgeSegmentMap: Map<string, SharedEdgeSegment> = new Map()
-  portPoints: SegmentPortPoint[]
 
   /** Map from segmentPortPointId to SegmentPortPoint */
   portPointMap: Map<string, SegmentPortPoint> = new Map()
@@ -107,8 +106,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
     this.nodeEdgeMap = getNodeEdgeMap(edges)
 
-    this.portPoints = []
-
     // This solver completes in a single step
     this.MAX_ITERATIONS = 1
   }
@@ -130,7 +127,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       if (segment) {
         this.sharedEdgeSegments.push(segment)
         this.edgeSegmentMap.set(edge.capacityMeshEdgeId, segment)
-        this.portPoints.push(...segment.portPoints)
 
         for (const portPoint of segment.portPoints) {
           this.portPointMap.set(portPoint.segmentPortPointId, portPoint)
