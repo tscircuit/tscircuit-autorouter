@@ -586,13 +586,13 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       edgeViz,
       deadEndViz,
       availableSegmentPointViz,
+      necessaryCrampedPortPointSolverViz,
       portPointPathingViz,
       multiSectionOptViz,
       uniformPortDistributionViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
       highDensityStitchViz,
       traceSimplificationViz,
-      necessaryCrampedPortPointSolverViz,
       this.solved
         ? combineVisualizations(
             problemViz,
