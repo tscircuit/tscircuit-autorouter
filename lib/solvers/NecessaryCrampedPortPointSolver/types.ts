@@ -1,6 +1,4 @@
-import {
-  SegmentPortPoint,
-} from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 export type DepthLimitedBfsCandidate = {
   port: SegmentPortPoint
