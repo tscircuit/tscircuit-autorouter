@@ -6,6 +6,7 @@ An MIT-licensed full-pipeline PCB autorouter library for node.js and TypeScript 
 
 Want to understand how the autorouter works? Check out a stage-by-stage breakdown with videos in [this autorouter walk through](./docs/blog-post/blog-post.md)
 
+
 ## How to file a bug report
 
 1. You should have [created a bug report via the tscircuit errors tab](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
