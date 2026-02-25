@@ -11,7 +11,7 @@ import { costFunction } from "./costFunction"
 import { DepthLimitedBfsCandidate } from "./types"
 
 export type NecessaryCrampedPortPointSolverInput = {
-  segmentPortPoints: SharedEdgeSegment[]
+  sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
 }
 
@@ -63,7 +63,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       this.mapOfCapacityMeshNodeIdToRef.set(cmNode.capacityMeshNodeId, cmNode)
     }
 
-    for (const sharedEdgeSegment of this.input.segmentPortPoints) {
+    for (const sharedEdgeSegment of this.input.sharedEdgeSegments) {
       for (const segmentPortPoint of sharedEdgeSegment.portPoints) {
         const cmNodeIds = segmentPortPoint.nodeIds
         for (const id of cmNodeIds) {
@@ -160,7 +160,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override getOutput(): SharedEdgeSegment[] {
-    return this.input.segmentPortPoints.map((segment) => ({
+    return this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.filter((portPoint) => {
         if (portPoint.cramped) {
