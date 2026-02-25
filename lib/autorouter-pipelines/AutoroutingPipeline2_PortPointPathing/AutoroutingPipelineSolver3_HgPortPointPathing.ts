@@ -227,7 +227,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       (cms) => [
         {
           capacityMeshNodes: cms.capacityNodes!,
-          segmentPortPoints: cms.availableSegmentPointSolver!.getOutput(),
+          sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
         },
       ],
     ),
