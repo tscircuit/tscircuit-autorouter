@@ -51,14 +51,14 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
      * TODO: AutoroutingPipeline2_HgPortPointSolver does not call setup
      * Add support for calling setup in the pipeline runner and remove this call to setup in the constructor.
      */
-    this.setup()
+    this._setup()
   }
 
   getSolverName(): string {
     return "necessaryCrampedPortPointSolver"
   }
 
-  override setup(): void {
+  override _setup(): void {
     this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
@@ -102,9 +102,9 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     }
   }
 
-  override step(): void {
+  override _step(): void {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver._step()
       if (!this.activeSubSolver.solved) {
         return
       }

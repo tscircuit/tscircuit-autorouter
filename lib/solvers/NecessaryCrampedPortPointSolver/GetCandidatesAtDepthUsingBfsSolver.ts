@@ -33,14 +33,14 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
     if (this.input.depthLimit < 1) {
       throw new Error("Depth limit must be at least 1")
     }
-    this.setup()
+    this._setup()
   }
 
   override getSolverName() {
     return "getCandidatesAtDepthUsingBfsSolver"
   }
 
-  override setup(): void {
+  override _setup(): void {
     const seedPorts =
       this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
         this.input.target.capacityMeshNodeId,
@@ -61,7 +61,7 @@ export class GetCandidatesAtDepthUsingBfsSolver extends BaseSolver {
     ]
   }
 
-  override step() {
+  override _step() {
     if (this.queue.length === 0) {
       this.currentExploredPortPoints = null
       this.solved = true
