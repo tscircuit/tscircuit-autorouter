@@ -1,15 +1,19 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { CapacityMeshNode, CapacityMeshNodeId, SimpleRouteJson } from "lib/types"
+import {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+  SimpleRouteJson,
+} from "lib/types"
 import {
   SegmentPortPoint,
   SharedEdgeSegment,
 } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { GraphicsObject } from "graphics-debug"
-import { getCandidatesAtDepthUsingBfs } from "./getCandidatesAtDepthUsingBfs"
+import { GraphicsObject, mergeGraphics } from "graphics-debug"
 import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObstacles"
 import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
+import { GetCandidatesAtDepthUsingBfsSolver } from "./GetCandidatesAtDepthUsingBfsSolver"
 
 export type NecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
@@ -24,19 +28,19 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   private unprocessedTargets: CapacityMeshNode[] = []
   private targetNode: CapacityMeshNode[] = []
 
-  private currentCapacityMeshNode: CapacityMeshNode | undefined
+  private currentTarget: CapacityMeshNode | undefined
 
   private crampedPortPointsToKeep: Set<SegmentPortPoint> = new Set()
   private candidatesAtDepth: ExploredPortPoint[] = []
+  private isRunningCrampedPass = false
+
+  override activeSubSolver: GetCandidatesAtDepthUsingBfsSolver | null = null
 
   /**
    * NOTE: I do not like maps, add a capacityMeshNode ref inside SegmentPortPoints
    * in future so we do not need the capacityMeshNodeId
    */
-  private nodeMap = new Map<
-    CapacityMeshNodeId,
-    CapacityMeshNode
-  >()
+  private nodeMap = new Map<CapacityMeshNodeId, CapacityMeshNode>()
   private mapOfCapacityMeshNodeIdToSegmentPortPoints = new Map<
     CapacityMeshNodeId,
     SegmentPortPoint[]
@@ -58,15 +62,15 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
-    const collectPointsToConnect = this.input.simpleRouteJson.connections.flatMap((connection) => connection.pointsToConnect)
+    const collectPointsToConnect =
+      this.input.simpleRouteJson.connections.flatMap(
+        (connection) => connection.pointsToConnect,
+      )
     this.targetNode = this.targetNode.filter((cmNode) => {
       let pointIsInsideObstacle = false
       collectPointsToConnect.forEach((point) => {
-        const distance = pointToBoxDistance(
-          point,
-          cmNode
-        )
-        if(distance <= 0){
+        const distance = pointToBoxDistance(point, cmNode)
+        if (distance <= 0) {
           pointIsInsideObstacle = true
         }
       })
@@ -74,7 +78,6 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     })
     this.unprocessedTargets = [...this.targetNode]
     this.unprocessedTargets.sort((a, b) => a.center.x - b.center.x)
-
 
     for (const cmNode of this.input.capacityMeshNodes) {
       this.nodeMap.set(cmNode.capacityMeshNodeId, cmNode)
@@ -100,79 +103,108 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override step(): void {
-    this.currentCapacityMeshNode = this.unprocessedTargets.shift()
+    if (this.activeSubSolver) {
+      this.activeSubSolver.step()
+      if (!this.activeSubSolver.solved) {
+        return
+      }
+      if (this.activeSubSolver.failed) {
+        this.failed = true
+        this.error = this.activeSubSolver.error
+        return
+      }
 
-    if (!this.currentCapacityMeshNode) {
-      this.solved = true
+      this.candidatesAtDepth = this.activeSubSolver.getOutput()
+      this.activeSubSolver = null
+
+      if (!this.currentTarget) {
+        this.failed = true
+        this.error = "Missing current capacity mesh node while finishing BFS"
+        return
+      }
+
+      if (!this.isRunningCrampedPass) {
+        const areAllCandidatesBlocked = isAllCandidatesBlockedByObstacles({
+          candidates: this.candidatesAtDepth,
+          mapOfCapacityMeshNodeIdToRef: this.nodeMap,
+        })
+
+        if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
+          this.isRunningCrampedPass = true
+          this.activeSubSolver = new GetCandidatesAtDepthUsingBfsSolver({
+            target: this.currentTarget,
+            depthLimit: 2,
+            shouldIgnoreCrampedPortPoints: false,
+            mapOfCapacityMeshNodeIdToSegmentPortPoints:
+              this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+            mapOfCapacityMeshNodeIdToRef: this.nodeMap,
+          })
+          return
+        }
+
+        this.currentTarget = undefined
+        return
+      }
+
+      let crampedCandidates = this.candidatesAtDepth.filter((candidate) => {
+        const port = candidate.port
+        const capacityMeshNodes = port.nodeIds.map((nodeId) => {
+          const cmNode = this.nodeMap.get(nodeId)
+          if (!cmNode) {
+            this.failed = true
+            this.error = `Could not find capacity mesh node for id ${nodeId}`
+            throw new Error(
+              `Could not find capacity mesh node for id ${nodeId}`,
+            )
+          }
+          return cmNode
+        })
+        return (
+          capacityMeshNodes.every((cmNode) => !cmNode._containsObstacle) &&
+          port.cramped
+        )
+      })
+
+      const areAllCrampedCandidatesBlocked = isAllCandidatesBlockedByObstacles({
+        candidates: crampedCandidates,
+        mapOfCapacityMeshNodeIdToRef: this.nodeMap,
+      })
+
+      if (areAllCrampedCandidatesBlocked) {
+        this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentTarget.capacityMeshNodeId}`
+      }
+
+      crampedCandidates.sort((a, b) => costFunction(a) - costFunction(b))
+      this.candidatesAtDepth = crampedCandidates
+      const bestCandidate = crampedCandidates[0]
+      if (!bestCandidate || crampedCandidates.length === 0) {
+        this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
+      } else {
+        this.crampedPortPointsToKeep.add(bestCandidate.port)
+      }
+
+      this.isRunningCrampedPass = false
+      this.currentTarget = undefined
       return
     }
 
-    this.candidatesAtDepth = getCandidatesAtDepthUsingBfs({
-      target: this.currentCapacityMeshNode,
-      depthLimit: 2,
-      shouldIgnoreCrampedPortPoints: true,
-      mapOfCapacityMeshNodeIdToSegmentPortPoints:
-        this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
-      mapOfCapacityMeshNodeIdToRef: this.nodeMap,
-    })
-
-    const areAllCandidatesBlocked = isAllCandidatesBlockedByObstacles({
-      candidates: this.candidatesAtDepth,
-      mapOfCapacityMeshNodeIdToRef: this.nodeMap,
-    })
-
-    if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
-      let candidatesAtDepthIncludingCramped = getCandidatesAtDepthUsingBfs({
-        target: this.currentCapacityMeshNode,
+    if (!this.currentTarget) {
+      this.currentTarget = this.unprocessedTargets.shift()
+      if (!this.currentTarget) {
+        this.solved = true
+        return
+      }
+      this.isRunningCrampedPass = false
+      this.candidatesAtDepth = []
+      this.activeSubSolver = new GetCandidatesAtDepthUsingBfsSolver({
+        target: this.currentTarget,
         depthLimit: 2,
-        shouldIgnoreCrampedPortPoints: false,
+        shouldIgnoreCrampedPortPoints: true,
         mapOfCapacityMeshNodeIdToSegmentPortPoints:
           this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
         mapOfCapacityMeshNodeIdToRef: this.nodeMap,
       })
-
-      candidatesAtDepthIncludingCramped =
-        candidatesAtDepthIncludingCramped.filter((candidates) => {
-          const port = candidates.port
-          const capacityMeshNodes = port.nodeIds.map((nodeId) => {
-            const cmNode = this.nodeMap.get(nodeId)
-            if (!cmNode) {
-              this.failed = true
-              this.error = `Could not find capacity mesh node for id ${nodeId}`
-              throw new Error(
-                `Could not find capacity mesh node for id ${nodeId}`,
-              )
-            }
-            return cmNode
-          })
-          return (
-            capacityMeshNodes.every((cmNode) => !cmNode._containsObstacle) &&
-            port.cramped
-          )
-        })
-
-      const areAllCandidatesIncludingCrampedBlocked =
-        isAllCandidatesBlockedByObstacles({
-          candidates: candidatesAtDepthIncludingCramped,
-          mapOfCapacityMeshNodeIdToRef: this.nodeMap,
-        })
-
-      if (areAllCandidatesIncludingCrampedBlocked) {
-        this.solved = false
-        this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentCapacityMeshNode.capacityMeshNodeId}`
-      }
-
-      candidatesAtDepthIncludingCramped.sort(
-        (a, b) => costFunction(a) - costFunction(b),
-      )
-      const bestCandidate = candidatesAtDepthIncludingCramped[0]
-      this.candidatesAtDepth = candidatesAtDepthIncludingCramped
-      if (!bestCandidate || this.candidatesAtDepth.length === 0) {
-        this.solved = false
-        this.error = `No candidates found for capacity mesh node ${this.currentCapacityMeshNode.capacityMeshNodeId} even after including cramped port points`
-      }
-
-      this.crampedPortPointsToKeep.add(bestCandidate.port)
+      return
     }
   }
 
@@ -198,7 +230,7 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
       graphics.rects!.push({
         ...obstacleCmNode,
         fill:
-          this.currentCapacityMeshNode?.capacityMeshNodeId ===
+          this.currentTarget?.capacityMeshNodeId ===
           obstacleCmNode.capacityMeshNodeId
             ? "rgba(255, 0, 0, 0.5)"
             : "rgba(255, 0, 0, 0.2)",
@@ -206,7 +238,12 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
     }
 
     for (const candidate of this.candidatesAtDepth) {
-      if (candidate.port.cramped) {
+      if (!candidate.port.cramped) {
+        graphics.points!.push({
+          ...candidate.port,
+          color: "green",
+        })
+      } else {
         graphics.rects!.push({
           center: {
             x: candidate.port.x,
@@ -214,16 +251,25 @@ export class NecessaryCrampedPortPointSolver extends BaseSolver {
           },
           width: 0.1,
           height: 0.1,
-          fill: this.crampedPortPointsToKeep.has(candidate.port)
-            ? "rgba(0, 255, 0, 1)"
-            : "rgba(0, 0, 0, 0.2)",
-        })
-      } else {
-        graphics.points!.push({
-          ...candidate.port,
-          color: "rgba(0, 255, 0, 1)",
+          fill: "green",
         })
       }
+    }
+
+    for (const crampedPortPoint of this.crampedPortPointsToKeep) {
+      graphics.rects!.push({
+        center: {
+          x: crampedPortPoint.x,
+          y: crampedPortPoint.y,
+        },
+        width: 0.1,
+        height: 0.1,
+        fill: "green",
+      })
+    }
+
+    if (this.activeSubSolver) {
+      return mergeGraphics(graphics, this.activeSubSolver.visualize())
     }
 
     return graphics
