@@ -1,28 +1,28 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
-import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import { LAYER_COLORS, SCALE } from "./capacity-node-editor/constants"
-import type {
-  Rect,
-  Edge,
-  PointDef,
-  PairDef,
-  DraggingState,
-  DragStartState,
-  SelectionState,
-} from "./capacity-node-editor/types"
-import {
-  getPointOnEdge,
-  getTFromMouseOnEdge,
-  findEdgeAndT,
-  parseLayers,
-} from "./capacity-node-editor/helpers"
+import { CapacityMeshNode } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { MetricsCard } from "./capacity-node-editor/MetricsCard"
 import { PortPoint } from "./capacity-node-editor/PortPoint"
-import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { CapacityMeshNode } from "lib/types"
+import { LAYER_COLORS, SCALE } from "./capacity-node-editor/constants"
+import {
+  findEdgeAndT,
+  getPointOnEdge,
+  getTFromMouseOnEdge,
+  parseLayers,
+} from "./capacity-node-editor/helpers"
+import type {
+  DragStartState,
+  DraggingState,
+  Edge,
+  PairDef,
+  PointDef,
+  Rect,
+  SelectionState,
+} from "./capacity-node-editor/types"
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -70,7 +70,7 @@ export default function CapacityNodeEditor({
   const [viaMode, setViaMode] = useState(false)
   const [vias, setVias] = useState<Array<{ x: number; y: number }>>([])
   // viaDiameter: used for both visualization AND isHighDensityNodeSolvable diagnostics
-  const [viaDiameter, setViaDiameter] = useState(0.6)
+  const [viaDiameter, setViaDiameter] = useState(0.3)
   // traceWidth: default from HighDensitySolver (0.15mm)
   const traceWidth = 0.15
 

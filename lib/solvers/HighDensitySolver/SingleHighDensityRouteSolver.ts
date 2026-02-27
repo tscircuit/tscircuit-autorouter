@@ -1,17 +1,17 @@
-import { BaseSolver } from "../BaseSolver"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import {
   distance,
-  pointToSegmentDistance,
   doSegmentsIntersect,
+  pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import type { GraphicsObject } from "graphics-debug"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
 import {
   Node,
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { BaseSolver } from "../BaseSolver"
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
   connectionName: string
@@ -96,7 +96,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.obstacleRoutes = opts.obstacleRoutes
     this.A = opts.A
     this.B = opts.B
-    this.viaDiameter = opts.viaDiameter ?? 0.6
+    this.viaDiameter = opts.viaDiameter ?? 0.3
     this.traceThickness = opts.traceThickness ?? 0.15
     this.obstacleMargin = opts.obstacleMargin ?? 0.2
     this.layerCount = opts.layerCount ?? 2

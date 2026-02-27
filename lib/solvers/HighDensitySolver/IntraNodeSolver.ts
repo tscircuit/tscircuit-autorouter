@@ -1,17 +1,17 @@
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { safeTransparentize } from "../colors"
-import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 export class IntraNodeRouteSolver extends BaseSolver {
   override getSolverName(): string {
@@ -62,7 +62,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.hyperParameters = params.hyperParameters ?? {}
     this.failedSubSolvers = []
     this.connMap = params.connMap
-    this.viaDiameter = params.viaDiameter ?? 0.6
+    this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     const unsolvedConnectionsMap: Map<
       string,
@@ -135,7 +135,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   //       connectionName,
   //       route: points,
   //       traceThickness: 0.1, // TODO load from hyperParameters
-  //       viaDiameter: 0.6,
+  //       viaDiameter: 0.3,
   //       vias: [],
   //     }),
   //   )

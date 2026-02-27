@@ -1,17 +1,17 @@
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import {
-  NodeWithPortPoints,
-  HighDensityIntraNodeRoute,
-} from "lib/types/high-density-types"
 import {
   distance,
-  pointToSegmentDistance,
   doSegmentsIntersect,
+  pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
+import { BaseSolver } from "lib/solvers/BaseSolver"
+import {
+  HighDensityIntraNodeRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { findCircleLineIntersections } from "./findCircleLineIntersections"
 import { computeDumbbellPaths } from "./computeDumbbellPaths"
+import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
 type Point = { x: number; y: number; z?: number }
 type Route = {
@@ -58,7 +58,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     super()
 
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.viaDiameter = params?.viaDiameter ?? 0.6
+    this.viaDiameter = params?.viaDiameter ?? 0.3
     this.traceThickness = params?.traceThickness ?? 0.15
     this.obstacleMargin = params?.obstacleMargin ?? 0.1
     this.layerCount = params?.layerCount ?? 2

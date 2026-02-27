@@ -1,32 +1,32 @@
+import {
+  clamp,
+  distSq,
+  distance,
+  doSegmentsIntersect,
+  pointToSegmentClosestPoint,
+  pointToSegmentDistance,
+  segmentToSegmentMinDistance,
+} from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { HighDensityHyperParameters } from "../HighDensityHyperParameters"
+import { safeTransparentize } from "lib/solvers/colors"
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { GraphicsObject } from "graphics-debug"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import { safeTransparentize } from "lib/solvers/colors"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import {
-  distance,
-  doSegmentsIntersect,
-  pointToSegmentDistance,
-  segmentToSegmentMinDistance,
-  pointToSegmentClosestPoint,
-  distSq,
-  clamp,
-} from "@tscircuit/math-utils"
-import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
-import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
-import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
-import { PolyLine, MHPoint, Candidate } from "./types1"
-import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWithViaPositions"
+import { HighDensityHyperParameters } from "../HighDensityHyperParameters"
 import { computeViaCountVariants } from "./computeViaCountVariants"
+import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWithViaPositions"
+import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnectionClosedFacesWithoutVias"
+import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
+import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
+import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
+import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
 import { withinBounds } from "./withinBounds"
-import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnectionClosedFacesWithoutVias"
 
 export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -48,7 +48,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
   MAX_CANDIDATES = 50e3
 
-  viaDiameter: number = 0.6
+  viaDiameter: number = 0.3
   obstacleMargin: number = 0.1
   traceWidth: number = 0.15
   availableZ: number[] = []

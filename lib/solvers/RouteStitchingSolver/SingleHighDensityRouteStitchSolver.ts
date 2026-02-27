@@ -1,8 +1,8 @@
-import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { GraphicsObject } from "graphics-debug"
 import { distance } from "@tscircuit/math-utils"
+import { GraphicsObject } from "graphics-debug"
+import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { BaseSolver } from "../BaseSolver"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
@@ -53,7 +53,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
         route: routePoints,
         vias: vias,
         jumpers: [],
-        viaDiameter: opts.defaultViaDiameter ?? 0.6, // Use default or fallback
+        viaDiameter: opts.defaultViaDiameter ?? 0.3, // Use default or fallback
         traceThickness: opts.defaultTraceThickness ?? 0.15, // Use default or fallback
       }
       this.solved = true

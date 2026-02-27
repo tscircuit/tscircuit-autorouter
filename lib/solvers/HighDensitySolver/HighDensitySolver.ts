@@ -1,16 +1,16 @@
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
-import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "../BaseSolver"
+import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
@@ -21,8 +21,8 @@ export class HighDensitySolver extends BaseSolver {
   routes: HighDensityIntraNodeRoute[]
   colorMap: Record<string, string>
 
-  // Defaults as specified: viaDiameter of 0.6 and traceThickness of 0.15
-  readonly defaultViaDiameter = 0.6
+  // Defaults as specified: viaDiameter of 0.3 and traceThickness of 0.15
+  readonly defaultViaDiameter = 0.3
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
   traceWidth: number

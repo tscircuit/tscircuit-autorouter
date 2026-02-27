@@ -1,13 +1,13 @@
-import { Rect, Line, Circle, Point } from "graphics-debug"
+import { Circle, Line, Point, Rect } from "graphics-debug"
+import { getColorMap, safeTransparentize } from "lib/solvers/colors"
 import { SimpleRouteJson } from "lib/types"
 import {
   getConnectionPointLayer,
   getConnectionPointLayers,
 } from "lib/types/srj-types"
-import { getColorMap, safeTransparentize } from "lib/solvers/colors"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
   const lines: Line[] = []
@@ -17,7 +17,7 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
 
   const colorMap: Record<string, string> = getColorMap(srj)
   const layerCount = 2
-  const viaRadius = (srj.minViaDiameter ?? 0.6) / 2
+  const viaRadius = (srj.minViaDiameter ?? 0.3) / 2
 
   // Add points for each connection's pointsToConnect
   if (srj.connections) {

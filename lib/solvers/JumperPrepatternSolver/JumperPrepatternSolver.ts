@@ -1,5 +1,11 @@
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../BaseSolver"
+import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
+import { RelateNodesToOffBoardConnectionsSolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
+import { SimpleHighDensitySolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver"
+import type { SimpleRouteConnection, SimpleRouteJson } from "../../types"
+import type { CapacityMeshEdge, CapacityMeshNode } from "../../types"
 import type {
   HighDensityIntraNodeRoute,
   HighDensityIntraNodeRouteWithJumpers,
@@ -7,36 +13,30 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "../../types/high-density-types"
-import { SimpleHighDensitySolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver"
-import { MultipleHighDensityRouteStitchSolver } from "../RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { getConnectivityMapFromSimpleRouteJson } from "../../utils/getConnectivityMapFromSimpleRouteJson"
+import { AvailableSegmentPointSolver } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "../BaseSolver"
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
+import {
+  HyperPortPointPathingSolver,
+  HyperPortPointPathingSolverParams,
+} from "../PortPointPathingSolver/HyperPortPointPathingSolver"
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
   PortPointPathingSolver,
 } from "../PortPointPathingSolver/PortPointPathingSolver"
-import {
-  HyperPortPointPathingSolver,
-  HyperPortPointPathingSolverParams,
-} from "../PortPointPathingSolver/HyperPortPointPathingSolver"
-import { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
+import { MultipleHighDensityRouteStitchSolver } from "../RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { safeTransparentize } from "../colors"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { SimpleRouteJson, SimpleRouteConnection } from "../../types"
-import { AvailableSegmentPointSolver } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { CapacityMeshNode, CapacityMeshEdge } from "../../types"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { getConnectivityMapFromSimpleRouteJson } from "../../utils/getConnectivityMapFromSimpleRouteJson"
 import { getColorMap } from "../colors"
-import { RelateNodesToOffBoardConnectionsSolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
+import { RemoveUnnecessaryJumpersSolver } from "./RemoveUnnecessaryJumpersSolver"
 import {
-  alternatingGrid,
   type PatternResult,
   type PrepatternJumper,
+  alternatingGrid,
 } from "./patterns/alternatingGrid"
 import { staggeredGrid } from "./patterns/staggeredGrid"
-import { JumperFootprint, JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
-import { RemoveUnnecessaryJumpersSolver } from "./RemoveUnnecessaryJumpersSolver"
 import { processPathingSolverResults } from "./processPathingSolverResults"
 
 export type PatternType = "alternating_grid" | "staggered_grid"
@@ -334,7 +334,7 @@ export class JumperPrepatternSolver extends BaseSolver {
             solver.portPointPathingSolver?.getNodesWithPortPoints() ??
             [],
           colorMap: solver.colorMap,
-          viaDiameter: 0.6,
+          viaDiameter: 0.3,
           traceWidth: solver.traceWidth,
           connMap: solver.connMap,
         },
@@ -349,7 +349,7 @@ export class JumperPrepatternSolver extends BaseSolver {
           hdRoutes: solver.highDensitySolver!.routes,
           colorMap: solver.colorMap,
           layerCount: 1,
-          defaultViaDiameter: 0.6,
+          defaultViaDiameter: 0.3,
         },
       ],
       {

@@ -1,5 +1,39 @@
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { CacheProvider } from "lib/cache/types"
+import { BaseSolver } from "lib/solvers/BaseSolver"
+import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
+import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
+import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
+import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
+import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import { CapacityNodeTargetMerger2 } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger2"
+import { CapacityPathingGreedySolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver"
+import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver"
+import { CapacityPathingSolver } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver"
+import { CapacityPathingSolver2_AvoidLowCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver2_AvoidLowCapacity"
+import { CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity"
+import { CapacityPathingSolver4_FlexibleNegativeCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver4_FlexibleNegativeCapacity_AvoidLowCapacity_FixedDistanceCost"
+import { CapacityPathingSolver5 } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver5"
+import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
+import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/NoOffBoardMultipleHighDensityRouteStitchSolver"
+import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import { SingleSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver"
+import { SingleLayerNodeMergerSolver } from "lib/solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
+import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
+import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import { getColorMap } from "lib/solvers/colors"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -8,52 +42,18 @@ import type {
   SimplifiedPcbTraces,
   TraceId,
 } from "lib/types"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
-import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
-import { CapacityPathingSolver } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver"
-import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
-import { getColorMap } from "lib/solvers/colors"
-import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
-import { CapacityPathingSolver2_AvoidLowCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver2_AvoidLowCapacity"
-import { CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity"
-import { CapacityPathingSolver4_FlexibleNegativeCapacity } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver4_FlexibleNegativeCapacity_AvoidLowCapacity_FixedDistanceCost"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
-import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
-import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
-import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
-import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver"
-import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
-import { SingleLayerNodeMergerSolver } from "lib/solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
-import { CapacityNodeTargetMerger2 } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger2"
-import { SingleSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
 import {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
 } from "lib/types/high-density-types"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { CapacityPathingSolver5 } from "lib/solvers/CapacityPathingSolver/CapacityPathingSolver5"
-import { CapacityPathingGreedySolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver"
-import { CacheProvider } from "lib/cache/types"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
-import { NoOffBoardMultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/NoOffBoardMultipleHighDensityRouteStitchSolver"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -356,7 +356,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
     this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    this.viaDiameter = srj.minViaDiameter ?? 0.6
+    this.viaDiameter = srj.minViaDiameter ?? 0.3
     this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
 

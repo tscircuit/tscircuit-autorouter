@@ -1,14 +1,14 @@
+import { distance } from "@tscircuit/math-utils"
+import { ConnectivityMap } from "connectivity-map"
+import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
-import { BaseSolver } from "../BaseSolver"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { SingleHighDensityRouteStitchSolver } from "./SingleHighDensityRouteStitchSolver"
-import { GraphicsObject } from "graphics-debug"
-import { safeTransparentize } from "../colors"
-import { ConnectivityMap } from "connectivity-map"
-import { distance } from "@tscircuit/math-utils"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { BaseSolver } from "../BaseSolver"
+import { safeTransparentize } from "../colors"
+import { SingleHighDensityRouteStitchSolver } from "./SingleHighDensityRouteStitchSolver"
 
 export type UnsolvedRoute = {
   connectionName: string
@@ -45,7 +45,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     const firstRoute = params.hdRoutes[0]
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
     this.defaultViaDiameter =
-      firstRoute?.viaDiameter ?? params.defaultViaDiameter ?? 0.6
+      firstRoute?.viaDiameter ?? params.defaultViaDiameter ?? 0.3
 
     const routeIslandConnectivityMap = new ConnectivityMap({})
     const routeIslandConnections: Array<string[]> = []

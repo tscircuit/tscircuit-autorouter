@@ -116,7 +116,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     colorMap,
     traceWidth = 0.15,
     obstacleMargin = 0.15,
-    viaDiameter = 0.6,
+    viaDiameter = 0.3,
     connMap,
     hyperParameters,
     capacityMeshNodes = [],

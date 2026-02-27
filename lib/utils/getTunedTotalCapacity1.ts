@@ -15,7 +15,7 @@ export const getTunedTotalCapacity1 = (
   maxCapacityFactor = 1,
   opts: { viaDiameter?: number; obstacleMargin?: number } = {},
 ) => {
-  const VIA_DIAMETER = opts.viaDiameter ?? 0.6
+  const VIA_DIAMETER = opts.viaDiameter ?? 0.3
   const TRACE_WIDTH = 0.15
   const obstacleMargin = opts.obstacleMargin ?? 0.2
 

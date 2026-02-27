@@ -1,3 +1,5 @@
+import { CurvyTraceSolver } from "@tscircuit/curvy-trace-solver"
+import type { CurvyTraceProblem, Obstacle } from "@tscircuit/curvy-trace-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
@@ -5,8 +7,6 @@ import type {
   PortPoint,
 } from "../../types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
-import { CurvyTraceSolver } from "@tscircuit/curvy-trace-solver"
-import type { CurvyTraceProblem, Obstacle } from "@tscircuit/curvy-trace-solver"
 
 export interface AdjacentObstacle {
   minX: number
@@ -50,7 +50,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap = params.colorMap ?? {}
     this.traceWidth = params.traceWidth ?? 0.15
-    this.viaDiameter = params.viaDiameter ?? 0.6
+    this.viaDiameter = params.viaDiameter ?? 0.3
     this.adjacentObstacles = params.adjacentObstacles ?? []
     this.MAX_ITERATIONS = 1000
   }

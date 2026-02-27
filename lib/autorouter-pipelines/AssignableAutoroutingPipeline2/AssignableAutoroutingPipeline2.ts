@@ -1,5 +1,42 @@
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { combineVisualizations } from "../../utils/combineVisualizations"
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { CacheProvider } from "lib/cache/types"
+import {
+  HyperPortPointPathingSolver,
+  HyperPortPointPathingSolverParams,
+} from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
+import {
+  HighDensityIntraNodeRoute,
+  HighDensityRoute,
+} from "lib/types/high-density-types"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "../../solvers/BaseSolver"
+import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
+import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
+import { HighDensitySolver as LegacyHighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import {
+  InputNodeWithPortPoints,
+  InputPortPoint,
+  PortPointPathingSolver,
+} from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
+import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
+import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
+import { TraceKeepoutSolver } from "../../solvers/TraceKeepoutSolver/TraceKeepoutSolver"
+import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getColorMap } from "../../solvers/colors"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -10,49 +47,12 @@ import type {
   SimplifiedPcbTraces,
   TraceId,
 } from "../../types"
-import { BaseSolver } from "../../solvers/BaseSolver"
-import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { getColorMap } from "../../solvers/colors"
-import { HighDensitySolver as LegacyHighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
-import { JumperHighDensitySolver } from "./JumperHighDensitySolver"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import { combineVisualizations } from "../../utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "../../utils/getTunedTotalCapacity1"
-import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
-import {
-  HighDensityIntraNodeRoute,
-  HighDensityRoute,
-} from "lib/types/high-density-types"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
-import { CacheProvider } from "lib/cache/types"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
-import { TraceKeepoutSolver } from "../../solvers/TraceKeepoutSolver/TraceKeepoutSolver"
-import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import {
-  PortPointPathingSolver,
-  InputNodeWithPortPoints,
-  InputPortPoint,
-} from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
-import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
-import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import { JumperHighDensitySolver } from "./JumperHighDensitySolver"
 import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFragmentSolver"
-import {
-  HyperPortPointPathingSolver,
-  HyperPortPointPathingSolverParams,
-} from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
+import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
 import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
 
 interface CapacityMeshSolverOptions {
@@ -400,7 +400,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    this.viaDiameter = srj.minViaDiameter ?? 0.6
+    this.viaDiameter = srj.minViaDiameter ?? 0.3
     this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1

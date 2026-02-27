@@ -1,12 +1,12 @@
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { Obstacle } from "lib/types"
-import { GraphicsObject } from "graphics-debug"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
-import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { GraphicsObject } from "graphics-debug"
+import { Obstacle } from "lib/types"
+import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { BaseSolver } from "../BaseSolver"
+import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
+import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
 
 export class MultiSimplifiedPathSolver extends BaseSolver {
   override getSolverName(): string {
@@ -52,7 +52,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
-    this.defaultViaDiameter = params.defaultViaDiameter ?? 0.6
+    this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
 
     this.simplifiedHdRoutes = []
   }

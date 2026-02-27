@@ -1,21 +1,21 @@
-import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { GraphicsObject } from "graphics-debug"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import {
   Bounds,
-  distance,
-  midpoint,
   Point,
   Point3,
-  pointToSegmentDistance,
-  getSegmentIntersection,
-  segmentToSegmentMinDistance,
   clamp,
+  distance,
+  getSegmentIntersection,
+  midpoint,
+  pointToSegmentDistance,
+  segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
-import { getPortPairMap, PortPairMap } from "lib/utils/getPortPairs"
-import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
+import { GraphicsObject } from "graphics-debug"
+import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { PortPairMap, getPortPairMap } from "lib/utils/getPortPairs"
+import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 
 export type ConnectionName = string
@@ -97,7 +97,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.hyperParameters = hyperParameters ?? {
       SHUFFLE_SEED: 0,
     }
-    this.viaDiameter = viaDiameter ?? 0.6
+    this.viaDiameter = viaDiameter ?? 0.3
 
     this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
     if (hyperParameters?.SHUFFLE_SEED) {

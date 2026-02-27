@@ -1,30 +1,30 @@
-import { BaseSolver } from "lib/solvers/BaseSolver"
 import {
-  NodeWithPortPoints,
-  HighDensityIntraNodeRoute,
-} from "lib/types/high-density-types"
-import {
-  distance,
-  pointToSegmentDistance,
-  doSegmentsIntersect,
   clamp,
+  distance,
+  doSegmentsIntersect,
+  pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { findCircleLineIntersections } from "./findCircleLineIntersections"
-import { findClosestPointToABCWithinBounds } from "lib/utils/findClosestPointToABCWithinBounds"
-import { calculatePerpendicularPointsAtDistance } from "lib/utils/calculatePointsAtDistance"
-import { snapToNearestBound } from "lib/utils/snapToNearestBound"
-import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import {
-  classifyPointInBounds,
+  HighDensityIntraNodeRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
+import { calculatePerpendicularPointsAtDistance } from "lib/utils/calculatePointsAtDistance"
+import {
   type PointBoundsPosition,
+  classifyPointInBounds,
 } from "lib/utils/classifyPointInBounds"
+import { findClosestPointToABCWithinBounds } from "lib/utils/findClosestPointToABCWithinBounds"
+import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle"
+import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { snapToNearestBound } from "lib/utils/snapToNearestBound"
 import {
   calculateTraversalPercentages,
   pointToAngle,
 } from "./calculateSideTraversal"
 import { computeTurnDirection } from "./computeTurnDirection"
+import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
 type Point = { x: number; y: number; z?: number }
 type Route = {
@@ -78,7 +78,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     super()
 
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.viaDiameter = params?.viaDiameter ?? 0.6
+    this.viaDiameter = params?.viaDiameter ?? 0.3
     this.traceThickness = params?.traceThickness ?? 0.15
     this.obstacleMargin = params?.obstacleMargin ?? 0.1
     this.layerCount = params?.layerCount ?? 2

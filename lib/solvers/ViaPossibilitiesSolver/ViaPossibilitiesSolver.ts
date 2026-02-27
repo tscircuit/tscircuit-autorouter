@@ -1,21 +1,21 @@
-import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { GraphicsObject } from "graphics-debug"
-import {
-  Face,
-  getCentroidsFromInnerBoxIntersections,
-} from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getCentroidsFromInnerBoxIntersections"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import {
   Bounds,
   Point,
   pointToSegmentDistance,
   segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
-import { getPortPairMap, PortPairMap } from "lib/utils/getPortPairs"
-import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import { safeTransparentize } from "../colors"
 import { distance } from "@tscircuit/math-utils"
+import { GraphicsObject } from "graphics-debug"
+import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { PortPairMap, getPortPairMap } from "lib/utils/getPortPairs"
+import { BaseSolver } from "../BaseSolver"
+import {
+  Face,
+  getCentroidsFromInnerBoxIntersections,
+} from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getCentroidsFromInnerBoxIntersections"
+import { safeTransparentize } from "../colors"
 
 export type CandidateHash = string
 export type ConnectionName = string
@@ -119,7 +119,7 @@ export class ViaPossibilitiesSolver extends BaseSolver {
     this.portPairMap = getPortPairMap(nodeWithPortPoints)
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
-    this.viaDiameter = viaDiameter ?? 0.6
+    this.viaDiameter = viaDiameter ?? 0.3
 
     this.transitionConnectionNames = Array.from(
       this.portPairMap

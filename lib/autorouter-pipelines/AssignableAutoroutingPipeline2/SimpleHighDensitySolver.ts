@@ -1,11 +1,11 @@
+import type { GraphicsObject } from "graphics-debug"
+import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import { BaseSolver } from "../../solvers/BaseSolver"
+import { safeTransparentize } from "../../solvers/colors"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../../solvers/BaseSolver"
-import { safeTransparentize } from "../../solvers/colors"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 
 const STEPS_PER_NODE = 10
 const BORDER_MARGIN = 0.3
@@ -178,7 +178,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
     nodePortPoints,
     colorMap,
     traceWidth = 0.1,
-    viaDiameter = 0.6,
+    viaDiameter = 0.3,
     pushMargin = 0.3,
     numMovablePoints = 2,
   }: {
