@@ -12,7 +12,10 @@ const nodeWithPortPoints = (node as any).nodeWithPortPoints
 
 test("cn11081 single transition solver routes without DRC errors", () => {
   const srj = createSrjFromNodeWithPortPoints(nodeWithPortPoints)
-  const solver = new HyperSingleIntraNodeSolver({ nodeWithPortPoints })
+  const solver = new HyperSingleIntraNodeSolver({
+    nodeWithPortPoints,
+    viaDiameter: 0.6,
+  })
 
   expect(srj).toMatchInlineSnapshot(`
     {
