@@ -49,6 +49,7 @@ jobs:
         github.event.comment.author_association == 'COLLABORATOR'
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     outputs:
       solvers: ${{ steps.parse.outputs.solvers }}
       scenario_limit: ${{ steps.parse.outputs.scenario_limit }}
@@ -109,7 +110,7 @@ jobs:
     name: Benchmark ${{ matrix.solver }}
     needs: setup
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
