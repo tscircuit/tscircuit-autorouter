@@ -41,7 +41,13 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
-import { SimpleRouteJson, CapacityMeshNode, CapacityMeshEdge, SimplifiedPcbTraces, SimplifiedPcbTrace } from "lib/types"
+import {
+  SimpleRouteJson,
+  CapacityMeshNode,
+  CapacityMeshEdge,
+  SimplifiedPcbTraces,
+  SimplifiedPcbTrace,
+} from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "lib/index"
 
