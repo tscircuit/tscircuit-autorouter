@@ -50,6 +50,7 @@ jobs:
       )
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    
     outputs:
       solvers: ${{ steps.parse.outputs.solvers }}
       scenario_limit: ${{ steps.parse.outputs.scenario_limit }}
