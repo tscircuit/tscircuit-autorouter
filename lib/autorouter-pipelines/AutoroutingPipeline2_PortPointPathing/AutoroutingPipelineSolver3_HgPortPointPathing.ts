@@ -4,8 +4,6 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
@@ -41,7 +39,6 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { NecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/NecessaryCrampedPortPointSolver"
 import { calculateOptimalCapacityDepth } from "dist"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
