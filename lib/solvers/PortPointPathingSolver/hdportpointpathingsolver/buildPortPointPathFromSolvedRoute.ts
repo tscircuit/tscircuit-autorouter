@@ -9,8 +9,8 @@ import type {
   HgRegion,
 } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
 import { getCandidateRegionId } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/getCandidateRegionId"
-import { getLayerFromPoint } from "lib/utils/getLayerFromPoint"
-import { getZFromLayer } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/getZFromLayer"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getConnectionPointLayer } from "lib/utils/connection-point-utils"
 
 const DEFAULT_Z = 0
 
@@ -20,23 +20,23 @@ const DEFAULT_Z = 0
 export function buildPortPointPathFromSolvedRoute({
   solvedRoute,
   connectionResult,
+  layerCount,
 }: {
   solvedRoute: SolvedRoute
   connectionResult: ConnectionPathResult
+  layerCount: number
 }): PortPointCandidate[] {
   const path: PortPointCandidate[] = []
   const connection = connectionResult.connection
   const startPoint = connection.pointsToConnect[0]
   const endPoint =
     connection.pointsToConnect[connection.pointsToConnect.length - 1]
-  const startZ = getZFromLayer({
-    layer: getLayerFromPoint({ point: startPoint }),
-    defaultZ: DEFAULT_Z,
-  })
-  const endZ = getZFromLayer({
-    layer: getLayerFromPoint({ point: endPoint }),
-    defaultZ: DEFAULT_Z,
-  })
+  const startZ = startPoint
+    ? mapLayerNameToZ(getConnectionPointLayer(startPoint), layerCount)
+    : DEFAULT_Z
+  const endZ = endPoint
+    ? mapLayerNameToZ(getConnectionPointLayer(endPoint), layerCount)
+    : DEFAULT_Z
 
   const startCandidate: PortPointCandidate = {
     prevCandidate: null,

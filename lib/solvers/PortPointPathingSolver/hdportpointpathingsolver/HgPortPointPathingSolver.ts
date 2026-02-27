@@ -61,6 +61,7 @@ export interface HgPortPointPathingSolverParams {
     MAX_RIPS: number
     MIN_ALLOWED_BOARD_SCORE: number
   }
+  layerCount: number
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -94,6 +95,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   randomRipFraction: number
   maxRips: number
   MIN_ALLOWED_BOARD_SCORE: number
+  layerCount: number
 
   constructor({
     inputGraph,
@@ -105,6 +107,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     rippingEnabled,
     weights,
     forceCenterFirst,
+    layerCount,
   }: HgPortPointPathingSolverParams) {
     const {
       GREEDY_MULTIPLIER: greedyMultiplier,
@@ -157,6 +160,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.connectionResultByName = new Map(
       connectionsWithResults.map((result) => [result.connection.name, result]),
     )
+    this.layerCount = layerCount
   }
 
   private clampPf(pf: number): number {
@@ -422,6 +426,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       solvedRoutes: this.solvedRoutes,
       connectionResults: this.connectionsWithResults,
       inputNodes: this.inputNodes,
+      layerCount: this.layerCount,
     })
     this.connectionsWithResults = assignments.connectionsWithResults
     this.assignedPortPoints = assignments.assignedPortPoints
@@ -825,6 +830,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         solvedRoutes: this.solvedRoutes,
         connectionResults: this.connectionsWithResults,
         inputNodes: this.inputNodes,
+        layerCount: this.layerCount,
       })
       nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
     }

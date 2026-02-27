@@ -304,6 +304,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             },
             forceCenterFirst: true,
             regionMemoryPfMap: new Map(),
+            layerCount: cms.srj.layerCount,
           },
         ]
       },

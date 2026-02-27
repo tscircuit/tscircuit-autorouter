@@ -16,10 +16,12 @@ export function buildPortPointAssignmentsFromSolvedRoutes({
   solvedRoutes,
   connectionResults,
   inputNodes,
+  layerCount,
 }: {
   solvedRoutes: SolvedRoute[]
   connectionResults: ConnectionPathResult[]
   inputNodes: InputNodeWithPortPoints[]
+  layerCount: number
 }): {
   connectionsWithResults: ConnectionPathResult[]
   assignedPortPoints: Map<
@@ -53,6 +55,7 @@ export function buildPortPointAssignmentsFromSolvedRoutes({
     const path = buildPortPointPathFromSolvedRoute({
       solvedRoute,
       connectionResult,
+      layerCount,
     })
     connectionResult.path = path
     connectionResult.portPoints = assignPortPointsForPath({
