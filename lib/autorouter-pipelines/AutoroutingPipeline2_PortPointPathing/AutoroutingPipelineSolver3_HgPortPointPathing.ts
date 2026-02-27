@@ -39,11 +39,11 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { calculateOptimalCapacityDepth } from "dist"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
 import { SimpleRouteJson, CapacityMeshNode, CapacityMeshEdge, SimplifiedPcbTraces, SimplifiedPcbTrace } from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { calculateOptimalCapacityDepth } from "lib/index"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
