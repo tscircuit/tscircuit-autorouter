@@ -3,6 +3,39 @@ import availableSegmentPointSolver_input from "./assets/availableSegmentPointSol
 import { expect, test } from "bun:test"
 
 test("repro02: impossible to reach obstacle with availableSegmentPointSolver", () => {
+  // Keep only nodes/edges reachable from the seed node within 4 BFS hops.
+  const bfsSeedNodeId = "cmn_126"
+  const bfsMaxDepth = 4
+  const adjacency = new Map<string, Set<string>>()
+  for (const edge of availableSegmentPointSolver_input[0].edges) {
+    const [a, b] = edge.nodeIds
+    if (!adjacency.has(a)) adjacency.set(a, new Set())
+    if (!adjacency.has(b)) adjacency.set(b, new Set())
+    adjacency.get(a)!.add(b)
+    adjacency.get(b)!.add(a)
+  }
+  const bfsDepthByNodeId = new Map<string, number>([[bfsSeedNodeId, 0]])
+  const bfsQueue = [bfsSeedNodeId]
+  while (bfsQueue.length > 0) {
+    const current = bfsQueue.shift()!
+    const depth = bfsDepthByNodeId.get(current)!
+    if (depth >= bfsMaxDepth) continue
+    for (const neighbor of adjacency.get(current) ?? []) {
+      if (bfsDepthByNodeId.has(neighbor)) continue
+      bfsDepthByNodeId.set(neighbor, depth + 1)
+      bfsQueue.push(neighbor)
+    }
+  }
+  const allowedCmnNodeIds = new Set(bfsDepthByNodeId.keys())
+  availableSegmentPointSolver_input[0].nodes =
+    availableSegmentPointSolver_input[0].nodes.filter((node) =>
+      allowedCmnNodeIds.has(node.capacityMeshNodeId),
+    )
+  availableSegmentPointSolver_input[0].edges =
+    availableSegmentPointSolver_input[0].edges.filter((edge) =>
+      edge.nodeIds.every((nodeId) => allowedCmnNodeIds.has(nodeId)),
+    )
+
   // Setup
   const solver = new AvailableSegmentPointSolver({
     ...availableSegmentPointSolver_input[0],
