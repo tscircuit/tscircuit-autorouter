@@ -50,6 +50,10 @@ import {
 } from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "lib/index"
+import {
+  buildGraph,
+  HgPortPointPathingSolver2,
+} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver2"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -240,67 +244,27 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HgPortPointPathingSolver,
+      HgPortPointPathingSolver2,
       (cms) => {
-        // Convert capacity nodes and segment points to InputNodeWithPortPoints
-        this.inputNodeWithPortPoints = cms.capacityNodes!.map((node) => ({
-          capacityMeshNodeId: node.capacityMeshNodeId,
-          center: node.center,
-          width: node.width,
-          height: node.height,
-          portPoints: [] as InputPortPoint[],
-          availableZ: node.availableZ,
-          _containsTarget: node._containsTarget,
-          _containsObstacle: node._containsObstacle,
-        }))
-
-        // Build a map for quick lookup
-        const nodeMap = new Map(
-          this.inputNodeWithPortPoints.map((n) => [n.capacityMeshNodeId, n]),
-        )
-
-        // Add port points from the available segment point solver
-        const segmentPointSolver = cms.necessaryCrampedPortPointSolver!
-        for (const segment of segmentPointSolver.getOutput()) {
-          for (const segmentPortPoint of segment.portPoints) {
-            const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
-            const inputPortPoint: InputPortPoint = {
-              portPointId: segmentPortPoint.segmentPortPointId,
-              x: segmentPortPoint.x,
-              y: segmentPortPoint.y,
-              z: segmentPortPoint.availableZ[0] ?? 0,
-              connectionNodeIds: [nodeId1, nodeId2],
-              distToCentermostPortOnZ: segmentPortPoint.distToCentermostPortOnZ,
-            }
-
-            // Add to first node
-            const node1 = nodeMap.get(nodeId1)
-            if (node1) {
-              node1.portPoints.push(inputPortPoint)
-            }
-            // Note: Don't add to second node - the solver will handle the shared edge
-          }
-        }
-
-        const { graph, regionMap, portPointMap } =
-          buildHyperGraphFromInputNodes({
-            inputNodes: this.inputNodeWithPortPoints,
-          })
-        const { connections, connectionsWithResults } =
-          buildHyperConnectionsFromSimpleRouteJson({
-            simpleRouteJson: cms.srjWithPointPairs!,
-            inputNodes: this.inputNodeWithPortPoints,
-            regionMap,
-          })
+        const { graph, connections } = buildGraph({
+          capacityMeshNodes: cms.capacityNodes!,
+          layerCount: cms.srj.layerCount,
+          segmentPortPoints: cms
+            .availableSegmentPointSolver!.getOutput()
+            .flatMap((seg) => seg.portPoints),
+          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+        })
 
         return [
           {
-            inputGraph: graph,
-            inputConnections: connections,
-            connectionsWithResults,
-            inputNodes: this.inputNodeWithPortPoints,
-            portPointMap,
-            rippingEnabled: true,
+            graph,
+            connections,
+            layerCount: cms.srj.layerCount,
+            effort: cms.effort,
+            flags: {
+              forceCenterFirstEnabled: true,
+              rippingEnabled: true,
+            },
             weights: {
               PORT_USAGE_PENALTY: 0.15,
               REGION_TRANSITION_PENALTY: 0.6,
@@ -314,10 +278,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               MAX_RIPS: 1000,
               RANDOM_RIP_FRACTION: 0.3,
               MIN_ALLOWED_BOARD_SCORE: -10000,
+              MAX_CANDIDATES_PER_REGION: 2,
             },
-            forceCenterFirst: true,
-            regionMemoryPfMap: new Map(),
-            layerCount: cms.srj.layerCount,
           },
         ]
       },
