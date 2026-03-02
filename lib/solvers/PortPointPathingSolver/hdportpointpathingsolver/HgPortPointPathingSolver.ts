@@ -879,6 +879,84 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       })
     }
 
+    for (const route of this.solvedRoutes) {
+      const startRegion = route.connection.startRegion
+      const path = route.path
+
+      const startRegionInputNodeWithPortPoint: InputNodeWithPortPoints = {
+        capacityMeshNodeId: startRegion.regionId,
+        center: startRegion.d.center,
+        width: startRegion.d.width,
+        height: startRegion.d.height,
+        portPoints: [{
+          portPointId: `input-${route.connection.connectionId}`,
+          x: startRegion.d.center.x,
+          y: startRegion.d.center.y,
+          z: startRegion.d.availableZ[0] ?? 0,
+          connectionNodeIds: [startRegion.regionId, startRegion.regionId],
+          distToCentermostPortOnZ: 0,
+          connectsToOffBoardNode: false,
+        }, {
+          portPointId: `first-port-${route.connection.connectionId}`,
+          x: path[0].port.d.x,
+          y: path[0].port.d.y,
+          z: path[0].port.d.availableZ[0] ?? 0,
+          connectionNodeIds: path[0].port.d.nodeIds,
+          distToCentermostPortOnZ: path[0].port.d.distToCentermostPortOnZ,
+          connectsToOffBoardNode: path[0].port.d.nodeIds.some(
+            (nodeId: CapacityMeshNodeId) =>
+              Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
+          ),
+        }],
+        availableZ: startRegion.d.availableZ,
+        _containsObstacle: startRegion.d._containsObstacle,
+        _containsTarget:
+          startRegion.d._containsTarget ??
+          endpointRegionIds.has(startRegion.regionId),
+        _offBoardConnectionId: startRegion.d._offBoardConnectionId,
+        _offBoardConnectedCapacityMeshNodeIds:
+          startRegion.d._offBoardConnectedCapacityMeshNodeIds,
+      }
+
+      const endRegionInputNodeWithPortPoint: InputNodeWithPortPoints = {
+        capacityMeshNodeId: route.connection.endRegion.regionId,
+        center: route.connection.endRegion.d.center,
+        width: route.connection.endRegion.d.width,
+        height: route.connection.endRegion.d.height,
+        portPoints: [{
+          portPointId: `output-${route.connection.connectionId}`,
+          x: route.connection.endRegion.d.center.x,
+          y: route.connection.endRegion.d.center.y,
+          z: route.connection.endRegion.d.availableZ[0] ?? 0,
+          connectionNodeIds: [route.connection.endRegion.regionId, route.connection.endRegion.regionId],
+          distToCentermostPortOnZ: 0,
+          connectsToOffBoardNode: false,
+        }, {
+          portPointId: `last-port-${route.connection.connectionId}`,
+          x: path[path.length - 1].port.d.x,
+          y: path[path.length - 1].port.d.y,
+          z: path[path.length - 1].port.d.availableZ[0] ?? 0,
+          connectionNodeIds: path[path.length - 1].port.d.nodeIds,
+          distToCentermostPortOnZ: path[path.length - 1].port.d.distToCentermostPortOnZ,
+          connectsToOffBoardNode: path[path.length - 1].port.d.nodeIds.some(
+            (nodeId: CapacityMeshNodeId) =>
+              Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
+          ),
+        }],
+        availableZ: route.connection.endRegion.d.availableZ,
+        _containsObstacle: route.connection.endRegion.d._containsObstacle,
+        _containsTarget:
+          route.connection.endRegion.d._containsTarget ??
+          endpointRegionIds.has(route.connection.endRegion.regionId),
+        _offBoardConnectionId: route.connection.endRegion.d._offBoardConnectionId,
+        _offBoardConnectedCapacityMeshNodeIds:
+          route.connection.endRegion.d._offBoardConnectedCapacityMeshNodeIds,
+      }
+
+      inputNodeWithPortPoints.push(startRegionInputNodeWithPortPoint)
+      inputNodeWithPortPoints.push(endRegionInputNodeWithPortPoint)
+    }
+
     return {
       nodesWithPortPoints,
       inputNodeWithPortPoints,
