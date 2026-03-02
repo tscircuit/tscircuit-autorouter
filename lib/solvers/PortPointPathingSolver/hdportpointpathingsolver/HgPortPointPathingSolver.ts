@@ -43,12 +43,13 @@ type TypedRegionPortAssignment = Omit<
   solvedRoute: TypedSolvedRoutes
 }
 
-type TypedRegion = Omit<Region, "d" | "assignments"> & {
+type TypedRegion = Omit<Region, "d" | "assignments" | "ports"> & {
   d: CapacityMeshNode
   assignments?: TypedRegionPortAssignment[]
+  ports: TypedRegionPort[]
 }
 
-type TypedRegionPort = Omit<RegionPort, "d"> & {
+type TypedRegionPort = Omit<RegionPort, "d" | "port"> & {
   d: SegmentPortPoint
 }
 
