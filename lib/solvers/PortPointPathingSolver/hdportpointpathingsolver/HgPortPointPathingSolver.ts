@@ -1,52 +1,233 @@
 import {
-  type Candidate,
+  Candidate,
+  Connection,
+  HyperGraph,
   HyperGraphSolver,
-  type RegionPortAssignment,
-  type SolvedRoute,
+  Region,
+  RegionPort,
+  RegionPortAssignment,
+  SolvedRoute,
 } from "@tscircuit/hypergraph"
-import type { Connection, HyperGraph } from "@tscircuit/hypergraph"
+import { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+  ConnectionPoint,
+  SimpleRouteConnection,
+} from "lib/types"
 import {
   distance,
   doSegmentsIntersect,
+  pointToBoxDistance,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import type { GraphicsObject } from "graphics-debug"
-import type {
-  ConnectionPathResult,
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { GraphicsObject, Line, mergeGraphics, Point } from "graphics-debug"
+import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import {
   InputNodeWithPortPoints,
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import type {
-  HgPort,
-  HgRegion,
-} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
-import { buildPortPointAssignmentsFromSolvedRoutes } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/buildPortPointAssignmentsFromSolvedRoutes"
-import { visualizeHgPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/visualizeHgPortPointPathingSolver"
-import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
-import type {
-  NodeWithPortPoints,
-  PortPoint,
-} from "lib/types/high-density-types"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
-import { computeSectionScore } from "lib/solvers/MultiSectionPortPointOptimizer"
 
-const MAX_CANDIDATES_PER_REGION = 2
+type TypedRegionPortAssignment = Omit<
+  RegionPortAssignment,
+  "regionPort1" | "regionPort2" | "region" | "connection" | "solvedRoute"
+> & {
+  regionPort1: TypedRegionPort
+  regionPort2: TypedRegionPort
+  region: TypedRegion
+  connection: TypedConnection
+  solvedRoute: TypedSolvedRoutes
+}
+
+type TypedRegion = Omit<Region, "d" | "assignments"> & {
+  d: CapacityMeshNode
+  assignments?: TypedRegionPortAssignment[]
+}
+
+type TypedRegionPort = Omit<RegionPort, "d"> & {
+  d: SegmentPortPoint
+}
+
+type TypedHyperGraph = Omit<HyperGraph, "ports" | "regions"> & {
+  ports: TypedRegionPort[]
+  regions: TypedRegion[]
+}
+
+type TypedConnection = Omit<Connection, "startRegion" | "endRegion"> & {
+  startRegion: TypedRegion
+  endRegion: TypedRegion
+  simpleRouteConnection?: SimpleRouteConnection
+}
+
+type TypedCandidate = Omit<
+  Candidate,
+  "port" | "parent" | "lastPort" | "lastRegion" | "nextRegion"
+> & {
+  port: TypedRegionPort
+  parent?: TypedCandidate
+  lastPort?: TypedRegionPort
+  lastRegion?: TypedRegion
+  nextRegion?: TypedRegion
+  ripRequired: boolean
+}
+
+type TypedSolvedRoutes = Omit<SolvedRoute, "path" | "connection"> & {
+  path: TypedCandidate[]
+  connection: TypedConnection
+}
 
 type RegionId = CapacityMeshNodeId
 type RegionMemoryPfMap = Map<RegionId, number>
 type RegionRipCountMap = Map<RegionId, number>
 
+/**
+ * I prefer this over throw
+ */
+function assertDefined<T>(
+  value: T | undefined | null,
+  message: string,
+): asserts value is T {
+  if (value === undefined || value === null) {
+    throw new Error(message)
+  }
+}
+
+const sharedZLayers = (layer1: number[], layer2: number[]): number[] => {
+  const shared = []
+  for (const z1 of layer1) {
+    if (layer2.includes(z1)) {
+      shared.push(z1)
+    }
+  }
+  return shared
+}
+
+const checkIfConnectionPointIsInRegion = (params: {
+  point: ConnectionPoint
+  region: TypedRegion
+  layerCount: number
+}): boolean => {
+  if (pointToBoxDistance(params.point, params.region.d) === 0) {
+    let layers =
+      "layers" in params.point ? params.point.layers : [params.point.layer]
+    let intLayers = layers.map((layer) => {
+      return mapLayerNameToZ(layer, params.layerCount)
+    })
+    const sharedLayers = sharedZLayers(intLayers, params.region.d.availableZ)
+    if (sharedLayers.length > 0) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * We build a hypergraph from the input nodes and simple route json
+ * we expect the simple route json connection to be in pairs
+ * the pointsToConnection should be in pairs
+ */
+export const buildGraph = (params: {
+  simpleRouteJsonConnections: SimpleRouteConnection[]
+  capacityMeshNodes: CapacityMeshNode[]
+  segmentPortPoints: SegmentPortPoint[]
+  layerCount: number
+}): { graph: TypedHyperGraph; connections: TypedConnection[] } => {
+  const graph: TypedHyperGraph = {
+    ports: [],
+    regions: [],
+  }
+  const connections: TypedConnection[] = []
+
+  for (const cmnNode of params.capacityMeshNodes) {
+    graph.regions.push({
+      regionId: cmnNode.capacityMeshNodeId,
+      d: cmnNode,
+      ports: [],
+    })
+  }
+
+  for (const spp of params.segmentPortPoints) {
+    const [region1Id, region2Id] = spp.nodeIds
+    const region1 = graph.regions.find(
+      (region) => region.regionId === region1Id,
+    )
+    const region2 = graph.regions.find(
+      (region) => region.regionId === region2Id,
+    )
+
+    assertDefined(
+      region1,
+      `Could not find region with id ${region1Id} for segment port point ${spp.segmentPortPointId}`,
+    )
+    assertDefined(
+      region2,
+      `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
+    )
+
+    const typedPort: TypedRegionPort = {
+      portId: spp.segmentPortPointId,
+      d: spp,
+      region1: region1,
+      region2: region2,
+    }
+    graph.ports.push(typedPort)
+    region1.ports.push(typedPort)
+    region2.ports.push(typedPort)
+  }
+
+  for (const connection of params.simpleRouteJsonConnections) {
+    const pointsToConnectPars = connection.pointsToConnect
+    const [startPoint, endPoint] = pointsToConnectPars
+    const startRegion = graph.regions.find((region) =>
+      checkIfConnectionPointIsInRegion({
+        point: startPoint,
+        region: region,
+        layerCount: params.layerCount,
+      }),
+    )
+    const endRegion = graph.regions.find((region) =>
+      checkIfConnectionPointIsInRegion({
+        point: endPoint,
+        region: region,
+        layerCount: params.layerCount,
+      }),
+    )
+
+    assertDefined(
+      startRegion,
+      `Could not find start region for connection "${connection.name}"`,
+    )
+    assertDefined(
+      endRegion,
+      `Could not find end region for connection "${connection.name}"`,
+    )
+
+    connections.push({
+      connectionId: connection.name,
+      mutuallyConnectedNetworkId:
+        connection.rootConnectionName ?? connection.name,
+      startRegion: startRegion,
+      endRegion: endRegion,
+      simpleRouteConnection: connection,
+    })
+  }
+
+  return { graph, connections }
+}
+
 export interface HgPortPointPathingSolverParams {
-  inputGraph: HyperGraph
-  inputConnections: Connection[]
-  connectionsWithResults: ConnectionPathResult[]
-  inputNodes: InputNodeWithPortPoints[]
-  portPointMap: Map<string, InputPortPoint>
-  regionMemoryPfMap: RegionMemoryPfMap
-  rippingEnabled: boolean
-  forceCenterFirst: boolean
+  graph: TypedHyperGraph
+  connections: TypedConnection[]
+  layerCount: number
+  effort: number
+  flags: {
+    rippingEnabled: boolean
+    forceCenterFirstEnabled: boolean
+  }
   weights: {
     GREEDY_MULTIPLIER: number
     RIP_COST: number
@@ -60,288 +241,399 @@ export interface HgPortPointPathingSolverParams {
     RANDOM_RIP_FRACTION: number
     MAX_RIPS: number
     MIN_ALLOWED_BOARD_SCORE: number
+    MAX_CANDIDATES_PER_REGION: number
   }
-  layerCount: number
+  opts?: {
+    regionMemoryPfMap?: RegionMemoryPfMap
+  }
 }
 
 export class HgPortPointPathingSolver extends HyperGraphSolver<
-  HgRegion,
-  HgPort
+  TypedRegion,
+  TypedRegionPort
 > {
-  inputNodes: InputNodeWithPortPoints[]
-  regionNodeMap: Map<RegionId, InputNodeWithPortPoints>
-  regionById: Map<RegionId, HgRegion>
-  portPointMap: Map<string, InputPortPoint>
-  connectionsWithResults: ConnectionPathResult[] = []
-  assignedPortPoints: Map<
-    string,
-    { connectionName: string; rootConnectionName?: string }
-  > = new Map()
-  nodeAssignedPortPoints: Map<CapacityMeshNodeId, PortPoint[]> = new Map()
-  assignmentsBuilt = false
-
-  portUsagePenalty: number
-  regionTransitionPenalty: number
-  ripRegionPfThresholdStart: number
-  maxRegionRips: number
-  memoryPfFactor: number
-  centerOffsetDistPenaltyFactor: number
-  forceCenterFirst: boolean
-  straightLineDeviationPenaltyFactor: number
-  connectionResultByName: Map<string, ConnectionPathResult>
-  regionRipCountMap: RegionRipCountMap = new Map()
-  regionMemoryPfMap: RegionMemoryPfMap = new Map()
-  totalRipCount = 0
-  randomRipFraction: number
-  maxRips: number
-  MIN_ALLOWED_BOARD_SCORE: number
-  layerCount: number
-
-  constructor({
-    inputGraph,
-    inputConnections,
-    connectionsWithResults,
-    inputNodes,
-    portPointMap,
-    regionMemoryPfMap,
-    rippingEnabled,
-    weights,
-    forceCenterFirst,
-    layerCount,
-  }: HgPortPointPathingSolverParams) {
-    const {
-      GREEDY_MULTIPLIER: greedyMultiplier,
-      MAX_REGION_RIPS: maxRegionRips,
-      MEMORY_PF_FACTOR: memoryPfFactor,
-      CENTER_OFFSET_DIST_PENALTY_FACTOR: centerOffsetDistPenaltyFactor,
-      PORT_USAGE_PENALTY: portUsagePenalty,
-      REGION_TRANSITION_PENALTY: regionTransitionPenalty,
-      STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:
-        straightLineDeviationPenaltyFactor,
-      RIP_COST: ripCost,
-      RIP_REGION_PF_THRESHOLD_START: ripRegionPfThresholdStart,
-      RANDOM_RIP_FRACTION: randomRipFraction,
-      MAX_RIPS: maxRips,
-      MIN_ALLOWED_BOARD_SCORE,
-    } = weights
+  private regionMemoryPfMap: RegionMemoryPfMap
+  private regionRipCountMap: RegionRipCountMap
+  private totalRipCount: number
+  constructor(private params: HgPortPointPathingSolverParams) {
     super({
-      inputGraph,
-      inputConnections,
-      greedyMultiplier: greedyMultiplier,
-      rippingEnabled: rippingEnabled ?? true,
-      ripCost: ripCost,
+      inputConnections: params.connections,
+      inputGraph: params.graph,
+      greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
+      ripCost: params.weights.RIP_COST,
+      rippingEnabled: params.flags.rippingEnabled,
     })
-    this.inputNodes = inputNodes
-    this.regionNodeMap = new Map(
-      inputNodes.map((node) => [node.capacityMeshNodeId, node]),
-    )
-    this.regionById = new Map(
-      this.graph.regions.map((region) => [
-        region.regionId as CapacityMeshNodeId,
-        region as HgRegion,
-      ]),
-    )
-    this.portPointMap = portPointMap
-    this.connectionsWithResults = connectionsWithResults
-
-    this.portUsagePenalty = portUsagePenalty
-    this.regionTransitionPenalty = regionTransitionPenalty
-    this.ripRegionPfThresholdStart = ripRegionPfThresholdStart
-    this.maxRegionRips = maxRegionRips
-    this.memoryPfFactor = memoryPfFactor
-    this.centerOffsetDistPenaltyFactor = centerOffsetDistPenaltyFactor
-    this.forceCenterFirst = forceCenterFirst
-    this.straightLineDeviationPenaltyFactor = straightLineDeviationPenaltyFactor
-    this.regionMemoryPfMap = regionMemoryPfMap
-    this.randomRipFraction = randomRipFraction
-    this.maxRips = maxRips
-    this.MIN_ALLOWED_BOARD_SCORE = MIN_ALLOWED_BOARD_SCORE
-    this.MAX_ITERATIONS = 200000
-    this.connectionResultByName = new Map(
-      connectionsWithResults.map((result) => [result.connection.name, result]),
-    )
-    this.layerCount = layerCount
+    this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()
+    this.regionRipCountMap = new Map()
+    this.totalRipCount = 0
+    this.MAX_ITERATIONS *= params.effort
   }
 
-  private clampPf(pf: number): number {
-    if (!Number.isFinite(pf)) return 0
-    return Math.max(0, Math.min(0.9999, pf))
+  override estimateCostToEnd(port: TypedRegionPort): number {
+    const endRegion = this.currentEndRegion
+    assertDefined(endRegion, "Current end region is undefined")
+    return distance(port.d, endRegion.d.center)
   }
 
-  private pfToFailureCost(pf: number): number {
-    return -Math.log(1 - this.clampPf(pf))
-  }
-
-  private recordRegionMemoryPf(regionId: RegionId, pf: number): void {
-    const clampedPf = this.clampPf(pf)
-    const prevPf = this.regionMemoryPfMap.get(regionId) ?? 0
-    const updatedPf = Math.max(clampedPf, prevPf * 0.98)
-    this.regionMemoryPfMap.set(regionId, updatedPf)
-  }
-
-  override estimateCostToEnd(port: HgPort): number {
-    const endCenter = this.currentEndRegion?.d?.center
-    if (!endCenter) return 0
-    return distance({ x: port.d.x, y: port.d.y }, endCenter)
-  }
-
-  override computeH(candidate: Candidate<HgRegion, HgPort>): number {
+  override computeH(
+    candidate: Candidate<TypedRegion, TypedRegionPort>,
+  ): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
-    const centerOffsetPenaltyInput =
-      candidate.port.d.distToCentermostPortOnZ ?? 0
-    const regionIdForMemory =
+    const centerOffsetPenalty =
+      candidate.port.d.distToCentermostPortOnZ *
+      this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
+    const regionIdForMemoryPf =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
-    const memoryPf = regionIdForMemory
-      ? (this.regionMemoryPfMap.get(regionIdForMemory) ?? 0)
+    const memoryPf = regionIdForMemoryPf
+      ? (this.regionMemoryPfMap.get(regionIdForMemoryPf) ?? 0)
       : 0
-    const memoryPfPenalty = this.pfToFailureCost(memoryPf) * this.memoryPfFactor
+    const memoryPfPenalty = memoryPf * this.params.weights.MEMORY_PF_FACTOR
     const straightLineDeviationPenalty =
-      this.getStraightLineDeviationPenalty(candidate)
+      this.computeDeviation(candidate) *
+      this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
+
     return (
       distanceToEnd +
-      centerOffsetPenaltyInput * this.centerOffsetDistPenaltyFactor +
+      centerOffsetPenalty +
       memoryPfPenalty +
       straightLineDeviationPenalty
     )
   }
 
-  private getStraightLineDeviationPenalty(
-    candidate: Candidate<HgRegion, HgPort>,
-  ): number {
-    if (this.straightLineDeviationPenaltyFactor <= 0) return 0
-
-    const connectionId = this.currentConnection?.connectionId
-    if (!connectionId) return 0
-
-    const connectionResult = this.connectionResultByName.get(connectionId)
-    const pointsToConnect = connectionResult?.connection.pointsToConnect
-    if (!pointsToConnect || pointsToConnect.length < 2) return 0
-
-    const startPoint = pointsToConnect[0]
-    const endPoint = pointsToConnect[1]
-    const candidatePoint = { x: candidate.port.d.x, y: candidate.port.d.y }
-    const deviation = pointToSegmentDistance(
-      candidatePoint,
-      startPoint,
-      endPoint,
-    )
-    return this.straightLineDeviationPenaltyFactor * deviation
-  }
-
   override computeIncreasedRegionCostIfPortsAreUsed(
-    region: HgRegion,
-    port1: HgPort,
-    port2: HgPort,
+    region: TypedRegion,
+    port1: TypedRegionPort,
+    port2: TypedRegionPort,
   ): number {
-    const transitionDistance = distance(
-      { x: port1.d.x, y: port1.d.y },
-      { x: port2.d.x, y: port2.d.y },
-    )
+    // TODO: I think we can do more
+    const transitionDistance = distance(port1.d, port2.d)
     const regionSizePenalty = Math.max(region.d.width, region.d.height) * 0.01
-    return transitionDistance * this.regionTransitionPenalty + regionSizePenalty
+    return (
+      transitionDistance * this.params.weights.REGION_TRANSITION_PENALTY +
+      regionSizePenalty
+    )
   }
 
-  override getPortUsagePenalty(port: HgPort): number {
+  override getPortUsagePenalty(port: TypedRegionPort): number {
     const ripCount = port.ripCount ?? 0
-    return ripCount * this.portUsagePenalty
+    return ripCount * this.params.weights.PORT_USAGE_PENALTY
   }
 
   override getRipsRequiredForPortUsage(
-    region: HgRegion,
-    port1: HgPort,
-    port2: HgPort,
+    region: TypedRegion,
+    port1: TypedRegionPort,
+    port2: TypedRegionPort,
   ): RegionPortAssignment[] {
-    const assignments = region.assignments ?? []
-    if (assignments.length === 0) return []
-    const newSegmentStart = { x: port1.d.x, y: port1.d.y }
-    const newSegmentEnd = { x: port2.d.x, y: port2.d.y }
+    const assignment: RegionPortAssignment[] = region.assignments ?? []
+    if (assignment.length === 0) return []
 
-    const ripsRequired = assignments.filter((assignment) => {
-      if (
-        assignment.connection.mutuallyConnectedNetworkId ===
-        this.currentConnection?.mutuallyConnectedNetworkId
-      ) {
-        return false
-      }
-      const existingPort1 = assignment.regionPort1 as HgPort
-      const existingPort2 = assignment.regionPort2 as HgPort
-      if (existingPort1 === port1 || existingPort1 === port2) return false
-      if (existingPort2 === port1 || existingPort2 === port2) return false
-      const existingStart = { x: existingPort1.d.x, y: existingPort1.d.y }
-      const existingEnd = { x: existingPort2.d.x, y: existingPort2.d.y }
-      return doSegmentsIntersect(
-        newSegmentStart,
-        newSegmentEnd,
-        existingStart,
-        existingEnd,
-      )
-    })
+    const ripsRequired: RegionPortAssignment[] = assignment.filter(
+      (assignment) => {
+        if (
+          assignment.connection.mutuallyConnectedNetworkId ===
+          this.currentConnection?.mutuallyConnectedNetworkId
+        ) {
+          return false
+        }
+
+        if (
+          assignment.regionPort1 === port1 ||
+          assignment.regionPort2 === port1
+        ) {
+          return false
+        }
+
+        if (
+          assignment.regionPort1 === port2 ||
+          assignment.regionPort2 === port2
+        ) {
+          return false
+        }
+
+        return doSegmentsIntersect(
+          assignment.regionPort1.d,
+          assignment.regionPort2.d,
+          port1.d,
+          port2.d,
+        )
+      },
+    )
 
     return ripsRequired
   }
 
-  private isPortAvailableForCurrentNet(port: HgPort): boolean {
-    const assignment = port.assignment
-    if (!assignment) return true
+  override selectCandidatesForEnteringRegion(
+    candidates: TypedCandidate[],
+  ): TypedCandidate[] {
+    const startRegion = this.currentConnection?.startRegion
+    const endRegion = this.currentConnection?.endRegion
+    assertDefined(
+      startRegion,
+      "Current connection or start region is undefined",
+    )
+    assertDefined(endRegion, "Current connection or end region is undefined")
 
-    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
-    return assignment.connection.mutuallyConnectedNetworkId === currentNetId
+    const filterCandidates = candidates.filter((candidate) => {
+      const nextRegion = candidate.nextRegion
+      if (!nextRegion?.d._containsObstacle) {
+        return true
+      }
+      return nextRegion === startRegion || nextRegion === endRegion
+    })
+
+    const centerFirstCandidates = this.params.flags.forceCenterFirstEnabled
+      ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
+      : filterCandidates
+
+    if (
+      centerFirstCandidates.length <=
+      this.params.weights.MAX_CANDIDATES_PER_REGION
+    ) {
+      return centerFirstCandidates
+    }
+
+    return centerFirstCandidates
+      .sort((a, b) => a.g + a.h - (b.g + b.h))
+      .slice(0, this.params.weights.MAX_CANDIDATES_PER_REGION)
+  }
+
+  override routeSolvedHook(solvedRoute: TypedSolvedRoutes): void {
+    const traversedRegions = new Set<TypedRegion>()
+    for (const candidate of solvedRoute.path) {
+      const region = candidate.lastRegion
+      if (region) traversedRegions.add(region)
+    }
+    for (const region of traversedRegions) {
+      const regionPf = this.computeRegionPfFromAssignments(region)
+      this.regionMemoryPfMap.set(region.regionId, regionPf)
+    }
+
+    if (!solvedRoute.requiredRip) return
+    if (this.unprocessedConnections.length < 2) return
+
+    // TODO: not sure if we need to do this
+    const [next, ...rest] = this.unprocessedConnections
+    this.unprocessedConnections = [...rest, next]
+  }
+
+  override computeRoutesToRip(
+    newlySolvedRoute: TypedSolvedRoutes,
+  ): Set<TypedSolvedRoutes> {
+    const portOverlapRoutesToRip = super.computePortOverlapRoutes(
+      newlySolvedRoute,
+    )
+    const routesToRip = new Set<TypedSolvedRoutes>(portOverlapRoutesToRip)
+
+    const crossingRoutesByRegion: Map<
+      TypedRegion,
+      Set<TypedSolvedRoutes>
+    > = new Map()
+    newlySolvedRoute.path.map((candidate) => {
+      if (!candidate.lastPort || !candidate.lastRegion) return
+      const crossingAssignments = this.getRipsRequiredForPortUsage(
+        candidate.lastRegion,
+        candidate.lastPort,
+        candidate.port,
+      )
+      if (crossingAssignments.length === 0) return null
+      const crossingRoutesInRegion =
+        crossingRoutesByRegion.get(candidate.lastRegion) ?? new Set()
+      for (const assignment of crossingAssignments) {
+        crossingRoutesInRegion.add(assignment.solvedRoute)
+      }
+      crossingRoutesByRegion.set(candidate.lastRegion, crossingRoutesInRegion)
+    })
+    const traversedRegions = newlySolvedRoute.path.flatMap((candidate) => {
+      if (!candidate.lastRegion) return []
+      return [candidate.lastRegion]
+    })
+
+    const allRegionIdsForRipping = Array.from(
+      new Set<TypedRegion>([
+        ...crossingRoutesByRegion.keys(),
+        ...traversedRegions,
+      ]),
+    )
+    const rippingRandomSeed =
+      this.iterations + this.solvedRoutes.length + this.totalRipCount
+    const ordereRegionIdsForRipping = cloneAndShuffleArray(
+      allRegionIdsForRipping,
+      rippingRandomSeed,
+    )
+    for (const region of ordereRegionIdsForRipping) {
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+      const rippingThreshold = this.getRegionRippingPfThreshold(region.regionId)
+      let currentPf = this.computeRegionPf({
+        region,
+        newlySolvedRoute,
+        routesToRip,
+      })
+      this.regionMemoryPfMap.set(region.regionId, currentPf)
+
+      if (currentPf <= rippingThreshold) continue
+
+      const testedConnection = new Set<TypedConnection>()
+      let ripCountForRegionLoop = 0
+
+      while (currentPf > rippingThreshold) {
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+        if (!region.assignments || region.assignments.length === 0) {
+          throw new Error(
+            "We are trying to rip a region with no assignments, this should not happen",
+          )
+        }
+
+        const availableRoutesToRegion = region.assignments
+          .map((e) => {
+            const route = e.solvedRoute
+            const routeConnection = e.connection
+            if (
+              routeConnection.connectionId ===
+              newlySolvedRoute.connection.connectionId
+            ) {
+              return null
+            }
+            if (!routesToRip.has(route)) {
+              return route
+            }
+          })
+          .filter((route) => !!route)
+
+        if (availableRoutesToRegion.length === 0) break
+
+        const shuffledRoutesInRegion = cloneAndShuffleArray(
+          availableRoutesToRegion,
+          rippingRandomSeed + ripCountForRegionLoop + testedConnection.size,
+        )
+
+        const routeToRip = shuffledRoutesInRegion[0]
+        if (!routeToRip) break
+        testedConnection.add(routeToRip.connection)
+
+        routesToRip.add(routeToRip)
+        this.totalRipCount++
+        ripCountForRegionLoop++
+        this.regionRipCountMap.set(
+          region.regionId,
+          (this.regionRipCountMap.get(region.regionId) ?? 0) + 1,
+        )
+
+        currentPf = this.computeRegionPf({
+          region,
+          newlySolvedRoute,
+          routesToRip,
+        })
+        this.regionMemoryPfMap.set(region.regionId, currentPf)
+      }
+    }
+    const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size
+    if (didRipAnyLoop) {
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS) return routesToRip
+
+      const eligibleRoutes = this.solvedRoutes.filter((route) => {
+        if (routesToRip.has(route)) return false
+        return (
+          route.connection.connectionId !==
+          newlySolvedRoute.connection.connectionId
+        )
+      })
+
+      if (eligibleRoutes.length === 0) return routesToRip
+
+      const randomRipCount = Math.max(
+        1,
+        Math.floor(
+          this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length,
+        ),
+      )
+      const shuffledEligibleRoutes = cloneAndShuffleArray(
+        eligibleRoutes,
+        rippingRandomSeed,
+      )
+
+      let addedRandomRips = 0
+      for (const route of shuffledEligibleRoutes) {
+        if (addedRandomRips >= randomRipCount) break
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+        if (routesToRip.has(route)) continue
+
+        routesToRip.add(route)
+        addedRandomRips++
+        this.totalRipCount++
+      }
+    }
+
+    return routesToRip
+  }
+
+  private computeDeviation(candidate: Candidate<TypedRegion, TypedRegionPort>) {
+    const startPoint = this.currentConnection?.startRegion.d.center
+    const endPoint = this.currentConnection?.endRegion.d.center
+    assertDefined(startPoint, "Current connection or start region is undefined")
+    assertDefined(endPoint, "Current connection or end region is undefined")
+    const portPoint = candidate.port.d
+    const deviation = pointToSegmentDistance(portPoint, startPoint, endPoint)
+    return deviation
   }
 
   private getCenterFirstEnteringRegionCandidates(
-    candidates: Candidate<HgRegion, HgPort>[],
-  ): Candidate<HgRegion, HgPort>[] {
-    const byZ = new Map<number, Candidate<HgRegion, HgPort>[]>()
-
+    candidates: Candidate<TypedRegion, TypedRegionPort>[],
+  ): Candidate<TypedRegion, TypedRegionPort>[] {
+    const byZ = new Map<number, Candidate<TypedRegion, TypedRegionPort>[]>()
     for (const candidate of candidates) {
-      const z = candidate.port.d.z ?? 0
-      const candidatesOnZ = byZ.get(z) ?? []
-      candidatesOnZ.push(candidate)
-      byZ.set(z, candidatesOnZ)
+      const availableZ = candidate.port.d.availableZ
+      for (const z of availableZ) {
+        const candidatesOnZ = byZ.get(z) ?? []
+        candidatesOnZ.push(candidate)
+        byZ.set(z, candidatesOnZ)
+      }
     }
 
-    const selected: Candidate<HgRegion, HgPort>[] = []
+    const selected: Candidate<TypedRegion, TypedRegionPort>[] = []
 
     for (const candidatesOnZ of byZ.values()) {
-      const sortedByCenterOffset = candidatesOnZ
-        .slice()
-        .sort(
-          (a, b) =>
-            a.port.d.distToCentermostPortOnZ - b.port.d.distToCentermostPortOnZ,
-        )
-      const centerCandidate = sortedByCenterOffset[0]
-      if (!centerCandidate) continue
+      const sortedByCenterOffsetCandidates = candidatesOnZ.sort(
+        (a, b) =>
+          a.port.d.distToCentermostPortOnZ - b.port.d.distToCentermostPortOnZ,
+      )
+      const currentCandidate = sortedByCenterOffsetCandidates[0]
+      if (!currentCandidate) continue
 
-      if (this.isPortAvailableForCurrentNet(centerCandidate.port)) {
-        selected.push(centerCandidate)
+      if (this.isPortAvailableForCurrentNet(currentCandidate.port)) {
+        selected.push(currentCandidate)
         continue
       }
 
-      const sortedByPosition = candidatesOnZ.slice().sort((a, b) => {
-        if (a.port.d.x !== b.port.d.x) return a.port.d.x - b.port.d.x
+      const sortedByPositionCandidates = candidatesOnZ.sort((a, b) => {
+        if (a.port.d.x !== b.port.d.x) {
+          return a.port.d.x - b.port.d.x
+        }
         return a.port.d.y - b.port.d.y
       })
 
-      const availableRanges: Candidate<HgRegion, HgPort>[][] = []
-      let currentRange: Candidate<HgRegion, HgPort>[] = []
+      const availableRangesCandidate: Candidate<
+        TypedRegion,
+        TypedRegionPort
+      >[][] = []
+      let currentRangeCandidate: Candidate<TypedRegion, TypedRegionPort>[] = []
 
-      for (const candidate of sortedByPosition) {
+      for (const candidate of sortedByPositionCandidates) {
         if (this.isPortAvailableForCurrentNet(candidate.port)) {
-          currentRange.push(candidate)
+          currentRangeCandidate.push(candidate)
           continue
         }
 
-        if (currentRange.length > 0) {
-          availableRanges.push(currentRange)
-          currentRange = []
+        if (currentRangeCandidate.length > 0) {
+          availableRangesCandidate.push(currentRangeCandidate)
+          currentRangeCandidate = []
         }
       }
 
-      if (currentRange.length > 0) {
-        availableRanges.push(currentRange)
+      if (currentRangeCandidate.length > 0) {
+        availableRangesCandidate.push(currentRangeCandidate)
       }
 
-      for (const range of availableRanges) {
+      for (const range of availableRangesCandidate) {
         selected.push(range[Math.floor(range.length / 2)])
       }
     }
@@ -349,227 +641,47 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return selected
   }
 
-  override selectCandidatesForEnteringRegion(
-    candidates: Candidate<HgRegion, HgPort>[],
-  ): Candidate<HgRegion, HgPort>[] {
-    const startRegion = this.currentConnection?.startRegion
-    const endRegion = this.currentConnection?.endRegion
+  private isPortAvailableForCurrentNet(port: TypedRegionPort): boolean {
+    const assignment = port.assignment
+    if (!assignment) return true
 
-    const filteredCandidates = candidates.filter((candidate) => {
-      const nextRegion = candidate.nextRegion
-      if (!nextRegion?.d._containsObstacle) return true
-      return nextRegion === startRegion || nextRegion === endRegion
-    })
-
-    const centerFirstCandidates = this.forceCenterFirst
-      ? this.getCenterFirstEnteringRegionCandidates(filteredCandidates)
-      : filteredCandidates
-
-    if (centerFirstCandidates.length <= MAX_CANDIDATES_PER_REGION) {
-      return centerFirstCandidates
-    }
-
-    return centerFirstCandidates
-      .slice()
-      .sort((a, b) => a.g + a.h - (b.g + b.h))
-      .slice(0, MAX_CANDIDATES_PER_REGION)
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
+    return assignment.connection.mutuallyConnectedNetworkId === currentNetId
   }
 
-  override routeSolvedHook(solvedRoute: SolvedRoute): void {
-    const traversedRegions = new Set<HgRegion>()
-    for (const candidate of solvedRoute.path) {
-      const region = candidate.lastRegion as HgRegion | undefined
-      if (region) traversedRegions.add(region)
-    }
-    for (const region of traversedRegions) {
-      const regionPf = this.computeRegionPfFromAssignments(region)
-      this.recordRegionMemoryPf(region.regionId as RegionId, regionPf)
-    }
-
-    if (!solvedRoute.requiredRip) return
-    if (this.unprocessedConnections.length < 2) return
-
-    const [next, ...rest] = this.unprocessedConnections
-    this.unprocessedConnections = [...rest, next]
-  }
-
-  override _step(): void {
-    super._step()
-    if (this.enforceBoardScoreGuardrail()) return
-    this.buildAssignmentsIfSolved()
-  }
-
-  private enforceBoardScoreGuardrail(): boolean {
-    if (!this.solved || this.failed) return false
-
-    const boardScore = this.computeBoardScore()
-    this.stats = {
-      ...this.stats,
-      boardScore,
-      totalRipCount: this.totalRipCount,
-    }
-
-    if (boardScore >= this.MIN_ALLOWED_BOARD_SCORE) return false
-
-    this.error = `Board score ${boardScore.toFixed(2)} is less than MIN_ALLOWED_BOARD_SCORE ${this.MIN_ALLOWED_BOARD_SCORE.toFixed(2)}`
-    this.failed = true
-    this.solved = false
-
-    return true
-  }
-
-  private buildAssignmentsIfSolved(): void {
-    if (!this.solved || this.assignmentsBuilt) {
-      return
-    }
-    const assignments = buildPortPointAssignmentsFromSolvedRoutes({
-      solvedRoutes: this.solvedRoutes,
-      connectionResults: this.connectionsWithResults,
-      inputNodes: this.inputNodes,
-      layerCount: this.layerCount,
-    })
-    this.connectionsWithResults = assignments.connectionsWithResults
-    this.assignedPortPoints = assignments.assignedPortPoints
-    this.nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
-    this.assignmentsBuilt = true
-  }
-
-  private getRegionRippingPfThreshold(regionId: RegionId): number {
-    const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
-    const regionRipFraction = Math.min(1, regionRipCount / this.maxRegionRips)
-    const startRippingPfThreshold = this.ripRegionPfThresholdStart
-    const threshold =
-      startRippingPfThreshold * (1 - regionRipFraction) + 1 * regionRipFraction
-
-    return threshold
-  }
-
-  private getPortPointsFromRegionAssignments(
-    assignments: RegionPortAssignment[],
-  ): PortPoint[] {
-    return assignments.flatMap((assignment) => {
-      const regionPort1 = assignment.regionPort1 as HgPort
-      const regionPort2 = assignment.regionPort2 as HgPort
+  private computeRegionPfFromAssignments(region: TypedRegion): number {
+    const existingAssignments = region.assignments ?? []
+    const existingPortPoints = existingAssignments.flatMap((assignment) => {
+      const region1PortPoint = assignment.regionPort1.d
+      const region2PortPoint = assignment.regionPort2.d
       const connectionName = assignment.connection.connectionId
       const rootConnectionName =
         assignment.connection.mutuallyConnectedNetworkId
-
       return [
         {
-          x: regionPort1.d.x,
-          y: regionPort1.d.y,
-          z: regionPort1.d.z,
+          x: region1PortPoint.x,
+          y: region1PortPoint.y,
+          z: region1PortPoint.availableZ[0] ?? 0,
           connectionName,
           rootConnectionName,
         },
         {
-          x: regionPort2.d.x,
-          y: regionPort2.d.y,
-          z: regionPort2.d.z,
+          x: region2PortPoint.x,
+          y: region2PortPoint.y,
+          z: region2PortPoint.availableZ[0] ?? 0,
           connectionName,
           rootConnectionName,
         },
-      ]
+      ] as PortPoint[]
     })
-  }
-
-  private getPortPointsFromNewlySolvedRouteInRegion(
-    newlySolvedRoute: SolvedRoute,
-    region: HgRegion,
-  ): PortPoint[] {
-    return newlySolvedRoute.path.flatMap((candidate) => {
-      if (!candidate.lastPort || candidate.lastRegion !== region) {
-        return []
-      }
-
-      const lastPort = candidate.lastPort as HgPort
-      const currentPort = candidate.port as HgPort
-
-      return [
-        {
-          x: lastPort.d.x,
-          y: lastPort.d.y,
-          z: lastPort.d.z,
-          connectionName: newlySolvedRoute.connection.connectionId,
-          rootConnectionName:
-            newlySolvedRoute.connection.mutuallyConnectedNetworkId,
-        },
-        {
-          x: currentPort.d.x,
-          y: currentPort.d.y,
-          z: currentPort.d.z,
-          connectionName: newlySolvedRoute.connection.connectionId,
-          rootConnectionName:
-            newlySolvedRoute.connection.mutuallyConnectedNetworkId,
-        },
-      ]
-    })
-  }
-
-  private computeRegionPf({
-    region,
-    newlySolvedRoute,
-    routesToRip,
-  }: {
-    region: HgRegion
-    newlySolvedRoute: SolvedRoute
-    routesToRip: Set<SolvedRoute>
-  }): number {
-    const node = this.regionNodeMap.get(region.regionId)
-    if (!node || node._containsTarget) {
-      return 0
-    }
-
-    const existingAssignments = (region.assignments ?? []).filter(
-      (assignment) => !routesToRip.has(assignment.solvedRoute),
-    )
-    const existingPortPoints =
-      this.getPortPointsFromRegionAssignments(existingAssignments)
-    const newlySolvedRoutePortPoints =
-      this.getPortPointsFromNewlySolvedRouteInRegion(newlySolvedRoute, region)
-    const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints]
 
     const nodeWithPortPoints: NodeWithPortPoints = {
-      capacityMeshNodeId: node.capacityMeshNodeId,
-      center: node.center,
-      width: node.width,
-      height: node.height,
-      portPoints,
-      availableZ: node.availableZ,
-    }
-    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
-
-    const pf = calculateNodeProbabilityOfFailure(
-      capacityMeshNode,
-      crossings.numSameLayerCrossings,
-      crossings.numEntryExitLayerChanges,
-      crossings.numTransitionPairCrossings,
-    )
-
-    return pf
-  }
-
-  private computeRegionPfFromAssignments(region: HgRegion): number {
-    const node = this.regionNodeMap.get(region.regionId)
-    if (!node || node._containsTarget) {
-      return 0
-    }
-
-    const existingAssignments = region.assignments ?? []
-    const existingPortPoints =
-      this.getPortPointsFromRegionAssignments(existingAssignments)
-
-    const nodeWithPortPoints: NodeWithPortPoints = {
-      capacityMeshNodeId: node.capacityMeshNodeId,
-      center: node.center,
-      width: node.width,
-      height: node.height,
+      ...region.d,
       portPoints: existingPortPoints,
-      availableZ: node.availableZ,
     }
+
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
+    const capacityMeshNode = region.d
 
     return calculateNodeProbabilityOfFailure(
       capacityMeshNode,
@@ -579,300 +691,96 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
-  private getDerivedCapacityMeshNode(
-    node: InputNodeWithPortPoints,
-  ): CapacityMeshNode {
-    return {
-      capacityMeshNodeId: node.capacityMeshNodeId,
-      center: node.center,
-      width: node.width,
-      height: node.height,
-      availableZ: node.availableZ,
-      layer: `z${node.availableZ.join(",")}`,
-      _containsObstacle: node._containsObstacle,
-      _containsTarget: node._containsTarget,
-      _offBoardConnectionId: node._offBoardConnectionId,
-      _offBoardConnectedCapacityMeshNodeIds:
-        node._offBoardConnectedCapacityMeshNodeIds,
-    }
-  }
-
-  private getCrossingRoutesByRegionForRoute(
-    newlySolvedRoute: SolvedRoute,
-  ): Map<RegionId, Set<SolvedRoute>> {
-    const crossingRoutesByRegion = new Map<RegionId, Set<SolvedRoute>>()
-
-    for (const candidate of newlySolvedRoute.path) {
-      if (!candidate.lastPort || !candidate.lastRegion) continue
-      const region = candidate.lastRegion as HgRegion
-      const regionId = region.regionId as RegionId
-
-      const crossingAssignments = this.getRipsRequiredForPortUsage(
-        region,
-        candidate.lastPort as HgPort,
-        candidate.port as HgPort,
-      )
-      if (crossingAssignments.length === 0) continue
-
-      const crossingRoutesInRegion =
-        crossingRoutesByRegion.get(regionId) ?? new Set()
-      for (const assignment of crossingAssignments) {
-        crossingRoutesInRegion.add(assignment.solvedRoute)
-      }
-      crossingRoutesByRegion.set(regionId, crossingRoutesInRegion)
-    }
-
-    return crossingRoutesByRegion
-  }
-
-  private getRoutesInRegionForRipping({
-    regionId,
-    routesToRip,
-    newlySolvedRoute,
-  }: {
-    regionId: RegionId
-    routesToRip: Set<SolvedRoute>
-    newlySolvedRoute: SolvedRoute
-  }): SolvedRoute[] {
-    const region = this.regionById.get(regionId)
-    if (!region?.assignments?.length) return []
-
-    const routeMap = new Map<string, SolvedRoute>()
-    for (const assignment of region.assignments) {
-      const route = assignment.solvedRoute
-      const routeConnectionId = route.connection.connectionId
-      if (routeConnectionId === newlySolvedRoute.connection.connectionId) {
-        continue
-      }
-      if (routesToRip.has(route)) continue
-      routeMap.set(routeConnectionId, route)
-    }
-
-    return [...routeMap.values()]
-  }
-
-  private getTraversedRegionIds(route: SolvedRoute): Array<RegionId> {
-    const regionIdSet = new Set<RegionId>()
-    for (const candidate of route.path) {
-      const region = candidate.lastRegion as HgRegion | undefined
-      if (!region) continue
-      regionIdSet.add(region.regionId as RegionId)
-    }
-    return [...regionIdSet]
-  }
-
-  private processRandomRips({
-    routesToRip,
-    newlySolvedRoute,
-    randomSeed,
-  }: {
-    routesToRip: Set<SolvedRoute>
-    newlySolvedRoute: SolvedRoute
-    randomSeed: number
-  }): void {
-    if (this.randomRipFraction <= 0) return
-    if (this.totalRipCount >= this.maxRips) return
-
-    const eligibleRoutes = this.solvedRoutes.filter((route) => {
-      if (routesToRip.has(route)) return false
-      return (
-        route.connection.connectionId !==
-        newlySolvedRoute.connection.connectionId
-      )
-    })
-
-    if (eligibleRoutes.length === 0) return
-
-    const randomRipCount = Math.max(
+  private getRegionRippingPfThreshold(regionId: RegionId): number {
+    const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
+    const regionRipFraction = Math.min(
       1,
-      Math.floor(this.randomRipFraction * eligibleRoutes.length),
+      regionRipCount / this.params.weights.MAX_REGION_RIPS,
     )
-    const shuffledEligibleRoutes = cloneAndShuffleArray(
-      eligibleRoutes,
-      randomSeed,
-    )
-
-    let addedRandomRips = 0
-    for (const route of shuffledEligibleRoutes) {
-      if (addedRandomRips >= randomRipCount) break
-      if (this.totalRipCount >= this.maxRips) break
-      if (routesToRip.has(route)) continue
-
-      routesToRip.add(route)
-      addedRandomRips++
-      this.totalRipCount++
-    }
+    const startRippingPfThreshold =
+      this.params.weights.RIP_REGION_PF_THRESHOLD_START
+    const threshold =
+      startRippingPfThreshold * (1 - regionRipFraction) + 1 * regionRipFraction
+    return threshold
   }
 
-  private processRippingForRoute(
-    newlySolvedRoute: SolvedRoute,
-  ): Set<SolvedRoute> {
-    const portOverlapRoutesToRip = super.computePortOverlapRoutes(
-      newlySolvedRoute,
+  private computeRegionPf({
+    region,
+    newlySolvedRoute,
+    routesToRip,
+  }: {
+    region: TypedRegion
+    newlySolvedRoute: TypedSolvedRoutes
+    routesToRip: Set<TypedSolvedRoutes>
+  }): number {
+    const existingAssignments = (region.assignments ?? []).filter(
+      (assignment) => !routesToRip.has(assignment.solvedRoute),
     )
-    const routesToRip = new Set<SolvedRoute>(portOverlapRoutesToRip)
+    const existingPortPoints = existingAssignments.flatMap((assignment) => {
+      const regionPort1 = assignment.regionPort1
+      const regionPort2 = assignment.regionPort2
+      const connectionName = assignment.connection.connectionId
+      const rootConnectionName =
+        assignment.connection.mutuallyConnectedNetworkId
+      return [
+        {
+          x: regionPort1.d.x,
+          y: regionPort1.d.y,
+          z: regionPort1.d.availableZ[0] ?? 0,
+          connectionName,
+          rootConnectionName,
+        },
+        {
+          x: regionPort2.d.x,
+          y: regionPort2.d.y,
+          z: regionPort2.d.availableZ[0] ?? 0,
+          connectionName,
+          rootConnectionName,
+        },
+      ] as PortPoint[]
+    })
+    const newlySolvedRoutePortPoints = newlySolvedRoute.path.flatMap(
+      (candidate) => {
+        if (!candidate.lastPort || candidate.lastRegion !== region) {
+          return []
+        }
 
-    const crossingRoutesByRegion =
-      this.getCrossingRoutesByRegionForRoute(newlySolvedRoute)
-    const rippingRandomSeed =
-      this.iterations + this.solvedRoutes.length + this.totalRipCount
+        const lastPort = candidate.lastPort
+        const currentPort = candidate.port
 
-    const traversedRegionIds = this.getTraversedRegionIds(newlySolvedRoute)
-    const allRegionIdsForRipping = Array.from(
-      new Set([...traversedRegionIds, ...crossingRoutesByRegion.keys()]),
+        return [
+          {
+            x: lastPort.d.x,
+            y: lastPort.d.y,
+            z: lastPort.d.availableZ[0],
+            connectionName: newlySolvedRoute.connection.connectionId,
+            rootConnectionName:
+              newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+          },
+          {
+            x: currentPort.d.x,
+            y: currentPort.d.y,
+            z: currentPort.d.availableZ[0],
+            connectionName: newlySolvedRoute.connection.connectionId,
+            rootConnectionName:
+              newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+          },
+        ] as PortPoint[]
+      },
     )
-    const orderedRegionIds = cloneAndShuffleArray(
-      allRegionIdsForRipping,
-      rippingRandomSeed,
-    )
 
-    for (const regionId of orderedRegionIds) {
-      if (this.totalRipCount >= this.maxRips) {
-        break
-      }
-
-      const region = this.regionById.get(regionId)
-      if (!region) continue
-
-      const rippingPfThreshold = this.getRegionRippingPfThreshold(regionId)
-      let currentPf = this.computeRegionPf({
-        region,
-        newlySolvedRoute,
-        routesToRip,
-      })
-      this.recordRegionMemoryPf(regionId, currentPf)
-
-      if (currentPf <= rippingPfThreshold) continue
-
-      const testedConnectionIds = new Set<string>()
-      let ripCountForRegionLoop = 0
-
-      while (currentPf > rippingPfThreshold) {
-        if (this.totalRipCount >= this.maxRips) break
-
-        const availableRoutesInRegion = this.getRoutesInRegionForRipping({
-          regionId,
-          routesToRip,
-          newlySolvedRoute,
-        }).filter(
-          (route) =>
-            !testedConnectionIds.has(route.connection.connectionId) &&
-            !routesToRip.has(route),
-        )
-
-        if (availableRoutesInRegion.length === 0) break
-
-        const shuffledRoutesInRegion = cloneAndShuffleArray(
-          availableRoutesInRegion,
-          rippingRandomSeed + ripCountForRegionLoop + testedConnectionIds.size,
-        )
-        const routeToRip = shuffledRoutesInRegion[0]
-        if (!routeToRip) break
-        testedConnectionIds.add(routeToRip.connection.connectionId)
-
-        routesToRip.add(routeToRip)
-        this.totalRipCount++
-        ripCountForRegionLoop++
-        this.regionRipCountMap.set(
-          regionId,
-          (this.regionRipCountMap.get(regionId) ?? 0) + 1,
-        )
-
-        currentPf = this.computeRegionPf({
-          region,
-          newlySolvedRoute,
-          routesToRip,
-        })
-        this.recordRegionMemoryPf(regionId, currentPf)
-      }
-    }
-
-    const didRipAnyInLoop = routesToRip.size > portOverlapRoutesToRip.size
-    if (didRipAnyInLoop) {
-      this.processRandomRips({
-        routesToRip,
-        newlySolvedRoute,
-        randomSeed: rippingRandomSeed + 10_000,
-      })
-    }
-
-    return routesToRip
-  }
-
-  override computeRoutesToRip(newlySolvedRoute: SolvedRoute): Set<SolvedRoute> {
-    return this.processRippingForRoute(newlySolvedRoute)
-  }
-
-  getNodesWithPortPoints(): NodeWithPortPoints[] {
-    const nodesWithPortPoints: NodeWithPortPoints[] = []
-    for (const node of this.inputNodes) {
-      const assignedPortPoints =
-        this.nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
-      if (assignedPortPoints.length === 0) {
-        continue
-      }
-      nodesWithPortPoints.push({
-        capacityMeshNodeId: node.capacityMeshNodeId,
-        center: node.center,
-        width: node.width,
-        height: node.height,
-        portPoints: assignedPortPoints,
-        availableZ: node.availableZ,
-      })
-    }
-    return nodesWithPortPoints
-  }
-
-  computeBoardScore(): number {
-    let nodeAssignedPortPoints = this.nodeAssignedPortPoints
-    if (!this.assignmentsBuilt) {
-      const assignments = buildPortPointAssignmentsFromSolvedRoutes({
-        solvedRoutes: this.solvedRoutes,
-        connectionResults: this.connectionsWithResults,
-        inputNodes: this.inputNodes,
-        layerCount: this.layerCount,
-      })
-      nodeAssignedPortPoints = assignments.nodeAssignedPortPoints
-    }
-
-    const nodesWithPortPoints: NodeWithPortPoints[] = []
-    for (const node of this.inputNodes) {
-      const assignedPortPoints =
-        nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
-      if (assignedPortPoints.length === 0) continue
-      nodesWithPortPoints.push({
-        capacityMeshNodeId: node.capacityMeshNodeId,
-        center: node.center,
-        width: node.width,
-        height: node.height,
-        portPoints: assignedPortPoints,
-        availableZ: node.availableZ,
-      })
-    }
-
-    const capacityMeshNodeMap = new Map(
-      this.inputNodes.map((node) => [
-        node.capacityMeshNodeId,
-        this.getDerivedCapacityMeshNode(node),
-      ]),
-    )
-    return computeSectionScore(nodesWithPortPoints, capacityMeshNodeMap)
-  }
-
-  computeNodePf(node: InputNodeWithPortPoints): number {
-    const portPoints = this.nodeAssignedPortPoints.get(node.capacityMeshNodeId)
-    if (!portPoints || portPoints.length === 0) return 0
+    const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints]
 
     const nodeWithPortPoints: NodeWithPortPoints = {
-      capacityMeshNodeId: node.capacityMeshNodeId,
-      center: node.center,
-      width: node.width,
-      height: node.height,
+      capacityMeshNodeId: region.d.capacityMeshNodeId,
+      center: region.d.center,
+      width: region.d.width,
+      height: region.d.height,
       portPoints,
-      availableZ: node.availableZ,
+      availableZ: region.d.availableZ,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = this.getDerivedCapacityMeshNode(node)
+    const capacityMeshNode = region.d
 
     const pf = calculateNodeProbabilityOfFailure(
       capacityMeshNode,
@@ -884,7 +792,227 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return pf
   }
 
-  visualize(): GraphicsObject {
-    return visualizeHgPortPointPathingSolver(this)
+  getOutput(): {
+    nodesWithPortPoints: NodeWithPortPoints[]
+    inputNodeWithPortPoints: InputNodeWithPortPoints[]
+  } {
+    const regionById = new Map(
+      this.params.graph.regions.map((region) => [region.regionId, region]),
+    )
+    const endpointRegionIds = new Set<RegionId>()
+    for (const connection of this.params.connections) {
+      endpointRegionIds.add(connection.startRegion.regionId)
+      endpointRegionIds.add(connection.endRegion.regionId)
+    }
+
+    const nodesWithPortPoints: NodeWithPortPoints[] = []
+    const inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
+
+    for (const region of this.params.graph.regions) {
+      const assignments = region.assignments ?? []
+      const nodePortPoints = assignments.flatMap((assignment) => {
+        const connectionName = assignment.connection.connectionId
+        const rootConnectionName =
+          assignment.connection.mutuallyConnectedNetworkId
+
+        return [
+          {
+            portPointId: assignment.regionPort1.d.segmentPortPointId,
+            x: assignment.regionPort1.d.x,
+            y: assignment.regionPort1.d.y,
+            z: assignment.regionPort1.d.availableZ[0] ?? 0,
+            connectionName,
+            rootConnectionName,
+          },
+          {
+            portPointId: assignment.regionPort2.d.segmentPortPointId,
+            x: assignment.regionPort2.d.x,
+            y: assignment.regionPort2.d.y,
+            z: assignment.regionPort2.d.availableZ[0] ?? 0,
+            connectionName,
+            rootConnectionName,
+          },
+        ] as PortPoint[]
+      })
+
+      if (nodePortPoints.length > 0) {
+        nodesWithPortPoints.push({
+          capacityMeshNodeId: region.d.capacityMeshNodeId,
+          center: region.d.center,
+          width: region.d.width,
+          height: region.d.height,
+          portPoints: nodePortPoints,
+          availableZ: region.d.availableZ,
+        })
+      }
+
+      const inputPortPoints: InputPortPoint[] = region.ports.map((port) => {
+        const connectsToOffBoardNode = port.d.nodeIds.some(
+          (nodeId: CapacityMeshNodeId) =>
+            Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
+        )
+        return {
+          portPointId: port.d.segmentPortPointId,
+          x: port.d.x,
+          y: port.d.y,
+          z: port.d.availableZ[0] ?? 0,
+          connectionNodeIds: port.d.nodeIds,
+          distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
+          connectsToOffBoardNode,
+        }
+      })
+
+      inputNodeWithPortPoints.push({
+        capacityMeshNodeId: region.d.capacityMeshNodeId,
+        center: region.d.center,
+        width: region.d.width,
+        height: region.d.height,
+        portPoints: inputPortPoints,
+        availableZ: region.d.availableZ,
+        _containsObstacle: region.d._containsObstacle,
+        _containsTarget:
+          region.d._containsTarget ?? endpointRegionIds.has(region.regionId),
+        _offBoardConnectionId: region.d._offBoardConnectionId,
+        _offBoardConnectedCapacityMeshNodeIds:
+          region.d._offBoardConnectedCapacityMeshNodeIds,
+      })
+    }
+
+    return {
+      nodesWithPortPoints,
+      inputNodeWithPortPoints,
+    }
   }
+
+  override visualize(): GraphicsObject {
+    return mergeGraphicsArray([
+      visualizeTypedHyperGraph(this.params.graph),
+      visualizeTypedConnections(this.params.connections),
+      visualizeCandidate(
+        this.candidateQueue.peekMany(10) as TypedCandidate[] | undefined,
+        this.currentConnection?.startRegion.d.center,
+      ),
+    ])
+  }
+}
+
+const mergeGraphicsArray = (
+  graphicsObjects: (GraphicsObject | null | undefined)[],
+): GraphicsObject => {
+  let merged: GraphicsObject | undefined | null = {}
+  merged = graphicsObjects.reduce((acc, obj) => {
+    if (!acc || !obj) {
+      return {}
+    }
+    return mergeGraphics(acc, obj)
+  }, merged)
+  if (!merged) {
+    return {}
+  }
+  return merged
+}
+
+const visualizeCandidate = (
+  candidates: TypedCandidate[] | undefined,
+  startPoint: Point,
+): GraphicsObject | null => {
+  const graphics: GraphicsObject = {
+    lines: [],
+    points: [],
+  }
+
+  if (!candidates) {
+    return graphics
+  }
+
+  let currentCandidate = candidates.shift()
+  if (!currentCandidate) {
+    return graphics
+  }
+
+  const currentCandidatePath: Line = {
+    points: [],
+    strokeColor: "rgba(255, 250, 50, 1)",
+    strokeWidth: 0.1,
+  }
+  graphics.points!.push({
+    ...currentCandidate.port.d,
+    color: "rgb(255, 50, 50)",
+    label: `g: ${currentCandidate.g}\nh: ${currentCandidate.h}\nf: ${currentCandidate.f}\nripRequired: ${currentCandidate.ripRequired}`,
+  })
+
+  do {
+    currentCandidatePath.points.push(currentCandidate.port.d)
+    currentCandidate = currentCandidate.parent
+  } while (currentCandidate)
+  currentCandidatePath.points.reverse()
+  currentCandidatePath.points.unshift(startPoint)
+
+  graphics.lines!.push(currentCandidatePath)
+
+  for (const candidate of candidates) {
+    graphics.points!.push({
+      ...candidate.port.d,
+      color: "rgb(0, 64, 255)",
+      label: `g: ${candidate.g}\nh: ${candidate.h}\nf: ${candidate.f}\nripRequired: ${candidate.ripRequired}`,
+    })
+  }
+
+  return graphics
+}
+
+const visualizeTypedConnections = (
+  connections: TypedConnection[],
+): GraphicsObject => {
+  const graphics: GraphicsObject = {
+    lines: [],
+    points: [],
+  }
+
+  for (const connection of connections) {
+    const startCenter = connection.startRegion.d.center
+    const endCenter = connection.endRegion.d.center
+    const midX = (startCenter.x + endCenter.x) / 2
+    const midY = (startCenter.y + endCenter.y) / 2
+    graphics.points!.push({
+      x: midX,
+      y: midY,
+      color: "rgba(255, 50, 150, 0.8)",
+      label: connection.connectionId,
+    })
+    graphics.lines!.push({
+      points: [startCenter, endCenter],
+      strokeColor: "rgba(255, 50, 150, 0.2)",
+      strokeWidth: 0.05,
+    })
+  }
+  return graphics
+}
+
+const visualizeTypedHyperGraph = (graph: TypedHyperGraph): GraphicsObject => {
+  const graphics: GraphicsObject = {
+    rects: [],
+    points: [],
+  }
+
+  for (const region of graph.regions) {
+    graphics.rects!.push({
+      center: region.d.center,
+      width: region.d.width,
+      height: region.d.height,
+      fill: "rgba(200, 200, 200, 0.5)",
+      label: region.regionId,
+    })
+  }
+
+  for (const port of graph.ports) {
+    graphics.points!.push({
+      x: port.d.x,
+      y: port.d.y,
+      color: "rgba(4, 90, 20, 0.3)",
+      label: port.portId,
+    })
+  }
+
+  return graphics
 }

@@ -5,7 +5,6 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import {
-  HighDensityIntraNodeRoute,
   HighDensityRoute,
 } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -15,7 +14,6 @@ import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPoint
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
@@ -24,21 +22,12 @@ import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetTo
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import {
   InputNodeWithPortPoints,
-  InputPortPoint,
 } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
-import {
-  HgPortPointPathingSolver,
-  HgPortPointPathingSolverParams,
-} from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver"
-import { buildHyperConnectionsFromSimpleRouteJson } from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperConnectionsFromSimpleRouteJson"
-import { buildHyperGraphFromInputNodes } from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -52,8 +41,8 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "lib/index"
 import {
   buildGraph,
-  HgPortPointPathingSolver2,
-} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver2"
+  HgPortPointPathingSolver,
+} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -127,7 +116,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
-  inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -244,7 +232,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HgPortPointPathingSolver2,
+      HgPortPointPathingSolver,
       (cms) => {
         const { graph, connections } = buildGraph({
           capacityMeshNodes: cms.capacityNodes!,
@@ -312,8 +300,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         return [
           {
             nodeWithPortPoints:
-              cms.portPointPathingSolver?.getNodesWithPortPoints() ?? [],
-            inputNodesWithPortPoints: this.inputNodeWithPortPoints,
+              cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+            inputNodesWithPortPoints:
+              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
+              [],
             minTraceWidth: cms.minTraceWidth,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
@@ -323,11 +313,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
-        nodePortPoints:
-          cms.uniformPortDistributionSolver?.getOutput() ??
-          cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
-          cms.portPointPathingSolver?.getNodesWithPortPoints() ??
-          [],
+        nodePortPoints: cms.uniformPortDistributionSolver?.getOutput() ?? [],
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
@@ -600,23 +586,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       }
       return { lines }
     }
-
-    if (this.portPointPathingSolver) {
-      const lines: Line[] = []
-      for (const connection of this.portPointPathingSolver
-        .connectionsWithResults) {
-        if (!connection.path) continue
-        lines.push({
-          points: connection.path.map((candidate) => ({
-            x: candidate.point.x,
-            y: candidate.point.y,
-          })),
-          strokeColor: this.colorMap[connection.connection.name],
-        })
-      }
-      return { lines }
-    }
-
     // This output is good as-is
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver?.visualize()
