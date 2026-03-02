@@ -816,8 +816,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       const connectionName = route.connection.connectionId
       const rootConnectionName = route.connection.mutuallyConnectedNetworkId
 
-      const startRegionId = route.connection.startRegion.regionId as RegionId
-      const endRegionId = route.connection.endRegion.regionId as RegionId
+      const startRegionId = route.connection.startRegion.regionId
+      const endRegionId = route.connection.endRegion.regionId
 
       const startPortPoints =
         endpointPortPointsByRegion.get(startRegionId) ?? []
@@ -975,6 +975,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         this.candidateQueue.peekMany(10) as TypedCandidate[] | undefined,
         this.currentConnection?.startRegion.d.center,
       ),
+      visualizeSolvedRoute(this.solvedRoutes),
     ])
   }
 }
@@ -993,6 +994,29 @@ const mergeGraphicsArray = (
     return {}
   }
   return merged
+}
+
+const visualizeSolvedRoute = (
+  solvedRoutes: TypedSolvedRoutes[],
+): GraphicsObject => {
+  const graphics: GraphicsObject = {
+    lines: [],
+    points: [],
+  }
+
+  for (const solvedRoute of solvedRoutes) {
+    const line: Line = {
+      points: [solvedRoute.connection.startRegion.d.center],
+      strokeColor: "rgba(255, 50, 50, 1)",
+      strokeWidth: 0.1,
+    }
+    for (const candidate of solvedRoute.path) {
+      line.points.push(candidate.port.d)
+    }
+    line.points.push(solvedRoute.connection.endRegion.d.center)
+    graphics.lines!.push(line)
+  }
+  return graphics
 }
 
 const visualizeCandidate = (
