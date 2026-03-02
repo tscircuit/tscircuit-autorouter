@@ -62,7 +62,7 @@ jobs:
           github.event.comment.author_association == 'COLLABORATOR'
         )
       )
-    runs-on: ubuntu-22.04-16core
+    runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
