@@ -10,31 +10,18 @@ get_solvers() {
     import { readFileSync } from "node:fs"
     import { join } from "node:path"
 
+    // Use autorouter-pipelines/index.ts as the source of truth for benchmarkable solvers
+    const pipelinesIndex = readFileSync(join(process.cwd(), "lib", "autorouter-pipelines", "index.ts"), "utf8")
+    const pipelineNames = [...pipelinesIndex.matchAll(/export\s*\{\s*(\w+)\s*\}/g)].map(m => m[1])
+
+    // Resolve aliases from lib/index.ts
     const libIndex = readFileSync(join(process.cwd(), "lib", "index.ts"), "utf8")
-    const solverNames = new Set()
+    const solvers = pipelineNames.map(name => {
+      const aliasMatch = libIndex.match(new RegExp(name + "\\s+as\\s+(\\w+)"))
+      return aliasMatch ? aliasMatch[1] : name
+    })
 
-    const blocks = libIndex.matchAll(
-      /export\s*\{([^}]*)\}\s*from\s*"\.\/autorouter-pipelines\/[^\"]+"/g,
-    )
-
-    for (const block of blocks) {
-      const entries = block[1]
-        .split(",")
-        .map((entry) => entry.trim())
-        .filter(Boolean)
-
-      for (const entry of entries) {
-        if (entry.startsWith("type ")) continue
-        const aliasMatch = entry.match(/^(\w+)\s+as\s+(\w+)$/)
-        if (aliasMatch) {
-          solverNames.add(aliasMatch[2])
-        } else {
-          solverNames.add(entry)
-        }
-      }
-    }
-
-    console.log(Array.from(solverNames).join("\n"))
+    console.log(solvers.join("\n"))
   ' 2>/dev/null || true
 }
 

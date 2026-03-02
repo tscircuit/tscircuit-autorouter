@@ -94,34 +94,28 @@ const parseArgs = (): BenchmarkOptions => {
 }
 
 const loadSolverNames = async (): Promise<string[]> => {
+  // Use autorouter-pipelines/index.ts as the source of truth for benchmarkable solvers
+  const pipelinesIndexPath = path.join(
+    process.cwd(),
+    "lib",
+    "autorouter-pipelines",
+    "index.ts",
+  )
+  const pipelinesIndex = await readFile(pipelinesIndexPath, "utf8")
+
+  const pipelineNames: string[] = []
+  for (const match of pipelinesIndex.matchAll(/export\s*\{\s*(\w+)\s*\}/g)) {
+    pipelineNames.push(match[1])
+  }
+
+  // Resolve aliases from lib/index.ts (e.g. "X as Y")
   const libIndexPath = path.join(process.cwd(), "lib", "index.ts")
   const libIndex = await readFile(libIndexPath, "utf8")
 
-  const solverNames = new Set<string>()
-  const exportBlocks = libIndex.matchAll(
-    /export\s*\{([^}]*)\}\s*from\s*["']\.\/autorouter-pipelines\/[^"']+["']/g,
-  )
-
-  for (const block of exportBlocks) {
-    const entries = block[1]
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean)
-
-    for (const entry of entries) {
-      if (entry.startsWith("type ")) {
-        continue
-      }
-      const aliasMatch = entry.match(/^(\w+)\s+as\s+(\w+)$/)
-      if (aliasMatch) {
-        solverNames.add(aliasMatch[2])
-      } else {
-        solverNames.add(entry)
-      }
-    }
-  }
-
-  return Array.from(solverNames)
+  return pipelineNames.map((name) => {
+    const aliasMatch = libIndex.match(new RegExp(`${name}\\s+as\\s+(\\w+)`))
+    return aliasMatch ? aliasMatch[1] : name
+  })
 }
 
 const loadScenarios = (scenarioLimit?: number) => {
