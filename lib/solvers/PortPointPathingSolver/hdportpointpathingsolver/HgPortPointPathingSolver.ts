@@ -793,7 +793,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return pf
   }
 
-  getOutput(): {
+  override getOutput(): {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
   } {
@@ -972,7 +972,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       visualizeTypedHyperGraph(this.params.graph),
       visualizeTypedConnections(this.params.connections),
       visualizeCandidate(
-        this.candidateQueue.peekMany(10) as TypedCandidate[] | undefined,
+        this.candidateQueue.peekMany(100) as TypedCandidate[] | undefined,
         this.currentConnection?.startRegion.d.center,
       ),
       visualizeSolvedRoute(this.solvedRoutes),
