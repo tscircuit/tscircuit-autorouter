@@ -805,13 +805,50 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       endpointRegionIds.add(connection.startRegion.regionId)
       endpointRegionIds.add(connection.endRegion.regionId)
     }
+    const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>()
+    for (const route of this.solvedRoutes) {
+      const path = route.path
+      if (path.length === 0) continue
+      const firstPort = path[0]?.port
+      const lastPort = path[path.length - 1]?.port
+      if (!firstPort || !lastPort) continue
+
+      const connectionName = route.connection.connectionId
+      const rootConnectionName = route.connection.mutuallyConnectedNetworkId
+
+      const startRegionId = route.connection.startRegion.regionId as RegionId
+      const endRegionId = route.connection.endRegion.regionId as RegionId
+
+      const startPortPoints =
+        endpointPortPointsByRegion.get(startRegionId) ?? []
+      startPortPoints.push({
+        portPointId: firstPort.d.segmentPortPointId,
+        x: firstPort.d.x,
+        y: firstPort.d.y,
+        z: firstPort.d.availableZ[0] ?? 0,
+        connectionName,
+        rootConnectionName,
+      })
+      endpointPortPointsByRegion.set(startRegionId, startPortPoints)
+
+      const endPortPoints = endpointPortPointsByRegion.get(endRegionId) ?? []
+      endPortPoints.push({
+        portPointId: lastPort.d.segmentPortPointId,
+        x: lastPort.d.x,
+        y: lastPort.d.y,
+        z: lastPort.d.availableZ[0] ?? 0,
+        connectionName,
+        rootConnectionName,
+      })
+      endpointPortPointsByRegion.set(endRegionId, endPortPoints)
+    }
 
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
 
     for (const region of this.params.graph.regions) {
       const assignments = region.assignments ?? []
-      const nodePortPoints = assignments.flatMap((assignment) => {
+      const edgePortPoints = assignments.flatMap((assignment) => {
         const connectionName = assignment.connection.connectionId
         const rootConnectionName =
           assignment.connection.mutuallyConnectedNetworkId
@@ -835,6 +872,52 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           },
         ] as PortPoint[]
       })
+
+      const centerPortPoints: PortPoint[] = []
+      if (
+        region.d._containsObstacle &&
+        endpointRegionIds.has(region.regionId)
+      ) {
+        const endpointPortPoints =
+          endpointPortPointsByRegion.get(region.regionId) ?? []
+        const supplementalEndpointPortPoints: PortPoint[] = []
+        for (const endpointPort of endpointPortPoints) {
+          const alreadyExists = edgePortPoints.some(
+            (p) =>
+              p.connectionName === endpointPort.connectionName &&
+              p.rootConnectionName === endpointPort.rootConnectionName &&
+              p.portPointId === endpointPort.portPointId,
+          )
+          if (!alreadyExists) {
+            supplementalEndpointPortPoints.push(endpointPort)
+          }
+        }
+        edgePortPoints.push(...supplementalEndpointPortPoints)
+
+        const edgePortPointsByConnection = new Map<string, PortPoint[]>()
+        for (const portPoint of edgePortPoints) {
+          const key = `${portPoint.connectionName}::${portPoint.rootConnectionName ?? ""}`
+          const points = edgePortPointsByConnection.get(key) ?? []
+          points.push(portPoint)
+          edgePortPointsByConnection.set(key, points)
+        }
+
+        for (const [key, points] of edgePortPointsByConnection.entries()) {
+          const [connectionName, rootConnectionName = ""] = key.split("::")
+          const firstPoint = points[0]
+          if (!firstPoint) continue
+          centerPortPoints.push({
+            portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
+            x: region.d.center.x,
+            y: region.d.center.y,
+            z: firstPoint.z,
+            connectionName,
+            rootConnectionName: rootConnectionName || undefined,
+          })
+        }
+      }
+
+      const nodePortPoints = [...edgePortPoints, ...centerPortPoints]
 
       if (nodePortPoints.length > 0) {
         nodesWithPortPoints.push({
@@ -871,90 +954,11 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         portPoints: inputPortPoints,
         availableZ: region.d.availableZ,
         _containsObstacle: region.d._containsObstacle,
-        _containsTarget:
-          region.d._containsTarget ?? endpointRegionIds.has(region.regionId),
+        _containsTarget: region.d._containsTarget,
         _offBoardConnectionId: region.d._offBoardConnectionId,
         _offBoardConnectedCapacityMeshNodeIds:
           region.d._offBoardConnectedCapacityMeshNodeIds,
       })
-    }
-
-    for (const route of this.solvedRoutes) {
-      const startRegion = route.connection.startRegion
-      const path = route.path
-
-      const startRegionInputNodeWithPortPoint: InputNodeWithPortPoints = {
-        capacityMeshNodeId: startRegion.regionId,
-        center: startRegion.d.center,
-        width: startRegion.d.width,
-        height: startRegion.d.height,
-        portPoints: [{
-          portPointId: `input-${route.connection.connectionId}`,
-          x: startRegion.d.center.x,
-          y: startRegion.d.center.y,
-          z: startRegion.d.availableZ[0] ?? 0,
-          connectionNodeIds: [startRegion.regionId, startRegion.regionId],
-          distToCentermostPortOnZ: 0,
-          connectsToOffBoardNode: false,
-        }, {
-          portPointId: `first-port-${route.connection.connectionId}`,
-          x: path[0].port.d.x,
-          y: path[0].port.d.y,
-          z: path[0].port.d.availableZ[0] ?? 0,
-          connectionNodeIds: path[0].port.d.nodeIds,
-          distToCentermostPortOnZ: path[0].port.d.distToCentermostPortOnZ,
-          connectsToOffBoardNode: path[0].port.d.nodeIds.some(
-            (nodeId: CapacityMeshNodeId) =>
-              Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
-          ),
-        }],
-        availableZ: startRegion.d.availableZ,
-        _containsObstacle: startRegion.d._containsObstacle,
-        _containsTarget:
-          startRegion.d._containsTarget ??
-          endpointRegionIds.has(startRegion.regionId),
-        _offBoardConnectionId: startRegion.d._offBoardConnectionId,
-        _offBoardConnectedCapacityMeshNodeIds:
-          startRegion.d._offBoardConnectedCapacityMeshNodeIds,
-      }
-
-      const endRegionInputNodeWithPortPoint: InputNodeWithPortPoints = {
-        capacityMeshNodeId: route.connection.endRegion.regionId,
-        center: route.connection.endRegion.d.center,
-        width: route.connection.endRegion.d.width,
-        height: route.connection.endRegion.d.height,
-        portPoints: [{
-          portPointId: `output-${route.connection.connectionId}`,
-          x: route.connection.endRegion.d.center.x,
-          y: route.connection.endRegion.d.center.y,
-          z: route.connection.endRegion.d.availableZ[0] ?? 0,
-          connectionNodeIds: [route.connection.endRegion.regionId, route.connection.endRegion.regionId],
-          distToCentermostPortOnZ: 0,
-          connectsToOffBoardNode: false,
-        }, {
-          portPointId: `last-port-${route.connection.connectionId}`,
-          x: path[path.length - 1].port.d.x,
-          y: path[path.length - 1].port.d.y,
-          z: path[path.length - 1].port.d.availableZ[0] ?? 0,
-          connectionNodeIds: path[path.length - 1].port.d.nodeIds,
-          distToCentermostPortOnZ: path[path.length - 1].port.d.distToCentermostPortOnZ,
-          connectsToOffBoardNode: path[path.length - 1].port.d.nodeIds.some(
-            (nodeId: CapacityMeshNodeId) =>
-              Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
-          ),
-        }],
-        availableZ: route.connection.endRegion.d.availableZ,
-        _containsObstacle: route.connection.endRegion.d._containsObstacle,
-        _containsTarget:
-          route.connection.endRegion.d._containsTarget ??
-          endpointRegionIds.has(route.connection.endRegion.regionId),
-        _offBoardConnectionId: route.connection.endRegion.d._offBoardConnectionId,
-        _offBoardConnectedCapacityMeshNodeIds:
-          route.connection.endRegion.d._offBoardConnectedCapacityMeshNodeIds,
-      }
-
-      inputNodeWithPortPoints.push(startRegionInputNodeWithPortPoint)
-      inputNodeWithPortPoints.push(endRegionInputNodeWithPortPoint)
     }
 
     return {
