@@ -32,7 +32,7 @@ import {
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import { cloneAndShuffleArray, seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -271,8 +271,6 @@ export interface HgPortPointPathingSolverParams {
     MIN_ALLOWED_BOARD_SCORE: number
     MAX_ITERATIONS_PER_PATH: number
     RANDOM_WALK_DISTANCE: number
-    FORCE_OFF_BOARD_FREQUENCY: number
-    FORCE_OFF_BOARD_SEED: number
     RIPPING_PF_THRESHOLD: number
     START_RIPPING_PF_THRESHOLD: number
     END_RIPPING_PF_THRESHOLD: number
@@ -290,6 +288,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   TypedRegionPort
 > {
   private regionMemoryPfMap: RegionMemoryPfMap
+  private baseRegionFailureCostMap: Map<RegionId, number>
   private regionRipCountMap: RegionRipCountMap
   private totalRipCount: number
   constructor(private params: HgPortPointPathingSolverParams) {
@@ -301,11 +300,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       rippingEnabled: params.flags.RIPPING_ENABLED,
     })
     this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()
+    this.baseRegionFailureCostMap = new Map()
     this.regionRipCountMap = new Map()
     this.totalRipCount = 0
-    this.MAX_ITERATIONS *= params.effort
     if (params.weights.MAX_ITERATIONS_PER_PATH > 0) {
-      this.MAX_ITERATIONS = params.weights.MAX_ITERATIONS_PER_PATH * params.effort
+      this.MAX_ITERATIONS =
+        params.weights.MAX_ITERATIONS_PER_PATH * params.effort
     }
   }
 
@@ -328,9 +328,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
 
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
-    const centeredOffset = 
+    const centeredOffset =
       candidate.port.d.distToCentermostPortOnZ -
-        this.params.weights.CENTER_OFFSET_FOCUS_SHIFT
+      this.params.weights.CENTER_OFFSET_FOCUS_SHIFT
     const centerOffsetPenalty =
       centeredOffset * this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
     const regionIdForMemoryPf =
@@ -356,20 +356,53 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     port1: TypedRegionPort,
     port2: TypedRegionPort,
   ): number {
-    const transitionDistance = distance(port1.d, port2.d)
-    const regionSizePenalty = Math.max(region.d.width, region.d.height) * 0.01
-    const zPenalty =
-      port1.d.z !== port2.d.z ? this.params.weights.RANDOM_COST_MAGNITUDE : 0
-    return (
-      transitionDistance * this.params.weights.BASE_CANDIDATE_COST +
-      regionSizePenalty +
-      zPenalty
+    const currentConnection = this.currentConnection
+    assertDefined(currentConnection, "Current connection is undefined")
+
+    const baseCost = this.getBaseRegionFailureCost(region)
+    const pfAfter = this.computeRegionPfWithAdditionalSegment(
+      region,
+      port1,
+      port2,
+      currentConnection.connectionId,
+      currentConnection.mutuallyConnectedNetworkId,
+    )
+    if (pfAfter >= this.NODE_MAX_PF) {
+      return this.params.weights.NODE_PF_MAX_PENALTY
+    }
+    const afterCost = this.pfToFailureCost(pfAfter)
+    const delta = Math.max(0, afterCost - baseCost)
+    return Math.min(
+      this.params.weights.NODE_PF_MAX_PENALTY,
+      delta * this.params.weights.NODE_PF_FACTOR,
     )
   }
 
+  override computeG(
+    candidate: Candidate<TypedRegion, TypedRegionPort>,
+  ): number {
+    const typedCandidate = candidate as TypedCandidate
+    const baseCost = super.computeG(candidate)
+    if (typedCandidate.nextRegion !== this.currentEndRegion) {
+      return baseCost
+    }
+    return baseCost + this.computeEndRegionCloseCost(typedCandidate)
+  }
+
   override getPortUsagePenalty(port: TypedRegionPort): number {
-    void port
-    return 0
+    const assignment = port.assignment
+    if (!assignment) return 0
+
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
+    if (assignment.connection.mutuallyConnectedNetworkId === currentNetId) {
+      return 0
+    }
+
+    // Discourage reusing a port that is already occupied by a different net.
+    return (
+      Math.max(1, this.params.weights.NODE_PF_FACTOR) * 0.5 +
+      this.params.weights.BASE_CANDIDATE_COST
+    )
   }
 
   override getRipsRequiredForPortUsage(
@@ -438,24 +471,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
       : filterCandidates
 
-    if (
-      this.params.weights.FORCE_OFF_BOARD_FREQUENCY > 0 &&
-      centerFirstCandidates.length > 1
-    ) {
-      const explorationSeed =
-        this.params.weights.SHUFFLE_SEED +
-        this.params.weights.FORCE_OFF_BOARD_SEED +
-        this.iterations +
-        this.solvedRoutes.length
-      const random = seededRandom(explorationSeed)
-      if (random() < this.params.weights.FORCE_OFF_BOARD_FREQUENCY) {
-        centerFirstCandidates = cloneAndShuffleArray(
-          centerFirstCandidates,
-          explorationSeed,
-        )
-      }
-    }
-
     const maxAllowedCost = -this.params.weights.MIN_ALLOWED_BOARD_SCORE
     if (maxAllowedCost > 0) {
       const affordableCandidates = centerFirstCandidates.filter(
@@ -470,6 +485,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override routeSolvedHook(solvedRoute: TypedSolvedRoutes): void {
+    this.baseRegionFailureCostMap.clear()
     const traversedRegions = new Set<TypedRegion>()
     for (const candidate of solvedRoute.path) {
       const region = candidate.lastRegion
@@ -617,7 +633,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       const randomRipCount = Math.max(
         1,
-        Math.floor(this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length),
+        Math.floor(
+          this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length,
+        ),
       )
       const shuffledEligibleRoutes = cloneAndShuffleArray(
         eligibleRoutes,
@@ -653,7 +671,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     let distanceTraveled = 0
     let currentCandidate: TypedCandidate | undefined = candidate
     while (currentCandidate?.parent) {
-      distanceTraveled += distance(currentCandidate.parent.port.d, currentCandidate.port.d)
+      distanceTraveled += distance(
+        currentCandidate.parent.port.d,
+        currentCandidate.port.d,
+      )
       currentCandidate = currentCandidate.parent
     }
     return distanceTraveled
@@ -669,6 +690,36 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return (
       failureCost * this.params.weights.MEMORY_PF_FACTOR +
       failureCost * this.params.weights.NODE_PF_FACTOR * 0.01
+    )
+  }
+
+  private computeEndRegionCloseCost(candidate: TypedCandidate): number {
+    const currentConnection = this.currentConnection
+    const endRegion = this.currentEndRegion
+    assertDefined(currentConnection, "Current connection is undefined")
+    assertDefined(endRegion, "Current end region is undefined")
+
+    const endPoint = currentConnection.endRegion.d.center
+
+    const endTargetPort: TypedRegionPort = {
+      portId: `end-target:${currentConnection.connectionId}`,
+      region1: endRegion,
+      region2: endRegion,
+      d: {
+        portId: `end-target:${currentConnection.connectionId}`,
+        parentPortId: `end-target:${currentConnection.connectionId}`,
+        x: endPoint.x,
+        y: endPoint.y,
+        z: candidate.port.d.z,
+        distToCentermostPortOnZ: 0,
+        regions: [endRegion, endRegion],
+      },
+    }
+
+    return this.computeIncreasedRegionCostIfPortsAreUsed(
+      endRegion,
+      candidate.port,
+      endTargetPort,
     )
   }
 
@@ -744,8 +795,53 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private computeRegionPfFromAssignments(region: TypedRegion): number {
+    const existingPortPoints = this.getRegionAssignedPortPoints(region)
+
+    const nodeWithPortPoints: NodeWithPortPoints = {
+      ...region.d,
+      portPoints: existingPortPoints,
+    }
+
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    const capacityMeshNode = region.d
+
+    return calculateNodeProbabilityOfFailure(
+      capacityMeshNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
+  }
+
+  private clampPf(pf: number): number {
+    return Math.min(Math.max(pf, 0), 0.999999)
+  }
+
+  private get NODE_MAX_PF() {
+    return Math.min(
+      0.99999,
+      1 - Math.exp(-this.params.weights.NODE_PF_MAX_PENALTY),
+    )
+  }
+
+  private pfToFailureCost(pf: number): number {
+    const p = this.clampPf(pf)
+    if (p >= this.NODE_MAX_PF) return this.params.weights.NODE_PF_MAX_PENALTY
+    return -Math.log(1 - p)
+  }
+
+  private getBaseRegionFailureCost(region: TypedRegion): number {
+    const cached = this.baseRegionFailureCostMap.get(region.regionId)
+    if (cached != null) return cached
+    const pfBefore = this.computeRegionPfFromAssignments(region)
+    const baseCost = this.pfToFailureCost(pfBefore)
+    this.baseRegionFailureCostMap.set(region.regionId, baseCost)
+    return baseCost
+  }
+
+  private getRegionAssignedPortPoints(region: TypedRegion): PortPoint[] {
     const existingAssignments = region.assignments ?? []
-    const existingPortPoints = existingAssignments.flatMap((assignment) => {
+    return existingAssignments.flatMap((assignment) => {
       const region1PortPoint = assignment.regionPort1.d
       const region2PortPoint = assignment.regionPort2.d
       const connectionName = assignment.connection.connectionId
@@ -768,17 +864,41 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         },
       ] as PortPoint[]
     })
+  }
+
+  private computeRegionPfWithAdditionalSegment(
+    region: TypedRegion,
+    port1: TypedRegionPort,
+    port2: TypedRegionPort,
+    connectionName: string,
+    rootConnectionName?: string,
+  ): number {
+    const existingPortPoints = this.getRegionAssignedPortPoints(region)
+    const additionalPortPoints: PortPoint[] = [
+      {
+        x: port1.d.x,
+        y: port1.d.y,
+        z: port1.d.z,
+        connectionName,
+        rootConnectionName,
+      },
+      {
+        x: port2.d.x,
+        y: port2.d.y,
+        z: port2.d.z,
+        connectionName,
+        rootConnectionName,
+      },
+    ]
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
-      portPoints: existingPortPoints,
+      portPoints: [...existingPortPoints, ...additionalPortPoints],
     }
-
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = region.d
 
     return calculateNodeProbabilityOfFailure(
-      capacityMeshNode,
+      region.d,
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
@@ -787,16 +907,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   private getRegionRippingPfThreshold(regionId: RegionId): number {
     const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
-    const maxRegionRips = Math.max(1, Math.floor(this.params.weights.MAX_RIPS / 10))
-    const regionRipFraction = Math.min(
+    const maxRegionRips = Math.max(
       1,
-      regionRipCount / maxRegionRips,
+      Math.floor(this.params.weights.MAX_RIPS / 10),
     )
+    const regionRipFraction = Math.min(1, regionRipCount / maxRegionRips)
     const startRippingPfThreshold =
       this.params.weights.START_RIPPING_PF_THRESHOLD ||
       this.params.weights.RIPPING_PF_THRESHOLD ||
       0.3
-    const endRippingPfThreshold = this.params.weights.END_RIPPING_PF_THRESHOLD || 1
+    const endRippingPfThreshold =
+      this.params.weights.END_RIPPING_PF_THRESHOLD || 1
     const threshold =
       startRippingPfThreshold * (1 - regionRipFraction) +
       endRippingPfThreshold * regionRipFraction
