@@ -36,7 +36,6 @@ import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
-  PortPointPathingHyperParameters,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 
 type RawPort = {
@@ -255,7 +254,33 @@ export interface HgPortPointPathingSolverParams {
   colorMap?: Record<string, string>
   layerCount: number
   effort: number
-  hyperParameters?: Partial<PortPointPathingHyperParameters>
+  flags: {
+    FORCE_CENTER_FIRST: boolean
+    RIPPING_ENABLED: boolean
+    JUMPER_PF_FN_ENABLED: boolean
+  }
+  weights: {
+    SHUFFLE_SEED: number
+    CENTER_OFFSET_DIST_PENALTY_FACTOR: number
+    CENTER_OFFSET_FOCUS_SHIFT: number
+    GREEDY_MULTIPLIER: number
+    NODE_PF_FACTOR: number
+    RANDOM_COST_MAGNITUDE: number
+    NODE_PF_MAX_PENALTY: number
+    MEMORY_PF_FACTOR: number
+    BASE_CANDIDATE_COST: number
+    MIN_ALLOWED_BOARD_SCORE: number
+    MAX_ITERATIONS_PER_PATH: number
+    RANDOM_WALK_DISTANCE: number
+    FORCE_OFF_BOARD_FREQUENCY: number
+    FORCE_OFF_BOARD_SEED: number
+    RIPPING_PF_THRESHOLD: number
+    START_RIPPING_PF_THRESHOLD: number
+    END_RIPPING_PF_THRESHOLD: number
+    MAX_RIPS: number
+    RANDOM_RIP_FRACTION: number
+    STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: number
+  }
   opts?: {
     regionMemoryPfMap?: RegionMemoryPfMap
   }
@@ -265,52 +290,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   TypedRegion,
   TypedRegionPort
 > {
-  private readonly hyperParameters: Partial<PortPointPathingHyperParameters>
   private regionMemoryPfMap: RegionMemoryPfMap
   private regionRipCountMap: RegionRipCountMap
   private totalRipCount: number
-
-  private get CENTER_OFFSET_DIST_PENALTY_FACTOR() {
-    return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
-  }
-  private get STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR() {
-    return this.hyperParameters.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR ?? 0
-  }
-  private get MEMORY_PF_FACTOR() {
-    return this.hyperParameters.MEMORY_PF_FACTOR ?? 0
-  }
-  private get REGION_TRANSITION_PENALTY() {
-    return this.hyperParameters.BASE_CANDIDATE_COST ?? 0.6
-  }
-  private get LAYER_TRANSITION_PENALTY() {
-    return this.hyperParameters.RANDOM_COST_MAGNITUDE ?? 0.5
-  }
-  private get MAX_RIPS() {
-    return this.hyperParameters.MAX_RIPS ?? 1000
-  }
-  private get RANDOM_RIP_FRACTION() {
-    return this.hyperParameters.RANDOM_RIP_FRACTION ?? 0.3
-  }
-  private get RIPPING_ENABLED() {
-    return this.hyperParameters.RIPPING_ENABLED ?? true
-  }
-  private get FORCE_CENTER_FIRST() {
-    return this.hyperParameters.FORCE_CENTER_FIRST ?? true
-  }
-  private get GREEDY_MULTIPLIER() {
-    return this.hyperParameters.GREEDY_MULTIPLIER ?? 0.7
-  }
-
   constructor(private params: HgPortPointPathingSolverParams) {
-    const hyperParameters = params.hyperParameters ?? {}
     super({
       inputConnections: params.connections,
       inputGraph: params.graph,
-      greedyMultiplier: hyperParameters.GREEDY_MULTIPLIER ?? 0.7,
+      greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
       ripCost: 0,
-      rippingEnabled: hyperParameters.RIPPING_ENABLED ?? true,
+      rippingEnabled: params.flags.RIPPING_ENABLED,
     })
-    this.hyperParameters = hyperParameters
     this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()
     this.regionRipCountMap = new Map()
     this.totalRipCount = 0
@@ -328,15 +318,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
     const centerOffsetPenalty =
-      candidate.port.d.distToCentermostPortOnZ * this.CENTER_OFFSET_DIST_PENALTY_FACTOR
+      candidate.port.d.distToCentermostPortOnZ *
+      this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
     const regionIdForMemoryPf =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
     const memoryPf = regionIdForMemoryPf
       ? (this.regionMemoryPfMap.get(regionIdForMemoryPf) ?? 0)
       : 0
-    const memoryPfPenalty = memoryPf * this.MEMORY_PF_FACTOR
+    const memoryPfPenalty = memoryPf * this.params.weights.MEMORY_PF_FACTOR
     const straightLineDeviationPenalty =
-      this.computeDeviation(candidate) * this.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
+      this.computeDeviation(candidate) *
+      this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
 
     return (
       distanceToEnd +
@@ -354,9 +346,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     // TODO: I think we can do more
     const transitionDistance = distance(port1.d, port2.d)
     const regionSizePenalty = Math.max(region.d.width, region.d.height) * 0.01
-    const zPenalty = port1.d.z !== port2.d.z ? this.LAYER_TRANSITION_PENALTY : 0
+    const zPenalty =
+      port1.d.z !== port2.d.z ? this.params.weights.RANDOM_COST_MAGNITUDE : 0
     return (
-      transitionDistance * this.REGION_TRANSITION_PENALTY +
+      transitionDistance * this.params.weights.BASE_CANDIDATE_COST +
       regionSizePenalty +
       zPenalty
     )
@@ -429,7 +422,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       return nextRegion === startRegion || nextRegion === endRegion
     })
 
-    const centerFirstCandidates = this.FORCE_CENTER_FIRST
+    const centerFirstCandidates = this.params.flags.FORCE_CENTER_FIRST
       ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
       : filterCandidates
 
@@ -500,7 +493,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       rippingRandomSeed,
     )
     for (const region of ordereRegionIdsForRipping) {
-      if (this.totalRipCount >= this.MAX_RIPS) break
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
       const rippingThreshold = this.getRegionRippingPfThreshold(region.regionId)
       let currentPf = this.computeRegionPf({
         region,
@@ -515,7 +508,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       let ripCountForRegionLoop = 0
 
       while (currentPf > rippingThreshold) {
-        if (this.totalRipCount >= this.MAX_RIPS) break
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
         if (!region.assignments || region.assignments.length === 0) {
           throw new Error(
             "We are trying to rip a region with no assignments, this should not happen",
@@ -567,7 +560,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
     const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size
     if (didRipAnyLoop) {
-      if (this.totalRipCount >= this.MAX_RIPS) return routesToRip
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS) return routesToRip
 
       const eligibleRoutes = this.solvedRoutes.filter((route) => {
         if (routesToRip.has(route)) return false
@@ -581,7 +574,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       const randomRipCount = Math.max(
         1,
-        Math.floor(this.RANDOM_RIP_FRACTION * eligibleRoutes.length),
+        Math.floor(this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length),
       )
       const shuffledEligibleRoutes = cloneAndShuffleArray(
         eligibleRoutes,
@@ -591,7 +584,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       let addedRandomRips = 0
       for (const route of shuffledEligibleRoutes) {
         if (addedRandomRips >= randomRipCount) break
-        if (this.totalRipCount >= this.MAX_RIPS) break
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
         if (routesToRip.has(route)) continue
 
         routesToRip.add(route)
@@ -728,16 +721,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   private getRegionRippingPfThreshold(regionId: RegionId): number {
     const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
-    const maxRegionRips = Math.max(1, Math.floor(this.MAX_RIPS / 10))
+    const maxRegionRips = Math.max(1, Math.floor(this.params.weights.MAX_RIPS / 10))
     const regionRipFraction = Math.min(
       1,
       regionRipCount / maxRegionRips,
     )
     const startRippingPfThreshold =
-      this.hyperParameters.START_RIPPING_PF_THRESHOLD ??
-      this.hyperParameters.RIPPING_PF_THRESHOLD ??
+      this.params.weights.START_RIPPING_PF_THRESHOLD ||
+      this.params.weights.RIPPING_PF_THRESHOLD ||
       0.3
-    const endRippingPfThreshold = this.hyperParameters.END_RIPPING_PF_THRESHOLD ?? 1
+    const endRippingPfThreshold = this.params.weights.END_RIPPING_PF_THRESHOLD || 1
     const threshold =
       startRippingPfThreshold * (1 - regionRipFraction) +
       endRippingPfThreshold * regionRipFraction
