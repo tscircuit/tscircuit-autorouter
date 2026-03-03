@@ -45,7 +45,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       inputConnections: params.connections,
       inputGraph: params.graph,
       greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
-      ripCost: 0,
+      ripCost: params.weights.RIPPING_PF_COST,
       rippingEnabled: params.flags.RIPPING_ENABLED,
     })
     this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()

@@ -97,7 +97,9 @@ export interface HgPortPointPathingSolverParams {
     /** Scales exact Pf-delta step cost in g (higher = stronger congestion avoidance). */
     NODE_PF_FACTOR: number
     /** Flat added cost when transition changes layer (z differs). */
-    RANDOM_COST_MAGNITUDE: number
+    LAYER_CHANGE_COST: number
+    /** Cost associated with ripping a region due to Pf threshold. */
+    RIPPING_PF_COST: number
     /** Maximum cap applied to Pf-derived costs to avoid explosive scores. */
     NODE_PF_MAX_PENALTY: number
     /** Scales memory-Pf contribution in heuristic h (bias away from historically bad regions). */
