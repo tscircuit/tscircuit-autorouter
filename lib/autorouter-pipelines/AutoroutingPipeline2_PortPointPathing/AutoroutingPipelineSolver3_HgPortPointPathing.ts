@@ -38,7 +38,7 @@ import { calculateOptimalCapacityDepth } from "lib/index"
 import {
   buildGraph,
   HgPortPointPathingSolver,
-} from "lib/solvers/PortPointPathingSolver/hdportpointpathingsolver"
+} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
