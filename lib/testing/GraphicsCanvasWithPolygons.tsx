@@ -20,12 +20,18 @@ export interface ExtendedGraphicsObject extends GraphicsObject {
 
 function getMaxStep(graphics: ExtendedGraphicsObject): number {
   let max = 0
-  for (const p of graphics.points ?? []) if (p.step !== undefined && p.step > max) max = p.step
-  for (const l of graphics.lines ?? []) if (l.step !== undefined && l.step > max) max = l.step
-  for (const r of graphics.rects ?? []) if (r.step !== undefined && r.step > max) max = r.step
-  for (const c of graphics.circles ?? []) if (c.step !== undefined && c.step > max) max = c.step
-  for (const t of graphics.texts ?? []) if (t.step !== undefined && t.step > max) max = t.step
-  for (const p of graphics.polygons ?? []) if (p.step !== undefined && p.step > max) max = p.step
+  for (const p of graphics.points ?? [])
+    if (p.step !== undefined && p.step > max) max = p.step
+  for (const l of graphics.lines ?? [])
+    if (l.step !== undefined && l.step > max) max = l.step
+  for (const r of graphics.rects ?? [])
+    if (r.step !== undefined && r.step > max) max = r.step
+  for (const c of graphics.circles ?? [])
+    if (c.step !== undefined && c.step > max) max = c.step
+  for (const t of graphics.texts ?? [])
+    if (t.step !== undefined && t.step > max) max = t.step
+  for (const p of graphics.polygons ?? [])
+    if (p.step !== undefined && p.step > max) max = p.step
   return max
 }
 
@@ -51,12 +57,24 @@ function filterByStep(
   if (selectedStep === null) return graphics
   return {
     ...graphics,
-    points: graphics.points?.filter((p) => p.step === undefined || p.step === selectedStep),
-    lines: graphics.lines?.filter((l) => l.step === undefined || l.step === selectedStep),
-    rects: graphics.rects?.filter((r) => r.step === undefined || r.step === selectedStep),
-    circles: graphics.circles?.filter((c) => c.step === undefined || c.step === selectedStep),
-    texts: graphics.texts?.filter((t) => t.step === undefined || t.step === selectedStep),
-    polygons: graphics.polygons?.filter((p) => p.step === undefined || p.step === selectedStep),
+    points: graphics.points?.filter(
+      (p) => p.step === undefined || p.step === selectedStep,
+    ),
+    lines: graphics.lines?.filter(
+      (l) => l.step === undefined || l.step === selectedStep,
+    ),
+    rects: graphics.rects?.filter(
+      (r) => r.step === undefined || r.step === selectedStep,
+    ),
+    circles: graphics.circles?.filter(
+      (c) => c.step === undefined || c.step === selectedStep,
+    ),
+    texts: graphics.texts?.filter(
+      (t) => t.step === undefined || t.step === selectedStep,
+    ),
+    polygons: graphics.polygons?.filter(
+      (p) => p.step === undefined || p.step === selectedStep,
+    ),
   }
 }
 

@@ -75,7 +75,10 @@ export const addVisualizationToLastStep = (
   if ((visualizationToAdd as any).polygons) {
     result.polygons = [
       ...(result.polygons || []),
-      ...(visualizationToAdd as any).polygons.map((p: any) => ({ ...p, step: highestStep })),
+      ...(visualizationToAdd as any).polygons.map((p: any) => ({
+        ...p,
+        step: highestStep,
+      })),
     ]
   }
 

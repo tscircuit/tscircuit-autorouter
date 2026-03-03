@@ -15,7 +15,19 @@ const simpleRouteJson: SimpleRouteJson = {
       center: { x: 0, y: 0 },
       width: 6,
       height: 6,
-      connectedTo: ["data0", "data1", "data2", "data3", "gpio0", "gpio1", "vcc", "gnd", "pwr", "led0", "led1"],
+      connectedTo: [
+        "data0",
+        "data1",
+        "data2",
+        "data3",
+        "gpio0",
+        "gpio1",
+        "vcc",
+        "gnd",
+        "pwr",
+        "led0",
+        "led1",
+      ],
     },
     // "Resistor array" — top right
     {

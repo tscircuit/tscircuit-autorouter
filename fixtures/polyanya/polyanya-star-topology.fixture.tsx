@@ -19,8 +19,16 @@ for (let i = 0; i < N; i++) {
   connections.push({
     name: `star${i}`,
     pointsToConnect: [
-      { x: +x.toFixed(2) as unknown as number, y: +y.toFixed(2) as unknown as number, layer: "top" },
-      { x: +ox.toFixed(2) as unknown as number, y: +oy.toFixed(2) as unknown as number, layer: "top" },
+      {
+        x: +x.toFixed(2) as unknown as number,
+        y: +y.toFixed(2) as unknown as number,
+        layer: "top",
+      },
+      {
+        x: +ox.toFixed(2) as unknown as number,
+        y: +oy.toFixed(2) as unknown as number,
+        layer: "top",
+      },
     ],
   })
 }
@@ -30,7 +38,14 @@ const simpleRouteJson = {
   minTraceWidth: 0.15,
   obstacles: [
     // Small central obstacle to force routing around it
-    { type: "rect", layers: ["top", "bottom"], center: { x: 0, y: 0 }, width: 2, height: 2, connectedTo: [] },
+    {
+      type: "rect",
+      layers: ["top", "bottom"],
+      center: { x: 0, y: 0 },
+      width: 2,
+      height: 2,
+      connectedTo: [],
+    },
   ],
   connections,
   bounds: { minX: -10, maxX: 10, minY: -10, maxY: 10 },

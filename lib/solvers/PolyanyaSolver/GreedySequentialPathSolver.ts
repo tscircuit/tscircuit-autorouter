@@ -162,9 +162,17 @@ export class GreedySequentialPathSolver extends BaseSolver {
     }
 
     // Initialize per-layer state (only for active layers)
-    this.rectObstacles = this.baseObstaclePolygons.slice(0, this.layerCount).map((polys) => [...polys])
-    this.tracePolygonObstacles = Array.from({ length: this.layerCount }, () => [])
-    this.traceWeightedRegions = Array.from({ length: this.layerCount }, () => [])
+    this.rectObstacles = this.baseObstaclePolygons
+      .slice(0, this.layerCount)
+      .map((polys) => [...polys])
+    this.tracePolygonObstacles = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
+    this.traceWeightedRegions = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
     this.meshes = Array.from({ length: this.layerCount }, () => null)
 
     // Build meshes for active layers only
@@ -188,9 +196,22 @@ export class GreedySequentialPathSolver extends BaseSolver {
     this.allConnections = params.srj.connections.map((conn) => {
       const pts = conn.pointsToConnect
       const originalStart = { x: pts[0]!.x, y: pts[0]!.y }
-      const originalEnd = { x: pts[pts.length - 1]!.x, y: pts[pts.length - 1]!.y }
-      const startCandidates = this.getNudgeCandidates(originalStart, originalEnd, params.srj.obstacles, conn.name)
-      const endCandidates = this.getNudgeCandidates(originalEnd, originalStart, params.srj.obstacles, conn.name)
+      const originalEnd = {
+        x: pts[pts.length - 1]!.x,
+        y: pts[pts.length - 1]!.y,
+      }
+      const startCandidates = this.getNudgeCandidates(
+        originalStart,
+        originalEnd,
+        params.srj.obstacles,
+        conn.name,
+      )
+      const endCandidates = this.getNudgeCandidates(
+        originalEnd,
+        originalStart,
+        params.srj.obstacles,
+        conn.name,
+      )
       return {
         name: conn.name,
         originalStart,
@@ -238,7 +259,9 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // Guard: skip rebuild if obstacle complexity is too high
     const totalVerts = allObstacles.reduce((sum, poly) => sum + poly.length, 0)
     if (totalVerts > GreedySequentialPathSolver.MAX_OBSTACLE_VERTICES) {
-      console.warn(`buildMesh: skipping layer ${layerZ} rebuild — ${totalVerts} vertices exceeds limit`)
+      console.warn(
+        `buildMesh: skipping layer ${layerZ} rebuild — ${totalVerts} vertices exceeds limit`,
+      )
       return
     }
 
@@ -296,7 +319,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
         Math.abs(pt.y - obs.center.y) < halfH
       ) {
         // Prefer smaller (more specific) obstacle
-        if (!containingObs || obs.width * obs.height < containingObs.width * containingObs.height) {
+        if (
+          !containingObs ||
+          obs.width * obs.height < containingObs.width * containingObs.height
+        ) {
           containingObs = obs
         }
       }
@@ -342,9 +368,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
             const distTop = hh - d2y
             const distBottom = hh + d2y
             const minDist = Math.min(distRight, distLeft, distTop, distBottom)
-            if (minDist === distRight) result = { x: obs2.center.x + hw, y: result.y }
-            else if (minDist === distLeft) result = { x: obs2.center.x - hw, y: result.y }
-            else if (minDist === distBottom) result = { x: result.x, y: obs2.center.y - hh }
+            if (minDist === distRight)
+              result = { x: obs2.center.x + hw, y: result.y }
+            else if (minDist === distLeft)
+              result = { x: obs2.center.x - hw, y: result.y }
+            else if (minDist === distBottom)
+              result = { x: result.x, y: obs2.center.y - hh }
             else result = { x: result.x, y: obs2.center.y + hh }
             pushed = true
           }
@@ -359,9 +388,17 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
   /** Reset routing state back to initial (no committed traces) */
   private resetState() {
-    this.rectObstacles = this.baseObstaclePolygons.slice(0, this.layerCount).map((polys) => [...polys])
-    this.tracePolygonObstacles = Array.from({ length: this.layerCount }, () => [])
-    this.traceWeightedRegions = Array.from({ length: this.layerCount }, () => [])
+    this.rectObstacles = this.baseObstaclePolygons
+      .slice(0, this.layerCount)
+      .map((polys) => [...polys])
+    this.tracePolygonObstacles = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
+    this.traceWeightedRegions = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
     this.meshes = Array.from({ length: this.layerCount }, () => null)
     this.resolvedPaths = []
     this.traceObstaclePolys = []
@@ -443,7 +480,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
         const dy = second.y - first.y
         const len = Math.hypot(dx, dy)
         if (len > 1e-9) {
-          pts[0] = { x: first.x - (dx / len) * clearance, y: first.y - (dy / len) * clearance }
+          pts[0] = {
+            x: first.x - (dx / len) * clearance,
+            y: first.y - (dy / len) * clearance,
+          }
         }
       }
     }
@@ -456,7 +496,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
         const dy = last.y - secondToLast.y
         const len = Math.hypot(dx, dy)
         if (len > 1e-9) {
-          pts[pts.length - 1] = { x: last.x + (dx / len) * clearance, y: last.y + (dy / len) * clearance }
+          pts[pts.length - 1] = {
+            x: last.x + (dx / len) * clearance,
+            y: last.y + (dy / len) * clearance,
+          }
         }
       }
     }
@@ -575,7 +618,9 @@ export class GreedySequentialPathSolver extends BaseSolver {
     end: Point,
   ): { cost: number; path: Point[] } {
     const vg = new VisibilityGraph(mesh, {
-      weightedRegions: this.useObstacles ? [] : this.traceWeightedRegions[layerZ]!,
+      weightedRegions: this.useObstacles
+        ? []
+        : this.traceWeightedRegions[layerZ]!,
     })
     const r = vg.search(start, end)
     return { cost: r.cost, path: r.path }
@@ -604,7 +649,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
       const c = this.remaining[i]!
 
       // Try the default nudge first, then alternate directions
-      const starts = c.startCandidates.length > 0 ? c.startCandidates : [c.start]
+      const starts =
+        c.startCandidates.length > 0 ? c.startCandidates : [c.start]
       const ends = c.endCandidates.length > 0 ? c.endCandidates : [c.end]
 
       let foundForThis = false
@@ -615,9 +661,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
             : this.searchVG(mesh, layerZ, s, e)
           if (r.cost < 0 || r.path.length === 0) continue
 
-          const better = pickShortest
-            ? r.cost < bestCost
-            : r.cost > bestCost
+          const better = pickShortest ? r.cost < bestCost : r.cost > bestCost
           if (better) {
             bestIdx = i
             bestCost = r.cost
@@ -645,9 +689,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
    * Try to pick a connection across all layers, preferring layer 0.
    * Returns the best match with its layer, or idx=-1 if nothing routable.
    */
-  private pickBestAcrossLayers(
-    pickShortest: boolean,
-  ): { idx: number; path: Point[]; layerZ: number } {
+  private pickBestAcrossLayers(pickShortest: boolean): {
+    idx: number
+    path: Point[]
+    layerZ: number
+  } {
     // Try layer 0 first (primary layer)
     const layer0 = this.pickBestOnLayer(0, pickShortest)
     if (layer0.idx >= 0) {
@@ -683,7 +729,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
         Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
         Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
       ) {
-        fullRoute.push({ x: conn.originalStart.x, y: conn.originalStart.y, z: 0 })
+        fullRoute.push({
+          x: conn.originalStart.x,
+          y: conn.originalStart.y,
+          z: 0,
+        })
       }
 
       for (const p of path) {
@@ -743,7 +793,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
     if (this.useObstacles) {
       // Add trace thick polygon obstacle to the layer the trace was routed on
-      const newObstacles = this.pathToObstaclePolygons(path, clearance, conn.originalStart, conn.originalEnd)
+      const newObstacles = this.pathToObstaclePolygons(
+        path,
+        clearance,
+        conn.originalStart,
+        conn.originalEnd,
+      )
       this.tracePolygonObstacles[layerZ]!.push(...newObstacles)
 
       for (const poly of newObstacles) {
@@ -840,8 +895,13 @@ export class GreedySequentialPathSolver extends BaseSolver {
     if (this.solveStartTime === 0) this.solveStartTime = Date.now()
 
     // Timeout guard: bail if solving takes too long
-    if (Date.now() - this.solveStartTime > GreedySequentialPathSolver.MAX_SOLVE_TIME_MS) {
-      console.warn(`GreedySequentialPathSolver: timeout after ${GreedySequentialPathSolver.MAX_SOLVE_TIME_MS}ms, ${this.resolvedPaths.length}/${this.totalConnections} routed`)
+    if (
+      Date.now() - this.solveStartTime >
+      GreedySequentialPathSolver.MAX_SOLVE_TIME_MS
+    ) {
+      console.warn(
+        `GreedySequentialPathSolver: timeout after ${GreedySequentialPathSolver.MAX_SOLVE_TIME_MS}ms, ${this.resolvedPaths.length}/${this.totalConnections} routed`,
+      )
       this.saveIfBest()
       if (this.bestResults) {
         this.resolvedPaths = this.bestResults
@@ -889,10 +949,22 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return this.layerCount
   }
 
-  visualize(): GraphicsObject & { polygons?: Array<{ points: { x: number; y: number }[]; fill?: string; stroke?: string; strokeWidth?: number }> } {
+  visualize(): GraphicsObject & {
+    polygons?: Array<{
+      points: { x: number; y: number }[]
+      fill?: string
+      stroke?: string
+      strokeWidth?: number
+    }>
+  } {
     const lines: Line[] = []
     const points: GraphicsObject["points"] = []
-    const polygons: Array<{ points: { x: number; y: number }[]; fill?: string; stroke?: string; strokeWidth?: number }> = []
+    const polygons: Array<{
+      points: { x: number; y: number }[]
+      fill?: string
+      stroke?: string
+      strokeWidth?: number
+    }> = []
 
     // Draw committed trace paths, split by layer for distinct styling
     for (const rp of this.resolvedPaths) {
@@ -968,7 +1040,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // Mark remaining unrouted endpoints
     for (const conn of this.remaining) {
       const color = this.colorMap[conn.name] ?? "red"
-      points.push({ x: conn.start.x, y: conn.start.y, color, label: `${conn.name} (unrouted)` })
+      points.push({
+        x: conn.start.x,
+        y: conn.start.y,
+        color,
+        label: `${conn.name} (unrouted)`,
+      })
       points.push({ x: conn.end.x, y: conn.end.y, color })
     }
 

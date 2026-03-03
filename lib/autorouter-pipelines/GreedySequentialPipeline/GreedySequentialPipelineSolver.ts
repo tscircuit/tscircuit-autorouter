@@ -1,9 +1,6 @@
 import type { GraphicsObject, Line } from "graphics-debug"
 import { combineVisualizations } from "../../utils/combineVisualizations"
-import type {
-  SimpleRouteJson,
-  SimplifiedPcbTraces,
-} from "../../types"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "../../types"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { getColorMap } from "../../solvers/colors"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -23,7 +20,9 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
 }
 
 function definePipelineStep<
-  T extends new (...args: any[]) => BaseSolver,
+  T extends new (
+    ...args: any[]
+  ) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof GreedySequentialPipelineSolver,
@@ -78,36 +77,29 @@ export class GreedySequentialPipelineSolver extends BaseSolver {
         },
       },
     ),
-    definePipelineStep(
-      "greedySolver",
-      GreedySequentialPathSolver,
-      (pps) => [
+    definePipelineStep("greedySolver", GreedySequentialPathSolver, (pps) => [
+      {
+        srj: pps.srjWithPointPairs ?? pps.srj,
+        colorMap: pps.colorMap,
+        minTraceWidth: pps.minTraceWidth,
+        margin: pps.srj.defaultObstacleMargin ?? pps.minTraceWidth,
+      },
+    ]),
+    definePipelineStep("outputSolver", PolyanyaOutputSolver, (pps) => {
+      const baseSrj = pps.srjWithPointPairs ?? pps.srj
+      const effectiveLayerCount = pps.greedySolver!.getEffectiveLayerCount()
+      return [
         {
-          srj: pps.srjWithPointPairs ?? pps.srj,
-          colorMap: pps.colorMap,
-          minTraceWidth: pps.minTraceWidth,
-          margin: pps.srj.defaultObstacleMargin ?? pps.minTraceWidth,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "outputSolver",
-      PolyanyaOutputSolver,
-      (pps) => {
-        const baseSrj = pps.srjWithPointPairs ?? pps.srj
-        const effectiveLayerCount = pps.greedySolver!.getEffectiveLayerCount()
-        return [
-          {
-            resolvedPaths: pps.greedySolver!.getResolvedPaths(),
-            srj: baseSrj.layerCount >= effectiveLayerCount
+          resolvedPaths: pps.greedySolver!.getResolvedPaths(),
+          srj:
+            baseSrj.layerCount >= effectiveLayerCount
               ? baseSrj
               : { ...baseSrj, layerCount: effectiveLayerCount },
-            minTraceWidth: pps.minTraceWidth,
-            viaDiameter: pps.viaDiameter,
-          },
-        ]
-      },
-    ),
+          minTraceWidth: pps.minTraceWidth,
+          viaDiameter: pps.viaDiameter,
+        },
+      ]
+    }),
   ]
 
   constructor(
@@ -173,7 +165,8 @@ export class GreedySequentialPipelineSolver extends BaseSolver {
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
-    const effectiveLayerCount = this.greedySolver?.getEffectiveLayerCount() ?? this.srj.layerCount
+    const effectiveLayerCount =
+      this.greedySolver?.getEffectiveLayerCount() ?? this.srj.layerCount
     return {
       ...this.srj,
       layerCount: Math.max(this.srj.layerCount, effectiveLayerCount),

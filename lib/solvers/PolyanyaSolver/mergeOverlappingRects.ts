@@ -34,7 +34,9 @@ class UnionFind {
 }
 
 function aabbsOverlap(a: AABB, b: AABB): boolean {
-  return a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY
+  return (
+    a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY
+  )
 }
 
 /**
@@ -140,8 +142,9 @@ function rectilinearUnion(rects: AABB[]): Point[][] {
   if (cols <= 0 || rows <= 0) return []
 
   // Mark which grid cells are filled
-  const filled: boolean[][] = Array.from({ length: rows }, () =>
-    new Array(cols).fill(false) as boolean[],
+  const filled: boolean[][] = Array.from(
+    { length: rows },
+    () => new Array(cols).fill(false) as boolean[],
   )
 
   for (const r of rects) {
