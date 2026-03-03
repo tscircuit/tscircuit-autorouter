@@ -22,13 +22,7 @@ import {
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import {
-  getGraphicsObjectsFromLogString,
-  GraphicsObject,
-  Line,
-  mergeGraphics,
-  Point,
-} from "graphics-debug"
+import { GraphicsObject, Line, mergeGraphics, Point } from "graphics-debug"
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
@@ -333,9 +327,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return distance(port.d, endRegion.d.center)
   }
 
-  override computeH(
-    candidate: Candidate<TypedRegion, TypedRegionPort>,
-  ): number {
+  override computeH(candidate: TypedCandidate): number {
     const typedCandidate = candidate as TypedCandidate
     const distanceTraveled = this.computeDistanceTraveled(typedCandidate)
     if (
@@ -396,9 +388,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
-  override computeG(
-    candidate: Candidate<TypedRegion, TypedRegionPort>,
-  ): number {
+  override computeG(candidate: TypedCandidate): number {
     const typedCandidate = candidate as TypedCandidate
     const baseCost = super.computeG(candidate)
     if (typedCandidate.nextRegion !== this.currentEndRegion) {
@@ -675,7 +665,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return routesToRip
   }
 
-  private computeDeviation(candidate: Candidate<TypedRegion, TypedRegionPort>) {
+  private computeDeviation(candidate: TypedCandidate) {
     const startPoint = this.currentConnection?.startRegion.d.center
     const endPoint = this.currentConnection?.endRegion.d.center
     assertDefined(startPoint, "Current connection or start region is undefined")
@@ -742,9 +732,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private getCenterFirstEnteringRegionCandidates(
-    candidates: Candidate<TypedRegion, TypedRegionPort>[],
-  ): Candidate<TypedRegion, TypedRegionPort>[] {
-    const byZ = new Map<number, Candidate<TypedRegion, TypedRegionPort>[]>()
+    candidates: TypedCandidate[],
+  ): TypedCandidate[] {
+    const byZ = new Map<number, TypedCandidate[]>()
     for (const candidate of candidates) {
       const z = candidate.port.d.z
       const candidatesOnZ = byZ.get(z) ?? []
@@ -752,7 +742,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       byZ.set(z, candidatesOnZ)
     }
 
-    const selected: Candidate<TypedRegion, TypedRegionPort>[] = []
+    const selected: TypedCandidate[] = []
 
     for (const candidatesOnZ of byZ.values()) {
       const sortedByCenterOffsetCandidates = candidatesOnZ.sort(
@@ -774,11 +764,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         return a.port.d.y - b.port.d.y
       })
 
-      const availableRangesCandidate: Candidate<
-        TypedRegion,
-        TypedRegionPort
-      >[][] = []
-      let currentRangeCandidate: Candidate<TypedRegion, TypedRegionPort>[] = []
+      const availableRangesCandidate: TypedCandidate[][] = []
+      let currentRangeCandidate: TypedCandidate[] = []
 
       for (const candidate of sortedByPositionCandidates) {
         if (this.isPortAvailableForCurrentNet(candidate.port)) {
