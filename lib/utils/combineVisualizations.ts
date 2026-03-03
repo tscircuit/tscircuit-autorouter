@@ -1,13 +1,27 @@
 import type { GraphicsObject } from "graphics-debug"
 
+type FilledPolygon = {
+  points: { x: number; y: number }[]
+  fill?: string
+  stroke?: string
+  strokeWidth?: number
+  step?: number
+  label?: string
+}
+
+type ExtendedGraphicsObject = GraphicsObject & {
+  polygons?: FilledPolygon[]
+}
+
 export const combineVisualizations = (
-  ...visualizations: GraphicsObject[]
-): GraphicsObject => {
-  const combined: GraphicsObject = {
+  ...visualizations: ExtendedGraphicsObject[]
+): ExtendedGraphicsObject => {
+  const combined: ExtendedGraphicsObject = {
     points: [],
     lines: [],
     circles: [],
     rects: [],
+    polygons: [],
   }
 
   visualizations.forEach((viz, i) => {
@@ -34,6 +48,12 @@ export const combineVisualizations = (
       combined.rects = [
         ...(combined.rects || []),
         ...viz.rects.map((r) => ({ ...r, step: i })),
+      ]
+    }
+    if (viz.polygons) {
+      combined.polygons = [
+        ...(combined.polygons || []),
+        ...viz.polygons.map((p) => ({ ...p, step: i })),
       ]
     }
   })
