@@ -15,8 +15,6 @@ import type {
 
 export type RawPort = {
   portId: string
-  /** some ports are like one port but on different layers, this groups them */
-  parentPortId: string
   x: number
   y: number
   z: number

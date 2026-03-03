@@ -452,7 +452,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       region2: endRegion,
       d: {
         portId: `end-target:${currentConnection.connectionId}`,
-        parentPortId: `end-target:${currentConnection.connectionId}`,
         x: endPoint.x,
         y: endPoint.y,
         z: candidate.port.d.z,

@@ -20,23 +20,13 @@ export function visualizeTypedHyperGraph(
     })
   }
 
-  let lastPort: TypedRegionPort | undefined = graph.ports[0]
-  let padding = 0
-
   for (const port of graph.ports) {
-    if (lastPort && port.d.parentPortId === lastPort.d.parentPortId) {
-      padding += 0.1
-    } else {
-      padding = 0
-    }
-
     graphics.points!.push({
-      x: port.d.x + padding,
+      x: port.d.x,
       y: port.d.y,
       color: "rgba(4, 90, 20, 0.3)",
       label: port.portId,
     })
-    lastPort = port
   }
 
   return graphics

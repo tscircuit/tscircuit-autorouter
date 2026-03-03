@@ -53,7 +53,6 @@ export function buildGraph(params: {
     for (const z of spp.availableZ) {
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
-        parentPortId: spp.segmentPortPointId,
         x: spp.x,
         y: spp.y,
         z,
