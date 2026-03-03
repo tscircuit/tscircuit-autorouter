@@ -1,0 +1,42 @@
+name: Benchmark Instructions
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  post-instructions:
+    name: Post benchmark instructions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment benchmark usage
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const body = [
+              "## 🏃 Benchmark This PR",
+              "",
+              "Run benchmarks by commenting on this PR:",
+              "",
+              "```",
+              "/benchmark [solver-name|_] [scenario-limit] --concurrency <n>",
+              "```",
+              "",
+              "Examples:",
+              "- `/benchmark` -> all solvers, all scenarios (default concurrency 16)",
+              "- `/benchmark AutoroutingPipelineSolver` -> one solver, all scenarios",
+              "- `/benchmark _ 20` -> all solvers, first 20 scenarios",
+              "- `/benchmark AutoroutingPipelineSolver 20 --concurrency 8` -> one solver, 20 scenarios, 8 workers",
+            ].join("\n")
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            })
