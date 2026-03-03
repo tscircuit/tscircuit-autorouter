@@ -32,7 +32,7 @@ import {
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import { cloneAndShuffleArray, seededRandom } from "lib/utils/cloneAndShuffleArray"
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -257,7 +257,6 @@ export interface HgPortPointPathingSolverParams {
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
-    JUMPER_PF_FN_ENABLED: boolean
   }
   weights: {
     SHUFFLE_SEED: number
@@ -305,6 +304,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.regionRipCountMap = new Map()
     this.totalRipCount = 0
     this.MAX_ITERATIONS *= params.effort
+    if (params.weights.MAX_ITERATIONS_PER_PATH > 0) {
+      this.MAX_ITERATIONS = params.weights.MAX_ITERATIONS_PER_PATH * params.effort
+    }
   }
 
   override estimateCostToEnd(port: TypedRegionPort): number {
@@ -316,16 +318,27 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override computeH(
     candidate: Candidate<TypedRegion, TypedRegionPort>,
   ): number {
+    const typedCandidate = candidate as TypedCandidate
+    const distanceTraveled = this.computeDistanceTraveled(typedCandidate)
+    if (
+      this.params.weights.RANDOM_WALK_DISTANCE > 0 &&
+      distanceTraveled < this.params.weights.RANDOM_WALK_DISTANCE
+    ) {
+      return 0
+    }
+
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
+    const centeredOffset = 
+      candidate.port.d.distToCentermostPortOnZ -
+        this.params.weights.CENTER_OFFSET_FOCUS_SHIFT
     const centerOffsetPenalty =
-      candidate.port.d.distToCentermostPortOnZ *
-      this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
+      centeredOffset * this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
     const regionIdForMemoryPf =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
     const memoryPf = regionIdForMemoryPf
       ? (this.regionMemoryPfMap.get(regionIdForMemoryPf) ?? 0)
       : 0
-    const memoryPfPenalty = memoryPf * this.params.weights.MEMORY_PF_FACTOR
+    const memoryPfPenalty = this.computeMemoryPfPenalty(memoryPf)
     const straightLineDeviationPenalty =
       this.computeDeviation(candidate) *
       this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
@@ -343,7 +356,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     port1: TypedRegionPort,
     port2: TypedRegionPort,
   ): number {
-    // TODO: I think we can do more
     const transitionDistance = distance(port1.d, port2.d)
     const regionSizePenalty = Math.max(region.d.width, region.d.height) * 0.01
     const zPenalty =
@@ -422,9 +434,37 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       return nextRegion === startRegion || nextRegion === endRegion
     })
 
-    const centerFirstCandidates = this.params.flags.FORCE_CENTER_FIRST
+    let centerFirstCandidates = this.params.flags.FORCE_CENTER_FIRST
       ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
       : filterCandidates
+
+    if (
+      this.params.weights.FORCE_OFF_BOARD_FREQUENCY > 0 &&
+      centerFirstCandidates.length > 1
+    ) {
+      const explorationSeed =
+        this.params.weights.SHUFFLE_SEED +
+        this.params.weights.FORCE_OFF_BOARD_SEED +
+        this.iterations +
+        this.solvedRoutes.length
+      const random = seededRandom(explorationSeed)
+      if (random() < this.params.weights.FORCE_OFF_BOARD_FREQUENCY) {
+        centerFirstCandidates = cloneAndShuffleArray(
+          centerFirstCandidates,
+          explorationSeed,
+        )
+      }
+    }
+
+    const maxAllowedCost = -this.params.weights.MIN_ALLOWED_BOARD_SCORE
+    if (maxAllowedCost > 0) {
+      const affordableCandidates = centerFirstCandidates.filter(
+        (candidate) => candidate.g + candidate.h <= maxAllowedCost,
+      )
+      if (affordableCandidates.length > 0) {
+        centerFirstCandidates = affordableCandidates
+      }
+    }
 
     return centerFirstCandidates
   }
@@ -487,7 +527,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ]),
     )
     const rippingRandomSeed =
-      this.iterations + this.solvedRoutes.length + this.totalRipCount
+      this.params.weights.SHUFFLE_SEED +
+      this.iterations +
+      this.solvedRoutes.length +
+      this.totalRipCount
     const ordereRegionIdsForRipping = cloneAndShuffleArray(
       allRegionIdsForRipping,
       rippingRandomSeed,
@@ -604,6 +647,29 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const portPoint = candidate.port.d
     const deviation = pointToSegmentDistance(portPoint, startPoint, endPoint)
     return deviation
+  }
+
+  private computeDistanceTraveled(candidate: TypedCandidate): number {
+    let distanceTraveled = 0
+    let currentCandidate: TypedCandidate | undefined = candidate
+    while (currentCandidate?.parent) {
+      distanceTraveled += distance(currentCandidate.parent.port.d, currentCandidate.port.d)
+      currentCandidate = currentCandidate.parent
+    }
+    return distanceTraveled
+  }
+
+  private computeMemoryPfPenalty(memoryPf: number): number {
+    const clampedPf = Math.min(Math.max(memoryPf, 0), 0.999999)
+    const failureCost = Math.min(
+      this.params.weights.NODE_PF_MAX_PENALTY,
+      -Math.log(1 - clampedPf),
+    )
+
+    return (
+      failureCost * this.params.weights.MEMORY_PF_FACTOR +
+      failureCost * this.params.weights.NODE_PF_FACTOR * 0.01
+    )
   }
 
   private getCenterFirstEnteringRegionCandidates(
