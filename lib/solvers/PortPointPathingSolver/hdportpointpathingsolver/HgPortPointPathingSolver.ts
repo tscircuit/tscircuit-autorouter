@@ -22,7 +22,13 @@ import {
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { GraphicsObject, Line, mergeGraphics, Point } from "graphics-debug"
+import {
+  getGraphicsObjectsFromLogString,
+  GraphicsObject,
+  Line,
+  mergeGraphics,
+  Point,
+} from "graphics-debug"
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
@@ -30,7 +36,19 @@ import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
+  PortPointPathingHyperParameters,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+
+type RawPort = {
+  portId: string
+  /** some ports are like one port but on different layers, this groups them */
+  parentPortId: string
+  x: number
+  y: number
+  z: number
+  distToCentermostPortOnZ: number
+  regions: TypedRegion[]
+}
 
 type TypedRegionPortAssignment = Omit<
   RegionPortAssignment,
@@ -50,7 +68,7 @@ type TypedRegion = Omit<Region, "d" | "assignments" | "ports"> & {
 }
 
 type TypedRegionPort = Omit<RegionPort, "d" | "port"> & {
-  d: SegmentPortPoint
+  d: RawPort
 }
 
 type TypedHyperGraph = Omit<HyperGraph, "ports" | "regions"> & {
@@ -169,15 +187,26 @@ export const buildGraph = (params: {
       `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
     )
 
-    const typedPort: TypedRegionPort = {
-      portId: spp.segmentPortPointId,
-      d: spp,
-      region1: region1,
-      region2: region2,
+    for (const z of spp.availableZ) {
+      const port: RawPort = {
+        portId: `${spp.segmentPortPointId}::${z}`,
+        parentPortId: spp.segmentPortPointId,
+        x: spp.x,
+        y: spp.y,
+        z,
+        distToCentermostPortOnZ: 0,
+        regions: [region1, region2],
+      }
+      const typedPort: TypedRegionPort = {
+        portId: spp.segmentPortPointId,
+        d: port,
+        region1: region1,
+        region2: region2,
+      }
+      graph.ports.push(typedPort)
+      region1.ports.push(typedPort)
+      region2.ports.push(typedPort)
     }
-    graph.ports.push(typedPort)
-    region1.ports.push(typedPort)
-    region2.ports.push(typedPort)
   }
 
   for (const connection of params.simpleRouteJsonConnections) {
@@ -226,25 +255,7 @@ export interface HgPortPointPathingSolverParams {
   colorMap?: Record<string, string>
   layerCount: number
   effort: number
-  flags: {
-    rippingEnabled: boolean
-    forceCenterFirstEnabled: boolean
-  }
-  weights: {
-    GREEDY_MULTIPLIER: number
-    RIP_COST: number
-    PORT_USAGE_PENALTY: number
-    REGION_TRANSITION_PENALTY: number
-    MEMORY_PF_FACTOR: number
-    CENTER_OFFSET_DIST_PENALTY_FACTOR: number
-    STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: number
-    RIP_REGION_PF_THRESHOLD_START: number
-    MAX_REGION_RIPS: number
-    RANDOM_RIP_FRACTION: number
-    MAX_RIPS: number
-    MIN_ALLOWED_BOARD_SCORE: number
-    MAX_CANDIDATES_PER_REGION: number
-  }
+  hyperParameters?: Partial<PortPointPathingHyperParameters>
   opts?: {
     regionMemoryPfMap?: RegionMemoryPfMap
   }
@@ -254,17 +265,52 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   TypedRegion,
   TypedRegionPort
 > {
+  private readonly hyperParameters: Partial<PortPointPathingHyperParameters>
   private regionMemoryPfMap: RegionMemoryPfMap
   private regionRipCountMap: RegionRipCountMap
   private totalRipCount: number
+
+  private get CENTER_OFFSET_DIST_PENALTY_FACTOR() {
+    return this.hyperParameters.CENTER_OFFSET_DIST_PENALTY_FACTOR ?? 0
+  }
+  private get STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR() {
+    return this.hyperParameters.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR ?? 0
+  }
+  private get MEMORY_PF_FACTOR() {
+    return this.hyperParameters.MEMORY_PF_FACTOR ?? 0
+  }
+  private get REGION_TRANSITION_PENALTY() {
+    return this.hyperParameters.BASE_CANDIDATE_COST ?? 0.6
+  }
+  private get LAYER_TRANSITION_PENALTY() {
+    return this.hyperParameters.RANDOM_COST_MAGNITUDE ?? 0.5
+  }
+  private get MAX_RIPS() {
+    return this.hyperParameters.MAX_RIPS ?? 1000
+  }
+  private get RANDOM_RIP_FRACTION() {
+    return this.hyperParameters.RANDOM_RIP_FRACTION ?? 0.3
+  }
+  private get RIPPING_ENABLED() {
+    return this.hyperParameters.RIPPING_ENABLED ?? true
+  }
+  private get FORCE_CENTER_FIRST() {
+    return this.hyperParameters.FORCE_CENTER_FIRST ?? true
+  }
+  private get GREEDY_MULTIPLIER() {
+    return this.hyperParameters.GREEDY_MULTIPLIER ?? 0.7
+  }
+
   constructor(private params: HgPortPointPathingSolverParams) {
+    const hyperParameters = params.hyperParameters ?? {}
     super({
       inputConnections: params.connections,
       inputGraph: params.graph,
-      greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
-      ripCost: params.weights.RIP_COST,
-      rippingEnabled: params.flags.rippingEnabled,
+      greedyMultiplier: hyperParameters.GREEDY_MULTIPLIER ?? 0.7,
+      ripCost: 0,
+      rippingEnabled: hyperParameters.RIPPING_ENABLED ?? true,
     })
+    this.hyperParameters = hyperParameters
     this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()
     this.regionRipCountMap = new Map()
     this.totalRipCount = 0
@@ -282,17 +328,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ): number {
     const distanceToEnd = this.estimateCostToEnd(candidate.port)
     const centerOffsetPenalty =
-      candidate.port.d.distToCentermostPortOnZ *
-      this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
+      candidate.port.d.distToCentermostPortOnZ * this.CENTER_OFFSET_DIST_PENALTY_FACTOR
     const regionIdForMemoryPf =
       candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
     const memoryPf = regionIdForMemoryPf
       ? (this.regionMemoryPfMap.get(regionIdForMemoryPf) ?? 0)
       : 0
-    const memoryPfPenalty = memoryPf * this.params.weights.MEMORY_PF_FACTOR
+    const memoryPfPenalty = memoryPf * this.MEMORY_PF_FACTOR
     const straightLineDeviationPenalty =
-      this.computeDeviation(candidate) *
-      this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
+      this.computeDeviation(candidate) * this.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
 
     return (
       distanceToEnd +
@@ -310,15 +354,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     // TODO: I think we can do more
     const transitionDistance = distance(port1.d, port2.d)
     const regionSizePenalty = Math.max(region.d.width, region.d.height) * 0.01
+    const zPenalty = port1.d.z !== port2.d.z ? this.LAYER_TRANSITION_PENALTY : 0
     return (
-      transitionDistance * this.params.weights.REGION_TRANSITION_PENALTY +
-      regionSizePenalty
+      transitionDistance * this.REGION_TRANSITION_PENALTY +
+      regionSizePenalty +
+      zPenalty
     )
   }
 
   override getPortUsagePenalty(port: TypedRegionPort): number {
-    const ripCount = port.ripCount ?? 0
-    return ripCount * this.params.weights.PORT_USAGE_PENALTY
+    void port
+    return 0
   }
 
   override getRipsRequiredForPortUsage(
@@ -383,20 +429,11 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       return nextRegion === startRegion || nextRegion === endRegion
     })
 
-    const centerFirstCandidates = this.params.flags.forceCenterFirstEnabled
+    const centerFirstCandidates = this.FORCE_CENTER_FIRST
       ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
       : filterCandidates
 
-    if (
-      centerFirstCandidates.length <=
-      this.params.weights.MAX_CANDIDATES_PER_REGION
-    ) {
-      return centerFirstCandidates
-    }
-
     return centerFirstCandidates
-      .sort((a, b) => a.g + a.h - (b.g + b.h))
-      .slice(0, this.params.weights.MAX_CANDIDATES_PER_REGION)
   }
 
   override routeSolvedHook(solvedRoute: TypedSolvedRoutes): void {
@@ -463,7 +500,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       rippingRandomSeed,
     )
     for (const region of ordereRegionIdsForRipping) {
-      if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+      if (this.totalRipCount >= this.MAX_RIPS) break
       const rippingThreshold = this.getRegionRippingPfThreshold(region.regionId)
       let currentPf = this.computeRegionPf({
         region,
@@ -478,7 +515,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       let ripCountForRegionLoop = 0
 
       while (currentPf > rippingThreshold) {
-        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+        if (this.totalRipCount >= this.MAX_RIPS) break
         if (!region.assignments || region.assignments.length === 0) {
           throw new Error(
             "We are trying to rip a region with no assignments, this should not happen",
@@ -530,7 +567,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
     const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size
     if (didRipAnyLoop) {
-      if (this.totalRipCount >= this.params.weights.MAX_RIPS) return routesToRip
+      if (this.totalRipCount >= this.MAX_RIPS) return routesToRip
 
       const eligibleRoutes = this.solvedRoutes.filter((route) => {
         if (routesToRip.has(route)) return false
@@ -544,9 +581,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       const randomRipCount = Math.max(
         1,
-        Math.floor(
-          this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length,
-        ),
+        Math.floor(this.RANDOM_RIP_FRACTION * eligibleRoutes.length),
       )
       const shuffledEligibleRoutes = cloneAndShuffleArray(
         eligibleRoutes,
@@ -556,7 +591,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       let addedRandomRips = 0
       for (const route of shuffledEligibleRoutes) {
         if (addedRandomRips >= randomRipCount) break
-        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+        if (this.totalRipCount >= this.MAX_RIPS) break
         if (routesToRip.has(route)) continue
 
         routesToRip.add(route)
@@ -583,12 +618,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ): Candidate<TypedRegion, TypedRegionPort>[] {
     const byZ = new Map<number, Candidate<TypedRegion, TypedRegionPort>[]>()
     for (const candidate of candidates) {
-      const availableZ = candidate.port.d.availableZ
-      for (const z of availableZ) {
-        const candidatesOnZ = byZ.get(z) ?? []
-        candidatesOnZ.push(candidate)
-        byZ.set(z, candidatesOnZ)
-      }
+      const z = candidate.port.d.z
+      const candidatesOnZ = byZ.get(z) ?? []
+      candidatesOnZ.push(candidate)
+      byZ.set(z, candidatesOnZ)
     }
 
     const selected: Candidate<TypedRegion, TypedRegionPort>[] = []
@@ -663,14 +696,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         {
           x: region1PortPoint.x,
           y: region1PortPoint.y,
-          z: region1PortPoint.availableZ[0] ?? 0,
+          z: region1PortPoint.z,
           connectionName,
           rootConnectionName,
         },
         {
           x: region2PortPoint.x,
           y: region2PortPoint.y,
-          z: region2PortPoint.availableZ[0] ?? 0,
+          z: region2PortPoint.z,
           connectionName,
           rootConnectionName,
         },
@@ -695,14 +728,19 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   private getRegionRippingPfThreshold(regionId: RegionId): number {
     const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
+    const maxRegionRips = Math.max(1, Math.floor(this.MAX_RIPS / 10))
     const regionRipFraction = Math.min(
       1,
-      regionRipCount / this.params.weights.MAX_REGION_RIPS,
+      regionRipCount / maxRegionRips,
     )
     const startRippingPfThreshold =
-      this.params.weights.RIP_REGION_PF_THRESHOLD_START
+      this.hyperParameters.START_RIPPING_PF_THRESHOLD ??
+      this.hyperParameters.RIPPING_PF_THRESHOLD ??
+      0.3
+    const endRippingPfThreshold = this.hyperParameters.END_RIPPING_PF_THRESHOLD ?? 1
     const threshold =
-      startRippingPfThreshold * (1 - regionRipFraction) + 1 * regionRipFraction
+      startRippingPfThreshold * (1 - regionRipFraction) +
+      endRippingPfThreshold * regionRipFraction
     return threshold
   }
 
@@ -728,14 +766,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         {
           x: regionPort1.d.x,
           y: regionPort1.d.y,
-          z: regionPort1.d.availableZ[0] ?? 0,
+          z: regionPort1.d.z,
           connectionName,
           rootConnectionName,
         },
         {
           x: regionPort2.d.x,
           y: regionPort2.d.y,
-          z: regionPort2.d.availableZ[0] ?? 0,
+          z: regionPort2.d.z,
           connectionName,
           rootConnectionName,
         },
@@ -754,7 +792,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           {
             x: lastPort.d.x,
             y: lastPort.d.y,
-            z: lastPort.d.availableZ[0],
+            z: lastPort.d.z,
             connectionName: newlySolvedRoute.connection.connectionId,
             rootConnectionName:
               newlySolvedRoute.connection.mutuallyConnectedNetworkId,
@@ -762,7 +800,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           {
             x: currentPort.d.x,
             y: currentPort.d.y,
-            z: currentPort.d.availableZ[0],
+            z: currentPort.d.z,
             connectionName: newlySolvedRoute.connection.connectionId,
             rootConnectionName:
               newlySolvedRoute.connection.mutuallyConnectedNetworkId,
@@ -808,7 +846,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
     const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>()
     for (const route of this.solvedRoutes) {
-      const path = route.path
+      const path = route.path as TypedCandidate[]
       if (path.length === 0) continue
       const firstPort = path[0]?.port
       const lastPort = path[path.length - 1]?.port
@@ -823,10 +861,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       const startPortPoints =
         endpointPortPointsByRegion.get(startRegionId) ?? []
       startPortPoints.push({
-        portPointId: firstPort.d.segmentPortPointId,
+        portPointId: firstPort.d.portId,
         x: firstPort.d.x,
         y: firstPort.d.y,
-        z: firstPort.d.availableZ[0] ?? 0,
+        z: firstPort.d.z,
         connectionName,
         rootConnectionName,
       })
@@ -834,10 +872,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       const endPortPoints = endpointPortPointsByRegion.get(endRegionId) ?? []
       endPortPoints.push({
-        portPointId: lastPort.d.segmentPortPointId,
+        portPointId: lastPort.d.portId,
         x: lastPort.d.x,
         y: lastPort.d.y,
-        z: lastPort.d.availableZ[0] ?? 0,
+        z: lastPort.d.z,
         connectionName,
         rootConnectionName,
       })
@@ -856,18 +894,18 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
         return [
           {
-            portPointId: assignment.regionPort1.d.segmentPortPointId,
+            portPointId: assignment.regionPort1.d.portId,
             x: assignment.regionPort1.d.x,
             y: assignment.regionPort1.d.y,
-            z: assignment.regionPort1.d.availableZ[0] ?? 0,
+            z: assignment.regionPort1.d.z,
             connectionName,
             rootConnectionName,
           },
           {
-            portPointId: assignment.regionPort2.d.segmentPortPointId,
+            portPointId: assignment.regionPort2.d.portId,
             x: assignment.regionPort2.d.x,
             y: assignment.regionPort2.d.y,
-            z: assignment.regionPort2.d.availableZ[0] ?? 0,
+            z: assignment.regionPort2.d.z,
             connectionName,
             rootConnectionName,
           },
@@ -932,19 +970,18 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       }
 
       const inputPortPoints: InputPortPoint[] = region.ports.map((port) => {
-        const connectsToOffBoardNode = port.d.nodeIds.some(
-          (nodeId: CapacityMeshNodeId) =>
-            Boolean(regionById.get(nodeId)?.d._offBoardConnectionId),
+        const connectsToOffBoardNode = port.d.regions.some((region) =>
+          Boolean(region.d._offBoardConnectionId),
         )
         return {
-          portPointId: port.d.segmentPortPointId,
+          portPointId: port.d.portId,
           x: port.d.x,
           y: port.d.y,
-          z: port.d.availableZ[0] ?? 0,
-          connectionNodeIds: port.d.nodeIds,
+          z: port.d.z,
+          connectionNodeIds: port.d.regions.map((region) => region.regionId),
           distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
           connectsToOffBoardNode,
-        }
+        } as InputPortPoint
       })
 
       inputNodeWithPortPoints.push({
@@ -1023,7 +1060,7 @@ const visualizeSolvedRoute = (
       segmentPoints.push({
         x: candidate.port.d.x,
         y: candidate.port.d.y,
-        z: candidate.port.d.availableZ[0] ?? 0,
+        z: candidate.port.d.z,
       })
     }
     segmentPoints.push({
@@ -1088,7 +1125,7 @@ const visualizeCandidate = (
     currentCandidatePathPoints.push({
       x: currentCandidate.port.d.x,
       y: currentCandidate.port.d.y,
-      z: currentCandidate.port.d.availableZ[0] ?? 0,
+      z: currentCandidate.port.d.z,
     })
     currentCandidate = currentCandidate.parent
   } while (currentCandidate)
@@ -1127,7 +1164,7 @@ const visualizeCandidate = (
     graphics.points!.push({
       ...candidate.port.d,
       color: "rgb(0, 64, 255)",
-      label: `g: ${candidate.g}\nh: ${candidate.h}\nf: ${candidate.f}\nripRequired: ${candidate.ripRequired}`,
+      label: `${candidate.port.portId}\ng: ${candidate.g}\nh: ${candidate.h}\nf: ${candidate.f}\nripRequired: ${candidate.ripRequired}`,
     })
   }
 
@@ -1185,13 +1222,23 @@ const visualizeTypedHyperGraph = (graph: TypedHyperGraph): GraphicsObject => {
     })
   }
 
+  let lastPort: TypedRegionPort | undefined = graph.ports[0]
+  let padding = 0
+
   for (const port of graph.ports) {
+    if (lastPort && port.d.parentPortId === lastPort.d.parentPortId) {
+      padding += 0.1
+    } else {
+      padding = 0
+    }
+
     graphics.points!.push({
-      x: port.d.x,
+      x: port.d.x + padding,
       y: port.d.y,
       color: "rgba(4, 90, 20, 0.3)",
       label: port.portId,
     })
+    lastPort = port
   }
 
   return graphics
