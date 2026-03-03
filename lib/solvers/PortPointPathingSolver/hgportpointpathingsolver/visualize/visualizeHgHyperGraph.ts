@@ -2,9 +2,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { HyperGraphHg, RegionPortHg } from "../types"
 
 /** Draws regions and ports from the HG hypergraph for debugging. */
-export function visualizeHgHyperGraph(
-  graph: HyperGraphHg,
-): GraphicsObject {
+export function visualizeHgHyperGraph(graph: HyperGraphHg): GraphicsObject {
   const graphics: GraphicsObject = {
     rects: [],
     points: [],

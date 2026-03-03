@@ -2,12 +2,7 @@ import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/A
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import { assertDefined } from "./assertDefined"
 import { checkIfConnectionPointIsInRegion } from "./checkIfConnectionPointIsInRegion"
-import type {
-  RawPort,
-  ConnectionHg,
-  HyperGraphHg,
-  RegionPortHg,
-} from "./types"
+import type { RawPort, ConnectionHg, HyperGraphHg, RegionPortHg } from "./types"
 
 /**
  * Builds the hypergraph and connection list consumed by the HG pathing solver.

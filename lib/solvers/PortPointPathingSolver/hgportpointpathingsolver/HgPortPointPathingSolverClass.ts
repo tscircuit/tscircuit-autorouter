@@ -257,10 +257,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
     const routesToRip = new Set<SolvedRoutesHg>(portOverlapRoutesToRip)
 
-    const crossingRoutesByRegion: Map<
-      RegionHg,
-      Set<SolvedRoutesHg>
-    > = new Map()
+    const crossingRoutesByRegion: Map<RegionHg, Set<SolvedRoutesHg>> = new Map()
     newlySolvedRoute.path.map((candidate) => {
       if (!candidate.lastPort || !candidate.lastRegion) return
       const crossingAssignments = this.getRipsRequiredForPortUsage(
