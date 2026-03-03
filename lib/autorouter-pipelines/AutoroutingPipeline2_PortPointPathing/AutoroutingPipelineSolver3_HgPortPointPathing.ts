@@ -36,7 +36,7 @@ import {
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "lib/index"
 import {
-  buildGraph,
+  buildHyperGraph,
   HgPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 
@@ -230,7 +230,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       "portPointPathingSolver",
       HgPortPointPathingSolver,
       (cms) => {
-        const { graph, connections } = buildGraph({
+        const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           segmentPortPoints: cms

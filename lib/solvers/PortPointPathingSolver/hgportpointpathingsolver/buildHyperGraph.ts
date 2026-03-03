@@ -4,25 +4,25 @@ import { assertDefined } from "./assertDefined"
 import { checkIfConnectionPointIsInRegion } from "./checkIfConnectionPointIsInRegion"
 import type {
   RawPort,
-  TypedConnection,
-  TypedHyperGraph,
-  TypedRegionPort,
+  ConnectionHg,
+  HyperGraphHg,
+  RegionPortHg,
 } from "./types"
 
 /**
  * Builds the hypergraph and connection list consumed by the HG pathing solver.
  */
-export function buildGraph(params: {
+export function buildHyperGraph(params: {
   simpleRouteJsonConnections: SimpleRouteConnection[]
   capacityMeshNodes: CapacityMeshNode[]
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
-}): { graph: TypedHyperGraph; connections: TypedConnection[] } {
-  const graph: TypedHyperGraph = {
+}): { graph: HyperGraphHg; connections: ConnectionHg[] } {
+  const graph: HyperGraphHg = {
     ports: [],
     regions: [],
   }
-  const connections: TypedConnection[] = []
+  const connections: ConnectionHg[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
     graph.regions.push({
@@ -59,15 +59,15 @@ export function buildGraph(params: {
         distToCentermostPortOnZ: 0,
         regions: [region1, region2],
       }
-      const typedPort: TypedRegionPort = {
+      const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,
         d: port,
         region1,
         region2,
       }
-      graph.ports.push(typedPort)
-      region1.ports.push(typedPort)
-      region2.ports.push(typedPort)
+      graph.ports.push(hgPort)
+      region1.ports.push(hgPort)
+      region2.ports.push(hgPort)
     }
   }
 

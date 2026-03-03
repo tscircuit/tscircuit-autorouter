@@ -7,6 +7,7 @@ import type {
   RegionPortAssignment,
   SolvedRoute,
 } from "@tscircuit/hypergraph"
+
 import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
@@ -19,56 +20,56 @@ export type RawPort = {
   y: number
   z: number
   distToCentermostPortOnZ: number
-  regions: TypedRegion[]
+  regions: RegionHg[]
 }
 
-export type TypedRegionPort = Omit<RegionPort, "d" | "port"> & {
+export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {
   d: RawPort
 }
 
-export type TypedRegion = Omit<Region, "d" | "assignments" | "ports"> & {
+export type RegionHg = Omit<Region, "d" | "assignments" | "ports"> & {
   d: CapacityMeshNode
-  assignments?: TypedRegionPortAssignment[]
-  ports: TypedRegionPort[]
+  assignments?: RegionPortAssignmentHg[]
+  ports: RegionPortHg[]
 }
 
-export type TypedHyperGraph = Omit<HyperGraph, "ports" | "regions"> & {
-  ports: TypedRegionPort[]
-  regions: TypedRegion[]
+export type HyperGraphHg = Omit<HyperGraph, "ports" | "regions"> & {
+  ports: RegionPortHg[]
+  regions: RegionHg[]
 }
 
-export type TypedConnection = Omit<Connection, "startRegion" | "endRegion"> & {
-  startRegion: TypedRegion
-  endRegion: TypedRegion
+export type ConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
+  startRegion: RegionHg
+  endRegion: RegionHg
   simpleRouteConnection?: SimpleRouteConnection
 }
 
-export type TypedCandidate = Omit<
+export type CandidateHg = Omit<
   Candidate,
   "port" | "parent" | "lastPort" | "lastRegion" | "nextRegion"
 > & {
-  port: TypedRegionPort
-  parent?: TypedCandidate
-  lastPort?: TypedRegionPort
-  lastRegion?: TypedRegion
-  nextRegion?: TypedRegion
+  port: RegionPortHg
+  parent?: CandidateHg
+  lastPort?: RegionPortHg
+  lastRegion?: RegionHg
+  nextRegion?: RegionHg
   ripRequired: boolean
 }
 
-export type TypedSolvedRoutes = Omit<SolvedRoute, "path" | "connection"> & {
-  path: TypedCandidate[]
-  connection: TypedConnection
+export type SolvedRoutesHg = Omit<SolvedRoute, "path" | "connection"> & {
+  path: CandidateHg[]
+  connection: ConnectionHg
 }
 
-export type TypedRegionPortAssignment = Omit<
+export type RegionPortAssignmentHg = Omit<
   RegionPortAssignment,
   "regionPort1" | "regionPort2" | "region" | "connection" | "solvedRoute"
 > & {
-  regionPort1: TypedRegionPort
-  regionPort2: TypedRegionPort
-  region: TypedRegion
-  connection: TypedConnection
-  solvedRoute: TypedSolvedRoutes
+  regionPort1: RegionPortHg
+  regionPort2: RegionPortHg
+  region: RegionHg
+  connection: ConnectionHg
+  solvedRoute: SolvedRoutesHg
 }
 
 export type RegionId = CapacityMeshNodeId
@@ -76,8 +77,8 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
-  graph: TypedHyperGraph
-  connections: TypedConnection[]
+  graph: HyperGraphHg
+  connections: ConnectionHg[]
   colorMap?: Record<string, string>
   layerCount: number
   effort: number

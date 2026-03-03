@@ -1,9 +1,9 @@
 import type { GraphicsObject } from "graphics-debug"
-import type { TypedConnection } from "../types"
+import type { ConnectionHg } from "../types"
 
 /** Draws graph-level connection hints between source and target regions. */
-export function visualizeTypedConnections(
-  connections: TypedConnection[],
+export function visualizeHgConnections(
+  connections: ConnectionHg[],
   colorMap: Record<string, string>,
 ): GraphicsObject {
   const graphics: GraphicsObject = {

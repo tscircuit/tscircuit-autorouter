@@ -20,21 +20,21 @@ import type {
   RegionId,
   RegionMemoryPfMap,
   RegionRipCountMap,
-  TypedCandidate,
-  TypedConnection,
-  TypedRegion,
-  TypedRegionPort,
-  TypedSolvedRoutes,
+  CandidateHg,
+  ConnectionHg,
+  RegionHg,
+  RegionPortHg,
+  SolvedRoutesHg,
 } from "./types"
 import { visualizeCandidate } from "./visualize/visualizeCandidate"
 import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
-import { visualizeTypedConnections } from "./visualize/visualizeTypedConnections"
-import { visualizeTypedHyperGraph } from "./visualize/visualizeTypedHyperGraph"
+import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
+import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
 
-/** Solves port-point routing over a typed hypergraph using HG heuristics and optional ripping. */
+/** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
-  TypedRegion,
-  TypedRegionPort
+  RegionHg,
+  RegionPortHg
 > {
   private regionMemoryPfMap: RegionMemoryPfMap
   private baseRegionFailureCostMap: Map<RegionId, number>
@@ -58,15 +58,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
   }
 
-  override estimateCostToEnd(port: TypedRegionPort): number {
+  override estimateCostToEnd(port: RegionPortHg): number {
     const endRegion = this.currentEndRegion
     assertDefined(endRegion, "Current end region is undefined")
     return distance(port.d, endRegion.d.center)
   }
 
-  override computeH(candidate: TypedCandidate): number {
-    const typedCandidate = candidate as TypedCandidate
-    const distanceTraveled = this.computeDistanceTraveled(typedCandidate)
+  override computeH(candidate: CandidateHg): number {
+    const hgCandidate = candidate as CandidateHg
+    const distanceTraveled = this.computeDistanceTraveled(hgCandidate)
     if (
       this.params.weights.RANDOM_WALK_DISTANCE > 0 &&
       distanceTraveled < this.params.weights.RANDOM_WALK_DISTANCE
@@ -99,9 +99,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override computeIncreasedRegionCostIfPortsAreUsed(
-    region: TypedRegion,
-    port1: TypedRegionPort,
-    port2: TypedRegionPort,
+    region: RegionHg,
+    port1: RegionPortHg,
+    port2: RegionPortHg,
   ): number {
     const currentConnection = this.currentConnection
     assertDefined(currentConnection, "Current connection is undefined")
@@ -125,16 +125,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
-  override computeG(candidate: TypedCandidate): number {
-    const typedCandidate = candidate as TypedCandidate
+  override computeG(candidate: CandidateHg): number {
+    const hgCandidate = candidate as CandidateHg
     const baseCost = super.computeG(candidate)
-    if (typedCandidate.nextRegion !== this.currentEndRegion) {
+    if (hgCandidate.nextRegion !== this.currentEndRegion) {
       return baseCost
     }
-    return baseCost + this.computeEndRegionCloseCost(typedCandidate)
+    return baseCost + this.computeEndRegionCloseCost(hgCandidate)
   }
 
-  override getPortUsagePenalty(port: TypedRegionPort): number {
+  override getPortUsagePenalty(port: RegionPortHg): number {
     const assignment = port.assignment
     if (!assignment) return 0
 
@@ -151,9 +151,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override getRipsRequiredForPortUsage(
-    region: TypedRegion,
-    port1: TypedRegionPort,
-    port2: TypedRegionPort,
+    region: RegionHg,
+    port1: RegionPortHg,
+    port2: RegionPortHg,
   ): RegionPortAssignment[] {
     const assignment: RegionPortAssignment[] = region.assignments ?? []
     if (assignment.length === 0) return []
@@ -194,8 +194,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override selectCandidatesForEnteringRegion(
-    candidates: TypedCandidate[],
-  ): TypedCandidate[] {
+    candidates: CandidateHg[],
+  ): CandidateHg[] {
     const startRegion = this.currentConnection?.startRegion
     const endRegion = this.currentConnection?.endRegion
     assertDefined(
@@ -229,9 +229,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return centerFirstCandidates
   }
 
-  override routeSolvedHook(solvedRoute: TypedSolvedRoutes): void {
+  override routeSolvedHook(solvedRoute: SolvedRoutesHg): void {
     this.baseRegionFailureCostMap.clear()
-    const traversedRegions = new Set<TypedRegion>()
+    const traversedRegions = new Set<RegionHg>()
     for (const candidate of solvedRoute.path) {
       const region = candidate.lastRegion
       if (region) traversedRegions.add(region)
@@ -250,16 +250,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override computeRoutesToRip(
-    newlySolvedRoute: TypedSolvedRoutes,
-  ): Set<TypedSolvedRoutes> {
+    newlySolvedRoute: SolvedRoutesHg,
+  ): Set<SolvedRoutesHg> {
     const portOverlapRoutesToRip = super.computePortOverlapRoutes(
       newlySolvedRoute,
     )
-    const routesToRip = new Set<TypedSolvedRoutes>(portOverlapRoutesToRip)
+    const routesToRip = new Set<SolvedRoutesHg>(portOverlapRoutesToRip)
 
     const crossingRoutesByRegion: Map<
-      TypedRegion,
-      Set<TypedSolvedRoutes>
+      RegionHg,
+      Set<SolvedRoutesHg>
     > = new Map()
     newlySolvedRoute.path.map((candidate) => {
       if (!candidate.lastPort || !candidate.lastRegion) return
@@ -282,7 +282,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     })
 
     const allRegionIdsForRipping = Array.from(
-      new Set<TypedRegion>([
+      new Set<RegionHg>([
         ...crossingRoutesByRegion.keys(),
         ...traversedRegions,
       ]),
@@ -308,7 +308,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       if (currentPf <= rippingThreshold) continue
 
-      const testedConnection = new Set<TypedConnection>()
+      const testedConnection = new Set<ConnectionHg>()
       let ripCountForRegionLoop = 0
 
       while (currentPf > rippingThreshold) {
@@ -402,7 +402,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return routesToRip
   }
 
-  private computeDeviation(candidate: TypedCandidate) {
+  private computeDeviation(candidate: CandidateHg) {
     const startPoint = this.currentConnection?.startRegion.d.center
     const endPoint = this.currentConnection?.endRegion.d.center
     assertDefined(startPoint, "Current connection or start region is undefined")
@@ -412,9 +412,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return deviation
   }
 
-  private computeDistanceTraveled(candidate: TypedCandidate): number {
+  private computeDistanceTraveled(candidate: CandidateHg): number {
     let distanceTraveled = 0
-    let currentCandidate: TypedCandidate | undefined = candidate
+    let currentCandidate: CandidateHg | undefined = candidate
     while (currentCandidate?.parent) {
       distanceTraveled += distance(
         currentCandidate.parent.port.d,
@@ -438,7 +438,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
-  private computeEndRegionCloseCost(candidate: TypedCandidate): number {
+  private computeEndRegionCloseCost(candidate: CandidateHg): number {
     const currentConnection = this.currentConnection
     const endRegion = this.currentEndRegion
     assertDefined(currentConnection, "Current connection is undefined")
@@ -446,7 +446,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const endPoint = currentConnection.endRegion.d.center
 
-    const endTargetPort: TypedRegionPort = {
+    const endTargetPort: RegionPortHg = {
       portId: `end-target:${currentConnection.connectionId}`,
       region1: endRegion,
       region2: endRegion,
@@ -468,9 +468,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private getCenterFirstEnteringRegionCandidates(
-    candidates: TypedCandidate[],
-  ): TypedCandidate[] {
-    const byZ = new Map<number, TypedCandidate[]>()
+    candidates: CandidateHg[],
+  ): CandidateHg[] {
+    const byZ = new Map<number, CandidateHg[]>()
     for (const candidate of candidates) {
       const z = candidate.port.d.z
       const candidatesOnZ = byZ.get(z) ?? []
@@ -478,7 +478,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       byZ.set(z, candidatesOnZ)
     }
 
-    const selected: TypedCandidate[] = []
+    const selected: CandidateHg[] = []
 
     for (const candidatesOnZ of byZ.values()) {
       const sortedByCenterOffsetCandidates = candidatesOnZ.sort(
@@ -500,8 +500,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         return a.port.d.y - b.port.d.y
       })
 
-      const availableRangesCandidate: TypedCandidate[][] = []
-      let currentRangeCandidate: TypedCandidate[] = []
+      const availableRangesCandidate: CandidateHg[][] = []
+      let currentRangeCandidate: CandidateHg[] = []
 
       for (const candidate of sortedByPositionCandidates) {
         if (this.isPortAvailableForCurrentNet(candidate.port)) {
@@ -527,7 +527,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return selected
   }
 
-  private isPortAvailableForCurrentNet(port: TypedRegionPort): boolean {
+  private isPortAvailableForCurrentNet(port: RegionPortHg): boolean {
     const assignment = port.assignment
     if (!assignment) return true
 
@@ -535,7 +535,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return assignment.connection.mutuallyConnectedNetworkId === currentNetId
   }
 
-  private computeRegionPfFromAssignments(region: TypedRegion): number {
+  private computeRegionPfFromAssignments(region: RegionHg): number {
     const existingPortPoints = this.getRegionAssignedPortPoints(region)
 
     const nodeWithPortPoints: NodeWithPortPoints = {
@@ -571,7 +571,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return -Math.log(1 - p)
   }
 
-  private getBaseRegionFailureCost(region: TypedRegion): number {
+  private getBaseRegionFailureCost(region: RegionHg): number {
     const cached = this.baseRegionFailureCostMap.get(region.regionId)
     if (cached != null) return cached
     const pfBefore = this.computeRegionPfFromAssignments(region)
@@ -580,7 +580,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return baseCost
   }
 
-  private getRegionAssignedPortPoints(region: TypedRegion): PortPoint[] {
+  private getRegionAssignedPortPoints(region: RegionHg): PortPoint[] {
     const existingAssignments = region.assignments ?? []
     return existingAssignments.flatMap((assignment) => {
       const region1PortPoint = assignment.regionPort1.d
@@ -608,9 +608,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private computeRegionPfWithAdditionalSegment(
-    region: TypedRegion,
-    port1: TypedRegionPort,
-    port2: TypedRegionPort,
+    region: RegionHg,
+    port1: RegionPortHg,
+    port2: RegionPortHg,
     connectionName: string,
     rootConnectionName?: string,
   ): number {
@@ -670,9 +670,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     newlySolvedRoute,
     routesToRip,
   }: {
-    region: TypedRegion
-    newlySolvedRoute: TypedSolvedRoutes
-    routesToRip: Set<TypedSolvedRoutes>
+    region: RegionHg
+    newlySolvedRoute: SolvedRoutesHg
+    routesToRip: Set<SolvedRoutesHg>
   }): number {
     const existingAssignments = (region.assignments ?? []).filter(
       (assignment) => !routesToRip.has(assignment.solvedRoute),
@@ -767,7 +767,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
     const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>()
     for (const route of this.solvedRoutes) {
-      const path = route.path as TypedCandidate[]
+      const path = route.path as CandidateHg[]
       if (path.length === 0) continue
       const firstPort = path[0]?.port
       const lastPort = path[path.length - 1]?.port
@@ -928,13 +928,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override visualize(): GraphicsObject {
     return mergeGraphicsArray([
-      visualizeTypedHyperGraph(this.params.graph),
-      visualizeTypedConnections(
+      visualizeHgHyperGraph(this.params.graph),
+      visualizeHgConnections(
         this.params.connections,
         this.params.colorMap ?? {},
       ),
       visualizeCandidate(
-        this.candidateQueue.peekMany(100) as TypedCandidate[] | undefined,
+        this.candidateQueue.peekMany(100) as CandidateHg[] | undefined,
         this.currentConnection?.startRegion.d.center,
       ),
       visualizeSolvedRoute(this.solvedRoutes, this.params.colorMap ?? {}),

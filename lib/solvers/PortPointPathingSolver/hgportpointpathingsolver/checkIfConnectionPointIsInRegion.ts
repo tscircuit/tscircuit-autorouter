@@ -2,12 +2,12 @@ import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectionPoint } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { sharedZLayers } from "./sharedZLayers"
-import type { TypedRegion } from "./types"
+import type { RegionHg } from "./types"
 
 /** Checks whether a connection endpoint lies inside a region on at least one shared layer. */
 export function checkIfConnectionPointIsInRegion(params: {
   point: ConnectionPoint
-  region: TypedRegion
+  region: RegionHg
   layerCount: number
 }): boolean {
   if (pointToBoxDistance(params.point, params.region.d) === 0) {

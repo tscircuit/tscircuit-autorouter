@@ -1,9 +1,9 @@
 import type { GraphicsObject, Point } from "graphics-debug"
-import type { TypedCandidate } from "../types"
+import type { CandidateHg } from "../types"
 
 /** Draws the current best candidate path and queue candidates for inspection. */
 export function visualizeCandidate(
-  candidates: TypedCandidate[] | undefined,
+  candidates: CandidateHg[] | undefined,
   startPoint: Point,
 ): GraphicsObject | null {
   const graphics: GraphicsObject = {

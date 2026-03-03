@@ -1,9 +1,9 @@
 import type { GraphicsObject, Line } from "graphics-debug"
-import type { TypedSolvedRoutes } from "../types"
+import type { SolvedRoutesHg } from "../types"
 
 /** Draws solved connection paths for debug rendering. */
 export function visualizeSolvedRoute(
-  solvedRoutes: TypedSolvedRoutes[],
+  solvedRoutes: SolvedRoutesHg[],
   colorMap: Record<string, string>,
 ): GraphicsObject {
   const graphics: GraphicsObject = {
