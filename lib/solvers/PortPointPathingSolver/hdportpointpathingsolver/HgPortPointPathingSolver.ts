@@ -223,6 +223,7 @@ export const buildGraph = (params: {
 export interface HgPortPointPathingSolverParams {
   graph: TypedHyperGraph
   connections: TypedConnection[]
+  colorMap?: Record<string, string>
   layerCount: number
   effort: number
   flags: {
@@ -970,12 +971,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override visualize(): GraphicsObject {
     return mergeGraphicsArray([
       visualizeTypedHyperGraph(this.params.graph),
-      visualizeTypedConnections(this.params.connections),
+      visualizeTypedConnections(
+        this.params.connections,
+        this.params.colorMap ?? {},
+      ),
       visualizeCandidate(
         this.candidateQueue.peekMany(100) as TypedCandidate[] | undefined,
         this.currentConnection?.startRegion.d.center,
       ),
-      visualizeSolvedRoute(this.solvedRoutes),
+      visualizeSolvedRoute(this.solvedRoutes, this.params.colorMap ?? {}),
     ])
   }
 }
@@ -998,6 +1002,7 @@ const mergeGraphicsArray = (
 
 const visualizeSolvedRoute = (
   solvedRoutes: TypedSolvedRoutes[],
+  colorMap: Record<string, string>,
 ): GraphicsObject => {
   const graphics: GraphicsObject = {
     lines: [],
@@ -1005,16 +1010,50 @@ const visualizeSolvedRoute = (
   }
 
   for (const solvedRoute of solvedRoutes) {
-    const line: Line = {
-      points: [solvedRoute.connection.startRegion.d.center],
-      strokeColor: "rgba(255, 50, 50, 1)",
-      strokeWidth: 0.1,
-    }
+    const connectionColor =
+      colorMap[solvedRoute.connection.connectionId] ?? "rgba(255, 50, 50, 1)"
+    const segmentPoints: Array<{ x: number; y: number; z: number }> = [
+      {
+        x: solvedRoute.connection.startRegion.d.center.x,
+        y: solvedRoute.connection.startRegion.d.center.y,
+        z: solvedRoute.connection.startRegion.d.availableZ[0] ?? 0,
+      },
+    ]
     for (const candidate of solvedRoute.path) {
-      line.points.push(candidate.port.d)
+      segmentPoints.push({
+        x: candidate.port.d.x,
+        y: candidate.port.d.y,
+        z: candidate.port.d.availableZ[0] ?? 0,
+      })
     }
-    line.points.push(solvedRoute.connection.endRegion.d.center)
-    graphics.lines!.push(line)
+    segmentPoints.push({
+      x: solvedRoute.connection.endRegion.d.center.x,
+      y: solvedRoute.connection.endRegion.d.center.y,
+      z: solvedRoute.connection.endRegion.d.availableZ[0] ?? 0,
+    })
+
+    for (let i = 0; i < segmentPoints.length - 1; i++) {
+      const pointA = segmentPoints[i]
+      const pointB = segmentPoints[i + 1]
+      const sameLayer = pointA.z === pointB.z
+      let strokeDash: string | undefined
+      if (sameLayer) {
+        strokeDash = pointA.z === 0 ? undefined : "10 5"
+      } else {
+        strokeDash = "3 3 10"
+      }
+
+      const line: Line = {
+        points: [
+          { x: pointA.x, y: pointA.y },
+          { x: pointB.x, y: pointB.y },
+        ],
+        strokeColor: connectionColor,
+        strokeWidth: 0.1,
+        strokeDash,
+      }
+      graphics.lines!.push(line)
+    }
   }
   return graphics
 }
@@ -1037,11 +1076,8 @@ const visualizeCandidate = (
     return graphics
   }
 
-  const currentCandidatePath: Line = {
-    points: [],
-    strokeColor: "rgba(255, 250, 50, 1)",
-    strokeWidth: 0.1,
-  }
+  const currentCandidatePathPoints: Array<{ x: number; y: number; z: number }> =
+    []
   graphics.points!.push({
     ...currentCandidate.port.d,
     color: "rgb(255, 50, 50)",
@@ -1049,13 +1085,43 @@ const visualizeCandidate = (
   })
 
   do {
-    currentCandidatePath.points.push(currentCandidate.port.d)
+    currentCandidatePathPoints.push({
+      x: currentCandidate.port.d.x,
+      y: currentCandidate.port.d.y,
+      z: currentCandidate.port.d.availableZ[0] ?? 0,
+    })
     currentCandidate = currentCandidate.parent
   } while (currentCandidate)
-  currentCandidatePath.points.reverse()
-  currentCandidatePath.points.unshift(startPoint)
+  currentCandidatePathPoints.reverse()
 
-  graphics.lines!.push(currentCandidatePath)
+  const startZ = currentCandidatePathPoints[0]?.z ?? 0
+  currentCandidatePathPoints.unshift({
+    x: startPoint.x,
+    y: startPoint.y,
+    z: startZ,
+  })
+
+  for (let i = 0; i < currentCandidatePathPoints.length - 1; i++) {
+    const pointA = currentCandidatePathPoints[i]
+    const pointB = currentCandidatePathPoints[i + 1]
+    const sameLayer = pointA.z === pointB.z
+    let strokeDash: string | undefined
+    if (sameLayer) {
+      strokeDash = pointA.z === 0 ? undefined : "10 5"
+    } else {
+      strokeDash = "3 3 10"
+    }
+
+    graphics.lines!.push({
+      points: [
+        { x: pointA.x, y: pointA.y },
+        { x: pointB.x, y: pointB.y },
+      ],
+      strokeColor: "rgba(255, 250, 50, 1)",
+      strokeWidth: 0.1,
+      strokeDash,
+    })
+  }
 
   for (const candidate of candidates) {
     graphics.points!.push({
@@ -1070,6 +1136,7 @@ const visualizeCandidate = (
 
 const visualizeTypedConnections = (
   connections: TypedConnection[],
+  colorMap: Record<string, string>,
 ): GraphicsObject => {
   const graphics: GraphicsObject = {
     lines: [],
@@ -1081,16 +1148,22 @@ const visualizeTypedConnections = (
     const endCenter = connection.endRegion.d.center
     const midX = (startCenter.x + endCenter.x) / 2
     const midY = (startCenter.y + endCenter.y) / 2
+    const connectionColor =
+      colorMap[connection.connectionId] ?? "rgba(255, 50, 150, 0.8)"
     graphics.points!.push({
       x: midX,
       y: midY,
-      color: "rgba(255, 50, 150, 0.8)",
+      color: connectionColor,
       label: connection.connectionId,
     })
     graphics.lines!.push({
       points: [startCenter, endCenter],
-      strokeColor: "rgba(255, 50, 150, 0.2)",
+      strokeColor: connectionColor,
       strokeWidth: 0.05,
+      strokeDash:
+        (connection.startRegion.d.availableZ[0] ?? 0) === 0
+          ? undefined
+          : "10 5",
     })
   }
   return graphics
