@@ -30,6 +30,7 @@ import { visualizeCandidate } from "./visualize/visualizeCandidate"
 import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
 import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
+import { getValidEndpointPointInRegion } from "./getValidEndpointPointInRegion"
 
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -754,9 +755,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
   } {
-    const regionById = new Map(
-      this.params.graph.regions.map((region) => [region.regionId, region]),
-    )
     const endpointRegionIds = new Set<RegionId>()
     for (const connection of this.params.connections) {
       endpointRegionIds.add(connection.startRegion.regionId)
@@ -831,10 +829,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       })
 
       const centerPortPoints: PortPoint[] = []
-      if (
-        region.d._containsObstacle &&
-        endpointRegionIds.has(region.regionId)
-      ) {
+      if (endpointRegionIds.has(region.regionId)) {
         const endpointPortPoints =
           endpointPortPointsByRegion.get(region.regionId) ?? []
         const supplementalEndpointPortPoints: PortPoint[] = []
@@ -863,11 +858,24 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           const [connectionName, rootConnectionName = ""] = key.split("::")
           const firstPoint = points[0]
           if (!firstPoint) continue
+          const normalizedRoot = rootConnectionName || undefined
+          const connection = this.params.connections.find(
+            (connection) =>
+              connection.connectionId === connectionName &&
+              connection.mutuallyConnectedNetworkId === normalizedRoot,
+          )
+          if (!connection) continue
+          const pos = getValidEndpointPointInRegion({
+            connection,
+            region,
+            layerCount: this.params.layerCount,
+          })
+          if (pos == null) continue
           centerPortPoints.push({
             portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
-            x: region.d.center.x,
-            y: region.d.center.y,
-            z: firstPoint.z,
+            x: pos.x,
+            y: pos.y,
+            z: pos.z,
             connectionName,
             rootConnectionName: rootConnectionName || undefined,
           })
