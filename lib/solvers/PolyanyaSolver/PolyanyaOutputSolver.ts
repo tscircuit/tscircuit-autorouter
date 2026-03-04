@@ -25,9 +25,7 @@ export class PolyanyaOutputSolver extends BaseSolver {
     this.srj = params.srj
     this.minTraceWidth = params.minTraceWidth
     this.viaDiameter = params.viaDiameter
-    this.connByName = new Map(
-      this.srj.connections.map((c) => [c.name, c]),
-    )
+    this.connByName = new Map(this.srj.connections.map((c) => [c.name, c]))
   }
 
   _step() {
