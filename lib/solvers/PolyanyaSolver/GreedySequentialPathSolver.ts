@@ -121,6 +121,19 @@ export class GreedySequentialPathSolver extends BaseSolver {
   /** Total connections for progress tracking */
   private totalConnections: number
 
+  /** Validation results populated after solving */
+  validationResult: {
+    totalConnections: number
+    routedConnections: number
+    unroutedConnections: string[]
+    crossNetCrossings: Array<{
+      traceA: string
+      traceB: string
+      layer: number
+      point: { x: number; y: number }
+    }>
+  } | null = null
+
   constructor(params: {
     srj: SimpleRouteJson
     colorMap: Record<string, string>
@@ -991,6 +1004,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
       this.traceObstaclePolys = this.bestObstaclePolys!
     }
     this.phase = "done"
+    this.validate()
     this.solved = true
   }
 
@@ -1017,6 +1031,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
         this.traceObstaclePolys = this.bestObstaclePolys!
       }
       this.phase = "done"
+      this.validate()
       this.solved = true
       return
     }
@@ -1024,6 +1039,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
     if (this.remaining.length === 0) {
       this.saveIfBest()
       this.phase = "done"
+      this.validate()
       this.solved = true
       return
     }
@@ -1043,6 +1059,83 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
     this.progress =
       (this.totalConnections - this.remaining.length) / this.totalConnections
+  }
+
+  /** Run post-solve validation: check unrouted connections and same-layer crossings */
+  private validate() {
+    const unrouted = this.remaining.map((c) => c.name)
+
+    // Build per-connection layer-segmented routes for crossing detection
+    type Seg = {
+      connName: string
+      z: number
+      x1: number
+      y1: number
+      x2: number
+      y2: number
+    }
+    const segments: Seg[] = []
+    for (const rp of this.resolvedPaths) {
+      for (let i = 0; i < rp.route.length - 1; i++) {
+        const a = rp.route[i]!
+        const b = rp.route[i + 1]!
+        if (a.z !== b.z) continue // skip via transitions
+        segments.push({
+          connName: rp.connectionName,
+          z: a.z,
+          x1: a.x,
+          y1: a.y,
+          x2: b.x,
+          y2: b.y,
+        })
+      }
+    }
+
+    // Check all segment pairs from different nets on the same layer
+    const crossings: NonNullable<
+      typeof this.validationResult
+    >["crossNetCrossings"] = []
+    // Build a map from connName to root net name for same-net detection
+    const connByName = new Map(this.srj.connections.map((c) => [c.name, c]))
+    const getNetName = (name: string): string => {
+      const conn = connByName.get(name)
+      return conn?.rootConnectionName ?? conn?.netConnectionName ?? name
+    }
+
+    for (let i = 0; i < segments.length; i++) {
+      const a = segments[i]!
+      for (let j = i + 1; j < segments.length; j++) {
+        const b = segments[j]!
+        if (a.z !== b.z) continue
+        if (getNetName(a.connName) === getNetName(b.connName)) continue
+
+        const ix = segSegIntersection(
+          a.x1,
+          a.y1,
+          a.x2,
+          a.y2,
+          b.x1,
+          b.y1,
+          b.x2,
+          b.y2,
+        )
+        if (ix) {
+          crossings.push({
+            traceA: a.connName,
+            traceB: b.connName,
+            layer: a.z,
+            point: ix,
+          })
+        }
+      }
+    }
+
+    this.validationResult = {
+      totalConnections: this.totalConnections,
+      routedConnections: this.resolvedPaths.length,
+      unroutedConnections: unrouted,
+      crossNetCrossings: crossings,
+    }
   }
 
   getResolvedPaths(): ResolvedPath[] {
@@ -1156,4 +1249,30 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
     return { lines, points }
   }
+}
+
+/** Strict interior segment-segment intersection (excludes shared endpoints). */
+function segSegIntersection(
+  ax1: number,
+  ay1: number,
+  ax2: number,
+  ay2: number,
+  bx1: number,
+  by1: number,
+  bx2: number,
+  by2: number,
+): { x: number; y: number } | null {
+  const d1x = ax2 - ax1
+  const d1y = ay2 - ay1
+  const d2x = bx2 - bx1
+  const d2y = by2 - by1
+  const denom = d1x * d2y - d1y * d2x
+  if (Math.abs(denom) < 1e-12) return null
+  const t = ((bx1 - ax1) * d2y - (by1 - ay1) * d2x) / denom
+  const u = ((bx1 - ax1) * d1y - (by1 - ay1) * d1x) / denom
+  const EPS = 1e-6
+  if (t > EPS && t < 1 - EPS && u > EPS && u < 1 - EPS) {
+    return { x: ax1 + t * d1x, y: ay1 + t * d1y }
+  }
+  return null
 }

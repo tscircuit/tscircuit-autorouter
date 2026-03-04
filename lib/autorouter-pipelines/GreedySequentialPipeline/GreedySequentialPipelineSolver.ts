@@ -164,6 +164,10 @@ export class GreedySequentialPipelineSolver extends BaseSolver {
     return this.outputSolver.getSimplifiedTraces()
   }
 
+  getValidationResult() {
+    return this.greedySolver?.validationResult ?? null
+  }
+
   getOutputSimpleRouteJson(): SimpleRouteJson {
     const effectiveLayerCount =
       this.greedySolver?.getEffectiveLayerCount() ?? this.srj.layerCount
