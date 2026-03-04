@@ -27,7 +27,6 @@ export const addVisualizationToLastStep = (
   checkArrayForHighestStep(baseVisualization.lines)
   checkArrayForHighestStep(baseVisualization.circles)
   checkArrayForHighestStep(baseVisualization.rects)
-  checkArrayForHighestStep((baseVisualization as any).polygons)
 
   // If no steps found, default to 0
   if (highestStep === -1) {
@@ -35,12 +34,11 @@ export const addVisualizationToLastStep = (
   }
 
   // Create a new visualization with the added items at the highest step
-  const result: any = {
+  const result: GraphicsObject = {
     points: [...(baseVisualization.points || [])],
     lines: [...(baseVisualization.lines || [])],
     circles: [...(baseVisualization.circles || [])],
     rects: [...(baseVisualization.rects || [])],
-    polygons: [...((baseVisualization as any).polygons || [])],
   }
 
   // Add each item from visualizationToAdd with the highest step
@@ -69,16 +67,6 @@ export const addVisualizationToLastStep = (
     result.rects = [
       ...(result.rects || []),
       ...visualizationToAdd.rects.map((r) => ({ ...r, step: highestStep })),
-    ]
-  }
-
-  if ((visualizationToAdd as any).polygons) {
-    result.polygons = [
-      ...(result.polygons || []),
-      ...(visualizationToAdd as any).polygons.map((p: any) => ({
-        ...p,
-        step: highestStep,
-      })),
     ]
   }
 

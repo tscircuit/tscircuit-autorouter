@@ -949,22 +949,18 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return this.layerCount
   }
 
-  visualize(): GraphicsObject & {
-    polygons?: Array<{
-      points: { x: number; y: number }[]
-      fill?: string
-      stroke?: string
-      strokeWidth?: number
-    }>
-  } {
+  /** Convert an hsl/hsla color string to hsla with the given alpha (0-1). */
+  private withAlpha(color: string, alpha: number): string {
+    const m = color.match(/^hsl\(([^)]+)\)$/)
+    if (m) return `hsla(${m[1]}, ${alpha})`
+    const ma = color.match(/^hsla\((.+),\s*[\d.]+\)$/)
+    if (ma) return `hsla(${ma[1]}, ${alpha})`
+    return color
+  }
+
+  visualize(): GraphicsObject {
     const lines: Line[] = []
     const points: GraphicsObject["points"] = []
-    const polygons: Array<{
-      points: { x: number; y: number }[]
-      fill?: string
-      stroke?: string
-      strokeWidth?: number
-    }> = []
 
     // Draw committed trace paths, split by layer for distinct styling
     for (const rp of this.resolvedPaths) {
@@ -980,7 +976,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
             const isTop = prevZ === 0
             lines.push({
               points: segment.map((p) => ({ x: p.x, y: p.y })),
-              strokeColor: isTop ? color : `${color}99`,
+              strokeColor: isTop ? color : this.withAlpha(color, 0.6),
               strokeWidth: this.minTraceWidth,
               ...(isTop ? {} : { strokeDash: "4 2" }),
             })
@@ -990,16 +986,16 @@ export class GreedySequentialPathSolver extends BaseSolver {
       }
     }
 
-    // Draw trace obstacle polygons as filled shapes
+    // Draw trace obstacle polygon outlines
     for (const tp of this.traceObstaclePolys) {
       const color = this.colorMap[tp.connectionName] ?? "green"
-      const fillOpacity = tp.layerZ === 0 ? "20" : "10"
-      const strokeOpacity = tp.layerZ === 0 ? "60" : "30"
+      const alpha = tp.layerZ === 0 ? 0.4 : 0.2
       if (tp.polygon.length >= 3) {
-        polygons.push({
-          points: tp.polygon.map((p) => ({ x: p.x, y: p.y })),
-          fill: `${color}${fillOpacity}`,
-          stroke: `${color}${strokeOpacity}`,
+        const pts = tp.polygon.map((p) => ({ x: p.x, y: p.y }))
+        pts.push({ ...pts[0]! }) // close the polygon
+        lines.push({
+          points: pts,
+          strokeColor: this.withAlpha(color, alpha),
           strokeWidth: 0.02,
         })
       }
@@ -1049,6 +1045,6 @@ export class GreedySequentialPathSolver extends BaseSolver {
       points.push({ x: conn.end.x, y: conn.end.y, color })
     }
 
-    return { lines, points, polygons }
+    return { lines, points }
   }
 }

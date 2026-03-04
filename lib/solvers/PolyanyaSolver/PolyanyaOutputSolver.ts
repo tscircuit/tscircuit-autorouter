@@ -12,6 +12,7 @@ export class PolyanyaOutputSolver extends BaseSolver {
   viaDiameter: number
   hdRoutes: HighDensityIntraNodeRoute[] = []
   simplifiedTraces: SimplifiedPcbTraces = []
+  private connByName: Map<string, SimpleRouteJson["connections"][number]>
 
   constructor(params: {
     resolvedPaths: ResolvedPath[]
@@ -24,6 +25,9 @@ export class PolyanyaOutputSolver extends BaseSolver {
     this.srj = params.srj
     this.minTraceWidth = params.minTraceWidth
     this.viaDiameter = params.viaDiameter
+    this.connByName = new Map(
+      this.srj.connections.map((c) => [c.name, c]),
+    )
   }
 
   _step() {
@@ -38,9 +42,7 @@ export class PolyanyaOutputSolver extends BaseSolver {
 
     // Convert HD routes → SimplifiedPcbTraces
     this.simplifiedTraces = this.hdRoutes.map((hdRoute, i) => {
-      const conn = this.srj.connections.find(
-        (c) => c.name === hdRoute.connectionName,
-      )
+      const conn = this.connByName.get(hdRoute.connectionName)
       return {
         type: "pcb_trace" as const,
         pcb_trace_id: `${hdRoute.connectionName}_${i}`,

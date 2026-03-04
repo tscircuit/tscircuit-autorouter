@@ -3,7 +3,6 @@ import {
   InteractiveGraphics,
   InteractiveGraphicsCanvas,
 } from "graphics-debug/react"
-import { GraphicsCanvasWithPolygons } from "./GraphicsCanvasWithPolygons"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { SimpleRouteJson } from "lib/types"
@@ -906,7 +905,7 @@ export const AutoroutingPipelineDebugger = ({
             objectLimit={20e3}
           />
         ) : (
-          <GraphicsCanvasWithPolygons
+          <InteractiveGraphicsCanvas
             graphics={visualization}
             showLabelsByDefault={false}
           />

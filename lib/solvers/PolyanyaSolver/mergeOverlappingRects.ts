@@ -33,9 +33,15 @@ class UnionFind {
   }
 }
 
+const AABB_EPSILON = 1e-9
+
 function aabbsOverlap(a: AABB, b: AABB): boolean {
+  // Treat touching (shared edges/corners) as overlapping so adjacent rects merge
   return (
-    a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY
+    a.minX <= b.maxX + AABB_EPSILON &&
+    a.maxX + AABB_EPSILON >= b.minX &&
+    a.minY <= b.maxY + AABB_EPSILON &&
+    a.maxY + AABB_EPSILON >= b.minY
   )
 }
 
@@ -137,6 +143,12 @@ function rectilinearUnion(rects: AABB[]): Point[][] {
   const xs = Array.from(xSet).sort((a, b) => a - b)
   const ys = Array.from(ySet).sort((a, b) => a - b)
 
+  // Build O(1) coordinate-to-index maps
+  const xIndex = new Map<number, number>()
+  const yIndex = new Map<number, number>()
+  for (let i = 0; i < xs.length; i++) xIndex.set(xs[i]!, i)
+  for (let i = 0; i < ys.length; i++) yIndex.set(ys[i]!, i)
+
   const cols = xs.length - 1
   const rows = ys.length - 1
   if (cols <= 0 || rows <= 0) return []
@@ -148,10 +160,10 @@ function rectilinearUnion(rects: AABB[]): Point[][] {
   )
 
   for (const r of rects) {
-    const cStart = xs.indexOf(r.minX)
-    const cEnd = xs.indexOf(r.maxX)
-    const rStart = ys.indexOf(r.minY)
-    const rEnd = ys.indexOf(r.maxY)
+    const cStart = xIndex.get(r.minX)!
+    const cEnd = xIndex.get(r.maxX)!
+    const rStart = yIndex.get(r.minY)!
+    const rEnd = yIndex.get(r.maxY)!
     for (let row = rStart; row < rEnd; row++) {
       for (let col = cStart; col < cEnd; col++) {
         filled[row]![col] = true

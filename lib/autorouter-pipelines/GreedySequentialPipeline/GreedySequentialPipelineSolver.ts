@@ -70,10 +70,10 @@ export class GreedySequentialPipelineSolver extends BaseSolver {
         onSolved: (pps) => {
           pps.srjWithPointPairs =
             pps.netToPointPairsSolver?.getNewSimpleRouteJson()
-          pps.colorMap = getColorMap(pps.srjWithPointPairs!, pps.connMap)
           pps.connMap = getConnectivityMapFromSimpleRouteJson(
             pps.srjWithPointPairs!,
           )
+          pps.colorMap = getColorMap(pps.srjWithPointPairs!, pps.connMap)
         },
       },
     ),

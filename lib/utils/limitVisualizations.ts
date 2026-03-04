@@ -1,16 +1,15 @@
 import type { GraphicsObject } from "graphics-debug"
 
 export const limitVisualizations = (
-  graphicsObject: any,
+  graphicsObject: GraphicsObject,
   objectLimit = 10000,
-): any => {
+): GraphicsObject => {
   // Count total objects
   const totalObjects =
     (graphicsObject.points?.length || 0) +
     (graphicsObject.lines?.length || 0) +
     (graphicsObject.circles?.length || 0) +
-    (graphicsObject.rects?.length || 0) +
-    (graphicsObject.polygons?.length || 0)
+    (graphicsObject.rects?.length || 0)
 
   // If under limit, return original
   if (totalObjects <= objectLimit) {
@@ -29,7 +28,7 @@ export const limitVisualizations = (
   }
 
   // Create new graphics object with reduced items
-  const reduced: any = {
+  const reduced: GraphicsObject = {
     points: graphicsObject.points
       ? graphicsObject.points.filter(filterBySkipFactor)
       : [],
@@ -41,9 +40,6 @@ export const limitVisualizations = (
       : [],
     rects: graphicsObject.rects
       ? graphicsObject.rects.filter(filterBySkipFactor)
-      : [],
-    polygons: graphicsObject.polygons
-      ? graphicsObject.polygons.filter(filterBySkipFactor)
       : [],
   }
 

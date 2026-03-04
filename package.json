@@ -45,7 +45,7 @@
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "flatbush": "^4.4.0",
-    "polyanya": "github:zalo/polyanya-ts",
+    "polyanya": "github:zalo/polyanya-ts#8dc7dc392f03febe7127354c063446a89685fc04",
     "graphics-debug": "^0.0.77",
     "kleur": "^4.1.5",
     "looks-same": "9",
