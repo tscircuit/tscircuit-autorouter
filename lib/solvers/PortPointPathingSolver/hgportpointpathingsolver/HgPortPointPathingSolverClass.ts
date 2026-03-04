@@ -846,17 +846,28 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         }
         edgePortPoints.push(...supplementalEndpointPortPoints)
 
-        const edgePortPointsByConnection = new Map<string, PortPoint[]>()
+        const edgePortPointsByConnection = new Map<
+          string,
+          {
+            connectionName: string
+            rootConnectionName?: string
+            ports: PortPoint[]
+          }
+        >()
         for (const portPoint of edgePortPoints) {
           const key = `${portPoint.connectionName}::${portPoint.rootConnectionName ?? ""}`
-          const points = edgePortPointsByConnection.get(key) ?? []
-          points.push(portPoint)
+          const points = edgePortPointsByConnection.get(key) ?? {
+            connectionName: portPoint.connectionName,
+            rootConnectionName: portPoint.rootConnectionName,
+            ports: [],
+          }
+          points.ports.push(portPoint)
           edgePortPointsByConnection.set(key, points)
         }
 
         for (const [key, points] of edgePortPointsByConnection.entries()) {
-          const [connectionName, rootConnectionName = ""] = key.split("::")
-          const firstPoint = points[0]
+          const { connectionName, rootConnectionName = "", ports } = points
+          const firstPoint = ports[0]
           if (!firstPoint) continue
           const normalizedRoot = rootConnectionName || undefined
           const connection = this.params.connections.find(
