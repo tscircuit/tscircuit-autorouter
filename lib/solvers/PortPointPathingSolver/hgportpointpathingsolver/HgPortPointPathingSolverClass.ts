@@ -30,7 +30,7 @@ import { visualizeCandidate } from "./visualize/visualizeCandidate"
 import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
 import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
-import { getValidEndpointPointInRegion } from "./getValidEndpointPointInRegion"
+import { getConnectionEndpointPointInRegion } from "./getConnectionEndpointPointInRegion"
 
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -846,29 +846,30 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         }
         edgePortPoints.push(...supplementalEndpointPortPoints)
 
-        const edgePortPointsByConnection = new Map<
+        const endpointConnectionsInRegion = new Map<
           string,
           {
             connectionName: string
             rootConnectionName?: string
-            ports: PortPoint[]
+            endpointPort: PortPoint
           }
         >()
-        for (const portPoint of edgePortPoints) {
+        for (const portPoint of endpointPortPoints) {
           const key = `${portPoint.connectionName}::${portPoint.rootConnectionName ?? ""}`
-          const points = edgePortPointsByConnection.get(key) ?? {
+          if (endpointConnectionsInRegion.has(key)) continue
+          endpointConnectionsInRegion.set(key, {
             connectionName: portPoint.connectionName,
             rootConnectionName: portPoint.rootConnectionName,
-            ports: [],
-          }
-          points.ports.push(portPoint)
-          edgePortPointsByConnection.set(key, points)
+            endpointPort: portPoint,
+          })
         }
 
-        for (const [key, points] of edgePortPointsByConnection.entries()) {
-          const { connectionName, rootConnectionName = "", ports } = points
-          const firstPoint = ports[0]
-          if (!firstPoint) continue
+        for (const points of endpointConnectionsInRegion.values()) {
+          const {
+            connectionName,
+            rootConnectionName = "",
+            endpointPort,
+          } = points
           const normalizedRoot = rootConnectionName || undefined
           const connection = this.params.connections.find(
             (connection) =>
@@ -876,17 +877,26 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
               connection.mutuallyConnectedNetworkId === normalizedRoot,
           )
           if (!connection) continue
-          const pos = getValidEndpointPointInRegion({
+
+          const regionIsStart =
+            connection.startRegion.regionId === region.regionId
+          const regionIsEnd = connection.endRegion.regionId === region.regionId
+          if (!regionIsStart && !regionIsEnd) continue
+
+          const endpointPos = getConnectionEndpointPointInRegion({
             connection,
             region,
             layerCount: this.params.layerCount,
+            endpointKind: regionIsStart ? "start" : "end",
+            preferredZ: endpointPort.z,
           })
-          if (pos == null) continue
+          if (!endpointPos) continue
+
           centerPortPoints.push({
             portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
-            x: pos.x,
-            y: pos.y,
-            z: pos.z,
+            x: endpointPos.x,
+            y: endpointPos.y,
+            z: endpointPos.z,
             connectionName,
             rootConnectionName: rootConnectionName || undefined,
           })
