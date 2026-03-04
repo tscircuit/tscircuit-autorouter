@@ -4,6 +4,7 @@ import {
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import {
   Node,
@@ -54,6 +55,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   hyperParameters: Partial<HighDensityHyperParameters>
 
   connMap?: ConnectivityMap
+
+  obstacleSegments: IndexedObstacleSegment[] = []
+  obstacleSegmentIndex: Flatbush | null = null
+  obstacleVias: IndexedObstacleVia[] = []
+  obstacleViaIndex: Flatbush | null = null
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: string[]
@@ -109,6 +115,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.debug_nodesTooCloseToObstacle = new Set()
     this.debug_nodePathToParentIntersectsObstacle = new Set()
     this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length
+    this.buildObstacleIndexes()
     const bestRowOrColumnCount = Math.ceil(5 * (this.numRoutes + 1))
     let numXCells = this.boundsSize.width / this.cellStep
     let numYCells = this.boundsSize.height / this.cellStep
@@ -215,29 +222,37 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    for (const route of this.obstacleRoutes) {
-      const connectedToObstacle = this.connMap?.areIdsConnected?.(
-        this.connectionName,
-        route.connectionName,
+    const traceProximity = this.traceThickness + margin
+    if (this.obstacleSegmentIndex) {
+      const nearbySegmentIds = this.obstacleSegmentIndex.search(
+        node.x - traceProximity,
+        node.y - traceProximity,
+        node.x + traceProximity,
+        node.y + traceProximity,
       )
-
-      if (!connectedToObstacle) {
-        const pointPairs = getSameLayerPointPairs(route)
-        for (const pointPair of pointPairs) {
-          if (
-            (isVia || pointPair.z === node.z) &&
-            pointToSegmentDistance(node, pointPair.A, pointPair.B) <
-              this.traceThickness + margin
-          ) {
-            return true
-          }
+      for (const segmentId of nearbySegmentIds) {
+        const segment = this.obstacleSegments[segmentId]
+        if (!segment || segment.connectedToCurrentConnection) continue
+        if (!isVia && segment.z !== node.z) continue
+        if (
+          pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
+        ) {
+          return true
         }
       }
-      for (const via of route.vias) {
-        if (
-          distance(node, via) <
-          this.viaDiameter / 2 + this.traceThickness / 2 + margin
-        ) {
+    }
+
+    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    if (this.obstacleViaIndex) {
+      const nearbyViaIds = this.obstacleViaIndex.search(
+        node.x - viaProximity,
+        node.y - viaProximity,
+        node.x + viaProximity,
+        node.y + viaProximity,
+      )
+      for (const viaId of nearbyViaIds) {
+        const via = this.obstacleVias[viaId]
+        if (via && distance(node, via) < viaProximity) {
           return true
         }
       }
@@ -270,20 +285,89 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   doesPathToParentIntersectObstacle(node: Node) {
     const parent = node.parent
     if (!parent) return false
-    for (const route of this.obstacleRoutes) {
-      const obstacleIsConnectedToNewPath = this.connMap?.areIdsConnected?.(
-        this.connectionName,
-        route.connectionName,
-      )
-      if (obstacleIsConnectedToNewPath) continue
-      for (const pointPair of getSameLayerPointPairs(route)) {
-        if (pointPair.z !== node.z) continue
-        if (doSegmentsIntersect(node, parent, pointPair.A, pointPair.B)) {
-          return true
-        }
+    if (!this.obstacleSegmentIndex) return false
+
+    const minX = Math.min(node.x, parent.x)
+    const maxX = Math.max(node.x, parent.x)
+    const minY = Math.min(node.y, parent.y)
+    const maxY = Math.max(node.y, parent.y)
+
+    const nearbySegmentIds = this.obstacleSegmentIndex.search(
+      minX,
+      minY,
+      maxX,
+      maxY,
+    )
+
+    for (const segmentId of nearbySegmentIds) {
+      const segment = this.obstacleSegments[segmentId]
+      if (!segment || segment.connectedToCurrentConnection) continue
+      if (segment.z !== node.z) continue
+      if (doSegmentsIntersect(node, parent, segment.A, segment.B)) {
+        return true
       }
     }
     return false
+  }
+
+  buildObstacleIndexes() {
+    if (this.obstacleRoutes.length === 0) {
+      this.obstacleSegmentIndex = null
+      this.obstacleViaIndex = null
+      return
+    }
+
+    const obstacleSegments: IndexedObstacleSegment[] = []
+    const obstacleVias: IndexedObstacleVia[] = []
+
+    for (const route of this.obstacleRoutes) {
+      const connectedToCurrentConnection =
+        this.connMap?.areIdsConnected?.(
+          this.connectionName,
+          route.connectionName,
+        ) ?? false
+
+      for (const pointPair of getSameLayerPointPairs(route)) {
+        obstacleSegments.push({
+          ...pointPair,
+          connectedToCurrentConnection,
+        })
+      }
+
+      for (const via of route.vias) {
+        obstacleVias.push(via)
+      }
+    }
+
+    this.obstacleSegments = obstacleSegments
+    this.obstacleVias = obstacleVias
+
+    if (obstacleSegments.length > 0) {
+      const segmentIndex = new Flatbush(obstacleSegments.length)
+      for (const segment of obstacleSegments) {
+        segmentIndex.add(
+          Math.min(segment.A.x, segment.B.x),
+          Math.min(segment.A.y, segment.B.y),
+          Math.max(segment.A.x, segment.B.x),
+          Math.max(segment.A.y, segment.B.y),
+        )
+      }
+      segmentIndex.finish()
+      this.obstacleSegmentIndex = segmentIndex
+    } else {
+      this.obstacleSegmentIndex = null
+    }
+
+    if (obstacleVias.length > 0) {
+      const viaIndex = new Flatbush(obstacleVias.length)
+      for (const via of obstacleVias) {
+        viaIndex.add(via.x, via.y, via.x, via.y)
+      }
+      viaIndex.finish()
+      this.obstacleViaIndex = viaIndex
+    } else {
+      this.obstacleViaIndex = null
+    }
   }
 
   computeH(node: Node) {
@@ -652,6 +736,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return graphics
   }
 }
+
+type IndexedObstacleSegment = {
+  z: number
+  A: { x: number; y: number; z: number }
+  B: { x: number; y: number; z: number }
+  connectedToCurrentConnection: boolean
+}
+
+type IndexedObstacleVia = { x: number; y: number }
 
 function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
   const pointPairs: {
