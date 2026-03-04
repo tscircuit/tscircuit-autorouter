@@ -609,6 +609,43 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return rectToPolygon(viaPoint.x, viaPoint.y, r * 2, r * 2, this.margin)
   }
 
+  /**
+   * Check if placing a via at the given point would collide with any existing
+   * trace obstacle polygon on any layer. Uses AABB overlap as a fast check.
+   */
+  private isViaSafe(point: Point): boolean {
+    const viaHalf = this.viaDiameter / 2 + this.margin
+    const vMinX = point.x - viaHalf
+    const vMaxX = point.x + viaHalf
+    const vMinY = point.y - viaHalf
+    const vMaxY = point.y + viaHalf
+
+    for (let z = 0; z < this.layerCount; z++) {
+      for (const poly of this.tracePolygonObstacles[z]!) {
+        // Quick AABB check against the trace polygon
+        let pMinX = Infinity
+        let pMinY = Infinity
+        let pMaxX = -Infinity
+        let pMaxY = -Infinity
+        for (const p of poly) {
+          if (p.x < pMinX) pMinX = p.x
+          if (p.y < pMinY) pMinY = p.y
+          if (p.x > pMaxX) pMaxX = p.x
+          if (p.y > pMaxY) pMaxY = p.y
+        }
+        if (
+          vMaxX > pMinX &&
+          vMinX < pMaxX &&
+          vMaxY > pMinY &&
+          vMinY < pMaxY
+        ) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+
   /** Search using Polyanya SearchInstance (mesh-based, no weighted regions) */
   private searchPolyanya(
     mesh: Mesh,
@@ -668,6 +705,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
       let foundForThis = false
       for (const s of starts) {
         for (const e of ends) {
+          // For non-zero layers, vias are placed at start/end — ensure they
+          // don't collide with existing trace obstacles on any layer.
+          if (layerZ > 0 && (!this.isViaSafe(s) || !this.isViaSafe(e))) continue
+
           const r = this.usePolyanya
             ? this.searchPolyanya(mesh, s, e)
             : this.searchVG(mesh, layerZ, s, e)
