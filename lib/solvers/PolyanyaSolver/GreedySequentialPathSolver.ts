@@ -200,17 +200,29 @@ export class GreedySequentialPathSolver extends BaseSolver {
         x: pts[pts.length - 1]!.x,
         y: pts[pts.length - 1]!.y,
       }
+      // Build all names that might appear in obstacle connectedTo lists:
+      // the connection name itself, rootConnectionName, and for merged names
+      // like "source_trace_8__source_trace_9", the constituent parts.
+      const connNames = [conn.name]
+      if (conn.rootConnectionName && conn.rootConnectionName !== conn.name) {
+        connNames.push(conn.rootConnectionName)
+      }
+      if (conn.name.includes("__")) {
+        for (const part of conn.name.split("__")) {
+          if (!connNames.includes(part)) connNames.push(part)
+        }
+      }
       const startCandidates = this.getNudgeCandidates(
         originalStart,
         originalEnd,
         params.srj.obstacles,
-        conn.name,
+        connNames,
       )
       const endCandidates = this.getNudgeCandidates(
         originalEnd,
         originalStart,
         params.srj.obstacles,
-        conn.name,
+        connNames,
       )
       return {
         name: conn.name,
@@ -287,9 +299,9 @@ export class GreedySequentialPathSolver extends BaseSolver {
     pt: { x: number; y: number },
     other: { x: number; y: number },
     obstacles: SimpleRouteJson["obstacles"],
-    connName: string,
+    connNames: string[],
   ): Point {
-    const ranked = this.getNudgeCandidates(pt, other, obstacles, connName)
+    const ranked = this.getNudgeCandidates(pt, other, obstacles, connNames)
     return ranked[0] ?? { x: pt.x, y: pt.y }
   }
 
@@ -302,10 +314,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
     pt: { x: number; y: number },
     other: { x: number; y: number },
     obstacles: SimpleRouteJson["obstacles"],
-    connName: string,
+    connNames: string[],
   ): Point[] {
     const connected = obstacles.filter((obs) =>
-      obs.connectedTo.includes(connName),
+      connNames.some((n) => obs.connectedTo.includes(n)),
     )
     if (connected.length === 0) return [{ x: pt.x, y: pt.y }]
 
