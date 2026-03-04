@@ -1,4 +1,3 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { sharedZLayers } from "./sharedZLayers"
 import { ConnectionHg, RegionHg } from "./types"
@@ -10,7 +9,6 @@ export const getValidEndpointPointInRegion = (params: {
 }): { x: number; y: number; z: number } | null => {
   const { connection, region, layerCount } = params
   for (const point of connection.simpleRouteConnection?.pointsToConnect ?? []) {
-    if (pointToBoxDistance(point, region.d) !== 0) continue
     const layers =
       "layers" in point
         ? point.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
