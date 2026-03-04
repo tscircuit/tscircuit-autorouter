@@ -654,6 +654,34 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return true
   }
 
+  /**
+   * Check if a bridge segment (from original endpoint to nudged endpoint)
+   * crosses any already-committed trace segment on the given layer.
+   */
+  private bridgeCrossesExistingTrace(
+    from: Point,
+    to: Point,
+    layerZ: number,
+  ): boolean {
+    // Skip if bridge is zero-length
+    if (Math.abs(from.x - to.x) < 1e-9 && Math.abs(from.y - to.y) < 1e-9)
+      return false
+
+    for (const rp of this.resolvedPaths) {
+      for (let i = 0; i < rp.route.length - 1; i++) {
+        const a = rp.route[i]!
+        const b = rp.route[i + 1]!
+        if (a.z !== layerZ || b.z !== layerZ) continue
+        if (
+          segSegIntersection(from.x, from.y, to.x, to.y, a.x, a.y, b.x, b.y)
+        ) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
   /** Search using Polyanya SearchInstance (mesh-based, no weighted regions) */
   private searchPolyanya(
     mesh: Mesh,
@@ -716,6 +744,14 @@ export class GreedySequentialPathSolver extends BaseSolver {
           // For non-zero layers, vias are placed at start/end — ensure they
           // don't collide with existing trace obstacles on any layer.
           if (layerZ > 0 && (!this.isViaSafe(s) || !this.isViaSafe(e))) continue
+
+          // Check bridges from original endpoints to nudged endpoints
+          // don't cross any existing traces on this layer.
+          if (
+            this.bridgeCrossesExistingTrace(c.originalStart, s, layerZ) ||
+            this.bridgeCrossesExistingTrace(e, c.originalEnd, layerZ)
+          )
+            continue
 
           const r = this.usePolyanya
             ? this.searchPolyanya(mesh, s, e)
