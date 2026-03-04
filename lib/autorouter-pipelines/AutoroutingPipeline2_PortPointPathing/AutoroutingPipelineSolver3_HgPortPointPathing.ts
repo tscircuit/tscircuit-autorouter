@@ -4,10 +4,7 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
-import {
-  HighDensityIntraNodeRoute,
-  HighDensityRoute,
-} from "lib/types/high-density-types"
+import { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -15,30 +12,18 @@ import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPoint
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../../solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import {
-  InputNodeWithPortPoints,
-  InputPortPoint,
-} from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
-import {
-  HgPortPointPathingSolver,
-  HgPortPointPathingSolverParams,
-} from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/HgPortPointPathingSolver"
-import { buildHyperConnectionsFromSimpleRouteJson } from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperConnectionsFromSimpleRouteJson"
-import { buildHyperGraphFromInputNodes } from "../../solvers/PortPointPathingSolver/hdportpointpathingsolver/buildHyperGraphFromInputNodes"
+import { InputNodeWithPortPoints } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -50,6 +35,10 @@ import {
 } from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "lib/index"
+import {
+  buildHyperGraph,
+  HgPortPointPathingSolver,
+} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -123,7 +112,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
-  inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -242,82 +230,46 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       "portPointPathingSolver",
       HgPortPointPathingSolver,
       (cms) => {
-        // Convert capacity nodes and segment points to InputNodeWithPortPoints
-        this.inputNodeWithPortPoints = cms.capacityNodes!.map((node) => ({
-          capacityMeshNodeId: node.capacityMeshNodeId,
-          center: node.center,
-          width: node.width,
-          height: node.height,
-          portPoints: [] as InputPortPoint[],
-          availableZ: node.availableZ,
-          _containsTarget: node._containsTarget,
-          _containsObstacle: node._containsObstacle,
-        }))
-
-        // Build a map for quick lookup
-        const nodeMap = new Map(
-          this.inputNodeWithPortPoints.map((n) => [n.capacityMeshNodeId, n]),
-        )
-
-        // Add port points from the available segment point solver
-        const segmentPointSolver = cms.necessaryCrampedPortPointSolver!
-        for (const segment of segmentPointSolver.getOutput()) {
-          for (const segmentPortPoint of segment.portPoints) {
-            const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
-            const inputPortPoint: InputPortPoint = {
-              portPointId: segmentPortPoint.segmentPortPointId,
-              x: segmentPortPoint.x,
-              y: segmentPortPoint.y,
-              z: segmentPortPoint.availableZ[0] ?? 0,
-              connectionNodeIds: [nodeId1, nodeId2],
-              distToCentermostPortOnZ: segmentPortPoint.distToCentermostPortOnZ,
-            }
-
-            // Add to first node
-            const node1 = nodeMap.get(nodeId1)
-            if (node1) {
-              node1.portPoints.push(inputPortPoint)
-            }
-            // Note: Don't add to second node - the solver will handle the shared edge
-          }
-        }
-
-        const { graph, regionMap, portPointMap } =
-          buildHyperGraphFromInputNodes({
-            inputNodes: this.inputNodeWithPortPoints,
-          })
-        const { connections, connectionsWithResults } =
-          buildHyperConnectionsFromSimpleRouteJson({
-            simpleRouteJson: cms.srjWithPointPairs!,
-            inputNodes: this.inputNodeWithPortPoints,
-            regionMap,
-          })
+        const { graph, connections } = buildHyperGraph({
+          capacityMeshNodes: cms.capacityNodes!,
+          layerCount: cms.srj.layerCount,
+          segmentPortPoints: cms
+            .availableSegmentPointSolver!.getOutput()
+            .flatMap((seg) => seg.portPoints),
+          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+        })
 
         return [
           {
-            inputGraph: graph,
-            inputConnections: connections,
-            connectionsWithResults,
-            inputNodes: this.inputNodeWithPortPoints,
-            portPointMap,
-            rippingEnabled: true,
+            graph,
+            connections,
+            layerCount: cms.srj.layerCount,
+            effort: cms.effort,
+            flags: {
+              FORCE_CENTER_FIRST: true,
+              RIPPING_ENABLED: true,
+            },
             weights: {
-              PORT_USAGE_PENALTY: 0.15,
-              REGION_TRANSITION_PENALTY: 0.6,
+              SHUFFLE_SEED: 0,
               MEMORY_PF_FACTOR: 4,
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0.05,
-              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-              RIP_COST: 8.5,
-              GREEDY_MULTIPLIER: 0.7,
-              RIP_REGION_PF_THRESHOLD_START: 0.3,
-              MAX_REGION_RIPS: 100,
+              CENTER_OFFSET_FOCUS_SHIFT: 0,
+              NODE_PF_FACTOR: 0,
+              LAYER_CHANGE_COST: 0.5,
+              RIPPING_PF_COST: 0.0,
+              NODE_PF_MAX_PENALTY: 100,
+              BASE_CANDIDATE_COST: 0.6,
+              MAX_ITERATIONS_PER_PATH: 0,
+              RANDOM_WALK_DISTANCE: 0,
+              RIPPING_PF_THRESHOLD: 0.3,
+              START_RIPPING_PF_THRESHOLD: 0.3,
+              END_RIPPING_PF_THRESHOLD: 1,
               MAX_RIPS: 1000,
               RANDOM_RIP_FRACTION: 0.3,
+              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
+              GREEDY_MULTIPLIER: 0.7,
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
-            forceCenterFirst: true,
-            regionMemoryPfMap: new Map(),
-            layerCount: cms.srj.layerCount,
           },
         ]
       },
@@ -350,8 +302,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         return [
           {
             nodeWithPortPoints:
-              cms.portPointPathingSolver?.getNodesWithPortPoints() ?? [],
-            inputNodesWithPortPoints: this.inputNodeWithPortPoints,
+              cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+            inputNodesWithPortPoints:
+              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
+              [],
             minTraceWidth: cms.minTraceWidth,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
@@ -361,11 +315,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
-        nodePortPoints:
-          cms.uniformPortDistributionSolver?.getOutput() ??
-          cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
-          cms.portPointPathingSolver?.getNodesWithPortPoints() ??
-          [],
+        nodePortPoints: cms.uniformPortDistributionSolver?.getOutput() ?? [],
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
@@ -638,23 +588,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       }
       return { lines }
     }
-
-    if (this.portPointPathingSolver) {
-      const lines: Line[] = []
-      for (const connection of this.portPointPathingSolver
-        .connectionsWithResults) {
-        if (!connection.path) continue
-        lines.push({
-          points: connection.path.map((candidate) => ({
-            x: candidate.point.x,
-            y: candidate.point.y,
-          })),
-          strokeColor: this.colorMap[connection.connection.name],
-        })
-      }
-      return { lines }
-    }
-
     // This output is good as-is
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver?.visualize()

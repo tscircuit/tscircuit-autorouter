@@ -6,6 +6,30 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      solver_name:
+        description: Solver name to benchmark (optional)
+        required: false
+        type: string
+      scenario_limit:
+        description: Number of scenarios to run (optional)
+        required: false
+        type: string
+      concurrency:
+        description: Number of workers per solver
+        required: false
+        default: "16"
+        type: string
+      include_assignable:
+        description: Include assignable pipelines
+        required: false
+        default: false
+        type: boolean
+      ref:
+        description: Git ref (branch, tag, or SHA) to benchmark
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -16,7 +40,7 @@ jobs:
   benchmark:
     name: Run benchmark
     if: |
-      github.event_name == 'push' || (
+      github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (
         github.event_name == 'issue_comment' &&
         github.event.issue.pull_request &&
         github.event.comment.user.type != 'Bot' &&
@@ -43,6 +67,7 @@ jobs:
             let concurrency = '16'
             let ref = context.sha
             let statusCommentId = ''
+            let includeAssignable = false
 
             if (isComment) {
               const body = context.payload.comment.body.trim()
@@ -54,6 +79,10 @@ jobs:
                 if (token === '--concurrency') {
                   concurrency = tokens[i + 1] || concurrency
                   i += 1
+                  continue
+                }
+                if (token === '--include-assignable') {
+                  includeAssignable = true
                   continue
                 }
                 positional.push(token)
@@ -83,9 +112,20 @@ jobs:
               statusCommentId = String(statusComment.data.id)
             }
 
+
+            if (context.eventName === 'workflow_dispatch') {
+              const inputs = context.payload.inputs || {}
+              solverName = (inputs.solver_name || '').trim()
+              scenarioLimit = (inputs.scenario_limit || '').trim()
+              concurrency = (inputs.concurrency || concurrency).trim()
+              includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+              ref = (inputs.ref || '').trim() || ref
+            }
+
             core.setOutput('solver_name', solverName)
             core.setOutput('scenario_limit', scenarioLimit)
             core.setOutput('concurrency', concurrency)
+            core.setOutput('include_assignable', includeAssignable ? 'true' : 'false')
             core.setOutput('ref', ref)
             core.setOutput('status_comment_id', statusCommentId)
 
@@ -107,6 +147,7 @@ jobs:
           SOLVER_NAME: ${{ steps.parse.outputs.solver_name }}
           SCENARIO_LIMIT: ${{ steps.parse.outputs.scenario_limit }}
           CONCURRENCY: ${{ steps.parse.outputs.concurrency }}
+          INCLUDE_ASSIGNABLE: ${{ steps.parse.outputs.include_assignable }}
         run: |
           chmod +x ./benchmark.sh
           CMD=(./benchmark.sh --concurrency "$CONCURRENCY")
@@ -115,6 +156,9 @@ jobs:
           fi
           if [ -n "$SCENARIO_LIMIT" ]; then
             CMD+=(--scenario-limit "$SCENARIO_LIMIT")
+          fi
+          if [ "$INCLUDE_ASSIGNABLE" = "true" ]; then
+            CMD+=(--include-assignable)
           fi
           "${CMD[@]}"
           cp benchmark-result.txt benchmark-result-pr.txt

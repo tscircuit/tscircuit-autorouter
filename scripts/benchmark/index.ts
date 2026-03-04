@@ -25,6 +25,7 @@ type BenchmarkOptions = {
   solverName?: string
   scenarioLimit?: number
   concurrency: number
+  excludeAssignable: boolean
 }
 
 const formatTime = (timeMs: number | null) => {
@@ -57,7 +58,7 @@ const getPercentileMs = (
 
 const parseArgs = (): BenchmarkOptions => {
   const args = process.argv.slice(2)
-  const options: BenchmarkOptions = { concurrency: 4 }
+  const options: BenchmarkOptions = { concurrency: 4, excludeAssignable: false }
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i]
@@ -74,6 +75,10 @@ const parseArgs = (): BenchmarkOptions => {
     if (arg === "--concurrency") {
       options.concurrency = Number.parseInt(args[i + 1], 10)
       i += 1
+      continue
+    }
+    if (arg === "--exclude-assignable") {
+      options.excludeAssignable = true
       continue
     }
     throw new Error(`Unknown argument: ${arg}`)
@@ -93,7 +98,9 @@ const parseArgs = (): BenchmarkOptions => {
   return options
 }
 
-const loadSolverNames = async (): Promise<string[]> => {
+const loadSolverNames = async (
+  excludeAssignable: boolean,
+): Promise<string[]> => {
   // Use autorouter-pipelines/index.ts as the source of truth for benchmarkable solvers
   const pipelinesIndexPath = path.join(
     process.cwd(),
@@ -112,10 +119,16 @@ const loadSolverNames = async (): Promise<string[]> => {
   const libIndexPath = path.join(process.cwd(), "lib", "index.ts")
   const libIndex = await readFile(libIndexPath, "utf8")
 
-  return pipelineNames.map((name) => {
+  const solverNames = pipelineNames.map((name) => {
     const aliasMatch = libIndex.match(new RegExp(`${name}\\s+as\\s+(\\w+)`))
     return aliasMatch ? aliasMatch[1] : name
   })
+
+  if (!excludeAssignable) {
+    return solverNames
+  }
+
+  return solverNames.filter((name) => !name.includes("Assignable"))
 }
 
 const loadScenarios = (scenarioLimit?: number) => {
@@ -247,8 +260,9 @@ const runSolverWithWorkers = async (
 }
 
 const main = async () => {
-  const { solverName, scenarioLimit, concurrency } = parseArgs()
-  const availableSolvers = await loadSolverNames()
+  const { solverName, scenarioLimit, concurrency, excludeAssignable } =
+    parseArgs()
+  const availableSolvers = await loadSolverNames(excludeAssignable)
   const solvers = solverName ? [solverName] : availableSolvers
 
   if (solverName && !availableSolvers.includes(solverName)) {
