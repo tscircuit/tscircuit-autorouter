@@ -633,12 +633,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
           if (p.x > pMaxX) pMaxX = p.x
           if (p.y > pMaxY) pMaxY = p.y
         }
-        if (
-          vMaxX > pMinX &&
-          vMinX < pMaxX &&
-          vMaxY > pMinY &&
-          vMinY < pMaxY
-        ) {
+        if (vMaxX > pMinX && vMinX < pMaxX && vMaxY > pMinY && vMinY < pMaxY) {
           return false
         }
       }
@@ -845,9 +840,35 @@ export class GreedySequentialPathSolver extends BaseSolver {
     const clearance = this.minTraceWidth / 2 + this.margin
 
     if (this.useObstacles) {
-      // Add trace thick polygon obstacle to the layer the trace was routed on
+      // Build full path including bridge segments so the obstacle polygon
+      // covers the entire route, not just the Polyanya path between nudged
+      // endpoints.
+      const obstaclePath: Point[] = []
+
+      if (layerZ === 0) {
+        // Prepend original start if it differs from nudged start
+        if (
+          Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
+          Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
+        ) {
+          obstaclePath.push(conn.originalStart)
+        }
+        for (const p of path) obstaclePath.push(p)
+        // Append original end if it differs from nudged end
+        if (
+          Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
+          Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
+        ) {
+          obstaclePath.push(conn.originalEnd)
+        }
+      } else {
+        // Non-zero layer: the Polyanya path is on layerZ; bridge segments
+        // are on layer 0 and handled separately below.
+        for (const p of path) obstaclePath.push(p)
+      }
+
       const newObstacles = this.pathToObstaclePolygons(
-        path,
+        obstaclePath,
         clearance,
         conn.originalStart,
         conn.originalEnd,
@@ -860,6 +881,41 @@ export class GreedySequentialPathSolver extends BaseSolver {
           connectionName: conn.name,
           layerZ,
         })
+      }
+
+      // For non-zero layers, add bridge segment obstacles on layer 0
+      if (layerZ > 0) {
+        const bridges: Point[][] = []
+        // Bridge from original start to via start (on layer 0)
+        if (
+          Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
+          Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
+        ) {
+          bridges.push([conn.originalStart, routeStart])
+        }
+        // Bridge from via end to original end (on layer 0)
+        if (
+          Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
+          Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
+        ) {
+          bridges.push([routeEnd, conn.originalEnd])
+        }
+        for (const bridge of bridges) {
+          const bridgeObstacles = this.pathToObstaclePolygons(
+            bridge,
+            clearance,
+            conn.originalStart,
+            conn.originalEnd,
+          )
+          this.tracePolygonObstacles[0]!.push(...bridgeObstacles)
+          for (const poly of bridgeObstacles) {
+            this.traceObstaclePolys.push({
+              polygon: poly,
+              connectionName: conn.name,
+              layerZ: 0,
+            })
+          }
+        }
       }
 
       // Add via obstacles to ALL layers (vias are through-hole)
