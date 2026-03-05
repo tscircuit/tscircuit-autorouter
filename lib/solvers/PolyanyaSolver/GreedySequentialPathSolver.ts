@@ -12,9 +12,7 @@ import {
 } from "polyanya"
 import { BaseSolver } from "../BaseSolver"
 import type { SimpleRouteJson, ConnectionPoint } from "../../types"
-import {
-  getConnectionPointLayers,
-} from "../../utils/connection-point-utils"
+import { getConnectionPointLayers } from "../../utils/connection-point-utils"
 import type { ResolvedPath } from "./types"
 import { mergeOverlappingRects } from "./mergeOverlappingRects"
 
@@ -93,7 +91,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
   private tracePolygonObstacles: Point[][][] = []
 
   /** Cached AABBs for trace obstacle polygons (parallel to tracePolygonObstacles) */
-  private tracePolyAABBs: { minX: number; minY: number; maxX: number; maxY: number }[][] = []
+  private tracePolyAABBs: {
+    minX: number
+    minY: number
+    maxX: number
+    maxY: number
+  }[][] = []
 
   /** Base net name for each trace obstacle polygon (parallel to tracePolygonObstacles) */
   private tracePolyNetNames: string[][] = []
@@ -200,14 +203,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
       { length: this.layerCount },
       () => [],
     )
-    this.tracePolyAABBs = Array.from(
-      { length: this.layerCount },
-      () => [],
-    )
-    this.tracePolyNetNames = Array.from(
-      { length: this.layerCount },
-      () => [],
-    )
+    this.tracePolyAABBs = Array.from({ length: this.layerCount }, () => [])
+    this.tracePolyNetNames = Array.from({ length: this.layerCount }, () => [])
     this.traceWeightedRegions = Array.from(
       { length: this.layerCount },
       () => [],
@@ -468,14 +465,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
       { length: this.layerCount },
       () => [],
     )
-    this.tracePolyAABBs = Array.from(
-      { length: this.layerCount },
-      () => [],
-    )
-    this.tracePolyNetNames = Array.from(
-      { length: this.layerCount },
-      () => [],
-    )
+    this.tracePolyAABBs = Array.from({ length: this.layerCount }, () => [])
+    this.tracePolyNetNames = Array.from({ length: this.layerCount }, () => [])
     this.traceWeightedRegions = Array.from(
       { length: this.layerCount },
       () => [],
@@ -669,8 +660,16 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return rectToPolygon(viaPoint.x, viaPoint.y, r * 2, r * 2, this.margin)
   }
 
-  private static polyAABB(poly: Point[]): { minX: number; minY: number; maxX: number; maxY: number } {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  private static polyAABB(poly: Point[]): {
+    minX: number
+    minY: number
+    maxX: number
+    maxY: number
+  } {
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
     for (const p of poly) {
       if (p.x < minX) minX = p.x
       if (p.y < minY) minY = p.y
@@ -686,10 +685,16 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return m ? m[1]! : connectionName
   }
 
-  private pushTraceObstacle(layerZ: number, poly: Point[], connectionName: string) {
+  private pushTraceObstacle(
+    layerZ: number,
+    poly: Point[],
+    connectionName: string,
+  ) {
     this.tracePolygonObstacles[layerZ]!.push(poly)
     this.tracePolyAABBs[layerZ]!.push(GreedySequentialPathSolver.polyAABB(poly))
-    this.tracePolyNetNames[layerZ]!.push(GreedySequentialPathSolver.baseNetName(connectionName))
+    this.tracePolyNetNames[layerZ]!.push(
+      GreedySequentialPathSolver.baseNetName(connectionName),
+    )
   }
 
   /**
@@ -710,7 +715,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
       for (let i = 0; i < aabbs.length; i++) {
         if (exemptNet && nets[i] === exemptNet) continue
         const bb = aabbs[i]!
-        if (vMaxX > bb.minX && vMinX < bb.maxX && vMaxY > bb.minY && vMinY < bb.maxY) {
+        if (
+          vMaxX > bb.minX &&
+          vMinX < bb.maxX &&
+          vMaxY > bb.minY &&
+          vMinY < bb.maxY
+        ) {
           return false
         }
       }
@@ -724,7 +734,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
    * Uses point-in-polygon + closest edge distance for precise collision.
    */
   private circlePolygonOverlap(
-    cx: number, cy: number, radius: number, poly: Point[],
+    cx: number,
+    cy: number,
+    radius: number,
+    poly: Point[],
   ): { dx: number; dy: number; depth: number } | null {
     // Find the closest point on any polygon edge to the circle center
     let minDist = Infinity
@@ -739,7 +752,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
       const ey = b.y - a.y
       const len2 = ex * ex + ey * ey
       if (len2 < 1e-12) continue
-      const t = Math.max(0, Math.min(1, ((cx - a.x) * ex + (cy - a.y) * ey) / len2))
+      const t = Math.max(
+        0,
+        Math.min(1, ((cx - a.x) * ex + (cy - a.y) * ey) / len2),
+      )
       const px = a.x + t * ex
       const py = a.y + t * ey
       const d = Math.hypot(cx - px, cy - py)
@@ -755,9 +771,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // Circle center might be inside the polygon — check with ray casting
     let inside = false
     for (let i = 0, j = n - 1; i < n; j = i++) {
-      const yi = poly[i]!.y, yj = poly[j]!.y
-      if ((yi > cy) !== (yj > cy)) {
-        const xi = poly[i]!.x, xj = poly[j]!.x
+      const yi = poly[i]!.y,
+        yj = poly[j]!.y
+      if (yi > cy !== yj > cy) {
+        const xi = poly[i]!.x,
+          xj = poly[j]!.x
         if (cx < ((xj - xi) * (cy - yi)) / (yj - yi) + xi) {
           inside = !inside
         }
@@ -790,7 +808,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
    * Returns the adjusted point if successful, or null if no safe position
    * found within maxDrift distance of the original candidate.
    */
-  private findViaSafePoint(candidate: Point, maxDrift: number, exemptNet?: string): Point | null {
+  private findViaSafePoint(
+    candidate: Point,
+    maxDrift: number,
+    exemptNet?: string,
+  ): Point | null {
     const radius = this.viaDiameter / 2
     let px = candidate.x
     let py = candidate.y
@@ -804,8 +826,13 @@ export class GreedySequentialPathSolver extends BaseSolver {
         for (let i = 0; i < polys.length; i++) {
           if (exemptNet && nets[i] === exemptNet) continue
           const bb = aabbs[i]!
-          if (px + radius < bb.minX || px - radius > bb.maxX ||
-              py + radius < bb.minY || py - radius > bb.maxY) continue
+          if (
+            px + radius < bb.minX ||
+            px - radius > bb.maxX ||
+            py + radius < bb.minY ||
+            py - radius > bb.maxY
+          )
+            continue
           const overlap = this.circlePolygonOverlap(px, py, radius, polys[i]!)
           if (overlap) {
             const eps = 0.02
@@ -845,7 +872,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
       return false
 
     for (const rp of this.resolvedPaths) {
-      if (exemptNet && GreedySequentialPathSolver.baseNetName(rp.connectionName) === exemptNet) continue
+      if (
+        exemptNet &&
+        GreedySequentialPathSolver.baseNetName(rp.connectionName) === exemptNet
+      )
+        continue
       for (let i = 0; i < rp.route.length - 1; i++) {
         const a = rp.route[i]!
         const b = rp.route[i + 1]!
@@ -947,8 +978,18 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
           // Bridge checks on the endpoint's native layer (exempt same net)
           if (
-            this.bridgeCrossesExistingTrace(c.originalStart, effectiveS, c.startLayerZ, baseNet) ||
-            this.bridgeCrossesExistingTrace(effectiveE, c.originalEnd, c.endLayerZ, baseNet)
+            this.bridgeCrossesExistingTrace(
+              c.originalStart,
+              effectiveS,
+              c.startLayerZ,
+              baseNet,
+            ) ||
+            this.bridgeCrossesExistingTrace(
+              effectiveE,
+              c.originalEnd,
+              c.endLayerZ,
+              baseNet,
+            )
           )
             continue
 
@@ -1013,8 +1054,13 @@ export class GreedySequentialPathSolver extends BaseSolver {
    * layer's mesh. Falls back to a straight line if pathfinding fails (e.g.
    * pad center is inside its own obstacle — expected for short bridges).
    */
-  private pathfindBridge(from: Point, to: Point, bridgeLayerZ: number): Point[] {
-    if (Math.abs(from.x - to.x) < 1e-6 && Math.abs(from.y - to.y) < 1e-6) return []
+  private pathfindBridge(
+    from: Point,
+    to: Point,
+    bridgeLayerZ: number,
+  ): Point[] {
+    if (Math.abs(from.x - to.x) < 1e-6 && Math.abs(from.y - to.y) < 1e-6)
+      return []
     const mesh = this.meshes[bridgeLayerZ]
     if (mesh) {
       const si = new SearchInstance(mesh)
@@ -1031,7 +1077,13 @@ export class GreedySequentialPathSolver extends BaseSolver {
   }
 
   private commitPath(
-    conn: { name: string; originalStart: Point; originalEnd: Point; startLayerZ: number; endLayerZ: number },
+    conn: {
+      name: string
+      originalStart: Point
+      originalEnd: Point
+      startLayerZ: number
+      endLayerZ: number
+    },
     path: Point[],
     layerZ: number,
   ) {
@@ -1072,7 +1124,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
         }
         // Ensure via point is the last before transition
         const last = fullRoute[fullRoute.length - 1]!
-        if (Math.abs(last.x - routeStart.x) > 1e-6 || Math.abs(last.y - routeStart.y) > 1e-6) {
+        if (
+          Math.abs(last.x - routeStart.x) > 1e-6 ||
+          Math.abs(last.y - routeStart.y) > 1e-6
+        ) {
           fullRoute.push({ x: routeStart.x, y: routeStart.y, z: startZ })
         }
       } else {
@@ -1087,7 +1142,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
       // Start bridge on same layer as route
       if (startBridgePath.length > 0) {
         for (let i = 0; i < startBridgePath.length - 1; i++) {
-          fullRoute.push({ x: startBridgePath[i]!.x, y: startBridgePath[i]!.y, z: layerZ })
+          fullRoute.push({
+            x: startBridgePath[i]!.x,
+            y: startBridgePath[i]!.y,
+            z: layerZ,
+          })
         }
       }
       for (const p of path) {
@@ -1104,12 +1163,23 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // End bridge on native layer
     if (endBridgePath.length > 0) {
       for (let i = 1; i < endBridgePath.length; i++) {
-        fullRoute.push({ x: endBridgePath[i]!.x, y: endBridgePath[i]!.y, z: endBridgeZ })
+        fullRoute.push({
+          x: endBridgePath[i]!.x,
+          y: endBridgePath[i]!.y,
+          z: endBridgeZ,
+        })
       }
       // Ensure original end is the final point
       const last = fullRoute[fullRoute.length - 1]!
-      if (Math.abs(last.x - conn.originalEnd.x) > 1e-6 || Math.abs(last.y - conn.originalEnd.y) > 1e-6) {
-        fullRoute.push({ x: conn.originalEnd.x, y: conn.originalEnd.y, z: endBridgeZ })
+      if (
+        Math.abs(last.x - conn.originalEnd.x) > 1e-6 ||
+        Math.abs(last.y - conn.originalEnd.y) > 1e-6
+      ) {
+        fullRoute.push({
+          x: conn.originalEnd.x,
+          y: conn.originalEnd.y,
+          z: endBridgeZ,
+        })
       }
     }
 
