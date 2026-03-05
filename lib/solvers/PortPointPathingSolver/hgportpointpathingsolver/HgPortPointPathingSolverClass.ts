@@ -657,8 +657,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
     const regionRipFraction = Math.min(1, regionRipCount / maxRegionRips)
     const startRippingPfThreshold =
-      this.params.weights.START_RIPPING_PF_THRESHOLD ||
-      0.3
+      this.params.weights.START_RIPPING_PF_THRESHOLD || 0.3
     const endRippingPfThreshold =
       this.params.weights.END_RIPPING_PF_THRESHOLD || 1
     const threshold =

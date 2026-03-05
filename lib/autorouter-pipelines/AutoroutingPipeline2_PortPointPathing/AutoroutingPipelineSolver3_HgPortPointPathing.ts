@@ -255,7 +255,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0.05,
               CENTER_OFFSET_FOCUS_SHIFT: 0,
               NODE_PF_FACTOR: 0,
-              LAYER_CHANGE_COST: 1,
+              LAYER_CHANGE_COST: 0,
               RIPPING_PF_COST: 0.0,
               NODE_PF_MAX_PENALTY: 100,
               BASE_CANDIDATE_COST: 0.6,
