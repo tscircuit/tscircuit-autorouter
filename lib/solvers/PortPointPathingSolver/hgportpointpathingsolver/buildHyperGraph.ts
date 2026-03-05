@@ -51,7 +51,7 @@ export function buildHyperGraph(params: {
         x: spp.x,
         y: spp.y,
         z,
-        distToCentermostPortOnZ: 0,
+        distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
         regions: [region1, region2],
       }
       const hgPort: RegionPortHg = {
