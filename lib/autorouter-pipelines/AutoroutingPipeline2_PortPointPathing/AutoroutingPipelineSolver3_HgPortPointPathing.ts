@@ -261,7 +261,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               BASE_CANDIDATE_COST: 0.6,
               MAX_ITERATIONS_PER_PATH: 0,
               RANDOM_WALK_DISTANCE: 0,
-              RIPPING_PF_THRESHOLD: 0.3,
               START_RIPPING_PF_THRESHOLD: 0.3,
               END_RIPPING_PF_THRESHOLD: 1,
               MAX_RIPS: 1000,

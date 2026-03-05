@@ -113,8 +113,6 @@ export interface HgPortPointPathingSolverParams {
     MAX_ITERATIONS_PER_PATH: number
     /** Distance threshold where heuristic is suppressed to encourage initial exploration. */
     RANDOM_WALK_DISTANCE: number
-    /** Fallback ripping threshold if START/END thresholds are not used. */
-    RIPPING_PF_THRESHOLD: number
     /** Initial region Pf threshold for ripping decisions. */
     START_RIPPING_PF_THRESHOLD: number
     /** Final region Pf threshold as region rip-count approaches its cap. */
