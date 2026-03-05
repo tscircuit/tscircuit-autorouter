@@ -11,7 +11,10 @@ import {
   mergeMesh,
 } from "polyanya"
 import { BaseSolver } from "../BaseSolver"
-import type { SimpleRouteJson } from "../../types"
+import type { SimpleRouteJson, ConnectionPoint } from "../../types"
+import {
+  getConnectionPointLayers,
+} from "../../utils/connection-point-utils"
 import type { ResolvedPath } from "./types"
 import { mergeOverlappingRects } from "./mergeOverlappingRects"
 
@@ -63,6 +66,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
     originalEnd: Point
     startCandidates: Point[]
     endCandidates: Point[]
+    startLayerZ: number
+    endLayerZ: number
   }>
 
   /** Connections still waiting to be routed */
@@ -74,6 +79,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
     originalEnd: Point
     startCandidates: Point[]
     endCandidates: Point[]
+    startLayerZ: number
+    endLayerZ: number
   }>
 
   /** Per-layer base obstacle polygons from original SRJ only (for resets) */
@@ -84,6 +91,12 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
   /** Per-layer trace obstacle polygons (thick polyline offsets, passed directly to CDT without merging) */
   private tracePolygonObstacles: Point[][][] = []
+
+  /** Cached AABBs for trace obstacle polygons (parallel to tracePolygonObstacles) */
+  private tracePolyAABBs: { minX: number; minY: number; maxX: number; maxY: number }[][] = []
+
+  /** Base net name for each trace obstacle polygon (parallel to tracePolygonObstacles) */
+  private tracePolyNetNames: string[][] = []
 
   /** Per-layer weighted regions from committed traces (only used when !useObstacles) */
   private traceWeightedRegions: WeightedRegion[][] = []
@@ -150,12 +163,17 @@ export class GreedySequentialPathSolver extends BaseSolver {
     this.useObstacles = params.useObstacles ?? true
     this.usePolyanya = params.usePolyanya ?? true
     this.maxLayerCount = Math.max(1, params.srj.layerCount ?? 2)
-    this.layerCount = 1 // Start with 1 layer, expand when stuck
+    this.layerCount = Math.min(2, this.maxLayerCount) // Start with 2 layers for layer-aware routing
     this.viaDiameter = params.srj.minViaDiameter ?? 0.6
+
+    // Build layer name → z-index map
+    const allLayerNames = this.getAllLayerNames()
+    for (let z = 0; z < allLayerNames.length; z++) {
+      this.layerNameToZ.set(allLayerNames[z]!, z)
+    }
 
     // Build per-layer base obstacle polygons for ALL possible layers upfront
     // (so layer names remain stable when layerCount grows dynamically)
-    const allLayerNames = this.getAllLayerNames()
     this.baseObstaclePolygons = []
     for (let z = 0; z < this.maxLayerCount; z++) {
       const layerName = allLayerNames[z]!
@@ -182,6 +200,14 @@ export class GreedySequentialPathSolver extends BaseSolver {
       { length: this.layerCount },
       () => [],
     )
+    this.tracePolyAABBs = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
+    this.tracePolyNetNames = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
     this.traceWeightedRegions = Array.from(
       { length: this.layerCount },
       () => [],
@@ -202,9 +228,9 @@ export class GreedySequentialPathSolver extends BaseSolver {
       }
     }
     this.sharedPoints = new Set<string>()
-    for (const [key, count] of pointCounts) {
+    pointCounts.forEach((count, key) => {
       if (count > 1) this.sharedPoints.add(key)
-    }
+    })
 
     this.allConnections = params.srj.connections.map((conn) => {
       const pts = conn.pointsToConnect
@@ -213,6 +239,11 @@ export class GreedySequentialPathSolver extends BaseSolver {
         x: pts[pts.length - 1]!.x,
         y: pts[pts.length - 1]!.y,
       }
+
+      // Determine which layer each endpoint is on from the connection point data
+      const startLayerZ = this.connectionPointToLayerZ(pts[0]!)
+      const endLayerZ = this.connectionPointToLayerZ(pts[pts.length - 1]!)
+
       // Build all names that might appear in obstacle connectedTo lists:
       // the connection name itself, rootConnectionName, and for merged names
       // like "source_trace_8__source_trace_9", the constituent parts.
@@ -245,6 +276,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
         end: endCandidates[0] ?? originalEnd,
         startCandidates,
         endCandidates,
+        startLayerZ,
+        endLayerZ,
       }
     })
 
@@ -266,6 +299,21 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
   private getLayerNames(): string[] {
     return this.getAllLayerNames().slice(0, this.layerCount)
+  }
+
+  /** Map from layer name → z-index (built once in constructor) */
+  private layerNameToZ: Map<string, number> = new Map()
+
+  /** Convert a connection point's layer name(s) to a z-index.
+   *  Returns 0 (top) as default. If point is on multiple layers, returns
+   *  the first matching z-index (prefers top). */
+  private connectionPointToLayerZ(pt: ConnectionPoint): number {
+    const layers = getConnectionPointLayers(pt)
+    for (const name of layers) {
+      const z = this.layerNameToZ.get(name)
+      if (z !== undefined) return z
+    }
+    return 0
   }
 
   /** Max total obstacle vertices before we skip mesh rebuild (OOM guard) */
@@ -420,6 +468,14 @@ export class GreedySequentialPathSolver extends BaseSolver {
       { length: this.layerCount },
       () => [],
     )
+    this.tracePolyAABBs = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
+    this.tracePolyNetNames = Array.from(
+      { length: this.layerCount },
+      () => [],
+    )
     this.traceWeightedRegions = Array.from(
       { length: this.layerCount },
       () => [],
@@ -542,12 +598,6 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // Build left side (forward along path, offset +clearance in normal dir)
     // and right side (offset -clearance). At interior vertices, use a bevel
     // join on the outside of each turn so the polygon covers full corners.
-    //
-    // Turn direction is determined by cross product of adjacent segment dirs:
-    //   cross > 0 → left turn → outside is right side → bevel right
-    //   cross < 0 → right turn → outside is left side → bevel left
-    // The inside gets a single miter point; the outside gets two points
-    // (one per adjacent segment normal) to form a bevel.
     const left: Point[] = []
     const right: Point[] = []
 
@@ -566,15 +616,13 @@ export class GreedySequentialPathSolver extends BaseSolver {
         const n0 = normals[i - 1]!
         const n1 = normals[i]!
 
-        // Cross product of segment directions to determine turn direction
-        // d0 direction: (pts[i] - pts[i-1]), d1 direction: (pts[i+1] - pts[i])
         const d0x = pts[i]!.x - pts[i - 1]!.x
         const d0y = pts[i]!.y - pts[i - 1]!.y
         const d1x = pts[i + 1]!.x - pts[i]!.x
         const d1y = pts[i + 1]!.y - pts[i]!.y
         const cross = d0x * d1y - d0y * d1x
 
-        // Miter normal for the inside
+        // Miter normal for the inside of the turn
         let mx = n0.nx + n1.nx
         let my = n0.ny + n1.ny
         const mlen = Math.hypot(mx, my)
@@ -590,17 +638,16 @@ export class GreedySequentialPathSolver extends BaseSolver {
         }
 
         if (cross > 1e-9) {
-          // Left turn: inside is left, outside is right → bevel on right
+          // Left turn: inside is left (miter), outside is right (bevel)
           left.push({ x: p.x + mx * clearance, y: p.y + my * clearance })
           right.push({ x: p.x - n0.nx * clearance, y: p.y - n0.ny * clearance })
           right.push({ x: p.x - n1.nx * clearance, y: p.y - n1.ny * clearance })
         } else if (cross < -1e-9) {
-          // Right turn: inside is right, outside is left → bevel on left
+          // Right turn: inside is right (miter), outside is left (bevel)
           left.push({ x: p.x + n0.nx * clearance, y: p.y + n0.ny * clearance })
           left.push({ x: p.x + n1.nx * clearance, y: p.y + n1.ny * clearance })
           right.push({ x: p.x - mx * clearance, y: p.y - my * clearance })
         } else {
-          // Straight (or nearly): single miter point on each side
           left.push({ x: p.x + mx * clearance, y: p.y + my * clearance })
           right.push({ x: p.x - mx * clearance, y: p.y - my * clearance })
         }
@@ -622,36 +669,165 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return rectToPolygon(viaPoint.x, viaPoint.y, r * 2, r * 2, this.margin)
   }
 
+  private static polyAABB(poly: Point[]): { minX: number; minY: number; maxX: number; maxY: number } {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const p of poly) {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.x > maxX) maxX = p.x
+      if (p.y > maxY) maxY = p.y
+    }
+    return { minX, minY, maxX, maxY }
+  }
+
+  /** Extract base net name: "source_net_3_mst0" → "source_net_3" */
+  private static baseNetName(connectionName: string): string {
+    const m = connectionName.match(/^(.+?)_mst\d+$/)
+    return m ? m[1]! : connectionName
+  }
+
+  private pushTraceObstacle(layerZ: number, poly: Point[], connectionName: string) {
+    this.tracePolygonObstacles[layerZ]!.push(poly)
+    this.tracePolyAABBs[layerZ]!.push(GreedySequentialPathSolver.polyAABB(poly))
+    this.tracePolyNetNames[layerZ]!.push(GreedySequentialPathSolver.baseNetName(connectionName))
+  }
+
   /**
    * Check if placing a via at the given point would collide with any existing
-   * trace obstacle polygon on any layer. Uses AABB overlap as a fast check.
+   * trace obstacle polygon on any layer. Trace polygons already include
+   * clearance, so we only need to check the via's own radius.
    */
-  private isViaSafe(point: Point): boolean {
-    const viaHalf = this.viaDiameter / 2 + this.margin
-    const vMinX = point.x - viaHalf
-    const vMaxX = point.x + viaHalf
-    const vMinY = point.y - viaHalf
-    const vMaxY = point.y + viaHalf
+  private isViaSafe(point: Point, exemptNet?: string): boolean {
+    const viaR = this.viaDiameter / 2
+    const vMinX = point.x - viaR
+    const vMaxX = point.x + viaR
+    const vMinY = point.y - viaR
+    const vMaxY = point.y + viaR
 
     for (let z = 0; z < this.layerCount; z++) {
-      for (const poly of this.tracePolygonObstacles[z]!) {
-        // Quick AABB check against the trace polygon
-        let pMinX = Infinity
-        let pMinY = Infinity
-        let pMaxX = -Infinity
-        let pMaxY = -Infinity
-        for (const p of poly) {
-          if (p.x < pMinX) pMinX = p.x
-          if (p.y < pMinY) pMinY = p.y
-          if (p.x > pMaxX) pMaxX = p.x
-          if (p.y > pMaxY) pMaxY = p.y
-        }
-        if (vMaxX > pMinX && vMinX < pMaxX && vMaxY > pMinY && vMinY < pMaxY) {
+      const aabbs = this.tracePolyAABBs[z]!
+      const nets = this.tracePolyNetNames[z]!
+      for (let i = 0; i < aabbs.length; i++) {
+        if (exemptNet && nets[i] === exemptNet) continue
+        const bb = aabbs[i]!
+        if (vMaxX > bb.minX && vMinX < bb.maxX && vMaxY > bb.minY && vMinY < bb.maxY) {
           return false
         }
       }
     }
     return true
+  }
+
+  /**
+   * Check if a circle (via footprint) overlaps a polygon. Returns the
+   * minimum separation vector to push the circle out, or null if no overlap.
+   * Uses point-in-polygon + closest edge distance for precise collision.
+   */
+  private circlePolygonOverlap(
+    cx: number, cy: number, radius: number, poly: Point[],
+  ): { dx: number; dy: number; depth: number } | null {
+    // Find the closest point on any polygon edge to the circle center
+    let minDist = Infinity
+    let closestX = 0
+    let closestY = 0
+    const n = poly.length
+
+    for (let i = 0; i < n; i++) {
+      const a = poly[i]!
+      const b = poly[(i + 1) % n]!
+      const ex = b.x - a.x
+      const ey = b.y - a.y
+      const len2 = ex * ex + ey * ey
+      if (len2 < 1e-12) continue
+      const t = Math.max(0, Math.min(1, ((cx - a.x) * ex + (cy - a.y) * ey) / len2))
+      const px = a.x + t * ex
+      const py = a.y + t * ey
+      const d = Math.hypot(cx - px, cy - py)
+      if (d < minDist) {
+        minDist = d
+        closestX = px
+        closestY = py
+      }
+    }
+
+    if (minDist >= radius) return null
+
+    // Circle center might be inside the polygon — check with ray casting
+    let inside = false
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      const yi = poly[i]!.y, yj = poly[j]!.y
+      if ((yi > cy) !== (yj > cy)) {
+        const xi = poly[i]!.x, xj = poly[j]!.x
+        if (cx < ((xj - xi) * (cy - yi)) / (yj - yi) + xi) {
+          inside = !inside
+        }
+      }
+    }
+
+    if (inside) {
+      // Center is inside polygon — push toward closest edge
+      const dx = cx - closestX
+      const dy = cy - closestY
+      const d = Math.hypot(dx, dy)
+      if (d < 1e-9) {
+        // Exactly on the edge — pick arbitrary perpendicular
+        return { dx: 1, dy: 0, depth: radius }
+      }
+      return { dx: dx / d, dy: dy / d, depth: radius + d }
+    } else {
+      // Center is outside but within radius of an edge
+      const dx = cx - closestX
+      const dy = cy - closestY
+      if (minDist < 1e-9) return { dx: 1, dy: 0, depth: radius }
+      return { dx: dx / minDist, dy: dy / minDist, depth: radius - minDist }
+    }
+  }
+
+  /**
+   * Try to find a via-safe point near the given candidate by iteratively
+   * pushing it away from colliding trace obstacle polygons. Uses precise
+   * circle-polygon collision to get accurate separation vectors.
+   * Returns the adjusted point if successful, or null if no safe position
+   * found within maxDrift distance of the original candidate.
+   */
+  private findViaSafePoint(candidate: Point, maxDrift: number, exemptNet?: string): Point | null {
+    const radius = this.viaDiameter / 2
+    let px = candidate.x
+    let py = candidate.y
+
+    for (let iter = 0; iter < 10; iter++) {
+      let pushed = false
+      for (let z = 0; z < this.layerCount; z++) {
+        const polys = this.tracePolygonObstacles[z]!
+        const aabbs = this.tracePolyAABBs[z]!
+        const nets = this.tracePolyNetNames[z]!
+        for (let i = 0; i < polys.length; i++) {
+          if (exemptNet && nets[i] === exemptNet) continue
+          const bb = aabbs[i]!
+          if (px + radius < bb.minX || px - radius > bb.maxX ||
+              py + radius < bb.minY || py - radius > bb.maxY) continue
+          const overlap = this.circlePolygonOverlap(px, py, radius, polys[i]!)
+          if (overlap) {
+            const eps = 0.02
+            px += overlap.dx * (overlap.depth + eps)
+            py += overlap.dy * (overlap.depth + eps)
+            pushed = true
+          }
+        }
+      }
+      if (!pushed) {
+        const drift = Math.hypot(px - candidate.x, py - candidate.y)
+        if (drift <= maxDrift) return { x: px, y: py }
+        return null
+      }
+    }
+
+    // After iterations, final check
+    if (this.isViaSafe({ x: px, y: py }, exemptNet)) {
+      const drift = Math.hypot(px - candidate.x, py - candidate.y)
+      if (drift <= maxDrift) return { x: px, y: py }
+    }
+    return null
   }
 
   /**
@@ -662,12 +838,14 @@ export class GreedySequentialPathSolver extends BaseSolver {
     from: Point,
     to: Point,
     layerZ: number,
+    exemptNet?: string,
   ): boolean {
     // Skip if bridge is zero-length
     if (Math.abs(from.x - to.x) < 1e-9 && Math.abs(from.y - to.y) < 1e-9)
       return false
 
     for (const rp of this.resolvedPaths) {
+      if (exemptNet && GreedySequentialPathSolver.baseNetName(rp.connectionName) === exemptNet) continue
       for (let i = 0; i < rp.route.length - 1; i++) {
         const a = rp.route[i]!
         const b = rp.route[i + 1]!
@@ -733,29 +911,50 @@ export class GreedySequentialPathSolver extends BaseSolver {
     for (let i = 0; i < this.remaining.length; i++) {
       const c = this.remaining[i]!
 
+      // Check if vias are needed at start/end for this layer
+      const needStartVia = c.startLayerZ !== layerZ
+      const needEndVia = c.endLayerZ !== layerZ
+
       // Try the default nudge first, then alternate directions
       const starts =
         c.startCandidates.length > 0 ? c.startCandidates : [c.start]
       const ends = c.endCandidates.length > 0 ? c.endCandidates : [c.end]
 
       let foundForThis = false
+      const maxViaDrift = this.viaDiameter * 2
+      const baseNet = GreedySequentialPathSolver.baseNetName(c.name)
       for (const s of starts) {
         for (const e of ends) {
-          // For non-zero layers, vias are placed at start/end — ensure they
-          // don't collide with existing trace obstacles on any layer.
-          if (layerZ > 0 && (!this.isViaSafe(s) || !this.isViaSafe(e))) continue
+          // Via safety only needed where a layer transition occurs.
+          // If the nudge point isn't via-safe, try to find a nearby safe point.
+          // Same-net obstacles are exempt (shared port connections).
+          let effectiveS = s
+          let effectiveE = e
+          if (needStartVia) {
+            if (!this.isViaSafe(s, baseNet)) {
+              const safe = this.findViaSafePoint(s, maxViaDrift, baseNet)
+              if (!safe) continue
+              effectiveS = safe
+            }
+          }
+          if (needEndVia) {
+            if (!this.isViaSafe(e, baseNet)) {
+              const safe = this.findViaSafePoint(e, maxViaDrift, baseNet)
+              if (!safe) continue
+              effectiveE = safe
+            }
+          }
 
-          // Check bridges from original endpoints to nudged endpoints
-          // don't cross any existing traces on this layer.
+          // Bridge checks on the endpoint's native layer (exempt same net)
           if (
-            this.bridgeCrossesExistingTrace(c.originalStart, s, layerZ) ||
-            this.bridgeCrossesExistingTrace(e, c.originalEnd, layerZ)
+            this.bridgeCrossesExistingTrace(c.originalStart, effectiveS, c.startLayerZ, baseNet) ||
+            this.bridgeCrossesExistingTrace(effectiveE, c.originalEnd, c.endLayerZ, baseNet)
           )
             continue
 
           const r = this.usePolyanya
-            ? this.searchPolyanya(mesh, s, e)
-            : this.searchVG(mesh, layerZ, s, e)
+            ? this.searchPolyanya(mesh, effectiveS, effectiveE)
+            : this.searchVG(mesh, layerZ, effectiveS, effectiveE)
           if (r.cost < 0 || r.path.length === 0) continue
 
           const better = pickShortest ? r.cost < bestCost : r.cost > bestCost
@@ -763,8 +962,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
             bestIdx = i
             bestCost = r.cost
             bestPath = r.path
-            bestStart = s
-            bestEnd = e
+            bestStart = effectiveS
+            bestEnd = effectiveE
           }
           foundForThis = true
           break
@@ -809,8 +1008,30 @@ export class GreedySequentialPathSolver extends BaseSolver {
   }
 
   /** Commit a routed path on a specific layer: add to results and update obstacles/regions */
+  /**
+   * Pathfind a bridge segment from pad center to nudge point on the given
+   * layer's mesh. Falls back to a straight line if pathfinding fails (e.g.
+   * pad center is inside its own obstacle — expected for short bridges).
+   */
+  private pathfindBridge(from: Point, to: Point, bridgeLayerZ: number): Point[] {
+    if (Math.abs(from.x - to.x) < 1e-6 && Math.abs(from.y - to.y) < 1e-6) return []
+    const mesh = this.meshes[bridgeLayerZ]
+    if (mesh) {
+      const si = new SearchInstance(mesh)
+      si.setStartGoal(from, to)
+      if (si.search()) {
+        const pts = si.getPathPoints()
+        if (pts.length >= 2) return pts
+      }
+    }
+    // Fallback: straight line (pad center is typically inside its own obstacle
+    // so pathfinding may fail, but the bridge is still valid since it stays
+    // within the connected obstacle's footprint)
+    return [from, to]
+  }
+
   private commitPath(
-    conn: { name: string; originalStart: Point; originalEnd: Point },
+    conn: { name: string; originalStart: Point; originalEnd: Point; startLayerZ: number; endLayerZ: number },
     path: Point[],
     layerZ: number,
   ) {
@@ -820,60 +1041,75 @@ export class GreedySequentialPathSolver extends BaseSolver {
     const routeStart = path[0]!
     const routeEnd = path[path.length - 1]!
 
-    if (layerZ === 0) {
-      // Same layer — just bridge original points
-      if (
-        Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
-        Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
-      ) {
-        fullRoute.push({
-          x: conn.originalStart.x,
-          y: conn.originalStart.y,
-          z: 0,
-        })
+    const startZ = conn.startLayerZ
+    const endZ = conn.endLayerZ
+    const needStartVia = startZ !== layerZ
+    const needEndVia = endZ !== layerZ
+
+    const startBridged =
+      Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
+      Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
+    const endBridged =
+      Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
+      Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
+
+    // Precompute bridge paths (pathfound on native layer mesh)
+    const startBridgeZ = needStartVia ? startZ : layerZ
+    const endBridgeZ = needEndVia ? endZ : layerZ
+    const startBridgePath: Point[] = startBridged
+      ? this.pathfindBridge(conn.originalStart, routeStart, startBridgeZ)
+      : []
+    const endBridgePath: Point[] = endBridged
+      ? this.pathfindBridge(routeEnd, conn.originalEnd, endBridgeZ)
+      : []
+
+    // === Build fullRoute ===
+    // Start bridge on native layer
+    if (needStartVia) {
+      if (startBridgePath.length > 0) {
+        for (const p of startBridgePath) {
+          fullRoute.push({ x: p.x, y: p.y, z: startZ })
+        }
+        // Ensure via point is the last before transition
+        const last = fullRoute[fullRoute.length - 1]!
+        if (Math.abs(last.x - routeStart.x) > 1e-6 || Math.abs(last.y - routeStart.y) > 1e-6) {
+          fullRoute.push({ x: routeStart.x, y: routeStart.y, z: startZ })
+        }
+      } else {
+        fullRoute.push({ x: routeStart.x, y: routeStart.y, z: startZ })
       }
-
-      for (const p of path) {
-        fullRoute.push({ x: p.x, y: p.y, z: 0 })
-      }
-
-      if (
-        Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
-        Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
-      ) {
-        fullRoute.push({ x: conn.originalEnd.x, y: conn.originalEnd.y, z: 0 })
-      }
-    } else {
-      // Different layer — need vias at start and end to transition
-
-      // Bridge from original start on layer 0
-      fullRoute.push({ x: conn.originalStart.x, y: conn.originalStart.y, z: 0 })
-
-      // Via down at the nudged start point
-      const viaStart = { x: routeStart.x, y: routeStart.y }
-      fullRoute.push({ x: viaStart.x, y: viaStart.y, z: 0 })
-      vias.push(viaStart)
-      // Now on layerZ
-      fullRoute.push({ x: viaStart.x, y: viaStart.y, z: layerZ })
-
-      // Route on layerZ (skip first point, already added as via location)
-      for (let i = 1; i < path.length - 1; i++) {
+      vias.push({ x: routeStart.x, y: routeStart.y })
+      fullRoute.push({ x: routeStart.x, y: routeStart.y, z: layerZ })
+      for (let i = 1; i < path.length; i++) {
         fullRoute.push({ x: path[i]!.x, y: path[i]!.y, z: layerZ })
       }
+    } else {
+      // Start bridge on same layer as route
+      if (startBridgePath.length > 0) {
+        for (let i = 0; i < startBridgePath.length - 1; i++) {
+          fullRoute.push({ x: startBridgePath[i]!.x, y: startBridgePath[i]!.y, z: layerZ })
+        }
+      }
+      for (const p of path) {
+        fullRoute.push({ x: p.x, y: p.y, z: layerZ })
+      }
+    }
 
-      // Via up at the nudged end point
-      const viaEnd = { x: routeEnd.x, y: routeEnd.y }
-      fullRoute.push({ x: viaEnd.x, y: viaEnd.y, z: layerZ })
-      vias.push(viaEnd)
-      // Back on layer 0
-      fullRoute.push({ x: viaEnd.x, y: viaEnd.y, z: 0 })
+    // End via transition
+    if (needEndVia) {
+      vias.push({ x: routeEnd.x, y: routeEnd.y })
+      fullRoute.push({ x: routeEnd.x, y: routeEnd.y, z: endZ })
+    }
 
-      // Bridge to original end on layer 0
-      if (
-        Math.abs(conn.originalEnd.x - viaEnd.x) > 1e-6 ||
-        Math.abs(conn.originalEnd.y - viaEnd.y) > 1e-6
-      ) {
-        fullRoute.push({ x: conn.originalEnd.x, y: conn.originalEnd.y, z: 0 })
+    // End bridge on native layer
+    if (endBridgePath.length > 0) {
+      for (let i = 1; i < endBridgePath.length; i++) {
+        fullRoute.push({ x: endBridgePath[i]!.x, y: endBridgePath[i]!.y, z: endBridgeZ })
+      }
+      // Ensure original end is the final point
+      const last = fullRoute[fullRoute.length - 1]!
+      if (Math.abs(last.x - conn.originalEnd.x) > 1e-6 || Math.abs(last.y - conn.originalEnd.y) > 1e-6) {
+        fullRoute.push({ x: conn.originalEnd.x, y: conn.originalEnd.y, z: endBridgeZ })
       }
     }
 
@@ -889,42 +1125,33 @@ export class GreedySequentialPathSolver extends BaseSolver {
     const clearance = this.minTraceWidth / 2 + this.margin
 
     if (this.useObstacles) {
-      // Build full path including bridge segments so the obstacle polygon
-      // covers the entire route, not just the Polyanya path between nudged
-      // endpoints.
-      const obstaclePath: Point[] = []
+      // Track which layers need mesh rebuild
+      const layersToRebuild = new Set<number>()
+      layersToRebuild.add(layerZ)
 
-      if (layerZ === 0) {
-        // Prepend original start if it differs from nudged start
-        if (
-          Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
-          Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
-        ) {
-          obstaclePath.push(conn.originalStart)
+      // --- Main route obstacle on layerZ (includes same-layer bridges) ---
+      const routeObstaclePath: Point[] = []
+      if (!needStartVia && startBridgePath.length > 0) {
+        // Include pathfound bridge in the route obstacle (same layer)
+        for (let i = 0; i < startBridgePath.length - 1; i++) {
+          routeObstaclePath.push(startBridgePath[i]!)
         }
-        for (const p of path) obstaclePath.push(p)
-        // Append original end if it differs from nudged end
-        if (
-          Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
-          Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
-        ) {
-          obstaclePath.push(conn.originalEnd)
+      }
+      for (const p of path) routeObstaclePath.push(p)
+      if (!needEndVia && endBridgePath.length > 0) {
+        for (let i = 1; i < endBridgePath.length; i++) {
+          routeObstaclePath.push(endBridgePath[i]!)
         }
-      } else {
-        // Non-zero layer: the Polyanya path is on layerZ; bridge segments
-        // are on layer 0 and handled separately below.
-        for (const p of path) obstaclePath.push(p)
       }
 
       const newObstacles = this.pathToObstaclePolygons(
-        obstaclePath,
+        routeObstaclePath,
         clearance,
         conn.originalStart,
         conn.originalEnd,
       )
-      this.tracePolygonObstacles[layerZ]!.push(...newObstacles)
-
       for (const poly of newObstacles) {
+        this.pushTraceObstacle(layerZ, poly, conn.name)
         this.traceObstaclePolys.push({
           polygon: poly,
           connectionName: conn.name,
@@ -932,39 +1159,31 @@ export class GreedySequentialPathSolver extends BaseSolver {
         })
       }
 
-      // For non-zero layers, add bridge segment obstacles on layer 0
-      if (layerZ > 0) {
-        const bridges: Point[][] = []
-        // Bridge from original start to via start (on layer 0)
-        if (
-          Math.abs(conn.originalStart.x - routeStart.x) > 1e-6 ||
-          Math.abs(conn.originalStart.y - routeStart.y) > 1e-6
-        ) {
-          bridges.push([conn.originalStart, routeStart])
+      // --- Bridge obstacles on the endpoint's native layer (when different from route) ---
+      const addBridgeObs = (bridgePath: Point[], bridgeLayerZ: number) => {
+        if (bridgePath.length < 2) return
+        const bridgeObs = this.pathToObstaclePolygons(
+          bridgePath,
+          clearance,
+          conn.originalStart,
+          conn.originalEnd,
+        )
+        for (const poly of bridgeObs) {
+          this.pushTraceObstacle(bridgeLayerZ, poly, conn.name)
+          this.traceObstaclePolys.push({
+            polygon: poly,
+            connectionName: conn.name,
+            layerZ: bridgeLayerZ,
+          })
         }
-        // Bridge from via end to original end (on layer 0)
-        if (
-          Math.abs(conn.originalEnd.x - routeEnd.x) > 1e-6 ||
-          Math.abs(conn.originalEnd.y - routeEnd.y) > 1e-6
-        ) {
-          bridges.push([routeEnd, conn.originalEnd])
-        }
-        for (const bridge of bridges) {
-          const bridgeObstacles = this.pathToObstaclePolygons(
-            bridge,
-            clearance,
-            conn.originalStart,
-            conn.originalEnd,
-          )
-          this.tracePolygonObstacles[0]!.push(...bridgeObstacles)
-          for (const poly of bridgeObstacles) {
-            this.traceObstaclePolys.push({
-              polygon: poly,
-              connectionName: conn.name,
-              layerZ: 0,
-            })
-          }
-        }
+        layersToRebuild.add(bridgeLayerZ)
+      }
+
+      if (needStartVia && startBridgePath.length >= 2) {
+        addBridgeObs(startBridgePath, startZ)
+      }
+      if (needEndVia && endBridgePath.length >= 2) {
+        addBridgeObs(endBridgePath, endZ)
       }
 
       // Add via obstacles to ALL layers (vias are through-hole)
@@ -974,16 +1193,14 @@ export class GreedySequentialPathSolver extends BaseSolver {
             const viaPoly = this.viaToObstaclePolygon(via)
             this.rectObstacles[z]!.push(viaPoly)
           }
+          layersToRebuild.add(z)
         }
       }
 
-      // Rebuild meshes for affected layers
-      this.buildMesh(layerZ)
-      if (vias.length > 0) {
-        for (let z = 0; z < this.layerCount; z++) {
-          if (z !== layerZ) this.buildMesh(z)
-        }
-      }
+      // Rebuild meshes for all affected layers
+      layersToRebuild.forEach((z) => {
+        if (z < this.layerCount) this.buildMesh(z)
+      })
     } else {
       const newRegions = this.pathToWeightedRegions(path, clearance)
       this.traceWeightedRegions[layerZ]!.push(...newRegions)
