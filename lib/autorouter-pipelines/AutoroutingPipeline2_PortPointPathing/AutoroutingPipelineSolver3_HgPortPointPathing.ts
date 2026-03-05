@@ -252,7 +252,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             weights: {
               SHUFFLE_SEED: 0,
               MEMORY_PF_FACTOR: 4,
-              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0.05,
+              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
               CENTER_OFFSET_FOCUS_SHIFT: 0,
               NODE_PF_FACTOR: 0,
               LAYER_CHANGE_COST: 0,
