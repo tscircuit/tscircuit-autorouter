@@ -35,7 +35,10 @@ export interface FixedTopologyHighDensityIntraNodeSolverParams {
   traceWidth?: number
   viaDiameter?: number
   connMap?: ConnectivityMap
+  effort?: number
 }
+
+const P99_MAX_ITERATIONS = 24411
 
 /**
  * Routes intra-node traces using a fixed via-topology grid and the hypergraph
@@ -70,7 +73,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     this.viaTile = defaultViaTile
     this.viaDiameter = this._resolveViaDiameter(params.viaDiameter)
     this.connMap = params.connMap
-    this.MAX_ITERATIONS = 1e6
+    this.MAX_ITERATIONS = P99_MAX_ITERATIONS * (params.effort ?? 1)
 
     // Initialize colorMap if not provided
     if (Object.keys(this.colorMap).length === 0) {
