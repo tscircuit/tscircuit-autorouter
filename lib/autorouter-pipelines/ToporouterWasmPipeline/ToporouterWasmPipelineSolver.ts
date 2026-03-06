@@ -58,9 +58,7 @@ async function loadWasmModule(): Promise<any> {
   return wasmModulePromise
 }
 
-function getConnectionPointLayers(
-  pt: ConnectionPoint,
-): string[] {
+function getConnectionPointLayers(pt: ConnectionPoint): string[] {
   if ("layers" in pt) return pt.layers
   if ("layer" in pt) return [pt.layer]
   return ["top"]
@@ -275,8 +273,7 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       const x = (obs.center.x - bounds.minX) * scale
       const y = (obs.center.y - bounds.minY) * scale
       const layer = getLayerIndex(obs.layers?.[0] ?? "top")
-      const netName =
-        obs.connectedTo.length > 0 ? obs.connectedTo[0] : null
+      const netName = obs.connectedTo.length > 0 ? obs.connectedTo[0] : null
       // type: 0=PIN, 1=PAD, 2=VIA, 3=OBSTACLE
       const type = netName ? 1 : 3
       _topo_add_obstacle(ptr, x, y, r, type, netName, layer)
@@ -486,7 +483,10 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
             } else {
               if (sweep < 0) sweep += Math.PI * 2
             }
-            const nSegs = Math.max(4, Math.ceil((Math.abs(sweep) * arc.r) / 0.5))
+            const nSegs = Math.max(
+              4,
+              Math.ceil((Math.abs(sweep) * arc.r) / 0.5),
+            )
             for (let j = 1; j <= nSegs; j++) {
               const t = j / nSegs
               const a = sa + sweep * t
