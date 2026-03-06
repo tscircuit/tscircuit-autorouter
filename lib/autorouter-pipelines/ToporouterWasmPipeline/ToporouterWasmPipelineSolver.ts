@@ -42,7 +42,12 @@ async function loadWasmModule(): Promise<any> {
       if (wasmJsUrl.protocol === "file:") {
         const fs = await import("fs")
         jsCode = fs.readFileSync(wasmJsUrl, "utf-8")
-        wasmBinary = fs.readFileSync(wasmUrl).buffer as ArrayBuffer
+        // Use slice to avoid Buffer pooling issues where .buffer is larger than the data
+        const buf = fs.readFileSync(wasmUrl)
+        wasmBinary = buf.buffer.slice(
+          buf.byteOffset,
+          buf.byteOffset + buf.byteLength,
+        )
       } else {
         const [jsResp, wasmResp] = await Promise.all([
           fetch(wasmJsUrl.href),
