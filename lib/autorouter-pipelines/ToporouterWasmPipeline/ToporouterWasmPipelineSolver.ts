@@ -191,7 +191,10 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     const bounds = srj.bounds
     const bw = bounds.maxX - bounds.minX
     const bh = bounds.maxY - bounds.minY
-    const scale = 100
+    // Scale to toporouter internal units. Must be large enough that
+    // pin constraint polygons and board edges create well-formed CDT
+    // triangulations with plenty of interior triangles for A* expansion.
+    const scale = 10000
 
     const wrap = (name: string, ret: any, args: any[]) =>
       Module.cwrap(name, ret, args)
@@ -319,9 +322,10 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       }
 
       // Nudge a point outside ALL obstacle+keepaway zones.
-      // Try the 4 cardinal directions; pick the one that produces a
-      // point clear of every obstacle. Iterate to escape overlapping obstacles.
-      const nudgeMargin = ka + tw
+      // Margin includes keepaway, trace width, and the pin's own radius
+      // so the nudged pin's constraint polygon doesn't overlap obstacles.
+      const pinRadius = Math.max(tw, ka) * 1.5
+      const nudgeMargin = ka + tw + pinRadius * 2
       const boardW = bw * scale
       const boardH = bh * scale
 
@@ -396,11 +400,14 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
 
             originalPositions.set(ptKey, { x: pt.x, y: pt.y })
 
+            // Pin radius must be large enough for the CDT constraint
+            // polygon to function properly (A* expands from inside it).
+            const pinRadius = Math.max(tw, ka) * 1.5
             obsId = _topo_add_obstacle(
               ptr,
               nudged.x,
               nudged.y,
-              tw / 4,
+              pinRadius,
               0,
               conn.name,
               layer,
