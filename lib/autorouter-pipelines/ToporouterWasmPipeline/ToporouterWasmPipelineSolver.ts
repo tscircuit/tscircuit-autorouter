@@ -40,12 +40,10 @@ async function loadWasmModule(): Promise<any> {
       let wasmBinary: ArrayBuffer | undefined
 
       if (wasmJsUrl.protocol === "file:") {
-        // Node/bun environment — read from filesystem
         const fs = await import("fs")
         jsCode = fs.readFileSync(wasmJsUrl, "utf-8")
         wasmBinary = fs.readFileSync(wasmUrl).buffer as ArrayBuffer
       } else {
-        // Browser environment — use fetch
         const [jsResp, wasmResp] = await Promise.all([
           fetch(wasmJsUrl.href),
           fetch(wasmUrl.href),
@@ -54,10 +52,27 @@ async function loadWasmModule(): Promise<any> {
         wasmBinary = await wasmResp.arrayBuffer()
       }
 
-      const factory = new Function(`${jsCode}; return ToporouterModule;`)()
-      wasmModule = await factory({ wasmBinary })
+      // Use blob URL import to avoid CSP unsafe-eval issues with new Function()
+      const wrappedCode = `${jsCode}\nexport default ToporouterModule;`
+      const blob = new Blob([wrappedCode], { type: "text/javascript" })
+      const blobUrl = URL.createObjectURL(blob)
+      try {
+        const mod: any = await import(/* webpackIgnore: true */ blobUrl)
+        const factory = mod.default
+        wasmModule = await factory({ wasmBinary })
+      } catch {
+        // Fallback for environments where blob import fails (e.g. bun)
+        const factory = new Function(`${jsCode}; return ToporouterModule;`)()
+        wasmModule = await factory({ wasmBinary })
+      } finally {
+        URL.revokeObjectURL(blobUrl)
+      }
       return wasmModule
-    })()
+    })().catch((e) => {
+      // Reset so future calls can retry
+      wasmModulePromise = null
+      throw e
+    })
   }
 
   return wasmModulePromise
@@ -73,7 +88,7 @@ function getLayerIndex(layerName: string): number {
   if (layerName === "top" || layerName === "front") return 0
   if (layerName === "bottom" || layerName === "back") return 1
   const m = layerName.match(/inner(\d+)/)
-  if (m) return Number.parseInt(m[1]) + 1
+  if (m) return Number.parseInt(m[1]) + 2
   return 0
 }
 
@@ -268,241 +283,286 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     ])
 
     const ptr = _topo_create(bw * scale, bh * scale)
-
-    const tw = (srj.nominalTraceWidth ?? srj.minTraceWidth) * scale
-    const ka = (srj.defaultObstacleMargin ?? srj.minTraceWidth / 2) * scale
-    _topo_set_trace_width(ptr, tw)
-    _topo_set_keepaway(ptr, ka)
-    _topo_set_via_cost(ptr, 10000)
-
-    // Add ALL SRJ obstacles as blockers to the toporouter.
-    for (const obs of srj.obstacles) {
-      const r = (Math.max(obs.width, obs.height) / 2) * scale
-      const x = (obs.center.x - bounds.minX) * scale
-      const y = (obs.center.y - bounds.minY) * scale
-      const layer = getLayerIndex(obs.layers?.[0] ?? "top")
-      _topo_add_obstacle(ptr, x, y, r, 3, null, layer)
-    }
-
-    // For connection endpoints that land inside an obstacle (+ keepaway),
-    // nudge them to just outside so the CDT router can reach them.
-    // After routing, we bridge back from the nudged point to the original.
-    const nudgeMargin = ka + tw // clear of obstacle + keepaway + trace width
-    const originalPositions = new Map<string, { x: number; y: number }>()
-
-    function nudgePoint(px: number, py: number): { x: number; y: number } {
-      // Iteratively nudge out of all obstacles
-      for (let iter = 0; iter < 5; iter++) {
-        let nudged = false
-        for (const obs of srj.obstacles) {
-          const hw = (obs.width / 2) * scale + nudgeMargin
-          const hh = (obs.height / 2) * scale + nudgeMargin
-          const ox = (obs.center.x - bounds.minX) * scale
-          const oy = (obs.center.y - bounds.minY) * scale
-
-          if (px > ox - hw && px < ox + hw && py > oy - hh && py < oy + hh) {
-            const dLeft = px - (ox - hw)
-            const dRight = ox + hw - px
-            const dTop = py - (oy - hh)
-            const dBottom = oy + hh - py
-            const dMin = Math.min(dLeft, dRight, dTop, dBottom)
-
-            if (dMin === dLeft) px = ox - hw - 1
-            else if (dMin === dRight) px = ox + hw + 1
-            else if (dMin === dTop) py = oy - hh - 1
-            else py = oy + hh + 1
-            nudged = true
-          }
-        }
-        if (!nudged) break
-      }
-      // Clamp to board bounds
-      px = Math.max(nudgeMargin, Math.min(bw * scale - nudgeMargin, px))
-      py = Math.max(nudgeMargin, Math.min(bh * scale - nudgeMargin, py))
-      return { x: px, y: py }
-    }
-
-    // Add connection points as pin-type obstacles at nudged positions.
-    const pointObsIds = new Map<string, number>()
-
-    for (const conn of srj.connections) {
-      const ptIds: number[] = []
-
-      for (const pt of conn.pointsToConnect) {
-        const ptKey = `${pt.x.toFixed(6)},${pt.y.toFixed(6)}`
-        let obsId: number = pointObsIds.get(ptKey) ?? -1
-
-        if (obsId === -1) {
-          const rawX = (pt.x - bounds.minX) * scale
-          const rawY = (pt.y - bounds.minY) * scale
-          const nudged = nudgePoint(rawX, rawY)
-          const layers = getConnectionPointLayers(pt)
-          const layer = getLayerIndex(layers[0])
-
-          // Remember original position for bridging
-          originalPositions.set(ptKey, {
-            x: pt.x,
-            y: pt.y,
-          })
-
-          obsId = _topo_add_obstacle(
-            ptr,
-            nudged.x,
-            nudged.y,
-            tw / 4,
-            0,
-            conn.name,
-            layer,
-          ) as number
-          pointObsIds.set(ptKey, obsId)
-        }
-        ptIds.push(obsId)
-      }
-
-      for (let i = 0; i < ptIds.length - 1; i++) {
-        _topo_add_connection(ptr, ptIds[i], ptIds[i + 1], conn.name)
-      }
-    }
-
-    _topo_solve(ptr)
-
-    const stats = {
-      routed: _topo_get_num_routed(ptr) as number,
-      failed: _topo_get_num_failed(ptr) as number,
-      wiringScore: _topo_get_wiring_score(ptr) as number,
-    }
-
-    // Extract routes
-    const numRoutes = _topo_get_num_routes(ptr) as number
-    const routes: TopoRouteResult[] = []
     const xBuf = Module._malloc(8)
     const yBuf = Module._malloc(8)
 
-    for (let i = 0; i < numRoutes; i++) {
-      const netName = _topo_get_route_net_name(ptr, i) as string
-      const pathLen = _topo_get_route_path_len(ptr, i) as number
-      const path: Array<{ x: number; y: number }> = []
+    try {
+      const tw = (srj.nominalTraceWidth ?? srj.minTraceWidth) * scale
+      const ka = (srj.defaultObstacleMargin ?? srj.minTraceWidth / 2) * scale
+      _topo_set_trace_width(ptr, tw)
+      _topo_set_keepaway(ptr, ka)
+      _topo_set_via_cost(ptr, 10000)
 
-      for (let j = 0; j < pathLen; j++) {
-        _topo_get_route_point(ptr, i, j, xBuf, yBuf)
-        path.push({
-          x: Module.getValue(xBuf, "double") / scale + bounds.minX,
-          y: Module.getValue(yBuf, "double") / scale + bounds.minY,
+      // Scaled obstacle rects for nudging
+      const obsRects: Array<{
+        ox: number
+        oy: number
+        hw: number
+        hh: number
+      }> = []
+      for (const obs of srj.obstacles) {
+        obsRects.push({
+          ox: (obs.center.x - bounds.minX) * scale,
+          oy: (obs.center.y - bounds.minY) * scale,
+          hw: (obs.width / 2) * scale,
+          hh: (obs.height / 2) * scale,
         })
       }
 
-      const numArcs = _topo_get_route_num_arcs(ptr, i) as number
-      const arcs: TopoRouteResult["arcs"] = []
+      // Add ALL SRJ obstacles as blockers.
+      for (let oi = 0; oi < srj.obstacles.length; oi++) {
+        const obs = srj.obstacles[oi]
+        const { ox, oy, hw, hh } = obsRects[oi]
+        const r = Math.max(hw, hh)
+        const layer = getLayerIndex(obs.layers?.[0] ?? "top")
+        _topo_add_obstacle(ptr, ox, oy, r, 3, null, layer)
+      }
 
-      if (numArcs > 0) {
-        const cxB = Module._malloc(8)
-        const cyB = Module._malloc(8)
-        const rB = Module._malloc(8)
-        const dirB = Module._malloc(4)
-        const x0B = Module._malloc(8)
-        const y0B = Module._malloc(8)
-        const x1B = Module._malloc(8)
-        const y1B = Module._malloc(8)
+      // Nudge a point outside ALL obstacle+keepaway zones.
+      // Try the 4 cardinal directions; pick the one that produces a
+      // point clear of every obstacle. Iterate to escape overlapping obstacles.
+      const nudgeMargin = ka + tw
+      const boardW = bw * scale
+      const boardH = bh * scale
 
-        for (let j = 0; j < numArcs; j++) {
-          _topo_get_route_arc(ptr, i, j, cxB, cyB, rB, dirB, x0B, y0B, x1B, y1B)
-          arcs.push({
-            cx: Module.getValue(cxB, "double") / scale + bounds.minX,
-            cy: Module.getValue(cyB, "double") / scale + bounds.minY,
-            r: Module.getValue(rB, "double") / scale,
-            dir: Module.getValue(dirB, "i32"),
-            x0: Module.getValue(x0B, "double") / scale + bounds.minX,
-            y0: Module.getValue(y0B, "double") / scale + bounds.minY,
-            x1: Module.getValue(x1B, "double") / scale + bounds.minX,
-            y1: Module.getValue(y1B, "double") / scale + bounds.minY,
+      function isInsideAnyObstacle(px: number, py: number): boolean {
+        for (const { ox, oy, hw, hh } of obsRects) {
+          if (
+            px > ox - hw - nudgeMargin &&
+            px < ox + hw + nudgeMargin &&
+            py > oy - hh - nudgeMargin &&
+            py < oy + hh + nudgeMargin
+          )
+            return true
+        }
+        return false
+      }
+
+      function nudgePoint(px: number, py: number): { x: number; y: number } {
+        if (!isInsideAnyObstacle(px, py)) return { x: px, y: py }
+
+        // Try nudging in each cardinal direction with increasing distance
+        const directions = [
+          { dx: 1, dy: 0 },
+          { dx: -1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: 0, dy: -1 },
+          { dx: 1, dy: 1 },
+          { dx: -1, dy: -1 },
+          { dx: 1, dy: -1 },
+          { dx: -1, dy: 1 },
+        ]
+        for (let dist = nudgeMargin; dist < boardW; dist += nudgeMargin * 0.5) {
+          for (const { dx, dy } of directions) {
+            const norm = Math.sqrt(dx * dx + dy * dy)
+            const nx = px + (dx / norm) * dist
+            const ny = py + (dy / norm) * dist
+            if (
+              nx > nudgeMargin &&
+              nx < boardW - nudgeMargin &&
+              ny > nudgeMargin &&
+              ny < boardH - nudgeMargin &&
+              !isInsideAnyObstacle(nx, ny)
+            ) {
+              return { x: nx, y: ny }
+            }
+          }
+        }
+        // Couldn't find a clear spot — return clamped position
+        return {
+          x: Math.max(nudgeMargin, Math.min(boardW - nudgeMargin, px)),
+          y: Math.max(nudgeMargin, Math.min(boardH - nudgeMargin, py)),
+        }
+      }
+
+      // Build connection points with nudged positions.
+      // Key includes connection name to avoid cross-net deduplication.
+      const originalPositions = new Map<string, { x: number; y: number }>()
+      const pointObsIds = new Map<string, number>()
+
+      for (const conn of srj.connections) {
+        const ptIds: number[] = []
+
+        for (const pt of conn.pointsToConnect) {
+          const ptKey = `${conn.name}:${pt.x.toFixed(6)},${pt.y.toFixed(6)}`
+          let obsId: number = pointObsIds.get(ptKey) ?? -1
+
+          if (obsId === -1) {
+            const rawX = (pt.x - bounds.minX) * scale
+            const rawY = (pt.y - bounds.minY) * scale
+            const nudged = nudgePoint(rawX, rawY)
+            const layers = getConnectionPointLayers(pt)
+            const layer = getLayerIndex(layers[0])
+
+            originalPositions.set(ptKey, { x: pt.x, y: pt.y })
+
+            obsId = _topo_add_obstacle(
+              ptr,
+              nudged.x,
+              nudged.y,
+              tw / 4,
+              0,
+              conn.name,
+              layer,
+            ) as number
+            pointObsIds.set(ptKey, obsId)
+          }
+          ptIds.push(obsId)
+        }
+
+        for (let i = 0; i < ptIds.length - 1; i++) {
+          _topo_add_connection(ptr, ptIds[i], ptIds[i + 1], conn.name)
+        }
+      }
+
+      _topo_solve(ptr)
+
+      const stats = {
+        routed: _topo_get_num_routed(ptr) as number,
+        failed: _topo_get_num_failed(ptr) as number,
+        wiringScore: _topo_get_wiring_score(ptr) as number,
+      }
+
+      // Extract routes
+      const numRoutes = _topo_get_num_routes(ptr) as number
+      const routes: TopoRouteResult[] = []
+
+      for (let i = 0; i < numRoutes; i++) {
+        const netName = _topo_get_route_net_name(ptr, i) as string
+        const pathLen = _topo_get_route_path_len(ptr, i) as number
+        const path: Array<{ x: number; y: number }> = []
+
+        for (let j = 0; j < pathLen; j++) {
+          _topo_get_route_point(ptr, i, j, xBuf, yBuf)
+          path.push({
+            x: Module.getValue(xBuf, "double") / scale + bounds.minX,
+            y: Module.getValue(yBuf, "double") / scale + bounds.minY,
           })
         }
 
-        Module._free(cxB)
-        Module._free(cyB)
-        Module._free(rB)
-        Module._free(dirB)
-        Module._free(x0B)
-        Module._free(y0B)
+        const numArcs = _topo_get_route_num_arcs(ptr, i) as number
+        const arcs: TopoRouteResult["arcs"] = []
+
+        if (numArcs > 0) {
+          const cxB = Module._malloc(8)
+          const cyB = Module._malloc(8)
+          const rB = Module._malloc(8)
+          const dirB = Module._malloc(4)
+          const x0B = Module._malloc(8)
+          const y0B = Module._malloc(8)
+          const x1B = Module._malloc(8)
+          const y1B = Module._malloc(8)
+
+          try {
+            for (let j = 0; j < numArcs; j++) {
+              _topo_get_route_arc(
+                ptr,
+                i,
+                j,
+                cxB,
+                cyB,
+                rB,
+                dirB,
+                x0B,
+                y0B,
+                x1B,
+                y1B,
+              )
+              arcs.push({
+                cx: Module.getValue(cxB, "double") / scale + bounds.minX,
+                cy: Module.getValue(cyB, "double") / scale + bounds.minY,
+                r: Module.getValue(rB, "double") / scale,
+                dir: Module.getValue(dirB, "i32"),
+                x0: Module.getValue(x0B, "double") / scale + bounds.minX,
+                y0: Module.getValue(y0B, "double") / scale + bounds.minY,
+                x1: Module.getValue(x1B, "double") / scale + bounds.minX,
+                y1: Module.getValue(y1B, "double") / scale + bounds.minY,
+              })
+            }
+          } finally {
+            Module._free(cxB)
+            Module._free(cyB)
+            Module._free(rB)
+            Module._free(dirB)
+            Module._free(x0B)
+            Module._free(y0B)
+            Module._free(x1B)
+            Module._free(y1B)
+          }
+        }
+
+        routes.push({ netName, path, arcs })
+      }
+
+      // Extract CDT edges for visualization
+      const numEdges = _topo_get_num_cdt_edges(ptr) as number
+      const cdtEdges: TopoSolveResult["cdtEdges"] = []
+      const x1B = Module._malloc(8)
+      const y1B = Module._malloc(8)
+      const x2B = Module._malloc(8)
+      const y2B = Module._malloc(8)
+      const icB = Module._malloc(4)
+
+      try {
+        for (let i = 0; i < numEdges; i++) {
+          _topo_get_cdt_edge(ptr, i, x1B, y1B, x2B, y2B, icB)
+          cdtEdges.push({
+            v1: {
+              x: Module.getValue(x1B, "double") / scale + bounds.minX,
+              y: Module.getValue(y1B, "double") / scale + bounds.minY,
+            },
+            v2: {
+              x: Module.getValue(x2B, "double") / scale + bounds.minX,
+              y: Module.getValue(y2B, "double") / scale + bounds.minY,
+            },
+            isConstraint: Module.getValue(icB, "i32") !== 0,
+          })
+        }
+      } finally {
         Module._free(x1B)
         Module._free(y1B)
+        Module._free(x2B)
+        Module._free(y2B)
+        Module._free(icB)
       }
 
-      routes.push({ netName, path, arcs })
-    }
+      this.result = { routes, stats, cdtEdges }
+      this.stats = {
+        ...stats,
+        routeCount: routes.length,
+        cdtEdgeCount: cdtEdges.length,
+      }
 
-    // Extract CDT edges for visualization
-    const numEdges = _topo_get_num_cdt_edges(ptr) as number
-    const cdtEdges: TopoSolveResult["cdtEdges"] = []
-    const x1B = Module._malloc(8)
-    const y1B = Module._malloc(8)
-    const x2B = Module._malloc(8)
-    const y2B = Module._malloc(8)
-    const icB = Module._malloc(4)
+      // Bridge routed paths back to original pad centers
+      for (const route of routes) {
+        if (route.path.length < 2) continue
+        const conn = srj.connections.find((c) => c.name === route.netName)
+        if (!conn) continue
 
-    for (let i = 0; i < numEdges; i++) {
-      _topo_get_cdt_edge(ptr, i, x1B, y1B, x2B, y2B, icB)
-      cdtEdges.push({
-        v1: {
-          x: Module.getValue(x1B, "double") / scale + bounds.minX,
-          y: Module.getValue(y1B, "double") / scale + bounds.minY,
-        },
-        v2: {
-          x: Module.getValue(x2B, "double") / scale + bounds.minX,
-          y: Module.getValue(y2B, "double") / scale + bounds.minY,
-        },
-        isConstraint: Module.getValue(icB, "i32") !== 0,
-      })
-    }
+        for (const pt of conn.pointsToConnect) {
+          const orig = originalPositions.get(
+            `${conn.name}:${pt.x.toFixed(6)},${pt.y.toFixed(6)}`,
+          )
+          if (!orig) continue
+          const first = route.path[0]
+          const last = route.path[route.path.length - 1]
+          const distFirst = (first.x - pt.x) ** 2 + (first.y - pt.y) ** 2
+          const distLast = (last.x - pt.x) ** 2 + (last.y - pt.y) ** 2
 
-    Module._free(x1B)
-    Module._free(y1B)
-    Module._free(x2B)
-    Module._free(y2B)
-    Module._free(icB)
-    Module._free(xBuf)
-    Module._free(yBuf)
-
-    _topo_destroy(ptr)
-
-    this.result = { routes, stats, cdtEdges }
-    this.stats = {
-      ...stats,
-      routeCount: routes.length,
-      cdtEdgeCount: cdtEdges.length,
-    }
-    // Bridge routed paths back to original pad centers.
-    // The router used nudged endpoints; now prepend/append a short
-    // wire segment from the original position to the nudged position.
-    for (const route of routes) {
-      if (route.path.length < 2) continue
-      const conn = srj.connections.find((c) => c.name === route.netName)
-      if (!conn) continue
-
-      // Find the original position for the start point
-      for (const pt of conn.pointsToConnect) {
-        const orig = originalPositions.get(
-          `${pt.x.toFixed(6)},${pt.y.toFixed(6)}`,
-        )
-        if (!orig) continue
-        const first = route.path[0]
-        const last = route.path[route.path.length - 1]
-        const distFirst = (first.x - pt.x) ** 2 + (first.y - pt.y) ** 2
-        const distLast = (last.x - pt.x) ** 2 + (last.y - pt.y) ** 2
-
-        // Bridge to the closest endpoint
-        if (
-          distFirst < distLast &&
-          distFirst < 1 // only if close (same point, nudged)
-        ) {
-          route.path.unshift({ x: orig.x, y: orig.y })
-        } else if (distLast < 1) {
-          route.path.push({ x: orig.x, y: orig.y })
+          if (distFirst < distLast && distFirst < 1) {
+            route.path.unshift({ x: orig.x, y: orig.y })
+          } else if (distLast < 1) {
+            route.path.push({ x: orig.x, y: orig.y })
+          }
         }
       }
-    }
 
-    this.traces = this.convertRoutesToTraces(routes)
+      this.traces = this.convertRoutesToTraces(routes)
+    } finally {
+      Module._free(xBuf)
+      Module._free(yBuf)
+      _topo_destroy(ptr)
+    }
   }
 
   private convertRoutesToTraces(
@@ -536,6 +596,7 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         })
 
         for (const arc of route.arcs) {
+          // Line to arc start (skip if sentinel values)
           if (arc.x0 !== -1 && arc.y0 !== -1) {
             traceRoute.push({
               route_type: "wire",
@@ -545,7 +606,8 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
               layer,
             })
           }
-          if (arc.r > 0) {
+          // Discretize arc (only if start point is valid)
+          if (arc.r > 0 && arc.x0 !== -1 && arc.y0 !== -1) {
             const sa = Math.atan2(arc.y0 - arc.cy, arc.x0 - arc.cx)
             const ea = Math.atan2(arc.y1 - arc.cy, arc.x1 - arc.cx)
             let sweep = ea - sa
@@ -604,17 +666,13 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
-    if (!this.solved) {
+    if (!this.solved)
       throw new Error("Cannot get output before solving is complete")
-    }
     return this.traces
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
-    return {
-      ...this.srj,
-      traces: this.getOutputSimplifiedPcbTraces(),
-    }
+    return { ...this.srj, traces: this.getOutputSimplifiedPcbTraces() }
   }
 
   visualize(): GraphicsObject {
@@ -665,9 +723,7 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       strokeColor: this.colorMap[r.netName] ?? "rgba(0,255,0,0.7)",
     }))
 
-    const routeViz: GraphicsObject = {
-      lines: [...cdtLines, ...routeLines],
-    }
+    const routeViz: GraphicsObject = { lines: [...cdtLines, ...routeLines] }
 
     if (this.solved) {
       return combineVisualizations(
@@ -676,16 +732,16 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
       )
     }
-
     return combineVisualizations(problemViz, routeViz)
   }
 
   preview(): GraphicsObject {
     if (!this.result) return {}
-    const lines: Line[] = this.result.routes.map((r) => ({
-      points: r.path,
-      strokeColor: this.colorMap[r.netName] ?? "rgba(0,255,0,0.7)",
-    }))
-    return { lines }
+    return {
+      lines: this.result.routes.map((r) => ({
+        points: r.path,
+        strokeColor: this.colorMap[r.netName] ?? "rgba(0,255,0,0.7)",
+      })),
+    }
   }
 }
