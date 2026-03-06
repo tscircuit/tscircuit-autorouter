@@ -16,6 +16,7 @@ export * from "./cache/setupGlobalCaches"
 export * from "./cache/types"
 export * from "./autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
 export { convertSrjToGraphicsObject } from "./utils/convertSrjToGraphicsObject"
+export { ToporouterWasmPipelineSolver } from "./autorouter-pipelines/ToporouterWasmPipeline/ToporouterWasmPipelineSolver"
 
 // Jumper-based solvers for single-layer PCBs
 export { IntraNodeSolverWithJumpers } from "./solvers/HighDensitySolver/IntraNodeSolverWithJumpers"
