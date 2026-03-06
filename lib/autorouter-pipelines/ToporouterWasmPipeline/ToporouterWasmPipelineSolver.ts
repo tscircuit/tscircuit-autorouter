@@ -11,14 +11,12 @@
  * be merged into production due to its GPL license.
  */
 
-import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
+import type { GraphicsObject, Line } from "graphics-debug"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTraces,
   SimplifiedPcbTrace,
-  Obstacle,
-  SimpleRouteConnection,
   ConnectionPoint,
 } from "../../types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -35,22 +33,29 @@ async function loadWasmModule(): Promise<any> {
 
   if (!wasmModulePromise) {
     wasmModulePromise = (async () => {
-      // Dynamic import of the emscripten glue JS
-      const wasmJsUrl = new URL("./wasm/toporouter.js", import.meta.url).href
-      const wasmUrl = new URL("./wasm/toporouter.wasm", import.meta.url).href
+      const wasmJsUrl = new URL("./wasm/toporouter.js", import.meta.url)
+      const wasmUrl = new URL("./wasm/toporouter.wasm", import.meta.url)
 
-      // Fetch and evaluate the module factory
-      const response = await fetch(wasmJsUrl)
-      const jsCode = await response.text()
+      let jsCode: string
+      let wasmBinary: ArrayBuffer | undefined
 
-      // The emscripten module is a factory function called ToporouterModule
+      if (wasmJsUrl.protocol === "file:") {
+        // Node/bun environment — read from filesystem
+        const fs = await import("fs")
+        jsCode = fs.readFileSync(wasmJsUrl, "utf-8")
+        wasmBinary = fs.readFileSync(wasmUrl).buffer as ArrayBuffer
+      } else {
+        // Browser environment — use fetch
+        const [jsResp, wasmResp] = await Promise.all([
+          fetch(wasmJsUrl.href),
+          fetch(wasmUrl.href),
+        ])
+        jsCode = await jsResp.text()
+        wasmBinary = await wasmResp.arrayBuffer()
+      }
+
       const factory = new Function(`${jsCode}; return ToporouterModule;`)()
-      wasmModule = await factory({
-        locateFile: (path: string) => {
-          if (path.endsWith(".wasm")) return wasmUrl
-          return path
-        },
-      })
+      wasmModule = await factory({ wasmBinary })
       return wasmModule
     })()
   }
@@ -123,12 +128,26 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     return [this.srj, this.opts] as const
   }
 
+  /** Override solve() to handle async WASM loading */
+  override async solve() {
+    const startTime = Date.now()
+    const mod = await loadWasmModule()
+    try {
+      this.solveWithWasm(mod)
+      this.solved = true
+      this.progress = 1
+    } catch (e) {
+      this.error = `ToporouterWasm error: ${e}`
+      this.failed = true
+    }
+    this.timeToSolve = Date.now() - startTime
+  }
+
   _step() {
     if (this.phase === "loading") {
       if (!this.loadingStarted) {
         this.loadingStarted = true
         this.progress = 0.05
-        // Start async WASM loading, then solve synchronously
         loadWasmModule()
           .then((mod) => {
             this.phase = "solving"
@@ -150,7 +169,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       }
       return
     }
-    // Waiting for async solve to complete
   }
 
   private solveWithWasm(Module: any) {
@@ -158,28 +176,25 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     const bounds = srj.bounds
     const bw = bounds.maxX - bounds.minX
     const bh = bounds.maxY - bounds.minY
-
-    // Scale to internal toporouter units (100x for precision)
     const scale = 100
 
-    const _topo_create = Module.cwrap("topo_create", "number", [
+    const wrap = (name: string, ret: any, args: any[]) =>
+      Module.cwrap(name, ret, args)
+    const _topo_create = wrap("topo_create", "number", ["number", "number"])
+    const _topo_destroy = wrap("topo_destroy", null, ["number"])
+    const _topo_set_trace_width = wrap("topo_set_trace_width", null, [
       "number",
       "number",
     ])
-    const _topo_destroy = Module.cwrap("topo_destroy", null, ["number"])
-    const _topo_set_trace_width = Module.cwrap("topo_set_trace_width", null, [
+    const _topo_set_keepaway = wrap("topo_set_keepaway", null, [
       "number",
       "number",
     ])
-    const _topo_set_keepaway = Module.cwrap("topo_set_keepaway", null, [
+    const _topo_set_via_cost = wrap("topo_set_via_cost", null, [
       "number",
       "number",
     ])
-    const _topo_set_via_cost = Module.cwrap("topo_set_via_cost", null, [
-      "number",
-      "number",
-    ])
-    const _topo_add_obstacle = Module.cwrap("topo_add_obstacle", "number", [
+    const _topo_add_obstacle = wrap("topo_add_obstacle", "number", [
       "number",
       "number",
       "number",
@@ -188,50 +203,45 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       "string",
       "number",
     ])
-    const _topo_add_connection = Module.cwrap("topo_add_connection", "number", [
+    const _topo_add_connection = wrap("topo_add_connection", "number", [
       "number",
       "number",
       "number",
       "string",
     ])
-    const _topo_solve = Module.cwrap("topo_solve", "number", ["number"])
-    const _topo_get_num_routed = Module.cwrap("topo_get_num_routed", "number", [
+    const _topo_solve = wrap("topo_solve", "number", ["number"])
+    const _topo_get_num_routed = wrap("topo_get_num_routed", "number", [
       "number",
     ])
-    const _topo_get_num_failed = Module.cwrap("topo_get_num_failed", "number", [
+    const _topo_get_num_failed = wrap("topo_get_num_failed", "number", [
       "number",
     ])
-    const _topo_get_wiring_score = Module.cwrap(
-      "topo_get_wiring_score",
-      "number",
-      ["number"],
-    )
-    const _topo_get_num_routes = Module.cwrap("topo_get_num_routes", "number", [
+    const _topo_get_wiring_score = wrap("topo_get_wiring_score", "number", [
       "number",
     ])
-    const _topo_get_route_path_len = Module.cwrap(
-      "topo_get_route_path_len",
+    const _topo_get_num_routes = wrap("topo_get_num_routes", "number", [
       "number",
-      ["number", "number"],
-    )
-    const _topo_get_route_point = Module.cwrap("topo_get_route_point", null, [
+    ])
+    const _topo_get_route_path_len = wrap("topo_get_route_path_len", "number", [
+      "number",
+      "number",
+    ])
+    const _topo_get_route_point = wrap("topo_get_route_point", null, [
       "number",
       "number",
       "number",
       "number",
       "number",
     ])
-    const _topo_get_route_net_name = Module.cwrap(
-      "topo_get_route_net_name",
-      "string",
-      ["number", "number"],
-    )
-    const _topo_get_route_num_arcs = Module.cwrap(
-      "topo_get_route_num_arcs",
+    const _topo_get_route_net_name = wrap("topo_get_route_net_name", "string", [
       "number",
-      ["number", "number"],
-    )
-    const _topo_get_route_arc = Module.cwrap("topo_get_route_arc", null, [
+      "number",
+    ])
+    const _topo_get_route_num_arcs = wrap("topo_get_route_num_arcs", "number", [
+      "number",
+      "number",
+    ])
+    const _topo_get_route_arc = wrap("topo_get_route_arc", null, [
       "number",
       "number",
       "number",
@@ -244,12 +254,10 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       "number",
       "number",
     ])
-    const _topo_get_num_cdt_edges = Module.cwrap(
-      "topo_get_num_cdt_edges",
+    const _topo_get_num_cdt_edges = wrap("topo_get_num_cdt_edges", "number", [
       "number",
-      ["number"],
-    )
-    const _topo_get_cdt_edge = Module.cwrap("topo_get_cdt_edge", null, [
+    ])
+    const _topo_get_cdt_edge = wrap("topo_get_cdt_edge", null, [
       "number",
       "number",
       "number",
@@ -267,19 +275,54 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     _topo_set_keepaway(ptr, ka)
     _topo_set_via_cost(ptr, 10000)
 
-    // Add SRJ obstacles as toporouter obstacles
+    // Add ALL SRJ obstacles as blockers to the toporouter.
     for (const obs of srj.obstacles) {
       const r = (Math.max(obs.width, obs.height) / 2) * scale
       const x = (obs.center.x - bounds.minX) * scale
       const y = (obs.center.y - bounds.minY) * scale
       const layer = getLayerIndex(obs.layers?.[0] ?? "top")
-      const netName = obs.connectedTo.length > 0 ? obs.connectedTo[0] : null
-      // type: 0=PIN, 1=PAD, 2=VIA, 3=OBSTACLE
-      const type = netName ? 1 : 3
-      _topo_add_obstacle(ptr, x, y, r, type, netName, layer)
+      _topo_add_obstacle(ptr, x, y, r, 3, null, layer)
     }
 
-    // Add connection points as pin obstacles and connect them
+    // For connection endpoints that land inside an obstacle (+ keepaway),
+    // nudge them to just outside so the CDT router can reach them.
+    // After routing, we bridge back from the nudged point to the original.
+    const nudgeMargin = ka + tw // clear of obstacle + keepaway + trace width
+    const originalPositions = new Map<string, { x: number; y: number }>()
+
+    function nudgePoint(px: number, py: number): { x: number; y: number } {
+      // Iteratively nudge out of all obstacles
+      for (let iter = 0; iter < 5; iter++) {
+        let nudged = false
+        for (const obs of srj.obstacles) {
+          const hw = (obs.width / 2) * scale + nudgeMargin
+          const hh = (obs.height / 2) * scale + nudgeMargin
+          const ox = (obs.center.x - bounds.minX) * scale
+          const oy = (obs.center.y - bounds.minY) * scale
+
+          if (px > ox - hw && px < ox + hw && py > oy - hh && py < oy + hh) {
+            const dLeft = px - (ox - hw)
+            const dRight = ox + hw - px
+            const dTop = py - (oy - hh)
+            const dBottom = oy + hh - py
+            const dMin = Math.min(dLeft, dRight, dTop, dBottom)
+
+            if (dMin === dLeft) px = ox - hw - 1
+            else if (dMin === dRight) px = ox + hw + 1
+            else if (dMin === dTop) py = oy - hh - 1
+            else py = oy + hh + 1
+            nudged = true
+          }
+        }
+        if (!nudged) break
+      }
+      // Clamp to board bounds
+      px = Math.max(nudgeMargin, Math.min(bw * scale - nudgeMargin, px))
+      py = Math.max(nudgeMargin, Math.min(bh * scale - nudgeMargin, py))
+      return { x: px, y: py }
+    }
+
+    // Add connection points as pin-type obstacles at nudged positions.
     const pointObsIds = new Map<string, number>()
 
     for (const conn of srj.connections) {
@@ -290,15 +333,23 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         let obsId: number = pointObsIds.get(ptKey) ?? -1
 
         if (obsId === -1) {
-          const x = (pt.x - bounds.minX) * scale
-          const y = (pt.y - bounds.minY) * scale
+          const rawX = (pt.x - bounds.minX) * scale
+          const rawY = (pt.y - bounds.minY) * scale
+          const nudged = nudgePoint(rawX, rawY)
           const layers = getConnectionPointLayers(pt)
           const layer = getLayerIndex(layers[0])
+
+          // Remember original position for bridging
+          originalPositions.set(ptKey, {
+            x: pt.x,
+            y: pt.y,
+          })
+
           obsId = _topo_add_obstacle(
             ptr,
-            x,
-            y,
-            tw / 2,
+            nudged.x,
+            nudged.y,
+            tw / 4,
             0,
             conn.name,
             layer,
@@ -308,13 +359,11 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         ptIds.push(obsId)
       }
 
-      // Connect consecutive points in the connection
       for (let i = 0; i < ptIds.length - 1; i++) {
         _topo_add_connection(ptr, ptIds[i], ptIds[i + 1], conn.name)
       }
     }
 
-    // Solve
     _topo_solve(ptr)
 
     const stats = {
@@ -326,7 +375,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     // Extract routes
     const numRoutes = _topo_get_num_routes(ptr) as number
     const routes: TopoRouteResult[] = []
-
     const xBuf = Module._malloc(8)
     const yBuf = Module._malloc(8)
 
@@ -386,7 +434,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     // Extract CDT edges for visualization
     const numEdges = _topo_get_num_cdt_edges(ptr) as number
     const cdtEdges: TopoSolveResult["cdtEdges"] = []
-
     const x1B = Module._malloc(8)
     const y1B = Module._malloc(8)
     const x2B = Module._malloc(8)
@@ -424,8 +471,37 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       routeCount: routes.length,
       cdtEdgeCount: cdtEdges.length,
     }
+    // Bridge routed paths back to original pad centers.
+    // The router used nudged endpoints; now prepend/append a short
+    // wire segment from the original position to the nudged position.
+    for (const route of routes) {
+      if (route.path.length < 2) continue
+      const conn = srj.connections.find((c) => c.name === route.netName)
+      if (!conn) continue
 
-    // Convert routes to SimplifiedPcbTraces
+      // Find the original position for the start point
+      for (const pt of conn.pointsToConnect) {
+        const orig = originalPositions.get(
+          `${pt.x.toFixed(6)},${pt.y.toFixed(6)}`,
+        )
+        if (!orig) continue
+        const first = route.path[0]
+        const last = route.path[route.path.length - 1]
+        const distFirst = (first.x - pt.x) ** 2 + (first.y - pt.y) ** 2
+        const distLast = (last.x - pt.x) ** 2 + (last.y - pt.y) ** 2
+
+        // Bridge to the closest endpoint
+        if (
+          distFirst < distLast &&
+          distFirst < 1 // only if close (same point, nudged)
+        ) {
+          route.path.unshift({ x: orig.x, y: orig.y })
+        } else if (distLast < 1) {
+          route.path.push({ x: orig.x, y: orig.y })
+        }
+      }
+    }
+
     this.traces = this.convertRoutesToTraces(routes)
   }
 
@@ -435,7 +511,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     const traceWidth = this.srj.nominalTraceWidth ?? this.srj.minTraceWidth
     const traces: SimplifiedPcbTraces = []
 
-    // Find which layer each connection belongs to
     const connLayerMap = new Map<string, string>()
     for (const conn of this.srj.connections) {
       const layers = conn.pointsToConnect.flatMap((pt) =>
@@ -452,7 +527,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       const traceRoute: SimplifiedPcbTrace["route"] = []
 
       if (route.arcs.length > 0) {
-        // Use arc-based smooth path
         traceRoute.push({
           route_type: "wire",
           x: route.path[0].x,
@@ -462,7 +536,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         })
 
         for (const arc of route.arcs) {
-          // Line to arc start
           if (arc.x0 !== -1 && arc.y0 !== -1) {
             traceRoute.push({
               route_type: "wire",
@@ -472,8 +545,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
               layer,
             })
           }
-
-          // Discretize arc into line segments
           if (arc.r > 0) {
             const sa = Math.atan2(arc.y0 - arc.cy, arc.x0 - arc.cx)
             const ea = Math.atan2(arc.y1 - arc.cy, arc.x1 - arc.cx)
@@ -501,7 +572,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
           }
         }
 
-        // Line to end
         const lastPt = route.path[route.path.length - 1]
         traceRoute.push({
           route_type: "wire",
@@ -511,7 +581,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
           layer,
         })
       } else {
-        // Simple path
         for (const pt of route.path) {
           traceRoute.push({
             route_type: "wire",
@@ -552,19 +621,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
     const { srj } = this
     const { minX, maxX, minY, maxY } = srj.bounds
 
-    const problemLines: Line[] = [
-      {
-        points: [
-          { x: minX, y: minY },
-          { x: maxX, y: minY },
-          { x: maxX, y: maxY },
-          { x: minX, y: maxY },
-          { x: minX, y: minY },
-        ],
-        strokeColor: "rgba(255,0,0,0.25)",
-      },
-    ]
-
     const problemViz: GraphicsObject = {
       points: srj.connections.flatMap((c) =>
         c.pointsToConnect.map((p) => ({
@@ -581,12 +637,22 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
             : "rgba(255,0,0,0.25)",
         label: o.layers?.join(", "),
       })),
-      lines: problemLines,
+      lines: [
+        {
+          points: [
+            { x: minX, y: minY },
+            { x: maxX, y: minY },
+            { x: maxX, y: maxY },
+            { x: minX, y: maxY },
+            { x: minX, y: minY },
+          ],
+          strokeColor: "rgba(255,0,0,0.25)",
+        },
+      ],
     }
 
     if (!this.result) return problemViz
 
-    // CDT edges
     const cdtLines: Line[] = this.result.cdtEdges.map((e) => ({
       points: [e.v1, e.v2],
       strokeColor: e.isConstraint
@@ -594,7 +660,6 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
         : "rgba(40,50,70,0.3)",
     }))
 
-    // Route lines
     const routeLines: Line[] = this.result.routes.map((r) => ({
       points: r.path,
       strokeColor: this.colorMap[r.netName] ?? "rgba(0,255,0,0.7)",
