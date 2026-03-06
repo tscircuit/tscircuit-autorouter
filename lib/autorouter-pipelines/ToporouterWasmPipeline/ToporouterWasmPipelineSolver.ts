@@ -327,7 +327,7 @@ export class ToporouterWasmPipelineSolver extends BaseSolver {
       // Use minimal clearance: just enough to clear the obstacle bbox + keepaway
       // + the pin's own radius so its constraint polygon doesn't overlap.
       const pinRadius = tw
-      const nudgeClearance = ka + pinRadius + tw * 0.5
+      const nudgeClearance = ka + tw + pinRadius * 2
       const boardW = bw * scale
       const boardH = bh * scale
       const boardMargin = ka + pinRadius
