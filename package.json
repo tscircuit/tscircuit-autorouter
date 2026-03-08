@@ -67,6 +67,7 @@
     "@tscircuit/high-density-a01": "^0.0.10",
     "bun-match-svg": "^0.0.14",
     "fast-json-stable-stringify": "^2.1.0",
+    "high-density-dataset-z04": "https://github.com/tscircuit/high-density-dataset-z04.git",
     "object-hash": "^3.0.0"
   }
 }
