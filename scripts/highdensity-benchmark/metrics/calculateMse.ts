@@ -1,11 +1,8 @@
-import type { PredictionEvaluationRow } from "../types/PredictionEvaluationRow.ts"
-
-export const calculateMse = (rows: PredictionEvaluationRow[]) => {
-  // MSE is the average squared difference between predicted and actual failure.
+export const calculateMse = (squaredErrors: number[]) => {
+  // Each entry is already (predictedFailure - actualFailure) ** 2.
   return (
-    rows.reduce((sum, row) => {
-      const actualFailure = row.actualDidFail ? 1 : 0
-      return sum + (row.predictedFailureProbability - actualFailure) ** 2
-    }, 0) / rows.length
+    squaredErrors.reduce((sum, squaredError) => {
+      return sum + squaredError
+    }, 0) / squaredErrors.length
   )
 }
