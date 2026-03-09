@@ -35,9 +35,7 @@ export class BenchmarkWorkerPool {
     this.timeoutMs = timeoutMs
   }
 
-  static async run(
-    options: RunBenchmarkOptions,
-  ): Promise<RunBenchmarkResult> {
+  static async run(options: RunBenchmarkOptions): Promise<RunBenchmarkResult> {
     const pool = new BenchmarkWorkerPool(options)
     return pool.run()
   }
@@ -71,7 +69,11 @@ export class BenchmarkWorkerPool {
       const task = this.takeNextTask()
       if (!task) return
 
-      const result = await worker.runTask(task, this.nextTaskId++, this.timeoutMs)
+      const result = await worker.runTask(
+        task,
+        this.nextTaskId++,
+        this.timeoutMs,
+      )
       if (result === null) {
         this.timedOutProblemIds.push(task.problemId)
         continue

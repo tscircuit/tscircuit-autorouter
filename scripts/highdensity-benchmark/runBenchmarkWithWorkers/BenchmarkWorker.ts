@@ -57,7 +57,13 @@ export class BenchmarkWorker {
       }
 
       const timeoutId = setTimeout(() => {
-        void this.handleTimeout(onMessage, onError, onExit, resolveTask, rejectTask)
+        void this.handleTimeout(
+          onMessage,
+          onError,
+          onExit,
+          resolveTask,
+          rejectTask,
+        )
       }, timeoutMs)
 
       this.activeTaskId = taskId
