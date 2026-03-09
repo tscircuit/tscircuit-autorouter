@@ -53,9 +53,9 @@ export class BenchmarkWorkerPool {
     )
 
     try {
-      await Promise.all(this.workers.map((worker) => this.drainQueue(worker)))
+      await this.runWorkers()
     } finally {
-      await Promise.all(this.workers.map((worker) => worker.close()))
+      await this.closeWorkers()
     }
 
     return {
@@ -84,6 +84,22 @@ export class BenchmarkWorkerPool {
         `${task.problemId} ${result.solved ? "pass" : "fail"} solve in ${formatSeconds(result.solveDurationMs)} seconds (${this.completedProblems}/${this.tasks.length})`,
       )
       this.results.push(result.value)
+    }
+  }
+
+  private async runWorkers() {
+    const drainPromises: Array<Promise<void>> = []
+
+    for (const worker of this.workers) {
+      drainPromises.push(this.drainQueue(worker))
+    }
+
+    await Promise.all(drainPromises)
+  }
+
+  private async closeWorkers() {
+    for (const worker of this.workers) {
+      await worker.close()
     }
   }
 
