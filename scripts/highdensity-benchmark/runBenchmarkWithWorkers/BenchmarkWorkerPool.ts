@@ -3,7 +3,6 @@ import {
   BenchmarkTask,
   RunBenchmarkOptions,
   RunBenchmarkResult,
-  formatSeconds,
   getProblemId,
 } from "./shared.ts"
 
@@ -13,6 +12,7 @@ export class BenchmarkWorkerPool {
   private readonly timeoutMs: number
   private readonly results: number[] = []
   private readonly timedOutProblemIds: string[] = []
+  private passCount = 0
   private completedProblems = 0
   private nextTaskIndex = 0
   private nextTaskId = 1
@@ -45,12 +45,16 @@ export class BenchmarkWorkerPool {
       return {
         results: [],
         timedOutProblemIds: [],
+        totalDurationMs: 0,
+        passCount: 0,
       }
     }
 
     console.log(
       `Starting high-density benchmark with ${this.workers.length} workers across ${this.tasks.length} cases`,
     )
+
+    const startedAt = Date.now()
 
     try {
       await this.runWorkers()
@@ -61,6 +65,8 @@ export class BenchmarkWorkerPool {
     return {
       results: this.results,
       timedOutProblemIds: this.timedOutProblemIds,
+      totalDurationMs: Date.now() - startedAt,
+      passCount: this.passCount,
     }
   }
 
@@ -76,14 +82,16 @@ export class BenchmarkWorkerPool {
       )
       if (result === null) {
         this.timedOutProblemIds.push(task.problemId)
+        this.logProgress()
         continue
       }
 
       this.completedProblems += 1
-      console.log(
-        `${task.problemId} ${result.solved ? "pass" : "fail"} solve in ${formatSeconds(result.solveDurationMs)} seconds (${this.completedProblems}/${this.tasks.length})`,
-      )
+      if (result.solved) {
+        this.passCount += 1
+      }
       this.results.push(result.value)
+      this.logProgress()
     }
   }
 
@@ -109,5 +117,18 @@ export class BenchmarkWorkerPool {
 
     this.nextTaskIndex += 1
     return task
+  }
+
+  private logProgress() {
+    const processedProblems =
+      this.completedProblems + this.timedOutProblemIds.length
+    const completedRatio =
+      this.completedProblems === 0 ? 0 : this.passCount / this.completedProblems
+
+    console.log(
+      `Progress ${processedProblems}/${this.tasks.length} | pass ${(
+        completedRatio * 100
+      ).toFixed(1)}%`,
+    )
   }
 }

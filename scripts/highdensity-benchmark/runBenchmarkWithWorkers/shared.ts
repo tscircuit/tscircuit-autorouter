@@ -40,6 +40,8 @@ export type RunBenchmarkOptions = {
 export type RunBenchmarkResult = {
   results: number[]
   timedOutProblemIds: string[]
+  totalDurationMs: number
+  passCount: number
 }
 
 export const getProblemId = (problem: NodeWithPortPoints, index: number) => {
