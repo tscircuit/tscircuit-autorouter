@@ -36,7 +36,7 @@ const unwrapProblem = (problem: unknown) => {
 const computeProblemScore = (problem: unknown) => {
   // The worker keeps the benchmark math off the main thread.
   // The worker owns both the predictor and the real solve for one problem.
-  const typedProblem = unwrapProblem(problem) as NodeWithPortPoints
+  const nodeWithPortPoints = unwrapProblem(problem) as NodeWithPortPoints
   const stats = getIntraNodeCrossingsUsingCircle(typedProblem)
 
   // Normalize optional fields so the scoring function always sees the same shape.
