@@ -1,15 +1,16 @@
 import { Worker } from "node:worker_threads"
 import { resolve } from "node:path"
+import { NodeWithPortPoints } from "lib/types/high-density-types"
 
 type BenchmarkTask = {
-  problem: unknown
+  problem: NodeWithPortPoints
   problemId: string
 }
 
 type WorkerRequest = {
   taskId: number
   problemId: string
-  problem: unknown
+  problem: NodeWithPortPoints
 }
 
 type WorkerResponse =
@@ -44,7 +45,7 @@ type WorkerSlot = {
 }
 
 type RunBenchmarkOptions = {
-  problems: unknown[]
+  problems: NodeWithPortPoints[]
   concurrency: number
   timeoutMs: number
 }
@@ -56,11 +57,11 @@ type RunBenchmarkResult = {
 
 const workerPath = resolve(import.meta.dir, "./worker.ts")
 
-const getProblemId = (problem: unknown, index: number) => {
+const getProblemId = (problem: NodeWithPortPoints, index: number) => {
   // Keep timeout reporting readable by assigning each task a stable label.
   // Prefer a stable dataset identifier when one exists and fall back to the index.
   if (typeof problem === "object" && problem !== null && "id" in problem) {
-    const id = (problem as { id?: unknown }).id
+    const id = problem.id
     if (typeof id === "string" || typeof id === "number") {
       return String(id)
     }
