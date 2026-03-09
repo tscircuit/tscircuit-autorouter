@@ -1,16 +1,13 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util"
-import { FAIL_AT_OR_ABOVE, PASS_AT_OR_BELOW } from "./config/benchmarkPolicy.ts"
-import { evaluatePredictions } from "./evaluation/evaluatePredictions.ts"
-import { calculateExtremeBandMetrics } from "./metrics/calculateExtremeBandMetrics.ts"
+import { availableParallelism } from "node:os"
 import { calculateMse } from "./metrics/calculateMse.ts"
-import { loadCachedResults } from "./results/loadCachedResults.ts"
-import { runCurrentSolver } from "./runtime/runCurrentSolver.ts"
+import { runBenchmarkWithWorkers } from "./runBenchmarkWithWorkers.ts"
+import { NodeWithPortPoints } from "lib/types/high-density-types.ts"
 
 type CliOptions = {
   concurrency: number
-  run: boolean
   timeoutSeconds: number
 }
 
@@ -19,22 +16,18 @@ const usage = () =>
     "Usage: bun scripts/highdensity-benchmark/index.ts [options]",
     "",
     "Options:",
-    "  --run                Generate fresh benchmark results with the current solver",
     "  --concurrency        Number of worker threads to use for fresh solver runs",
     "  --timeout-seconds    Kill and fail any single solve that exceeds this limit",
     "  -h, --help           Show this help",
   ].join("\n")
 
 const parseCliArgs = (): CliOptions => {
+  // Parse the small CLI surface up front so the rest of the file can stay focused.
   const { values } = parseArgs({
     args: process.argv.slice(2),
     allowPositionals: false,
     strict: true,
     options: {
-      run: {
-        type: "boolean",
-        default: false,
-      },
       concurrency: {
         type: "string",
       },
@@ -49,12 +42,14 @@ const parseCliArgs = (): CliOptions => {
     },
   })
 
+  // Help should exit before any expensive imports or worker startup happen.
   if (values.help) {
     console.log(usage())
     process.exit(0)
   }
 
-  const concurrency =
+  // A zero concurrency flag means "choose something sensible from the machine".
+  const requestedConcurrency =
     values.concurrency === undefined
       ? 0
       : Number.parseInt(values.concurrency, 10)
@@ -63,52 +58,58 @@ const parseCliArgs = (): CliOptions => {
       ? 1000
       : Number.parseInt(values["timeout-seconds"], 10)
 
-  if (!Number.isInteger(concurrency) || concurrency < 0) {
+  // Keep validation strict so failures happen close to the user's input.
+  if (!Number.isInteger(requestedConcurrency) || requestedConcurrency < 0) {
     throw new TypeError("--concurrency must be a non-negative integer")
   }
   if (!Number.isInteger(timeoutSeconds) || timeoutSeconds <= 0) {
     throw new TypeError("--timeout-seconds must be a positive integer")
   }
 
+  // The worker pool needs at least one worker, even when the user passes zero.
+  const concurrency =
+    requestedConcurrency === 0
+      ? Math.max(1, availableParallelism() - 1)
+      : requestedConcurrency
+
   return {
     concurrency,
-    run: values.run ?? false,
     timeoutSeconds,
   }
 }
 
-const main = async ({ run, concurrency, timeoutSeconds }: CliOptions) => {
-  // Use either cached benchmark outputs or fresh solver runs as the ground truth set.
-  const results = run
-    ? await runCurrentSolver({ concurrency, timeoutSeconds })
-    : await loadCachedResults()
-  const evaluationRows = await evaluatePredictions(results)
-  const mse = calculateMse(evaluationRows)
-  const extremeBandMetrics = calculateExtremeBandMetrics(evaluationRows, {
-    passAtOrBelow: PASS_AT_OR_BELOW,
-    failAtOrAbove: FAIL_AT_OR_ABOVE,
+const main = async ({ concurrency, timeoutSeconds }: CliOptions) => {
+  // Load the dataset once and dispatch raw entries to the worker pool.
+  const { hgProblems } = await import("high-density-dataset-z04")
+  const problems = hgProblems as unknown as NodeWithPortPoints[]
+
+  // Workers now return squared errors from real-time solves, not just predictor values.
+  const completedScores = await runBenchmarkWithWorkers({
+    problems,
+    concurrency,
+    timeoutMs: timeoutSeconds * 1000,
   })
 
-  console.log(
-    JSON.stringify(
-      {
-        mse: Number(mse.toFixed(8)),
-        policy: extremeBandMetrics.policy,
-        totalEvaluated: extremeBandMetrics.totalEvaluated,
-        coverage: extremeBandMetrics.coverage,
-        outcomes: extremeBandMetrics.outcomes,
-        passPrecision: Number(extremeBandMetrics.pass.precision.toFixed(8)),
-        passRecall: Number(extremeBandMetrics.pass.recall.toFixed(8)),
-        failPrecision: Number(extremeBandMetrics.fail.precision.toFixed(8)),
-        failRecall: Number(extremeBandMetrics.fail.recall.toFixed(8)),
-      },
-      null,
-      2,
-    ),
-  )
+  // Avoid a divide-by-zero MSE when every single problem times out.
+  if (completedScores.results.length === 0) {
+    console.log("Completed problems: 0")
+    console.log(
+      "Timed out problems:",
+      completedScores.timedOutProblemIds.length,
+    )
+    console.log("Mean Squared Error: skipped because no problems completed")
+    return
+  }
+
+  // Only completed results participate in the metric, per the requested timeout rule.
+  const mse = calculateMse(completedScores.results)
+  console.log("Completed problems:", completedScores.results.length)
+  console.log("Timed out problems:", completedScores.timedOutProblemIds.length)
+  console.log("Mean Squared Error:", mse)
 }
 
 try {
+  // Keep startup tiny here and push the real work into the async main path.
   await main(parseCliArgs())
 } catch (error) {
   if (error instanceof TypeError) {
