@@ -41,7 +41,7 @@ const computeProblemScore = (problem: unknown) => {
 
   // Normalize optional fields so the scoring function always sees the same shape.
   // Keep the payload normalized to the same shape used by the old benchmark path.
-  const predictedFailure = calculateNodeProbabilityOfFailure(
+  const predictedPf = calculateNodeProbabilityOfFailure(
     {
       ...typedProblem,
       layer: "",
