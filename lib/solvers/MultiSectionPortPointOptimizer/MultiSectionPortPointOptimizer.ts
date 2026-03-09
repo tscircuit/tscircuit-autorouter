@@ -216,7 +216,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   MAX_ATTEMPTS_PER_NODE = 100
 
   /** Maximum total number of section optimization attempts */
-  MAX_SECTION_ATTEMPTS = 50
+  MAX_SECTION_ATTEMPTS = 14
 
   /** Acceptable probability of failure threshold */
   ACCEPTABLE_PF = 0.05
