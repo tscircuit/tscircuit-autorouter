@@ -11,16 +11,27 @@ import { CapacityMeshNode } from "lib/types/capacity-mesh-types"
  * @returns The calculated capacity
  */
 export const getTunedTotalCapacity1 = (
-  nodeOrWidth: CapacityMeshNode | { width: number; availableZ?: number[] },
+  nodeOrWidth:
+    | CapacityMeshNode
+    | { width: number; height?: number; availableZ?: number[] },
   maxCapacityFactor = 1,
   opts: { viaDiameter?: number; obstacleMargin?: number } = {},
 ) => {
   const VIA_DIAMETER = opts.viaDiameter ?? 0.3
   const TRACE_WIDTH = 0.15
-  const obstacleMargin = opts.obstacleMargin ?? 0.2
-
   const width = "width" in nodeOrWidth ? nodeOrWidth.width : nodeOrWidth
-  const viaLengthAcross = width / (VIA_DIAMETER / 2 + obstacleMargin)
+  const obstacleMargin = opts.obstacleMargin ?? 0.2
+  const height =
+    "height" in nodeOrWidth && typeof nodeOrWidth.height === "number"
+      ? nodeOrWidth.height
+      : width
+  const minSide = Math.min(width, height)
+
+  const effectiveNodeSpan = Math.sqrt(width * height)
+  const narrowSideViaRatio = minSide / (VIA_DIAMETER + obstacleMargin)
+  const viaRatioFactor = Math.min(1.2, Math.max(0.85, narrowSideViaRatio ** 0.05))
+  const viaLengthAcross =
+    (effectiveNodeSpan * viaRatioFactor) / (VIA_DIAMETER / 2 + obstacleMargin)
 
   const tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor
 
