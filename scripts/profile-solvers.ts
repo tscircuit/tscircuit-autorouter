@@ -108,10 +108,7 @@ const parseArgs = (): ProfileOptions => {
   return options
 }
 
-const loadScenarios = (
-  scenarioName?: string,
-  scenarioLimit?: number,
-) => {
+const loadScenarios = (scenarioName?: string, scenarioLimit?: number) => {
   const allScenarios = Object.entries(dataset)
     .filter(([, value]) => Boolean(value) && typeof value === "object")
     .sort(([a], [b]) => a.localeCompare(b)) as Array<[string, SimpleRouteJson]>
