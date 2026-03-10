@@ -6,12 +6,12 @@ import { CapacityMeshNode } from "lib/types/capacity-mesh-types"
  * This capacity corresponds to how many vias the node can fit, tuned for two
  * layers.
  *
- * @param nodeOrWidth The node or width to calculate capacity for
+ * @param node The node or width to calculate capacity for
  * @param maxCapacityFactor Optional multiplier to adjust capacity
  * @returns The calculated capacity
  */
 export const getTunedTotalCapacity1 = (
-  nodeOrWidth:
+  node:
     | CapacityMeshNode
     | { width: number; height?: number; availableZ?: number[] },
   maxCapacityFactor = 1,
@@ -19,11 +19,11 @@ export const getTunedTotalCapacity1 = (
 ) => {
   const VIA_DIAMETER = opts.viaDiameter ?? 0.3
   const TRACE_WIDTH = 0.15
-  const width = "width" in nodeOrWidth ? nodeOrWidth.width : nodeOrWidth
+  const width = "width" in node ? node.width : node
   const obstacleMargin = opts.obstacleMargin ?? 0.2
   const height =
-    "height" in nodeOrWidth && typeof nodeOrWidth.height === "number"
-      ? nodeOrWidth.height
+    "height" in node && typeof node.height === "number"
+      ? node.height
       : width
   const minSide = Math.min(width, height)
 
@@ -35,7 +35,7 @@ export const getTunedTotalCapacity1 = (
 
   const tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor
 
-  if (nodeOrWidth.availableZ?.length === 1 && tunedTotalCapacity > 1) {
+  if (node.availableZ?.length === 1 && tunedTotalCapacity > 1) {
     return 1
   }
 
