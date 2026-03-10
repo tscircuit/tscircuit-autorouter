@@ -37,15 +37,15 @@ const computeProblemScore = (problem: unknown) => {
   // The worker keeps the benchmark math off the main thread.
   // The worker owns both the predictor and the real solve for one problem.
   const nodeWithPortPoints = unwrapProblem(problem) as NodeWithPortPoints
-  const stats = getIntraNodeCrossingsUsingCircle(typedProblem)
+  const stats = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
   // Normalize optional fields so the scoring function always sees the same shape.
   // Keep the payload normalized to the same shape used by the old benchmark path.
   const predictedPf = calculateNodeProbabilityOfFailure(
     {
-      ...typedProblem,
+      ...nodeWithPortPoints,
       layer: "",
-      availableZ: typedProblem.availableZ ?? [],
+      availableZ: nodeWithPortPoints.availableZ ?? [],
     },
     stats.numSameLayerCrossings,
     stats.numEntryExitLayerChanges,
@@ -54,7 +54,7 @@ const computeProblemScore = (problem: unknown) => {
 
   // The benchmark target must come from a real solve, not from cached result files.
   const solver = new HighDensitySolver({
-    nodePortPoints: [typedProblem],
+    nodePortPoints: [nodeWithPortPoints],
   })
   const solveStart = performance.now()
   solver.solve()
@@ -63,7 +63,7 @@ const computeProblemScore = (problem: unknown) => {
   // The target is binary: solved means 0 failure, unsolved means 1 failure.
   const actualFailure = solver.solved ? 0 : 1
   return {
-    value: (predictedFailure - actualFailure) ** 2,
+    value: (predictedPf - actualFailure) ** 2,
     solved: solver.solved,
     solveDurationMs,
   }
