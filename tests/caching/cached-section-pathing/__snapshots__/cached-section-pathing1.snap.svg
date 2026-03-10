@@ -30,34 +30,34 @@ Cap: 1.0/1.5
 f:12.0 g:0.0 h:8.0
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C2
 Cap: 1.0/1.5
-f:17.4 g:6.3 h:7.5
+f:16.7 g:5.8 h:7.2
 Z: 0,1" data-x="3" data-y="3" x="247.40740740740742" y="454.8148148148148" width="41.481481481481495" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="252.40740740740742" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.4888888888888903" fill="rgba(128, 0, 128, 0.1)">nodeR2C2
 Cap: 1.0/1.5
-f:17.4 g:6.3 h:7.5
+f:16.7 g:5.8 h:7.2
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C3
 Cap: 2.0/1.5
-f:13.8 g:3.1 h:7.1
+f:13.3 g:2.9 h:6.9
 Z: 0,1" data-x="5" data-y="3" x="351.1111111111111" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(255,0,0,0.3)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(255,0,0,0.3)">nodeR2C3
 Cap: 2.0/1.5
-f:13.8 g:3.1 h:7.1
+f:13.3 g:2.9 h:6.9
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR2C4
 Cap: 0.0/1.5
-f:14.6 g:5.1 h:6.3
+f:14.4 g:4.9 h:6.3
 Z: 0,1" data-x="7" data-y="3" x="454.8148148148148" y="454.8148148148148" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="459.8148148148148" y="454.8148148148148" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeR2C4
 Cap: 0.0/1.5
-f:14.6 g:5.1 h:6.3
+f:14.4 g:4.9 h:6.3
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR3C3
 Cap: 2.0/1.5
-f:14.0 g:6.3 h:5.1
+f:13.2 g:5.8 h:4.9
 Z: 0,1" data-x="5" data-y="5" x="351.1111111111111" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(255,0,0,0.3)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(255,0,0,0.3)">nodeR3C3
 Cap: 2.0/1.5
-f:14.0 g:6.3 h:5.1
+f:13.2 g:5.8 h:4.9
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR3C4
 Cap: 0.0/1.5
-f:15.0 g:8.3 h:4.5
+f:14.5 g:7.8 h:4.5
 Z: 0,1" data-x="7" data-y="5" x="454.8148148148148" y="351.1111111111111" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="459.8148148148148" y="351.1111111111111" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeR3C4
 Cap: 0.0/1.5
-f:15.0 g:8.3 h:4.5
+f:14.5 g:7.8 h:4.5
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeB
 Cap: 1.0/1.5
 cost:?
@@ -66,22 +66,22 @@ Cap: 1.0/1.5
 cost:?
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR4C2
 Cap: 1.0/1.5
-f:18.5 g:12.5 h:4.0
+f:17.2 g:11.6 h:3.7
 Z: 0,1" data-x="3" data-y="7" x="247.40740740740742" y="247.4074074074074" width="41.481481481481495" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="252.40740740740742" y="247.4074074074074" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.4888888888888903" fill="rgba(128, 0, 128, 0.1)">nodeR4C2
 Cap: 1.0/1.5
-f:18.5 g:12.5 h:4.0
+f:17.2 g:11.6 h:3.7
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeR4C3
 Cap: 2.0/1.5
-f:14.1 g:9.4 h:3.1
+f:13.1 g:8.7 h:2.9
 Z: 0,1" data-x="5" data-y="7" x="351.1111111111111" y="247.4074074074074" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(255,0,0,0.3)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="247.4074074074074" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(255,0,0,0.3)">nodeR4C3
 Cap: 2.0/1.5
-f:14.1 g:9.4 h:3.1
+f:13.1 g:8.7 h:2.9
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeD
 Cap: 1.0/1.5
-f:11.4 g:11.4 h:0.0
+f:10.7 g:10.7 h:0.0
 Z: 0,1" data-x="5" data-y="9" x="351.1111111111111" y="143.7037037037037" width="41.481481481481524" height="41.481481481481524" fill="rgba(128, 0, 128, 0.1)" stroke="rgba(128, 0, 128, 0.1)" stroke-width="0.019285714285714288"/><text x="356.1111111111111" y="143.7037037037037" font-family="sans-serif" dominant-baseline="text-before-edge" font-size="2.488888888888891" fill="rgba(128, 0, 128, 0.1)">nodeD
 Cap: 1.0/1.5
-f:11.4 g:11.4 h:0.0
+f:10.7 g:10.7 h:0.0
 Z: 0,1</text></g><g><rect data-type="rect" data-label="nodeB1
 Cap: 1.0/1.5
 cost:?
