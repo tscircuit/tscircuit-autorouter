@@ -46,8 +46,6 @@ describe("Auto Capacity Depth", () => {
     expect(capacity1).toEqual(capacity2)
   })
 
-
-
   test("getTunedTotalCapacity1 lowers capacity for thin rectangles", () => {
     const squareCapacity = getTunedTotalCapacity1({ width: 4, height: 4 })
     const thinCapacity = getTunedTotalCapacity1({ width: 16, height: 1 })

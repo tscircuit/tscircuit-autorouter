@@ -22,14 +22,15 @@ export const getTunedTotalCapacity1 = (
   const width = "width" in node ? node.width : node
   const obstacleMargin = opts.obstacleMargin ?? 0.2
   const height =
-    "height" in node && typeof node.height === "number"
-      ? node.height
-      : width
+    "height" in node && typeof node.height === "number" ? node.height : width
   const minSide = Math.min(width, height)
 
   const effectiveNodeSpan = Math.sqrt(width * height)
   const narrowSideViaRatio = minSide / (VIA_DIAMETER + obstacleMargin)
-  const viaRatioFactor = Math.min(1.2, Math.max(0.85, narrowSideViaRatio ** 0.05))
+  const viaRatioFactor = Math.min(
+    1.2,
+    Math.max(0.85, narrowSideViaRatio ** 0.05),
+  )
   const viaLengthAcross =
     (effectiveNodeSpan * viaRatioFactor) / (VIA_DIAMETER / 2 + obstacleMargin)
 
