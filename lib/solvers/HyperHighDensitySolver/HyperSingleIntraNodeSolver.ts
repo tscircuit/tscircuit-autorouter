@@ -32,15 +32,19 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
+  effort: number
 
   constructor(
-    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0],
+    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
+      effort?: number
+    },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
-    this.MAX_ITERATIONS = 30_000_000
+    this.effort = opts.effort ?? 1
+    this.MAX_ITERATIONS = 10_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
@@ -138,7 +142,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "orderings50",
-        possibleValues: Array.from({ length: 50 }, (_, i) => ({
+        possibleValues: Array.from({ length: 20 }, (_, i) => ({
           SHUFFLE_SEED: 100 + i,
         })),
       },
@@ -267,6 +271,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         colorMap: this.constructorParams.colorMap,
         viaDiameter: this.constructorParams.viaDiameter,
         traceWidth: this.constructorParams.traceWidth,
+        effort: this.effort,
       }) as any
     }
     return new CachedIntraNodeRouteSolver({
