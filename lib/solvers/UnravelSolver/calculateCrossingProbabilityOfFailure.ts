@@ -25,15 +25,15 @@ export const calculateNodeProbabilityOfFailure = (
 
   // Estimated number of vias based on crossings
   const estNumVias =
-    numSameLayerCrossings * 0.82 +
-    numEntryExitLayerChanges * 0.41 +
-    numTransitionCrossings * 0.2
+    numSameLayerCrossings * 0.65 +
+    numEntryExitLayerChanges * 0.3 +
+    numTransitionCrossings * 0.32
 
-  const estUsedCapacity = (estNumVias / 2) ** 1.1
+  const estUsedCapacity = (estNumVias / 1.8) ** 1.15
 
   // We could refine this with actual trace capacity
   const approxProb = estUsedCapacity / totalCapacity
 
   // Bounded probability calculation
-  return approxProb
+  return Math.max(0, Math.min(1, approxProb))
 }
