@@ -13,5 +13,7 @@ test("repro: hypergraph-not-using-poitToCOnnect (circuit18)", () => {
 
   solver.solve()
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(import.meta.path)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 }, 30_000)
