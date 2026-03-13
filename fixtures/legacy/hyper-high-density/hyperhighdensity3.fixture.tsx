@@ -269,6 +269,7 @@ export default () => {
                   {solver.solver?.unsolvedConnections?.length}
                 </td>
                 <td style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {/* @ts-ignore */}
                   {solver.solver.solvedRoutes?.length}
                 </td>
                 <td>
