@@ -1,41 +1,43 @@
-import { useState, useEffect, useMemo, useRef } from "react"
+import { GraphicsObject, Line, Point, Rect } from "graphics-debug"
 import {
   InteractiveGraphics,
   InteractiveGraphicsCanvas,
 } from "graphics-debug/react"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { SimpleRouteJson } from "lib/types"
+import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
+import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
+import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
+import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
 import {
   AutoroutingPipelineSolver2_PortPointPathing,
   CapacityMeshSolver,
 } from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing"
 import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
-import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
-import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
-import { GraphicsObject, Line, Point, Rect } from "graphics-debug"
-import { limitVisualizations } from "lib/utils/limitVisualizations"
-import { getNodesNearNode } from "lib/solvers/UnravelSolver/getNodesNearNode"
-import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
-import { convertToCircuitJson } from "./utils/convertToCircuitJson"
-import { getDrcErrors } from "./getDrcErrors"
-import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
-import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
-import { CacheDebugger } from "./CacheDebugger"
 import {
   getGlobalInMemoryCache,
   getGlobalLocalStorageCache,
 } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { BaseSolver } from "lib/solvers/BaseSolver"
+import { getNodesNearNode } from "lib/solvers/UnravelSolver/getNodesNearNode"
+import { SimpleRouteJson } from "lib/types"
+import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { limitVisualizations } from "lib/utils/limitVisualizations"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   AutoroutingPipelineMenuBar,
-  PIPELINE_OPTIONS,
-  type PipelineId,
   EFFORT_LEVELS,
   type EffortLevel,
+  LAYER_OVERRIDE_OPTIONS,
+  type LayerOverride,
+  PIPELINE_OPTIONS,
+  type PipelineId,
 } from "./AutoroutingPipelineMenuBar"
-import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
-import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
+import { CacheDebugger } from "./CacheDebugger"
+import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
+import { getDrcErrors } from "./getDrcErrors"
+import { convertToCircuitJson } from "./utils/convertToCircuitJson"
+import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -48,6 +50,26 @@ const PIPELINE_SOLVERS = {
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
 const EFFORT_STORAGE_KEY = "selectedEffort"
+const LAYER_OVERRIDE_STORAGE_KEY = "selectedLayerOverride"
+
+const parseLayerOverride = (value: string | null): LayerOverride => {
+  if (value === "auto") return "auto"
+  const parsed = value ? parseInt(value, 10) : Number.NaN
+  return LAYER_OVERRIDE_OPTIONS.includes(parsed as LayerOverride)
+    ? (parsed as LayerOverride)
+    : "auto"
+}
+
+const applyLayerOverrideToSrj = (
+  srj: SimpleRouteJson,
+  layerOverride: LayerOverride,
+): SimpleRouteJson => {
+  if (layerOverride === "auto") return srj
+  return {
+    ...srj,
+    layerCount: layerOverride,
+  }
+}
 
 const sanitizeParamsForDownload = (
   value: any,
@@ -199,23 +221,47 @@ export const AutoroutingPipelineDebugger = ({
     }
   }
 
+  const [layerOverride, setLayerOverrideState] = useState<LayerOverride>(() =>
+    parseLayerOverride(localStorage.getItem(LAYER_OVERRIDE_STORAGE_KEY)),
+  )
+
+  const setLayerOverride = (newLayerOverride: LayerOverride) => {
+    setLayerOverrideState(newLayerOverride)
+    try {
+      localStorage.setItem(LAYER_OVERRIDE_STORAGE_KEY, String(newLayerOverride))
+    } catch (e) {
+      console.warn("Could not save layer override to localStorage:", e)
+    }
+  }
+
   const createNewSolver = (
     opts: {
       cacheProvider?: CacheProvider | null
       pipelineId?: PipelineId
       effort?: EffortLevel
+      layerOverride?: LayerOverride
     } = {},
   ) => {
+    const cacheProviderToUse = opts.cacheProvider ?? cacheProvider
     if (createSolverProp) {
-      return createSolverProp(srj, { cacheProvider, effort, ...opts })
+      return createSolverProp(
+        applyLayerOverrideToSrj(srj, opts.layerOverride ?? layerOverride),
+        {
+          cacheProvider: cacheProviderToUse,
+          effort: opts.effort ?? effort,
+        },
+      )
     }
     const pipelineToUse = opts.pipelineId ?? selectedPipelineId
     const effortToUse = opts.effort ?? effort
+    const srjToUse = applyLayerOverrideToSrj(
+      srj,
+      opts.layerOverride ?? layerOverride,
+    )
     const SolverClass = PIPELINE_SOLVERS[pipelineToUse]
-    return new SolverClass(srj, {
-      cacheProvider,
+    return new SolverClass(srjToUse, {
+      cacheProvider: cacheProviderToUse,
       effort: effortToUse,
-      ...opts,
     })
   }
 
@@ -232,29 +278,33 @@ export const AutoroutingPipelineDebugger = ({
     const initialEffort = storedEffort
       ? (parseInt(storedEffort, 10) as EffortLevel)
       : 1
+    const initialLayerOverride = parseLayerOverride(
+      localStorage.getItem(LAYER_OVERRIDE_STORAGE_KEY),
+    )
+    const initialSrj = applyLayerOverrideToSrj(srj, initialLayerOverride)
     const SolverClass = PIPELINE_SOLVERS[initialPipelineId]
 
     if (!SolverClass) {
       // Fallback to default pipeline if stored ID is invalid
       const fallbackClass =
-        PIPELINE_SOLVERS["AutoroutingPipelineSolver2_PortPointPathing"]
+        PIPELINE_SOLVERS.AutoroutingPipelineSolver2_PortPointPathing
       return createSolverProp
-        ? createSolverProp(srj, {
+        ? createSolverProp(initialSrj, {
             cacheProvider: initialCacheProvider,
             effort: initialEffort,
           })
-        : new fallbackClass(srj, {
+        : new fallbackClass(initialSrj, {
             cacheProvider: initialCacheProvider,
             effort: initialEffort,
           })
     }
 
     return createSolverProp
-      ? createSolverProp(srj, {
+      ? createSolverProp(initialSrj, {
           cacheProvider: initialCacheProvider,
           effort: initialEffort,
         })
-      : new SolverClass(srj, {
+      : new SolverClass(initialSrj, {
           cacheProvider: initialCacheProvider,
           effort: initialEffort,
         })
@@ -296,6 +346,11 @@ export const AutoroutingPipelineDebugger = ({
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | undefined
 
+    if (isSolvingToBreakpointRef.current) {
+      setIsAnimating(false)
+      return
+    }
+
     if (isAnimating && !solver.solved && !solver.failed) {
       const speedDef = SPEED_DEFINITIONS[speedLevel]
       // For speeds >= 1x (index 4+), we might still want to respect the passed-in animationSpeed prop
@@ -319,11 +374,6 @@ export const AutoroutingPipelineDebugger = ({
       if (intervalId !== undefined) {
         clearInterval(intervalId)
       }
-    }
-
-    // Stop animation if breakpoint solving is active
-    if (isSolvingToBreakpointRef.current) {
-      setIsAnimating(false)
     }
   }, [isAnimating, speedLevel, solver, animationSpeed])
 
@@ -755,8 +805,13 @@ export const AutoroutingPipelineDebugger = ({
         selectedPipelineId={selectedPipelineId}
         onSetPipelineId={(pipelineId: PipelineId) => {
           setSelectedPipelineId(pipelineId)
-          const SolverClass = PIPELINE_SOLVERS[pipelineId]
-          setSolver(new SolverClass(srj, { cacheProvider, effort }))
+          setLayerOverride("auto")
+          setSolver(
+            createNewSolver({
+              pipelineId,
+              layerOverride: "auto",
+            }),
+          )
           setDrcErrors(null)
           setDrcErrorCount(0)
         }}
@@ -764,6 +819,14 @@ export const AutoroutingPipelineDebugger = ({
         onSetEffort={(newEffort: EffortLevel) => {
           setEffort(newEffort)
           setSolver(createNewSolver({ effort: newEffort }))
+          setDrcErrors(null)
+          setDrcErrorCount(0)
+        }}
+        layerOverride={layerOverride}
+        defaultLayerCount={srj.layerCount}
+        onSetLayerOverride={(newLayerOverride: LayerOverride) => {
+          setLayerOverride(newLayerOverride)
+          setSolver(createNewSolver({ layerOverride: newLayerOverride }))
           setDrcErrors(null)
           setDrcErrorCount(0)
         }}

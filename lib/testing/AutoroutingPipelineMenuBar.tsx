@@ -1,3 +1,4 @@
+import { CacheProvider } from "lib/cache/types"
 import {
   Menubar,
   MenubarContent,
@@ -12,10 +13,9 @@ import {
 } from "lib/testing/ui/menubar" // Assuming shadcn components are here
 import {
   type CacheProviderName,
-  cacheProviderNames,
   SPEED_DEFINITIONS,
+  cacheProviderNames,
 } from "./AutoroutingPipelineDebugger"
-import { CacheProvider } from "lib/cache/types"
 
 const cacheProviders: CacheProviderName[] = [
   "None",
@@ -25,6 +25,8 @@ const cacheProviders: CacheProviderName[] = [
 
 export const EFFORT_LEVELS = [1, 2, 5, 10, 20, 50, 100] as const
 export type EffortLevel = (typeof EFFORT_LEVELS)[number]
+export const LAYER_OVERRIDE_OPTIONS = ["auto", 2, 4] as const
+export type LayerOverride = (typeof LAYER_OVERRIDE_OPTIONS)[number]
 
 export const PIPELINE_OPTIONS = [
   {
@@ -73,6 +75,9 @@ interface AutoroutingPipelineMenuBarProps {
   onSetPipelineId: (pipelineId: PipelineId) => void
   effort: EffortLevel
   onSetEffort: (effort: EffortLevel) => void
+  layerOverride: LayerOverride
+  defaultLayerCount: number
+  onSetLayerOverride: (layerOverride: LayerOverride) => void
 }
 
 export const AutoroutingPipelineMenuBar = ({
@@ -93,7 +98,15 @@ export const AutoroutingPipelineMenuBar = ({
   onSetPipelineId,
   effort,
   onSetEffort,
+  layerOverride,
+  defaultLayerCount,
+  onSetLayerOverride,
 }: AutoroutingPipelineMenuBarProps) => {
+  const layerOverrideLabel =
+    layerOverride === "auto"
+      ? `auto (${defaultLayerCount})`
+      : String(layerOverride)
+
   return (
     <Menubar className="rounded-none border-b border-none px-2 lg:px-4 mb-4 light">
       <MenubarMenu>
@@ -125,6 +138,29 @@ export const AutoroutingPipelineMenuBar = ({
                   {effort === level && <MenubarShortcut>✓</MenubarShortcut>}
                 </MenubarItem>
               ))}
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSub>
+            <MenubarSubTrigger>Layers: {layerOverrideLabel}</MenubarSubTrigger>
+            <MenubarSubContent>
+              {LAYER_OVERRIDE_OPTIONS.map((option) => {
+                const label =
+                  option === "auto"
+                    ? `auto (${defaultLayerCount})`
+                    : String(option)
+                return (
+                  <MenubarItem
+                    key={option}
+                    onClick={() => onSetLayerOverride(option)}
+                    disabled={layerOverride === option}
+                  >
+                    {label}
+                    {layerOverride === option && (
+                      <MenubarShortcut>✓</MenubarShortcut>
+                    )}
+                  </MenubarItem>
+                )
+              })}
             </MenubarSubContent>
           </MenubarSub>
         </MenubarContent>
