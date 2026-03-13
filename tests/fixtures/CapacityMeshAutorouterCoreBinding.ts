@@ -108,9 +108,7 @@ export class CapacityMeshAutorouterCoreBinding
       // )
       this.cycleCount++
 
-      // Get visualization data if available
-      const debugGraphics =
-        this.solver.activeSubSolver?.visualize() || undefined
+      const debugGraphics = this.getDebugGraphics()
 
       // Report progress
       const progress = this.solver.progress
@@ -143,6 +141,17 @@ export class CapacityMeshAutorouterCoreBinding
         error: error instanceof Error ? error : new Error(String(error)),
       })
       this.isRouting = false
+    }
+  }
+
+  private getDebugGraphics(): AutorouterProgressEvent["debugGraphics"] {
+    const activeSubSolver = this.solver.activeSubSolver
+    if (!activeSubSolver) return undefined
+
+    try {
+      return activeSubSolver.visualize()
+    } catch {
+      return undefined
     }
   }
 
