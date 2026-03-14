@@ -46,7 +46,7 @@
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "flatbush": "^4.4.0",
-    "graphics-debug": "^0.0.77",
+    "graphics-debug": "^0.0.86",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
     "kleur": "^4.1.5",
     "looks-same": "9",

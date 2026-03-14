@@ -176,7 +176,7 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
               ? baseColor
               : safeTransparentize(baseColor, 0.5),
             // Use dashed line for non-top layers
-            ...(isTopLayer ? {} : { strokeDash: "3 2" }),
+            ...(isTopLayer ? {} : { strokeDash: [0.2, 0.2] }),
           })
         }
       }
