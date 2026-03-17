@@ -24,6 +24,7 @@ import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { limitVisualizations } from "lib/utils/limitVisualizations"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { PipelineStagesTable } from "@tscircuit/solver-utils/react"
 import {
   AutoroutingPipelineMenuBar,
   EFFORT_LEVELS,
@@ -161,6 +162,66 @@ const getGlobalCacheProviderFromName = (
   if (name === "In Memory") return getGlobalInMemoryCache()
   if (name === "Local Storage") return getGlobalLocalStorageCache()
   return null
+}
+
+type PipelineStepDefinition = {
+  solverName: string
+}
+
+type PipelineDebuggerSolver = BaseSolver & {
+  pipelineDef?: PipelineStepDefinition[]
+  currentPipelineStepIndex?: number
+  startTimeOfPhase?: Record<string, number>
+  endTimeOfPhase?: Record<string, number>
+  timeSpentOnPhase?: Record<string, number>
+  [key: string]: any
+}
+
+const createGenericPipelineTableAdapter = (solver: PipelineDebuggerSolver) => {
+  const pipelineDef = solver.pipelineDef ?? []
+  const firstIterationOfStage: Record<string, number> = {}
+  let cumulativeIterations = 0
+
+  for (const step of pipelineDef) {
+    const stepSolver = solver[step.solverName] as BaseSolver | undefined
+    if (stepSolver) {
+      firstIterationOfStage[step.solverName] = cumulativeIterations
+      cumulativeIterations += stepSolver.iterations
+      continue
+    }
+
+    if (
+      step.solverName ===
+      pipelineDef[solver.currentPipelineStepIndex ?? 0]?.solverName
+    ) {
+      firstIterationOfStage[step.solverName] = cumulativeIterations
+    }
+  }
+
+  const timeSpentOnStage = { ...(solver.timeSpentOnPhase ?? {}) }
+  const activeStageName =
+    pipelineDef[solver.currentPipelineStepIndex ?? 0]?.solverName
+  const activeStageStartTime = activeStageName
+    ? solver.startTimeOfPhase?.[activeStageName]
+    : undefined
+
+  if (
+    activeStageName &&
+    activeStageStartTime !== undefined &&
+    !solver.endTimeOfPhase?.[activeStageName]
+  ) {
+    timeSpentOnStage[activeStageName] = performance.now() - activeStageStartTime
+  }
+
+  Object.assign(solver, {
+    currentPipelineStageIndex: solver.currentPipelineStepIndex ?? 0,
+    startTimeOfStage: solver.startTimeOfPhase ?? {},
+    endTimeOfStage: solver.endTimeOfPhase ?? {},
+    timeSpentOnStage,
+    firstIterationOfStage,
+  })
+
+  return solver
 }
 
 export const AutoroutingPipelineDebugger = ({
@@ -327,6 +388,8 @@ export const AutoroutingPipelineDebugger = ({
   const [drcErrors, setDrcErrors] = useState<GraphicsObject | null>(null)
   const [drcErrorCount, setDrcErrorCount] = useState<number>(0)
   const [showDeepestVisualization, setShowDeepestVisualization] =
+    useState(false)
+  const [showGenericPipelineSteps, setShowGenericPipelineSteps] =
     useState(false)
   const [isBreakpointDialogOpen, setIsBreakpointDialogOpen] = useState(false)
   const [breakpointNodeId, setBreakpointNodeId] = useState<string>(
@@ -720,6 +783,30 @@ export const AutoroutingPipelineDebugger = ({
     setForceUpdate((prev) => prev + 1) // Update UI
   }
 
+  const handleSolveUntilStageComplete = (targetSolverStageKey: string) => {
+    if (solver.solved || solver.failed) return
+
+    const targetStageIndex = solver.pipelineDef?.findIndex(
+      (step: any) => step.solverName === targetSolverStageKey,
+    )
+
+    if (targetStageIndex === undefined || targetStageIndex < 0) return
+
+    setIsAnimating(false)
+    isSolvingToBreakpointRef.current = false
+
+    while (
+      !solver.solved &&
+      !solver.failed &&
+      (solver.currentPipelineStepIndex ?? Number.POSITIVE_INFINITY) <=
+        targetStageIndex
+    ) {
+      solver.step()
+    }
+
+    setForceUpdate((prev) => prev + 1)
+  }
+
   // Increase animation speed
   const increaseSpeed = () => {
     setSpeedLevel((prev) => Math.min(prev + 1, SPEED_DEFINITIONS.length - 1))
@@ -771,6 +858,18 @@ export const AutoroutingPipelineDebugger = ({
     showDeepestVisualization,
     deepestActiveSubSolver,
   ])
+
+  const genericPipelineTableSolver = useMemo(
+    () => createGenericPipelineTableAdapter(solver as PipelineDebuggerSolver),
+    [
+      solver,
+      solver.iterations,
+      solver.activeSubSolver,
+      (solver as PipelineDebuggerSolver).currentPipelineStepIndex,
+      solver.solved,
+      solver.failed,
+    ],
+  )
 
   return (
     <div className="p-4">
@@ -1071,157 +1170,191 @@ export const AutoroutingPipelineDebugger = ({
       )}
 
       <div className="mt-4 border-t pt-4">
-        <h3 className="font-bold mb-2">Pipeline Steps</h3>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left">Step</th>
-              <th className="border p-2 text-left">Status</th>
-              <th className="border p-2 text-left">
-                i<sub>0</sub>
-              </th>
-              <th className="border p-2 text-left">Iterations</th>
-              <th className="border p-2 text-left">Progress</th>
-              <th className="border p-2 text-left">Time</th>
-              <th className="border p-2 text-left">Stats</th>
-              <th className="border p-2 text-left">Input</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              let cumulativeIterations = 0
+        <div className="mb-2 flex items-center gap-2">
+          <h3 className="font-bold">Pipeline Steps</h3>
+          <button
+            className="ml-auto text-sm text-blue-600 hover:underline"
+            onClick={() => setShowGenericPipelineSteps((prev) => !prev)}
+          >
+            {showGenericPipelineSteps
+              ? "Switch to Detailed Pipeline Steps"
+              : "Switch to Generic Pipeline Steps"}
+          </button>
+        </div>
+        {showGenericPipelineSteps ? (
+          <PipelineStagesTable
+            solver={genericPipelineTableSolver as any}
+            onStepUntilPhase={handleSolveUntilStageComplete}
+            onDownloadInput={(stepSolver, stepName) => {
+              const params = sanitizeParamsForDownload(
+                stepSolver.getConstructorParams(),
+              )
+              const paramsJson = JSON.stringify(params, null, 2)
+              const blob = new Blob([paramsJson], {
+                type: "application/json",
+              })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement("a")
+              a.download = `${stepName}_input.json`
+              a.href = url
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+            triggerRender={() => setForceUpdate((prev) => prev + 1)}
+          />
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-left">Step</th>
+                <th className="border p-2 text-left">Status</th>
+                <th className="border p-2 text-left">
+                  i<sub>0</sub>
+                </th>
+                <th className="border p-2 text-left">Iterations</th>
+                <th className="border p-2 text-left">Progress</th>
+                <th className="border p-2 text-left">Time</th>
+                <th className="border p-2 text-left">Stats</th>
+                <th className="border p-2 text-left">Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                let cumulativeIterations = 0
 
-              // Calculate total time spent across all stages that have started
-              const totalTimeMs =
-                solver.pipelineDef?.reduce((total: number, step: any) => {
+                // Calculate total time spent across all stages that have started
+                const totalTimeMs =
+                  solver.pipelineDef?.reduce((total: number, step: any) => {
+                    const startTime = solver.startTimeOfPhase[step.solverName]
+                    if (startTime === undefined) return total // Stage hasn't started
+                    const endTime =
+                      solver.endTimeOfPhase[step.solverName] ??
+                      performance.now()
+                    return total + (endTime - startTime)
+                  }, 0) ?? 0
+
+                return solver.pipelineDef?.map((step: any, index: number) => {
+                  const stepSolver = solver[
+                    step.solverName as keyof CapacityMeshSolver
+                  ] as BaseSolver | undefined
+                  const i0 = cumulativeIterations
+                  if (stepSolver) {
+                    cumulativeIterations += stepSolver.iterations
+                  }
+                  const status = stepSolver?.solved
+                    ? "Solved"
+                    : stepSolver?.failed
+                      ? "Failed"
+                      : stepSolver
+                        ? "In Progress"
+                        : "Not Started"
+                  const statusClass = stepSolver?.solved
+                    ? "text-green-600"
+                    : stepSolver?.failed
+                      ? "text-red-600"
+                      : "text-blue-600"
+
                   const startTime = solver.startTimeOfPhase[step.solverName]
-                  if (startTime === undefined) return total // Stage hasn't started
                   const endTime =
                     solver.endTimeOfPhase[step.solverName] ?? performance.now()
-                  return total + (endTime - startTime)
-                }, 0) ?? 0
+                  const stepTimeMs =
+                    startTime !== undefined ? endTime - startTime : 0
+                  const stepTimeSec = stepTimeMs / 1000
+                  const timePercentage =
+                    totalTimeMs > 0 ? (stepTimeMs / totalTimeMs) * 100 : 0
 
-              return solver.pipelineDef?.map((step: any, index: number) => {
-                const stepSolver = solver[
-                  step.solverName as keyof CapacityMeshSolver
-                ] as BaseSolver | undefined
-                const i0 = cumulativeIterations
-                if (stepSolver) {
-                  cumulativeIterations += stepSolver.iterations
-                }
-                const status = stepSolver?.solved
-                  ? "Solved"
-                  : stepSolver?.failed
-                    ? "Failed"
-                    : stepSolver
-                      ? "In Progress"
-                      : "Not Started"
-                const statusClass = stepSolver?.solved
-                  ? "text-green-600"
-                  : stepSolver?.failed
-                    ? "text-red-600"
-                    : "text-blue-600"
-
-                const startTime = solver.startTimeOfPhase[step.solverName]
-                const endTime =
-                  solver.endTimeOfPhase[step.solverName] ?? performance.now()
-                const stepTimeMs =
-                  startTime !== undefined ? endTime - startTime : 0
-                const stepTimeSec = stepTimeMs / 1000
-                const timePercentage =
-                  totalTimeMs > 0 ? (stepTimeMs / totalTimeMs) * 100 : 0
-
-                return (
-                  <tr key={step.solverName}>
-                    <td className="border p-2">
-                      <span className="text-gray-500 mr-1 tabular-nums">
-                        {(index + 1).toString().padStart(2, "0")}
-                      </span>
-                      {status === "Not Started" && (
-                        <button
-                          className="ml-2 mr-2 text-xs hover:bg-gray-200 rounded px-1 py-0.5"
-                          onClick={() =>
-                            handlePlayStage(
-                              solver.pipelineDef[index].solverName,
-                            )
-                          }
-                          title={`Play until ${step.solverName} starts`}
-                        >
-                          ▶️
-                        </button>
-                      )}
-                      {step.solverName}
-                    </td>
-                    <td className={`border p-2 font-bold ${statusClass}`}>
-                      {status}
-                    </td>
-                    <td className="border p-2 tabular-nums text-gray-500">
-                      {status === "Not Started" ? "" : i0}
-                    </td>
-                    <td className="border p-2">
-                      {stepSolver?.iterations || 0}
-                    </td>
-                    <td className="border p-2">
-                      {status === "Solved"
-                        ? "100%"
-                        : status === "In Progress"
-                          ? `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
-                          : ""}
-                    </td>
-                    <td className="border p-2 tabular-nums">
-                      <div className="flex">
-                        <div className="flex-grow">
-                          {stepTimeSec.toFixed(2)}s
-                        </div>
-                        {status !== "Not Started" && totalTimeMs > 0 && (
-                          <div className="text-gray-500 ml-1">
-                            {timePercentage.toFixed(1)}%
-                          </div>
+                  return (
+                    <tr key={step.solverName}>
+                      <td className="border p-2">
+                        <span className="text-gray-500 mr-1 tabular-nums">
+                          {(index + 1).toString().padStart(2, "0")}
+                        </span>
+                        {status === "Not Started" && (
+                          <button
+                            className="ml-2 mr-2 text-xs hover:bg-gray-200 rounded px-1 py-0.5"
+                            onClick={() =>
+                              handlePlayStage(
+                                solver.pipelineDef[index].solverName,
+                              )
+                            }
+                            title={`Play until ${step.solverName} starts`}
+                          >
+                            ▶️
+                          </button>
                         )}
-                      </div>
-                    </td>
-                    <td className="border p-2 text-xs align-top">
-                      {stepSolver?.stats &&
-                      Object.keys(stepSolver.stats).length > 0 ? (
-                        <details>
-                          <summary className="cursor-pointer">Stats</summary>
-                          <pre className="mt-1 bg-gray-50 p-1 rounded text-[10px] max-h-40 overflow-auto">
-                            {JSON.stringify(stepSolver.stats, null, 2)}
-                          </pre>
-                        </details>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      <button
-                        className="text-blue-600 hover:underline"
-                        onClick={() => {
-                          const params = sanitizeParamsForDownload(
-                            step.getConstructorParams(solver),
-                          )
-                          const paramsJson = JSON.stringify(params, null, 2)
-                          const blob = new Blob([paramsJson], {
-                            type: "application/json",
-                          })
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement("a")
-                          a.download = `${step.solverName}_input.json`
-                          a.href = url
-                          a.click()
-                          URL.revokeObjectURL(url)
-                        }}
-                        disabled={!stepSolver}
-                      >
-                        ⬇️ Input
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })
-            })()}
-          </tbody>
-        </table>
+                        {step.solverName}
+                      </td>
+                      <td className={`border p-2 font-bold ${statusClass}`}>
+                        {status}
+                      </td>
+                      <td className="border p-2 tabular-nums text-gray-500">
+                        {status === "Not Started" ? "" : i0}
+                      </td>
+                      <td className="border p-2">
+                        {stepSolver?.iterations || 0}
+                      </td>
+                      <td className="border p-2">
+                        {status === "Solved"
+                          ? "100%"
+                          : status === "In Progress"
+                            ? `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
+                            : ""}
+                      </td>
+                      <td className="border p-2 tabular-nums">
+                        <div className="flex">
+                          <div className="flex-grow">
+                            {stepTimeSec.toFixed(2)}s
+                          </div>
+                          {status !== "Not Started" && totalTimeMs > 0 && (
+                            <div className="text-gray-500 ml-1">
+                              {timePercentage.toFixed(1)}%
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="border p-2 text-xs align-top">
+                        {stepSolver?.stats &&
+                        Object.keys(stepSolver.stats).length > 0 ? (
+                          <details>
+                            <summary className="cursor-pointer">Stats</summary>
+                            <pre className="mt-1 bg-gray-50 p-1 rounded text-[10px] max-h-40 overflow-auto">
+                              {JSON.stringify(stepSolver.stats, null, 2)}
+                            </pre>
+                          </details>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="border p-2">
+                        <button
+                          className="text-blue-600 hover:underline"
+                          onClick={() => {
+                            const params = sanitizeParamsForDownload(
+                              step.getConstructorParams(solver),
+                            )
+                            const paramsJson = JSON.stringify(params, null, 2)
+                            const blob = new Blob([paramsJson], {
+                              type: "application/json",
+                            })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement("a")
+                            a.download = `${step.solverName}_input.json`
+                            a.href = url
+                            a.click()
+                            URL.revokeObjectURL(url)
+                          }}
+                          disabled={!stepSolver}
+                        >
+                          ⬇️ Input
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              })()}
+            </tbody>
+          </table>
+        )}
       </div>
       <h3 className="font-bold mt-8 mb-2">Advanced</h3>
       <div className="flex gap-2">
