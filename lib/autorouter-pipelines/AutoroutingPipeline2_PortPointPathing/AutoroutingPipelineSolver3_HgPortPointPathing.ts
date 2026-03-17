@@ -315,6 +315,15 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints: cms.uniformPortDistributionSolver?.getOutput() ?? [],
+        nodePfById: new Map(
+          (
+            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
+            []
+          ).map((node) => [
+            node.capacityMeshNodeId,
+            cms.portPointPathingSolver?.computeNodePf(node) ?? 0,
+          ]),
+        ),
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,

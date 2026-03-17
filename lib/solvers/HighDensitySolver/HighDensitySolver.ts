@@ -10,6 +10,7 @@ import type {
 import { BaseSolver } from "../BaseSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
+import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
 export class HighDensitySolver extends BaseSolver {
@@ -32,6 +33,7 @@ export class HighDensitySolver extends BaseSolver {
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
     null
   connMap?: ConnectivityMap
+  nodePfById: Map<string, number>
 
   constructor({
     nodePortPoints,
@@ -40,6 +42,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter,
     traceWidth,
     effort,
+    nodePfById,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -47,6 +50,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter?: number
     traceWidth?: number
     effort?: number
+    nodePfById?: Map<string, number> | Record<string, number>
   }) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
@@ -58,6 +62,85 @@ export class HighDensitySolver extends BaseSolver {
     this.MAX_ITERATIONS = 10e6 * this.effort
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
+    this.nodePfById =
+      nodePfById instanceof Map
+        ? new Map(nodePfById)
+        : new Map(Object.entries(nodePfById ?? {}))
+    this.stats = {
+      solverNodeCount: {} as Record<string, number>,
+      difficultNodePfs: {} as Record<string, number[]>,
+    }
+  }
+
+  private getSolvedNodeSolverType(
+    solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
+  ): string {
+    if (solver instanceof HyperSingleIntraNodeSolver && solver.winningSolver) {
+      return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
+    }
+    return this.getConcreteSolverTypeName(solver)
+  }
+
+  private getConcreteSolverTypeName(solver: BaseSolver): string {
+    if (solver instanceof CachedIntraNodeRouteSolver) {
+      const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
+      return solver.cacheHit ? `${concreteName} [cached]` : concreteName
+    }
+
+    if (solver instanceof IntraNodeRouteSolver) {
+      return this.getIntraNodeStrategyName(solver.hyperParameters)
+    }
+
+    return solver.getSolverName()
+  }
+
+  private getIntraNodeStrategyName(
+    hyperParameters: Record<string, any> | undefined,
+  ): string {
+    if (hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
+      return "MultiHeadPolyLineIntraNodeSolver3"
+    }
+    if (hyperParameters?.CLOSED_FORM_SINGLE_TRANSITION) {
+      return "SingleTransitionIntraNodeSolver"
+    }
+    if (hyperParameters?.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
+      return "TwoCrossingRoutesHighDensitySolver"
+    }
+    if (hyperParameters?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
+      return "SingleTransitionCrossingRouteSolver"
+    }
+    if (hyperParameters?.FIXED_TOPOLOGY_HIGH_DENSITY_INTRA_NODE_SOLVER) {
+      return "FixedTopologyHighDensityIntraNodeSolver"
+    }
+    if (hyperParameters?.HIGH_DENSITY_A01) {
+      return "HighDensitySolverA01"
+    }
+    if (hyperParameters?.HIGH_DENSITY_A03) {
+      return "HighDensitySolverA03"
+    }
+    return "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+  }
+
+  private recordSolvedNodeStats(
+    solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
+    node: NodeWithPortPoints,
+  ) {
+    const solverType = this.getSolvedNodeSolverType(solver)
+    const solverNodeCount = this.stats.solverNodeCount as Record<string, number>
+    const difficultNodePfs = this.stats.difficultNodePfs as Record<
+      string,
+      number[]
+    >
+
+    solverNodeCount[solverType] = (solverNodeCount[solverType] ?? 0) + 1
+
+    const pf = this.nodePfById.get(node.capacityMeshNodeId) ?? 0
+    if (pf > 0.05) {
+      if (!difficultNodePfs[solverType]) {
+        difficultNodePfs[solverType] = []
+      }
+      difficultNodePfs[solverType].push(pf)
+    }
   }
 
   /**
@@ -70,6 +153,10 @@ export class HighDensitySolver extends BaseSolver {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
         this.routes.push(...this.activeSubSolver.solvedRoutes)
+        this.recordSolvedNodeStats(
+          this.activeSubSolver,
+          this.activeSubSolver.nodeWithPortPoints,
+        )
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
         this.failedSolvers.push(this.activeSubSolver)
