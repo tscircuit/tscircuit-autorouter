@@ -24,6 +24,8 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
     for (const connection of srj.connections) {
       for (const point of connection.pointsToConnect) {
         const pointLayers = getConnectionPointLayers(point)
+        const rootConnectionName =
+          connection.rootConnectionName ?? connection.name
         points.push({
           x: point.x,
           y: point.y,
@@ -33,7 +35,11 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
             ("z" in point
               ? mapZToLayerName(point.z as number, layerCount)
               : "top"),
-          label: `${connection.name} (${pointLayers.join(",")})`,
+          label: [
+            connection.name,
+            rootConnectionName,
+            pointLayers.join(","),
+          ].join("\n"),
         })
       }
     }
