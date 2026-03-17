@@ -23,6 +23,12 @@ export const getTunedTotalCapacity1 = (
   const obstacleMargin = opts.obstacleMargin ?? 0.2
   const height =
     "height" in node && typeof node.height === "number" ? node.height : width
+  if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    return 0
+  }
+  if (width <= 0 || height <= 0) {
+    return 0
+  }
   const minSide = Math.min(width, height)
 
   const effectiveNodeSpan = Math.sqrt(width * height)
@@ -35,6 +41,9 @@ export const getTunedTotalCapacity1 = (
     (effectiveNodeSpan * viaRatioFactor) / (VIA_DIAMETER / 2 + obstacleMargin)
 
   const tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor
+  if (!Number.isFinite(tunedTotalCapacity)) {
+    return 0
+  }
 
   if (node.availableZ?.length === 1 && tunedTotalCapacity > 1) {
     return 1
