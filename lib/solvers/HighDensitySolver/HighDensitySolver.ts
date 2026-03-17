@@ -33,7 +33,7 @@ export class HighDensitySolver extends BaseSolver {
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
     null
   connMap?: ConnectivityMap
-  nodePfById: Map<string, number>
+  nodePfById: Map<string, number | null>
 
   constructor({
     nodePortPoints,
@@ -50,7 +50,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter?: number
     traceWidth?: number
     effort?: number
-    nodePfById?: Map<string, number> | Record<string, number>
+    nodePfById?: Map<string, number | null> | Record<string, number | null>
   }) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
@@ -134,8 +134,8 @@ export class HighDensitySolver extends BaseSolver {
 
     solverNodeCount[solverType] = (solverNodeCount[solverType] ?? 0) + 1
 
-    const pf = this.nodePfById.get(node.capacityMeshNodeId) ?? 0
-    if (pf > 0.05) {
+    const pf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
+    if (pf !== null && pf > 0.05) {
       if (!difficultNodePfs[solverType]) {
         difficultNodePfs[solverType] = []
       }

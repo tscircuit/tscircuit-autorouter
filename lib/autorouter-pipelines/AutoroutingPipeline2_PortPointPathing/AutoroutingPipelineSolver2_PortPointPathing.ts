@@ -339,7 +339,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           new Map(
             (cms.portPointPathingSolver?.inputNodes ?? []).map((node) => [
               node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? 0,
+              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
             ]),
           ),
         colorMap: cms.colorMap,
