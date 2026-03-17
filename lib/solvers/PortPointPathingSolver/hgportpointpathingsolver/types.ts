@@ -80,6 +80,7 @@ export interface HgPortPointPathingSolverParams {
   graph: HyperGraphHg
   connections: ConnectionHg[]
   colorMap?: Record<string, string>
+  inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
   flags: {

@@ -44,6 +44,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     super({
       inputConnections: params.connections,
       inputGraph: params.graph,
+      inputSolvedRoutes: params.inputSolvedRoutes,
       greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
       ripCost: params.weights.RIPPING_PF_COST,
       rippingEnabled: params.flags.RIPPING_ENABLED,

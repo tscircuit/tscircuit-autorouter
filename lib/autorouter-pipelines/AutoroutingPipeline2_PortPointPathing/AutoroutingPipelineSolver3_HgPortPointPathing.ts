@@ -18,7 +18,6 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { InputNodeWithPortPoints } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -39,6 +38,8 @@ import {
   buildHyperGraph,
   HgPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { HyperGraphSectionOptimizer } from "@tscircuit/hypergraph"
+import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -99,6 +100,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
+  hyperGraphSectionOptimizer?: HyperGraphSectionOptimizer
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -269,6 +271,61 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
               GREEDY_MULTIPLIER: 0.7,
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "hyperGraphSectionOptimizer",
+      HyperGraphSectionOptimizer,
+      (cms) => {
+        const portPointSolver = cms.portPointPathingSolver!
+
+        return [
+          {
+            hyperGraphSolver: portPointSolver,
+            inputSolvedRoutes: portPointSolver.solvedRoutes,
+            expansionHopsFromCentralRegion: 1,
+            createHyperGraphSolver: (input) => {
+              return new HgPortPointPathingSolver({
+                graph: input.inputGraph as any,
+                connections: input.inputConnections as any,
+                inputSolvedRoutes: input.inputSolvedRoutes as any,
+                layerCount: cms.srj.layerCount,
+                effort: cms.effort,
+                flags: {
+                  FORCE_CENTER_FIRST: true,
+                  RIPPING_ENABLED: true,
+                },
+                weights: {
+                  SHUFFLE_SEED: 0,
+                  MEMORY_PF_FACTOR: 4,
+                  CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
+                  CENTER_OFFSET_FOCUS_SHIFT: 0,
+                  NODE_PF_FACTOR: 0,
+                  LAYER_CHANGE_COST: 0,
+                  RIPPING_PF_COST: 0.0,
+                  NODE_PF_MAX_PENALTY: 100,
+                  BASE_CANDIDATE_COST: 0.6,
+                  MAX_ITERATIONS_PER_PATH: 0,
+                  RANDOM_WALK_DISTANCE: 0,
+                  START_RIPPING_PF_THRESHOLD: 0.3,
+                  END_RIPPING_PF_THRESHOLD: 1,
+                  MAX_RIPS: 1000,
+                  RANDOM_RIP_FRACTION: 0.3,
+                  STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
+                  GREEDY_MULTIPLIER: 0.7,
+                  MIN_ALLOWED_BOARD_SCORE: -10000,
+                },
+              })
+            },
+            regionCost: computeCostPerRegion,
+            effort: cms.effort,
+            ACCEPTABLE_REGION_COST: 0.1,
+            MAX_ATTEMPTS_PER_REGION: Math.max(3, 3 * cms.effort),
+            MAX_ATTEMPTS_PER_SECTION: Math.max(50, 50 * cms.effort),
+            FRACTION_TO_REPLACE: 1,
+            alwaysRipConflicts: true,
           },
         ]
       },
@@ -475,6 +532,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
+    const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
 
@@ -546,6 +604,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       availableSegmentPointViz,
       necessaryCrampedPortPointSolverViz,
       portPointPathingViz,
+      highDensityRouteSolverViz,
       multiSectionOptViz,
       uniformPortDistributionViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,

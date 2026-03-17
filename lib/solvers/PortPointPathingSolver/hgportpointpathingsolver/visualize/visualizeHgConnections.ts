@@ -29,7 +29,7 @@ export function visualizeHgConnections(
       strokeColor: connectionColor,
       strokeWidth: 0.05,
       strokeDash:
-        (connection.startRegion.d.availableZ[0] ?? 0) === 0
+        (connection.startRegion.d?.availableZ?.[0] ?? 0) === 0
           ? undefined
           : "10 5",
     })
