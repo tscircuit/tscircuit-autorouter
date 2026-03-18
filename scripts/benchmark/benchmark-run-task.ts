@@ -1,5 +1,5 @@
-import { runAllChecks } from "@tscircuit/checks"
 import * as autorouterModule from "../../lib"
+import { getDrcErrors } from "../../lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "../../lib/testing/utils/convertToCircuitJson"
 import type {
   SimpleRouteJson,
@@ -23,16 +23,6 @@ const getSolverConstructor = (solverName: string) => {
   return ctor as new (
     srj: SimpleRouteJson,
   ) => SolverInstance
-}
-
-const hasTraceError = (error: unknown): boolean => {
-  if (!error || typeof error !== "object") {
-    return false
-  }
-  if (!("error_type" in error)) {
-    return false
-  }
-  return (error as { error_type?: string }).error_type === "pcb_trace_error"
 }
 
 export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
@@ -70,8 +60,8 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       task.scenario.minTraceWidth,
       task.scenario.minViaDiameter,
     )
-    const checks = await runAllChecks(circuitJson)
-    const relaxedDrcPassed = !checks.some(hasTraceError)
+    const { errors } = getDrcErrors(circuitJson)
+    const relaxedDrcPassed = errors.length === 0
 
     return {
       solverName: task.solverName,
