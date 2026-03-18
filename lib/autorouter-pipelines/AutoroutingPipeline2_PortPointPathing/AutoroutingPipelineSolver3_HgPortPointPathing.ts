@@ -87,6 +87,28 @@ function definePipelineStep<
   }
 }
 
+const serializeSolvedRoutes = (
+  solvedRoutes: SolvedRoute[],
+): SerializedSolvedRoute[] => {
+  return solvedRoutes.map((solvedRoute) => ({
+    path: solvedRoute.path.map((candidate) => ({
+      portId: candidate.port.portId,
+      g: candidate.g,
+      h: candidate.h,
+      f: candidate.f,
+      hops: candidate.hops,
+      ripRequired: candidate.ripRequired,
+      lastPortId: candidate.lastPort?.portId,
+      lastRegionId: candidate.lastRegion?.regionId,
+      nextRegionId: candidate.nextRegion?.regionId,
+    })),
+    connection: convertConnectionsToSerializedConnections([
+      solvedRoute.connection,
+    ])[0]!,
+    requiredRip: solvedRoute.requiredRip,
+  }))
+}
+
 export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   // nodeSolver?: CapacityMeshNodeSolver2_NodeUnderObstacle
@@ -101,7 +123,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: HgSectionSolver
+  portPointPathingSolver?: HgPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
@@ -234,49 +256,53 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("portPointPathingSolver", HgSectionSolver, (cms) => {
-      const { graph, connections } = buildHyperGraph({
-        capacityMeshNodes: cms.capacityNodes!,
-        layerCount: cms.srj.layerCount,
-        segmentPortPoints: cms
-          .availableSegmentPointSolver!.getOutput()
-          .flatMap((seg) => seg.portPoints),
-        simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-      })
-
-      return [
-        {
-          graph,
-          connections,
+    definePipelineStep(
+      "portPointPathingSolver",
+      HgPortPointPathingSolver,
+      (cms) => {
+        const { graph, connections } = buildHyperGraph({
+          capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
-          effort: cms.effort,
-          flags: {
-            FORCE_CENTER_FIRST: true,
-            RIPPING_ENABLED: true,
+          segmentPortPoints: cms
+            .availableSegmentPointSolver!.getOutput()
+            .flatMap((seg) => seg.portPoints),
+          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+        })
+
+        return [
+          {
+            graph,
+            connections,
+            layerCount: cms.srj.layerCount,
+            effort: cms.effort,
+            flags: {
+              FORCE_CENTER_FIRST: true,
+              RIPPING_ENABLED: true,
+            },
+            weights: {
+              SHUFFLE_SEED: 0,
+              MEMORY_PF_FACTOR: 4,
+              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
+              CENTER_OFFSET_FOCUS_SHIFT: 0,
+              NODE_PF_FACTOR: 0,
+              LAYER_CHANGE_COST: 0,
+              RIPPING_PF_COST: 0.0,
+              NODE_PF_MAX_PENALTY: 100,
+              BASE_CANDIDATE_COST: 0.6,
+              MAX_ITERATIONS_PER_PATH: 0,
+              RANDOM_WALK_DISTANCE: 0,
+              START_RIPPING_PF_THRESHOLD: 0.3,
+              END_RIPPING_PF_THRESHOLD: 1,
+              MAX_RIPS: 1000,
+              RANDOM_RIP_FRACTION: 0.3,
+              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
+              GREEDY_MULTIPLIER: 0.7,
+              MIN_ALLOWED_BOARD_SCORE: -10000,
+            },
           },
-          weights: {
-            SHUFFLE_SEED: 0,
-            MEMORY_PF_FACTOR: 4,
-            CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-            CENTER_OFFSET_FOCUS_SHIFT: 0,
-            NODE_PF_FACTOR: 0,
-            LAYER_CHANGE_COST: 0,
-            RIPPING_PF_COST: 0.0,
-            NODE_PF_MAX_PENALTY: 100,
-            BASE_CANDIDATE_COST: 0.6,
-            MAX_ITERATIONS_PER_PATH: 0,
-            RANDOM_WALK_DISTANCE: 0,
-            START_RIPPING_PF_THRESHOLD: 0.3,
-            END_RIPPING_PF_THRESHOLD: 1,
-            MAX_RIPS: 1000,
-            RANDOM_RIP_FRACTION: 0.3,
-            STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-            GREEDY_MULTIPLIER: 0.7,
-            MIN_ALLOWED_BOARD_SCORE: -10000,
-          },
-        },
-      ]
-    }),
+        ]
+      },
+    ),
     definePipelineStep("hyperGraphSectionOptimizer", HgSectionSolver, (cms) => {
       const portPointSolver = cms.portPointPathingSolver!
 
@@ -288,8 +314,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           inputConnections: convertConnectionsToSerializedConnections(
             portPointSolver.connections as any,
           ),
-          inputSolvedRoutes: convertSolvedRoutesToSerializedSolvedRoutes(
-            portPointSolver.solvedRoutes as any,
+          inputSolvedRoutes: serializeSolvedRoutes(
+            portPointSolver.solvedRoutes as SolvedRoute[],
           ),
           expansionHopsFromCentralRegion: 1,
           effort: cms.effort,

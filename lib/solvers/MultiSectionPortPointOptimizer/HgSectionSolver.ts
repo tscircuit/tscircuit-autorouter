@@ -1,5 +1,6 @@
 import {
   CreateSectionSolverInput,
+  GraphEdgeId,
   HyperGraphSectionOptimizer2,
   HyperGraphSolver,
   Region,
@@ -18,6 +19,7 @@ import {
   SerializedRegionPortHg,
   SolvedRoutesHg,
 } from "../PortPointPathingSolver/hgportpointpathingsolver/types"
+import { GraphicsObject } from "graphics-debug"
 
 type SerializedHyperGraphHg = Omit<
   SerializedHyperGraph,
@@ -354,5 +356,14 @@ export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
         MIN_ALLOWED_BOARD_SCORE: -10000,
       },
     })
+  }
+
+
+  visualize(): GraphicsObject {
+    if(this.activeSubSolver){
+        return this.activeSubSolver.visualize()
+    }
+
+    return {}
   }
 }
