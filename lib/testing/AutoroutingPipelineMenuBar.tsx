@@ -63,7 +63,7 @@ interface AutoroutingPipelineMenuBarProps {
   canSelectObjects: boolean
   onSetCanSelectObjects: (canSelect: boolean) => void
   onRunDrcChecks: () => void
-  drcErrorCount: number
+  onRunRelaxedDrcChecks: () => void
   animationSpeed: number
   onSetAnimationSpeed: (speed: number) => void
   onSolveToBreakpointClick: () => void
@@ -88,7 +88,7 @@ export const AutoroutingPipelineMenuBar = ({
   canSelectObjects,
   onSetCanSelectObjects,
   onRunDrcChecks,
-  drcErrorCount,
+  onRunRelaxedDrcChecks,
   onSolveToBreakpointClick,
   cacheProviderName,
   cacheProvider,
@@ -195,13 +195,9 @@ export const AutoroutingPipelineMenuBar = ({
             Solve to Breakpoint
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem onClick={onRunDrcChecks}>
-            Run DRC Checks{" "}
-            {drcErrorCount > 0 && (
-              <MenubarShortcut className="text-red-500">
-                ({drcErrorCount})
-              </MenubarShortcut>
-            )}
+          <MenubarItem onClick={onRunDrcChecks}>Run DRC Checks</MenubarItem>
+          <MenubarItem onClick={onRunRelaxedDrcChecks}>
+            Run Relaxed DRC Checks
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

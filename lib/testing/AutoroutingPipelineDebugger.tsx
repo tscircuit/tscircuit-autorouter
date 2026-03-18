@@ -35,6 +35,7 @@ import {
   type PipelineId,
 } from "./AutoroutingPipelineMenuBar"
 import { CacheDebugger } from "./CacheDebugger"
+import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
 import { getDrcErrors } from "./getDrcErrors"
 import { convertToCircuitJson } from "./utils/convertToCircuitJson"
@@ -387,6 +388,9 @@ export const AutoroutingPipelineDebugger = ({
   )
   const [drcErrors, setDrcErrors] = useState<GraphicsObject | null>(null)
   const [drcErrorCount, setDrcErrorCount] = useState<number>(0)
+  const [lastDrcMode, setLastDrcMode] = useState<"strict" | "relaxed" | null>(
+    null,
+  )
   const [showDeepestVisualization, setShowDeepestVisualization] =
     useState(false)
   const [showGenericPipelineSteps, setShowGenericPipelineSteps] =
@@ -402,6 +406,7 @@ export const AutoroutingPipelineDebugger = ({
     setSolver(createNewSolver())
     setDrcErrors(null) // Clear DRC errors when resetting
     setDrcErrorCount(0)
+    setLastDrcMode(null)
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on reset
   }
 
@@ -578,7 +583,7 @@ export const AutoroutingPipelineDebugger = ({
   }
 
   // Run DRC checks on the current routes
-  const handleRunDrcChecks = () => {
+  const runDrcChecks = (mode: "strict" | "relaxed") => {
     try {
       // Get the SRJ with point pairs from the NetToPointPairsSolver
       const srjWithPointPairs =
@@ -610,7 +615,11 @@ export const AutoroutingPipelineDebugger = ({
       )
 
       const { errors: allErrors, locationAwareErrors } =
-        getDrcErrors(circuitJson)
+        mode === "relaxed"
+          ? getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
+          : getDrcErrors(circuitJson)
+
+      setLastDrcMode(mode)
 
       if (allErrors.length > 0) {
         const errorGraphics: GraphicsObject = {
@@ -674,22 +683,27 @@ export const AutoroutingPipelineDebugger = ({
         setDrcErrors(errorGraphics)
         setDrcErrorCount(allErrors.length)
         alert(
-          `Found ${allErrors.length} DRC errors. See the highlighted areas.`,
+          `Found ${allErrors.length} ${mode === "relaxed" ? "relaxed " : ""}DRC errors. See the highlighted areas.`,
         )
       } else {
         setDrcErrors(null)
         setDrcErrorCount(0)
-        alert("No DRC errors found! All traces are properly spaced.")
+        alert(
+          `No ${mode === "relaxed" ? "relaxed " : ""}DRC errors found! All traces are properly spaced.`,
+        )
       }
     } catch (error) {
       console.error("DRC check error:", error)
       alert(
-        `Error running DRC checks: ${
+        `Error running ${mode === "relaxed" ? "relaxed " : ""}DRC checks: ${
           error instanceof Error ? error.message : String(error)
         }`,
       )
     }
   }
+
+  const handleRunDrcChecks = () => runDrcChecks("strict")
+  const handleRunRelaxedDrcChecks = () => runDrcChecks("relaxed")
 
   // Solve to Breakpoint logic
   const handleSolveToBreakpoint = (
@@ -882,7 +896,7 @@ export const AutoroutingPipelineDebugger = ({
         canSelectObjects={canSelectObjects}
         onSetCanSelectObjects={setCanSelectObjects}
         onRunDrcChecks={handleRunDrcChecks}
-        drcErrorCount={drcErrorCount}
+        onRunRelaxedDrcChecks={handleRunRelaxedDrcChecks}
         animationSpeed={speedLevel}
         onSetAnimationSpeed={setSpeedLevel}
         onSolveToBreakpointClick={() => {
@@ -913,6 +927,7 @@ export const AutoroutingPipelineDebugger = ({
           )
           setDrcErrors(null)
           setDrcErrorCount(0)
+          setLastDrcMode(null)
         }}
         effort={effort}
         onSetEffort={(newEffort: EffortLevel) => {
@@ -920,6 +935,7 @@ export const AutoroutingPipelineDebugger = ({
           setSolver(createNewSolver({ effort: newEffort }))
           setDrcErrors(null)
           setDrcErrorCount(0)
+          setLastDrcMode(null)
         }}
         layerOverride={layerOverride}
         defaultLayerCount={srj.layerCount}
@@ -928,6 +944,7 @@ export const AutoroutingPipelineDebugger = ({
           setSolver(createNewSolver({ layerOverride: newLayerOverride }))
           setDrcErrors(null)
           setDrcErrorCount(0)
+          setLastDrcMode(null)
         }}
       />
       <div className="flex gap-2 mb-4 text-xs">
@@ -1023,6 +1040,12 @@ export const AutoroutingPipelineDebugger = ({
             {solver.activeSubSolver?.constructor.name ?? "None"}
           </span>
         </div>
+        {lastDrcMode && (
+          <div className="border p-2 rounded">
+            DRC Errors ({lastDrcMode === "relaxed" ? "Relaxed" : "Strict"}):{" "}
+            <span className="font-bold">{drcErrorCount}</span>
+          </div>
+        )}
         {solver.error && (
           <div className="border p-2 rounded bg-red-100">
             Error: <span className="font-bold">{solver.error}</span>

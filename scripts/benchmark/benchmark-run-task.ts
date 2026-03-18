@@ -1,16 +1,12 @@
 import * as autorouterModule from "../../lib"
 import { getDrcErrors } from "../../lib/testing/getDrcErrors"
+import { RELAXED_DRC_OPTIONS } from "../../lib/testing/drcPresets"
 import { convertToCircuitJson } from "../../lib/testing/utils/convertToCircuitJson"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
 } from "../../lib/types/srj-types"
 import type { BenchmarkTask, WorkerResult } from "./benchmark-types"
-
-const RELAXED_DRC_OPTIONS = {
-  viaClearance: 0.1,
-  traceClearance: 0.1,
-} as const
 
 type SolverInstance = {
   solved?: boolean
