@@ -1,6 +1,7 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
@@ -33,9 +34,9 @@ export class HighDensitySolver extends BaseSolver {
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
     null
   connMap?: ConnectivityMap
-  nodePfById: Map<string, number | null>
+  nodePfById: Map<CapacityMeshNodeId, number | null>
   nodeSolveMetadataById: Map<
-    string,
+    CapacityMeshNodeId,
     {
       node: NodeWithPortPoints
       status: "solved" | "failed"
@@ -62,7 +63,9 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter?: number
     traceWidth?: number
     effort?: number
-    nodePfById?: Map<string, number | null> | Record<string, number | null>
+    nodePfById?:
+      | Map<CapacityMeshNodeId, number | null>
+      | Record<string, number | null>
   }) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
@@ -112,7 +115,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private createNodeMarkerLabel(
-    capacityMeshNodeId: string,
+    capacityMeshNodeId: CapacityMeshNodeId,
     metadata: {
       status: "solved" | "failed"
       solverType: string
@@ -305,8 +308,6 @@ export class HighDensitySolver extends BaseSolver {
         const top = metadata.node.center.y - metadata.node.height / 2
         const bottom = metadata.node.center.y + metadata.node.height / 2
 
-        const rectWidth = Math.max(metadata.node.width * 0.1, 0.12)
-        const rectHeight = Math.max(metadata.node.height * 0.1, 0.12)
         const label = this.createNodeMarkerLabel(capacityMeshNodeId, metadata)
 
         graphics.lines!.push(
@@ -356,14 +357,26 @@ export class HighDensitySolver extends BaseSolver {
           },
         )
 
-        graphics.rects!.push({
-          center: metadata.node.center,
-          layer: "hd_node_markers",
-          width: rectWidth,
-          height: rectHeight,
-          fill: "red",
-          label,
-        })
+        if (metadata.status === "solved") {
+          graphics.points!.push({
+            x: metadata.node.center.x,
+            y: metadata.node.center.y,
+            color: "red",
+            layer: "hd_node_markers",
+            label,
+          })
+        } else {
+          const rectWidth = Math.max(metadata.node.width * 0.1, 0.12)
+          const rectHeight = Math.max(metadata.node.height * 0.1, 0.12)
+          graphics.rects!.push({
+            center: metadata.node.center,
+            layer: "hd_node_markers",
+            width: rectWidth,
+            height: rectHeight,
+            fill: "red",
+            label,
+          })
+        }
       }
     }
     if (this.activeSubSolver) {

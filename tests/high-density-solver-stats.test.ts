@@ -146,15 +146,20 @@ test("HighDensitySolver emits node markers only after completion", () => {
   expect(solver.solved).toBe(true)
 
   const finalViz = solver.visualize()
-  const markers =
+  const rectMarkers =
     finalViz.rects?.filter((rect) => rect.label?.includes("hd_node_marker")) ??
     []
+  const pointMarkers =
+    finalViz.points?.filter((point) =>
+      point.label?.includes("hd_node_marker"),
+    ) ?? []
 
-  expect(markers.length).toBe(2)
-  expect(markers[0].fill).toBe("red")
-  expect(markers[0].label).toContain("solver:")
-  expect(markers[0].label).toContain("node:")
-  expect(markers[0].label).toContain("status: solved")
+  expect(rectMarkers.length).toBe(0)
+  expect(pointMarkers.length).toBe(2)
+  expect(pointMarkers[0].color).toBe("red")
+  expect(pointMarkers[0].label).toContain("solver:")
+  expect(pointMarkers[0].label).toContain("node:")
+  expect(pointMarkers[0].label).toContain("status: solved")
 
   const dashedBoundaryLines =
     finalViz.lines?.filter((line) => line.layer === "hd_node_boundaries") ?? []
