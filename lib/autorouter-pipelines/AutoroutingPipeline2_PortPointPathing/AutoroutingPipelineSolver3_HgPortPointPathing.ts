@@ -2,7 +2,6 @@ import {
   type SerializedSolvedRoute,
   type SolvedRoute,
   convertConnectionsToSerializedConnections,
-  convertHyperGraphToSerializedHyperGraph,
 } from "@tscircuit/hypergraph"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -10,7 +9,11 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { calculateOptimalCapacityDepth } from "lib/index"
-import { HgSectionSolver } from "lib/solvers/MultiSectionPortPointOptimizer/HgSectionSolver"
+import {
+  HgSectionSolver,
+  convertConnectionsHgToSerializedConnections,
+  convertHyperGraphHgToSerializedHyperGraph,
+} from "lib/solvers/MultiSectionPortPointOptimizer/HgSectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import {
   HgPortPointPathingSolver,
@@ -306,17 +309,28 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     definePipelineStep("hyperGraphSectionOptimizer", HgSectionSolver, (cms) => {
       const portPointSolver = cms.portPointPathingSolver!
 
+      const inputGraph = convertHyperGraphHgToSerializedHyperGraph(
+        portPointSolver.graph as any,
+      )
+      const inputConnections = convertConnectionsHgToSerializedConnections(
+        portPointSolver.connections as any,
+      )
+      const inputSolvedRoutes = serializeSolvedRoutes(
+        portPointSolver.solvedRoutes as SolvedRoute[],
+      )
+
+      console.log("hyperGraphSectionOptimizer input", {
+        regions: inputGraph.regions.length,
+        ports: inputGraph.ports.length,
+        connections: inputConnections.length,
+        solvedRoutes: inputSolvedRoutes.length,
+      })
+
       return [
         {
-          inputGraph: convertHyperGraphToSerializedHyperGraph(
-            portPointSolver.graph as any,
-          ),
-          inputConnections: convertConnectionsToSerializedConnections(
-            portPointSolver.connections as any,
-          ),
-          inputSolvedRoutes: serializeSolvedRoutes(
-            portPointSolver.solvedRoutes as SolvedRoute[],
-          ),
+          inputGraph: inputGraph as any,
+          inputConnections: inputConnections as any,
+          inputSolvedRoutes,
           expansionHopsFromCentralRegion: 1,
           effort: cms.effort,
           ACCEPTABLE_CENTRAL_REGION_COST: 0.1,

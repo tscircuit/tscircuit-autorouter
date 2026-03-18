@@ -1,6 +1,5 @@
 import {
   CreateSectionSolverInput,
-  GraphEdgeId,
   HyperGraphSectionOptimizer2,
   HyperGraphSolver,
   Region,
@@ -8,29 +7,57 @@ import {
   SerializedHyperGraph,
   SerializedSolvedRoute,
 } from "@tscircuit/hypergraph"
+import { GraphicsObject } from "graphics-debug"
 import { HgPortPointPathingSolver } from "../PortPointPathingSolver/hgportpointpathingsolver"
 import {
   ConnectionHg,
   HyperGraphHg,
   RegionHg,
   RegionPortHg,
-  SerializedConnectionHg,
   SerializedRegionHg,
   SerializedRegionPortHg,
   SolvedRoutesHg,
 } from "../PortPointPathingSolver/hgportpointpathingsolver/types"
-import { GraphicsObject } from "graphics-debug"
 
-type SerializedHyperGraphHg = Omit<
-  SerializedHyperGraph,
-  "regions" | "ports"
-> & {
-  regions: SerializedRegionHg[]
-  ports: SerializedRegionPortHg[]
+export const convertHyperGraphHgToSerializedHyperGraph = (
+  graph: HyperGraphHg,
+): SerializedHyperGraph => {
+  const serializedPorts = graph.ports.map((port) => ({
+    portId: port.portId,
+    region1Id: port.region1.regionId,
+    region2Id: port.region2.regionId,
+    d: {
+      ...port.d,
+      regions: (port.d.regions ?? []).map((region) => region.regionId),
+    },
+  }))
+
+  const serializedRegions = graph.regions.map((region) => ({
+    regionId: region.regionId,
+    pointIds: region.ports.map((port) => port.portId),
+    d: region.d ? structuredClone(region.d) : region.d,
+  }))
+
+  return {
+    ports: serializedPorts,
+    regions: serializedRegions,
+  }
+}
+
+export const convertConnectionsHgToSerializedConnections = (
+  connections: ConnectionHg[],
+): SerializedConnection[] => {
+  return connections.map((connection) => ({
+    connectionId: connection.connectionId,
+    mutuallyConnectedNetworkId:
+      connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+    startRegionId: connection.startRegion.regionId,
+    endRegionId: connection.endRegion.regionId,
+  }))
 }
 
 const convertSerializedHgHyperGraphToHyperGraphHg = (
-  serializedHyperGraph: SerializedHyperGraphHg,
+  serializedHyperGraph: SerializedHyperGraph,
 ): HyperGraphHg => {
   const { regions: sRegions, ports: sPorts } = serializedHyperGraph
 
@@ -42,7 +69,7 @@ const convertSerializedHgHyperGraphToHyperGraphHg = (
       ports: _ports,
       assignments: _assignments,
       ...regionWithoutAssignments
-    } = region as SerializedRegionHg & { assignments?: unknown }
+    } = region as unknown as SerializedRegionHg & { assignments?: unknown }
 
     regionMap.set(region.regionId, {
       ...regionWithoutAssignments,
@@ -64,22 +91,17 @@ const convertSerializedHgHyperGraphToHyperGraphHg = (
     return regionMap.get(regionRef.regionId) ?? (regionRef as RegionHg)
   }
 
-  const serializedPorts =
-    sPorts.length > 0
-      ? sPorts
-      : sRegions.flatMap((region) => region.ports ?? [])
+  const serializedPorts = sPorts.length > 0 ? sPorts : []
 
   for (const port of serializedPorts) {
-    const { region1Id, region2Id, region1, region2, d, ...rest } =
-      port as SerializedRegionPortHg & {
-        region1Id?: string
-        region2Id?: string
-        region1?: Region | RegionHg | string
-        region2?: Region | RegionHg | string
-      }
+    const { region1Id, region2Id, d, ...rest } = port as {
+      region1Id: string
+      region2Id: string
+      d: SerializedRegionPortHg["d"]
+    }
 
-    const resolvedRegion1 = resolveRegion(region1Id ?? region1)
-    const resolvedRegion2 = resolveRegion(region2Id ?? region2)
+    const resolvedRegion1 = resolveRegion(region1Id)
+    const resolvedRegion2 = resolveRegion(region2Id)
 
     const serializedRawPort = d as SerializedRegionPortHg["d"] | undefined
     const rawPortRegions = Array.isArray(serializedRawPort?.regions)
@@ -117,15 +139,15 @@ const convertSerializedHgHyperGraphToHyperGraphHg = (
   }
 }
 
-const convertSerializedConnectionHgToConnectionHg = (
-  serializedConnections: SerializedConnectionHg[],
+const convertSerializedConnectionToConnectionHg = (
+  serializedConnections: SerializedConnection[],
   graph: HyperGraphHg,
 ): ConnectionHg[] => {
   const connections: ConnectionHg[] = []
 
   for (const inputConn of serializedConnections) {
-    const startRegionId = inputConn.startRegion
-    const endRegionId = inputConn.endRegion
+    const startRegionId = inputConn.startRegionId
+    const endRegionId = inputConn.endRegionId
 
     const startRegion = graph.regions.find(
       (region) => region.regionId === startRegionId,
@@ -148,8 +170,6 @@ const convertSerializedConnectionHgToConnectionHg = (
         inputConn.mutuallyConnectedNetworkId ?? inputConn.connectionId,
       startRegion,
       endRegion,
-      simpleRouteConnection: (inputConn as SerializedConnectionHg)
-        .simpleRouteConnection,
     })
   }
 
@@ -171,12 +191,10 @@ const convertSerializedSolvedToSolvedRoutes = (
   const connectionMap = new Map(
     connections.map((connection) => [connection.connectionId, connection]),
   )
-  const serializedRouteConnections = routes.map((route) =>
-    toSerializedConnectionHg(route.connection),
-  )
+  const serializedRouteConnections = routes.map((route) => route.connection)
   const serializedConvertedConnections =
     serializedRouteConnections.length > 0
-      ? convertSerializedConnectionHgToConnectionHg(
+      ? convertSerializedConnectionToConnectionHg(
           serializedRouteConnections,
           graph,
         )
@@ -289,19 +307,6 @@ const inferLayerCount = (graph: HyperGraphHg): number => {
   return Math.max(1, maxZ + 1)
 }
 
-const toSerializedConnectionHg = (
-  connection: SerializedConnection,
-): SerializedConnectionHg => {
-  return {
-    connectionId: connection.connectionId,
-    mutuallyConnectedNetworkId:
-      connection.mutuallyConnectedNetworkId ?? connection.connectionId,
-    startRegion: connection.startRegionId,
-    endRegion: connection.endRegionId,
-  }
-}
-
-
 export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
   protected override createHyperGraphSolver(
     input: CreateSectionSolverInput,
@@ -313,11 +318,11 @@ export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
     } = input
 
     const hyperGraph = convertSerializedHgHyperGraphToHyperGraphHg(
-      serializedInputGraph as unknown as SerializedHyperGraphHg,
+      serializedInputGraph as SerializedHyperGraph,
     )
-    const connections = convertSerializedConnectionHgToConnectionHg(
-      serializedInputConnection as unknown as SerializedConnectionHg[],
-      this.graph
+    const connections = convertSerializedConnectionToConnectionHg(
+      serializedInputConnection,
+      hyperGraph,
     )
     const solvedRoutes = convertSerializedSolvedToSolvedRoutes(
       serializedInputSolvedRoutes as SerializedSolvedRoute[],
@@ -358,10 +363,9 @@ export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
     })
   }
 
-
   visualize(): GraphicsObject {
-    if(this.activeSubSolver){
-        return this.activeSubSolver.visualize()
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
     }
 
     return {}

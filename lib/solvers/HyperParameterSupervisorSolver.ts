@@ -183,7 +183,11 @@ export class HyperParameterSupervisorSolver<
     }
 
     if (bestSupervisedSolver) {
-      graphics = bestSupervisedSolver.solver.visualize()
+      try {
+        graphics = bestSupervisedSolver.solver.visualize()
+      } catch {
+        return graphics
+      }
     }
     return graphics
   }
