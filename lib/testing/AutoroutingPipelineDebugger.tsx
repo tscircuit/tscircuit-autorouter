@@ -1055,9 +1055,11 @@ export const AutoroutingPipelineDebugger = ({
             graphics={visualization}
             onObjectClicked={({ object }) => {
               if (!canSelectObjects) return
+              const objectLabel = object.label ?? ""
               if (
-                !object.label?.includes("cn") &&
-                !object.label?.includes("cmn")
+                !objectLabel.includes("cn") &&
+                !objectLabel.includes("cmn") &&
+                !objectLabel.includes("hd_node_marker")
               )
                 return
               setDialogObject(object)
