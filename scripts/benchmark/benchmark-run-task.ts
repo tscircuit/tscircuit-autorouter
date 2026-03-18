@@ -7,6 +7,11 @@ import type {
 } from "../../lib/types/srj-types"
 import type { BenchmarkTask, WorkerResult } from "./benchmark-types"
 
+const RELAXED_DRC_OPTIONS = {
+  viaClearance: 0.254,
+  traceClearance: 0.254,
+} as const
+
 type SolverInstance = {
   solved?: boolean
   failed?: boolean
@@ -60,7 +65,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       task.scenario.minTraceWidth,
       task.scenario.minViaDiameter,
     )
-    const { errors } = getDrcErrors(circuitJson)
+    const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
     const relaxedDrcPassed = errors.length === 0
 
     return {

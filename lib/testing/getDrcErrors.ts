@@ -22,9 +22,21 @@ export interface GetDrcErrorsResult {
   locationAwareErrors: LocationAwareDrcError[]
 }
 
-export const getDrcErrors = (circuitJson: CircuitJson): GetDrcErrorsResult => {
-  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson)
-  const viaErrors = checkSameNetViaSpacing(circuitJson)
+export interface GetDrcErrorsOptions {
+  viaClearance?: number
+  traceClearance?: number
+}
+
+export const getDrcErrors = (
+  circuitJson: CircuitJson,
+  options: GetDrcErrorsOptions = {},
+): GetDrcErrorsResult => {
+  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
+    minSpacing: options.traceClearance,
+  })
+  const viaErrors = checkSameNetViaSpacing(circuitJson, {
+    minSpacing: options.viaClearance,
+  })
 
   const errors: DrcError[] = [...traceErrors, ...viaErrors]
 
