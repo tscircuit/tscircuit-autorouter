@@ -328,8 +328,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
 
       return [
         {
-          inputGraph: inputGraph as any,
-          inputConnections: inputConnections as any,
+          inputGraph: inputGraph,
+          inputConnections: inputConnections,
           inputSolvedRoutes,
           expansionHopsFromCentralRegion: 1,
           effort: cms.effort,

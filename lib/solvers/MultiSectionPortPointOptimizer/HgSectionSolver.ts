@@ -18,6 +18,7 @@ import {
   SerializedRegionPortHg,
   SolvedRoutesHg,
 } from "../PortPointPathingSolver/hgportpointpathingsolver/types"
+import { computeCostPerRegion } from "../PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 
 export const convertHyperGraphHgToSerializedHyperGraph = (
   graph: HyperGraphHg,
@@ -361,6 +362,10 @@ export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
         MIN_ALLOWED_BOARD_SCORE: -10000,
       },
     })
+  }
+
+  override getCostOfCentralRegion(region: Region): number {
+      return computeCostPerRegion(region as RegionHg)
   }
 
   visualize(): GraphicsObject {
