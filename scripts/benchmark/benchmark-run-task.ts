@@ -8,8 +8,8 @@ import type {
 import type { BenchmarkTask, WorkerResult } from "./benchmark-types"
 
 const RELAXED_DRC_OPTIONS = {
-  viaClearance: 0.254,
-  traceClearance: 0.254,
+  viaClearance: 0.1,
+  traceClearance: 0.1,
 } as const
 
 type SolverInstance = {
