@@ -7,6 +7,7 @@ import type {
   RegionPortAssignment,
   SolvedRoute,
 } from "@tscircuit/hypergraph"
+import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
 
 import type {
   CapacityMeshNode,
@@ -23,8 +24,16 @@ export type RawPort = {
   regions: RegionHg[]
 }
 
+export type SerializedRawPort = Omit<RawPort, "regions"> & {
+  regions: RegionId[]
+}
+
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {
   d: RawPort
+}
+
+export type SerializedRegionPortHg = Omit<RegionPort, "d" | "port"> & {
+  d: SerializedRawPort
 }
 
 export type RegionHg = Omit<Region, "d" | "assignments" | "ports"> & {
@@ -33,14 +42,30 @@ export type RegionHg = Omit<Region, "d" | "assignments" | "ports"> & {
   ports: RegionPortHg[]
 }
 
+export type SerializedRegionHg = Omit<Region, "d" | "assignments" | "ports"> & {
+  d: CapacityMeshNode
+  ports: SerializedRegionPortHg[]
+}
+
 export type HyperGraphHg = Omit<HyperGraph, "ports" | "regions"> & {
   ports: RegionPortHg[]
   regions: RegionHg[]
 }
 
+export type SerializedHyperGraphHg = Omit<HyperGraph, "ports" | "regions"> & {
+  ports: SerializedRegionPortHg[]
+  regions: SerializedRegionHg[]
+}
+
 export type ConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
   startRegion: RegionHg
   endRegion: RegionHg
+  simpleRouteConnection?: SimpleRouteConnection
+}
+
+export type SerializedConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
+  startRegion: RegionId
+  endRegion: RegionId
   simpleRouteConnection?: SimpleRouteConnection
 }
 
@@ -60,6 +85,24 @@ export type SolvedRoutesHg = Omit<SolvedRoute, "path" | "connection"> & {
   path: CandidateHg[]
   connection: ConnectionHg
 }
+
+type SerializedCandidateHg = Omit<
+  Candidate,
+  "port" | "parent" | "lastPort" | "lastRegion" | "nextRegion"
+> & {
+  port: SerializedRegionPortHg
+  parent?: SerializedCandidateHg
+  lastPort?: SerializedRegionPortHg
+  lastRegion?: SerializedRegionHg
+  nextRegion?: SerializedRegionHg
+  ripRequired: boolean
+}
+
+type SerializedSolvedRouteHg = Omit<SolvedRoute, "path" | "connection"> & {
+  path: SerializedCandidateHg[]
+  connection: SerializedConnectionHg
+}
+
 
 export type RegionPortAssignmentHg = Omit<
   RegionPortAssignment,

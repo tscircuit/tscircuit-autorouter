@@ -1,10 +1,33 @@
+import {
+  type SerializedSolvedRoute,
+  type SolvedRoute,
+  convertConnectionsToSerializedConnections,
+  convertHyperGraphToSerializedHyperGraph,
+} from "@tscircuit/hypergraph"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { calculateOptimalCapacityDepth } from "lib/index"
+import { HgSectionSolver } from "lib/solvers/MultiSectionPortPointOptimizer/HgSectionSolver"
+import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
+import {
+  HgPortPointPathingSolver,
+  buildHyperGraph,
+} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
+import { getColorMap } from "lib/solvers/colors"
+import {
+  CapacityMeshEdge,
+  CapacityMeshNode,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+} from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -23,23 +46,6 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
-import { getColorMap } from "lib/solvers/colors"
-import {
-  SimpleRouteJson,
-  CapacityMeshNode,
-  CapacityMeshEdge,
-  SimplifiedPcbTraces,
-  SimplifiedPcbTrace,
-} from "lib/types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { calculateOptimalCapacityDepth } from "lib/index"
-import {
-  buildHyperGraph,
-  HgPortPointPathingSolver,
-} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { HyperGraphSectionOptimizer } from "@tscircuit/hypergraph"
-import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -95,12 +101,12 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: HgPortPointPathingSolver
+  portPointPathingSolver?: HgSectionSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
-  hyperGraphSectionOptimizer?: HyperGraphSectionOptimizer
+  hyperGraphSectionOptimizer?: HgSectionSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -228,108 +234,71 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep(
-      "portPointPathingSolver",
-      HgPortPointPathingSolver,
-      (cms) => {
-        const { graph, connections } = buildHyperGraph({
-          capacityMeshNodes: cms.capacityNodes!,
+    definePipelineStep("portPointPathingSolver", HgSectionSolver, (cms) => {
+      const { graph, connections } = buildHyperGraph({
+        capacityMeshNodes: cms.capacityNodes!,
+        layerCount: cms.srj.layerCount,
+        segmentPortPoints: cms
+          .availableSegmentPointSolver!.getOutput()
+          .flatMap((seg) => seg.portPoints),
+        simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+      })
+
+      return [
+        {
+          graph,
+          connections,
           layerCount: cms.srj.layerCount,
-          segmentPortPoints: cms
-            .availableSegmentPointSolver!.getOutput()
-            .flatMap((seg) => seg.portPoints),
-          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-        })
-
-        return [
-          {
-            graph,
-            connections,
-            layerCount: cms.srj.layerCount,
-            effort: cms.effort,
-            flags: {
-              FORCE_CENTER_FIRST: true,
-              RIPPING_ENABLED: true,
-            },
-            weights: {
-              SHUFFLE_SEED: 0,
-              MEMORY_PF_FACTOR: 4,
-              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-              CENTER_OFFSET_FOCUS_SHIFT: 0,
-              NODE_PF_FACTOR: 0,
-              LAYER_CHANGE_COST: 0,
-              RIPPING_PF_COST: 0.0,
-              NODE_PF_MAX_PENALTY: 100,
-              BASE_CANDIDATE_COST: 0.6,
-              MAX_ITERATIONS_PER_PATH: 0,
-              RANDOM_WALK_DISTANCE: 0,
-              START_RIPPING_PF_THRESHOLD: 0.3,
-              END_RIPPING_PF_THRESHOLD: 1,
-              MAX_RIPS: 1000,
-              RANDOM_RIP_FRACTION: 0.3,
-              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-              GREEDY_MULTIPLIER: 0.7,
-              MIN_ALLOWED_BOARD_SCORE: -10000,
-            },
+          effort: cms.effort,
+          flags: {
+            FORCE_CENTER_FIRST: true,
+            RIPPING_ENABLED: true,
           },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "hyperGraphSectionOptimizer",
-      HyperGraphSectionOptimizer,
-      (cms) => {
-        const portPointSolver = cms.portPointPathingSolver!
-
-        return [
-          {
-            hyperGraphSolver: portPointSolver,
-            inputSolvedRoutes: portPointSolver.solvedRoutes,
-            expansionHopsFromCentralRegion: 1,
-            createHyperGraphSolver: (input) => {
-              return new HgPortPointPathingSolver({
-                graph: input.inputGraph as any,
-                connections: input.inputConnections as any,
-                inputSolvedRoutes: input.inputSolvedRoutes as any,
-                layerCount: cms.srj.layerCount,
-                effort: cms.effort,
-                flags: {
-                  FORCE_CENTER_FIRST: true,
-                  RIPPING_ENABLED: true,
-                },
-                weights: {
-                  SHUFFLE_SEED: 0,
-                  MEMORY_PF_FACTOR: 4,
-                  CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-                  CENTER_OFFSET_FOCUS_SHIFT: 0,
-                  NODE_PF_FACTOR: 0,
-                  LAYER_CHANGE_COST: 0,
-                  RIPPING_PF_COST: 0.0,
-                  NODE_PF_MAX_PENALTY: 100,
-                  BASE_CANDIDATE_COST: 0.6,
-                  MAX_ITERATIONS_PER_PATH: 0,
-                  RANDOM_WALK_DISTANCE: 0,
-                  START_RIPPING_PF_THRESHOLD: 0.3,
-                  END_RIPPING_PF_THRESHOLD: 1,
-                  MAX_RIPS: 1000,
-                  RANDOM_RIP_FRACTION: 0.3,
-                  STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-                  GREEDY_MULTIPLIER: 0.7,
-                  MIN_ALLOWED_BOARD_SCORE: -10000,
-                },
-              })
-            },
-            regionCost: computeCostPerRegion,
-            effort: cms.effort,
-            ACCEPTABLE_REGION_COST: 0.1,
-            MAX_ATTEMPTS_PER_REGION: Math.max(3, 3 * cms.effort),
-            MAX_ATTEMPTS_PER_SECTION: Math.max(50, 50 * cms.effort),
-            FRACTION_TO_REPLACE: 1,
-            alwaysRipConflicts: true,
+          weights: {
+            SHUFFLE_SEED: 0,
+            MEMORY_PF_FACTOR: 4,
+            CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
+            CENTER_OFFSET_FOCUS_SHIFT: 0,
+            NODE_PF_FACTOR: 0,
+            LAYER_CHANGE_COST: 0,
+            RIPPING_PF_COST: 0.0,
+            NODE_PF_MAX_PENALTY: 100,
+            BASE_CANDIDATE_COST: 0.6,
+            MAX_ITERATIONS_PER_PATH: 0,
+            RANDOM_WALK_DISTANCE: 0,
+            START_RIPPING_PF_THRESHOLD: 0.3,
+            END_RIPPING_PF_THRESHOLD: 1,
+            MAX_RIPS: 1000,
+            RANDOM_RIP_FRACTION: 0.3,
+            STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
+            GREEDY_MULTIPLIER: 0.7,
+            MIN_ALLOWED_BOARD_SCORE: -10000,
           },
-        ]
-      },
-    ),
+        },
+      ]
+    }),
+    definePipelineStep("hyperGraphSectionOptimizer", HgSectionSolver, (cms) => {
+      const portPointSolver = cms.portPointPathingSolver!
+
+      return [
+        {
+          inputGraph: convertHyperGraphToSerializedHyperGraph(
+            portPointSolver.graph as any,
+          ),
+          inputConnections: convertConnectionsToSerializedConnections(
+            portPointSolver.connections as any,
+          ),
+          inputSolvedRoutes: convertSolvedRoutesToSerializedSolvedRoutes(
+            portPointSolver.solvedRoutes as any,
+          ),
+          expansionHopsFromCentralRegion: 1,
+          effort: cms.effort,
+          ACCEPTABLE_CENTRAL_REGION_COST: 0.1,
+          MAX_ATTEMPTS_PER_REGION: Math.max(3, 3 * cms.effort),
+          MAX_ATTEMPTS_PER_SECTION: Math.max(50, 50 * cms.effort),
+        },
+      ]
+    }),
     // definePipelineStep(
     //   "multiSectionPortPointOptimizer",
     //   MultiSectionPortPointOptimizer,
