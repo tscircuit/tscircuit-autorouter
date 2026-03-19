@@ -19,7 +19,7 @@ type WireSegment = {
   b: { x: number; y: number }
 }
 
-const layers = ["top", "inner1", "inner2", "bottom"]
+const layers = ["top", "bottom"]
 
 const getWireSegments = (traces: SimplifiedPcbTrace[]): WireSegment[] => {
   const segments: WireSegment[] = []
