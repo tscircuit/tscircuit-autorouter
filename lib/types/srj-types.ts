@@ -72,7 +72,16 @@ export interface SimpleRouteConnection {
   mergedConnectionNames?: string[]
   isOffBoard?: boolean
   netConnectionName?: string
+  /**
+   * The desired trace width for this connection in mm.
+   * If not set, falls back to `minTraceWidth`.
+   */
   nominalTraceWidth?: number
+  /**
+   * Multiplier of `minTraceWidth` for this connection (e.g. 2 = 0.3mm, 4 = 0.6mm, 8 = 1.2mm).
+   * If `nominalTraceWidth` is also set, `nominalTraceWidth` takes precedence.
+   */
+  traceWidthMultiplier?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

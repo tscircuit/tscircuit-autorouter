@@ -1,6 +1,7 @@
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import { getEffectiveNominalTraceWidth } from "lib/utils/getEffectiveTraceWidth"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
@@ -101,13 +102,14 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
+      const effectiveWidth = getEffectiveNominalTraceWidth(
+        connection,
+        this.minTraceWidth,
+      )
+      if (effectiveWidth === undefined) {
         continue
       }
-      this.connectionNominalTraceWidthMap.set(
-        connection.name,
-        connection.nominalTraceWidth,
-      )
+      this.connectionNominalTraceWidthMap.set(connection.name, effectiveWidth)
     }
 
     if (this.obstacles.length > 0) {
