@@ -63,7 +63,10 @@ export type ConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
   simpleRouteConnection?: SimpleRouteConnection
 }
 
-export type SerializedConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
+export type SerializedConnectionHg = Omit<
+  Connection,
+  "startRegion" | "endRegion"
+> & {
   startRegion: RegionId
   endRegion: RegionId
   simpleRouteConnection?: SimpleRouteConnection
@@ -102,7 +105,6 @@ type SerializedSolvedRouteHg = Omit<SolvedRoute, "path" | "connection"> & {
   path: SerializedCandidateHg[]
   connection: SerializedConnectionHg
 }
-
 
 export type RegionPortAssignmentHg = Omit<
   RegionPortAssignment,

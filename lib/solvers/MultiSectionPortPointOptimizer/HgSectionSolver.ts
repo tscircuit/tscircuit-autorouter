@@ -365,7 +365,7 @@ export class HgSectionSolver extends HyperGraphSectionOptimizer2 {
   }
 
   override getCostOfCentralRegion(region: Region): number {
-      return computeCostPerRegion(region as RegionHg)
+    return computeCostPerRegion(region as RegionHg)
   }
 
   visualize(): GraphicsObject {
