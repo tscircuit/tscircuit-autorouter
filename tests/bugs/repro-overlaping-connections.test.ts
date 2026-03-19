@@ -7,7 +7,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno.json" with {
+import circuit101 from "../../fixtures/datasets/circuit101.json" with {
   type: "json",
 }
 
@@ -20,13 +20,6 @@ type WireSegment = {
 }
 
 const layers = ["top", "inner1", "inner2", "bottom"]
-
-const create4LayerSubset = (): SimpleRouteJson => {
-  const srj = structuredClone(bugReport.simple_route_json) as SimpleRouteJson
-  srj.layerCount = 4
-
-  return srj
-}
 
 const getWireSegments = (traces: SimplifiedPcbTrace[]): WireSegment[] => {
   const segments: WireSegment[] = []
@@ -108,7 +101,7 @@ const toLayerStackedSvg = (
         center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
         radius,
         stroke: "red",
-        fill: "none",
+        fill: "rgba(255, 0, 0, 0.3)",
       })
     }
 
@@ -148,8 +141,8 @@ const toLayerStackedSvg = (
   })
 }
 
-test("bugreport46-ac4337 4-layer overlap detection between different nets on z0/z1", async () => {
-  const solver = new AutoroutingPipelineSolver(create4LayerSubset())
+test("overlap detection between different nets", async () => {
+  const solver = new AutoroutingPipelineSolver(circuit101 as any)
   solver.solve()
 
   expect(solver.failed).toBe(false)
