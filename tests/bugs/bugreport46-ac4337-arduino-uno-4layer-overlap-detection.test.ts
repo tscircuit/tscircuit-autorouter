@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject, stackGraphicsVertically } from "graphics-debug"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  getSvgFromGraphicsObject,
+  stackGraphicsVertically,
+} from "graphics-debug"
 import type { GraphicsObject } from "graphics-debug"
+import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno.json" with {
@@ -16,20 +19,11 @@ type WireSegment = {
   b: { x: number; y: number }
 }
 
-const layers = ["top", "inner1", "inner2", "bottom"] as const
+const layers = ["top", "inner1", "inner2", "bottom"]
 
 const create4LayerSubset = (): SimpleRouteJson => {
   const srj = structuredClone(bugReport.simple_route_json) as SimpleRouteJson
   srj.layerCount = 4
-  srj.connections = srj.connections.slice(0, 4)
-
-  const selectedConnectionNames = new Set(srj.connections.map((c) => c.name))
-  srj.obstacles = srj.obstacles.filter(
-    (o) =>
-      !o.connectedTo ||
-      o.connectedTo.length === 0 ||
-      o.connectedTo.some((name) => selectedConnectionNames.has(name)),
-  )
 
   return srj
 }
@@ -62,7 +56,10 @@ const getWireSegments = (traces: SimplifiedPcbTrace[]): WireSegment[] => {
   return segments
 }
 
-const toLayerStackedSvg = (traces: SimplifiedPcbTrace[]) => {
+const toLayerStackedSvg = (
+  traces: SimplifiedPcbTrace[],
+  overlapingSegments: [WireSegment, WireSegment][],
+) => {
   const netColor = new Map<string, string>()
   const getColor = (net: string) => {
     if (!netColor.has(net)) {
@@ -74,6 +71,46 @@ const toLayerStackedSvg = (traces: SimplifiedPcbTrace[]) => {
 
   const layerGraphics: GraphicsObject[] = layers.map((layer) => {
     const lines: NonNullable<GraphicsObject["lines"]> = []
+    const circles: NonNullable<GraphicsObject["circles"]> = []
+
+    for (const [segmentA, segmentB] of overlapingSegments) {
+      if (segmentA.layer !== layer || segmentB.layer !== layer) continue
+
+      const minX = Math.min(
+        segmentA.a.x,
+        segmentA.b.x,
+        segmentB.a.x,
+        segmentB.b.x,
+      )
+      const maxX = Math.max(
+        segmentA.a.x,
+        segmentA.b.x,
+        segmentB.a.x,
+        segmentB.b.x,
+      )
+      const minY = Math.min(
+        segmentA.a.y,
+        segmentA.b.y,
+        segmentB.a.y,
+        segmentB.b.y,
+      )
+      const maxY = Math.max(
+        segmentA.a.y,
+        segmentA.b.y,
+        segmentB.a.y,
+        segmentB.b.y,
+      )
+
+      const padding = Math.max(segmentA.width, segmentB.width) / 2
+      const radius = Math.hypot(maxX - minX, maxY - minY) / 2 + padding
+
+      circles.push({
+        center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+        radius,
+        stroke: "red",
+        fill: "none",
+      })
+    }
 
     for (const trace of traces) {
       let previous: SimplifiedPcbTrace["route"][number] | null = null
@@ -81,7 +118,7 @@ const toLayerStackedSvg = (traces: SimplifiedPcbTrace[]) => {
         if (
           step.route_type === "wire" &&
           previous?.route_type === "wire" &&
-          previous.layer === layer &&
+          // previous.layer === layer &&
           step.layer === layer
         ) {
           lines.push({
@@ -97,7 +134,7 @@ const toLayerStackedSvg = (traces: SimplifiedPcbTrace[]) => {
       }
     }
 
-    return { title: layer, lines }
+    return { title: layer, lines, circles }
   })
 
   const stacked = stackGraphicsVertically(layerGraphics, {
@@ -112,15 +149,16 @@ const toLayerStackedSvg = (traces: SimplifiedPcbTrace[]) => {
 }
 
 test("bugreport46-ac4337 4-layer overlap detection between different nets on z0/z1", async () => {
-  const solver = new AutoroutingPipelineSolver(create4LayerSubset(), {
-    effort: 0.25,
-  })
+  const solver = new AutoroutingPipelineSolver(create4LayerSubset())
   solver.solve()
 
   expect(solver.failed).toBe(false)
 
   const traces = solver.getOutputSimpleRouteJson().traces ?? []
   const segments = getWireSegments(traces)
+  console.log(`segments: ${segments.length}`)
+
+  const overlpaingSegments: [WireSegment, WireSegment][] = []
 
   let overlapCount = 0
   for (let i = 0; i < segments.length; i++) {
@@ -130,7 +168,6 @@ test("bugreport46-ac4337 4-layer overlap detection between different nets on z0/
 
       if (segmentA.connectionName === segmentB.connectionName) continue
       if (segmentA.layer !== segmentB.layer) continue
-      if (segmentA.layer !== "top" && segmentA.layer !== "bottom") continue
 
       const distance = minimumDistanceBetweenSegments(
         segmentA.a,
@@ -138,14 +175,19 @@ test("bugreport46-ac4337 4-layer overlap detection between different nets on z0/
         segmentB.a,
         segmentB.b,
       )
+
       const minAllowedDistance = (segmentA.width + segmentB.width) / 2
 
-      if (distance < minAllowedDistance - 1e-6) overlapCount++
+      if (distance < minAllowedDistance - 1e-6) {
+        overlpaingSegments.push([segmentA, segmentB])
+        overlapCount++
+      }
     }
   }
 
   expect(overlapCount).toBeGreaterThan(0)
+  console.log(`overlapCount: ${overlpaingSegments.length}`)
 
-  const stackedSvg = toLayerStackedSvg(traces)
+  const stackedSvg = toLayerStackedSvg(traces, overlpaingSegments)
   await expect(stackedSvg).toMatchSvgSnapshot(import.meta.path)
 }, 120_000)
