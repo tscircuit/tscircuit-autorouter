@@ -89,6 +89,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    let traceWidthMultiplier: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -127,6 +128,16 @@ export function mergeConnections(
       ) {
         nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
       }
+
+      // Preserve the largest traceWidthMultiplier across merged connections
+      if (simpleRouteConnection.traceWidthMultiplier !== undefined) {
+        if (
+          traceWidthMultiplier === undefined ||
+          simpleRouteConnection.traceWidthMultiplier > traceWidthMultiplier
+        ) {
+          traceWidthMultiplier = simpleRouteConnection.traceWidthMultiplier
+        }
+      }
     })
 
     // Create the new merged SimpleRouteConnection
@@ -145,6 +156,7 @@ export function mergeConnections(
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      traceWidthMultiplier: traceWidthMultiplier, // Keep the largest multiplier
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)

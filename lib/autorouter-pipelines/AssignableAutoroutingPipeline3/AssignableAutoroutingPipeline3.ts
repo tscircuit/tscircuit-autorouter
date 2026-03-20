@@ -421,25 +421,27 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         srj: cms.srj,
       },
     ]),
-    // definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
-    //   {
-    //     hdRoutes:
-    //       cms.traceSimplificationSolver?.simplifiedHdRoutes ??
-    //       cms?.highDensityStitchSolver?.mergedHdRoutes ??
-    //       [],
-    //     obstacles: [
-    //       ...cms.srj.obstacles,
-    //       ...(cms.highDensitySolver?.getOutputJumpers() ?? []).flatMap(
-    //         (jumper) => jumper.pads,
-    //       ),
-    //     ] as Obstacle[],
-    //     connMap: cms.connMap,
-    //     colorMap: cms.colorMap,
-    //     nominalTraceWidth: cms.srj.nominalTraceWidth,
-    //     minTraceWidth: cms.minTraceWidth,
-    //     obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-    //   },
-    // ]),
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+      {
+        hdRoutes:
+          cms.traceKeepoutSolver?.redrawnHdRoutes ??
+          cms.traceSimplificationSolver?.simplifiedHdRoutes ??
+          cms?.highDensityStitchSolver?.mergedHdRoutes ??
+          [],
+        connection: cms.srjWithPointPairs?.connections ?? cms.srj.connections,
+        obstacles: [
+          ...cms.srj.obstacles,
+          ...(cms.highDensitySolver?.getOutputJumpers() ?? []).flatMap(
+            (jumper) => jumper.pads,
+          ),
+        ] as Obstacle[],
+        connMap: cms.connMap,
+        colorMap: cms.colorMap,
+        minTraceWidth: cms.minTraceWidth,
+        obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+        layerCount: cms.srj.layerCount,
+      },
+    ]),
   ]
 
   constructor(

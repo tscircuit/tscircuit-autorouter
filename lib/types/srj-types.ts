@@ -73,6 +73,14 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
+  /**
+   * Multiplier for trace width relative to minTraceWidth.
+   * For example, 2 = 2x minTraceWidth (0.3mm if minTraceWidth is 0.15mm).
+   * Supported values: 1, 2, 4, 8.
+   * When both nominalTraceWidth and traceWidthMultiplier are set,
+   * nominalTraceWidth takes precedence.
+   */
+  traceWidthMultiplier?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
