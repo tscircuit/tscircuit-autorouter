@@ -70,6 +70,7 @@
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.21",
     "fast-json-stable-stringify": "^2.1.0",
-    "object-hash": "^3.0.0"
+    "object-hash": "^3.0.0",
+    "tiny-hypergraph": "github:tscircuit/tiny-hypergraph#52435783ba59151d594f96b5e30c99b2e68280fd"
   }
 }
