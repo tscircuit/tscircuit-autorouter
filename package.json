@@ -64,7 +64,8 @@
     "typescript": "^5.9.3",
     "use-mouse-matrix-transform": "^1.3.0",
     "vite": "^6.0.11",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "tiny-hypergraph": "github:tscircuit/tiny-hypergraph#e62ec0d8ca15333cfd3a0d50e4ccb12932ab2545"
   },
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.21",
