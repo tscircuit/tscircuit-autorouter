@@ -15,6 +15,7 @@ import type { SimpleRouteJson, ConnectionPoint } from "../../types"
 import { getConnectionPointLayers } from "../../utils/connection-point-utils"
 import type { ResolvedPath } from "./types"
 import { mergeOverlappingRects } from "./mergeOverlappingRects"
+import { TracePhysicsRelaxer, type RelaxerObstacle } from "./TracePhysicsRelaxer"
 
 const TRACE_WEIGHT = 10
 const TRACE_PENALTY = 25
@@ -130,6 +131,23 @@ export class GreedySequentialPathSolver extends BaseSolver {
   /** Points shared by multiple connections (no endcap clearance here) */
   private sharedPoints: Set<string>
 
+  // -----------------------------------------------------------------------
+  // Physics relaxation
+  // -----------------------------------------------------------------------
+
+  /** Physics relaxer instance (reused across calls) */
+  private relaxer: TracePhysicsRelaxer
+
+  /** How many light-relax iterations to run after each committed trace */
+  private static RELAX_ITER_COMMIT = 3
+  /** How many heavy-relax iterations to run when the solver gets stuck */
+  private static RELAX_ITER_STUCK = 12
+  /** Number of stuck-relaxation attempts before advancing the phase */
+  private static MAX_STUCK_RELAX = 2
+
+  /** Counts how many relaxation attempts have been made in the current phase */
+  private stuckRelaxCount = 0
+
   /** Time tracking for timeout guard */
   private solveStartTime: number = 0
   private static MAX_SOLVE_TIME_MS = 30_000
@@ -228,6 +246,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
     pointCounts.forEach((count, key) => {
       if (count > 1) this.sharedPoints.add(key)
     })
+
+    // Initialize physics relaxer (clearance = same as obstacle polygon clearance)
+    const relaxClearance = this.minTraceWidth / 2 + this.margin
+    this.relaxer = new TracePhysicsRelaxer(relaxClearance)
 
     this.allConnections = params.srj.connections.map((conn) => {
       const pts = conn.pointsToConnect
@@ -456,8 +478,136 @@ export class GreedySequentialPathSolver extends BaseSolver {
     return results
   }
 
+  // -----------------------------------------------------------------------
+  // Physics relaxation helpers
+  // -----------------------------------------------------------------------
+
+  /** Net-name function used by the relaxer for same-net exemption */
+  private netNameForRelaxer(connectionName: string): string {
+    return GreedySequentialPathSolver.baseNetName(connectionName)
+  }
+
+  /**
+   * Rebuild all trace polygon obstacles from the current resolvedPaths vertex
+   * positions and then rebuild CDT meshes for all active layers.
+   *
+   * Call this after modifying route vertex positions (e.g. after relaxation).
+   * Via obstacles (stored in rectObstacles) are not touched.
+   */
+  private rebuildAllTraceObstacles() {
+    // Clear trace polygon obstacles only
+    for (let z = 0; z < this.layerCount; z++) {
+      this.tracePolygonObstacles[z] = []
+      this.tracePolyAABBs[z] = []
+      this.tracePolyNetNames[z] = []
+    }
+    this.traceObstaclePolys = []
+
+    const clearance = this.minTraceWidth / 2 + this.margin
+    const connMap = new Map(this.allConnections.map((c) => [c.name, c]))
+
+    for (const rp of this.resolvedPaths) {
+      const connInfo = connMap.get(rp.connectionName)
+
+      // Walk through the route and extract runs of same-layer points
+      let runStart = 0
+      for (let i = 1; i <= rp.route.length; i++) {
+        const prevZ = rp.route[i - 1]!.z
+        const curZ = i < rp.route.length ? rp.route[i]!.z : -1
+
+        if (curZ !== prevZ || i === rp.route.length) {
+          const run = rp.route.slice(runStart, i)
+          const layerZ = prevZ
+
+          if (run.length >= 2 && layerZ < this.layerCount) {
+            const pts = run.map((p) => ({ x: p.x, y: p.y }))
+            // Pass original endpoints only for the first/last run so endcap
+            // extension logic in pathToObstaclePolygons works correctly
+            const isFirstRun = runStart === 0
+            const isLastRun = i === rp.route.length
+            const polys = this.pathToObstaclePolygons(
+              pts,
+              clearance,
+              isFirstRun ? connInfo?.originalStart : undefined,
+              isLastRun ? connInfo?.originalEnd : undefined,
+            )
+            for (const poly of polys) {
+              this.pushTraceObstacle(layerZ, poly, rp.connectionName)
+              this.traceObstaclePolys.push({
+                polygon: poly,
+                connectionName: rp.connectionName,
+                layerZ,
+              })
+            }
+          }
+          runStart = i
+        }
+      }
+    }
+
+    // Rebuild CDT meshes for all active layers
+    for (let z = 0; z < this.layerCount; z++) {
+      this.buildMesh(z)
+    }
+  }
+
+  /**
+   * Run physics relaxation on all committed traces then rebuild the CDT.
+   * @param iterations  Number of Jacobi iterations to perform.
+   */
+  /** Lazily built list of relaxer obstacles (one per SRJ obstacle, per active layer). */
+  private relaxerObstacles: RelaxerObstacle[] | null = null
+
+  private buildRelaxerObstacles(): RelaxerObstacle[] {
+    const allLayerNames = this.getAllLayerNames()
+    return this.srj.obstacles.map((obs) => {
+      const layers = obs.layers
+        .map((name) => allLayerNames.indexOf(name))
+        .filter((z) => z >= 0)
+      return {
+        layers,
+        cx: obs.center.x,
+        cy: obs.center.y,
+        // Expand by margin so the relaxer keeps traces the same distance from
+        // pads that the CDT obstacle polygons enforce.
+        hw: obs.width / 2 + this.margin,
+        hh: obs.height / 2 + this.margin,
+      }
+    })
+  }
+
+  private relaxTraces(iterations: number) {
+    if (this.resolvedPaths.length < 2 || !this.useObstacles) return
+
+    // Collect fixed points: all original pad positions from allConnections
+    const fixedKeys = new Set<string>()
+    for (const conn of this.allConnections) {
+      fixedKeys.add(`${conn.originalStart.x},${conn.originalStart.y}`)
+      fixedKeys.add(`${conn.originalEnd.x},${conn.originalEnd.y}`)
+    }
+
+    // Build obstacle list once and reuse (obstacles never change during solving)
+    if (!this.relaxerObstacles) {
+      this.relaxerObstacles = this.buildRelaxerObstacles()
+    }
+
+    const moved = this.relaxer.relax(
+      this.resolvedPaths,
+      fixedKeys,
+      (name) => this.netNameForRelaxer(name),
+      iterations,
+      0.08,
+      this.relaxerObstacles,
+    )
+
+    if (moved) {
+      this.rebuildAllTraceObstacles()
+    }
+  }
+
   /** Reset routing state back to initial (no committed traces) */
   private resetState() {
+    this.stuckRelaxCount = 0
     this.rectObstacles = this.baseObstaclePolygons
       .slice(0, this.layerCount)
       .map((polys) => [...polys])
@@ -1271,6 +1421,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
       layersToRebuild.forEach((z) => {
         if (z < this.layerCount) this.buildMesh(z)
       })
+
+      // Run light physics relaxation after each committed trace so traces
+      // spread apart and make room for subsequent routes.
+      this.relaxTraces(GreedySequentialPathSolver.RELAX_ITER_COMMIT)
     } else {
       const newRegions = this.pathToWeightedRegions(path, clearance)
       this.traceWeightedRegions[layerZ]!.push(...newRegions)
@@ -1371,10 +1525,22 @@ export class GreedySequentialPathSolver extends BaseSolver {
     const { idx, path, layerZ } = this.pickBestAcrossLayers(pickShortest)
 
     if (idx < 0) {
-      // Stuck — advance to next phase
+      // Stuck — try heavy relaxation before advancing phase.
+      // Relaxing lets committed traces burrrow apart so new paths open up.
+      if (this.stuckRelaxCount < GreedySequentialPathSolver.MAX_STUCK_RELAX) {
+        this.stuckRelaxCount++
+        this.relaxTraces(GreedySequentialPathSolver.RELAX_ITER_STUCK)
+        // Try routing again immediately (don't advance phase yet)
+        return
+      }
+      // Heavy relaxation didn't help — advance to next phase
+      this.stuckRelaxCount = 0
       this.advancePhase()
       return
     }
+
+    // Successfully picked a route — reset stuck-relax counter
+    this.stuckRelaxCount = 0
 
     const conn = this.remaining[idx]!
     this.remaining.splice(idx, 1)
