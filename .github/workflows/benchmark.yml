@@ -3,23 +3,29 @@ name: Autorouting Benchmark
 on:
   issue_comment:
     types: [created]
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
   push:
     branches:
       - main
   workflow_dispatch:
     inputs:
       solver_name:
-        description: Solver name to benchmark (optional)
+        description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver; use "all" for all solvers)'
         required: false
         type: string
       scenario_limit:
         description: Number of scenarios to run (optional)
         required: false
         type: string
-      concurrency:
-        description: Number of workers per solver
+      effort:
+        description: Effort multiplier to apply to each scenario (optional)
         required: false
-        default: "16"
+        type: string
+      concurrency:
+        description: Number of workers per solver (or "auto")
+        required: false
+        default: "auto"
         type: string
       include_assignable:
         description: Include assignable pipelines
@@ -40,7 +46,13 @@ jobs:
   benchmark:
     name: Run benchmark
     if: |
-      github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (
+      github.event_name == 'workflow_dispatch' || (
+        github.event_name == 'push' &&
+        github.ref_name == 'main'
+      ) || (
+        github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.title, '[BENCHMARK TEST]')
+      ) || (
         github.event_name == 'issue_comment' &&
         github.event.issue.pull_request &&
         github.event.comment.user.type != 'Bot' &&
@@ -51,8 +63,8 @@ jobs:
           github.event.comment.author_association == 'COLLABORATOR'
         )
       )
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ${{ vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
+    timeout-minutes: 60
 
     steps:
       - name: Parse benchmark command
@@ -62,9 +74,12 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const isComment = context.eventName === 'issue_comment'
-            let solverName = ''
+            const allSolversAliases = new Set(['all', '_'])
+            const defaultSolver = 'AutoroutingPipelineSolver'
+            let solverName = defaultSolver
             let scenarioLimit = ''
-            let concurrency = '16'
+            let effort = ''
+            let concurrency = 'auto'
             let ref = context.sha
             let statusCommentId = ''
             let includeAssignable = false
@@ -81,6 +96,11 @@ jobs:
                   i += 1
                   continue
                 }
+                if (token === '--effort') {
+                  effort = tokens[i + 1] || effort
+                  i += 1
+                  continue
+                }
                 if (token === '--include-assignable') {
                   includeAssignable = true
                   continue
@@ -88,11 +108,19 @@ jobs:
                 positional.push(token)
               }
 
-              if (positional[0] && positional[0] !== '_') {
+              const requestedSolver = positional[0] || ''
+              const usesAllSolvers =
+                requestedSolver !== '' &&
+                allSolversAliases.has(requestedSolver.toLowerCase())
+
+              if (requestedSolver && !usesAllSolvers) {
                 solverName = positional[0]
               }
               if (positional[1]) {
                 scenarioLimit = positional[1]
+              }
+              if (usesAllSolvers) {
+                solverName = ''
               }
 
               const pr = await github.rest.pulls.get({
@@ -115,15 +143,26 @@ jobs:
 
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
-              solverName = (inputs.solver_name || '').trim()
+              const requestedSolver = (inputs.solver_name || '').trim()
+              if (requestedSolver) {
+                solverName = allSolversAliases.has(requestedSolver.toLowerCase())
+                  ? ''
+                  : requestedSolver
+              }
               scenarioLimit = (inputs.scenario_limit || '').trim()
+              effort = (inputs.effort || '').trim()
               concurrency = (inputs.concurrency || concurrency).trim()
               includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
               ref = (inputs.ref || '').trim() || ref
             }
 
+            if (context.eventName === 'pull_request') {
+              ref = context.payload.pull_request.head.sha
+            }
+
             core.setOutput('solver_name', solverName)
             core.setOutput('scenario_limit', scenarioLimit)
+            core.setOutput('effort', effort)
             core.setOutput('concurrency', concurrency)
             core.setOutput('include_assignable', includeAssignable ? 'true' : 'false')
             core.setOutput('ref', ref)
@@ -146,16 +185,28 @@ jobs:
         env:
           SOLVER_NAME: ${{ steps.parse.outputs.solver_name }}
           SCENARIO_LIMIT: ${{ steps.parse.outputs.scenario_limit }}
+          EFFORT: ${{ steps.parse.outputs.effort }}
           CONCURRENCY: ${{ steps.parse.outputs.concurrency }}
           INCLUDE_ASSIGNABLE: ${{ steps.parse.outputs.include_assignable }}
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+          BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+          BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
         run: |
           chmod +x ./benchmark.sh
-          CMD=(./benchmark.sh --concurrency "$CONCURRENCY")
+          RESOLVED_CONCURRENCY="$CONCURRENCY"
+          if [ -z "$RESOLVED_CONCURRENCY" ] || [ "$RESOLVED_CONCURRENCY" = "auto" ]; then
+            RESOLVED_CONCURRENCY="$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4)"
+          fi
+          echo "Using benchmark concurrency: $RESOLVED_CONCURRENCY"
+          CMD=(./benchmark.sh --concurrency "$RESOLVED_CONCURRENCY")
           if [ -n "$SOLVER_NAME" ]; then
             CMD+=(--solver "$SOLVER_NAME")
           fi
           if [ -n "$SCENARIO_LIMIT" ]; then
             CMD+=(--scenario-limit "$SCENARIO_LIMIT")
+          fi
+          if [ -n "$EFFORT" ]; then
+            CMD+=(--effort "$EFFORT")
           fi
           if [ "$INCLUDE_ASSIGNABLE" = "true" ]; then
             CMD+=(--include-assignable)
@@ -211,18 +262,18 @@ jobs:
               '## 🏃 Autorouting Benchmark Results',
               '',
               '<details>',
-              '<summary>📊 PR Results</summary>',
-              '',
-              '```',
-              truncate(prText, maxLength),
-              '```',
-              '</details>',
-              '',
-              '<details open>',
               '<summary>📊 Main Branch Results</summary>',
               '',
               '```',
               truncate(mainText, maxLength),
+              '```',
+              '</details>',
+              '',
+              '<details open>',
+              '<summary>📊 PR Results</summary>',
+              '',
+              '```',
+              truncate(prText, maxLength),
               '```',
               '</details>',
               '',

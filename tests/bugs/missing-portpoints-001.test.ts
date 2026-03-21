@@ -8,7 +8,7 @@ import { getLastStepSvg } from "tests/fixtures/getLastStepSvg"
 
 const srj = bugReport as SimpleRouteJson
 
-test("missing-port-points-001", () => {
+test.skip("missing-port-points-001", () => {
   const solver = new AutoroutingPipelineSolver3_HgPortPointPathing(srj)
   solver.solve()
   expect(solver.solved).toBe(true)

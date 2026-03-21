@@ -181,6 +181,7 @@ export const HyperHighDensityDebugger = ({
                   {supervisedSolver.solver?.unsolvedConnections?.length}
                 </td>
                 <td style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {/* @ts-ignore */}
                   {supervisedSolver.solver.solvedRoutes?.length}
                 </td>
                 <td>

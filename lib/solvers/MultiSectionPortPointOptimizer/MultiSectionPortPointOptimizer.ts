@@ -216,7 +216,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   MAX_ATTEMPTS_PER_NODE = 100
 
   /** Maximum total number of section optimization attempts */
-  MAX_SECTION_ATTEMPTS = 50
+  MAX_SECTION_ATTEMPTS = 15
 
   /** Acceptable probability of failure threshold */
   ACCEPTABLE_PF = 0.05
@@ -274,8 +274,6 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     this.JUMPER_PF_FN_ENABLED =
       params.JUMPER_PF_FN_ENABLED ?? this.JUMPER_PF_FN_ENABLED
     this.SHUFFLE_SEEDS_PER_SECTION = params.SHUFFLE_SEEDS_PER_SECTION
-
-    this.MAX_SECTION_ATTEMPTS *= this.effort
 
     this.nodeMap = new Map(
       params.inputNodes.map((n) => [n.capacityMeshNodeId, n]),

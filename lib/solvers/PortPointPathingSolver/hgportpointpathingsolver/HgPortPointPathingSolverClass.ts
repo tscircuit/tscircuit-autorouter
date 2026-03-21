@@ -44,6 +44,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     super({
       inputConnections: params.connections,
       inputGraph: params.graph,
+      inputSolvedRoutes: params.inputSolvedRoutes,
       greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
       ripCost: params.weights.RIPPING_PF_COST,
       rippingEnabled: params.flags.RIPPING_ENABLED,
@@ -126,8 +127,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override computeG(candidate: CandidateHg): number {
-    const hgCandidate = candidate as CandidateHg
-    const baseCost = super.computeG(candidate)
+    const hgCandidate = candidate
+    let baseCost = super.computeG(candidate)
+    if (
+      hgCandidate.lastPort &&
+      hgCandidate.lastPort.d.z !== hgCandidate.port.d.z
+    ) {
+      baseCost += this.params.weights.LAYER_CHANGE_COST
+    }
     if (hgCandidate.nextRegion !== this.currentEndRegion) {
       return baseCost
     }
@@ -651,9 +658,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
     const regionRipFraction = Math.min(1, regionRipCount / maxRegionRips)
     const startRippingPfThreshold =
-      this.params.weights.START_RIPPING_PF_THRESHOLD ||
-      this.params.weights.RIPPING_PF_THRESHOLD ||
-      0.3
+      this.params.weights.START_RIPPING_PF_THRESHOLD || 0.3
     const endRippingPfThreshold =
       this.params.weights.END_RIPPING_PF_THRESHOLD || 1
     const threshold =
@@ -748,6 +753,26 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
 
     return pf
+  }
+
+  computeNodePf(node: InputNodeWithPortPoints): number | null {
+    const solvedNode = this.getOutput().nodesWithPortPoints.find(
+      (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
+    )
+    const region = this.params.graph.regions.find(
+      (candidate) => candidate.d.capacityMeshNodeId === node.capacityMeshNodeId,
+    )
+
+    if (!solvedNode || !region) return null
+
+    const crossings = getIntraNodeCrossingsUsingCircle(solvedNode)
+
+    return calculateNodeProbabilityOfFailure(
+      region.d,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
   }
 
   override getOutput(): {
@@ -926,6 +951,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   override visualize(): GraphicsObject {
     return mergeGraphicsArray([
       visualizeHgHyperGraph(this.params.graph),
+      this.visualizePfOverlay(),
       visualizeHgConnections(
         this.params.connections,
         this.params.colorMap ?? {},
@@ -936,5 +962,52 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       ),
       visualizeSolvedRoute(this.solvedRoutes, this.params.colorMap ?? {}),
     ])
+  }
+
+  private visualizePfOverlay(): GraphicsObject {
+    const output = this.getOutput()
+    const nodes = output?.inputNodeWithPortPoints ?? []
+    const nodesWithPortPointsById = new Map(
+      (output?.nodesWithPortPoints ?? []).map((node) => [
+        node.capacityMeshNodeId,
+        node,
+      ]),
+    )
+    const graphics: GraphicsObject = { rects: [] }
+
+    for (const node of nodes) {
+      const pfValue = this.computeNodePf(node)
+      const pf = pfValue ?? 0
+      const solvedNode = nodesWithPortPointsById.get(node.capacityMeshNodeId)
+      const crossings = solvedNode
+        ? getIntraNodeCrossingsUsingCircle(solvedNode)
+        : {
+            numSameLayerCrossings: 0,
+            numEntryExitLayerChanges: 0,
+            numTransitionPairCrossings: 0,
+          }
+      const red = Math.min(255, Math.floor(pf * 512))
+      const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512))
+      let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, ${pf < 0.001 ? "0.1" : "0.3"})`
+
+      if (node._containsObstacle) {
+        color = "rgba(255, 0, 0, 0.3)"
+      }
+
+      if (node._offBoardConnectedCapacityMeshNodeIds?.length) {
+        color = "rgba(255, 165, 0, 0.3)"
+      }
+
+      graphics.rects!.push({
+        center: node.center,
+        width: node.width - 0.2,
+        height: node.height - 0.2,
+        layer: `z${node?.availableZ?.join(",")}`,
+        fill: color,
+        label: `${node.capacityMeshNodeId}\npf: ${pfValue === null ? "n/a" : pfValue.toFixed(3)}\nxSame: ${crossings.numSameLayerCrossings}, xLC: ${crossings.numEntryExitLayerChanges}, xTransition: ${crossings.numTransitionPairCrossings}`,
+      })
+    }
+
+    return graphics
   }
 }

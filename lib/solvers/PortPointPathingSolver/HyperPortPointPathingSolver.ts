@@ -253,6 +253,17 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     return new Map()
   }
 
+  computeNodePf(node: InputNodeWithPortPoints): number | null {
+    if (this.winningSolver) {
+      return this.winningSolver.computeNodePf(node)
+    }
+    const best = this.getSupervisedSolverWithBestFitness()
+    if (best) {
+      return best.solver.computeNodePf(node)
+    }
+    return null
+  }
+
   /**
    * Compute board score from the winning solver
    */

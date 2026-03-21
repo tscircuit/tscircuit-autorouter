@@ -365,7 +365,7 @@ function createPcbSmtPads(srj: SimpleRouteJson): AnyCircuitElement[] {
  */
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
-  minViaDiameter = 0.6,
+  minViaDiameter = 0.3,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -376,6 +376,7 @@ function extractViasFromRoutes(
       ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
         trace.route.forEach((segment) => {
           if (segment.route_type === "via") {
+            const viaDiameter = segment.via_diameter ?? minViaDiameter
             const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
             if (!viaLocations.has(locationKey)) {
               vias.push({
@@ -384,8 +385,8 @@ function extractViasFromRoutes(
                 pcb_trace_id: trace.pcb_trace_id,
                 x: segment.x,
                 y: segment.y,
-                outer_diameter: minViaDiameter,
-                hole_diameter: minViaDiameter * 0.5,
+                outer_diameter: viaDiameter,
+                hole_diameter: viaDiameter * 0.5,
                 layers: [segment.from_layer, segment.to_layer] as LayerName[],
               })
               viaLocations.add(locationKey)
@@ -397,7 +398,7 @@ function extractViasFromRoutes(
       // Extract vias from HighDensityRoutes by looking for layer changes
       ;(routes as HighDensityRoute[]).forEach((route, routeIndex) => {
         const traceId = `trace_${routeIndex}`
-        const viaDiameter = route.viaDiameter || minViaDiameter
+        const viaDiameter = route.viaDiameter ?? minViaDiameter
         for (let i = 1; i < route.route.length; i++) {
           const prevPoint = route.route[i - 1]
           const currPoint = route.route[i]
@@ -445,7 +446,7 @@ export function convertToCircuitJson(
   srjWithPointPairs: SimpleRouteJson,
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   minTraceWidth = 0.1,
-  minViaDiameter = 0.6,
+  minViaDiameter = srjWithPointPairs.minViaDiameter ?? 0.3,
 ): AnyCircuitElement[] {
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []

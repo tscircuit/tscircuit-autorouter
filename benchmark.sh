@@ -3,8 +3,17 @@ set -euo pipefail
 
 SOLVER_NAME=""
 SCENARIO_LIMIT=""
-CONCURRENCY="${BENCHMARK_CONCURRENCY:-4}"
+EFFORT=""
+SAMPLE_TIMEOUT=""
 INCLUDE_ASSIGNABLE=false
+DATASET="dataset01"
+DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver"
+
+default_concurrency() {
+  getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4
+}
+
+CONCURRENCY="${BENCHMARK_CONCURRENCY:-$(default_concurrency)}"
 
 get_solvers() {
   INCLUDE_ASSIGNABLE="$INCLUDE_ASSIGNABLE" bun --eval '
@@ -32,21 +41,31 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|_] [scenario-limit] [--concurrency N] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--scenario-limit N] [--concurrency N] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
-  --concurrency N      Number of Bun workers used per solver (default: 4)
+  --concurrency N      Number of Bun workers used per solver, or "auto"
+  --effort N           Override scenario effort multiplier
+  --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 60s + 60s * effort
+  --dataset NAME       Dataset to benchmark: dataset01 (default) or zdwiel
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
+
+Defaults:
+  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver.
+  Use "all" to benchmark every available solver.
 
 Examples:
   ./benchmark.sh
   ./benchmark.sh AutoroutingPipelineSolver
-  ./benchmark.sh _ 20 --concurrency 8
+  ./benchmark.sh all 20 --concurrency auto
+  ./benchmark.sh --solver AutoroutingPipelineSolver --effort 2
+  ./benchmark.sh --solver AutoroutingPipelineSolver --sample-timeout 90s
   ./benchmark.sh --solver AutoroutingPipelineSolver --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver --dataset zdwiel --scenario-limit 20
   ./benchmark.sh --include-assignable
 EOF
 
@@ -88,6 +107,21 @@ while [ "$#" -gt 0 ]; do
       ;;
     --concurrency)
       CONCURRENCY="${2:-}"
+      if [ "$CONCURRENCY" = "auto" ]; then
+        CONCURRENCY="$(default_concurrency)"
+      fi
+      shift 2
+      ;;
+    --effort)
+      EFFORT="${2:-}"
+      shift 2
+      ;;
+    --sample-timeout)
+      SAMPLE_TIMEOUT="${2:-}"
+      shift 2
+      ;;
+    --dataset)
+      DATASET="${2:-}"
       shift 2
       ;;
     --include-assignable)
@@ -104,12 +138,28 @@ done
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
 
-if [ -n "$SOLVER_NAME" ] && [ "$SOLVER_NAME" != "_" ]; then
+if [ -z "$SOLVER_NAME" ]; then
+  SOLVER_NAME="$DEFAULT_SOLVER_NAME"
+fi
+
+if [ -n "$SOLVER_NAME" ] && [ "$SOLVER_NAME" != "_" ] && [ "$SOLVER_NAME" != "all" ]; then
   CMD+=("--solver" "$SOLVER_NAME")
 fi
 
 if [ -n "$SCENARIO_LIMIT" ]; then
   CMD+=("--scenario-limit" "$SCENARIO_LIMIT")
+fi
+
+if [ -n "$EFFORT" ]; then
+  CMD+=("--effort" "$EFFORT")
+fi
+
+if [ -n "$SAMPLE_TIMEOUT" ]; then
+  CMD+=("--sample-timeout" "$SAMPLE_TIMEOUT")
+fi
+
+if [ -n "$DATASET" ]; then
+  CMD+=("--dataset" "$DATASET")
 fi
 
 if [ "$INCLUDE_ASSIGNABLE" != true ]; then

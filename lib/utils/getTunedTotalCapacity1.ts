@@ -6,25 +6,46 @@ import { CapacityMeshNode } from "lib/types/capacity-mesh-types"
  * This capacity corresponds to how many vias the node can fit, tuned for two
  * layers.
  *
- * @param nodeOrWidth The node or width to calculate capacity for
+ * @param node The node or width to calculate capacity for
  * @param maxCapacityFactor Optional multiplier to adjust capacity
  * @returns The calculated capacity
  */
 export const getTunedTotalCapacity1 = (
-  nodeOrWidth: CapacityMeshNode | { width: number; availableZ?: number[] },
+  node:
+    | CapacityMeshNode
+    | { width: number; height?: number; availableZ?: number[] },
   maxCapacityFactor = 1,
   opts: { viaDiameter?: number; obstacleMargin?: number } = {},
 ) => {
   const VIA_DIAMETER = opts.viaDiameter ?? 0.3
   const TRACE_WIDTH = 0.15
+  const width = "width" in node ? node.width : node
   const obstacleMargin = opts.obstacleMargin ?? 0.2
+  const height =
+    "height" in node && typeof node.height === "number" ? node.height : width
+  if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    return 0
+  }
+  if (width <= 0 || height <= 0) {
+    return 0
+  }
+  const minSide = Math.min(width, height)
 
-  const width = "width" in nodeOrWidth ? nodeOrWidth.width : nodeOrWidth
-  const viaLengthAcross = width / (VIA_DIAMETER / 2 + obstacleMargin)
+  const effectiveNodeSpan = Math.sqrt(width * height)
+  const narrowSideViaRatio = minSide / (VIA_DIAMETER + obstacleMargin)
+  const viaRatioFactor = Math.min(
+    1.2,
+    Math.max(0.85, narrowSideViaRatio ** 0.05),
+  )
+  const viaLengthAcross =
+    (effectiveNodeSpan * viaRatioFactor) / (VIA_DIAMETER / 2 + obstacleMargin)
 
   const tunedTotalCapacity = (viaLengthAcross / 2) ** 1.1 * maxCapacityFactor
+  if (!Number.isFinite(tunedTotalCapacity)) {
+    return 0
+  }
 
-  if (nodeOrWidth.availableZ?.length === 1 && tunedTotalCapacity > 1) {
+  if (node.availableZ?.length === 1 && tunedTotalCapacity > 1) {
     return 1
   }
 

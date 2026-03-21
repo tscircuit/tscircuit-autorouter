@@ -16,6 +16,7 @@ type SolverRecord = {
 }
 
 type ProfileOptions = {
+  scenarioName?: string
   scenarioLimit?: number
 }
 
@@ -66,15 +67,27 @@ const parseArgs = (): ProfileOptions => {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
-    if (arg === "--scenario-limit") {
-      options.scenarioLimit = Number.parseInt(args[i + 1], 10)
+    if (arg === "--scenario") {
+      const scenarioName = args[i + 1]
+      if (!scenarioName || scenarioName.startsWith("-")) {
+        throw new Error("--scenario requires a scenario name")
+      }
+      options.scenarioName = scenarioName
+      i += 1
+    } else if (arg === "--scenario-limit") {
+      const rawScenarioLimit = args[i + 1]
+      if (!rawScenarioLimit || rawScenarioLimit.startsWith("-")) {
+        throw new Error("--scenario-limit requires a value")
+      }
+      options.scenarioLimit = Number.parseInt(rawScenarioLimit, 10)
       i += 1
     } else if (arg === "-h" || arg === "--help") {
       console.log(
         [
-          "Usage: bun scripts/profile-solvers.ts [--scenario-limit N]",
+          "Usage: bun scripts/profile-solvers.ts [--scenario NAME] [--scenario-limit N]",
           "",
           "Options:",
+          "  --scenario NAME      Run only the named scenario",
           "  --scenario-limit N   Run only first N scenarios",
           "  -h, --help           Show this help",
         ].join("\n"),
@@ -95,12 +108,18 @@ const parseArgs = (): ProfileOptions => {
   return options
 }
 
-const loadScenarios = (scenarioLimit?: number) => {
+const loadScenarios = (scenarioName?: string, scenarioLimit?: number) => {
   const allScenarios = Object.entries(dataset)
     .filter(([, value]) => Boolean(value) && typeof value === "object")
     .sort(([a], [b]) => a.localeCompare(b)) as Array<[string, SimpleRouteJson]>
 
-  return scenarioLimit ? allScenarios.slice(0, scenarioLimit) : allScenarios
+  const filteredScenarios = scenarioName
+    ? allScenarios.filter(([name]) => name === scenarioName)
+    : allScenarios
+
+  return scenarioLimit
+    ? filteredScenarios.slice(0, scenarioLimit)
+    : filteredScenarios
 }
 
 const getPercentile = (values: number[], p: number): number | null => {
@@ -143,9 +162,12 @@ const formatTable = (headers: string[], body: string[][]): string => {
 // --- Main ---
 const main = () => {
   const opts = parseArgs()
-  const scenarios = loadScenarios(opts.scenarioLimit)
+  const scenarios = loadScenarios(opts.scenarioName, opts.scenarioLimit)
 
   if (scenarios.length === 0) {
+    if (opts.scenarioName) {
+      throw new Error(`Scenario not found: ${opts.scenarioName}`)
+    }
     throw new Error("No scenarios found")
   }
 

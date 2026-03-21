@@ -22,7 +22,10 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private queue: ExploredPortPoint[] = []
   private resultExploredPortPoints: ExploredPortPoint[] = []
   private currentExploredPortPoints: ExploredPortPoint | null = null
-  private visitedExploredPortPoints: SegmentPortPoint[] = []
+  private visitedExploredPortPoints = new Map<
+    SegmentPortPoint,
+    ExploredPortPoint
+  >()
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
@@ -49,11 +52,16 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         parent: null,
         countOfCrampedPortPointsInPath: seedPort.cramped ? 1 : 0,
       }
-      this.queue.push(initialCandidate)
+      const existingCandidate = this.visitedExploredPortPoints.get(seedPort)
+      if (
+        !existingCandidate ||
+        this.getCandidateCost(initialCandidate) <
+          this.getCandidateCost(existingCandidate)
+      ) {
+        this.visitedExploredPortPoints.set(seedPort, initialCandidate)
+        this.queue.push(initialCandidate)
+      }
     }
-    this.visitedExploredPortPoints = [
-      ...new Set(this.queue.map((candidate) => candidate.port)),
-    ]
   }
 
   override _step() {
@@ -65,6 +73,12 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
     while (this.queue.length > 0) {
       this.currentExploredPortPoints = this.queue.shift()!
+      const bestKnownCandidate = this.visitedExploredPortPoints.get(
+        this.currentExploredPortPoints.port,
+      )
+      if (bestKnownCandidate !== this.currentExploredPortPoints) {
+        continue
+      }
 
       if (this.currentExploredPortPoints.depth === this.input.depthLimit) {
         this.resultExploredPortPoints.push(this.currentExploredPortPoints)
@@ -95,22 +109,32 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           continue
         }
 
-        this.queue.push({
+        const nextCandidate: ExploredPortPoint = {
           port: nextPort,
           depth: this.currentExploredPortPoints.depth + 1,
           parent: this.currentExploredPortPoints,
           countOfCrampedPortPointsInPath:
             this.currentExploredPortPoints.countOfCrampedPortPointsInPath +
             (nextPort.cramped ? 1 : 0),
-        })
+        }
+        const existingCandidate = this.visitedExploredPortPoints.get(nextPort)
+        if (
+          existingCandidate &&
+          this.getCandidateCost(existingCandidate) <=
+            this.getCandidateCost(nextCandidate)
+        ) {
+          continue
+        }
+        this.visitedExploredPortPoints.set(nextPort, nextCandidate)
+        this.queue.push(nextCandidate)
       }
     }
 
-    this.visitedExploredPortPoints = [
-      ...new Set(this.queue.map((candidate) => candidate.port)),
-      ...this.visitedExploredPortPoints,
-    ]
     this.solved = true
+  }
+
+  private getCandidateCost(candidate: ExploredPortPoint): number {
+    return candidate.depth + candidate.countOfCrampedPortPointsInPath * 1000
   }
 
   getOutput() {
@@ -123,7 +147,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       rects: [],
     }
 
-    for (const candidate of this.visitedExploredPortPoints) {
+    for (const candidate of this.visitedExploredPortPoints.keys()) {
       graphics.points!.push({
         ...candidate,
         color: candidate.cramped ? "blue" : "green",

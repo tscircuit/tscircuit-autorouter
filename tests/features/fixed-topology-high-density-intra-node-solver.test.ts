@@ -5,10 +5,12 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import input03 from "../../fixtures/features/via-high-density/via-high-density03-input.json" with {
   type: "json",
 }
 import { FixedTopologyHighDensityIntraNodeSolver } from "lib/solvers/FixedTopologyHighDensityIntraNodeSolver"
+import type { SimplifiedPcbTrace } from "lib/types"
 
 test("FixedTopologyHighDensityIntraNodeSolver test", () => {
   const solver = new FixedTopologyHighDensityIntraNodeSolver({
@@ -47,6 +49,30 @@ test("FixedTopologyHighDensityIntraNodeSolver test", () => {
       ),
   )
   expect(hasBottomLayerTrace).toBe(true)
+  expect(
+    circuitJson
+      .filter((element) => element.type === "pcb_via")
+      .every((via) => via.outer_diameter <= 0.3 + 1e-6),
+  ).toBe(true)
+
+  const simplifiedTraces: SimplifiedPcbTrace[] = solver.solvedRoutes.map(
+    (route, index) => ({
+      type: "pcb_trace",
+      pcb_trace_id: `fixed_topology_${index}`,
+      connection_name: route.connectionName,
+      route: convertHdRouteToSimplifiedRoute(route, srj.layerCount),
+    }),
+  )
+  const circuitJsonFromSimplified = convertToCircuitJson(
+    srj,
+    simplifiedTraces,
+    srj.minTraceWidth,
+  )
+  expect(
+    circuitJsonFromSimplified
+      .filter((element) => element.type === "pcb_via")
+      .every((via) => via.outer_diameter <= 0.3 + 1e-6),
+  ).toBe(true)
 
   const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[])
   expect(pcbSvg).toMatchSvgSnapshot(import.meta.path)

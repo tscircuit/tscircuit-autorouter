@@ -15,7 +15,10 @@ import type { SimpleRouteJson, ConnectionPoint } from "../../types"
 import { getConnectionPointLayers } from "../../utils/connection-point-utils"
 import type { ResolvedPath } from "./types"
 import { mergeOverlappingRects } from "./mergeOverlappingRects"
-import { TracePhysicsRelaxer, type RelaxerObstacle } from "./TracePhysicsRelaxer"
+import {
+  TracePhysicsRelaxer,
+  type RelaxerObstacle,
+} from "./TracePhysicsRelaxer"
 
 const TRACE_WEIGHT = 10
 const TRACE_PENALTY = 25

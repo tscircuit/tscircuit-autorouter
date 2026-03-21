@@ -97,6 +97,7 @@ export interface SimplifiedPcbTrace {
         y: number
         to_layer: string
         from_layer: string
+        via_diameter?: number
       }
     | {
         route_type: "jumper"

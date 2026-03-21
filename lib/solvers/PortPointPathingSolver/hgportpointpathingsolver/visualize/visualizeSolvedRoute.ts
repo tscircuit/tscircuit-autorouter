@@ -18,7 +18,7 @@ export function visualizeSolvedRoute(
       {
         x: solvedRoute.connection.startRegion.d.center.x,
         y: solvedRoute.connection.startRegion.d.center.y,
-        z: solvedRoute.connection.startRegion.d.availableZ[0] ?? 0,
+        z: solvedRoute.connection.startRegion.d?.availableZ?.[0] ?? 0,
       },
     ]
     for (const candidate of solvedRoute.path) {
@@ -31,7 +31,7 @@ export function visualizeSolvedRoute(
     segmentPoints.push({
       x: solvedRoute.connection.endRegion.d.center.x,
       y: solvedRoute.connection.endRegion.d.center.y,
-      z: solvedRoute.connection.endRegion.d.availableZ[0] ?? 0,
+      z: solvedRoute.connection.endRegion.d?.availableZ?.[0] ?? 0,
     })
 
     for (let i = 0; i < segmentPoints.length - 1; i++) {
@@ -51,7 +51,7 @@ export function visualizeSolvedRoute(
           { x: pointB.x, y: pointB.y },
         ],
         strokeColor: connectionColor,
-        strokeWidth: 0.1,
+        strokeWidth: 0.01,
         strokeDash,
       }
       graphics.lines!.push(line)

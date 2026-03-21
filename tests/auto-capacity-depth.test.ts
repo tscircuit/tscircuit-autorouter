@@ -46,6 +46,23 @@ describe("Auto Capacity Depth", () => {
     expect(capacity1).toEqual(capacity2)
   })
 
+  test("getTunedTotalCapacity1 lowers capacity for thin rectangles", () => {
+    const squareCapacity = getTunedTotalCapacity1({ width: 4, height: 4 })
+    const thinCapacity = getTunedTotalCapacity1({ width: 16, height: 1 })
+
+    expect(thinCapacity).toBeLessThan(squareCapacity)
+  })
+
+  test("getTunedTotalCapacity1 responds to via diameter option", () => {
+    const defaultCapacity = getTunedTotalCapacity1({ width: 2, height: 2 })
+    const largerViaCapacity = getTunedTotalCapacity1(
+      { width: 2, height: 2 },
+      1,
+      { viaDiameter: 0.6 },
+    )
+
+    expect(largerViaCapacity).toBeLessThan(defaultCapacity)
+  })
   // Needs larger simple route json to test
   // test("CapacityMeshSolver automatically calculates capacityDepth", () => {
   //   const simpleRouteJson = {

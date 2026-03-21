@@ -4,7 +4,7 @@ An MIT-licensed full-pipeline PCB autorouter library for node.js and TypeScript 
 
 [View Online Playground](https://autorouter.tscircuit.com) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com) &middot; [Report/Debug Autorouter Bugs](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
-Want to understand how the autorouter works? Check out a stage-by-stage breakdown with videos in [this autorouter walk through](./docs/blog-post/blog-post.md)
+Want to understand how the autorouter works? Read this [blog post](https://blog.autorouting.com/p/hypergraph-autorouting)
 
 ## How to file a bug report
 

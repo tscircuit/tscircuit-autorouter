@@ -14,7 +14,10 @@ import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRou
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
-import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
+import {
+  HighDensitySolverA01,
+  HighDensitySolverA03 as HighDensityA03Solver,
+} from "@tscircuit/high-density-a01"
 import { FixedTopologyHighDensityIntraNodeSolver } from "../FixedTopologyHighDensityIntraNodeSolver"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -23,6 +26,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | SingleTransitionCrossingRouteSolver
   | SingleTransitionIntraNodeSolver
   | FixedTopologyHighDensityIntraNodeSolver
+  | HighDensityA03Solver
 > {
   override getSolverName(): string {
     return "HyperSingleIntraNodeSolver"
@@ -32,15 +36,19 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
+  effort: number
 
   constructor(
-    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0],
+    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
+      effort?: number
+    },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
-    this.MAX_ITERATIONS = 30_000_000
+    this.effort = opts.effort ?? 1
+    this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
@@ -55,6 +63,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
+      ["highDensityA03"],
       ["fixedTopologyHighDensityIntraNodeSolver"],
     ]
   }
@@ -138,7 +147,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "orderings50",
-        possibleValues: Array.from({ length: 50 }, (_, i) => ({
+        possibleValues: Array.from({ length: 20 }, (_, i) => ({
           SHUFFLE_SEED: 100 + i,
         })),
       },
@@ -194,11 +203,22 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
           },
         ],
       },
+      {
+        name: "highDensityA03",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A03: true,
+          },
+        ],
+      },
     ]
   }
 
   computeG(solver: IntraNodeRouteSolver) {
-    if ((solver as any) instanceof HighDensitySolverA01) {
+    if (
+      (solver as any) instanceof HighDensitySolverA01 ||
+      (solver as any) instanceof HighDensityA03Solver
+    ) {
       return (solver as any).iterations / 1_000_000
     }
     if (solver?.hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
@@ -234,6 +254,25 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       solver.MAX_ITERATIONS = 10_000_000
       return solver as any
     }
+    if (hyperParameters.HIGH_DENSITY_A03) {
+      const solver = new HighDensityA03Solver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        highResolutionCellSize: 0.1,
+        highResolutionCellThickness: 8,
+        lowResolutionCellSize: 0.4,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: 0.15,
+        traceMargin: 0.15,
+        // This likely needs to be corrected to use the actual trace width-
+        // but using anything but 0.1 for traceThickness is causing issues
+        // needs more debugging- repro01 in the high-density-a01 repo
+        // has a good reproduction
+        traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
+        hyperParameters,
+      })
+      solver.MAX_ITERATIONS *= this.effort
+      return solver as any
+    }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -265,8 +304,8 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
         colorMap: this.constructorParams.colorMap,
-        viaDiameter: this.constructorParams.viaDiameter,
         traceWidth: this.constructorParams.traceWidth,
+        effort: this.effort,
       }) as any
     }
     return new CachedIntraNodeRouteSolver({
@@ -277,7 +316,10 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
   onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
     let routes: HighDensityIntraNodeRoute[]
-    if ((solver.solver as any) instanceof HighDensitySolverA01) {
+    if (
+      (solver.solver as any) instanceof HighDensitySolverA01 ||
+      (solver.solver as any) instanceof HighDensityA03Solver
+    ) {
       routes = (solver.solver as any).getOutput()
     } else {
       routes = solver.solver.solvedRoutes

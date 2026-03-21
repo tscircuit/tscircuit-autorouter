@@ -62,7 +62,7 @@ export function visualizeCandidate(
         { x: pointB.x, y: pointB.y },
       ],
       strokeColor: "rgba(255, 250, 50, 1)",
-      strokeWidth: 0.1,
+      strokeWidth: 0.01,
       strokeDash,
     })
   }

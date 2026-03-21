@@ -334,10 +334,19 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
           cms.portPointPathingSolver?.getNodesWithPortPoints() ??
           [],
+        nodePfById:
+          cms.multiSectionPortPointOptimizer?.nodePfMap ??
+          new Map(
+            (cms.portPointPathingSolver?.inputNodes ?? []).map((node) => [
+              node.capacityMeshNodeId,
+              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+            ]),
+          ),
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
         traceWidth: cms.minTraceWidth,
+        effort: cms.effort,
       },
     ]),
     definePipelineStep(

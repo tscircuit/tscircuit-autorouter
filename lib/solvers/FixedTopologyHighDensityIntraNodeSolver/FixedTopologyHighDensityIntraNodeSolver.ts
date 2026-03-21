@@ -7,7 +7,6 @@ import {
   type ViaTile,
   ViaGraphSolver,
   createConvexViaGraphFromXYConnections,
-  viaTile as defaultViaTile,
 } from "@tscircuit/hypergraph"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type {
@@ -33,7 +32,6 @@ export interface FixedTopologyHighDensityIntraNodeSolverParams {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap?: Record<string, string>
   traceWidth?: number
-  viaDiameter?: number
   connMap?: ConnectivityMap
   effort?: number
 }
@@ -53,8 +51,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   traceWidth: number
-  viaDiameter: number
-  viaTile: ViaTile
   connMap?: ConnectivityMap
 
   rootConnectionNameByConnectionId: Map<string, string | undefined> = new Map()
@@ -70,8 +66,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap = params.colorMap ?? {}
     this.traceWidth = params.traceWidth ?? 0.15
-    this.viaTile = defaultViaTile
-    this.viaDiameter = this._resolveViaDiameter(params.viaDiameter)
     this.connMap = params.connMap
     this.MAX_ITERATIONS = P99_MAX_ITERATIONS * (params.effort ?? 1)
 
@@ -90,17 +84,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       if (vias.length > 0) return vias[0].diameter
     }
     return 0.3
-  }
-
-  private _resolveViaDiameter(requestedViaDiameter?: number): number {
-    const viaTileDiameter = this._getViaTileDiameter(this.viaTile)
-    if (
-      requestedViaDiameter !== undefined &&
-      Math.abs(requestedViaDiameter - viaTileDiameter) <= 1e-6
-    ) {
-      return requestedViaDiameter
-    }
-    return viaTileDiameter
   }
 
   private _initializeGraph(): ViaGraphSolver | null {
@@ -140,10 +123,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     }
     if (inputConnections.length === 0) return null
 
-    const convexGraph = createConvexViaGraphFromXYConnections(
-      inputConnections,
-      this.viaTile,
-    )
+    const convexGraph = createConvexViaGraphFromXYConnections(inputConnections)
     this.tiledViasByNet = convexGraph.viaTile.viasByNet ?? {}
 
     return new ViaGraphSolver({
@@ -418,6 +398,9 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
   private _processResults(viaGraphSolver: ViaGraphSolver) {
     this.solvedRoutes = []
     const viaTile = viaGraphSolver.viaTile
+    const fallbackViaDiameter = viaTile
+      ? this._getViaTileDiameter(viaTile)
+      : 0.3
     const viasByPosition: Map<
       string,
       {
@@ -571,7 +554,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
             ? Math.max(
                 ...routeViaRegions.map((viaRegion) => viaRegion.diameter),
               )
-            : this.viaDiameter,
+            : fallbackViaDiameter,
         route: routePoints,
         vias: routeVias,
         viaRegions: routeViaRegions,

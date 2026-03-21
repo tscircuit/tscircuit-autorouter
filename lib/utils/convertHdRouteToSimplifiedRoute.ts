@@ -58,6 +58,7 @@ export const convertHdRouteToSimplifiedRoute = (
           y: point.y,
           from_layer: fromLayer,
           to_layer: toLayer,
+          via_diameter: hdRoute.viaDiameter,
         })
       }
 
