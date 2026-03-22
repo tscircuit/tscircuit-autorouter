@@ -602,7 +602,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
    */
   private beginRelax(softIters: number, isStuck: boolean): void {
     if (!this.useObstacles || this.resolvedPaths.length === 0) return
-    if (!this.relaxerObstacles) this.relaxerObstacles = this.buildRelaxerObstacles()
+    if (!this.relaxerObstacles)
+      this.relaxerObstacles = this.buildRelaxerObstacles()
 
     this.relaxer.startSession(
       this.resolvedPaths,
@@ -640,6 +641,40 @@ export class GreedySequentialPathSolver extends BaseSolver {
     }
 
     return false
+  }
+
+  /**
+   * Insert intermediate vertices along each same-layer segment so the physics
+   * relaxer has roughly one vertex per grid-cell length.  This lets the route
+   * deform smoothly rather than bending only at the original pathfinder knees.
+   *
+   * Layer-transition edges (via hops) are never subdivided.
+   */
+  private subdivideRoute(
+    route: { x: number; y: number; z: number }[],
+  ): { x: number; y: number; z: number }[] {
+    if (route.length < 2) return route
+    // Target: one vertex per ~cell-size (= 2 × hardClearance)
+    const maxLen = (this.minTraceWidth / 2 + this.margin) * 2
+    const out: { x: number; y: number; z: number }[] = [route[0]!]
+    for (let i = 1; i < route.length; i++) {
+      const a = route[i - 1]!
+      const b = route[i]!
+      // Never subdivide layer transitions (z changes)
+      if (a.z !== b.z) {
+        out.push(b)
+        continue
+      }
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const dist = Math.hypot(dx, dy)
+      const n = Math.max(1, Math.ceil(dist / maxLen))
+      for (let j = 1; j <= n; j++) {
+        const t = j / n
+        out.push({ x: a.x + dx * t, y: a.y + dy * t, z: b.z })
+      }
+    }
+    return out
   }
 
   /** Reset routing state back to initial (no committed traces) */
@@ -1373,7 +1408,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
 
     this.resolvedPaths.push({
       connectionName: conn.name,
-      route: fullRoute,
+      route: this.subdivideRoute(fullRoute),
       vias,
     })
 
@@ -1529,7 +1564,10 @@ export class GreedySequentialPathSolver extends BaseSolver {
     if (this.solveStartTime === 0) this.solveStartTime = Date.now()
 
     // Timeout guard
-    if (Date.now() - this.solveStartTime > GreedySequentialPathSolver.MAX_SOLVE_TIME_MS) {
+    if (
+      Date.now() - this.solveStartTime >
+      GreedySequentialPathSolver.MAX_SOLVE_TIME_MS
+    ) {
       console.warn(
         `GreedySequentialPathSolver: timeout after ${GreedySequentialPathSolver.MAX_SOLVE_TIME_MS}ms, ${this.resolvedPaths.length}/${this.totalConnections} routed`,
       )
@@ -1597,7 +1635,8 @@ export class GreedySequentialPathSolver extends BaseSolver {
     this.remaining.splice(idx, 1)
     this.commitPath(conn, path, layerZ)
 
-    this.progress = (this.totalConnections - this.remaining.length) / this.totalConnections
+    this.progress =
+      (this.totalConnections - this.remaining.length) / this.totalConnections
 
     // Begin light relaxation so each iteration shows up as a separate frame
     this.beginRelax(GreedySequentialPathSolver.RELAX_ITER_COMMIT, false)
@@ -1726,6 +1765,32 @@ export class GreedySequentialPathSolver extends BaseSolver {
             })
           }
           segStart = i
+        }
+      }
+    }
+
+    // Draw capsule collision bounds for every same-layer segment.
+    // Each capsule = a line rendered at strokeWidth = hardClearance diameter,
+    // which naturally produces a capsule shape (rectangle + rounded ends).
+    // Shown whenever relaxation is active (soft or hard state) so you can
+    // watch the traces spread apart in real time.
+    if (this.relaxState !== "idle") {
+      const capsuleDiameter = (this.minTraceWidth / 2 + this.margin) * 2
+      for (const rp of this.resolvedPaths) {
+        const color = this.colorMap[rp.connectionName] ?? "green"
+        for (let i = 0; i < rp.route.length - 1; i++) {
+          const a = rp.route[i]!
+          const b = rp.route[i + 1]!
+          if (a.z !== b.z) continue // skip via transitions
+          if (a.z !== 0) continue // only draw layer 0 for clarity
+          lines.push({
+            points: [
+              { x: a.x, y: a.y },
+              { x: b.x, y: b.y },
+            ],
+            strokeColor: this.withAlpha(color, 0.18),
+            strokeWidth: capsuleDiameter,
+          })
         }
       }
     }

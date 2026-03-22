@@ -138,7 +138,14 @@ function segAABBClosest(
   let best: { nx: number; ny: number; depth: number; t: number } | null = null
   for (let i = 0; i <= SAMPLES; i++) {
     const t = i / SAMPLES
-    const sep = pointAABBSep(ax + (bx - ax) * t, ay + (by - ay) * t, cx, cy, hw, hh)
+    const sep = pointAABBSep(
+      ax + (bx - ax) * t,
+      ay + (by - ay) * t,
+      cx,
+      cy,
+      hw,
+      hh,
+    )
     if (!sep) continue
     if (!best || sep.depth > best.depth) best = { ...sep, t }
   }
@@ -234,7 +241,14 @@ export class TracePhysicsRelaxer {
   private static readonly HARD_PASSES = 6
   private static readonly MIN_MOVE = 1e-5
 
-  constructor(traceClearance: number, separationFactor = 2.5) {
+  /**
+   * @param traceClearance   Minimum hard separation (= minTraceWidth/2 + margin).
+   * @param separationFactor Soft target = traceClearance × separationFactor.
+   *   Keep close to 1.0–1.3; the soft field is just a gentle nudge to spread
+   *   traces apart.  Hard obstacles and endpoints are enforced absolutely in
+   *   hardPass() regardless of this value.
+   */
+  constructor(traceClearance: number, separationFactor = 1.2) {
     this.hardClearance = traceClearance
     this.softClearance = traceClearance * separationFactor
     this.cellSize = this.softClearance * 2
@@ -242,6 +256,11 @@ export class TracePhysicsRelaxer {
 
   get hasSession(): boolean {
     return this._hasSession
+  }
+
+  /** The absolute minimum clearance enforced by the hard pass. */
+  get capsuleRadius(): number {
+    return this.hardClearance
   }
 
   // ---------------------------------------------------------------------------
@@ -307,12 +326,22 @@ export class TracePhysicsRelaxer {
           if (seen.has(key)) continue
           seen.add(key)
 
-          const c = segSegClosest(sa.ax, sa.ay, sa.bx, sa.by, sb.ax, sb.ay, sb.bx, sb.by)
+          const c = segSegClosest(
+            sa.ax,
+            sa.ay,
+            sa.bx,
+            sa.by,
+            sb.ax,
+            sb.ay,
+            sb.bx,
+            sb.by,
+          )
           if (c.dist >= this.softClearance) continue
 
           const depth = this.softClearance - c.dist
-          // Use 0.8× depth so impulses are aggressive enough to converge
-          const push = depth * 0.8
+          // Gentle nudge — traces soft-repel each other but don't blast apart.
+          // Hard violations are resolved absolutely in hardPass().
+          const push = depth * 0.1
 
           this.applySegImpulse(impulses, sa, sb, c.nx, c.ny, c.s, c.t, push)
         }
@@ -323,7 +352,16 @@ export class TracePhysicsRelaxer {
     for (const seg of segments) {
       for (const obs of this.obstacles) {
         if (obs.layers.length > 0 && !obs.layers.includes(seg.az)) continue
-        const sep = segAABBClosest(seg.ax, seg.ay, seg.bx, seg.by, obs.cx, obs.cy, obs.hw, obs.hh)
+        const sep = segAABBClosest(
+          seg.ax,
+          seg.ay,
+          seg.bx,
+          seg.by,
+          obs.cx,
+          obs.cy,
+          obs.hw,
+          obs.hh,
+        )
         if (!sep) continue
         const dist = -sep.depth // positive = outside
         if (dist >= this.softClearance) continue
@@ -351,13 +389,21 @@ export class TracePhysicsRelaxer {
           const prev = verts[vi - 1]!
           const next = verts[vi + 1]!
           if (prev.z !== v.z || next.z !== v.z) continue
-          impulses[ti]![vi]!.dx += ((prev.x + next.x) * 0.5 - v.x) * this.stringPull
-          impulses[ti]![vi]!.dy += ((prev.y + next.y) * 0.5 - v.y) * this.stringPull
+          impulses[ti]![vi]!.dx +=
+            ((prev.x + next.x) * 0.5 - v.x) * this.stringPull
+          impulses[ti]![vi]!.dy +=
+            ((prev.y + next.y) * 0.5 - v.y) * this.stringPull
         }
       }
     }
 
     // --- Apply (Jacobi: all at once) ---
+    // Clamp the total displacement per vertex so vertices don't blast away
+    // when many pairs contribute simultaneously (happens with dense segments).
+    // This is what keeps the soft repulsion "soft" regardless of trace density.
+    // Each vertex moves at most this per step; keeps soft repulsion "soft"
+    // even when many segment pairs accumulate impulses on the same vertex.
+    const maxMove = this.hardClearance * 0.12
     let moved = false
     for (let ti = 0; ti < this.verts.length; ti++) {
       const verts = this.verts[ti]!
@@ -365,11 +411,12 @@ export class TracePhysicsRelaxer {
         const v = verts[vi]!
         if (v.fixed) continue
         const imp = impulses[ti]![vi]!
-        if (Math.abs(imp.dx) > TracePhysicsRelaxer.MIN_MOVE || Math.abs(imp.dy) > TracePhysicsRelaxer.MIN_MOVE) {
-          v.x += imp.dx
-          v.y += imp.dy
-          moved = true
-        }
+        const mag = Math.hypot(imp.dx, imp.dy)
+        if (mag < TracePhysicsRelaxer.MIN_MOVE) continue
+        const scale = mag > maxMove ? maxMove / mag : 1
+        v.x += imp.dx * scale
+        v.y += imp.dy * scale
+        moved = true
       }
     }
 
@@ -437,7 +484,16 @@ export class TracePhysicsRelaxer {
             const vb0 = this.verts[sb.ti]![sb.vi]!
             const vb1 = this.verts[sb.ti]![sb.vj]!
 
-            const c = segSegClosest(va0.x, va0.y, va1.x, va1.y, vb0.x, vb0.y, vb1.x, vb1.y)
+            const c = segSegClosest(
+              va0.x,
+              va0.y,
+              va1.x,
+              va1.y,
+              vb0.x,
+              vb0.y,
+              vb1.x,
+              vb1.y,
+            )
             if (c.dist >= this.hardClearance) continue
 
             const correction = this.hardClearance - c.dist + 1e-4
