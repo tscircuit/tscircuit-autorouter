@@ -245,7 +245,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: 0.15,
-        traceMargin: 0.15,
+        traceMargin: 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
@@ -262,7 +262,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         lowResolutionCellSize: 0.4,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: 0.15,
-        traceMargin: 0.15,
+        traceMargin: 0.1,
         // This likely needs to be corrected to use the actual trace width-
         // but using anything but 0.1 for traceThickness is causing issues
         // needs more debugging- repro01 in the high-density-a01 repo
