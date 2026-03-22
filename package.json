@@ -68,7 +68,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#3608022f119c62df9f3beda8dde98e483fad40a3"
   },
   "dependencies": {
-    "@tscircuit/high-density-a01": "^0.0.22",
+    "@tscircuit/high-density-a01": "^0.0.24",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0"
   }
