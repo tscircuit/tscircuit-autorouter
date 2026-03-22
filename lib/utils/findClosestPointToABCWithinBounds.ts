@@ -188,7 +188,7 @@ export function findClosestPointToABCWithinBounds(
   // If all interior methods failed, check boundary points
   // Sample points along the boundary
   const numSamples = 100 // More samples for better accuracy
-  const boundaryPoints = []
+  const boundaryPoints: any[] = []
 
   for (let i = 0; i <= numSamples; i++) {
     const t = i / numSamples

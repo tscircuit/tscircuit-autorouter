@@ -27,3 +27,4 @@ export type {
   Jumper,
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
+export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
