@@ -1,13 +1,21 @@
 import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { CapacityMeshEdge, CapacityMeshNode } from "lib/types"
 import availableSegmentPointSolver_input from "./assets/availableSegmentPointSolver_input-113.json"
 import { expect, test } from "bun:test"
+
+type AvailableSegmentPointSolverInput = ConstructorParameters<
+  typeof AvailableSegmentPointSolver
+>[0]
+
+const availableSegmentPointSolverInputData =
+  availableSegmentPointSolver_input as AvailableSegmentPointSolverInput[]
 
 test("repro02: impossible to reach obstacle with availableSegmentPointSolver", () => {
   // Keep only nodes/edges reachable from the seed node within 4 BFS hops.
   const bfsSeedNodeId = "cmn_126"
   const bfsMaxDepth = 4
   const adjacency = new Map<string, Set<string>>()
-  for (const edge of availableSegmentPointSolver_input[0].edges) {
+  for (const edge of availableSegmentPointSolverInputData[0].edges) {
     const [a, b] = edge.nodeIds
     if (!adjacency.has(a)) adjacency.set(a, new Set())
     if (!adjacency.has(b)) adjacency.set(b, new Set())
@@ -27,22 +35,24 @@ test("repro02: impossible to reach obstacle with availableSegmentPointSolver", (
     }
   }
   const allowedCmnNodeIds = new Set(bfsDepthByNodeId.keys())
-  availableSegmentPointSolver_input[0].nodes =
-    availableSegmentPointSolver_input[0].nodes.filter((node) =>
-      allowedCmnNodeIds.has(node.capacityMeshNodeId),
+  availableSegmentPointSolverInputData[0].nodes =
+    availableSegmentPointSolverInputData[0].nodes.filter(
+      (node: CapacityMeshNode) =>
+        allowedCmnNodeIds.has(node.capacityMeshNodeId),
     )
-  availableSegmentPointSolver_input[0].edges =
-    availableSegmentPointSolver_input[0].edges.filter((edge) =>
-      edge.nodeIds.every((nodeId) => allowedCmnNodeIds.has(nodeId)),
+  availableSegmentPointSolverInputData[0].edges =
+    availableSegmentPointSolverInputData[0].edges.filter(
+      (edge: CapacityMeshEdge) =>
+        edge.nodeIds.every((nodeId: string) => allowedCmnNodeIds.has(nodeId)),
     )
 
   // Setup
   const solver = new AvailableSegmentPointSolver({
-    ...availableSegmentPointSolver_input[0],
-  } as any)
+    ...availableSegmentPointSolverInputData[0],
+  })
   solver.solve()
 
-  const { nodes } = availableSegmentPointSolver_input[0]
+  const { nodes } = availableSegmentPointSolverInputData[0]
   const sharedEdgeSegments = solver.sharedEdgeSegments
   const nodeById = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
 

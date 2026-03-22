@@ -17,6 +17,7 @@
 
     // Bundler mode
     "moduleResolution": "bundler",
+    "resolveJsonModule": false,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,

@@ -10,9 +10,17 @@ import { SegmentId, SegmentPoint } from "lib/solvers/UnravelSolver/types"
 import { SegmentWithAssignedPoints } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
 import { InMemoryCache } from "lib/cache/InMemoryCache"
 
+interface SegmentToPointFixtureData {
+  assignedSegments: SegmentWithAssignedPoints[]
+  nodes: CapacityMeshNode[]
+  colorMap: Record<string, string>
+}
+
+const segmentpoint5Data = segmentpoint5 as SegmentToPointFixtureData
+
 // Function to prepare solver parameters from raw data
 const prepareSolverParams = (
-  rawData: typeof segmentpoint5,
+  rawData: SegmentToPointFixtureData,
   rootNodeId: CapacityMeshNodeId,
 ) => {
   const dedupedSegments = getDedupedSegments(rawData.assignedSegments)
@@ -48,11 +56,11 @@ const prepareSolverParams = (
 
 // Function to create a translated and ID-remapped version of the data
 const createModifiedData = (
-  originalData: typeof segmentpoint5,
+  originalData: SegmentToPointFixtureData,
   originalRootNodeId: CapacityMeshNodeId,
   translation: { x: number; y: number },
 ): {
-  modifiedData: typeof segmentpoint5
+  modifiedData: SegmentToPointFixtureData
   newRootNodeId: CapacityMeshNodeId
 } => {
   const modifiedData = structuredClone(originalData)
@@ -108,7 +116,7 @@ const createModifiedData = (
           x: segment.end.x + translation.x,
           y: segment.end.y + translation.y,
         },
-        assignedPoints: segment.assignedPoints.map((ap) => ({
+        assignedPoints: (segment.assignedPoints ?? []).map((ap) => ({
           ...ap,
           point: {
             x: ap.point.x + translation.x,
@@ -135,9 +143,12 @@ export default function CachedUnravel1() {
     const originalRootId = "cn58" // Choose a root node from the data
     const translation = { x: 100, y: 50 }
 
-    const originalParams = prepareSolverParams(segmentpoint5, originalRootId)
+    const originalParams = prepareSolverParams(
+      segmentpoint5Data,
+      originalRootId,
+    )
     const { modifiedData, newRootNodeId } = createModifiedData(
-      segmentpoint5,
+      segmentpoint5Data,
       originalRootId,
       translation,
     )

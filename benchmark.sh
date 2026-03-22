@@ -60,7 +60,7 @@ Usage:
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline N         Run a numbered pipeline alias (1-4). Defaults to 10 scenarios when no limit is set
+  --pipeline N         Run a numbered pipeline alias (1-4)
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
@@ -158,9 +158,6 @@ done
 
 if [ -n "$PIPELINE_ID" ]; then
   SOLVER_NAME="$(resolve_pipeline_solver_name "$PIPELINE_ID")"
-  if [ -z "$SCENARIO_LIMIT" ]; then
-    SCENARIO_LIMIT="10"
-  fi
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
