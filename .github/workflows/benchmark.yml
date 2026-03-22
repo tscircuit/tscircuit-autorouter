@@ -75,53 +75,99 @@ jobs:
           script: |
             const isComment = context.eventName === 'issue_comment'
             const allSolversAliases = new Set(['all', '_'])
-            const defaultSolver = 'AutoroutingPipelineSolver'
-            let solverName = defaultSolver
-            let scenarioLimit = ''
-            let effort = ''
-            let concurrency = 'auto'
+            const splitShellArgs = (input) => {
+              const args = []
+              let current = ''
+              let quote = null
+              let escaping = false
+              let tokenStarted = false
+
+              const pushCurrent = () => {
+                if (!tokenStarted) return
+                args.push(current)
+                current = ''
+                tokenStarted = false
+              }
+
+              for (const char of input) {
+                if (escaping) {
+                  if (quote === '"' && char === '\n') {
+                    escaping = false
+                    continue
+                  }
+                  if (quote === '"' && !['"', '\\', '$', '`'].includes(char)) {
+                    current += '\\'
+                  }
+                  current += char
+                  tokenStarted = true
+                  escaping = false
+                  continue
+                }
+
+                if (quote === "'") {
+                  if (char === "'") {
+                    quote = null
+                  } else {
+                    current += char
+                  }
+                  tokenStarted = true
+                  continue
+                }
+
+                if (quote === '"') {
+                  if (char === '"') {
+                    quote = null
+                  } else if (char === '\\') {
+                    escaping = true
+                  } else {
+                    current += char
+                  }
+                  tokenStarted = true
+                  continue
+                }
+
+                if (/\s/.test(char)) {
+                  pushCurrent()
+                  continue
+                }
+
+                if (char === "'" || char === '"') {
+                  quote = char
+                  tokenStarted = true
+                  continue
+                }
+
+                if (char === '\\') {
+                  escaping = true
+                  tokenStarted = true
+                  continue
+                }
+
+                current += char
+                tokenStarted = true
+              }
+
+              if (escaping) {
+                current += '\\'
+              }
+
+              if (quote !== null) {
+                throw new Error('Unterminated quote in /benchmark command')
+              }
+
+              pushCurrent()
+              return args
+            }
+
+            let benchmarkArgs = []
+            let benchmarkConcurrency = ''
             let ref = context.sha
             let statusCommentId = ''
-            let includeAssignable = false
 
             if (isComment) {
               const body = context.payload.comment.body.trim()
-              const tokens = body.split(/\s+/).slice(1)
-              const positional = []
-
-              for (let i = 0; i < tokens.length; i += 1) {
-                const token = tokens[i]
-                if (token === '--concurrency') {
-                  concurrency = tokens[i + 1] || concurrency
-                  i += 1
-                  continue
-                }
-                if (token === '--effort') {
-                  effort = tokens[i + 1] || effort
-                  i += 1
-                  continue
-                }
-                if (token === '--include-assignable') {
-                  includeAssignable = true
-                  continue
-                }
-                positional.push(token)
-              }
-
-              const requestedSolver = positional[0] || ''
-              const usesAllSolvers =
-                requestedSolver !== '' &&
-                allSolversAliases.has(requestedSolver.toLowerCase())
-
-              if (requestedSolver && !usesAllSolvers) {
-                solverName = positional[0]
-              }
-              if (positional[1]) {
-                scenarioLimit = positional[1]
-              }
-              if (usesAllSolvers) {
-                solverName = ''
-              }
+              const commentArgs = body.replace(/^\/benchmark\b/, '').trim()
+              benchmarkArgs = splitShellArgs(commentArgs)
 
               const pr = await github.rest.pulls.get({
                 owner: context.repo.owner,
@@ -145,14 +191,29 @@ jobs:
               const inputs = context.payload.inputs || {}
               const requestedSolver = (inputs.solver_name || '').trim()
               if (requestedSolver) {
-                solverName = allSolversAliases.has(requestedSolver.toLowerCase())
-                  ? ''
-                  : requestedSolver
+                if (allSolversAliases.has(requestedSolver.toLowerCase())) {
+                  benchmarkArgs.push('all')
+                } else {
+                  benchmarkArgs.push('--solver', requestedSolver)
+                }
               }
-              scenarioLimit = (inputs.scenario_limit || '').trim()
-              effort = (inputs.effort || '').trim()
-              concurrency = (inputs.concurrency || concurrency).trim()
-              includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+              const scenarioLimit = (inputs.scenario_limit || '').trim()
+              const effort = (inputs.effort || '').trim()
+              const concurrency = (inputs.concurrency || '').trim()
+              const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+
+              if (scenarioLimit) {
+                benchmarkArgs.push('--scenario-limit', scenarioLimit)
+              }
+              if (effort) {
+                benchmarkArgs.push('--effort', effort)
+              }
+              if (includeAssignable) {
+                benchmarkArgs.push('--include-assignable')
+              }
+              if (concurrency && concurrency.toLowerCase() !== 'auto') {
+                benchmarkConcurrency = concurrency
+              }
               ref = (inputs.ref || '').trim() || ref
             }
 
@@ -160,11 +221,8 @@ jobs:
               ref = context.payload.pull_request.head.sha
             }
 
-            core.setOutput('solver_name', solverName)
-            core.setOutput('scenario_limit', scenarioLimit)
-            core.setOutput('effort', effort)
-            core.setOutput('concurrency', concurrency)
-            core.setOutput('include_assignable', includeAssignable ? 'true' : 'false')
+            core.setOutput('benchmark_args_json', JSON.stringify(benchmarkArgs))
+            core.setOutput('benchmark_concurrency', benchmarkConcurrency)
             core.setOutput('ref', ref)
             core.setOutput('status_comment_id', statusCommentId)
 
@@ -183,35 +241,31 @@ jobs:
 
       - name: Run benchmark (PR)
         env:
-          SOLVER_NAME: ${{ steps.parse.outputs.solver_name }}
-          SCENARIO_LIMIT: ${{ steps.parse.outputs.scenario_limit }}
-          EFFORT: ${{ steps.parse.outputs.effort }}
-          CONCURRENCY: ${{ steps.parse.outputs.concurrency }}
-          INCLUDE_ASSIGNABLE: ${{ steps.parse.outputs.include_assignable }}
+          BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
+          BENCHMARK_CONCURRENCY: ${{ steps.parse.outputs.benchmark_concurrency }}
           BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
           BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
           BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
         run: |
           chmod +x ./benchmark.sh
-          RESOLVED_CONCURRENCY="$CONCURRENCY"
-          if [ -z "$RESOLVED_CONCURRENCY" ] || [ "$RESOLVED_CONCURRENCY" = "auto" ]; then
-            RESOLVED_CONCURRENCY="$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4)"
-          fi
-          echo "Using benchmark concurrency: $RESOLVED_CONCURRENCY"
-          CMD=(./benchmark.sh --concurrency "$RESOLVED_CONCURRENCY")
-          if [ -n "$SOLVER_NAME" ]; then
-            CMD+=(--solver "$SOLVER_NAME")
-          fi
-          if [ -n "$SCENARIO_LIMIT" ]; then
-            CMD+=(--scenario-limit "$SCENARIO_LIMIT")
-          fi
-          if [ -n "$EFFORT" ]; then
-            CMD+=(--effort "$EFFORT")
-          fi
-          if [ "$INCLUDE_ASSIGNABLE" = "true" ]; then
-            CMD+=(--include-assignable)
-          fi
-          "${CMD[@]}"
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process')
+
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          const renderedArgs = args.map((arg) => JSON.stringify(arg)).join(' ')
+          console.log(`Running benchmark command: ./benchmark.sh${renderedArgs ? ` ${renderedArgs}` : ''}`)
+
+          const result = spawnSync('./benchmark.sh', args, {
+            stdio: 'inherit',
+            env: process.env,
+          })
+
+          if (result.error) {
+            throw result.error
+          }
+
+          process.exit(result.status ?? 1)
+          NODE
           cp benchmark-result.txt benchmark-result-pr.txt
 
       - name: Download main branch benchmark result
