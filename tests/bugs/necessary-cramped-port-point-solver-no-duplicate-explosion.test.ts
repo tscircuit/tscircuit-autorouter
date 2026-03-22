@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import missingPortPointsFixture from "../../fixtures/bug-reports/missing-port-points-001/missing-port-points-001.json"
-import { AutoroutingPipelineSolver3_HgPortPointPathing } from "../../lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
+import { AutoroutingPipelineSolver3_HgPortPointPathing } from "../../lib/autorouter-pipelines/AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "../../lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver"
 import type { SimpleRouteJson } from "../../lib/types"
 

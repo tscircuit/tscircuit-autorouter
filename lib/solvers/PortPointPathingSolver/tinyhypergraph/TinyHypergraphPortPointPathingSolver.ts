@@ -205,7 +205,7 @@ const buildSerializedTinyGraph = (
         connectionId: connection.connectionId,
       },
       path: [{ portId: startTerminalPortId }, { portId: endTerminalPortId }],
-    })
+    } as SerializedTinySolvedRoute)
   }
 
   return {

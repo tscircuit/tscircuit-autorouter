@@ -1,15 +1,11 @@
-import { HyperGraphSectionOptimizer } from "@tscircuit/hypergraph"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
-import {
-  HgPortPointPathingSolver,
-  buildHyperGraph,
-} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
+import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -53,24 +49,22 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
   getConstructorParams: (
-    instance: AutoroutingPipelineSolver3_HgPortPointPathing,
+    instance: AutoroutingPipelineSolver4_TinyHypergraph,
   ) => ConstructorParameters<T>
-  onSolved?: (instance: AutoroutingPipelineSolver3_HgPortPointPathing) => void
+  onSolved?: (instance: AutoroutingPipelineSolver4_TinyHypergraph) => void
 }
 
 function definePipelineStep<
-  T extends new (
-    ...args: any[]
-  ) => BaseSolver,
+  T extends new (...args: any[]) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
-  solverName: keyof AutoroutingPipelineSolver3_HgPortPointPathing,
+  solverName: keyof AutoroutingPipelineSolver4_TinyHypergraph,
   solverClass: T,
   getConstructorParams: (
-    instance: AutoroutingPipelineSolver3_HgPortPointPathing,
+    instance: AutoroutingPipelineSolver4_TinyHypergraph,
   ) => P,
   opts: {
-    onSolved?: (instance: AutoroutingPipelineSolver3_HgPortPointPathing) => void
+    onSolved?: (instance: AutoroutingPipelineSolver4_TinyHypergraph) => void
   } = {},
 ): PipelineStep<T> {
   return {
@@ -81,9 +75,8 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
+export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
-  // nodeSolver?: CapacityMeshNodeSolver2_NodeUnderObstacle
   nodeSolver?: RectDiffPipeline
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -95,12 +88,11 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: HgPortPointPathingSolver
+  portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
-  hyperGraphSectionOptimizer?: HyperGraphSectionOptimizer
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -135,8 +127,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     definePipelineStep(
       "nodeSolver",
       RectDiffPipeline,
-      // Cast to any because RectDiffSolver uses an older SimpleRouteJson type
-      // that doesn't support MultiLayerConnectionPoint yet
       (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! as any }],
       {
         onSolved: (cms) => {
@@ -144,39 +134,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         },
       },
     ),
-    // definePipelineStep(
-    //   "nodeSolver",
-    //   CapacityMeshNodeSolver2_NodeUnderObstacle,
-    //   (cms) => [
-    //     cms.netToPointPairsSolver?.getNewSimpleRouteJson() || cms.srj,
-    //     cms.opts,
-    //   ],
-    //   {
-    //     onSolved: (cms) => {
-    //       cms.capacityNodes = cms.nodeSolver?.finishedNodes!
-    //     },
-    //   },
-    // ),
-    // definePipelineStep(
-    //   "singleLayerNodeMerger",
-    //   SingleLayerNodeMergerSolver,
-    //   (cms) => [cms.nodeSolver?.finishedNodes!],
-    //   {
-    //     onSolved: (cms) => {
-    //       cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
-    //     },
-    //   },
-    // ),
-    // definePipelineStep(
-    //   "strawSolver",
-    //   StrawSolver,
-    //   (cms) => [{ nodes: cms.capacityNodes! }],
-    //   {
-    //     onSolved: (cms) => {
-    //       cms.capacityNodes = cms.strawSolver?.getResultNodes()!
-    //     },
-    //   },
-    // ),
     definePipelineStep(
       "edgeSolver",
       CapacityMeshEdgeSolver2_NodeTreeOptimization,
@@ -187,23 +144,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         },
       },
     ),
-    // definePipelineStep(
-    //   "deadEndSolver",
-    //   DeadEndSolver,
-    //   (cms) => [{ nodes: cms.capacityNodes!, edges: cms.capacityEdges! }],
-    //   {
-    //     onSolved: (cms) => {
-    //       const removedNodeIds = cms.deadEndSolver?.removedNodeIds!
-
-    //       cms.capacityNodes = cms.capacityNodes!.filter(
-    //         (n) => !removedNodeIds.has(n.capacityMeshNodeId),
-    //       )
-    //       cms.capacityEdges = cms.capacityEdges!.filter((e) =>
-    //         e.nodeIds.every((nodeId) => !removedNodeIds.has(nodeId)),
-    //       )
-    //     },
-    //   },
-    // ),
     definePipelineStep(
       "availableSegmentPointSolver",
       AvailableSegmentPointSolver,
@@ -230,7 +170,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HgPortPointPathingSolver,
+      TinyHypergraphPortPointPathingSolver,
       (cms) => {
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
@@ -276,98 +216,20 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "hyperGraphSectionOptimizer",
-      HyperGraphSectionOptimizer,
-      (cms) => {
-        const portPointSolver = cms.portPointPathingSolver!
-
-        return [
-          {
-            hyperGraphSolver: portPointSolver,
-            inputSolvedRoutes: portPointSolver.solvedRoutes,
-            expansionHopsFromCentralRegion: 1,
-            createHyperGraphSolver: (input) => {
-              return new HgPortPointPathingSolver({
-                graph: input.inputGraph as any,
-                connections: input.inputConnections as any,
-                inputSolvedRoutes: input.inputSolvedRoutes as any,
-                layerCount: cms.srj.layerCount,
-                effort: cms.effort,
-                flags: {
-                  FORCE_CENTER_FIRST: true,
-                  RIPPING_ENABLED: true,
-                },
-                weights: {
-                  SHUFFLE_SEED: 0,
-                  MEMORY_PF_FACTOR: 4,
-                  CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-                  CENTER_OFFSET_FOCUS_SHIFT: 0,
-                  NODE_PF_FACTOR: 0,
-                  LAYER_CHANGE_COST: 0,
-                  RIPPING_PF_COST: 0.0,
-                  NODE_PF_MAX_PENALTY: 100,
-                  BASE_CANDIDATE_COST: 0.6,
-                  MAX_ITERATIONS_PER_PATH: 0,
-                  RANDOM_WALK_DISTANCE: 0,
-                  START_RIPPING_PF_THRESHOLD: 0.3,
-                  END_RIPPING_PF_THRESHOLD: 1,
-                  MAX_RIPS: 1000,
-                  RANDOM_RIP_FRACTION: 0.3,
-                  STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-                  GREEDY_MULTIPLIER: 0.7,
-                  MIN_ALLOWED_BOARD_SCORE: -10000,
-                },
-              })
-            },
-            regionCost: computeCostPerRegion,
-            effort: cms.effort,
-            ACCEPTABLE_REGION_COST: 0.1,
-            MAX_ATTEMPTS_PER_REGION: Math.max(3, 3 * cms.effort),
-            MAX_ATTEMPTS_PER_SECTION: Math.max(50, 50 * cms.effort),
-            FRACTION_TO_REPLACE: 1,
-            alwaysRipConflicts: true,
-          },
-        ]
-      },
-    ),
-    // definePipelineStep(
-    //   "multiSectionPortPointOptimizer",
-    //   MultiSectionPortPointOptimizer,
-    //   (cms) => {
-    //     const portPointSolver = cms.portPointPathingSolver!
-    //     return [
-    //       {
-    //         simpleRouteJson: cms.srjWithPointPairs!,
-    //         inputNodes: portPointSolver.inputNodes,
-    //         capacityMeshNodes: cms.capacityNodes!,
-    //         capacityMeshEdges: cms.capacityEdges!,
-    //         colorMap: cms.colorMap,
-    //         initialConnectionResults: portPointSolver.connectionsWithResults,
-    //         initialAssignedPortPoints: portPointSolver.assignedPortPoints,
-    //         initialNodeAssignedPortPoints:
-    //           portPointSolver.nodeAssignedPortPoints,
-    //         effort: cms.effort,
-    //       },
-    //     ]
-    //   },
-    // ),
-    definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => {
-        return [
-          {
-            nodeWithPortPoints:
-              cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-            inputNodesWithPortPoints:
-              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-              [],
-            minTraceWidth: cms.minTraceWidth,
-            obstacles: cms.srj.obstacles,
-            layerCount: cms.srj.layerCount,
-          },
-        ]
-      },
+      (cms) => [
+        {
+          nodeWithPortPoints:
+            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+          inputNodesWithPortPoints:
+            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
+            [],
+          minTraceWidth: cms.minTraceWidth,
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
@@ -416,19 +278,17 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => {
-      return [
-        {
-          hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-          obstacles: cms.srj.obstacles,
-          connMap: cms.connMap,
-          colorMap: cms.colorMap,
-          minTraceWidth: cms.minTraceWidth,
-          connection: cms.srj.connections,
-          layerCount: cms.srj.layerCount,
-        },
-      ]
-    }),
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+      {
+        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        obstacles: cms.srj.obstacles,
+        connMap: cms.connMap,
+        colorMap: cms.colorMap,
+        minTraceWidth: cms.minTraceWidth,
+        connection: cms.srj.connections,
+        layerCount: cms.srj.layerCount,
+      },
+    ]),
   ]
 
   constructor(
@@ -444,14 +304,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
 
-    // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
-      // Calculate max width/height from bounds for initial node size
       const boundsWidth = srj.bounds.maxX - srj.bounds.minX
       const boundsHeight = srj.bounds.maxY - srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
-
-      // Use the calculateOptimalCapacityDepth function to determine the right depth
       const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5
       mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
         maxWidthHeight,
@@ -521,8 +377,9 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    if (!this.solved && this.activeSubSolver)
+    if (!this.solved && this.activeSubSolver) {
       return this.activeSubSolver.visualize()
+    }
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const nodeViz = this.nodeSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
@@ -547,18 +404,11 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
 
     problemLines.push({
       points: [
-        // Add five points representing the bounds of the PCB
-        {
-          x: this.srj.bounds?.minX ?? -50,
-          y: this.srj.bounds?.minY ?? -50,
-        },
+        { x: this.srj.bounds?.minX ?? -50, y: this.srj.bounds?.minY ?? -50 },
         { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.minY ?? -50 },
         { x: this.srj.bounds?.maxX ?? 50, y: this.srj.bounds?.maxY ?? 50 },
         { x: this.srj.bounds?.minX ?? -50, y: this.srj.bounds?.maxY ?? 50 },
-        {
-          x: this.srj.bounds?.minX ?? -50,
-          y: this.srj.bounds?.minY ?? -50,
-        }, // Close the rectangle
+        { x: this.srj.bounds?.minX ?? -50, y: this.srj.bounds?.minY ?? -50 },
       ],
       strokeColor: "rgba(255,0,0,0.25)",
     })
@@ -626,19 +476,9 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-    // return visualizations[visualizations.length - 1]
     return combineVisualizations(...visualizations)
   }
 
-  /**
-   * A lightweight version of the visualize method that can be used to stream
-   * progress
-   *
-   * We return the most relevant graphic for the stage:
-   * 1. netToPointPairs output
-   * 2. Capacity Planning Output
-   * 3. High Density Route Solver Output, max 200 lines
-   */
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
@@ -655,9 +495,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       }
       return { lines }
     }
-    // This output is good as-is
     if (this.netToPointPairsSolver) {
-      return this.netToPointPairsSolver?.visualize()
+      return this.netToPointPairsSolver.visualize()
     }
 
     return {}
@@ -671,9 +510,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     )
   }
 
-  /**
-   * Returns the SimpleRouteJson with routes converted to SimplifiedPcbTraces
-   */
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved || !this.highDensityRouteSolver) {
       throw new Error("Cannot get output before solving is complete")
@@ -688,7 +524,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         this.srj.connections.find((c) => c.name === connection.name)
           ?.netConnectionName
 
-      // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
         (r) => r.connectionName === connection.name,
       )
@@ -720,6 +555,4 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   }
 }
 
-/** @deprecated Use AutoroutingPipelineSolver instead */
-export const CapacityMeshSolver = AutoroutingPipelineSolver3_HgPortPointPathing
-export type CapacityMeshSolver = AutoroutingPipelineSolver3_HgPortPointPathing
+export { AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver4 }
