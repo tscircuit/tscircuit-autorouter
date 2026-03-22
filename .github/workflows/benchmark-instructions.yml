@@ -35,6 +35,8 @@ jobs:
               "- `/benchmark all 20` -> all solvers, first 20 scenarios",
               "- `/benchmark AutoroutingPipelineSolver 20 --concurrency 8` -> one solver, 20 scenarios, 8 workers",
               "- `/benchmark AutoroutingPipelineSolver 20 --effort 2` -> one solver, 20 scenarios, 2x effort",
+              "- `/benchmark AutoroutingPipelineSolver --dataset zdwiel` -> one solver, all scenarios, zdwiel dataset",
+              "- `/benchmark all 20 --dataset dataset01 --concurrency 8` -> all solvers, 20 scenarios, dataset01, 8 workers",
               "- `/benchmark --pipeline 4` -> same as `./benchmark.sh --pipeline 4`",
               "",
               "Any PR whose title contains `[BENCHMARK TEST]` will automatically run the benchmark workflow on PR updates.",

@@ -32,6 +32,10 @@ on:
         required: false
         default: false
         type: boolean
+      dataset_name:
+        description: 'Dataset to benchmark (optional: dataset01 or zdwiel)'
+        required: false
+        type: string
       ref:
         description: Git ref (branch, tag, or SHA) to benchmark
         required: false
@@ -186,7 +190,6 @@ jobs:
               statusCommentId = String(statusComment.data.id)
             }
 
-
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
               const requestedSolver = (inputs.solver_name || '').trim()
@@ -197,10 +200,12 @@ jobs:
                   benchmarkArgs.push('--solver', requestedSolver)
                 }
               }
+
               const scenarioLimit = (inputs.scenario_limit || '').trim()
               const effort = (inputs.effort || '').trim()
               const concurrency = (inputs.concurrency || '').trim()
               const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+              const datasetName = (inputs.dataset_name || '').trim()
 
               if (scenarioLimit) {
                 benchmarkArgs.push('--scenario-limit', scenarioLimit)
@@ -210,6 +215,9 @@ jobs:
               }
               if (includeAssignable) {
                 benchmarkArgs.push('--include-assignable')
+              }
+              if (datasetName) {
+                benchmarkArgs.push('--dataset', datasetName)
               }
               if (concurrency && concurrency.toLowerCase() !== 'auto') {
                 benchmarkConcurrency = concurrency
