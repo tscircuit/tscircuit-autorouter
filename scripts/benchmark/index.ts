@@ -54,10 +54,28 @@ type WorkerExecutionResult = {
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
-const DATASET_NAMES = ["dataset01", "zdwiel"] as const
+const DATASET_NAMES = ["dataset01", "zdwiel", "srj05"] as const
 
 type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
+
+const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
+  if (!value || typeof value !== "object") {
+    return null
+  }
+
+  const asRecord = value as Record<string, unknown>
+  const candidate =
+    asRecord.simpleRouteJson && typeof asRecord.simpleRouteJson === "object"
+      ? asRecord.simpleRouteJson
+      : value
+
+  if (!candidate || typeof candidate !== "object") {
+    return null
+  }
+
+  return "bounds" in candidate ? (candidate as SimpleRouteJson) : null
+}
 
 const isDatasetName = (value: string): value is DatasetName =>
   DATASET_NAMES.includes(value as DatasetName)
@@ -66,11 +84,14 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   dataset01: async () =>
     (await import("@tscircuit/autorouting-dataset-01")) as DatasetModule,
   zdwiel: async () => (await import("zdwiel-dataset")) as DatasetModule,
+  srj05: async () =>
+    (await import("@tscircuit/dataset-srj05")) as DatasetModule,
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   dataset01: /^circuit\d+$/,
   zdwiel: /^ts\d+_/,
+  srj05: /^sample\d{3}.*Circuit$/,
 }
 
 const formatTime = (timeMs: number | null) => {
@@ -311,10 +332,9 @@ const loadScenarios = async (
 
   const datasetModule = await datasetLoaders[datasetName]()
   const scenarioKeyPattern = datasetScenarioKeyPatterns[datasetName]
-  const allScenarios = (
-    Object.entries(datasetModule) as Array<[string, SimpleRouteJson]>
-  )
-    .filter(([, value]) => Boolean(value) && typeof value === "object")
+  const allScenarios = Object.entries(datasetModule)
+    .map(([name, value]) => [name, toSimpleRouteJson(value)] as const)
+    .filter((entry): entry is [string, SimpleRouteJson] => Boolean(entry[1]))
     .filter(([name]) => scenarioKeyPattern.test(name))
     .sort(([a], [b]) => a.localeCompare(b))
     .map(

@@ -33,7 +33,7 @@ on:
         default: false
         type: boolean
       dataset_name:
-        description: 'Dataset to benchmark (optional: dataset01 or zdwiel)'
+        description: 'Dataset to benchmark (optional: dataset01, zdwiel, or srj05)'
         required: false
         type: string
       ref:
