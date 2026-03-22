@@ -8,6 +8,20 @@ SAMPLE_TIMEOUT=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver"
+PIPELINE_ID=""
+
+resolve_pipeline_solver_name() {
+  case "$1" in
+    1) echo "AutoroutingPipeline1_OriginalUnravel" ;;
+    2) echo "AutoroutingPipelineSolver2_PortPointPathing" ;;
+    3) echo "AutoroutingPipelineSolver3_HgPortPointPathing" ;;
+    4) echo "AutoroutingPipelineSolver4" ;;
+    *)
+      echo "Unknown pipeline: $1" >&2
+      exit 1
+      ;;
+  esac
+}
 
 default_concurrency() {
   getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4
@@ -42,10 +56,11 @@ print_help() {
   cat <<'EOF'
 Usage:
   ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline N] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
+  --pipeline N         Run a numbered pipeline alias (1-4). Defaults to 10 scenarios when no limit is set
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
@@ -66,6 +81,7 @@ Examples:
   ./benchmark.sh --solver AutoroutingPipelineSolver --sample-timeout 90s
   ./benchmark.sh --solver AutoroutingPipelineSolver --scenario-limit 20
   ./benchmark.sh --solver AutoroutingPipelineSolver --dataset zdwiel --scenario-limit 20
+  ./benchmark.sh --pipeline 4
   ./benchmark.sh --include-assignable
 EOF
 
@@ -99,6 +115,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --solver)
       SOLVER_NAME="${2:-}"
+      shift 2
+      ;;
+    --pipeline)
+      PIPELINE_ID="${2:-}"
       shift 2
       ;;
     --scenario-limit)
@@ -135,6 +155,13 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+if [ -n "$PIPELINE_ID" ]; then
+  SOLVER_NAME="$(resolve_pipeline_solver_name "$PIPELINE_ID")"
+  if [ -z "$SCENARIO_LIMIT" ]; then
+    SCENARIO_LIMIT="10"
+  fi
+fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
 

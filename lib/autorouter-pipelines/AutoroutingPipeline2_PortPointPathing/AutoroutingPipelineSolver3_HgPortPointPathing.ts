@@ -1,13 +1,30 @@
+import { HyperGraphSectionOptimizer } from "@tscircuit/hypergraph"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
+import {
+  HgPortPointPathingSolver,
+  buildHyperGraph,
+} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
+import { getColorMap } from "lib/solvers/colors"
+import {
+  CapacityMeshEdge,
+  CapacityMeshNode,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+} from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -23,23 +40,6 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
-import { getColorMap } from "lib/solvers/colors"
-import {
-  SimpleRouteJson,
-  CapacityMeshNode,
-  CapacityMeshEdge,
-  SimplifiedPcbTraces,
-  SimplifiedPcbTrace,
-} from "lib/types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { calculateOptimalCapacityDepth } from "lib/index"
-import {
-  buildHyperGraph,
-  HgPortPointPathingSolver,
-} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { HyperGraphSectionOptimizer } from "@tscircuit/hypergraph"
-import { computeCostPerRegion } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number

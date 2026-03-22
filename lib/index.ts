@@ -6,6 +6,7 @@ export { AutoroutingPipeline1_OriginalUnravel } from "./autorouter-pipelines/Aut
 export { AssignableAutoroutingPipeline2 } from "./autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 export { AssignableAutoroutingPipeline3 } from "./autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
 export { AutoroutingPipelineSolver3_HgPortPointPathing } from "./autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
+export { AutoroutingPipelineSolver4 } from "./autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver4_TinyHypergraph"
 export {
   getTunedTotalCapacity1,
   calculateOptimalCapacityDepth,

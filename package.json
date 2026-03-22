@@ -59,18 +59,17 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#3608022f119c62df9f3beda8dde98e483fad40a3",
+    "tiny-hypergraph": "github:tscircuit/tiny-hypergraph#bc7305e",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",
     "use-mouse-matrix-transform": "^1.3.0",
     "vite": "^6.0.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "tiny-hypergraph": "github:tscircuit/tiny-hypergraph#e62ec0d8ca15333cfd3a0d50e4ccb12932ab2545"
+    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#3608022f119c62df9f3beda8dde98e483fad40a3"
   },
   "dependencies": {
-    "@tscircuit/high-density-a01": "^0.0.21",
+    "@tscircuit/high-density-a01": "^0.0.22",
     "fast-json-stable-stringify": "^2.1.0",
-    "object-hash": "^3.0.0",
-    "tiny-hypergraph": "github:tscircuit/tiny-hypergraph#52435783ba59151d594f96b5e30c99b2e68280fd"
+    "object-hash": "^3.0.0"
   }
 }
