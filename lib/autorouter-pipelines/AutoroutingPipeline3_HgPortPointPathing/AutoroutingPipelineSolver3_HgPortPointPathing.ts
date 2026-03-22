@@ -59,7 +59,9 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
 }
 
 function definePipelineStep<
-  T extends new (...args: any[]) => BaseSolver,
+  T extends new (
+    ...args: any[]
+  ) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof AutoroutingPipelineSolver3_HgPortPointPathing,

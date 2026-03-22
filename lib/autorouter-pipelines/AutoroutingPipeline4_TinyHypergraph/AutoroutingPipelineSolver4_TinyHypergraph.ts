@@ -55,7 +55,9 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
 }
 
 function definePipelineStep<
-  T extends new (...args: any[]) => BaseSolver,
+  T extends new (
+    ...args: any[]
+  ) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof AutoroutingPipelineSolver4_TinyHypergraph,
@@ -555,4 +557,6 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   }
 }
 
-export { AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver4 }
+export {
+  AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver4,
+}
