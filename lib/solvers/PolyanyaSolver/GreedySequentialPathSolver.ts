@@ -141,12 +141,24 @@ export class GreedySequentialPathSolver extends BaseSolver {
   /** Physics relaxer instance (reused across calls) */
   private relaxer: TracePhysicsRelaxer
 
-  /** How many light-relax iterations to run after each committed trace */
-  private static RELAX_ITER_COMMIT = 3
-  /** How many heavy-relax iterations to run when the solver gets stuck */
-  private static RELAX_ITER_STUCK = 12
+  /** How many soft Jacobi iterations after each committed trace */
+  private static RELAX_ITER_COMMIT = 4
+  /** How many soft Jacobi iterations when stuck */
+  private static RELAX_ITER_STUCK = 14
   /** Number of stuck-relaxation attempts before advancing the phase */
   private static MAX_STUCK_RELAX = 2
+
+  /**
+   * Relaxation state machine.
+   * "idle"    – not relaxing; normal routing.
+   * "soft"    – running Jacobi soft iterations (one per _step call).
+   * "hard"    – about to run the hard depenetration pass + CDT rebuild.
+   */
+  private relaxState: "idle" | "soft" | "hard" = "idle"
+  /** Remaining soft iterations in the current relaxation session. */
+  private relaxSoftItersLeft = 0
+  /** Whether the current relaxation was triggered by being stuck. */
+  private relaxIsStuck = false
 
   /** Counts how many relaxation attempts have been made in the current phase */
   private stuckRelaxCount = 0
@@ -554,10 +566,6 @@ export class GreedySequentialPathSolver extends BaseSolver {
     }
   }
 
-  /**
-   * Run physics relaxation on all committed traces then rebuild the CDT.
-   * @param iterations  Number of Jacobi iterations to perform.
-   */
   /** Lazily built list of relaxer obstacles (one per SRJ obstacle, per active layer). */
   private relaxerObstacles: RelaxerObstacle[] | null = null
 
@@ -571,46 +579,73 @@ export class GreedySequentialPathSolver extends BaseSolver {
         layers,
         cx: obs.center.x,
         cy: obs.center.y,
-        // Expand by margin so the relaxer keeps traces the same distance from
-        // pads that the CDT obstacle polygons enforce.
         hw: obs.width / 2 + this.margin,
         hh: obs.height / 2 + this.margin,
       }
     })
   }
 
-  private relaxTraces(iterations: number) {
-    if (this.resolvedPaths.length < 2 || !this.useObstacles) return
-
-    // Collect fixed points: all original pad positions from allConnections
-    const fixedKeys = new Set<string>()
+  private buildFixedKeys(): Set<string> {
+    const keys = new Set<string>()
     for (const conn of this.allConnections) {
-      fixedKeys.add(`${conn.originalStart.x},${conn.originalStart.y}`)
-      fixedKeys.add(`${conn.originalEnd.x},${conn.originalEnd.y}`)
+      keys.add(`${conn.originalStart.x},${conn.originalStart.y}`)
+      keys.add(`${conn.originalEnd.x},${conn.originalEnd.y}`)
     }
+    return keys
+  }
 
-    // Build obstacle list once and reuse (obstacles never change during solving)
-    if (!this.relaxerObstacles) {
-      this.relaxerObstacles = this.buildRelaxerObstacles()
-    }
+  /**
+   * Begin a relaxation session: enter "soft" state.
+   * Each subsequent _step() call will run one Jacobi iteration (visible in
+   * the debugger) until the budget is exhausted, then a hard pass runs and
+   * the CDT is rebuilt.
+   */
+  private beginRelax(softIters: number, isStuck: boolean): void {
+    if (!this.useObstacles || this.resolvedPaths.length === 0) return
+    if (!this.relaxerObstacles) this.relaxerObstacles = this.buildRelaxerObstacles()
 
-    const moved = this.relaxer.relax(
+    this.relaxer.startSession(
       this.resolvedPaths,
-      fixedKeys,
+      this.buildFixedKeys(),
       (name) => this.netNameForRelaxer(name),
-      iterations,
-      0.08,
       this.relaxerObstacles,
+      0.08,
     )
+    this.relaxSoftItersLeft = softIters
+    this.relaxIsStuck = isStuck
+    this.relaxState = "soft"
+  }
 
-    if (moved) {
-      this.rebuildAllTraceObstacles()
+  /** Drive one step of the active relaxation session. Returns true if still relaxing. */
+  private stepRelax(): boolean {
+    if (this.relaxState === "idle") return false
+
+    if (this.relaxState === "soft") {
+      const moved = this.relaxer.softStep()
+      this.relaxSoftItersLeft--
+      // Stop early if nothing moved; always run at least 1 iteration
+      if (this.relaxSoftItersLeft <= 0 || !moved) {
+        this.relaxState = "hard"
+      }
+      return true // still in relaxation
     }
+
+    if (this.relaxState === "hard") {
+      // Hard depenetration pass (snaps fixed vertices, projects out of obstacles)
+      this.relaxer.hardPass()
+      // Rebuild CDT from the freshly relaxed positions
+      this.rebuildAllTraceObstacles()
+      this.relaxState = "idle"
+      return false // relaxation finished
+    }
+
+    return false
   }
 
   /** Reset routing state back to initial (no committed traces) */
   private resetState() {
     this.stuckRelaxCount = 0
+    this.relaxState = "idle"
     this.rectObstacles = this.baseObstaclePolygons
       .slice(0, this.layerCount)
       .map((polys) => [...polys])
@@ -1424,10 +1459,6 @@ export class GreedySequentialPathSolver extends BaseSolver {
       layersToRebuild.forEach((z) => {
         if (z < this.layerCount) this.buildMesh(z)
       })
-
-      // Run light physics relaxation after each committed trace so traces
-      // spread apart and make room for subsequent routes.
-      this.relaxTraces(GreedySequentialPathSolver.RELAX_ITER_COMMIT)
     } else {
       const newRegions = this.pathToWeightedRegions(path, clearance)
       this.traceWeightedRegions[layerZ]!.push(...newRegions)
@@ -1497,14 +1528,17 @@ export class GreedySequentialPathSolver extends BaseSolver {
     // Initialize timer on first step
     if (this.solveStartTime === 0) this.solveStartTime = Date.now()
 
-    // Timeout guard: bail if solving takes too long
-    if (
-      Date.now() - this.solveStartTime >
-      GreedySequentialPathSolver.MAX_SOLVE_TIME_MS
-    ) {
+    // Timeout guard
+    if (Date.now() - this.solveStartTime > GreedySequentialPathSolver.MAX_SOLVE_TIME_MS) {
       console.warn(
         `GreedySequentialPathSolver: timeout after ${GreedySequentialPathSolver.MAX_SOLVE_TIME_MS}ms, ${this.resolvedPaths.length}/${this.totalConnections} routed`,
       )
+      // Finish any active relaxation cleanly before bailing
+      if (this.relaxState !== "idle") {
+        this.relaxer.hardPass()
+        this.rebuildAllTraceObstacles()
+        this.relaxState = "idle"
+      }
       this.saveIfBest()
       if (this.bestResults) {
         this.resolvedPaths = this.bestResults
@@ -1516,6 +1550,22 @@ export class GreedySequentialPathSolver extends BaseSolver {
       return
     }
 
+    // -----------------------------------------------------------------------
+    // Drive relaxation one step at a time so each iteration is a visible
+    // frame in the debugger.
+    // -----------------------------------------------------------------------
+    if (this.relaxState !== "idle") {
+      const stillRelaxing = this.stepRelax()
+      if (!stillRelaxing && this.relaxIsStuck) {
+        // Heavy relaxation just finished — try routing again without
+        // advancing the phase yet (stuckRelaxCount already incremented).
+      }
+      return
+    }
+
+    // -----------------------------------------------------------------------
+    // Normal routing step
+    // -----------------------------------------------------------------------
     if (this.remaining.length === 0) {
       this.saveIfBest()
       this.phase = "done"
@@ -1528,29 +1578,29 @@ export class GreedySequentialPathSolver extends BaseSolver {
     const { idx, path, layerZ } = this.pickBestAcrossLayers(pickShortest)
 
     if (idx < 0) {
-      // Stuck — try heavy relaxation before advancing phase.
-      // Relaxing lets committed traces burrrow apart so new paths open up.
+      // Stuck — start a heavy relaxation session before advancing phase
       if (this.stuckRelaxCount < GreedySequentialPathSolver.MAX_STUCK_RELAX) {
         this.stuckRelaxCount++
-        this.relaxTraces(GreedySequentialPathSolver.RELAX_ITER_STUCK)
-        // Try routing again immediately (don't advance phase yet)
+        this.beginRelax(GreedySequentialPathSolver.RELAX_ITER_STUCK, true)
         return
       }
-      // Heavy relaxation didn't help — advance to next phase
+      // Relaxation didn't help — advance to next phase
       this.stuckRelaxCount = 0
       this.advancePhase()
       return
     }
 
-    // Successfully picked a route — reset stuck-relax counter
+    // Successfully picked a route — reset stuck counter
     this.stuckRelaxCount = 0
 
     const conn = this.remaining[idx]!
     this.remaining.splice(idx, 1)
     this.commitPath(conn, path, layerZ)
 
-    this.progress =
-      (this.totalConnections - this.remaining.length) / this.totalConnections
+    this.progress = (this.totalConnections - this.remaining.length) / this.totalConnections
+
+    // Begin light relaxation so each iteration shows up as a separate frame
+    this.beginRelax(GreedySequentialPathSolver.RELAX_ITER_COMMIT, false)
   }
 
   /** Run post-solve validation: check unrouted connections and same-layer crossings */
