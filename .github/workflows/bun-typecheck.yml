@@ -23,4 +23,4 @@ jobs:
         run: bun i
 
       - name: Run type check
-        run: NODE_OPTIONS="--max-old-space-size=8192" bunx tsc --noEmit
+        run: bunx tsc --noEmit

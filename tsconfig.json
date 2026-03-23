@@ -12,7 +12,11 @@
     "paths": {
       "lib/*": ["lib/*"],
       "examples/*": ["examples/*"],
-      "tests/*": ["tests/*"]
+      "tests/*": ["tests/*"],
+      "@tscircuit/autorouting-dataset-01": ["types/dataset-module-shims"],
+      "@tscircuit/dataset-srj05": ["types/dataset-module-shims"],
+      "zdwiel-dataset": ["types/dataset-module-shims"],
+      "high-density-dataset-z04": ["types/dataset-module-shims"]
     },
 
     // Bundler mode
