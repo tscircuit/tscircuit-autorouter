@@ -244,11 +244,13 @@ export class TracePhysicsRelaxer {
   /**
    * @param traceClearance   Minimum hard separation (= minTraceWidth/2 + margin).
    * @param separationFactor Soft target = traceClearance × separationFactor.
-   *   Keep close to 1.0–1.3; the soft field is just a gentle nudge to spread
-   *   traces apart.  Hard obstacles and endpoints are enforced absolutely in
-   *   hardPass() regardless of this value.
+   *   Must be > 2.0 because CDT pathfinding already routes traces 2×
+   *   traceClearance apart (the obstacle polygon is traceClearance wide on
+   *   each side).  At exactly 2.0, traces are already at the target and
+   *   nothing moves.  Values between 2.1–2.3 give a gentle nudge that
+   *   opens narrow corridors for new traces to burrow through.
    */
-  constructor(traceClearance: number, separationFactor = 1.2) {
+  constructor(traceClearance: number, separationFactor = 2.2) {
     this.hardClearance = traceClearance
     this.softClearance = traceClearance * separationFactor
     this.cellSize = this.softClearance * 2
