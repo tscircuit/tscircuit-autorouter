@@ -1769,28 +1769,33 @@ export class GreedySequentialPathSolver extends BaseSolver {
       }
     }
 
-    // Draw capsule collision bounds for every same-layer segment.
-    // Each capsule = a line rendered at strokeWidth = hardClearance diameter,
-    // which naturally produces a capsule shape (rectangle + rounded ends).
-    // Shown whenever relaxation is active (soft or hard state) so you can
-    // watch the traces spread apart in real time.
+    // Draw capsule collision bounds as one thick polyline per same-layer
+    // run.  Drawing the whole run as a single polyline (rather than one
+    // line per segment) means joints are filled naturally — no wedge-shaped
+    // gaps at bends.  The Minkowski sum of a polyline with a circle is
+    // exactly a chain of capsules with filled joints.
     if (this.relaxState !== "idle") {
       const capsuleDiameter = (this.minTraceWidth / 2 + this.margin) * 2
       for (const rp of this.resolvedPaths) {
         const color = this.colorMap[rp.connectionName] ?? "green"
-        for (let i = 0; i < rp.route.length - 1; i++) {
-          const a = rp.route[i]!
-          const b = rp.route[i + 1]!
-          if (a.z !== b.z) continue // skip via transitions
-          if (a.z !== 0) continue // only draw layer 0 for clarity
-          lines.push({
-            points: [
-              { x: a.x, y: a.y },
-              { x: b.x, y: b.y },
-            ],
-            strokeColor: this.withAlpha(color, 0.18),
-            strokeWidth: capsuleDiameter,
-          })
+        // Collect same-layer runs
+        let runStart = 0
+        for (let i = 1; i <= rp.route.length; i++) {
+          const prevZ = rp.route[i - 1]!.z
+          const curZ = i < rp.route.length ? rp.route[i]!.z : -1
+          if (curZ !== prevZ || i === rp.route.length) {
+            if (prevZ === 0 && i - runStart >= 2) {
+              const pts = rp.route
+                .slice(runStart, i)
+                .map((p) => ({ x: p.x, y: p.y }))
+              lines.push({
+                points: pts,
+                strokeColor: this.withAlpha(color, 0.18),
+                strokeWidth: capsuleDiameter,
+              })
+            }
+            runStart = i
+          }
         }
       }
     }
