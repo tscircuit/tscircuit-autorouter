@@ -14,6 +14,10 @@ test(
 
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
+    expect(solver.portPointPathingSolver).toBeDefined()
+    expect(typeof solver.portPointPathingSolver?.stats.optimized).toBe(
+      "boolean",
+    )
     expect(srj).toEqual(before)
   },
   { timeout: 180_000 },

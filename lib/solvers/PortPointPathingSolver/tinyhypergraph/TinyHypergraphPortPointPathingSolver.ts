@@ -13,8 +13,12 @@ import type {
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { loadSerializedHyperGraph } from "tiny-hypergraph/lib/compat/loadSerializedHyperGraph"
-import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import {
+  TinyHyperGraphSectionPipelineSolver,
+  TinyHyperGraphSectionSolver,
+  TinyHyperGraphSolver,
+  type TinyHyperGraphSectionPipelineInput,
+} from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 
 type RouteMetadata = {
@@ -31,6 +35,20 @@ type SerializedTinySolvedRoute = NonNullable<
 >[number]
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const TINY_SOLVER_RIP_THRESHOLD_RAMP_MULTIPLIER = 10
+const TINY_SOLVER_MAX_ITERATION_MULTIPLIER = 100
+const TINY_SECTION_SOLVER_RIP_THRESHOLD_RAMP_MULTIPLIER = 1
+const TINY_SECTION_SOLVER_MAX_ITERATION_MULTIPLIER = 1
+
+const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
+const getTinyHyperGraphPipelineMaxIterations = (effort: number) =>
+  Math.ceil(
+    1e6 *
+      getEffortScale(effort) *
+      (TINY_SOLVER_MAX_ITERATION_MULTIPLIER +
+        TINY_SECTION_SOLVER_MAX_ITERATION_MULTIPLIER +
+        1),
+  )
 
 const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
@@ -252,8 +270,120 @@ const applyTerminalRegionNetIds = (loaded: {
   }
 }
 
+const applyTinyHyperGraphSolverTuning = (
+  solver: TinyHyperGraphSolver,
+  effort: number,
+) => {
+  const effortScale = getEffortScale(effort)
+  solver.RIP_THRESHOLD_RAMP_ATTEMPTS *=
+    TINY_SOLVER_RIP_THRESHOLD_RAMP_MULTIPLIER * effortScale
+  solver.MAX_ITERATIONS *=
+    TINY_SOLVER_MAX_ITERATION_MULTIPLIER * effortScale
+}
+
+const applyTinyHyperGraphSectionSolverTuning = (
+  solver: TinyHyperGraphSectionSolver,
+  effort: number,
+) => {
+  const effortScale = getEffortScale(effort)
+  solver.RIP_THRESHOLD_RAMP_ATTEMPTS *=
+    TINY_SECTION_SOLVER_RIP_THRESHOLD_RAMP_MULTIPLIER * effortScale
+  solver.MAX_ITERATIONS *=
+    TINY_SECTION_SOLVER_MAX_ITERATION_MULTIPLIER * effortScale
+}
+
+class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+  private configuredSolvers = new WeakSet<BaseSolver>()
+
+  constructor(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    private effort: number,
+  ) {
+    super(inputProblem)
+    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(effort)
+  }
+
+  override _step() {
+    try {
+      super._step()
+    } catch (error) {
+      if (this.trySkipOptimizeSection(error)) {
+        return
+      }
+      throw error
+    }
+    this.configureSolver(this.activeSubSolver)
+  }
+
+  override getInitialVisualizationSolver() {
+    const solver = super.getInitialVisualizationSolver()
+    this.configureSolver(solver)
+    return solver
+  }
+
+  getSolvedTinySolver(): TinyHyperGraphSolver {
+    const optimizeSectionSolver =
+      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
+
+    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
+      return optimizeSectionSolver.getSolvedSolver()
+    }
+
+    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
+      return solveGraphSolver
+    }
+
+    throw new Error("TinyHyperGraph section pipeline does not have a solved graph")
+  }
+
+  private configureSolver(solver?: BaseSolver | null) {
+    if (!solver || this.configuredSolvers.has(solver)) {
+      return
+    }
+
+    if (solver instanceof TinyHyperGraphSectionSolver) {
+      applyTerminalRegionNetIds(solver as any)
+      applyTinyHyperGraphSectionSolverTuning(solver, this.effort)
+    } else if (solver instanceof TinyHyperGraphSolver) {
+      applyTerminalRegionNetIds(solver as any)
+      applyTinyHyperGraphSolverTuning(solver, this.effort)
+    }
+
+    this.configuredSolvers.add(solver)
+  }
+
+  private trySkipOptimizeSection(error: unknown) {
+    if (this.getCurrentStageName() !== "optimizeSection") {
+      return false
+    }
+
+    const solveGraphOutput = this.getStageOutput<SerializedHyperGraph>(
+      "solveGraph",
+    )
+
+    if (!solveGraphOutput) {
+      return false
+    }
+
+    this.pipelineOutputs.optimizeSection = solveGraphOutput
+    this.currentPipelineStageIndex = this.pipelineDef.length
+    this.activeSubSolver = null
+    this.solved = true
+    this.failed = false
+    this.error = null
+    this.stats = {
+      ...this.stats,
+      sectionOptimizationSkipped: true,
+      sectionOptimizationError:
+        error instanceof Error ? error.message : String(error),
+    }
+    return true
+  }
+}
+
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private tinySolver: TinyHyperGraphSolver
+  private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -264,15 +394,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
     const serializedGraph = buildSerializedTinyGraph(params)
-    const loaded = loadSerializedHyperGraph(serializedGraph as any)
-    applyTerminalRegionNetIds(loaded as any)
-    this.tinySolver = new TinyHyperGraphSolver(loaded.topology, loaded.problem)
-    // this.tinySolver.RIP_THRESHOLD_START = 0.05
-    // this.tinySolver.RIP_THRESHOLD_END = 1
-    // this.tinySolver.RIP_THRESHOLD_RAMP_ATTEMPTS = 200
-    this.tinySolver.RIP_THRESHOLD_RAMP_ATTEMPTS *= 10 * params.effort
-    this.tinySolver.MAX_ITERATIONS *= 25 * params.effort
-    this.MAX_ITERATIONS = this.tinySolver.MAX_ITERATIONS
+    this.tinyPipelineSolver = new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+      {
+        serializedHyperGraph: serializedGraph,
+      },
+      params.effort,
+    )
+    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(params.effort)
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -315,45 +443,90 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   _step() {
     try {
-      this.tinySolver.step()
+      this.tinyPipelineSolver.step()
     } catch (error) {
       this.error = `${this.getSolverName()} error: ${error}`
       this.failed = true
       throw error
     }
 
-    this.solved = this.tinySolver.solved
-    this.failed = this.tinySolver.failed
-    this.error = this.tinySolver.error ?? null
-    this.progress = this.tinySolver.progress
-    this.stats = this.tinySolver.stats
+    const optimizeSectionSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
+        "optimizeSection",
+      )
+    const currentTinySolver = this.getCurrentTinySolver()
+
+    this.solved = this.tinyPipelineSolver.solved
+    this.failed = this.tinyPipelineSolver.failed
+    this.error = this.tinyPipelineSolver.error ?? null
+    this.progress = this.tinyPipelineSolver.progress
+    this.stats = {
+      ...(this.tinyPipelineSolver.stats ?? {}),
+      ...(currentTinySolver?.stats ?? {}),
+      ...(optimizeSectionSolver?.stats ?? {}),
+      currentStage: this.tinyPipelineSolver.getCurrentStageName(),
+      stageStats: this.tinyPipelineSolver.getStageStats(),
+    }
+    this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 
   preview(): GraphicsObject {
     return this.visualize()
   }
 
-  private getRouteMetadata(routeId: number): RouteMetadata | undefined {
-    return this.tinySolver.problem.routeMetadata?.[routeId] as
+  private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const optimizeSectionSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
+        "optimizeSection",
+      )
+
+    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
+      return optimizeSectionSolver.getSolvedSolver()
+    }
+
+    const solveGraphSolver = this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>(
+      "solveGraph",
+    )
+
+    if (solveGraphSolver) {
+      return solveGraphSolver
+    }
+
+    return undefined
+  }
+
+  private getSolvedTinySolver(): TinyHyperGraphSolver {
+    return this.tinyPipelineSolver.getSolvedTinySolver()
+  }
+
+  private getRouteMetadata(
+    solvedTinySolver: TinyHyperGraphSolver,
+    routeId: number,
+  ): RouteMetadata | undefined {
+    return solvedTinySolver.problem.routeMetadata?.[routeId] as
       | RouteMetadata
       | undefined
   }
 
-  private createAssignedPortPoint(routeId: number, portId: number): PortPoint {
-    const routeMetadata = this.getRouteMetadata(routeId)
+  private createAssignedPortPoint(
+    solvedTinySolver: TinyHyperGraphSolver,
+    routeId: number,
+    portId: number,
+  ): PortPoint {
+    const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
     const connectionName = routeMetadata
       ? getRouteConnectionName(routeMetadata)
       : `route-${routeId}`
     const rootConnectionName = routeMetadata
       ? getRouteRootConnectionName(routeMetadata)
       : undefined
-    const portMetadata = this.tinySolver.topology.portMetadata?.[portId]
+    const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
 
     return {
       portPointId: String(portMetadata?.portId ?? `tiny-port-${portId}`),
-      x: this.tinySolver.topology.portX[portId],
-      y: this.tinySolver.topology.portY[portId],
-      z: this.tinySolver.topology.portZ[portId],
+      x: solvedTinySolver.topology.portX[portId],
+      y: solvedTinySolver.topology.portY[portId],
+      z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
     }
@@ -363,9 +536,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
   } {
+    const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
-    const regionSegments = this.tinySolver.state.regionSegments
-    const regionMetadata = this.tinySolver.topology.regionMetadata ?? []
+    const regionSegments = solvedTinySolver.state.regionSegments
+    const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
 
     for (let regionId = 0; regionId < regionSegments.length; regionId++) {
       const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
@@ -379,8 +553,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const portPoints = regionSegments[regionId].flatMap(
         ([routeId, fromPortId, toPortId]) =>
           [
-            this.createAssignedPortPoint(routeId, fromPortId),
-            this.createAssignedPortPoint(routeId, toPortId),
+            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
+            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
           ] satisfies PortPoint[],
       )
 
@@ -431,6 +605,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    return this.tinySolver.visualize()
+    return this.tinyPipelineSolver.visualize()
   }
 }
