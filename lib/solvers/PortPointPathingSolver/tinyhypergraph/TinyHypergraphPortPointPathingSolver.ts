@@ -16,7 +16,6 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { loadSerializedHyperGraph } from "tiny-hypergraph/lib/compat/loadSerializedHyperGraph"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
-import { JUMPER_1206 } from "lib/utils/jumperSizes"
 
 type RouteMetadata = {
   connectionId: string
