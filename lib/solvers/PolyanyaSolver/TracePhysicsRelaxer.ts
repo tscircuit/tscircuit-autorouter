@@ -235,7 +235,7 @@ export class TracePhysicsRelaxer {
   private netNames: string[] = []
   private obstacles: RelaxerObstacle[] = []
   private sessionPaths: ResolvedPath[] = []
-  private stringPull = 0.08
+  private stringPull = 0.2
   private _hasSession = false
 
   private static readonly HARD_PASSES = 6
@@ -280,7 +280,7 @@ export class TracePhysicsRelaxer {
     fixedKeys: Set<string>,
     netNameFn: (name: string) => string,
     obstacles: RelaxerObstacle[] = [],
-    stringPull = 0.08,
+    stringPull = 0.2,
   ): void {
     this.sessionPaths = resolvedPaths
     this.obstacles = obstacles
@@ -348,36 +348,11 @@ export class TracePhysicsRelaxer {
       }
     }
 
-    // --- Obstacle soft repulsion ---
-    for (const seg of segments) {
-      for (const obs of this.obstacles) {
-        if (obs.layers.length > 0 && !obs.layers.includes(seg.az)) continue
-        const sep = segAABBClosest(
-          seg.ax,
-          seg.ay,
-          seg.bx,
-          seg.by,
-          obs.cx,
-          obs.cy,
-          obs.hw,
-          obs.hh,
-        )
-        if (!sep) continue
-        const dist = -sep.depth // positive = outside
-        if (dist >= this.softClearance) continue
-        const push = (this.softClearance - dist) * 0.8
-        const wa = 1 - sep.t
-        const wb = sep.t
-        if (!seg.aFixed) {
-          impulses[seg.ti]![seg.vi]!.dx += sep.nx * push * wa
-          impulses[seg.ti]![seg.vi]!.dy += sep.ny * push * wa
-        }
-        if (!seg.bFixed) {
-          impulses[seg.ti]![seg.vj]!.dx += sep.nx * push * wb
-          impulses[seg.ti]![seg.vj]!.dy += sep.ny * push * wb
-        }
-      }
-    }
+    // Obstacle repulsion is NOT applied during the soft step.
+    // Obstacles and endpoints are purely hard constraints — enforced
+    // absolutely in hardPass().  This prevents the obstacle force from
+    // dominating the soft trace-trace nudge and blasting traces away
+    // from pads while leaving them on top of each other.
 
     // --- String-pull ---
     if (this.stringPull > 0) {

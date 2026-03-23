@@ -610,7 +610,7 @@ export class GreedySequentialPathSolver extends BaseSolver {
       this.buildFixedKeys(),
       (name) => this.netNameForRelaxer(name),
       this.relaxerObstacles,
-      0.08,
+      0.2, // strong string-pull keeps subdivided traces coherent
     )
     this.relaxSoftItersLeft = softIters
     this.relaxIsStuck = isStuck
