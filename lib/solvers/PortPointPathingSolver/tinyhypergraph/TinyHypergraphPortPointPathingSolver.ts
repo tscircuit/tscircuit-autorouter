@@ -16,6 +16,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { loadSerializedHyperGraph } from "tiny-hypergraph/lib/compat/loadSerializedHyperGraph"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
+import { JUMPER_1206 } from "lib/utils/jumperSizes"
 
 type RouteMetadata = {
   connectionId: string
@@ -268,12 +269,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     applyTerminalRegionNetIds(loaded as any)
     this.tinySolver = new TinyHyperGraphSolver(loaded.topology, loaded.problem)
     // this.tinySolver.RIP_THRESHOLD_START = 0.05
-    // this.tinySolver.RIP_THRESHOLD_END = 1.2
+    // this.tinySolver.RIP_THRESHOLD_END = 1
     // this.tinySolver.RIP_THRESHOLD_RAMP_ATTEMPTS = 200
-    this.tinySolver.MAX_ITERATIONS = Math.max(
-      this.tinySolver.MAX_ITERATIONS,
-      1_000_000 * Math.max(1, params.effort),
-    )
+    this.tinySolver.RIP_THRESHOLD_RAMP_ATTEMPTS *= 10 * params.effort
+    this.tinySolver.MAX_ITERATIONS *= 25 * params.effort
     this.MAX_ITERATIONS = this.tinySolver.MAX_ITERATIONS
 
     this.originalRegionById = new Map(
