@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       solver_name:
-        description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver; use "all" for all solvers)'
+        description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver4; use "all" for all solvers)'
         required: false
         type: string
       scenario_limit:
