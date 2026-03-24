@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
-import { circuit003 } from "@tscircuit/autorouting-dataset-01"
+import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
+import type { SimpleRouteJson } from "lib/types"
 
 const approxEqual = (a: number, b: number, epsilon = 1e-6) =>
   Math.abs(a - b) < epsilon
@@ -8,6 +9,8 @@ const approxEqual = (a: number, b: number, epsilon = 1e-6) =>
 test(
   "pipeline4 circuit003 avoids center-via shortcut for cmn_3 same-point layer change",
   () => {
+    const circuit003 = (dataset01 as Record<string, unknown>)
+      .circuit003 as SimpleRouteJson
     const solver = new AutoroutingPipelineSolver4(circuit003)
     solver.solve()
 
