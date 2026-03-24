@@ -7,7 +7,7 @@ EFFORT=""
 SAMPLE_TIMEOUT=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
-DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver"
+DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver4"
 PIPELINE_ID=""
 
 resolve_pipeline_solver_name() {
@@ -70,19 +70,19 @@ Options:
   -h, --help           Show this help
 
 Defaults:
-  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver.
+  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver4.
   Use "all" to benchmark every available solver.
 
 Examples:
   ./benchmark.sh
-  ./benchmark.sh AutoroutingPipelineSolver
+  ./benchmark.sh AutoroutingPipelineSolver4
   ./benchmark.sh all 20 --concurrency auto
-  ./benchmark.sh --solver AutoroutingPipelineSolver --effort 2
-  ./benchmark.sh --solver AutoroutingPipelineSolver --sample-timeout 90s
-  ./benchmark.sh --solver AutoroutingPipelineSolver --scenario-limit 20
-  ./benchmark.sh --solver AutoroutingPipelineSolver --dataset zdwiel --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --effort 2
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --sample-timeout 90s
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset zdwiel --scenario-limit 20
   ./benchmark.sh --pipeline 4
-  ./benchmark.sh --solver AutoroutingPipelineSolver --dataset srj05 --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset srj05 --scenario-limit 20
   ./benchmark.sh --include-assignable
 EOF
 
