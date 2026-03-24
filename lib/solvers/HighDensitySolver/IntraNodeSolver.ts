@@ -149,6 +149,112 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
   }
 
+  private getSingleRouteSolverOpts(unsolvedConnection: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }) {
+    const { connectionName, points } = unsolvedConnection
+    return {
+      connectionName,
+      minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
+      bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
+      A: { x: points[0].x, y: points[0].y, z: points[0].z },
+      B: {
+        x: points[points.length - 1].x,
+        y: points[points.length - 1].y,
+        z: points[points.length - 1].z,
+      },
+      obstacleRoutes: this.connMap
+        ? this.solvedRoutes.filter(
+            (sr) =>
+              !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
+          )
+        : this.solvedRoutes,
+      futureConnections: this.unsolvedConnections,
+      layerCount: this.nodeWithPortPoints.portPoints.reduce(
+        (max, p) => Math.max(max, (p.z ?? 0) + 1),
+        2,
+      ),
+      hyperParameters: this.hyperParameters,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+      traceThickness: this.traceWidth,
+    }
+  }
+
+  private trySolveSamePointLayerChange(unsolvedConnection: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }) {
+    const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
+    const obstacleChecker =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const { A, B } = opts
+    const viaClearance =
+      obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2
+    const baseOffset = Math.max(
+      obstacleChecker.cellStep * 2,
+      obstacleChecker.viaDiameter,
+      obstacleChecker.traceThickness * 2,
+    )
+
+    const candidateViaPoints = dedupeCandidateViaPoints([
+      { x: A.x, y: A.y },
+      {
+        x: this.nodeWithPortPoints.center.x,
+        y: this.nodeWithPortPoints.center.y,
+      },
+      { x: A.x + baseOffset, y: A.y },
+      { x: A.x - baseOffset, y: A.y },
+      { x: A.x, y: A.y + baseOffset },
+      { x: A.x, y: A.y - baseOffset },
+      { x: A.x + baseOffset, y: A.y + baseOffset },
+      { x: A.x + baseOffset, y: A.y - baseOffset },
+      { x: A.x - baseOffset, y: A.y + baseOffset },
+      { x: A.x - baseOffset, y: A.y - baseOffset },
+    ]).filter((viaPoint) =>
+      isCandidateInsideBounds(viaPoint, opts.bounds, viaClearance),
+    )
+
+    for (const viaPoint of candidateViaPoints) {
+      if (
+        !isViaPointSafe(
+          obstacleChecker,
+          viaPoint,
+          A,
+          B,
+          this.nodeWithPortPoints.center,
+        )
+      ) {
+        continue
+      }
+
+      const route = [
+        { x: A.x, y: A.y, z: A.z },
+        { ...viaPoint, z: A.z },
+        { ...viaPoint, z: B.z },
+        { x: B.x, y: B.y, z: B.z },
+      ].filter(
+        (pt, idx, arr) =>
+          idx === 0 ||
+          Math.abs(pt.x - arr[idx - 1].x) > 1e-6 ||
+          Math.abs(pt.y - arr[idx - 1].y) > 1e-6 ||
+          pt.z !== arr[idx - 1].z,
+      )
+
+      this.solvedRoutes.push({
+        connectionName: unsolvedConnection.connectionName,
+        traceThickness: this.traceWidth,
+        viaDiameter: this.viaDiameter,
+        route,
+        vias: [{ x: viaPoint.x, y: viaPoint.y }],
+      })
+      return true
+    }
+
+    return false
+  }
+
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -184,68 +290,17 @@ export class IntraNodeRouteSolver extends BaseSolver {
       }
 
       // Fast-path: if the points share the same x/y but differ in layer,
-      // we can directly create a vertical via-only route without invoking
-      // the heavier search-based solvers. This prevents the hyper solver
-      // from timing out on degenerate zero-length connections.
+      // prefer a pure via or a nearby obstacle-free via before invoking
+      // the heavier search-based solvers. This keeps the degenerate case
+      // fast, but avoids blindly routing through the node center.
       if (sameX && sameY && A.z !== B.z) {
-        const viaPoint = {
-          x: this.nodeWithPortPoints.center.x,
-          y: this.nodeWithPortPoints.center.y,
-        }
-        const route = [
-          { x: A.x, y: A.y, z: A.z },
-          { ...viaPoint, z: A.z },
-          { ...viaPoint, z: B.z },
-          { x: B.x, y: B.y, z: B.z },
-        ].filter(
-          (pt, idx, arr) =>
-            idx === 0 ||
-            Math.abs(pt.x - arr[idx - 1].x) > 1e-6 ||
-            Math.abs(pt.y - arr[idx - 1].y) > 1e-6 ||
-            pt.z !== arr[idx - 1].z,
-        )
-
-        this.solvedRoutes.push({
-          connectionName: unsolvedConnection.connectionName,
-          traceThickness: this.traceWidth,
-          viaDiameter: this.viaDiameter,
-          route,
-          vias: [viaPoint],
-        })
-        return
+        if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
       }
     }
-    const { connectionName, points } = unsolvedConnection
     this.activeSubSolver =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
-        connectionName,
-        minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
-        bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
-        A: { x: points[0].x, y: points[0].y, z: points[0].z },
-        B: {
-          x: points[points.length - 1].x,
-          y: points[points.length - 1].y,
-          z: points[points.length - 1].z,
-        },
-        obstacleRoutes: this.connMap
-          ? this.solvedRoutes.filter(
-              (sr) =>
-                !this.connMap!.areIdsConnected(
-                  sr.connectionName,
-                  connectionName,
-                ),
-            )
-          : this.solvedRoutes,
-        futureConnections: this.unsolvedConnections,
-        layerCount: this.nodeWithPortPoints.portPoints.reduce(
-          (max, p) => Math.max(max, (p.z ?? 0) + 1),
-          2,
-        ),
-        hyperParameters: this.hyperParameters,
-        connMap: this.connMap,
-        viaDiameter: this.viaDiameter,
-        traceThickness: this.traceWidth,
-      })
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+        this.getSingleRouteSolverOpts(unsolvedConnection),
+      )
   }
 
   visualize(): GraphicsObject {
@@ -338,4 +393,164 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     return graphics
   }
+}
+
+const EPSILON = 1e-6
+
+const dedupeCandidateViaPoints = (points: { x: number; y: number }[]) => {
+  const deduped: { x: number; y: number }[] = []
+  for (const point of points) {
+    if (
+      deduped.some(
+        (existing) =>
+          Math.abs(existing.x - point.x) < EPSILON &&
+          Math.abs(existing.y - point.y) < EPSILON,
+      )
+    ) {
+      continue
+    }
+    deduped.push(point)
+  }
+  return deduped
+}
+
+const isCandidateInsideBounds = (
+  point: { x: number; y: number },
+  bounds: { minX: number; maxX: number; minY: number; maxY: number },
+  clearance: number,
+) =>
+  point.x >= bounds.minX + clearance &&
+  point.x <= bounds.maxX - clearance &&
+  point.y >= bounds.minY + clearance &&
+  point.y <= bounds.maxY - clearance
+
+const isTraceSegmentSafe = (
+  obstacleChecker: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
+  start: { x: number; y: number; z: number },
+  end: { x: number; y: number; z: number },
+) => {
+  if (
+    Math.abs(start.x - end.x) < EPSILON &&
+    Math.abs(start.y - end.y) < EPSILON
+  ) {
+    return true
+  }
+
+  const candidateEnd = {
+    ...end,
+    parent: {
+      ...start,
+      g: 0,
+      h: 0,
+      f: 0,
+      parent: null,
+    },
+    g: 0,
+    h: 0,
+    f: 0,
+  }
+
+  if (obstacleChecker.isNodeTooCloseToObstacle(candidateEnd)) return false
+  if (obstacleChecker.doesPathToParentIntersectObstacle(candidateEnd)) {
+    return false
+  }
+
+  const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
+  const sampleStep = Math.max(
+    obstacleChecker.traceThickness / 2,
+    obstacleChecker.cellStep / 2,
+    0.05,
+  )
+  const sampleCount = Math.max(1, Math.ceil(segmentLength / sampleStep))
+
+  for (let i = 1; i < sampleCount; i++) {
+    const t = i / sampleCount
+    const sample = {
+      x: start.x + (end.x - start.x) * t,
+      y: start.y + (end.y - start.y) * t,
+      z: start.z,
+      parent: {
+        ...start,
+        g: 0,
+        h: 0,
+        f: 0,
+        parent: null,
+      },
+      g: 0,
+      h: 0,
+      f: 0,
+    }
+    if (obstacleChecker.isNodeTooCloseToObstacle(sample, 0)) return false
+  }
+
+  return true
+}
+
+const isViaPointSafe = (
+  obstacleChecker: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
+  viaPoint: { x: number; y: number },
+  A: { x: number; y: number; z: number },
+  B: { x: number; y: number; z: number },
+  center: { x: number; y: number },
+) => {
+  const isAtEndpoint =
+    Math.abs(viaPoint.x - A.x) < EPSILON && Math.abs(viaPoint.y - A.y) < EPSILON
+
+  const viaNode = {
+    x: viaPoint.x,
+    y: viaPoint.y,
+    z: A.z,
+    parent: {
+      x: A.x,
+      y: A.y,
+      z: A.z,
+      g: 0,
+      h: 0,
+      f: 0,
+      parent: null,
+    },
+    g: 0,
+    h: 0,
+    f: 0,
+  }
+
+  if (
+    obstacleChecker.isNodeTooCloseToObstacle(
+      viaNode,
+      obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2,
+      true,
+    )
+  ) {
+    return false
+  }
+
+  if (
+    !isAtEndpoint &&
+    isCandidateInsideBounds(
+      viaPoint,
+      obstacleChecker.bounds,
+      obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2,
+    ) === false
+  ) {
+    return false
+  }
+
+  if (
+    !isTraceSegmentSafe(obstacleChecker, A, { ...viaPoint, z: A.z }) ||
+    !isTraceSegmentSafe(obstacleChecker, { ...viaPoint, z: B.z }, B)
+  ) {
+    return false
+  }
+
+  // Prefer solutions that don't drift through the center when the endpoint
+  // itself works, but still allow the center if it is the only safe option.
+  if (
+    !isAtEndpoint &&
+    Math.abs(viaPoint.x - center.x) < EPSILON &&
+    Math.abs(viaPoint.y - center.y) < EPSILON
+  ) {
+    return true
+  }
+
+  return true
 }
