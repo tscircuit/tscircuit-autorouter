@@ -56,7 +56,6 @@ const PIPELINE_SOLVERS = {
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
 const EFFORT_STORAGE_KEY = "selectedEffort"
 const LAYER_OVERRIDE_STORAGE_KEY = "selectedLayerOverride"
-const AUTO_SOLVE_STORAGE_KEY = "autoSolve"
 const AUTO_RUN_DRC_STORAGE_KEY = "autoRunDrc"
 
 const parseLayerOverride = (value: string | null): LayerOverride => {
@@ -301,19 +300,6 @@ export const AutoroutingPipelineDebugger = ({
     }
   }
 
-  const [autoSolve, setAutoSolveState] = useState<boolean>(
-    () => localStorage.getItem(AUTO_SOLVE_STORAGE_KEY) === "true",
-  )
-
-  const setAutoSolve = (enabled: boolean) => {
-    setAutoSolveState(enabled)
-    try {
-      localStorage.setItem(AUTO_SOLVE_STORAGE_KEY, String(enabled))
-    } catch (e) {
-      console.warn("Could not save auto-solve preference to localStorage:", e)
-    }
-  }
-
   const [autoRunDrc, setAutoRunDrcState] = useState<boolean>(
     () => localStorage.getItem(AUTO_RUN_DRC_STORAGE_KEY) === "true",
   )
@@ -431,7 +417,6 @@ export const AutoroutingPipelineDebugger = ({
     () => window.localStorage.getItem("lastBreakpointNodeId") || "",
   )
   const isSolvingToBreakpointRef = useRef(false) // Ref to track breakpoint solving state
-  const autoSolvedSolverRef = useRef<any>(null)
   const autoRanDrcForSolveRef = useRef(false)
 
   // Reset solver
@@ -478,26 +463,6 @@ export const AutoroutingPipelineDebugger = ({
       }
     }
   }, [isAnimating, speedLevel, solver, animationSpeed])
-
-  useEffect(() => {
-    if (!autoSolve || solver.solved || solver.failed) {
-      return
-    }
-
-    if (autoSolvedSolverRef.current === solver) {
-      return
-    }
-
-    autoSolvedSolverRef.current = solver
-    isSolvingToBreakpointRef.current = false
-    setIsAnimating(false)
-
-    const startTime = performance.now() / 1000
-    solver.solve()
-    const endTime = performance.now() / 1000
-    setSolveTime(endTime - startTime)
-    setForceUpdate((prev) => prev + 1)
-  }, [autoSolve, solver])
 
   useEffect(() => {
     if (!solver.solved) {
@@ -959,8 +924,6 @@ export const AutoroutingPipelineDebugger = ({
         onSetCanSelectObjects={setCanSelectObjects}
         onRunDrcChecks={handleRunDrcChecks}
         onRunRelaxedDrcChecks={handleRunRelaxedDrcChecks}
-        autoSolve={autoSolve}
-        onSetAutoSolve={setAutoSolve}
         autoRunDrc={autoRunDrc}
         onSetAutoRunDrc={setAutoRunDrc}
         animationSpeed={speedLevel}
