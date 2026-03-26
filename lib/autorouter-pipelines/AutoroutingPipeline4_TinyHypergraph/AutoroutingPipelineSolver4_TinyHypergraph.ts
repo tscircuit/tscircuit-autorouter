@@ -15,7 +15,10 @@ import {
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
 } from "lib/types"
-import { HighDensityRoute } from "lib/types/high-density-types"
+import {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -110,6 +113,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
+  highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -235,31 +239,40 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
-      {
-        nodePortPoints: cms.uniformPortDistributionSolver?.getOutput() ?? [],
-        nodePfById: new Map(
-          (
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            []
-          ).map((node) => [
-            node.capacityMeshNodeId,
-            cms.portPointPathingSolver?.computeNodePf(node) ?? null,
-          ]),
-        ),
-        colorMap: cms.colorMap,
-        connMap: cms.connMap,
-        viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
-      },
-    ]),
+    definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
+      const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
+      const fallbackNodes =
+        cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+      const nodePortPointsSource =
+        uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+
+      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+
+      return [
+        {
+          nodePortPoints: structuredClone(nodePortPointsSource),
+          nodePfById: new Map(
+            (
+              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
+              []
+            ).map((node) => [
+              node.capacityMeshNodeId,
+              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+            ]),
+          ),
+          colorMap: cms.colorMap,
+          connMap: cms.connMap,
+          viaDiameter: cms.viaDiameter,
+          traceWidth: cms.minTraceWidth,
+        },
+      ]
+    }),
     definePipelineStep(
       "highDensityRepairSolver",
       Pipeline4HighDensityRepairSolver,
       (cms) => [
         {
-          nodeWithPortPoints:
-            cms.uniformPortDistributionSolver?.getOutput() ?? [],
+          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
