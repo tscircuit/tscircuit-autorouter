@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type {
@@ -66,7 +67,7 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
     nodeWithPortPoints: [nodeWithPortPoints],
     hdRoutes: [hdRoute],
     obstacles: [],
-    repairMargin: 0.4,
+    repairMargin: 0.1,
   })
 
   solver.solve()
@@ -121,3 +122,68 @@ test("pipeline4 stitch stage consumes repaired high density routes", () => {
 
   expect(stitchParams.hdRoutes).toEqual([repairedRoute])
 })
+
+test(
+  "pipeline4 real case repair changes output routes",
+  () => {
+    const circuit003 = (dataset01 as Record<string, unknown>)
+      .circuit003 as SimpleRouteJson
+    const solver = new AutoroutingPipelineSolver4(circuit003)
+
+    solver.solve()
+
+    expect(solver.solved).toBe(true)
+    expect(solver.failed).toBe(false)
+    expect(solver.highDensityNodePortPoints?.length ?? 0).toBeGreaterThan(0)
+    expect(
+      solver.highDensityRepairSolver?.sampleEntries.length ?? 0,
+    ).toBeGreaterThan(0)
+
+    const inputRoutes = solver.highDensityRouteSolver?.routes ?? []
+    const repairedRoutes = solver.highDensityRepairSolver?.getOutput() ?? []
+
+    expect(repairedRoutes.length).toBe(inputRoutes.length)
+
+    const changedRouteCount = repairedRoutes.filter((route, index) => {
+      const inputRoute = inputRoutes[index]
+      return (
+        JSON.stringify(route.route) !== JSON.stringify(inputRoute?.route) ||
+        JSON.stringify(route.vias) !== JSON.stringify(inputRoute?.vias)
+      )
+    }).length
+
+    expect(changedRouteCount).toBeGreaterThan(0)
+  },
+  { timeout: 60000 },
+)
+
+test(
+  "pipeline4 real case stitch step input equals repaired output",
+  () => {
+    const circuit003 = (dataset01 as Record<string, unknown>)
+      .circuit003 as SimpleRouteJson
+    const solver = new AutoroutingPipelineSolver4(circuit003)
+
+    solver.solve()
+
+    const stitchStep = solver.pipelineDef.find(
+      (step) => step.solverName === "highDensityStitchSolver",
+    )
+    const [stitchParams] = stitchStep!.getConstructorParams(solver) as any
+    const repairedRoutes = solver.highDensityRepairSolver?.getOutput() ?? []
+    const rawRoutes = solver.highDensityRouteSolver?.routes ?? []
+
+    expect(stitchParams.hdRoutes).toEqual(repairedRoutes)
+    expect(stitchParams.hdRoutes.length).toBe(rawRoutes.length)
+
+    const changedRouteCount = stitchParams.hdRoutes.filter(
+      (route: HighDensityRoute, index: number) =>
+        JSON.stringify(route.route) !==
+          JSON.stringify(rawRoutes[index]?.route) ||
+        JSON.stringify(route.vias) !== JSON.stringify(rawRoutes[index]?.vias),
+    ).length
+
+    expect(changedRouteCount).toBeGreaterThan(0)
+  },
+  { timeout: 60000 },
+)

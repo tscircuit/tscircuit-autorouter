@@ -17,7 +17,7 @@ type RepairSampleEntry = {
   sample: DatasetSample
 }
 
-const DEFAULT_REPAIR_MARGIN = 0.4
+const DEFAULT_REPAIR_MARGIN = 0.1
 
 const doesRectOverlap = (
   a: { minX: number; maxX: number; minY: number; maxY: number },
