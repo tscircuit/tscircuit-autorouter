@@ -67,7 +67,7 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
     nodeWithPortPoints: [nodeWithPortPoints],
     hdRoutes: [hdRoute],
     obstacles: [],
-    repairMargin: 0.1,
+    repairMargin: 0.2,
   })
 
   solver.solve()

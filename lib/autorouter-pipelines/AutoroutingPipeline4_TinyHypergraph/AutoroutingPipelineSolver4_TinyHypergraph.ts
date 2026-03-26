@@ -276,7 +276,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           hdRoutes: cms.highDensityRouteSolver!.routes,
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
-          repairMargin: cms.srj.defaultObstacleMargin ?? 0.1,
+          repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
     ),
