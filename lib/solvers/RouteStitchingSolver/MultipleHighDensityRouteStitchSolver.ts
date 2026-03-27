@@ -18,7 +18,7 @@ export type UnsolvedRoute = {
 }
 
 const roundedPointHash = (p: { x: number; y: number; z: number }) =>
-  `${Math.round(p.x * 100)},${Math.round(p.y * 100)},${Math.round(p.z * 100)}`
+  `${Math.round(p.x * 1e5)},${Math.round(p.y * 1e5)},${Math.round(p.z * 1e5)}`
 
 export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   override getSolverName(): string {
