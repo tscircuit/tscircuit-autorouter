@@ -5,6 +5,7 @@ import type {
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
 import type { Obstacle } from "lib/types/srj-types"
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
@@ -115,12 +116,13 @@ const fromRepairRoute = (
 
 const getAdjacentObstacles = (
   node: NodeWithPortPoints,
-  obstacles: Obstacle[],
+  obstacleSHI: ObstacleSpatialHashIndex,
   margin: number,
 ) => {
   const expandedNodeBounds = getNodeBounds(node, margin)
 
-  return obstacles
+  return obstacleSHI
+    .search(expandedNodeBounds)
     .filter((obstacle) =>
       doesRectOverlap(expandedNodeBounds, getObstacleBounds(obstacle)),
     )
@@ -138,6 +140,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
   readonly originalObstacles: Obstacle[]
+  readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
@@ -157,6 +160,10 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
+    this.obstacleSHI = new ObstacleSpatialHashIndex(
+      "flatbush",
+      this.originalObstacles,
+    )
     this.colorMap = params.colorMap ?? {}
 
     const routeIndexesByNode = new Map<number, number[]>()
@@ -197,7 +204,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
             ),
             adjacentObstacles: getAdjacentObstacles(
               node,
-              params.obstacles,
+              this.obstacleSHI,
               this.repairMargin,
             ),
           },
