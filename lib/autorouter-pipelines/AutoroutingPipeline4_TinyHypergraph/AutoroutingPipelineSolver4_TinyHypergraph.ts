@@ -250,7 +250,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
       return [
         {
-          nodePortPoints: structuredClone(nodePortPointsSource),
+          nodePortPoints: nodePortPointsSource,
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
