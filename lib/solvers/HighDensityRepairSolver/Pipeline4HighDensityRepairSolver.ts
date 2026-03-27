@@ -205,7 +205,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       },
     )
 
-    this.MAX_ITERATIONS = Math.max(this.sampleEntries.length + 1, 1_000)
+    this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
       repairedNodeCount: 0,
