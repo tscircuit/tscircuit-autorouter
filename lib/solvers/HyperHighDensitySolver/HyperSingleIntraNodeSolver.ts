@@ -247,11 +247,11 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         viaMinDistFromBorder: 0.15,
         traceMargin: 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
-      solver.MAX_ITERATIONS = 10_000_000
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
@@ -268,9 +268,9 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         // needs more debugging- repro01 in the high-density-a01 repo
         // has a good reproduction
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
         hyperParameters,
       })
-      solver.MAX_ITERATIONS *= this.effort
       return solver as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
