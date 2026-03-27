@@ -142,6 +142,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
+  override activeSubSolver: HighDensityRepairSolver | null = null
   latestVisualization: GraphicsObject = {}
 
   constructor(params: {
@@ -236,50 +237,55 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       return
     }
 
-    const solver = new HighDensityRepairSolver({
-      sample: sampleEntry.sample,
-      margin: this.repairMargin,
-    }) as InstanceType<typeof HighDensityRepairSolver> & {
-      solve(): void
-      failed: boolean
-      error: string | null
-      visualize(): GraphicsObject
-      getOutput(): { repairedRoutes: RepairHdRoute[] }
-    }
-    solver.solve()
+    if (this.activeSubSolver) {
+      this.activeSubSolver.step()
+      this.latestVisualization = this.activeSubSolver.visualize()
 
-    if (solver.failed) {
-      this.failed = true
-      this.error =
-        solver.error ??
-        `High density repair failed for node ${sampleEntry.node.capacityMeshNodeId}`
+      if (this.activeSubSolver.failed) {
+        this.failed = true
+        this.error =
+          this.activeSubSolver.error ??
+          `High density repair failed for node ${sampleEntry.node.capacityMeshNodeId}`
+        this.activeSubSolver = null
+        return
+      }
+
+      if (!this.activeSubSolver.solved) {
+        return
+      }
+
+      const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+      for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
+        const routeIndex = sampleEntry.routeIndexes[i]
+        const fallbackRoute = this.originalHdRoutes[routeIndex]
+        const repairedRoute = repairedRoutes[i]
+        this.repairedRoutesByIndex.set(
+          routeIndex,
+          repairedRoute
+            ? fromRepairRoute(repairedRoute, fallbackRoute)
+            : fallbackRoute,
+        )
+      }
+
+      this.activeSubSolver = null
+      this.activeSampleIndex += 1
+      this.stats = {
+        sampleCount: this.sampleEntries.length,
+        repairedNodeCount: this.activeSampleIndex,
+        repairedRouteCount: this.repairedRoutesByIndex.size,
+      }
+
+      if (this.activeSampleIndex >= this.sampleEntries.length) {
+        this.solved = true
+      }
       return
     }
 
-    const repairedRoutes = solver.getOutput().repairedRoutes
-    for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
-      const routeIndex = sampleEntry.routeIndexes[i]
-      const fallbackRoute = this.originalHdRoutes[routeIndex]
-      const repairedRoute = repairedRoutes[i]
-      this.repairedRoutesByIndex.set(
-        routeIndex,
-        repairedRoute
-          ? fromRepairRoute(repairedRoute, fallbackRoute)
-          : fallbackRoute,
-      )
-    }
-
-    this.latestVisualization = solver.visualize()
-    this.activeSampleIndex += 1
-    this.stats = {
-      sampleCount: this.sampleEntries.length,
-      repairedNodeCount: this.activeSampleIndex,
-      repairedRouteCount: this.repairedRoutesByIndex.size,
-    }
-
-    if (this.activeSampleIndex >= this.sampleEntries.length) {
-      this.solved = true
-    }
+    this.activeSubSolver = new HighDensityRepairSolver({
+      sample: sampleEntry.sample,
+      margin: this.repairMargin,
+    })
+    this.latestVisualization = this.activeSubSolver.visualize()
   }
 
   getOutput(): HighDensityRoute[] {
@@ -289,6 +295,10 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+
     if (!this.solved) {
       return this.latestVisualization
     }
