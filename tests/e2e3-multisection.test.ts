@@ -3,6 +3,7 @@ import { AutoroutingPipelineSolver } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
 import { getSvgFromGraphicsObject } from "graphics-debug"
+import { AutoroutingPipelineSolver2_PortPointPathing } from "../lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing"
 import {
   createPortPointSection,
   visualizeSection,
@@ -35,7 +36,7 @@ test("should solve e2e3 board and produce valid SimpleRouteJson output", async (
 test("createPortPointSection creates valid section from center node", async () => {
   const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+  const solver = new AutoroutingPipelineSolver2_PortPointPathing(simpleSrj, {
     cacheProvider: null,
   })
 
@@ -104,7 +105,7 @@ test("createPortPointSection creates valid section from center node", async () =
 test("createPortPointSection with different expansion degrees", async () => {
   const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+  const solver = new AutoroutingPipelineSolver2_PortPointPathing(simpleSrj, {
     cacheProvider: null,
   })
 
@@ -187,7 +188,7 @@ test("createPortPointSection with different expansion degrees", async () => {
 test("createSectionSimpleRouteJson includes cut paths with low expansion degrees", async () => {
   const simpleSrj: SimpleRouteJson = e2e3Fixture as SimpleRouteJson
 
-  const solver = new AutoroutingPipelineSolver(simpleSrj, {
+  const solver = new AutoroutingPipelineSolver2_PortPointPathing(simpleSrj, {
     cacheProvider: null,
   })
 
