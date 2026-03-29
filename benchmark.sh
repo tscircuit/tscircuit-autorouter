@@ -36,17 +36,25 @@ get_solvers() {
 
     // Use autorouter-pipelines/index.ts as the source of truth for benchmarkable solvers
     const pipelinesIndex = readFileSync(join(process.cwd(), "lib", "autorouter-pipelines", "index.ts"), "utf8")
-    const pipelineNames = [...pipelinesIndex.matchAll(/export\s*\{\s*(\w+)\s*\}/g)].map(m => m[1])
+    const pipelineNames = new Set()
+    for (const match of pipelinesIndex.matchAll(/export\s*\{([\s\S]*?)\}\s*from/g)) {
+      const exportEntries = match[1].split(",").map((entry) => entry.trim()).filter(Boolean)
+      for (const entry of exportEntries) {
+        const localName = entry.split(/\s+as\s+/)[0]?.trim()
+        if (localName) pipelineNames.add(localName)
+      }
+    }
 
     // Resolve aliases from lib/index.ts
     const libIndex = readFileSync(join(process.cwd(), "lib", "index.ts"), "utf8")
-    const solvers = pipelineNames.map(name => {
-      const aliasMatch = libIndex.match(new RegExp(name + "\\s+as\\s+(\\w+)"))
-      return aliasMatch ? aliasMatch[1] : name
+    const solvers = [...pipelineNames].flatMap(name => {
+      const aliasMatches = [...libIndex.matchAll(new RegExp(name + "\\s+as\\s+(\\w+)", "g"))].map(match => match[1])
+      return [name, ...aliasMatches]
     })
+    const uniqueSolvers = [...new Set(solvers)]
 
     const includeAssignable = process.env.INCLUDE_ASSIGNABLE === "true"
-    const filtered = includeAssignable ? solvers : solvers.filter(name => !name.includes("Assignable"))
+    const filtered = includeAssignable ? uniqueSolvers : uniqueSolvers.filter(name => !name.includes("Assignable"))
 
     console.log(filtered.join("\n"))
   ' 2>/dev/null || true

@@ -6,5 +6,6 @@ export { AutoroutingPipeline1_OriginalUnravel } from "./AutoroutingPipeline1_Ori
 export { AutoroutingPipelineSolver3_HgPortPointPathing } from "./AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
 export {
   AutoroutingPipelineSolver4,
+  AutoroutingPipelineSolver4_TinyHypergraph,
   AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver,
 } from "./AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
