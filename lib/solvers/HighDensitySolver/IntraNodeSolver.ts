@@ -13,6 +13,25 @@ import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
+type ConnectionPoint = { x: number; y: number; z: number }
+
+const pointKey = (point: ConnectionPoint) =>
+  `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
+
+const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
+  const seen = new Set<string>()
+  const deduped: ConnectionPoint[] = []
+
+  for (const point of points) {
+    const key = pointKey(point)
+    if (seen.has(key)) continue
+    seen.add(key)
+    deduped.push(point)
+  }
+
+  return deduped
+}
+
 export class IntraNodeRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "IntraNodeRouteSolver"
@@ -64,10 +83,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
-    const unsolvedConnectionsMap: Map<
-      string,
-      { x: number; y: number; z: number }[]
-    > = new Map()
+    const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     for (const { connectionName, x, y, z } of nodeWithPortPoints.portPoints) {
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
@@ -77,7 +93,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.unsolvedConnections = Array.from(
       unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
         connectionName,
-        points,
+        points: dedupeConnectionPoints(points),
       })),
     )
 
@@ -219,6 +235,26 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return true
   }
 
+  private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }) {
+    const [origin, ...extraPoints] = dedupeConnectionPoints(
+      unsolvedConnection.points,
+    )
+
+    if (!origin || extraPoints.length <= 1) return false
+
+    for (const point of extraPoints) {
+      this.unsolvedConnections.push({
+        connectionName: unsolvedConnection.connectionName,
+        points: [origin, point],
+      })
+    }
+
+    return true
+  }
+
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -243,6 +279,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
     if (unsolvedConnection.points.length === 1) {
       return
+    }
+    if (unsolvedConnection.points.length > 2) {
+      if (this.queueExtraBranchesForMultiPointConnection(unsolvedConnection)) {
+        return
+      }
     }
     if (unsolvedConnection.points.length === 2) {
       const [A, B] = unsolvedConnection.points
