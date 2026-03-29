@@ -295,25 +295,41 @@ const loadSolverNames = async (
   )
   const pipelinesIndex = await readFile(pipelinesIndexPath, "utf8")
 
-  const pipelineNames: string[] = []
-  for (const match of pipelinesIndex.matchAll(/export\s*\{\s*(\w+)\s*\}/g)) {
-    pipelineNames.push(match[1])
+  const pipelineNames = new Set<string>()
+  for (const match of pipelinesIndex.matchAll(
+    /export\s*\{([\s\S]*?)\}\s*from/g,
+  )) {
+    const exportEntries = match[1]
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+
+    for (const entry of exportEntries) {
+      const localName = entry.split(/\s+as\s+/)[0]?.trim()
+      if (localName) {
+        pipelineNames.add(localName)
+      }
+    }
   }
 
   // Resolve aliases from lib/index.ts (e.g. "X as Y")
   const libIndexPath = path.join(process.cwd(), "lib", "index.ts")
   const libIndex = await readFile(libIndexPath, "utf8")
 
-  const solverNames = pipelineNames.map((name) => {
-    const aliasMatch = libIndex.match(new RegExp(`${name}\\s+as\\s+(\\w+)`))
-    return aliasMatch ? aliasMatch[1] : name
+  const solverNames = [...pipelineNames].flatMap((name) => {
+    const aliasMatches = [
+      ...libIndex.matchAll(new RegExp(`${name}\\s+as\\s+(\\w+)`, "g")),
+    ].map((match) => match[1])
+
+    return [name, ...aliasMatches]
   })
+  const uniqueSolverNames = [...new Set(solverNames)]
 
   if (!excludeAssignable) {
-    return solverNames
+    return uniqueSolverNames
   }
 
-  return solverNames.filter((name) => !name.includes("Assignable"))
+  return uniqueSolverNames.filter((name) => !name.includes("Assignable"))
 }
 
 const loadScenarios = async (
