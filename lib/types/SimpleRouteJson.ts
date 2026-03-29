@@ -1,43 +1,31 @@
 /**
- * Extended SimpleRouteJson types that add trace-width / thickness-multiplier
- * support on top of the base srj-types definitions.
+ * Trace-thickness extensions for SimpleRouteJson.
  *
- * These types are intentionally named with an "Extended" prefix so they do NOT
- * conflict with the canonical `SimpleRouteJson` / `SimpleRouteConnection`
- * definitions that live in `srj-types`.
+ * The canonical SimpleRouteJson / SimpleRouteConnection types come from
+ * srj-types (re-exported via lib/types/index.ts).  Rather than redefining
+ * those shapes here — which would create an incompatible duplicate — we only
+ * declare the additional, optional thickness fields that this feature adds.
+ *
+ * Consumers that need the full type can use:
+ *   import type { SimpleRouteJson } from "srj-types"
+ * and then apply TraceThicknessOptions on top of individual connections.
  */
 
-import type {
-  SimpleRouteJson as BaseSimpleRouteJson,
-  SimpleRouteConnection as BaseSimpleRouteConnection,
-} from "srj-types";
+import type { TraceThicknessMultiplier } from "./TraceThickness";
 
 /**
- * A `SimpleRouteConnection` augmented with optional per-connection trace
- * width/thickness overrides.
+ * Optional trace-thickness overrides that can be attached to an individual
+ * SimpleRouteConnection (or to the top-level SimpleRouteJson as a default).
+ *
+ * At most one of the two fields should be supplied; if both are present,
+ * `traceWidth` takes precedence.
  */
-export interface ExtendedSimpleRouteConnection extends BaseSimpleRouteConnection {
-  /** Explicit trace width in mm. Takes precedence over `thicknessMultiplier`. */
+export interface TraceThicknessOptions {
+  /** Explicit trace width in mm. Overrides thicknessMultiplier when set. */
   traceWidth?: number;
   /**
-   * Thickness multiplier relative to the board's default trace width.
-   * e.g. 1.0 = default, 2.0 = double width.
+   * Thickness expressed as a multiplier of the baseline trace width.
+   * @see TraceThicknessMultiplier for valid values.
    */
-  thicknessMultiplier?: number;
-}
-
-/**
- * A `SimpleRouteJson` augmented with optional board-level trace width defaults
- * and per-connection overrides via `ExtendedSimpleRouteConnection`.
- */
-export interface ExtendedSimpleRouteJson
-  extends Omit<BaseSimpleRouteJson, "connections"> {
-  /** Board-level default trace width in mm. */
-  defaultTraceWidth?: number;
-  /**
-   * Board-level default thickness multiplier.
-   * Applied when a connection has no explicit `traceWidth`.
-   */
-  defaultThicknessMultiplier?: number;
-  connections: ExtendedSimpleRouteConnection[];
+  thicknessMultiplier?: TraceThicknessMultiplier;
 }
