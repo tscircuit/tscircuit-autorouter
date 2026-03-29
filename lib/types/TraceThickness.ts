@@ -1,46 +1,51 @@
 /**
- * Trace thickness multipliers relative to the industry-standard data line
- * thickness of 0.15mm.
+ * Thickness multiplier model for trace widths.
  *
- * | Multiplier | Thickness | Typical use           |
- * |------------|-----------|----------------------|
- * | 1x         | 0.15 mm   | Signal / data lines  |
- * | 2x         | 0.30 mm   | Low-power supply     |
- * | 4x         | 0.60 mm   | Medium-power supply  |
- * | 8x         | 1.20 mm   | High-power / ground  |
+ * The multiplier is always relative to a board-level default trace width.
+ * A multiplier of 1.0 means "use the board default", 2.0 means "double width",
+ * 0.5 means "half width", etc.
  */
-export type TraceThicknessMultiplier = 1 | 2 | 4 | 8
 
-/** Base trace width in millimetres (industry standard data-line width). */
-export const BASE_TRACE_WIDTH_MM = 0.15
+/** Named semantic thickness levels, mapped to their multiplier values. */
+export const TraceThickness = {
+  Hairline: 0.5,
+  Thin: 0.75,
+  Default: 1.0,
+  Medium: 1.5,
+  Thick: 2.0,
+  Power: 3.0,
+} as const;
+
+export type TraceThicknessName = keyof typeof TraceThickness;
+export type TraceThicknessMultiplier = (typeof TraceThickness)[TraceThicknessName];
 
 /**
- * Convert a thickness multiplier to an absolute width in millimetres.
+ * Convert a thickness multiplier to an absolute width in mm.
+ *
+ * @param multiplier  - Thickness multiplier (e.g. 1.0 for default).
+ * @param defaultWidth - Board-level default trace width in mm.
+ * @returns Absolute trace width in mm.
  */
-export function traceWidthFromMultiplier(
-  multiplier: TraceThicknessMultiplier,
+export function multiplierToWidth(
+  multiplier: number,
+  defaultWidth: number,
 ): number {
-  return BASE_TRACE_WIDTH_MM * multiplier
+  return multiplier * defaultWidth;
 }
 
 /**
- * Round an arbitrary width in millimetres to the nearest supported
- * multiplier.  Values that cannot be mapped exactly are rounded to the
- * closest supported step.
+ * Convert an absolute trace width to a thickness multiplier.
+ *
+ * @param width        - Absolute trace width in mm.
+ * @param defaultWidth - Board-level default trace width in mm.
+ * @returns Thickness multiplier relative to the default width.
  */
-export function multiplierFromTraceWidth(
-  widthMm: number,
-): TraceThicknessMultiplier {
-  const raw = widthMm / BASE_TRACE_WIDTH_MM
-  const supported: TraceThicknessMultiplier[] = [1, 2, 4, 8]
-  let best: TraceThicknessMultiplier = 1
-  let bestDiff = Infinity
-  for (const m of supported) {
-    const diff = Math.abs(raw - m)
-    if (diff < bestDiff) {
-      bestDiff = diff
-      best = m
-    }
+export function widthToMultiplier(
+  width: number,
+  defaultWidth: number,
+): number {
+  if (defaultWidth === 0) {
+    throw new RangeError("defaultWidth must be non-zero");
   }
-  return best
+  return width / defaultWidth;
 }
