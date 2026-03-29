@@ -1,66 +1,60 @@
-import type { Obstacle } from "../types/SimpleRouteJson"
-import { getTraceClearance } from "./getTraceClearance"
+import type { Obstacle } from "srj-types/capacity-obstacle-types";
 
 /**
- * Return an "inflated" copy of an obstacle that accounts for the physical
- * width of the trace being routed.
+ * Returns a new Obstacle whose dimensions are expanded by `inflation` on every
+ * side (i.e. width/height grow by 2×inflation, radius grows by inflation).
  *
- * When a pathfinder operates on centre-lines it must keep the centre at
- * least `traceWidth/2 + minGap` away from every obstacle edge.  We achieve
- * this by enlarging each obstacle by that margin on all sides before
- * running the search.
- *
- * @param obstacle         Source obstacle (not mutated).
- * @param traceWidthMm     Width of the trace being routed, in mm.
- * @param minClearanceGap  Minimum conductor-to-conductor gap (default 0.1 mm).
+ * All dimension fields are optional on the source type, so we fall back to 0
+ * for any that are absent and only write back the field when the source had it.
  */
-export function inflateObstacleForTrace(
+export function inflateObstacle(
   obstacle: Obstacle,
-  traceWidthMm: number,
-  minClearanceGap = 0.1,
+  inflation: number,
 ): Obstacle {
-  const margin = getTraceClearance(traceWidthMm, minClearanceGap)
+  if (inflation === 0) return obstacle;
 
-  if (obstacle.type === "rect") {
-    return {
-      ...obstacle,
-      width: (obstacle.width ?? 0) + margin * 2,
-      height: (obstacle.height ?? 0) + margin * 2,
-    }
+  const inflated: Obstacle = { ...obstacle };
+
+  if (obstacle.width !== undefined) {
+    inflated.width = obstacle.width + 2 * inflation;
   }
 
-  if (obstacle.type === "circle") {
-    return {
-      ...obstacle,
-      radius: (obstacle.radius ?? 0) + margin,
-    }
+  if (obstacle.height !== undefined) {
+    inflated.height = obstacle.height + 2 * inflation;
   }
 
-  // Fallback – return unchanged (unknown shape)
-  return obstacle
+  if (obstacle.radius !== undefined) {
+    inflated.radius = obstacle.radius + inflation;
+  }
+
+  return inflated;
 }
 
 /**
- * Inflate a list of obstacles for a given trace width, skipping any obstacle
- * that belongs to the same net as the connection being routed (same-net
- * clearance relaxation).
+ * Inflates an obstacle to account for trace clearance.
  *
- * @param obstacles        Full obstacle list.
- * @param traceWidthMm     Width of the trace being routed.
- * @param connectionName   Net name of the connection being routed.
- * @param minClearanceGap  Minimum conductor-to-conductor gap (default 0.1 mm).
+ * The required keep-out margin on each side equals half the trace width plus
+ * the per-net clearance value:
+ *
+ *   inflation = traceWidth / 2 + clearance
+ *
+ * @param obstacle   The original (un-inflated) obstacle.
+ * @param traceWidth Resolved trace width in mm.
+ * @param clearance  Minimum clearance between trace edge and obstacle edge (mm).
+ *                   Defaults to 0 when not supplied.
  */
-export function inflateObstaclesForTrace(
-  obstacles: Obstacle[],
-  traceWidthMm: number,
-  connectionName: string,
-  minClearanceGap = 0.1,
-): Obstacle[] {
-  return obstacles.map((obs) => {
-    // Same-net obstacles: no need to maintain clearance (they will be merged)
-    if (obs.connectedTo.includes(connectionName)) {
-      return obs
-    }
-    return inflateObstacleForTrace(obs, traceWidthMm, minClearanceGap)
-  })
+export function inflateObstacleForTrace(
+  obstacle: Obstacle,
+  traceWidth: number,
+  clearance = 0,
+): Obstacle {
+  if (traceWidth < 0) {
+    throw new RangeError(`traceWidth must be ≥ 0, got ${traceWidth}`);
+  }
+  if (clearance < 0) {
+    throw new RangeError(`clearance must be ≥ 0, got ${clearance}`);
+  }
+
+  const inflation = traceWidth / 2 + clearance;
+  return inflateObstacle(obstacle, inflation);
 }
