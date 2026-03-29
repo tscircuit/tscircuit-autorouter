@@ -1,20 +1,30 @@
-export interface RoutedSegment {
-  x: number
-  y: number
-  layer: string
-  /** Width of this segment in millimetres */
-  width: number
-}
+/**
+ * Result shape returned by the autorouter, including per-segment trace widths.
+ */
 
-export interface RoutedTrace {
-  /** Matches the connection name from SimpleRouteConnection */
-  connectionName: string
-  route: RoutedSegment[]
+export interface RouteSegment {
+  /** Start x coordinate in mm */
+  x1: number;
+  /** Start y coordinate in mm */
+  y1: number;
+  /** End x coordinate in mm */
+  x2: number;
+  /** End y coordinate in mm */
+  y2: number;
+  /** PCB layer identifier (e.g. "top", "bottom") */
+  layer: string;
+  /** Resolved trace width for this segment in mm */
+  width: number;
 }
 
 export interface AutorouterResult {
-  /** Successfully routed connections */
-  traces: RoutedTrace[]
-  /** Connection names that could not be routed */
-  failedConnections?: string[]
+  /** Whether all connections were successfully routed */
+  succeeded: boolean;
+  /** Per-connection routed segments */
+  routes: Array<{
+    connectionName: string;
+    segments: RouteSegment[];
+  }>;
+  /** Diagnostic messages, warnings, or errors from the routing run */
+  messages?: string[];
 }
