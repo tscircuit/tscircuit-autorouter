@@ -1,4 +1,3 @@
-export * from "srj-types";
 export * from "srj-types/capacity-mesh-types";
 export * from "srj-types/capacity-obstacle-types";
 export * from "srj-types/capacity-route-types";
