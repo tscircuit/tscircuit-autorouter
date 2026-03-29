@@ -1,58 +1,43 @@
-import type { TraceThicknessMultiplier } from "./TraceThickness"
+/**
+ * Extended SimpleRouteJson types that add trace-width / thickness-multiplier
+ * support on top of the base srj-types definitions.
+ *
+ * These types are intentionally named with an "Extended" prefix so they do NOT
+ * conflict with the canonical `SimpleRouteJson` / `SimpleRouteConnection`
+ * definitions that live in `srj-types`.
+ */
 
-export interface Point {
-  x: number
-  y: number
-}
+import type {
+  SimpleRouteJson as BaseSimpleRouteJson,
+  SimpleRouteConnection as BaseSimpleRouteConnection,
+} from "srj-types";
 
-export interface Obstacle {
-  type: "rect" | "circle"
-  center: Point
-  width?: number
-  height?: number
-  radius?: number
-  /** Net name this obstacle belongs to (used for same-net clearance skipping) */
-  connectedTo: string[]
-  layers: string[]
+/**
+ * A `SimpleRouteConnection` augmented with optional per-connection trace
+ * width/thickness overrides.
+ */
+export interface ExtendedSimpleRouteConnection extends BaseSimpleRouteConnection {
+  /** Explicit trace width in mm. Takes precedence over `thicknessMultiplier`. */
+  traceWidth?: number;
+  /**
+   * Thickness multiplier relative to the board's default trace width.
+   * e.g. 1.0 = default, 2.0 = double width.
+   */
+  thicknessMultiplier?: number;
 }
 
 /**
- * A single connection (net segment) that the autorouter must route.
- *
- * `traceWidth` – explicit trace width in mm.  When omitted the autorouter
- * uses the default width derived from `thicknessMultiplier`.
- *
- * `thicknessMultiplier` – convenience shorthand; one of 1×, 2×, 4×, 8×
- * relative to the 0.15 mm base width.  Ignored when `traceWidth` is set.
- * Defaults to 1 (0.15 mm).
+ * A `SimpleRouteJson` augmented with optional board-level trace width defaults
+ * and per-connection overrides via `ExtendedSimpleRouteConnection`.
  */
-export interface SimpleRouteConnection {
-  name: string
-  pointsToConnect: Point[]
-  /** Layer(s) the trace is allowed to use */
-  allowedLayers?: string[]
+export interface ExtendedSimpleRouteJson
+  extends Omit<BaseSimpleRouteJson, "connections"> {
+  /** Board-level default trace width in mm. */
+  defaultTraceWidth?: number;
   /**
-   * Explicit trace width in millimetres.
-   * Overrides `thicknessMultiplier` when both are supplied.
+   * Board-level default thickness multiplier.
+   * Applied when a connection has no explicit `traceWidth`.
    */
-  traceWidth?: number
-  /**
-   * Thickness as a multiplier of the 0.15 mm base width (1 | 2 | 4 | 8).
-   * Defaults to 1 (standard signal-line width).
-   */
-  thicknessMultiplier?: TraceThicknessMultiplier
-}
-
-export interface SimpleRouteJson {
-  minTraceWidth: number
-  /** Board / routing-area bounds */
-  bounds?: {
-    minX: number
-    maxX: number
-    minY: number
-    maxY: number
-  }
-  connections: SimpleRouteConnection[]
-  obstacles: Obstacle[]
-  layers: string[]
+  defaultThicknessMultiplier?: number;
+  connections: ExtendedSimpleRouteConnection[];
 }
