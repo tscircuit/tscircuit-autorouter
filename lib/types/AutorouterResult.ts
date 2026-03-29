@@ -1,30 +1,35 @@
-/**
- * Result shape returned by the autorouter, including per-segment trace widths.
- */
+import type { TraceThicknessOptions } from "./SimpleRouteJson";
 
-export interface RouteSegment {
-  /** Start x coordinate in mm */
+/**
+ * A single routed segment produced by the autorouter.
+ */
+export interface RoutedSegment {
+  /** Net / connection name this segment belongs to. */
+  connectionName: string;
+  /** X coordinate of the segment start (mm). */
   x1: number;
-  /** Start y coordinate in mm */
+  /** Y coordinate of the segment start (mm). */
   y1: number;
-  /** End x coordinate in mm */
+  /** X coordinate of the segment end (mm). */
   x2: number;
-  /** End y coordinate in mm */
+  /** Y coordinate of the segment end (mm). */
   y2: number;
-  /** PCB layer identifier (e.g. "top", "bottom") */
+  /** Layer the segment lives on (e.g. "top", "bottom", "inner1"). */
   layer: string;
-  /** Resolved trace width for this segment in mm */
+  /** Resolved trace width in mm for this specific segment. */
   width: number;
 }
 
+/**
+ * The result returned by the autorouter after completing a routing pass.
+ */
 export interface AutorouterResult {
-  /** Whether all connections were successfully routed */
-  succeeded: boolean;
-  /** Per-connection routed segments */
-  routes: Array<{
-    connectionName: string;
-    segments: RouteSegment[];
-  }>;
-  /** Diagnostic messages, warnings, or errors from the routing run */
-  messages?: string[];
+  /** All routed wire segments, each carrying an explicit resolved width. */
+  segments: RoutedSegment[];
+  /**
+   * Thickness options that were applied as the global default for this run.
+   * Individual segments may have been routed with different widths if their
+   * connection specified per-connection overrides.
+   */
+  defaultThickness?: TraceThicknessOptions;
 }
