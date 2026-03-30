@@ -33,7 +33,7 @@
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/math-utils": "^0.0.27",
-    "@tscircuit/rectdiff": "0.0.22",
+    "@tscircuit/rectdiff": "0.0.25",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
