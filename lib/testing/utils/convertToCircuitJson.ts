@@ -305,46 +305,101 @@ function createPcbPorts(srj: SimpleRouteJson): AnyCircuitElement[] {
 }
 
 /**
- * Create pcb_smtpad elements from SRJ obstacles that reference pads/ports
- * Only constructs pads when obstacle.connectedTo hints at a real pad/port.
+ * Create pad-like circuit-json elements from SRJ obstacles.
+ * Multi-layer obstacles represent plated holes and must not be deduped away
+ * against top-side SMT pads that share the same connectivity metadata.
  */
-function createPcbSmtPads(srj: SimpleRouteJson): AnyCircuitElement[] {
+function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
-  const addedPadIds = new Set<string>()
+  const addedSmtPadIds = new Set<string>()
+  const addedPlatedHoleIds = new Set<string>()
 
   for (const obstacle of srj.obstacles as any[]) {
     const connectedTo: string[] = obstacle?.connectedTo || []
-    const padId: string | undefined = connectedTo.find((id) =>
+    const smtPadId: string | undefined = connectedTo.find((id) =>
       id.startsWith("pcb_smtpad_"),
+    )
+    const platedHoleId: string | undefined = connectedTo.find((id) =>
+      id.startsWith("pcb_plated_hole_"),
     )
     const pcbPortId: string | undefined = connectedTo.find((id) =>
       id.startsWith("pcb_port_"),
     )
 
-    // Construct only when we have at least a port or pad hint
-    if (!padId && !pcbPortId) continue
+    if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
-    const layer: string | undefined = Array.isArray(obstacle.layers)
-      ? obstacle.layers[0]
+    const layers: string[] = Array.isArray(obstacle.layers)
+      ? obstacle.layers
       : obstacle.layer
-    if (!layer) continue
+        ? [obstacle.layer]
+        : []
+    if (layers.length === 0) continue
 
-    const id = padId ?? `pcb_smtpad_${pads.length}`
-    if (addedPadIds.has(id)) continue
-    addedPadIds.add(id)
-
-    // Default to rectangular pads; SRJ obstacles generally provide width/height
     const width = obstacle.width ?? 0
     const height = obstacle.height ?? 0
     const x = obstacle.center?.x ?? obstacle.x
     const y = obstacle.center?.y ?? obstacle.y
 
-    if (typeof x !== "number" || typeof y !== "number") continue
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof height !== "number"
+    ) {
+      continue
+    }
+
+    const isMultiLayerObstacle = layers.length > 1
+
+    if (isMultiLayerObstacle) {
+      const id =
+        platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`
+      if (addedPlatedHoleIds.has(id)) continue
+      addedPlatedHoleIds.add(id)
+
+      const isCircularLike = Math.abs(width - height) < 0.001
+
+      if (isCircularLike) {
+        pads.push({
+          type: "pcb_plated_hole",
+          pcb_plated_hole_id: id,
+          shape: "circle",
+          outer_diameter: Math.max(width, height),
+          hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
+          x,
+          y,
+          layers,
+          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+        } as any)
+        continue
+      }
+
+      pads.push({
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: id,
+        shape: "circular_hole_with_rect_pad",
+        hole_shape: "circle",
+        hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
+        rect_pad_width: width,
+        rect_pad_height: height,
+        hole_offset_x: 0,
+        hole_offset_y: 0,
+        x,
+        y,
+        layers,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      } as any)
+      continue
+    }
+
+    const id = smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`
+    if (addedSmtPadIds.has(id)) continue
+    addedSmtPadIds.add(id)
 
     pads.push({
       type: "pcb_smtpad",
       pcb_smtpad_id: id,
-      layer,
+      layer: layers[0],
       shape: "rect",
       width,
       height,
@@ -457,8 +512,8 @@ export function convertToCircuitJson(
   // Add PCB ports for connection points
   circuitJson.push(...createPcbPorts(srjWithPointPairs))
 
-  // Add PCB SMT pads
-  circuitJson.push(...createPcbSmtPads(srjWithPointPairs))
+  // Add PCB pads / plated holes represented by SRJ obstacles
+  circuitJson.push(...createPcbPadElements(srjWithPointPairs))
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(...extractViasFromRoutes(routes, minViaDiameter))
