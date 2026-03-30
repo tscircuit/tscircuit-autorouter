@@ -7,20 +7,13 @@ import * as path from "node:path"
 import * as readline from "node:readline"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
+  BenchmarkReport,
   BenchmarkTask,
+  SolverRunSummary,
   WorkerResult,
   WorkerResultMessage,
   WorkerTaskMessage,
 } from "./benchmark-types"
-
-type SolverRunResult = {
-  solverName: string
-  completedRateLabel: string
-  relaxedDrcRateLabel: string
-  timedOutLabel: string
-  p50TimeMs: number | null
-  p95TimeMs: number | null
-}
 
 type BenchmarkOptions = {
   solverName?: string
@@ -366,7 +359,7 @@ const loadScenarios = async (
   return scenarioLimit ? allScenarios.slice(0, scenarioLimit) : allScenarios
 }
 
-const formatTable = (rows: SolverRunResult[]) => {
+const formatTable = (rows: SolverRunSummary[]) => {
   const headers = [
     "Solver",
     "Completed %",
@@ -799,9 +792,8 @@ const runBenchmarkTasks = async (
 
 const summarizeSolverResults = (
   solverName: string,
-  efforts: number[],
   results: WorkerResult[],
-): SolverRunResult => {
+): SolverRunSummary => {
   const timedOut = results.filter((result) => result.didTimeout)
   const succeeded = results.filter((result) => result.didSolve)
   const elapsedForSucceeded = succeeded.map((result) => result.elapsedTimeMs)
@@ -824,7 +816,7 @@ const summarizeSolverResults = (
     timedOutLabel: `${timedOut.length}/${results.length}`,
     p50TimeMs: getPercentileMs(elapsedForSucceeded, 0.5),
     p95TimeMs: getPercentileMs(elapsedForSucceeded, 0.95),
-  } satisfies SolverRunResult
+  } satisfies SolverRunSummary
 }
 
 const main = async () => {
@@ -870,13 +862,6 @@ const main = async () => {
   const rows = solvers.map((solver) =>
     summarizeSolverResults(
       solver,
-      scenarios.map(([, scenario]) =>
-        getTaskEffort({
-          solverName: solver,
-          scenarioName: "",
-          scenario,
-        }),
-      ),
       results.filter((result) => result.solverName === solver),
     ),
   )
@@ -892,13 +877,24 @@ const main = async () => {
   )
   const table = formatTable(rows)
   const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n`
+  const report: BenchmarkReport = {
+    version: 1,
+    datasetName,
+    scenarioCount: scenarios.length,
+    effortLabel,
+    summary: rows,
+    tests: results,
+  }
   await Bun.write("benchmark-result.txt", output)
+  await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2))
 
   console.log(`\nBenchmark Results (${effortLabel})\n`)
   console.log(table)
   console.log(`\nDataset: ${datasetName}`)
   console.log(`\nScenarios: ${scenarios.length}`)
-  console.log("Results written to benchmark-result.txt")
+  console.log(
+    "Results written to benchmark-result.txt and benchmark-result.json",
+  )
 }
 
 main().catch((error) => {

@@ -275,6 +275,7 @@ jobs:
           process.exit(result.status ?? 1)
           NODE
           cp benchmark-result.txt benchmark-result-pr.txt
+          cp benchmark-result.json benchmark-result-pr.json
 
       - name: Download main branch benchmark result
         if: github.event_name == 'issue_comment'
@@ -284,6 +285,7 @@ jobs:
           RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/benchmark.yml/runs?branch=main&event=push&status=success&per_page=1" --jq '.workflow_runs[0].id' 2>/dev/null || echo "")
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
             echo "(no main branch benchmark result available)" > benchmark-result-main.txt
+            echo "" > benchmark-result-main.json
             exit 0
           fi
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --name benchmark-result --dir ./main-artifact 2>/dev/null || true
@@ -292,6 +294,11 @@ jobs:
           else
             echo "(no main branch benchmark result available)" > benchmark-result-main.txt
           fi
+          if [ -f ./main-artifact/benchmark-result.json ]; then
+            cp ./main-artifact/benchmark-result.json benchmark-result-main.json
+          else
+            echo "" > benchmark-result-main.json
+          fi
 
       - name: Upload benchmark result
         uses: actions/upload-artifact@v4
@@ -299,8 +306,11 @@ jobs:
           name: benchmark-result
           path: |
             ./benchmark-result.txt
+            ./benchmark-result.json
             ./benchmark-result-pr.txt
+            ./benchmark-result-pr.json
             ./benchmark-result-main.txt
+            ./benchmark-result-main.json
           overwrite: true
 
       - name: Post benchmark result comment
@@ -312,6 +322,74 @@ jobs:
             const fs = require('node:fs')
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
+            const formatTime = (timeMs) => {
+              if (typeof timeMs !== 'number' || !Number.isFinite(timeMs)) {
+                return 'n/a'
+              }
+              return timeMs < 1000 ? `${Math.round(timeMs)}ms` : `${(timeMs / 1000).toFixed(1)}s`
+            }
+            const getStatus = (test) => {
+              if (test.didTimeout) return 'timed out'
+              if (test.didSolve) return 'solved'
+              return 'failed'
+            }
+            const getDrc = (test) => {
+              if (!test.didSolve) return 'n/a'
+              return test.relaxedDrcPassed ? 'pass' : 'fail'
+            }
+            const renderSummary = (report) => {
+              if (!Array.isArray(report?.summary) || report.summary.length === 0) {
+                return []
+              }
+              return [
+                `Dataset: ${report.datasetName}`,
+                `Scenarios: ${report.scenarioCount}`,
+                `Effort: ${report.effortLabel}`,
+                '',
+                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | --- | --- | --- | --- | --- |',
+                ...report.summary.map((row) =>
+                  `| ${row.solverName} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                ),
+              ]
+            }
+            const renderTests = (report) => {
+              if (!Array.isArray(report?.tests) || report.tests.length === 0) {
+                return ['Per-test results unavailable.']
+              }
+              return [
+                '| Solver | Scenario | Status | Time | Relaxed DRC |',
+                '| --- | --- | --- | --- | --- |',
+                ...report.tests.map((test) =>
+                  `| ${test.solverName} | ${test.scenarioName} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} |`,
+                ),
+              ]
+            }
+            const renderReport = (report, fallbackText) => {
+              if (!report) {
+                return ['```', truncate(fallbackText, maxLength), '```']
+              }
+
+              return [
+                ...renderSummary(report),
+                '',
+                '<details>',
+                '<summary>Details</summary>',
+                '',
+                ...renderTests(report),
+                '</details>',
+              ]
+            }
+            const readJson = (path) => {
+              if (!fs.existsSync(path)) return null
+              const raw = fs.readFileSync(path, 'utf8').trim()
+              if (!raw) return null
+              try {
+                return JSON.parse(raw)
+              } catch {
+                return null
+              }
+            }
 
             const prText = fs.existsSync('benchmark-result-pr.txt')
               ? fs.readFileSync('benchmark-result-pr.txt', 'utf8').trim()
@@ -319,6 +397,8 @@ jobs:
             const mainText = fs.existsSync('benchmark-result-main.txt')
               ? fs.readFileSync('benchmark-result-main.txt', 'utf8').trim()
               : '(not available)'
+            const prReport = readJson('benchmark-result-pr.json') ?? readJson('benchmark-result.json')
+            const mainReport = readJson('benchmark-result-main.json')
 
             const body = [
               '## 🏃 Autorouting Benchmark Results',
@@ -326,25 +406,23 @@ jobs:
               '<details>',
               '<summary>📊 Main Branch Results</summary>',
               '',
-              '```',
-              truncate(mainText, maxLength),
-              '```',
+              ...renderReport(mainReport, mainText),
               '</details>',
               '',
               '<details open>',
               '<summary>📊 PR Results</summary>',
               '',
-              '```',
-              truncate(prText, maxLength),
-              '```',
+              ...renderReport(prReport, prText),
               '</details>',
               '',
               `📦 Artifact: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`,
             ].join('\n')
 
+            const finalBody = body.length > maxLength ? truncate(body, maxLength) : body
+
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: Number('${{ steps.parse.outputs.status_comment_id }}'),
-              body,
+              body: finalBody,
             })

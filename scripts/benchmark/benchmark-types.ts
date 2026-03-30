@@ -25,3 +25,21 @@ export type WorkerResultMessage = {
   taskId: number
   result: WorkerResult
 }
+
+export type SolverRunSummary = {
+  solverName: string
+  completedRateLabel: string
+  relaxedDrcRateLabel: string
+  timedOutLabel: string
+  p50TimeMs: number | null
+  p95TimeMs: number | null
+}
+
+export type BenchmarkReport = {
+  version: 1
+  datasetName: string
+  scenarioCount: number
+  effortLabel: string
+  summary: SolverRunSummary[]
+  tests: WorkerResult[]
+}
