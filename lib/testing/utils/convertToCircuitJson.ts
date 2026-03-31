@@ -304,6 +304,45 @@ function createPcbPorts(srj: SimpleRouteJson): AnyCircuitElement[] {
   return Array.from(portMap.values())
 }
 
+function getPcbPortPositionMap(srj: SimpleRouteJson) {
+  const portPositionMap = new Map<string, { x: number; y: number }>()
+
+  for (const connection of srj.connections) {
+    for (const point of connection.pointsToConnect) {
+      if (!point.pcb_port_id) continue
+      portPositionMap.set(point.pcb_port_id, { x: point.x, y: point.y })
+    }
+  }
+
+  return portPositionMap
+}
+
+function getBestObstaclePcbPortId(
+  obstacleCenter: Obstacle["center"],
+  candidatePortIds: string[],
+  portPositionMap: Map<string, { x: number; y: number }>,
+): string | undefined {
+  let bestPcbPortId: string | undefined
+  let bestDistance = Number.POSITIVE_INFINITY
+
+  for (const pcbPortId of candidatePortIds) {
+    const position = portPositionMap.get(pcbPortId)
+    if (!position) continue
+
+    const distance = Math.hypot(
+      position.x - obstacleCenter.x,
+      position.y - obstacleCenter.y,
+    )
+
+    if (distance < bestDistance) {
+      bestDistance = distance
+      bestPcbPortId = pcbPortId
+    }
+  }
+
+  return bestPcbPortId ?? candidatePortIds[0]
+}
+
 /**
  * Create pad-like circuit-json elements from SRJ obstacles.
  * Multi-layer obstacles represent plated holes and must not be deduped away
@@ -313,41 +352,34 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Set<string>()
   const addedPlatedHoleIds = new Set<string>()
+  const portPositionMap = getPcbPortPositionMap(srj)
 
-  for (const obstacle of srj.obstacles as any[]) {
-    const connectedTo: string[] = obstacle?.connectedTo || []
+  for (const obstacle of srj.obstacles) {
+    const connectedTo = obstacle.connectedTo
     const smtPadId: string | undefined = connectedTo.find((id) =>
       id.startsWith("pcb_smtpad_"),
     )
     const platedHoleId: string | undefined = connectedTo.find((id) =>
       id.startsWith("pcb_plated_hole_"),
     )
-    const pcbPortId: string | undefined = connectedTo.find((id) =>
+    const candidatePortIds = connectedTo.filter((id) =>
       id.startsWith("pcb_port_"),
+    )
+    const pcbPortId = getBestObstaclePcbPortId(
+      obstacle.center,
+      candidatePortIds,
+      portPositionMap,
     )
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
-    const layers: string[] = Array.isArray(obstacle.layers)
-      ? obstacle.layers
-      : obstacle.layer
-        ? [obstacle.layer]
-        : []
+    const layers = obstacle.layers
     if (layers.length === 0) continue
 
-    const width = obstacle.width ?? 0
-    const height = obstacle.height ?? 0
-    const x = obstacle.center?.x ?? obstacle.x
-    const y = obstacle.center?.y ?? obstacle.y
-
-    if (
-      typeof x !== "number" ||
-      typeof y !== "number" ||
-      typeof width !== "number" ||
-      typeof height !== "number"
-    ) {
-      continue
-    }
+    const width = obstacle.width
+    const height = obstacle.height
+    const x = obstacle.center.x
+    const y = obstacle.center.y
 
     const isMultiLayerObstacle = layers.length > 1
 
