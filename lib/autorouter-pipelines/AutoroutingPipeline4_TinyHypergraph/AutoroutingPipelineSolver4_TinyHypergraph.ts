@@ -515,7 +515,6 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       availableSegmentPointViz,
       necessaryCrampedPortPointSolverViz,
       portPointPathingViz,
-      highDensityRouteSolverViz,
       multiSectionOptViz,
       uniformPortDistributionViz,
       highDensityViz ? combineVisualizations(problemViz, highDensityViz) : null,
