@@ -329,13 +329,13 @@ jobs:
               return timeMs < 1000 ? `${Math.round(timeMs)}ms` : `${(timeMs / 1000).toFixed(1)}s`
             }
             const getStatus = (test) => {
-              if (test.didTimeout) return 'timed out'
-              if (test.didSolve) return 'solved'
-              return 'failed'
+              if (test.didTimeout) return '❌'
+              if (test.didSolve) return '✅'
+              return '❌'
             }
             const getDrc = (test) => {
-              if (!test.didSolve) return 'n/a'
-              return test.relaxedDrcPassed ? 'pass' : 'fail'
+              if (!test.didSolve) return '❌'
+              return test.relaxedDrcPassed ? '✅' : '❌'
             }
             const renderSummary = (report) => {
               if (!Array.isArray(report?.summary) || report.summary.length === 0) {
