@@ -18,6 +18,12 @@ type RepairSampleEntry = {
   sample: DatasetSample
 }
 
+type RepairSkipReason =
+  | "missing-boundary"
+  | "empty-node"
+  | "empty-routes"
+  | "all-routes-two-point-no-obstacles"
+
 const DEFAULT_REPAIR_MARGIN = 0.2
 
 const doesRectOverlap = (
@@ -134,9 +140,51 @@ const getAdjacentObstacles = (
     }))
 }
 
+const hasValidRepairBoundary = (sample: DatasetSample) => {
+  const node = sample.nodeWithPortPoints
+  return Boolean(
+    node?.center &&
+      Number.isFinite(node.width) &&
+      Number.isFinite(node.height) &&
+      (node.width ?? 0) > 0 &&
+      (node.height ?? 0) > 0,
+  )
+}
+
+const isTwoPointViaFreeRoute = (route: RepairHdRoute) =>
+  (route.route?.length ?? 0) === 2 && (route.vias?.length ?? 0) === 0
+
+const getRepairSampleSkipReason = (
+  sample: DatasetSample,
+): RepairSkipReason | null => {
+  if (!hasValidRepairBoundary(sample)) {
+    return "missing-boundary"
+  }
+
+  if ((sample.nodeWithPortPoints?.portPoints?.length ?? 0) === 0) {
+    return "empty-node"
+  }
+
+  if ((sample.nodeHdRoutes?.length ?? 0) === 0) {
+    return "empty-routes"
+  }
+
+  if (
+    (sample.adjacentObstacles?.length ?? 0) === 0 &&
+    sample.nodeHdRoutes!.every(isTwoPointViaFreeRoute)
+  ) {
+    return "all-routes-two-point-no-obstacles"
+  }
+
+  return null
+}
+
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly sampleEntries: RepairSampleEntry[]
+  readonly skippedSampleCount: number
+  readonly skippedRouteCount: number
+  readonly skippedReasonCounts: Record<RepairSkipReason, number>
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
   readonly originalObstacles: Obstacle[]
@@ -179,7 +227,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
-    this.sampleEntries = Array.from(routeIndexesByNode.entries()).map(
+    const rawSampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
         return {
@@ -212,11 +260,47 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       },
     )
 
+    const skippedReasonCounts: Record<RepairSkipReason, number> = {
+      "missing-boundary": 0,
+      "empty-node": 0,
+      "empty-routes": 0,
+      "all-routes-two-point-no-obstacles": 0,
+    }
+    const sampleEntries: RepairSampleEntry[] = []
+    let skippedSampleCount = 0
+    let skippedRouteCount = 0
+
+    for (const sampleEntry of rawSampleEntries) {
+      const skipReason = getRepairSampleSkipReason(sampleEntry.sample)
+      if (!skipReason) {
+        sampleEntries.push(sampleEntry)
+        continue
+      }
+
+      skippedSampleCount += 1
+      skippedRouteCount += sampleEntry.routeIndexes.length
+      skippedReasonCounts[skipReason] += 1
+      for (const routeIndex of sampleEntry.routeIndexes) {
+        const originalRoute = this.originalHdRoutes[routeIndex]
+        if (originalRoute) {
+          this.repairedRoutesByIndex.set(routeIndex, originalRoute)
+        }
+      }
+    }
+
+    this.sampleEntries = sampleEntries
+    this.skippedSampleCount = skippedSampleCount
+    this.skippedRouteCount = skippedRouteCount
+    this.skippedReasonCounts = skippedReasonCounts
+
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
+      skippedSampleCount: this.skippedSampleCount,
+      skippedRouteCount: this.skippedRouteCount,
+      skippedReasonCounts: this.skippedReasonCounts,
       repairedNodeCount: 0,
-      repairedRouteCount: 0,
+      repairedRouteCount: this.repairedRoutesByIndex.size,
     }
   }
 
@@ -278,6 +362,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSampleIndex += 1
       this.stats = {
         sampleCount: this.sampleEntries.length,
+        skippedSampleCount: this.skippedSampleCount,
+        skippedRouteCount: this.skippedRouteCount,
+        skippedReasonCounts: this.skippedReasonCounts,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,
       }
