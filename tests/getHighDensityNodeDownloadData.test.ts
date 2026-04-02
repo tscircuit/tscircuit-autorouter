@@ -198,3 +198,82 @@ test("getHighDensityNodeDownloadData can fall back to constructor params in the 
     ],
   })
 })
+
+test("getHighDensityNodeDownloadData prefers solver metadata before touching throwing fallback getters", () => {
+  const solver = {
+    highDensityRouteSolver: {
+      nodeSolveMetadataById: new Map([
+        [
+          "cmn_47__sub_2_1",
+          {
+            node: {
+              capacityMeshNodeId: "cmn_47__sub_2_1",
+              center: { x: 1, y: 2 },
+              width: 3,
+              height: 4,
+              portPoints: [
+                { portPointId: "pp1", x: 1, y: 1, z: 0 },
+                { portPointId: "pp2", x: 2, y: 2, z: 1 },
+              ],
+            },
+          },
+        ],
+      ]),
+    },
+    someThrowingSolver: {
+      getOutput: () => {
+        throw new Error("should not be called")
+      },
+    },
+  } as any
+
+  expect(
+    (getHighDensityNodeDownloadData(solver, "cmn_47__sub_2_1") as any)
+      .nodeWithPortPoints,
+  ).toEqual({
+    capacityMeshNodeId: "cmn_47__sub_2_1",
+    center: { x: 1, y: 2 },
+    width: 3,
+    height: 4,
+    portPoints: [
+      { portPointId: "pp1", x: 1, y: 1, z: 0 },
+      { portPointId: "pp2", x: 2, y: 2, z: 1 },
+    ],
+  })
+})
+
+test("getHighDensityNodeDownloadData swallows throwing fallback getters during deep scan", () => {
+  const solver = {
+    activeSubSolver: {
+      getOutput: () => {
+        throw new Error("broken serializer")
+      },
+      nested: {
+        getConstructorParams: () => [
+          {
+            nodeWithPortPoints: [
+              {
+                capacityMeshNodeId: "cmn_safe",
+                center: { x: 9, y: 9 },
+                width: 1,
+                height: 1,
+                portPoints: [{ portPointId: "pp1", x: 9, y: 9, z: 0 }],
+              },
+            ],
+          },
+        ],
+      },
+    },
+  } as any
+
+  expect(
+    (getHighDensityNodeDownloadData(solver, "cmn_safe") as any)
+      .nodeWithPortPoints,
+  ).toEqual({
+    capacityMeshNodeId: "cmn_safe",
+    center: { x: 9, y: 9 },
+    width: 1,
+    height: 1,
+    portPoints: [{ portPointId: "pp1", x: 9, y: 9, z: 0 }],
+  })
+})

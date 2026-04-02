@@ -136,6 +136,14 @@ const findHighDensityNodeById = (
   )
 }
 
+const safelyCall = <T>(fn: () => T): T | null => {
+  try {
+    return fn()
+  } catch {
+    return null
+  }
+}
+
 const findPortPointNodeInUnknownValue = <
   T extends {
     capacityMeshNodeId: string
@@ -212,36 +220,45 @@ const findPortPointNodeInUnknownValue = <
   }
 
   if (typeof solverLike.getNodesWithPortPoints === "function") {
-    const match = findPortPointNodeInUnknownValue(
-      nodeId,
-      solverLike.getNodesWithPortPoints(),
-      predicate,
-      seen,
+    const nodesWithPortPoints = safelyCall(() =>
+      solverLike.getNodesWithPortPoints!(),
     )
-    if (match) return match
-  }
-
-  if (typeof solverLike.getOutput === "function") {
-    const match = findPortPointNodeInUnknownValue(
-      nodeId,
-      solverLike.getOutput(),
-      predicate,
-      seen,
-    )
-    if (match) return match
-  }
-
-  if (typeof solverLike.getConstructorParams === "function") {
-    try {
+    if (nodesWithPortPoints !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
-        solverLike.getConstructorParams(),
+        nodesWithPortPoints,
         predicate,
         seen,
       )
       if (match) return match
-    } catch {
-      // Some solver wrappers may not have constructor params available.
+    }
+  }
+
+  if (typeof solverLike.getOutput === "function") {
+    const output = safelyCall(() => solverLike.getOutput!())
+    if (output !== null) {
+      const match = findPortPointNodeInUnknownValue(
+        nodeId,
+        output,
+        predicate,
+        seen,
+      )
+      if (match) return match
+    }
+  }
+
+  if (typeof solverLike.getConstructorParams === "function") {
+    const constructorParams = safelyCall(() =>
+      solverLike.getConstructorParams!(),
+    )
+    if (constructorParams !== null) {
+      const match = findPortPointNodeInUnknownValue(
+        nodeId,
+        constructorParams,
+        predicate,
+        seen,
+      )
+      if (match) return match
     }
   }
 
@@ -266,15 +283,20 @@ export const getHighDensityNodeDownloadData = (
 ): HighDensityNodeDownloadData => {
   const nodeSolverOutput = solver.nodeSolver?.getOutput?.()
   const portPointPathingOutput = solver.portPointPathingSolver?.getOutput?.()
-  const fallbackResolvedPortPointNode = findPortPointNodeInUnknownValue(
+  const knownResolvedPortPointNode =
+    findHighDensityNodeById(solver, nodeId) ??
+    findNodeById(
+      nodeId,
+      solver.uniformPortDistributionSolver?.getOutput?.(),
+      solver.multiSectionPortPointOptimizer?.getNodesWithPortPoints?.(),
+      solver.segmentToPointOptimizer?.getNodesWithPortPoints?.(),
+      solver.unravelMultiSectionSolver?.getNodesWithPortPoints?.(),
+      solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
+      portPointPathingOutput?.nodesWithPortPoints,
+    )
+  const knownInputPortPointNode = findNodeById(
     nodeId,
-    solver,
-    isResolvedPortPointNode,
-  )
-  const fallbackInputPortPointNode = findPortPointNodeInUnknownValue(
-    nodeId,
-    solver,
-    isInputPortPointNode,
+    portPointPathingOutput?.inputNodeWithPortPoints,
   )
 
   return {
@@ -287,19 +309,10 @@ export const getHighDensityNodeDownloadData = (
       solver.capacityNodes,
     ),
     nodeWithPortPoints:
-      findHighDensityNodeById(solver, nodeId) ??
-      findNodeById(
-        nodeId,
-        solver.uniformPortDistributionSolver?.getOutput?.(),
-        solver.multiSectionPortPointOptimizer?.getNodesWithPortPoints?.(),
-        solver.segmentToPointOptimizer?.getNodesWithPortPoints?.(),
-        solver.unravelMultiSectionSolver?.getNodesWithPortPoints?.(),
-        solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
-        portPointPathingOutput?.nodesWithPortPoints,
-      ) ??
-      fallbackResolvedPortPointNode,
+      knownResolvedPortPointNode ??
+      findPortPointNodeInUnknownValue(nodeId, solver, isResolvedPortPointNode),
     inputNodeWithPortPoints:
-      findNodeById(nodeId, portPointPathingOutput?.inputNodeWithPortPoints) ??
-      fallbackInputPortPointNode,
+      knownInputPortPointNode ??
+      findPortPointNodeInUnknownValue(nodeId, solver, isInputPortPointNode),
   }
 }
