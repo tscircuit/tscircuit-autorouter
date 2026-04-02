@@ -168,23 +168,34 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         initialNodePosition.y -
         Math.round(opts.A.y / this.cellStep) * this.cellStep,
     }
+    const initialParent = {
+      ...opts.A,
+      z: opts.A.z ?? 0,
+      g: 0,
+      h: 0,
+      f: 0,
+      parent: null,
+    }
+    const roundedInitialNode = {
+      ...opts.A,
+      ...initialNodePosition,
+      z: opts.A.z ?? 0,
+      g: 0,
+      h: 0,
+      f: 0,
+      parent: initialParent,
+    }
+    const roundedInitialNodeDiffersFromA =
+      Math.abs(roundedInitialNode.x - opts.A.x) > 1e-9 ||
+      Math.abs(roundedInitialNode.y - opts.A.y) > 1e-9
+    const shouldFallbackToExactStart =
+      roundedInitialNodeDiffersFromA &&
+      (this.isNodeTooCloseToObstacle(roundedInitialNode) ||
+        this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
+        this.doesPathToParentIntersectObstacle(roundedInitialNode))
+
     this.candidates = new SingleRouteCandidatePriorityQueue([
-      {
-        ...opts.A,
-        ...initialNodePosition,
-        z: opts.A.z ?? 0,
-        g: 0,
-        h: 0,
-        f: 0,
-        parent: {
-          ...opts.A,
-          z: opts.A.z ?? 0,
-          g: 0,
-          h: 0,
-          f: 0,
-          parent: null,
-        },
-      },
+      shouldFallbackToExactStart ? initialParent : roundedInitialNode,
     ])
   }
 

@@ -11,7 +11,7 @@ const circuit15 = (dataset01 as Record<string, unknown>)
   .circuit015 as SimpleRouteJson
 
 test(
-  "circuit015 DRC detects accidental-contact overlaps after autorouting",
+  "circuit015 avoids accidental-contact overlaps after autorouting",
   () => {
     const solver = new AutoroutingPipelineSolver(circuit15, {
       effort: 4,
@@ -51,7 +51,7 @@ test(
     })
 
     expect(finalViz).toMatchGraphicsSvg(import.meta.path)
-    expect(accidentalContacts.length).toBeGreaterThan(0)
+    expect(accidentalContacts.length).toBe(0)
   },
   { timeout: 120_000 },
 )
