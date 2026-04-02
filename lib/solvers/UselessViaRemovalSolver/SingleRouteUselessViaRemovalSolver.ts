@@ -29,6 +29,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
+  ENDPOINT_LAYER_EPSILON = 0.01
 
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
@@ -217,9 +218,14 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       )
     }
 
-    // If no connected obstacles found at the endpoint, the endpoint
-    // might be a via or intermediate point - allow the layer change
-    return true
+    // If the route already proves this exact endpoint location exists on the
+    // target layer, treat it as an explicitly multilayer endpoint.
+    return this.unsimplifiedRoute.route.some(
+      (point) =>
+        Math.abs(point.x - endpointX) <= this.ENDPOINT_LAYER_EPSILON &&
+        Math.abs(point.y - endpointY) <= this.ENDPOINT_LAYER_EPSILON &&
+        point.z === targetZ,
+    )
   }
 
   canSectionMoveToLayer({
