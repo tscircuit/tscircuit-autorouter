@@ -207,7 +207,7 @@ test(
       x: topLayerEntry.x,
       y: topLayerEntry.y,
       z: topLayerEntry.z,
-    } satisfies PortPoint)
+    } satisfies Pick<PortPoint, "x" | "y" | "z">)
   },
   { timeout: 120_000 },
 )

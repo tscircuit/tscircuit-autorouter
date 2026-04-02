@@ -74,8 +74,9 @@ const runSimplificationLoop = (
   expect(viaRemoval.failed).toBe(false)
 
   const viaMergedRoutes = viaRemoval.getOptimizedHdRoutes()
+  expect(viaMergedRoutes).not.toBeNull()
   const viaMerger = new SameNetViaMergerSolver({
-    inputHdRoutes: viaMergedRoutes,
+    inputHdRoutes: viaMergedRoutes!,
     obstacles: context.srj.obstacles,
     colorMap: context.colorMap,
     layerCount: context.srj.layerCount,
@@ -85,9 +86,11 @@ const runSimplificationLoop = (
   viaMerger.solve()
 
   expect(viaMerger.failed).toBe(false)
+  const mergedViaRoutes = viaMerger.getMergedViaHdRoutes()
+  expect(mergedViaRoutes).not.toBeNull()
 
   const pathSimplifier = new MultiSimplifiedPathSolver({
-    unsimplifiedHdRoutes: viaMerger.getMergedViaHdRoutes(),
+    unsimplifiedHdRoutes: mergedViaRoutes!,
     obstacles: context.srj.obstacles,
     connMap: context.connMap,
     colorMap: context.colorMap,
