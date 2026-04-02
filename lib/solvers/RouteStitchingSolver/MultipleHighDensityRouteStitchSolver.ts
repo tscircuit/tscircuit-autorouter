@@ -20,6 +20,11 @@ export type UnsolvedRoute = {
 const roundedPointHash = (p: { x: number; y: number; z: number }) =>
   `${Math.round(p.x * 100)},${Math.round(p.y * 100)},${Math.round(p.z * 100)}`
 
+const getEndpointHashes = (route: HighDensityIntraNodeRoute) => ({
+  startHash: roundedPointHash(route.route[0]!),
+  endHash: roundedPointHash(route.route[route.route.length - 1]!),
+})
+
 export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   override getSolverName(): string {
     return "MultipleHighDensityRouteStitchSolver"
@@ -31,6 +36,99 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   colorMap: Record<string, string> = {}
   defaultTraceThickness: number
   defaultViaDiameter: number
+
+  private getClosestEndpointHash(
+    routes: HighDensityIntraNodeRoute[],
+    point: { x: number; y: number; z: number },
+  ) {
+    let bestHash: string | null = null
+    let bestDist = Infinity
+
+    for (const route of routes) {
+      const endpoints = [route.route[0]!, route.route[route.route.length - 1]!]
+      for (const endpoint of endpoints) {
+        const dist = distance(point, endpoint)
+        if (dist < bestDist) {
+          bestDist = dist
+          bestHash = roundedPointHash(endpoint)
+        }
+      }
+    }
+
+    return bestHash
+  }
+
+  private selectRoutesAlongEndpointPath(
+    hdRoutes: HighDensityIntraNodeRoute[],
+    start: { x: number; y: number; z: number },
+    end: { x: number; y: number; z: number },
+  ) {
+    if (hdRoutes.length <= 2) return hdRoutes
+
+    const startHash = this.getClosestEndpointHash(hdRoutes, start)
+    const endHash = this.getClosestEndpointHash(hdRoutes, end)
+
+    if (!startHash || !endHash || startHash === endHash) return hdRoutes
+
+    const adjacency = new Map<
+      string,
+      Array<{ nextHash: string; routeIndex: number }>
+    >()
+
+    for (let i = 0; i < hdRoutes.length; i++) {
+      const { startHash: routeStartHash, endHash: routeEndHash } =
+        getEndpointHashes(hdRoutes[i]!)
+
+      const startEntries = adjacency.get(routeStartHash) ?? []
+      startEntries.push({ nextHash: routeEndHash, routeIndex: i })
+      adjacency.set(routeStartHash, startEntries)
+
+      const endEntries = adjacency.get(routeEndHash) ?? []
+      endEntries.push({ nextHash: routeStartHash, routeIndex: i })
+      adjacency.set(routeEndHash, endEntries)
+    }
+
+    const queue = [startHash]
+    const visitedHashes = new Set<string>([startHash])
+    const prevByHash = new Map<
+      string,
+      { prevHash: string; routeIndex: number }
+    >()
+
+    while (queue.length > 0) {
+      const currentHash = queue.shift()!
+      if (currentHash === endHash) break
+
+      for (const edge of adjacency.get(currentHash) ?? []) {
+        if (visitedHashes.has(edge.nextHash)) continue
+        visitedHashes.add(edge.nextHash)
+        prevByHash.set(edge.nextHash, {
+          prevHash: currentHash,
+          routeIndex: edge.routeIndex,
+        })
+        queue.push(edge.nextHash)
+      }
+    }
+
+    if (!visitedHashes.has(endHash)) return hdRoutes
+
+    const selectedRouteIndexes = new Set<number>()
+    let cursorHash = endHash
+    while (cursorHash !== startHash) {
+      const prev = prevByHash.get(cursorHash)
+      if (!prev) return hdRoutes
+      selectedRouteIndexes.add(prev.routeIndex)
+      cursorHash = prev.prevHash
+    }
+
+    if (selectedRouteIndexes.size === 0) return hdRoutes
+
+    const selectedRoutes = hdRoutes.filter((_, index) =>
+      selectedRouteIndexes.has(index),
+    )
+
+    return selectedRoutes
+  }
 
   constructor(params: {
     connections: SimpleRouteConnection[]
@@ -141,9 +239,15 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
         }
       }
 
+      const selectedHdRoutes = this.selectRoutesAlongEndpointPath(
+        hdRoutes,
+        start,
+        end,
+      )
+
       this.unsolvedRoutes.push({
         connectionName: hdRoutes[0].connectionName,
-        hdRoutes,
+        hdRoutes: selectedHdRoutes,
         start,
         end,
       })
