@@ -94,9 +94,7 @@ const isInputPortPointNode = (
       !("z" in portPoint),
   )
 
-const isResolvedPortPointNode = (
-  value: unknown,
-): value is NodeWithPortPoints =>
+const isResolvedPortPointNode = (value: unknown): value is NodeWithPortPoints =>
   hasPortPoints(value) &&
   value.portPoints.some(
     (portPoint) =>
@@ -300,9 +298,8 @@ export const getHighDensityNodeDownloadData = (
         portPointPathingOutput?.nodesWithPortPoints,
       ) ??
       fallbackResolvedPortPointNode,
-    inputNodeWithPortPoints: findNodeById(
-      nodeId,
-      portPointPathingOutput?.inputNodeWithPortPoints,
-    ) ?? fallbackInputPortPointNode,
+    inputNodeWithPortPoints:
+      findNodeById(nodeId, portPointPathingOutput?.inputNodeWithPortPoints) ??
+      fallbackInputPortPointNode,
   }
 }
