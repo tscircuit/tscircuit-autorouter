@@ -253,6 +253,53 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       })
     }
 
+    const mergedRoutesByConnection = new Map<string, UnsolvedRoute>()
+    for (const unsolvedRoute of this.unsolvedRoutes) {
+      const existingRoute = mergedRoutesByConnection.get(
+        unsolvedRoute.connectionName,
+      )
+      if (existingRoute) {
+        existingRoute.hdRoutes.push(...unsolvedRoute.hdRoutes)
+        continue
+      }
+
+      const connection = params.connections.find(
+        (c) => c.name === unsolvedRoute.connectionName,
+      )
+
+      if (!connection) continue
+
+      mergedRoutesByConnection.set(unsolvedRoute.connectionName, {
+        connectionName: unsolvedRoute.connectionName,
+        hdRoutes: [...unsolvedRoute.hdRoutes],
+        start: {
+          ...connection.pointsToConnect[0],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[0]),
+            params.layerCount,
+          ),
+        },
+        end: {
+          ...connection.pointsToConnect[1],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[1]),
+            params.layerCount,
+          ),
+        },
+      })
+    }
+
+    this.unsolvedRoutes = Array.from(mergedRoutesByConnection.values()).map(
+      (unsolvedRoute) => ({
+        ...unsolvedRoute,
+        hdRoutes: this.selectRoutesAlongEndpointPath(
+          unsolvedRoute.hdRoutes,
+          unsolvedRoute.start,
+          unsolvedRoute.end,
+        ),
+      }),
+    )
+
     this.MAX_ITERATIONS = 100e3
   }
 
