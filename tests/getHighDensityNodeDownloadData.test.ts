@@ -81,3 +81,83 @@ test("getHighDensityNodeDownloadData falls back to legacy solver collections", (
     inputNodeWithPortPoints: null,
   })
 })
+
+test("getHighDensityNodeDownloadData prefers preserved high-density node input over intermediate collections", () => {
+  const solver = {
+    highDensityNodePortPoints: [
+      {
+        capacityMeshNodeId: "cn_3",
+        center: { x: 5, y: 6 },
+        width: 2,
+        height: 2,
+        portPoints: [
+          { portPointId: "pp1", x: 4, y: 5, z: 0 },
+          { portPointId: "pp2", x: 6, y: 5, z: 0 },
+          { portPointId: "pp3", x: 5, y: 7, z: 1 },
+        ],
+      },
+    ],
+    uniformPortDistributionSolver: {
+      getOutput: () => [
+        {
+          capacityMeshNodeId: "cn_3",
+          center: { x: 5, y: 6 },
+          width: 2,
+          height: 2,
+          portPoints: [{ portPointId: "pp1", x: 4, y: 5, z: 0 }],
+        },
+      ],
+    },
+  } as any
+
+  expect(
+    (getHighDensityNodeDownloadData(solver, "cn_3") as any).nodeWithPortPoints,
+  ).toEqual({
+    capacityMeshNodeId: "cn_3",
+    center: { x: 5, y: 6 },
+    width: 2,
+    height: 2,
+    portPoints: [
+      { portPointId: "pp1", x: 4, y: 5, z: 0 },
+      { portPointId: "pp2", x: 6, y: 5, z: 0 },
+      { portPointId: "pp3", x: 5, y: 7, z: 1 },
+    ],
+  })
+})
+
+test("getHighDensityNodeDownloadData can read node data from high-density solver metadata", () => {
+  const solver = {
+    highDensityRouteSolver: {
+      nodeSolveMetadataById: new Map([
+        [
+          "cn_4",
+          {
+            node: {
+              capacityMeshNodeId: "cn_4",
+              center: { x: 10, y: 11 },
+              width: 3,
+              height: 1,
+              portPoints: [
+                { portPointId: "pp1", x: 9, y: 11, z: 0 },
+                { portPointId: "pp2", x: 11, y: 11, z: 1 },
+              ],
+            },
+          },
+        ],
+      ]),
+    },
+  } as any
+
+  expect(
+    (getHighDensityNodeDownloadData(solver, "cn_4") as any).nodeWithPortPoints,
+  ).toEqual({
+    capacityMeshNodeId: "cn_4",
+    center: { x: 10, y: 11 },
+    width: 3,
+    height: 1,
+    portPoints: [
+      { portPointId: "pp1", x: 9, y: 11, z: 0 },
+      { portPointId: "pp2", x: 11, y: 11, z: 1 },
+    ],
+  })
+})

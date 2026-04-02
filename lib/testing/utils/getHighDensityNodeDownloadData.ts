@@ -15,6 +15,18 @@ type PortPointPathingOutput = {
   inputNodeWithPortPoints?: InputNodeWithPortPoints[]
 }
 
+type HighDensityRouteSolver = {
+  unsolvedNodePortPoints?: NodeWithPortPoints[]
+  allNodes?: NodeWithPortPoints[]
+  unsolvedNodes?: NodeWithPortPoints[]
+  nodeSolveMetadataById?: Map<
+    string,
+    {
+      node: NodeWithPortPoints
+    }
+  >
+}
+
 type HighDensityDownloadSolver = {
   nodeTargetMerger?: {
     newNodes?: CapacityMeshNode[]
@@ -24,6 +36,8 @@ type HighDensityDownloadSolver = {
     getOutput?: () => NodeSolverOutput
   }
   capacityNodes?: CapacityMeshNode[]
+  highDensityNodePortPoints?: NodeWithPortPoints[]
+  highDensityRouteSolver?: HighDensityRouteSolver
   uniformPortDistributionSolver?: {
     getOutput?: () => NodeWithPortPoints[]
   }
@@ -63,6 +77,25 @@ const findNodeById = <T extends NodeLike>(
   return null
 }
 
+const findHighDensityNodeById = (
+  solver: HighDensityDownloadSolver,
+  nodeId: string,
+): NodeWithPortPoints | null => {
+  const solverMetadataNode =
+    solver.highDensityRouteSolver?.nodeSolveMetadataById?.get(nodeId)?.node
+  if (solverMetadataNode) {
+    return solverMetadataNode
+  }
+
+  return findNodeById(
+    nodeId,
+    solver.highDensityNodePortPoints,
+    solver.highDensityRouteSolver?.unsolvedNodePortPoints,
+    solver.highDensityRouteSolver?.allNodes,
+    solver.highDensityRouteSolver?.unsolvedNodes,
+  )
+}
+
 export const getHighDensityNodeDownloadData = (
   solver: HighDensityDownloadSolver,
   nodeId: string,
@@ -79,15 +112,17 @@ export const getHighDensityNodeDownloadData = (
       nodeSolverOutput?.meshNodes,
       solver.capacityNodes,
     ),
-    nodeWithPortPoints: findNodeById(
-      nodeId,
-      solver.uniformPortDistributionSolver?.getOutput?.(),
-      solver.multiSectionPortPointOptimizer?.getNodesWithPortPoints?.(),
-      solver.segmentToPointOptimizer?.getNodesWithPortPoints?.(),
-      solver.unravelMultiSectionSolver?.getNodesWithPortPoints?.(),
-      solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
-      portPointPathingOutput?.nodesWithPortPoints,
-    ),
+    nodeWithPortPoints:
+      findHighDensityNodeById(solver, nodeId) ??
+      findNodeById(
+        nodeId,
+        solver.uniformPortDistributionSolver?.getOutput?.(),
+        solver.multiSectionPortPointOptimizer?.getNodesWithPortPoints?.(),
+        solver.segmentToPointOptimizer?.getNodesWithPortPoints?.(),
+        solver.unravelMultiSectionSolver?.getNodesWithPortPoints?.(),
+        solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
+        portPointPathingOutput?.nodesWithPortPoints,
+      ),
     inputNodeWithPortPoints: findNodeById(
       nodeId,
       portPointPathingOutput?.inputNodeWithPortPoints,
