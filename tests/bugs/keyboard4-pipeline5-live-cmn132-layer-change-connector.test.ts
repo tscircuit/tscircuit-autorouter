@@ -105,7 +105,9 @@ const getRouteByConnectionName = (
   routes: HighDensityRoute[],
   connectionName: string,
 ) => {
-  const route = routes.find((candidate) => candidate.connectionName === connectionName)
+  const route = routes.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
 
   expect(route).toBeDefined()
 
@@ -168,10 +170,19 @@ test(
       structuredClone(pipeline.highDensityStitchSolver?.mergedHdRoutes ?? []),
       pipeline,
     )
-    const loop2Routes = runSimplificationLoop(structuredClone(loop1Routes), pipeline)
+    const loop2Routes = runSimplificationLoop(
+      structuredClone(loop1Routes),
+      pipeline,
+    )
 
-    const sourceNet7Route = getRouteByConnectionName(loop2Routes, "source_net_7_mst3")
-    const sourceNet6Route = getRouteByConnectionName(loop2Routes, "source_net_6_mst3")
+    const sourceNet7Route = getRouteByConnectionName(
+      loop2Routes,
+      "source_net_7_mst3",
+    )
+    const sourceNet6Route = getRouteByConnectionName(
+      loop2Routes,
+      "source_net_6_mst3",
+    )
     const neighboringVia = sourceNet6Route.vias.find((via) =>
       pointMatches(via, { x: -11.95, y: -38.91 }),
     )

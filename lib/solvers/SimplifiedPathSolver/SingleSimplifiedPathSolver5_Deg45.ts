@@ -531,7 +531,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     for (
       let routeIndex = startIndex + 1;
-      routeIndex <= endIndexInclusive && routeIndex < this.inputRoute.route.length;
+      routeIndex <= endIndexInclusive &&
+      routeIndex < this.inputRoute.route.length;
       routeIndex++
     ) {
       const originalPoint = this.inputRoute.route[routeIndex]
