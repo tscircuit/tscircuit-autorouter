@@ -44,6 +44,7 @@ import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import { getDrcErrors } from "./getDrcErrors"
 import { getCurrentCircuitJson } from "./autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { convertToCircuitJson } from "./utils/convertToCircuitJson"
+import { extractCapacityMeshNodeIdFromObjectLabel } from "./utils/extractCapacityMeshNodeIdFromObjectLabel"
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 import { getHighDensityNodeDownloadData } from "./utils/getHighDensityNodeDownloadData"
 
@@ -1401,12 +1402,10 @@ export const AutoroutingPipelineDebugger = ({
                     className="mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm"
                     onClick={() => {
                       if (dialogObject?.label) {
-                        // Extract the capacity mesh node ID from the label
-                        const match =
-                          dialogObject.label.match(/cn_(\d+)/) ??
-                          dialogObject.label.match(/cmn_(\d+)/)
-                        if (match?.[0]) {
-                          const nodeId = match[0]
+                        const nodeId = extractCapacityMeshNodeIdFromObjectLabel(
+                          dialogObject.label,
+                        )
+                        if (nodeId) {
                           const dataToDownload = getHighDensityNodeDownloadData(
                             solver,
                             nodeId,

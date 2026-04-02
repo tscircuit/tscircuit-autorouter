@@ -161,3 +161,40 @@ test("getHighDensityNodeDownloadData can read node data from high-density solver
     ],
   })
 })
+
+test("getHighDensityNodeDownloadData can fall back to constructor params in the active solver tree", () => {
+  const solver = {
+    activeSubSolver: {
+      getConstructorParams: () => [
+        {
+          nodeWithPortPoints: [
+            {
+              capacityMeshNodeId: "new-cmn_0-0",
+              center: { x: 2, y: 3 },
+              width: 1,
+              height: 1,
+              portPoints: [
+                { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
+                { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  } as any
+
+  expect(
+    (getHighDensityNodeDownloadData(solver, "new-cmn_0-0") as any)
+      .nodeWithPortPoints,
+  ).toEqual({
+    capacityMeshNodeId: "new-cmn_0-0",
+    center: { x: 2, y: 3 },
+    width: 1,
+    height: 1,
+    portPoints: [
+      { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
+      { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+    ],
+  })
+})
