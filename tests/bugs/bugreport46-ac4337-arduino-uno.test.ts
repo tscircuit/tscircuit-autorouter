@@ -8,10 +8,10 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test.skip("bugreport46-ac4337-arduino-uno.json", () => {
+test("bugreport46-ac4337-arduino-uno.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-})
+}, 120_000)
