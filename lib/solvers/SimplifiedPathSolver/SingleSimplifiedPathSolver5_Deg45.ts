@@ -523,6 +523,31 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     this.currentStepSize = this.maxStepSize
   }
 
+  private appendOriginalRouteSlice(
+    startDistance: number,
+    endIndexInclusive: number,
+  ) {
+    const startIndex = this.getNearestIndexForDistance(startDistance)
+
+    for (
+      let routeIndex = startIndex + 1;
+      routeIndex <= endIndexInclusive && routeIndex < this.inputRoute.route.length;
+      routeIndex++
+    ) {
+      const originalPoint = this.inputRoute.route[routeIndex]
+      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
+
+      if (
+        lastPointInNewRoute &&
+        this.arePointsEqual(lastPointInNewRoute, originalPoint)
+      ) {
+        continue
+      }
+
+      this.newRoute.push({ ...originalPoint })
+    }
+  }
+
   moveHead(distance: number) {
     this.lastHeadMoveDistance = distance
     this.headDistanceAlongPath = Math.min(
@@ -707,6 +732,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     // If there's a layer change, handle it
     // Inside the _step method, within the layer change handling block:
     if (layerChangeBtwHeadAndTail && layerChangeAtDistance > 0) {
+      const connectorStartDistance = this.lastValidPath
+        ? this.lastValidPathHeadDistance
+        : this.tailDistanceAlongPath
       // Get the point *after* the layer change from the original route.
       // This point's XY coordinates define the via location.
       const indexAfterLayerChange =
@@ -720,20 +748,31 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.lastValidPath = null // Clear it after adding
       }
 
-      // 2. Ensure the route connects *exactly* to the via location on the *previous* layer.
+      // 2. Reach the via on the current layer without introducing an
+      // unchecked shortcut. If a direct 45-degree path is illegal, preserve
+      // the original geometry up to the via.
       const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
-      if (
-        lastPointInNewRoute.x !== viaLocation.x ||
-        lastPointInNewRoute.y !== viaLocation.y
-      ) {
-        // Add a point explicitly connecting to the via XY on the layer we are *leaving*.
-        this.newRoute.push({
-          x: viaLocation.x,
-          y: viaLocation.y,
-          z: lastPointInNewRoute.z, // Use the Z of the layer we are leaving
-        })
+      const viaPointOnLeavingLayer = {
+        x: viaLocation.x,
+        y: viaLocation.y,
+        z: lastPointInNewRoute.z,
       }
-      // If the last point was already at the via location, its Z is correct, so we don't need an else.
+
+      if (!this.arePointsEqual(lastPointInNewRoute, viaPointOnLeavingLayer)) {
+        const pathToVia = this.find45DegreePath(
+          lastPointInNewRoute,
+          viaPointOnLeavingLayer,
+        )
+
+        if (pathToVia) {
+          this.addPathToResult(pathToVia)
+        } else {
+          this.appendOriginalRouteSlice(
+            connectorStartDistance,
+            indexAfterLayerChange - 1,
+          )
+        }
+      }
 
       // 3. Add the via itself.
       this.newVias.push(viaLocation)
