@@ -185,7 +185,9 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
-          segmentPortPoints: sharedEdgeSegments.flatMap((seg) => seg.portPoints),
+          segmentPortPoints: sharedEdgeSegments.flatMap(
+            (seg) => seg.portPoints,
+          ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 
