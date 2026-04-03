@@ -328,6 +328,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       const segment = this.obstacleSegments[segmentId]
       if (!segment || segment.connectedToCurrentConnection) continue
       if (segment.z !== node.z) continue
+      // TODO: find out why removing doSegmentsIntersect is causing more intersections
       if (doSegmentsIntersect(node, parent, segment.A, segment.B)) {
         return true
       }
