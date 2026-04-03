@@ -44,7 +44,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   VIA_PENALTY_FACTOR = 0.3
   CELL_SIZE_FACTOR: number
-  ENABLE_NEARBY_SEGMENT_PROXIMITY_CHECK: boolean
   NEARBY_SEGMENT_CLEARANCE: number
 
   exploredNodes: Set<string>
@@ -88,7 +87,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     futureConnections?: FutureConnection[]
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
-    enableNearbySegmentProximityCheck?: boolean
     nearbySegmentClearance?: number
   }) {
     super()
@@ -119,8 +117,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
-    this.ENABLE_NEARBY_SEGMENT_PROXIMITY_CHECK =
-      opts.enableNearbySegmentProximityCheck ?? false
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.MAX_ITERATIONS = 10e3 // 5000
 
@@ -312,9 +308,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (!this.obstacleSegmentIndex) return false
 
     const clearance =
-      this.ENABLE_NEARBY_SEGMENT_PROXIMITY_CHECK &&
-      node.z === parent.z &&
-      this.obstacleSegments.length > 0
+      node.z === parent.z && this.obstacleSegments.length > 0
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
