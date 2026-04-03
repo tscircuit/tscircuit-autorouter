@@ -44,6 +44,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   VIA_PENALTY_FACTOR = 0.3
   CELL_SIZE_FACTOR: number
+  NEARBY_SEGMENT_CLEARANCE: number
 
   exploredNodes: Set<string>
 
@@ -86,6 +87,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     futureConnections?: FutureConnection[]
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
+    nearbySegmentClearance?: number
   }) {
     super()
     this.bounds = opts.bounds
@@ -115,6 +117,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
+    this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -304,23 +307,40 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (!parent) return false
     if (!this.obstacleSegmentIndex) return false
 
+    const clearance =
+      node.z === parent.z && this.obstacleSegments.length > 0
+        ? this.NEARBY_SEGMENT_CLEARANCE
+        : 0
+
     const minX = Math.min(node.x, parent.x)
     const maxX = Math.max(node.x, parent.x)
     const minY = Math.min(node.y, parent.y)
     const maxY = Math.max(node.y, parent.y)
 
     const nearbySegmentIds = this.obstacleSegmentIndex.search(
-      minX,
-      minY,
-      maxX,
-      maxY,
+      minX - clearance,
+      minY - clearance,
+      maxX + clearance,
+      maxY + clearance,
     )
 
     for (const segmentId of nearbySegmentIds) {
       const segment = this.obstacleSegments[segmentId]
       if (!segment || segment.connectedToCurrentConnection) continue
       if (segment.z !== node.z) continue
+      // TODO: find out why removing doSegmentsIntersect is causing more intersections
       if (doSegmentsIntersect(node, parent, segment.A, segment.B)) {
+        return true
+      }
+      if (
+        clearance > 0 &&
+        getSegmentToSegmentCenterlineDistance(
+          node,
+          parent,
+          segment.A,
+          segment.B,
+        ) < clearance
+      ) {
         return true
       }
     }
@@ -785,4 +805,18 @@ function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max))
+}
+
+function getSegmentToSegmentCenterlineDistance(
+  leftA: { x: number; y: number },
+  leftB: { x: number; y: number },
+  rightA: { x: number; y: number },
+  rightB: { x: number; y: number },
+) {
+  return Math.min(
+    pointToSegmentDistance(leftA, rightA, rightB),
+    pointToSegmentDistance(leftB, rightA, rightB),
+    pointToSegmentDistance(rightA, leftA, leftB),
+    pointToSegmentDistance(rightB, leftA, leftB),
+  )
 }

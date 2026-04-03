@@ -80,12 +80,19 @@ jobs:
 
       - name: Update snapshots
         if: steps.parse.outputs.can_push == 'true'
+        id: update_snapshots
+        continue-on-error: true
         env:
           BUN_UPDATE_SNAPSHOTS: "1"
-        run: bun test --timeout 120_000
+        run: |
+          set +e
+          bun test --timeout 120_000
+          exit_code=$?
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          exit "$exit_code"
 
       - name: Commit and push snapshot updates
-        if: steps.parse.outputs.can_push == 'true'
+        if: steps.parse.outputs.can_push == 'true' && always()
         id: commit
         env:
           BRANCH_NAME: ${{ steps.parse.outputs.head_ref }}
@@ -106,6 +113,10 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Mark workflow failed when bun test fails
+        if: steps.parse.outputs.can_push == 'true' && always() && steps.update_snapshots.outputs.exit_code != '0'
+        run: exit 1
+
       - name: Update status comment
         if: always()
         uses: actions/github-script@v7
@@ -113,6 +124,7 @@ jobs:
           CAN_PUSH: ${{ steps.parse.outputs.can_push }}
           CHANGED: ${{ steps.commit.outputs.changed }}
           COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+          TEST_EXIT_CODE: ${{ steps.update_snapshots.outputs.exit_code }}
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
@@ -124,6 +136,14 @@ jobs:
                 '## 📸 Update Snapshots',
                 '',
                 '⚠️ This command only supports PR branches from this repository (not forks).',
+                '',
+                `🔗 Workflow: [View run](${runUrl})`,
+              ].join('\n')
+            } else if (process.env.TEST_EXIT_CODE !== '0' && process.env.CHANGED === 'true') {
+              body = [
+                '## 📸 Update Snapshots',
+                '',
+                `⚠️ \`bun test\` exited with code ${process.env.TEST_EXIT_CODE}, but snapshot updates were committed to \`${(process.env.COMMIT_SHA || '').slice(0, 7)}\`.`,
                 '',
                 `🔗 Workflow: [View run](${runUrl})`,
               ].join('\n')
