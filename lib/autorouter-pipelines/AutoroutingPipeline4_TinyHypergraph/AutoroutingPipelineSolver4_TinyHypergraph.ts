@@ -195,12 +195,15 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
+        const sharedEdgeSegments =
+          cms.necessaryCrampedPortPointSolver?.getOutput() ??
+          cms.availableSegmentPointSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
-          segmentPortPoints: cms
-            .availableSegmentPointSolver!.getOutput()
-            .flatMap((seg) => seg.portPoints),
+          segmentPortPoints: sharedEdgeSegments.flatMap(
+            (seg) => seg.portPoints,
+          ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 

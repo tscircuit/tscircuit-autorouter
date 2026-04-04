@@ -186,19 +186,20 @@ test(
       loop2Routes,
       "source_net_6_mst3",
     )
-    const neighboringVia = sourceNet6Route.vias.find((via) =>
-      pointMatches(via, { x: -11.95, y: -38.91 }),
-    )
+    const closestViaInNode = sourceNet6Route.vias
+      .filter((via) => pointInsideNode(via, node!))
+      .map((via) => ({
+        via,
+        minDistance: getMinSameLayerSegmentDistanceToViaInNode(
+          sourceNet7Route,
+          via,
+          node!,
+        ),
+      }))
+      .sort((left, right) => left.minDistance - right.minDistance)[0]
 
-    expect(neighboringVia).toBeDefined()
-
-    const minDistance = getMinSameLayerSegmentDistanceToViaInNode(
-      sourceNet7Route,
-      neighboringVia!,
-      node!,
-    )
-
-    expect(minDistance).toBeGreaterThanOrEqual(0.2)
+    expect(closestViaInNode).toBeDefined()
+    expect(closestViaInNode!.minDistance).toBeGreaterThanOrEqual(0.2)
   },
   { timeout: 120_000 },
 )
