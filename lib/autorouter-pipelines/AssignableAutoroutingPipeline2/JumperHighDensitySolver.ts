@@ -136,7 +136,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     availableJumperTypes?: JumperType[]
   }) {
     super()
-    this.allNodes = [...nodePortPoints]
+    this.allNodes = nodePortPoints.filter((node) => !node._containsObstacle)
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth

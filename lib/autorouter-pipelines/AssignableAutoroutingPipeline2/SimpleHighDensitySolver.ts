@@ -195,15 +195,18 @@ export class SimpleHighDensitySolver extends BaseSolver {
         `numMovablePoints must be 1, 2, or 3, got ${numMovablePoints}`,
       )
     }
-    this.allNodes = [...nodePortPoints]
-    this.unsolvedNodes = [...nodePortPoints]
+    const routableNodes = nodePortPoints.filter(
+      (node) => !node._containsObstacle,
+    )
+    this.allNodes = [...routableNodes]
+    this.unsolvedNodes = [...routableNodes]
     this.colorMap = colorMap ?? {}
     this.routes = []
     this.traceWidth = traceWidth
     this.viaDiameter = viaDiameter
     this.numMovablePoints = numMovablePoints
     this.pushMargin = pushMargin
-    this.MAX_ITERATIONS = nodePortPoints.length * STEPS_PER_NODE + 1
+    this.MAX_ITERATIONS = routableNodes.length * STEPS_PER_NODE + 1
   }
 
   _step() {

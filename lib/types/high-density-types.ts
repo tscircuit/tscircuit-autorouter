@@ -14,6 +14,8 @@ export type NodeWithPortPoints = {
   height: number
   portPoints: PortPoint[]
   availableZ?: number[]
+  _containsTarget?: boolean
+  _containsObstacle?: boolean
 }
 
 /**

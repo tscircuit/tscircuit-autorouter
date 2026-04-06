@@ -1629,6 +1629,8 @@ export class PortPointPathingSolver extends BaseSolver {
           height: node.height,
           portPoints: assignedPortPoints,
           availableZ: node.availableZ,
+          _containsTarget: node._containsTarget,
+          _containsObstacle: node._containsObstacle,
         })
       }
     }

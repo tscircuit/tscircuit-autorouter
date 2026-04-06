@@ -4,7 +4,6 @@ import {
   doSegmentsIntersect,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
@@ -13,6 +12,10 @@ import type {
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import type { GraphicsObject } from "graphics-debug"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { assertDefined } from "./assertDefined"
 import { mergeGraphicsArray } from "./mergeGraphicsArray"
 import type {
@@ -909,6 +912,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           height: region.d.height,
           portPoints: nodePortPoints,
           availableZ: region.d.availableZ,
+          _containsTarget: region.d._containsTarget,
+          _containsObstacle: region.d._containsObstacle,
         })
       }
 

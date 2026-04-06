@@ -597,6 +597,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         height: originalRegion.d.height,
         portPoints,
         availableZ: originalRegion.d.availableZ,
+        _containsTarget: originalRegion.d._containsTarget,
+        _containsObstacle: originalRegion.d._containsObstacle,
       })
     }
 

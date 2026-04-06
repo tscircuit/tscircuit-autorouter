@@ -310,7 +310,9 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     fetchImpl?: typeof fetch
   }) {
     super()
-    this.unsolvedNodePortPoints = nodePortPoints
+    this.unsolvedNodePortPoints = nodePortPoints.filter(
+      (node) => !node._containsObstacle,
+    )
     this.colorMap = colorMap ?? {}
     this.connMap = connMap
     this.viaDiameter = viaDiameter ?? 0.3
