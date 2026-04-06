@@ -73,6 +73,14 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       this.colorMap = buildColorMapFromPortPoints(this.nodeWithPortPoints)
     }
 
+    if (this.nodeWithPortPoints.availableZ?.length === 1) {
+      this.error =
+        "FixedTopologyHighDensityIntraNodeSolver requires at least 2 layers."
+      this.failed = true
+      this.solved = false
+      return
+    }
+
     const nonTopLayerPortPoint = this.nodeWithPortPoints.portPoints.find(
       (pp) => pp.z !== 0,
     )
