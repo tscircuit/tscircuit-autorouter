@@ -26,7 +26,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
     super(
       srj,
       opts.maxNodeDimension === undefined
-        ? { ...opts, maxNodeDimension: 8 }
+        ? { ...opts, maxNodeDimension: 7 }
         : opts,
     )
     this.hdCacheBaseUrl =
