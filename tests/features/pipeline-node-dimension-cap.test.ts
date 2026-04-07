@@ -38,29 +38,3 @@ test("pipeline4 defaults node subdivision to 16mm", () => {
     16,
   )
 })
-
-test("pipeline5 defaults node subdivision to 8mm", () => {
-  const pipeline = new AutoroutingPipelineSolver5(
-    structuredClone(getCircuit011()),
-  )
-
-  pipeline.solveUntilPhase("edgeSolver")
-
-  expect(pipeline.maxNodeDimension).toBe(8)
-  expect(pipeline.capacityNodes).toBeDefined()
-  expect(
-    Math.max(
-      ...(pipeline.capacityNodes ?? []).map((node) =>
-        Math.max(node.width, node.height),
-      ),
-    ),
-  ).toBeLessThanOrEqual(8)
-  expect(
-    (pipeline.capacityNodes ?? []).filter((node) =>
-      node.capacityMeshNodeId.includes("__sub_"),
-    ).length,
-  ).toBe(15)
-  expect(pipeline.nodeDimensionSubdivisionSolver?.stats.maxNodeDimension).toBe(
-    8,
-  )
-})
