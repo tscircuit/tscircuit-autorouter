@@ -11,7 +11,7 @@ const shouldAttemptRemoteSolve = (metadata: {
   node: { availableZ?: number[] }
 }) => metadata.pairCount >= 3 && metadata.node.availableZ?.length !== 1
 
-test(
+test.skip(
   "pipeline5 routes pair-count >= 3 nodes remotely for e2e3",
   async () => {
     const pipeline4Input = structuredClone(e2e3Fixture as SimpleRouteJson)

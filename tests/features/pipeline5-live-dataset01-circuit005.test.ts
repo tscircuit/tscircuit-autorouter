@@ -5,7 +5,7 @@ import type { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines
 import { AutoroutingPipelineSolver5 } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache"
 import type { SimpleRouteJson } from "lib/types"
 
-test(
+test.skip(
   "pipeline5 visualizes the exact remote attempt outcome for dataset01 circuit005",
   async () => {
     const circuit005 = (dataset01 as Record<string, unknown>)

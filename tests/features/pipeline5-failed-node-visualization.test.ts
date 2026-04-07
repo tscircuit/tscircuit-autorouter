@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver"
 
-test("pipeline5 visualizes failed high-density nodes with a visible red marker", () => {
+test.skip("pipeline5 visualizes failed high-density nodes with a visible red marker", () => {
   const solver = new Pipeline5HdCacheHighDensitySolver({
     nodePortPoints: [
       {

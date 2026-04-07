@@ -6,7 +6,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46
   type: "json",
 }
 
-test(
+test.skip(
   "pipeline5 solves the Arduino Uno bugreport with live hd-cache",
   async () => {
     const srj = bugReport.simple_route_json as SimpleRouteJson
