@@ -189,3 +189,6 @@ yalc.lock
 .bun-test-plan/
 hypergraph
 benchmark-result.txt
+benchmark-result.json
+result-*
+tmp
