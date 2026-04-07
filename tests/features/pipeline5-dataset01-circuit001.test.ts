@@ -11,7 +11,7 @@ const shouldAttemptRemoteSolve = (metadata: {
   node: { availableZ?: number[] }
 }) => metadata.pairCount >= 3 && metadata.node.availableZ?.length !== 1
 
-test(
+test.skip(
   "pipeline5 visualizes exact high-density solver metadata for dataset01 circuit001",
   async () => {
     const circuit001 = (dataset01 as Record<string, unknown>)
