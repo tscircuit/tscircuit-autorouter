@@ -72,7 +72,7 @@
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.25",
     "fast-json-stable-stringify": "^2.1.0",
-    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/6319503e55acec103ee7439891a71b7c81fcd90c",
+    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/41591a6fda10d4eac08bb81069bb98a8f50689c5",
     "object-hash": "^3.0.0"
   }
 }
