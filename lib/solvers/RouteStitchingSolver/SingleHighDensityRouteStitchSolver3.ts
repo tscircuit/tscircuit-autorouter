@@ -7,10 +7,12 @@ import { BaseSolver } from "../BaseSolver"
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
+export const MAX_STITCH_GAP_DISTANCE_3 = 1
+const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 
-export class SingleHighDensityRouteStitchSolver extends BaseSolver {
+export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
-    return "SingleHighDensityRouteStitchSolver"
+    return "SingleHighDensityRouteStitchSolver3"
   }
 
   mergedHdRoute: HighDensityIntraNodeRoute
@@ -159,11 +161,19 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     if (this.remainingHdRoutes.length === 0) {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
-      this.mergedHdRoute.route.push({
-        x: this.end.x,
-        y: this.end.y,
-        z: lastMergedPoint.z,
-      })
+
+      if (
+        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
+        distance(lastMergedPoint, this.end) <=
+          MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      ) {
+        this.mergedHdRoute.route.push({
+          x: this.end.x,
+          y: this.end.y,
+          z: lastMergedPoint.z,
+        })
+      }
+
       this.solved = true
       return
     }
@@ -187,13 +197,11 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       if (lastMergedPoint.z === firstPointInCandidate.z) {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
-        } else {
+        } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreFirst = GAP_PENALTY + distToFirst
         }
       } else if (distToFirst < GEOMETRIC_TOLERANCE) {
         scoreFirst = VIA_PENALTY + distToFirst
-      } else {
-        scoreFirst = GAP_PENALTY + distToFirst
       }
 
       if (scoreFirst < bestScore) {
@@ -206,13 +214,11 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       if (lastMergedPoint.z === lastPointInCandidate.z) {
         if (distToLast < GEOMETRIC_TOLERANCE) {
           scoreLast = distToLast
-        } else {
+        } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreLast = GAP_PENALTY + distToLast
         }
       } else if (distToLast < GEOMETRIC_TOLERANCE) {
         scoreLast = VIA_PENALTY + distToLast
-      } else {
-        scoreLast = GAP_PENALTY + distToLast
       }
 
       if (scoreLast < bestScore) {
@@ -223,19 +229,22 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
-      this.failed = true
-      this.error = new Error("No route found to merge")
+      this.remainingHdRoutes = []
       return
     }
 
-    const hdRouteToMerge = this.remainingHdRoutes.splice(closestRouteIndex, 1)[0]
+    const hdRouteToMerge = this.remainingHdRoutes[closestRouteIndex]
+    this.remainingHdRoutes.splice(closestRouteIndex, 1)
 
-    let pointsToAdd = hdRouteToMerge.route
-    if (matchedOn === "last") {
-      pointsToAdd = [...pointsToAdd].reverse()
+    let pointsToAdd: Array<{ x: number; y: number; z: number }>
+    if (matchedOn === "first") {
+      pointsToAdd = hdRouteToMerge.route
+    } else {
+      pointsToAdd = [...hdRouteToMerge.route].reverse()
     }
 
     if (
+      pointsToAdd.length > 0 &&
       distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
       lastMergedPoint.z === pointsToAdd[0].z
     ) {
@@ -257,7 +266,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       lines: [],
       circles: [],
       rects: [],
-      title: "Single High Density Route Stitch Solver",
+      title: "Single High Density Route Stitch Solver 3",
     }
 
     graphics.points?.push(

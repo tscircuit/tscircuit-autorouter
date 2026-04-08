@@ -8,36 +8,74 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
-import { SingleHighDensityRouteStitchSolver } from "./SingleHighDensityRouteStitchSolver"
+import {
+  MAX_STITCH_GAP_DISTANCE_3,
+  SingleHighDensityRouteStitchSolver3,
+} from "./SingleHighDensityRouteStitchSolver3"
 
-export type UnsolvedRoute = {
+export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
 }
 
-const roundedPointHash = (p: { x: number; y: number; z: number }) =>
-  `${Math.round(p.x * 100)},${Math.round(p.y * 100)},${Math.round(p.z * 100)}`
+const ENDPOINT_MATCH_TOLERANCE = 0.1
 
-const getEndpointHashes = (route: HighDensityIntraNodeRoute) => ({
-  startHash: roundedPointHash(route.route[0]!),
-  endHash: roundedPointHash(route.route[route.route.length - 1]!),
-})
-
-export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
+export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
-    return "MultipleHighDensityRouteStitchSolver"
+    return "MultipleHighDensityRouteStitchSolver3"
   }
 
-  unsolvedRoutes: UnsolvedRoute[]
-  activeSolver: SingleHighDensityRouteStitchSolver | null = null
+  unsolvedRoutes: UnsolvedRoute3[]
+  activeSolver: SingleHighDensityRouteStitchSolver3 | null = null
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []
   colorMap: Record<string, string> = {}
   defaultTraceThickness: number
   defaultViaDiameter: number
+  private endpointClusters = new Map<
+    string,
+    Array<{ key: string; point: { x: number; y: number; z: number } }>
+  >()
+
+  private getEndpointKey(
+    connectionName: string,
+    point: { x: number; y: number; z: number },
+  ) {
+    const clusters = this.endpointClusters.get(connectionName) ?? []
+
+    let bestCluster:
+      | { key: string; point: { x: number; y: number; z: number } }
+      | undefined
+    let bestDistance = Infinity
+
+    for (const cluster of clusters) {
+      if (cluster.point.z !== point.z) continue
+      const clusterDistance = distance(cluster.point, point)
+      if (
+        clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
+        clusterDistance < bestDistance
+      ) {
+        bestCluster = cluster
+        bestDistance = clusterDistance
+      }
+    }
+
+    if (bestCluster) {
+      return bestCluster.key
+    }
+
+    const key = `${connectionName}:endpoint_${clusters.length}`
+    clusters.push({
+      key,
+      point: { x: point.x, y: point.y, z: point.z },
+    })
+    this.endpointClusters.set(connectionName, clusters)
+    return key
+  }
 
   private getClosestEndpointHash(
+    connectionName: string,
     routes: HighDensityIntraNodeRoute[],
     point: { x: number; y: number; z: number },
   ) {
@@ -50,7 +88,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
         const dist = distance(point, endpoint)
         if (dist < bestDist) {
           bestDist = dist
-          bestHash = roundedPointHash(endpoint)
+          bestHash = this.getEndpointKey(connectionName, endpoint)
         }
       }
     }
@@ -59,14 +97,15 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   }
 
   private selectRoutesAlongEndpointPath(
+    connectionName: string,
     hdRoutes: HighDensityIntraNodeRoute[],
     start: { x: number; y: number; z: number },
     end: { x: number; y: number; z: number },
   ) {
     if (hdRoutes.length <= 2) return hdRoutes
 
-    const startHash = this.getClosestEndpointHash(hdRoutes, start)
-    const endHash = this.getClosestEndpointHash(hdRoutes, end)
+    const startHash = this.getClosestEndpointHash(connectionName, hdRoutes, start)
+    const endHash = this.getClosestEndpointHash(connectionName, hdRoutes, end)
 
     if (!startHash || !endHash || startHash === endHash) return hdRoutes
 
@@ -76,8 +115,15 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     >()
 
     for (let i = 0; i < hdRoutes.length; i++) {
-      const { startHash: routeStartHash, endHash: routeEndHash } =
-        getEndpointHashes(hdRoutes[i]!)
+      const route = hdRoutes[i]!
+      const routeStartHash = this.getEndpointKey(
+        connectionName,
+        route.route[0]!,
+      )
+      const routeEndHash = this.getEndpointKey(
+        connectionName,
+        route.route[route.route.length - 1]!,
+      )
 
       const startEntries = adjacency.get(routeStartHash) ?? []
       startEntries.push({ nextHash: routeEndHash, routeIndex: i })
@@ -123,11 +169,61 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
 
     if (selectedRouteIndexes.size === 0) return hdRoutes
 
-    const selectedRoutes = hdRoutes.filter((_, index) =>
-      selectedRouteIndexes.has(index),
+    return hdRoutes.filter((_, index) => selectedRouteIndexes.has(index))
+  }
+
+  private selectIslandEndpoints(params: {
+    possibleEndpoints: Array<{ x: number; y: number; z: number }>
+    globalStart: { x: number; y: number; z: number }
+    globalEnd: { x: number; y: number; z: number }
+  }) {
+    const start = params.possibleEndpoints.reduce((bestPoint, point) =>
+      distance(point, params.globalStart) <
+      distance(bestPoint, params.globalStart)
+        ? point
+        : bestPoint,
     )
 
-    return selectedRoutes
+    const remainingEndpoints = params.possibleEndpoints.filter(
+      (point) => point !== start,
+    )
+
+    const endCandidates =
+      remainingEndpoints.length > 0
+        ? remainingEndpoints
+        : params.possibleEndpoints
+
+    const end = endCandidates.reduce((bestPoint, point) =>
+      distance(point, params.globalEnd) < distance(bestPoint, params.globalEnd)
+        ? point
+        : bestPoint,
+    )
+
+    return { start, end }
+  }
+
+  private hasStitchableGapBetweenUnsolvedRoutes(
+    unsolvedRoutes: UnsolvedRoute3[],
+  ) {
+    for (let i = 0; i < unsolvedRoutes.length; i++) {
+      for (let j = i + 1; j < unsolvedRoutes.length; j++) {
+        const endpointsA = [unsolvedRoutes[i]!.start, unsolvedRoutes[i]!.end]
+        const endpointsB = [unsolvedRoutes[j]!.start, unsolvedRoutes[j]!.end]
+
+        for (const endpointA of endpointsA) {
+          for (const endpointB of endpointsB) {
+            if (endpointA.z !== endpointB.z) continue
+            if (
+              distance(endpointA, endpointB) <= MAX_STITCH_GAP_DISTANCE_3
+            ) {
+              return true
+            }
+          }
+        }
+      }
+    }
+
+    return false
   }
 
   constructor(params: {
@@ -147,8 +243,6 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
 
     const routeIslandConnectivityMap = new ConnectivityMap({})
     const routeIslandConnections: Array<string[]> = []
-    const routeIslands = []
-
     const pointHashCounts = new Map<string, number>()
 
     for (let i = 0; i < params.hdRoutes.length; i++) {
@@ -157,8 +251,8 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       const end = hdRoute.route[hdRoute.route.length - 1]
       routeIslandConnections.push([
         `route_island_${i}`,
-        `${hdRoute.connectionName}:${roundedPointHash(start)}`,
-        `${hdRoute.connectionName}:${roundedPointHash(end)}`,
+        this.getEndpointKey(hdRoute.connectionName, start),
+        this.getEndpointKey(hdRoute.connectionName, end),
       ])
     }
     routeIslandConnectivityMap.addConnections(routeIslandConnections)
@@ -195,24 +289,62 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
         r.route[r.route.length - 1],
       ])
 
+      const possibleEndpointsByHash = new Map<
+        string,
+        { x: number; y: number; z: number }
+      >()
       const possibleEndpoints2 = []
       for (const possibleEndpoint1 of possibleEndpoints1) {
-        const pointHash = `${hdRoutes[0].connectionName}:${roundedPointHash(possibleEndpoint1)}`
+        const pointHash = this.getEndpointKey(
+          hdRoutes[0].connectionName,
+          possibleEndpoint1,
+        )
+        if (!possibleEndpointsByHash.has(pointHash)) {
+          possibleEndpointsByHash.set(pointHash, possibleEndpoint1)
+        }
         if (pointHashCounts.get(pointHash) === 1) {
           possibleEndpoints2.push(possibleEndpoint1)
         }
       }
-      // Not sure why this happens
-      // If removing, make sure off-board-assignable2 doesn't break
-      if (possibleEndpoints2.length === 0) {
-        console.log("no possible endpoints, can't stitch")
+
+      const candidateEndpoints =
+        possibleEndpoints2.length > 0
+          ? possibleEndpoints2
+          : [...possibleEndpointsByHash.values()]
+
+      if (candidateEndpoints.length === 0) {
         continue
       }
 
       let start: { x: number; y: number; z: number }
       let end: { x: number; y: number; z: number }
 
-      if (possibleEndpoints2.length !== 2) {
+      if (candidateEndpoints.length >= 2) {
+        ;({ start, end } = this.selectIslandEndpoints({
+          possibleEndpoints: candidateEndpoints,
+          globalStart: {
+            ...connection.pointsToConnect[0],
+            z: mapLayerNameToZ(
+              getConnectionPointLayer(connection.pointsToConnect[0]),
+              params.layerCount,
+            ),
+          },
+          globalEnd: {
+            ...connection.pointsToConnect[1],
+            z: mapLayerNameToZ(
+              getConnectionPointLayer(connection.pointsToConnect[1]),
+              params.layerCount,
+            ),
+          },
+        }))
+
+        if (
+          distance(start, connection.pointsToConnect[1]) <
+          distance(end, connection.pointsToConnect[0])
+        ) {
+          ;[start, end] = [end, start]
+        }
+      } else {
         start = {
           ...connection.pointsToConnect[0],
           z: mapLayerNameToZ(
@@ -227,19 +359,10 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
             params.layerCount,
           ),
         }
-      } else {
-        start = possibleEndpoints2[0]
-        end = possibleEndpoints2[1]
-
-        if (
-          distance(start, connection.pointsToConnect[1]) <
-          distance(end, connection.pointsToConnect[0])
-        ) {
-          ;[start, end] = [end, start]
-        }
       }
 
       const selectedHdRoutes = this.selectRoutesAlongEndpointPath(
+        hdRoutes[0].connectionName,
         hdRoutes,
         start,
         end,
@@ -253,7 +376,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       })
     }
 
-    const unsolvedRoutesByConnection = new Map<string, UnsolvedRoute[]>()
+    const unsolvedRoutesByConnection = new Map<string, UnsolvedRoute3[]>()
     for (const unsolvedRoute of this.unsolvedRoutes) {
       const routes = unsolvedRoutesByConnection.get(
         unsolvedRoute.connectionName,
@@ -273,8 +396,11 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       const hasDegenerateRoute = unsolvedRoutes.some((unsolvedRoute) =>
         unsolvedRoute.hdRoutes.some((hdRoute) => hdRoute.route.length < 2),
       )
+      const hasStitchableGap =
+        unsolvedRoutes.length > 1 &&
+        this.hasStitchableGapBetweenUnsolvedRoutes(unsolvedRoutes)
 
-      if (!hasDegenerateRoute) {
+      if (!hasDegenerateRoute && !hasStitchableGap) {
         return unsolvedRoutes
       }
 
@@ -305,7 +431,12 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       return [
         {
           connectionName,
-          hdRoutes: this.selectRoutesAlongEndpointPath(hdRoutes, start, end),
+          hdRoutes: this.selectRoutesAlongEndpointPath(
+            connectionName,
+            hdRoutes,
+            start,
+            end,
+          ),
           start,
           end,
         },
@@ -319,7 +450,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     if (this.activeSolver) {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
-        if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver) {
+        if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
         }
         this.activeSolver = null
@@ -337,7 +468,7 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       return
     }
 
-    this.activeSolver = new SingleHighDensityRouteStitchSolver({
+    this.activeSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: unsolvedRoute.connectionName,
       hdRoutes: unsolvedRoute.hdRoutes,
       start: unsolvedRoute.start,
@@ -354,43 +485,31 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
       lines: [],
       circles: [],
       rects: [],
-      title: "Multiple High Density Route Stitch Solver",
+      title: "Multiple High Density Route Stitch Solver 3",
     }
 
-    // Visualize the active solver if one exists
     if (this.activeSolver) {
-      // Combine visualizations from the active solver
       const activeSolverGraphics = this.activeSolver.visualize()
-
-      // Merge points
       if (activeSolverGraphics.points?.length) {
         graphics.points?.push(...activeSolverGraphics.points)
       }
-
-      // Merge lines
       if (activeSolverGraphics.lines?.length) {
         graphics.lines?.push(...activeSolverGraphics.lines)
       }
-
-      // Merge circles
       if (activeSolverGraphics.circles?.length) {
         graphics.circles?.push(...activeSolverGraphics.circles)
       }
-
-      // Merge rects if they exist
       if (activeSolverGraphics.rects?.length) {
         if (!graphics.rects) graphics.rects = []
         graphics.rects.push(...activeSolverGraphics.rects)
       }
     }
 
-    // Visualize all merged HD routes that have been solved
     for (const [i, mergedRoute] of this.mergedHdRoutes.entries()) {
       const solvedColor =
         this.colorMap[mergedRoute.connectionName] ??
-        `hsl(120, 100%, ${40 + ((i * 10) % 40)}%)` // Different shades of green
+        `hsl(120, 100%, ${40 + ((i * 10) % 40)}%)`
 
-      // Visualize the route path segment by segment
       for (let j = 0; j < mergedRoute.route.length - 1; j++) {
         const p1 = mergedRoute.route[j]
         const p2 = mergedRoute.route[j + 1]
@@ -407,7 +526,6 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
         })
       }
 
-      // Visualize route points (apply transparency based on Z)
       for (const point of mergedRoute.route) {
         const pointColor =
           point.z !== 0 ? safeTransparentize(solvedColor, 0.5) : solvedColor
@@ -418,85 +536,15 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
         })
       }
 
-      // Visualize vias in the merged route (Vias inherently connect layers, keep solid for now)
-      // TODO: Consider if via transparency should depend on connected layers
-      for (const via of mergedRoute.vias) {
-        graphics.circles?.push({
-          center: { x: via.x, y: via.y },
-          radius: mergedRoute.viaDiameter / 2,
-          fill: solvedColor, // Keep vias solid color for visibility
-        })
-      }
-
-      // Visualize jumpers in the merged route
-      if (mergedRoute.jumpers && mergedRoute.jumpers.length > 0) {
-        const jumperGraphics = getJumpersGraphics(mergedRoute.jumpers, {
-          color: solvedColor,
-          label: mergedRoute.connectionName,
-        })
-        graphics.rects!.push(...(jumperGraphics.rects ?? []))
-        graphics.lines!.push(...(jumperGraphics.lines ?? []))
-      }
-    }
-
-    // Visualize all remaining unsolved routes - start/end points only
-    for (const unsolvedRoute of this.unsolvedRoutes) {
-      const routeColor = this.colorMap[unsolvedRoute.connectionName] ?? "gray" // Use colorMap, default to gray
-
-      // Add start and end points for unsolved connections
-      graphics.points?.push(
-        {
-          x: unsolvedRoute.start.x,
-          y: unsolvedRoute.start.y,
-          color: routeColor,
-          label: `${unsolvedRoute.connectionName} Start (z=${unsolvedRoute.start.z})`,
-        },
-        {
-          x: unsolvedRoute.end.x,
-          y: unsolvedRoute.end.y,
-          color: routeColor,
-          label: `${unsolvedRoute.connectionName} End (z=${unsolvedRoute.end.z})`,
-        },
-      )
-
-      // Add a light dashed line between start and end to show pending connections
-      graphics.lines?.push({
-        points: [
-          { x: unsolvedRoute.start.x, y: unsolvedRoute.start.y },
-          { x: unsolvedRoute.end.x, y: unsolvedRoute.end.y },
-        ],
-        strokeColor: routeColor,
-        strokeDash: "2 2",
-      })
-
-      // Visualize HD routes associated with unsolved routes (faded)
-      for (const hdRoute of unsolvedRoute.hdRoutes) {
-        if (hdRoute.route.length > 1) {
-          graphics.lines?.push({
-            points: hdRoute.route.map((point) => ({ x: point.x, y: point.y })),
-            strokeColor: safeTransparentize(routeColor, 0.5), // Use routeColor
-            strokeDash: "10 5",
-          })
-        }
-
-        // Visualize vias
-        for (const via of hdRoute.vias) {
-          graphics.circles?.push({
-            center: { x: via.x, y: via.y },
-            radius: hdRoute.viaDiameter / 2,
-            fill: routeColor, // Use routeColor
-          })
-        }
-
-        // Visualize jumpers
-        if (hdRoute.jumpers && hdRoute.jumpers.length > 0) {
-          const jumperGraphics = getJumpersGraphics(hdRoute.jumpers, {
-            color: routeColor,
-            label: hdRoute.connectionName,
-          })
-          graphics.rects!.push(...(jumperGraphics.rects ?? []))
-          graphics.lines!.push(...(jumperGraphics.lines ?? []))
-        }
+      if (mergedRoute.vias?.length) {
+        const jumpers = mergedRoute.vias.map((via) => ({
+          points: [
+            { x: via.x, y: via.y, z: 0 },
+            { x: via.x, y: via.y, z: 1 },
+          ],
+          routeThickness: mergedRoute.traceThickness,
+        }))
+        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
       }
     }
 

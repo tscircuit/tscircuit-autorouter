@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
-import { MAX_STITCH_GAP_DISTANCE } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver"
+import { MAX_STITCH_GAP_DISTANCE_3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
 import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno.json" with {
   type: "json",
 }
@@ -49,7 +49,7 @@ test("bugreport46 stitch does not leave stitchable same-layer gaps at effort 2x"
 
       return { connectionName, bestGap }
     })
-    .filter(({ bestGap }) => bestGap <= MAX_STITCH_GAP_DISTANCE)
+    .filter(({ bestGap }) => bestGap <= MAX_STITCH_GAP_DISTANCE_3)
 
   expect(nearGapConnections).toEqual([])
 }, 120_000)

@@ -36,7 +36,7 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
@@ -93,7 +93,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   colorMap: Record<string, string>
   highDensityRouteSolver?: HighDensitySolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
+  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -303,7 +303,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     ),
     definePipelineStep(
       "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver,
+      MultipleHighDensityRouteStitchSolver3,
       (cms) => [
         {
           connections: cms.srjWithPointPairs!.connections,

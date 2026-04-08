@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { SingleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver"
+import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 const makeRoute = (
@@ -15,7 +15,7 @@ const makeRoute = (
 })
 
 test("single stitch bridges small same-layer gaps", () => {
-  const solver = new SingleHighDensityRouteStitchSolver({
+  const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "conn",
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 0 },
@@ -44,7 +44,7 @@ test("single stitch bridges small same-layer gaps", () => {
 })
 
 test("single stitch does not bridge large same-layer gaps", () => {
-  const solver = new SingleHighDensityRouteStitchSolver({
+  const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "conn",
     start: { x: 0, y: 0, z: 0 },
     end: { x: 3, y: 0, z: 0 },
@@ -71,7 +71,7 @@ test("single stitch does not bridge large same-layer gaps", () => {
 })
 
 test("single stitch can cap a modest terminal endpoint gap", () => {
-  const solver = new SingleHighDensityRouteStitchSolver({
+  const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "conn",
     start: { x: 0, y: 2, z: 0 },
     end: { x: 0, y: 0, z: 0 },
