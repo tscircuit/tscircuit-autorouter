@@ -45,6 +45,7 @@ export const computeViaCountVariants = (
   segmentsPerPolyline: number,
   maxViaCount: number,
   minViaCount: number,
+  minimumViaCountPerConnection?: number[],
 ): Array<number[]> => {
   const possibleViaCountsPerPolyline: number[][] = []
 
@@ -71,9 +72,10 @@ export const computeViaCountVariants = (
   let variants: number[][] = getEveryCombinationFromChoiceArray(
     possibleViaCountsPerPolyline,
   ).filter((variant) => {
+    const viaCount = variant.reduce((acc, count) => acc + count, 0)
+    if (viaCount < minViaCount) return false
     for (let i = 0; i < variant.length; i++) {
-      const viaCount = variant.reduce((acc, count) => acc + count, 0)
-      if (viaCount < minViaCount) return false
+      if ((minimumViaCountPerConnection?.[i] ?? 0) > variant[i]) return false
     }
     return true
   })

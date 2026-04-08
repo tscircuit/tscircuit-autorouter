@@ -14,6 +14,12 @@ export type NodeWithPortPoints = {
   height: number
   portPoints: PortPoint[]
   availableZ?: number[]
+  /**
+   * Layers occupied by unbroken copper pours where same-layer intra-node
+   * routing should prefer escaping to another layer instead of cutting through
+   * the pour. This is only a first-pass heuristic input.
+   */
+  unbrokenPourByLayer?: number[]
 }
 
 /**

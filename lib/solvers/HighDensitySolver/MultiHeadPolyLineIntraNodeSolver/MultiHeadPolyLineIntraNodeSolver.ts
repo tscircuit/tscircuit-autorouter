@@ -24,6 +24,7 @@ import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnec
 import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
 import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
 import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
+import { planUnbrokenPourEscapes } from "./planUnbrokenPourEscapes"
 import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
 import { withinBounds } from "./withinBounds"
@@ -302,18 +303,30 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     }
 
     const portPairsEntries = Array.from(portPairs.entries())
+    const pourEscapePlan = planUnbrokenPourEscapes({
+      portPairsEntries,
+      bounds: this.bounds,
+      availableZ: this.availableZ,
+      blockedLayers: this.nodeWithPortPoints.unbrokenPourByLayer,
+      boundaryPadding: this.BOUNDARY_PADDING,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+    })
 
     const viaCountVariants = computeViaCountVariants(
       portPairsEntries,
       this.SEGMENTS_PER_POLYLINE,
       this.maxViaCount,
       this.minViaCount,
+      pourEscapePlan.minimumViaCountPerConnection,
     )
 
     const possibleViaPositions = getPossibleInitialViaPositions({
       portPairsEntries,
       viaCountVariants,
       bounds: this.bounds,
+      reservedViaPositionsByConnectionName:
+        pourEscapePlan.reservedViaPositionsByConnectionName,
     })
 
     const possibleViaPositionsWithReorderings = []
