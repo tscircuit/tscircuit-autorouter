@@ -8,6 +8,7 @@ const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 export const MAX_STITCH_GAP_DISTANCE = 1
+const MAX_TERMINAL_STITCH_GAP_DISTANCE = 1.25
 
 export class SingleHighDensityRouteStitchSolver extends BaseSolver {
   override getSolverName(): string {
@@ -180,7 +181,7 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
 
       if (
         distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
-        distance(lastMergedPoint, this.end) <= MAX_STITCH_GAP_DISTANCE
+        distance(lastMergedPoint, this.end) <= MAX_TERMINAL_STITCH_GAP_DISTANCE
       ) {
         // Use the z-value of the last merged point to handle multi-layer
         // connection points where the route is on a specific layer.
