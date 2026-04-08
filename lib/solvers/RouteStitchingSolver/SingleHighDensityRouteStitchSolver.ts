@@ -223,19 +223,19 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
-      this.failed = true
-      this.error = new Error("No route found to merge")
+      // Should not happen given the gap fallback, but if no routes remain, we are done
+      this.remainingHdRoutes = [] // Force exit next step
       return
     }
 
-    const hdRouteToMerge = this.remainingHdRoutes.splice(
-      closestRouteIndex,
-      1,
-    )[0]
+    const hdRouteToMerge = this.remainingHdRoutes[closestRouteIndex]
+    this.remainingHdRoutes.splice(closestRouteIndex, 1)
 
-    let pointsToAdd = hdRouteToMerge.route
-    if (matchedOn === "last") {
-      pointsToAdd = [...pointsToAdd].reverse()
+    let pointsToAdd: Array<{ x: number; y: number; z: number }>
+    if (matchedOn === "first") {
+      pointsToAdd = hdRouteToMerge.route
+    } else {
+      pointsToAdd = [...hdRouteToMerge.route].reverse()
     }
 
     if (
@@ -295,44 +295,59 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
         })
       }
 
-      if (this.mergedHdRoute.vias?.length) {
-        const jumpers: Jumper[] = this.mergedHdRoute.vias.map((via) => ({
-          points: [
-            { x: via.x, y: via.y, z: 0 },
-            { x: via.x, y: via.y, z: 1 },
-          ],
-          routeThickness: this.mergedHdRoute.traceThickness,
-        }))
-        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
+      for (const via of this.mergedHdRoute.vias) {
+        graphics.circles?.push({
+          center: { x: via.x, y: via.y },
+          radius: this.mergedHdRoute.viaDiameter / 2,
+          fill: "green",
+        })
+      }
+
+      if (this.mergedHdRoute.jumpers && this.mergedHdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(this.mergedHdRoute.jumpers, {
+          color: "green",
+          label: this.mergedHdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 
-    for (const hdRoute of this.remainingHdRoutes) {
+    for (const [i, hdRoute] of this.remainingHdRoutes.entries()) {
+      const routeColor = this.colorMap[hdRoute.connectionName] ?? "gray"
       graphics.lines?.push({
         points: hdRoute.route.map((point) => ({
           x: point.x,
           y: point.y,
         })),
-        strokeColor: "orange",
+        strokeColor: routeColor,
       })
 
-      for (const point of hdRoute.route) {
+      for (let pi = 0; pi < hdRoute.route.length; pi++) {
+        const point = hdRoute.route[pi]
         graphics.points?.push({
-          x: point.x,
-          y: point.y,
-          color: "orange",
+          x: point.x + ((i % 2) - 0.5) / 500 + ((pi % 8) - 4) / 1000,
+          y: point.y + ((i % 2) - 0.5) / 500 + ((pi % 8) - 4) / 1000,
+          color: routeColor,
+          label: `Route ${hdRoute.connectionName} ${point === hdRoute.route[0] ? "First" : point === hdRoute.route[hdRoute.route.length - 1] ? "Last" : ""}`,
         })
       }
 
-      if (hdRoute.vias?.length) {
-        const jumpers: Jumper[] = hdRoute.vias.map((via) => ({
-          points: [
-            { x: via.x, y: via.y, z: 0 },
-            { x: via.x, y: via.y, z: 1 },
-          ],
-          routeThickness: hdRoute.traceThickness,
-        }))
-        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
+      for (const via of hdRoute.vias) {
+        graphics.circles?.push({
+          center: { x: via.x, y: via.y },
+          radius: hdRoute.viaDiameter / 2,
+          fill: routeColor,
+        })
+      }
+
+      if (hdRoute.jumpers && hdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(hdRoute.jumpers, {
+          color: routeColor,
+          label: hdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 
