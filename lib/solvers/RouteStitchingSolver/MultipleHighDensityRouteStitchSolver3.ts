@@ -536,15 +536,21 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
-      if (mergedRoute.vias?.length) {
-        const jumpers = mergedRoute.vias.map((via) => ({
-          points: [
-            { x: via.x, y: via.y, z: 0 },
-            { x: via.x, y: via.y, z: 1 },
-          ],
-          routeThickness: mergedRoute.traceThickness,
-        }))
-        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
+      for (const via of mergedRoute.vias) {
+        graphics.circles?.push({
+          center: { x: via.x, y: via.y },
+          radius: mergedRoute.viaDiameter / 2,
+          fill: solvedColor,
+        })
+      }
+
+      if (mergedRoute.jumpers && mergedRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(mergedRoute.jumpers, {
+          color: solvedColor,
+          label: mergedRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 

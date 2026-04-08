@@ -1,6 +1,6 @@
 import { distance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
-import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
+import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { BaseSolver } from "../BaseSolver"
 
@@ -301,15 +301,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
-      if (this.mergedHdRoute.vias?.length) {
-        const jumpers: Jumper[] = this.mergedHdRoute.vias.map((via) => ({
-          points: [
-            { x: via.x, y: via.y, z: 0 },
-            { x: via.x, y: via.y, z: 1 },
-          ],
-          routeThickness: this.mergedHdRoute.traceThickness,
-        }))
-        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
+      for (const via of this.mergedHdRoute.vias) {
+        graphics.circles?.push({
+          center: { x: via.x, y: via.y },
+          radius: this.mergedHdRoute.viaDiameter / 2,
+          fill: "green",
+        })
+      }
+
+      if (this.mergedHdRoute.jumpers && this.mergedHdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(this.mergedHdRoute.jumpers, {
+          color: "green",
+          label: this.mergedHdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 
@@ -330,15 +336,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
-      if (hdRoute.vias?.length) {
-        const jumpers: Jumper[] = hdRoute.vias.map((via) => ({
-          points: [
-            { x: via.x, y: via.y, z: 0 },
-            { x: via.x, y: via.y, z: 1 },
-          ],
-          routeThickness: hdRoute.traceThickness,
-        }))
-        graphics.circles?.push(...getJumpersGraphics(jumpers).circles!)
+      for (const via of hdRoute.vias) {
+        graphics.circles?.push({
+          center: { x: via.x, y: via.y },
+          radius: hdRoute.viaDiameter / 2,
+          fill: "orange",
+        })
+      }
+
+      if (hdRoute.jumpers && hdRoute.jumpers.length > 0) {
+        const jumperGraphics = getJumpersGraphics(hdRoute.jumpers, {
+          color: "orange",
+          label: hdRoute.connectionName,
+        })
+        graphics.rects!.push(...(jumperGraphics.rects ?? []))
+        graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
     }
 
