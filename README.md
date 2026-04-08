@@ -70,6 +70,7 @@ interface Obstacle {
   width: number
   height: number
   connectedTo: string[] // TraceIds
+  isCopperPour?: boolean
   offBoardConnectsTo?: string[] // TraceIds connected off-board
 }
 

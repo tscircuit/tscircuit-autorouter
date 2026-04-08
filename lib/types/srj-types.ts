@@ -62,6 +62,7 @@ export interface Obstacle {
   width: number
   height: number
   connectedTo: Array<TraceId | NetId>
+  isCopperPour?: boolean
   netIsAssignable?: boolean
   offBoardConnectsTo?: Array<OffBoardConnectionId>
 }
