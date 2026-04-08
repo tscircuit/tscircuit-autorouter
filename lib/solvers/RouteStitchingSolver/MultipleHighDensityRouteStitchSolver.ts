@@ -104,7 +104,11 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
   ) {
     if (hdRoutes.length <= 2) return hdRoutes
 
-    const startHash = this.getClosestEndpointHash(connectionName, hdRoutes, start)
+    const startHash = this.getClosestEndpointHash(
+      connectionName,
+      hdRoutes,
+      start,
+    )
     const endHash = this.getClosestEndpointHash(connectionName, hdRoutes, end)
 
     if (!startHash || !endHash || startHash === endHash) return hdRoutes
@@ -181,19 +185,21 @@ export class MultipleHighDensityRouteStitchSolver extends BaseSolver {
     globalStart: { x: number; y: number; z: number }
     globalEnd: { x: number; y: number; z: number }
   }) {
-    const start =
-      params.possibleEndpoints.reduce((bestPoint, point) =>
-        distance(point, params.globalStart) < distance(bestPoint, params.globalStart)
-          ? point
-          : bestPoint,
-      )
+    const start = params.possibleEndpoints.reduce((bestPoint, point) =>
+      distance(point, params.globalStart) <
+      distance(bestPoint, params.globalStart)
+        ? point
+        : bestPoint,
+    )
 
     const remainingEndpoints = params.possibleEndpoints.filter(
       (point) => point !== start,
     )
 
     const endCandidates =
-      remainingEndpoints.length > 0 ? remainingEndpoints : params.possibleEndpoints
+      remainingEndpoints.length > 0
+        ? remainingEndpoints
+        : params.possibleEndpoints
 
     const end = endCandidates.reduce((bestPoint, point) =>
       distance(point, params.globalEnd) < distance(bestPoint, params.globalEnd)

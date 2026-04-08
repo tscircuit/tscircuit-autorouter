@@ -12,44 +12,40 @@ const isSamePointXY = (
   tolerance = 1e-3,
 ) => Math.abs(a.x - b.x) < tolerance && Math.abs(a.y - b.y) < tolerance
 
-test(
-  "bugreport46 stitch avoids invalid long jump into source_net_23 endpoint at effort 2x",
-  () => {
-    const srj = structuredClone(bugReport.simple_route_json as any)
-    const targetConnection = srj.connections.find(
-      (connection: any) => connection.name === TARGET_CONNECTION,
-    )
+test("bugreport46 stitch avoids invalid long jump into source_net_23 endpoint at effort 2x", () => {
+  const srj = structuredClone(bugReport.simple_route_json as any)
+  const targetConnection = srj.connections.find(
+    (connection: any) => connection.name === TARGET_CONNECTION,
+  )
 
-    expect(targetConnection).toBeDefined()
+  expect(targetConnection).toBeDefined()
 
-    const targetPoint = targetConnection.pointsToConnect[1]
-    const pipeline = new AutoroutingPipelineSolver4(srj, { effort: 2 })
+  const targetPoint = targetConnection.pointsToConnect[1]
+  const pipeline = new AutoroutingPipelineSolver4(srj, { effort: 2 })
 
-    pipeline.solveUntilPhase("traceSimplificationSolver")
+  pipeline.solveUntilPhase("traceSimplificationSolver")
 
-    const badSegments =
-      pipeline.highDensityStitchSolver?.mergedHdRoutes
-        .filter((route) => route.connectionName === TARGET_CONNECTION)
-        .flatMap((route) =>
-          route.route.slice(0, -1).map((point, index) => {
-            const nextPoint = route.route[index + 1]!
-            return {
-              from: point,
-              to: nextPoint,
-              sameLayer: point.z === nextPoint.z,
-              length: Math.hypot(nextPoint.x - point.x, nextPoint.y - point.y),
-              touchesTarget:
-                isSamePointXY(point, targetPoint) ||
-                isSamePointXY(nextPoint, targetPoint),
-            }
-          }),
-        )
-        .filter(
-          (segment) =>
-            segment.sameLayer && segment.touchesTarget && segment.length > 20,
-        ) ?? []
+  const badSegments =
+    pipeline.highDensityStitchSolver?.mergedHdRoutes
+      .filter((route) => route.connectionName === TARGET_CONNECTION)
+      .flatMap((route) =>
+        route.route.slice(0, -1).map((point, index) => {
+          const nextPoint = route.route[index + 1]!
+          return {
+            from: point,
+            to: nextPoint,
+            sameLayer: point.z === nextPoint.z,
+            length: Math.hypot(nextPoint.x - point.x, nextPoint.y - point.y),
+            touchesTarget:
+              isSamePointXY(point, targetPoint) ||
+              isSamePointXY(nextPoint, targetPoint),
+          }
+        }),
+      )
+      .filter(
+        (segment) =>
+          segment.sameLayer && segment.touchesTarget && segment.length > 20,
+      ) ?? []
 
-    expect(badSegments).toHaveLength(0)
-  },
-  120_000,
-)
+  expect(badSegments).toHaveLength(0)
+}, 120_000)
