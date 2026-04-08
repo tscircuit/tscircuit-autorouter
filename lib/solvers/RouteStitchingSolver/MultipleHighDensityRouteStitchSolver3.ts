@@ -104,7 +104,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   ) {
     if (hdRoutes.length <= 2) return hdRoutes
 
-    const startHash = this.getClosestEndpointHash(connectionName, hdRoutes, start)
+    const startHash = this.getClosestEndpointHash(
+      connectionName,
+      hdRoutes,
+      start,
+    )
     const endHash = this.getClosestEndpointHash(connectionName, hdRoutes, end)
 
     if (!startHash || !endHash || startHash === endHash) return hdRoutes
@@ -213,9 +217,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         for (const endpointA of endpointsA) {
           for (const endpointB of endpointsB) {
             if (endpointA.z !== endpointB.z) continue
-            if (
-              distance(endpointA, endpointB) <= MAX_STITCH_GAP_DISTANCE_3
-            ) {
+            if (distance(endpointA, endpointB) <= MAX_STITCH_GAP_DISTANCE_3) {
               return true
             }
           }

@@ -228,7 +228,10 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       return
     }
 
-    const hdRouteToMerge = this.remainingHdRoutes.splice(closestRouteIndex, 1)[0]
+    const hdRouteToMerge = this.remainingHdRoutes.splice(
+      closestRouteIndex,
+      1,
+    )[0]
 
     let pointsToAdd = hdRouteToMerge.route
     if (matchedOn === "last") {
