@@ -22,10 +22,9 @@ test("bugreport03-fe4a17.json-AutoroutingPipeline1_OriginalUnravel", () => {
   solver.solve()
 
   const routesByConnection = new Map(
-    (solver.traceSimplificationSolver?.simplifiedHdRoutes ?? []).map((route) => [
-      route.connectionName,
-      route,
-    ]),
+    (solver.traceSimplificationSolver?.simplifiedHdRoutes ?? []).map(
+      (route) => [route.connectionName, route],
+    ),
   )
 
   for (const connection of srj.connections.filter(
