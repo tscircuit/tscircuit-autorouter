@@ -37,7 +37,7 @@ type PipelineRunSolver = StageDebuggablePipelineSolver & {
 
 type PipelineSolverConstructor = new (
   srj: SimpleRouteJson,
-  opts?: SolverOptions,
+  opts?: any,
 ) => PipelineRunSolver
 
 type RunSampleOptions = {
@@ -232,6 +232,9 @@ const formatDrcIdentifiers = (error: Record<string, unknown>) => {
 
   return parts.join(" ")
 }
+
+const toUnknownRecord = (value: object): Record<string, unknown> =>
+  value as unknown as Record<string, unknown>
 
 const emitLogLines = async (
   logsPath: string,
@@ -430,13 +433,13 @@ const main = async () => {
     ) as Array<Record<string, unknown>>
     const drcResult = getDrcErrors(circuitJson as any, RELAXED_DRC_OPTIONS)
     relaxedDrcPassed = drcResult.errors.length === 0
-    drcErrors = drcResult.errorsWithCenters.map((error) => ({
-      ...(error as Record<string, unknown>),
-      resolvedLocation: getApproximateErrorLocation(
-        error as Record<string, unknown>,
-        circuitJson,
-      ),
-    }))
+    drcErrors = drcResult.errorsWithCenters.map((error) => {
+      const errorRecord = toUnknownRecord(error)
+      return {
+        ...errorRecord,
+        resolvedLocation: getApproximateErrorLocation(errorRecord, circuitJson),
+      }
+    })
 
     await emitLogLines(
       result.logsPath,
