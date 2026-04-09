@@ -5,40 +5,35 @@ solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
 iterations: 66
 routes: 4
 nodePf: 0.026490258404940858
-portPoints: 8
-connections: source_net_2_mst0, source_net_0, source_net_1_mst1, source_net_4_mst1" points="40.000000000000014,413.33333333333326 600,413.33333333333326" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="9.825,3.475 9.825,7.525" data-type="line" data-label="hd_node_marker
+portPoints: 8" points="40.000000000000014,413.33333333333326 600,413.33333333333326" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="9.825,3.475 9.825,7.525" data-type="line" data-label="hd_node_marker
 node: cmn_2
 status: solved
 solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
 iterations: 66
 routes: 4
 nodePf: 0.026490258404940858
-portPoints: 8
-connections: source_net_2_mst0, source_net_0, source_net_1_mst1, source_net_4_mst1" points="600,413.33333333333326 600,226.66666666666663" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="9.825,7.525 -2.3249999999999993,7.525" data-type="line" data-label="hd_node_marker
+portPoints: 8" points="600,413.33333333333326 600,226.66666666666663" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="9.825,7.525 -2.3249999999999993,7.525" data-type="line" data-label="hd_node_marker
 node: cmn_2
 status: solved
 solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
 iterations: 66
 routes: 4
 nodePf: 0.026490258404940858
-portPoints: 8
-connections: source_net_2_mst0, source_net_0, source_net_1_mst1, source_net_4_mst1" points="600,226.66666666666663 40.000000000000014,226.66666666666663" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="-2.3249999999999993,7.525 -2.3249999999999993,3.475" data-type="line" data-label="hd_node_marker
+portPoints: 8" points="600,226.66666666666663 40.000000000000014,226.66666666666663" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><g><polyline data-points="-2.3249999999999993,7.525 -2.3249999999999993,3.475" data-type="line" data-label="hd_node_marker
 node: cmn_2
 status: solved
 solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
 iterations: 66
 routes: 4
 nodePf: 0.026490258404940858
-portPoints: 8
-connections: source_net_2_mst0, source_net_0, source_net_1_mst1, source_net_4_mst1" points="40.000000000000014,226.66666666666663 40.000000000000014,413.33333333333326" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><circle data-type="circle" data-label="" data-x="0.6000000000000001" data-y="7.000000000000003" cx="174.8148148148148" cy="250.86419753086403" r="6.913580246913581" fill="hsl(304.2105263157895, 100%, 50%)" stroke="black" stroke-width="0.02169642857142857"/><circle data-type="circle" data-label="" data-x="-0.6000000000000001" data-y="3.8000000000000003" cx="119.50617283950615" cy="398.35390946502054" r="6.913580246913581" fill="hsl(284.2105263157895, 100%, 50%)" stroke="black" stroke-width="0.02169642857142857"/><g><circle data-type="point" data-label="hd_node_marker
+portPoints: 8" points="40.000000000000014,226.66666666666663 40.000000000000014,413.33333333333326" fill="none" stroke="blue" stroke-width="1.3827160493827162" stroke-dasharray="6, 4"/></g><circle data-type="circle" data-label="" data-x="0.6000000000000001" data-y="7.000000000000003" cx="174.8148148148148" cy="250.86419753086403" r="6.913580246913581" fill="hsl(304.2105263157895, 100%, 50%)" stroke="black" stroke-width="0.02169642857142857"/><circle data-type="circle" data-label="" data-x="-0.6000000000000001" data-y="3.8000000000000003" cx="119.50617283950615" cy="398.35390946502054" r="6.913580246913581" fill="hsl(284.2105263157895, 100%, 50%)" stroke="black" stroke-width="0.02169642857142857"/><g><circle data-type="point" data-label="hd_node_marker
 node: cmn_2
 status: solved
 solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
 iterations: 66
 routes: 4
 nodePf: 0.026490258404940858
-portPoints: 8
-connections: source_net_2_mst0, source_net_0, source_net_1_mst1, source_net_4_mst1" data-x="3.75" data-y="5.5" cx="320" cy="320" r="3" fill="blue"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+portPoints: 8" data-x="3.75" data-y="5.5" cx="320" cy="320" r="3" fill="blue"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
               document.currentScript.parentElement.addEventListener('mousemove', (e) => {
                 const svg = e.currentTarget;
                 const rect = svg.getBoundingClientRect();
