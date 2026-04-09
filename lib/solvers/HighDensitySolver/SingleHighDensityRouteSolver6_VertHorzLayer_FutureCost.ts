@@ -1,4 +1,4 @@
-import { distance } from "@tscircuit/math-utils"
+import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
@@ -9,6 +9,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   MISALIGNED_DIST_PENALTY_FACTOR = 5
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
+  FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -49,6 +50,78 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     }
 
     return closestPoint
+  }
+
+  getFutureConnectionSegments() {
+    const segments: Array<{
+      connectionName: string
+      start: { x: number; y: number; z: number }
+      end: { x: number; y: number; z: number }
+    }> = []
+
+    for (const futureConnection of this.futureConnections) {
+      const isConnected =
+        futureConnection.connectionName === this.connectionName ||
+        (this.connMap?.areIdsConnected?.(
+          this.connectionName,
+          futureConnection.connectionName,
+        ) ??
+          false)
+      if (isConnected) continue
+
+      const [start, ...rest] = futureConnection.points
+      if (!start) continue
+
+      for (const end of rest) {
+        if (
+          Math.abs(start.x - end.x) < 1e-9 &&
+          Math.abs(start.y - end.y) < 1e-9
+        ) {
+          continue
+        }
+        segments.push({
+          connectionName: futureConnection.connectionName,
+          start,
+          end,
+        })
+      }
+    }
+
+    return segments
+  }
+
+  isViaTooCloseToFutureConnectionTrace(node: Node) {
+    const minCenterlineDistance =
+      this.viaDiameter / 2 +
+      this.traceThickness / 2 +
+      this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+
+    for (const segment of this.getFutureConnectionSegments()) {
+      if (
+        pointToSegmentDistance(node, segment.start, segment.end) <
+        minCenterlineDistance
+      ) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  override isNodeTooCloseToObstacle(
+    node: Node,
+    margin?: number,
+    isVia?: boolean,
+  ) {
+    if (super.isNodeTooCloseToObstacle(node, margin, isVia)) {
+      return true
+    }
+
+    if (isVia && this.isViaTooCloseToFutureConnectionTrace(node)) {
+      return true
+    }
+
+    return false
   }
 
   /**

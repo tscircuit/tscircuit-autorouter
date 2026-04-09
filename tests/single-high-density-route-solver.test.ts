@@ -105,3 +105,42 @@ test("SingleHighDensityRouteSolver respects availableZ when generating via neigh
 
   expect(neighbors.every((neighbor) => neighbor.z === 1)).toBe(true)
 })
+
+test("Future-cost solver rejects vias that violate future via-to-trace clearance", () => {
+  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
+    ...baseOpts,
+    A: { x: 5, y: 5, z: 0 },
+    B: { x: 7, y: 7, z: 1 },
+    obstacleRoutes: [],
+    futureConnections: [
+      {
+        connectionName: "future-conn",
+        points: [
+          { x: 0, y: 5.3, z: 0 },
+          { x: 10, y: 5.3, z: 0 },
+        ],
+      },
+    ],
+  })
+
+  const currentNode = {
+    x: 5,
+    y: 5,
+    z: 0,
+    g: 0,
+    h: 0,
+    f: 0,
+    parent: { x: 5, y: 5, z: 0, g: 0, h: 0, f: 0, parent: null },
+  }
+
+  expect(
+    solver.isNodeTooCloseToObstacle(
+      currentNode as any,
+      solver.viaDiameter / 2 + solver.obstacleMargin / 2,
+      true,
+    ),
+  ).toBe(true)
+
+  const neighbors = solver.getNeighbors(currentNode as any)
+  expect(neighbors.some((neighbor) => neighbor.z !== currentNode.z)).toBe(false)
+})

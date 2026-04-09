@@ -1,5 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
@@ -43,6 +44,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     connectionName: string
     points: { x: number; y: number; z: number }[]
   }[]
+  originalConnectionPointsByName: Map<string, ConnectionPoint[]>
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -52,6 +54,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  rerouteAttemptsByConnection: Map<string, number>
+
+  POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
+  MAX_POSTROUTE_REPAIR_ATTEMPTS = 2
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
@@ -93,12 +99,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
         { x, y, z: z ?? 0 },
       ])
     }
+    this.originalConnectionPointsByName = new Map(
+      Array.from(unsolvedConnectionsMap.entries()).map(
+        ([connectionName, points]) => [
+          connectionName,
+          dedupeConnectionPoints(points),
+        ],
+      ),
+    )
     this.unsolvedConnections = Array.from(
       unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
         connectionName,
         points: dedupeConnectionPoints(points),
       })),
     )
+    this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
       this.unsolvedConnections = cloneAndShuffleArray(
@@ -268,6 +283,83 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return true
   }
 
+  private getAvailableZLayers() {
+    if (
+      this.nodeWithPortPoints.availableZ &&
+      this.nodeWithPortPoints.availableZ.length > 0
+    ) {
+      return [...new Set(this.nodeWithPortPoints.availableZ)].sort(
+        (a, b) => a - b,
+      )
+    }
+
+    return [
+      ...new Set(
+        this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
+      ),
+    ].sort((a, b) => a - b)
+  }
+
+  private getFirstSolvedViaTraceConflict() {
+    if (this.solvedRoutes.length < 2) return null
+
+    const spatialIndex = new HighDensityRouteSpatialIndex(this.solvedRoutes)
+    const availableZ = this.getAvailableZLayers()
+
+    for (const route of this.solvedRoutes) {
+      const margin = route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE
+
+      for (const via of route.vias) {
+        for (const z of availableZ) {
+          const conflicts = spatialIndex
+            .getConflictingRoutesNearPoint({ x: via.x, y: via.y, z }, margin)
+            .filter(({ conflictingRoute }) => {
+              if (conflictingRoute.connectionName === route.connectionName) {
+                return false
+              }
+
+              return !(
+                this.connMap?.areIdsConnected(
+                  route.connectionName,
+                  conflictingRoute.connectionName,
+                ) ?? false
+              )
+            })
+
+          if (conflicts.length > 0) {
+            return {
+              route,
+              via,
+              conflictingRoute: conflicts[0]!.conflictingRoute,
+            }
+          }
+        }
+      }
+    }
+
+    return null
+  }
+
+  private queueConnectionForPostrouteRepair(connectionName: string) {
+    const points = this.originalConnectionPointsByName.get(connectionName)
+    if (!points || points.length < 2) {
+      return false
+    }
+
+    this.solvedRoutes = this.solvedRoutes.filter(
+      (route) => route.connectionName !== connectionName,
+    )
+    this.unsolvedConnections.push({
+      connectionName,
+      points: points.map((point) => ({ ...point })),
+    })
+    this.rerouteAttemptsByConnection.set(
+      connectionName,
+      (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
+    )
+    return true
+  }
+
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -287,6 +379,34 @@ export class IntraNodeRouteSolver extends BaseSolver {
     const unsolvedConnection = this.unsolvedConnections.pop()
     this.progress = this.computeProgress()
     if (!unsolvedConnection) {
+      const viaTraceConflict = this.getFirstSolvedViaTraceConflict()
+      if (viaTraceConflict) {
+        const repairAttempts =
+          this.rerouteAttemptsByConnection.get(
+            viaTraceConflict.route.connectionName,
+          ) ?? 0
+
+        if (repairAttempts >= this.MAX_POSTROUTE_REPAIR_ATTEMPTS) {
+          this.error = [
+            "Post-route via/trace clearance repair exceeded retry budget",
+            `route: ${viaTraceConflict.route.connectionName}`,
+            `conflicts with: ${viaTraceConflict.conflictingRoute.connectionName}`,
+            `via: (${viaTraceConflict.via.x.toFixed(3)}, ${viaTraceConflict.via.y.toFixed(3)})`,
+          ].join("\n")
+          this.failed = true
+          return
+        }
+
+        if (
+          this.queueConnectionForPostrouteRepair(
+            viaTraceConflict.route.connectionName,
+          )
+        ) {
+          this.progress = this.computeProgress()
+          return
+        }
+      }
+
       this.solved = this.failedSubSolvers.length === 0
       return
     }
