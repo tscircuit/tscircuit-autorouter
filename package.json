@@ -68,12 +68,12 @@
     "use-mouse-matrix-transform": "^1.3.0",
     "vite": "^6.0.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063"
+    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
+    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/6319503e55acec103ee7439891a71b7c81fcd90c"
   },
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.25",
     "fast-json-stable-stringify": "^2.1.0",
-    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/6319503e55acec103ee7439891a71b7c81fcd90c",
     "object-hash": "^3.0.0"
   }
 }
