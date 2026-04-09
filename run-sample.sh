@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-bun scripts/run-sample.ts "$@"
+exec bun run scripts/run-sample.ts "$@"

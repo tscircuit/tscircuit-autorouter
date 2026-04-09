@@ -45,6 +45,7 @@ export class PipelineStageDebugRunner<
   readonly pngWidth: number
   readonly pngHeight: number
   readonly context: Record<string, string | number | boolean | null | undefined>
+  readonly onLog?: (line: string) => void
 
   private readonly stageArtifacts: PipelineStageArtifact[] = []
 
@@ -54,6 +55,7 @@ export class PipelineStageDebugRunner<
     pngWidth?: number
     pngHeight?: number
     context?: Record<string, string | number | boolean | null | undefined>
+    onLog?: (line: string) => void
   }) {
     this.pipelineSolver = opts.pipelineSolver
     this.outputDir = opts.outputDir
@@ -61,6 +63,7 @@ export class PipelineStageDebugRunner<
     this.pngWidth = opts.pngWidth ?? 1536
     this.pngHeight = opts.pngHeight ?? 1536
     this.context = opts.context ?? {}
+    this.onLog = opts.onLog
   }
 
   async run(): Promise<PipelineStageDebugRunnerResult> {
@@ -219,6 +222,7 @@ export class PipelineStageDebugRunner<
   }
 
   private async log(line: string) {
+    this.onLog?.(line)
     await appendFile(this.logsPath, `${line}\n`)
   }
 

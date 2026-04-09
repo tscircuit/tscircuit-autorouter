@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { mkdir, readdir, readFile } from "node:fs/promises"
+import { appendFile, mkdir, readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import {
   AutoroutingPipeline1_OriginalUnravel,
@@ -8,10 +8,13 @@ import {
   AutoroutingPipelineSolver3_HgPortPointPathing,
   AutoroutingPipelineSolver4,
 } from "../lib"
+import { RELAXED_DRC_OPTIONS } from "../lib/testing/drcPresets"
+import { getDrcErrors } from "../lib/testing/getDrcErrors"
 import {
   PipelineStageDebugRunner,
   type StageDebuggablePipelineSolver,
 } from "../lib/testing/PipelineStageDebugRunner"
+import { convertToCircuitJson } from "../lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "../lib/types/srj-types"
 import {
   DATASET_NAMES,
@@ -27,10 +30,15 @@ type SolverOptions = {
   effort?: number
 }
 
+type PipelineRunSolver = StageDebuggablePipelineSolver & {
+  srjWithPointPairs?: SimpleRouteJson
+  getOutputSimplifiedPcbTraces?: () => unknown[]
+}
+
 type PipelineSolverConstructor = new (
   srj: SimpleRouteJson,
   opts?: SolverOptions,
-) => StageDebuggablePipelineSolver
+) => PipelineRunSolver
 
 type RunSampleOptions = {
   pipeline: PipelineId
@@ -98,6 +106,142 @@ const parsePositiveInt = (rawValue: string, flagName: string) => {
     throw new Error(`${flagName} must be a positive integer`)
   }
   return value
+}
+
+const toRelativePath = (targetPath: string) => {
+  const relativePath = path.relative(process.cwd(), targetPath)
+  if (relativePath === "") {
+    return "."
+  }
+  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`
+}
+
+const formatPoint = (point: { x: number; y: number } | null) => {
+  if (!point) {
+    return "n/a"
+  }
+  return `(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`
+}
+
+const getApproximateErrorLocation = (
+  error: Record<string, unknown>,
+  circuitJson: Array<Record<string, unknown>>,
+) => {
+  if (
+    "center" in error &&
+    error.center &&
+    typeof error.center === "object" &&
+    "x" in error.center &&
+    "y" in error.center
+  ) {
+    const center = error.center as { x: number; y: number }
+    return { x: center.x, y: center.y }
+  }
+
+  if (typeof error.pcb_trace_id === "string") {
+    const trace = circuitJson.find(
+      (element) =>
+        element.type === "pcb_trace" &&
+        element.pcb_trace_id === error.pcb_trace_id,
+    )
+    const route = Array.isArray(trace?.route) ? trace.route : []
+    const points = route.flatMap((segment) => {
+      if (
+        segment &&
+        typeof segment === "object" &&
+        typeof segment.x === "number" &&
+        typeof segment.y === "number"
+      ) {
+        return [{ x: segment.x, y: segment.y }]
+      }
+      return []
+    })
+
+    if (points.length > 0) {
+      const sum = points.reduce(
+        (acc, point) => ({
+          x: acc.x + point.x,
+          y: acc.y + point.y,
+        }),
+        { x: 0, y: 0 },
+      )
+      return {
+        x: sum.x / points.length,
+        y: sum.y / points.length,
+      }
+    }
+  }
+
+  const pcbPortIds = Array.isArray(error.pcb_port_ids)
+    ? error.pcb_port_ids.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : []
+  if (pcbPortIds.length > 0) {
+    const ports = circuitJson.filter(
+      (element) =>
+        element.type === "pcb_port" &&
+        typeof element.pcb_port_id === "string" &&
+        pcbPortIds.includes(element.pcb_port_id) &&
+        typeof element.x === "number" &&
+        typeof element.y === "number",
+    ) as Array<Record<string, number>>
+
+    if (ports.length > 0) {
+      const sum = ports.reduce(
+        (acc, port) => ({
+          x: acc.x + port.x,
+          y: acc.y + port.y,
+        }),
+        { x: 0, y: 0 },
+      )
+      return {
+        x: sum.x / ports.length,
+        y: sum.y / ports.length,
+      }
+    }
+  }
+
+  return null
+}
+
+const formatDrcIdentifiers = (error: Record<string, unknown>) => {
+  const idFields = [
+    "pcb_error_id",
+    "pcb_placement_error_id",
+    "source_trace_id",
+    "pcb_trace_id",
+    "source_port_id",
+  ] as const
+
+  const parts = idFields.flatMap((fieldName) => {
+    const value = error[fieldName]
+    return typeof value === "string" && value.length > 0
+      ? [`${fieldName}=${value}`]
+      : []
+  })
+
+  const pcbPortIds = Array.isArray(error.pcb_port_ids)
+    ? error.pcb_port_ids.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : []
+  if (pcbPortIds.length > 0) {
+    parts.push(`pcb_port_ids=${pcbPortIds.join(",")}`)
+  }
+
+  return parts.join(" ")
+}
+
+const emitLogLines = async (
+  logsPath: string,
+  lines: string[],
+  onLog?: (line: string) => void,
+) => {
+  for (const line of lines) {
+    onLog?.(line)
+  }
+  await appendFile(logsPath, `${lines.join("\n")}\n`)
 }
 
 const parseArgs = (): RunSampleOptions => {
@@ -208,7 +352,7 @@ const loadSrjFromPath = async (srjPath: string) => {
   return {
     scenario: srj,
     scenarioName: path.basename(absolutePath, path.extname(absolutePath)),
-    sourceLabel: absolutePath,
+    sourceLabel: toRelativePath(absolutePath),
   }
 }
 
@@ -252,6 +396,9 @@ const main = async () => {
   const pipelineSolver = new pipelineConfig.SolverConstructor(input.scenario, {
     effort: options.effort,
   })
+  const onLog = (line: string) => {
+    console.log(line)
+  }
 
   const runner = new PipelineStageDebugRunner({
     pipelineSolver,
@@ -266,15 +413,77 @@ const main = async () => {
       scenarioName: input.scenarioName,
       srjSource: input.sourceLabel,
     },
+    onLog,
   })
 
   const result = await runner.run()
+  let relaxedDrcPassed: boolean | null = null
+  let drcErrors: Array<Record<string, unknown>> = []
 
-  console.log(`Debug run written to ${result.outputDir}`)
-  console.log(`Logs: ${result.logsPath}`)
+  if (result.solved && !result.failed) {
+    const traces = pipelineSolver.getOutputSimplifiedPcbTraces?.() ?? []
+    const circuitJson = convertToCircuitJson(
+      pipelineSolver.srjWithPointPairs ?? input.scenario,
+      traces as any,
+      input.scenario.minTraceWidth,
+      input.scenario.minViaDiameter,
+    ) as Array<Record<string, unknown>>
+    const drcResult = getDrcErrors(circuitJson as any, RELAXED_DRC_OPTIONS)
+    relaxedDrcPassed = drcResult.errors.length === 0
+    drcErrors = drcResult.errorsWithCenters.map((error) => ({
+      ...(error as Record<string, unknown>),
+      resolvedLocation: getApproximateErrorLocation(
+        error as Record<string, unknown>,
+        circuitJson,
+      ),
+    }))
+
+    await emitLogLines(
+      result.logsPath,
+      [
+        "postrun",
+        `drc.relaxedPassed=${relaxedDrcPassed}`,
+        `drc.errorCount=${drcErrors.length}`,
+        ...drcErrors.map((error, index) => {
+          const message =
+            typeof error.message === "string"
+              ? error.message.replace(/\s+/g, " ").trim()
+              : ""
+          const location = formatPoint(
+            (error.resolvedLocation as { x: number; y: number } | null) ?? null,
+          )
+          const identifiers = formatDrcIdentifiers(error)
+          return `drc[${index + 1}] type=${error.error_type ?? error.type ?? "unknown"} location=${location} ${identifiers} message=${JSON.stringify(message)}`
+        }),
+      ],
+      onLog,
+    )
+  } else {
+    await emitLogLines(
+      result.logsPath,
+      ["postrun", "drc.relaxedPassed=n/a", "drc.errorCount=n/a"],
+      onLog,
+    )
+  }
+
+  const success = result.solved && !result.failed
+  const drcSummary =
+    relaxedDrcPassed === null ? "not-run" : relaxedDrcPassed ? "pass" : "fail"
+
+  console.log(`Success: ${success ? "yes" : "no"}`)
+  console.log(`Relaxed DRC: ${drcSummary}`)
+  console.log(
+    `DRC errors: ${relaxedDrcPassed === null ? "n/a" : String(drcErrors.length)}`,
+  )
+  console.log(`Output dir: ${toRelativePath(result.outputDir)}`)
+  console.log(`Logs: ${toRelativePath(result.logsPath)}`)
   console.log(`Stage PNGs: ${result.stageArtifacts.length}`)
 
-  if (!result.solved || result.failed) {
+  if (drcErrors.length > 0) {
+    console.log(`DRC details written to: ${toRelativePath(result.logsPath)}`)
+  }
+
+  if (!success) {
     console.error(result.error ?? "Pipeline run failed")
     process.exit(1)
   }
