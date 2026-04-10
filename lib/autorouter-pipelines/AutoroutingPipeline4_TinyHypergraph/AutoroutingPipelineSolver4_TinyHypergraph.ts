@@ -291,30 +291,30 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       ]
     }),
     definePipelineStep(
-      "highDensityForceImproveSolver",
-      Pipeline4HighDensityForceImproveSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: cms.highDensityRouteSolver!.routes,
-          colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
-          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-        },
-      ],
-    ),
-    definePipelineStep(
       "highDensityRepairSolver",
       Pipeline4HighDensityRepairSolver,
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes:
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: cms.highDensityRouteSolver!.routes,
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "highDensityForceImproveSolver",
+      Pipeline4HighDensityForceImproveSolver,
+      (cms) => [
+        {
+          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          hdRoutes:
+            cms.highDensityRepairSolver?.getOutput() ??
+            cms.highDensityRouteSolver!.routes,
+          colorMap: cms.colorMap,
+          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
+          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
     ),
@@ -325,8 +325,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           connections: cms.srjWithPointPairs!.connections,
           hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
+            cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,

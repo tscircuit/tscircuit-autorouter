@@ -87,14 +87,14 @@ test(
     )
     expect(outputFiles).toContain("logs.txt")
     expect(outputFiles).toContain("stage01-netToPointPairsSolver.png")
-    expect(outputFiles).toContain("stage10-highDensityForceImproveSolver.png")
-    expect(outputFiles).toContain("stage11-highDensityRepairSolver.png")
+    expect(outputFiles).toContain("stage10-highDensityRepairSolver.png")
+    expect(outputFiles).toContain("stage11-highDensityForceImproveSolver.png")
     expect(outputFiles).toContain("stage14-traceWidthSolver.png")
     expect(logs).toContain("enter stage=1 name=netToPointPairsSolver")
+    expect(logs).toContain("captured stage=10 name=highDensityRepairSolver")
     expect(logs).toContain(
-      "captured stage=10 name=highDensityForceImproveSolver",
+      "captured stage=11 name=highDensityForceImproveSolver",
     )
-    expect(logs).toContain("captured stage=11 name=highDensityRepairSolver")
     expect(
       statSync(path.join(outputDir, "stage14-traceWidthSolver.png")).size,
     ).toBeGreaterThan(0)
