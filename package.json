@@ -52,9 +52,6 @@
     "graphics-debug": "0.0.90",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
     "high-density-repair01": "git+https://github.com/ShiboSoftwareDev/high-density-repair01.git#f616c2e67643b84ce0cef6094caaac08b9b69f44",
-    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/6319503e55acec103ee7439891a71b7c81fcd90c",
-    "kleur": "^4.1.5",
-    "looks-same": "9",
     "rbush": "^4.0.1",
     "react": "18",
     "react-cosmos": "^6.2.3",
@@ -70,7 +67,8 @@
     "use-mouse-matrix-transform": "^1.3.0",
     "vite": "^6.0.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063"
+    "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
+    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/c3ef7d046064d5219c5246f58bb126ba053474b9"
   },
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.25",
