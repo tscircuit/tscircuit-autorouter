@@ -51,7 +51,7 @@
     "flatbush": "^4.4.0",
     "graphics-debug": "0.0.90",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
-    "high-density-repair01": "git+https://github.com/ShiboSoftwareDev/high-density-repair01.git#f616c2e67643b84ce0cef6094caaac08b9b69f44",
+    "high-density-repair01": "git+https://github.com/ShiboSoftwareDev/high-density-repair01.git#ccb691a344f218e449e45beb504ca34b15ff62dd",
     "rbush": "^4.0.1",
     "react": "18",
     "react-cosmos": "^6.2.3",
