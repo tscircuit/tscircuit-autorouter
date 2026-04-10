@@ -27,7 +27,7 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
     .circuit015 as SimpleRouteJson
   const pipeline = new AutoroutingPipelineSolver4(structuredClone(circuit015))
 
-  pipeline.solveUntilPhase("highDensityRepairSolver")
+  pipeline.solveUntilPhase("highDensityForceImproveSolver")
 
   expect(pipeline.highDensityRouteSolver?.solved).toBe(true)
   expect(pipeline.highDensityRouteSolver?.failed).toBe(false)
