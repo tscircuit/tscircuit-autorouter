@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
+import { Pipeline4HighDensityForceImproveSolver } from "lib/solvers/HighDensityForceImproveSolver/Pipeline4HighDensityForceImproveSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type {
   HighDensityRoute,
@@ -77,17 +78,67 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
   expect(solver.getOutput()).toEqual([hdRoute])
 })
 
-test("pipeline4 inserts repair stage after high density and before stitching", () => {
+test("Pipeline4HighDensityForceImproveSolver preserves simple no-op routes", () => {
+  const solver = new Pipeline4HighDensityForceImproveSolver({
+    nodeWithPortPoints: [nodeWithPortPoints],
+    hdRoutes: [hdRoute],
+    totalStepsPerNode: 20,
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.getOutput()).toEqual([hdRoute])
+})
+
+test("pipeline4 inserts force-improve stage after high density and before repair", () => {
   const solver = new AutoroutingPipelineSolver4(srj)
   const phaseNames = solver.pipelineDef.map((step) => step.solverName)
 
   expect(phaseNames.indexOf("highDensityRouteSolver")).toBeGreaterThanOrEqual(0)
-  expect(phaseNames.indexOf("highDensityRepairSolver")).toBe(
+  expect(phaseNames.indexOf("highDensityForceImproveSolver")).toBe(
     phaseNames.indexOf("highDensityRouteSolver") + 1,
+  )
+  expect(phaseNames.indexOf("highDensityRepairSolver")).toBe(
+    phaseNames.indexOf("highDensityForceImproveSolver") + 1,
   )
   expect(phaseNames.indexOf("highDensityStitchSolver")).toBe(
     phaseNames.indexOf("highDensityRepairSolver") + 1,
   )
+})
+
+test("pipeline4 repair stage consumes force-improved routes", () => {
+  const solver = new AutoroutingPipelineSolver4(srj)
+  const rawRoute: HighDensityRoute = {
+    ...hdRoute,
+    route: [
+      { x: -0.5, y: 0, z: 0 },
+      { x: 0, y: 0, z: 0 },
+      { x: 0.5, y: 0, z: 0 },
+    ],
+  }
+  const improvedRoute: HighDensityRoute = {
+    ...hdRoute,
+    route: [
+      { x: -0.5, y: 0, z: 0 },
+      { x: 0, y: 0.15, z: 0 },
+      { x: 0.5, y: 0, z: 0 },
+    ],
+  }
+
+  solver.srjWithPointPairs = srj
+  solver.highDensityRouteSolver = { routes: [rawRoute] } as any
+  solver.highDensityForceImproveSolver = {
+    getOutput: () => [improvedRoute],
+  } as any
+
+  const repairStep = solver.pipelineDef.find(
+    (step) => step.solverName === "highDensityRepairSolver",
+  )
+  const [repairParams] = repairStep!.getConstructorParams(solver) as any
+
+  expect(repairParams.hdRoutes).toEqual([improvedRoute])
 })
 
 test("pipeline4 stitch stage consumes repaired high density routes", () => {
