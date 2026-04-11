@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
-import { Pipeline4HighDensityForceImproveSolver } from "lib/solvers/HighDensityForceImproveSolver/Pipeline4HighDensityForceImproveSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { SimpleRouteJson } from "lib/types"
+import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 
 const srj: SimpleRouteJson = {
   layerCount: 2,
@@ -79,7 +79,7 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
 })
 
 test("Pipeline4HighDensityForceImproveSolver preserves simple no-op routes", () => {
-  const solver = new Pipeline4HighDensityForceImproveSolver({
+  const solver = new HighDensityForceImproveSolver({
     nodeWithPortPoints: [nodeWithPortPoints],
     hdRoutes: [hdRoute],
     totalStepsPerNode: 20,
