@@ -1,4 +1,9 @@
-import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
+import {
+  distance,
+  doSegmentsIntersect,
+  getSegmentIntersection,
+  pointToBoxDistance,
+} from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import {
   type ConnectionPoint,
@@ -11,12 +16,17 @@ import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetween
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { getPointKey } from "lib/utils/getPointKey"
+import {
+  doesSegmentCrossPolygonBoundary,
+  isPointInOrOnPolygon,
+} from "lib/utils/polygonContainment"
 import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
 
 const ESCAPE_POINT_ID_PREFIX = "escape-via:"
 const GEOMETRIC_TOLERANCE = 1e-4
+const MAX_PROJECTED_FREE_SPACE_BONUS = 3
 
 type Point2D = {
   x: number
@@ -278,12 +288,20 @@ export class EscapeViaLocationSolver extends BaseSolver {
   }
 
   private isInsideBoard(candidate: Point2D): boolean {
-    return (
+    const withinBounds =
       candidate.x >= this.ogSrj.bounds.minX + this.viaRadius &&
       candidate.x <= this.ogSrj.bounds.maxX - this.viaRadius &&
       candidate.y >= this.ogSrj.bounds.minY + this.viaRadius &&
       candidate.y <= this.ogSrj.bounds.maxY - this.viaRadius
-    )
+    if (!withinBounds) {
+      return false
+    }
+
+    if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
+      return isPointInOrOnPolygon(candidate, this.ogSrj.outline)
+    }
+
+    return true
   }
 
   private hasClearEscapePath(params: {
@@ -293,6 +311,19 @@ export class EscapeViaLocationSolver extends BaseSolver {
     sourceObstacle?: Obstacle
   }): boolean {
     const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params
+    if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
+      const crossesOutline = doesSegmentCrossPolygonBoundary({
+        start: sourcePoint,
+        end: candidate,
+        polygon: this.ogSrj.outline,
+        margin: this.requiredTraceClearance,
+      })
+
+      if (crossesOutline) {
+        return false
+      }
+    }
+
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
       if (!obstacle.layers.includes(sourceLayer)) continue
@@ -319,6 +350,191 @@ export class EscapeViaLocationSolver extends BaseSolver {
     }
 
     return true
+  }
+
+  private getBoardBoundarySegments(): Array<{ start: Point2D; end: Point2D }> {
+    if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
+      return this.ogSrj.outline.map((start, index) => ({
+        start,
+        end: this.ogSrj.outline![(index + 1) % this.ogSrj.outline!.length]!,
+      }))
+    }
+
+    const { minX, maxX, minY, maxY } = this.ogSrj.bounds
+    return [
+      {
+        start: { x: minX, y: minY },
+        end: { x: maxX, y: minY },
+      },
+      {
+        start: { x: maxX, y: minY },
+        end: { x: maxX, y: maxY },
+      },
+      {
+        start: { x: maxX, y: maxY },
+        end: { x: minX, y: maxY },
+      },
+      {
+        start: { x: minX, y: maxY },
+        end: { x: minX, y: minY },
+      },
+    ]
+  }
+
+  private getRayProbeDistance(): number {
+    const { minX, maxX, minY, maxY } = this.ogSrj.bounds
+    return Math.hypot(maxX - minX, maxY - minY) * 2 + this.viaDiameter
+  }
+
+  private getRayIntersectionDistance(params: {
+    rayStart: Point2D
+    rayEnd: Point2D
+    segmentStart: Point2D
+    segmentEnd: Point2D
+  }): number | null {
+    const { rayStart, rayEnd, segmentStart, segmentEnd } = params
+    if (!doSegmentsIntersect(rayStart, rayEnd, segmentStart, segmentEnd)) {
+      return null
+    }
+
+    const intersection = getSegmentIntersection(
+      rayStart,
+      rayEnd,
+      segmentStart,
+      segmentEnd,
+    )
+
+    if (!intersection) {
+      return null
+    }
+
+    const hitDistance = distance(rayStart, intersection)
+    if (hitDistance <= GEOMETRIC_TOLERANCE) {
+      return null
+    }
+
+    return hitDistance
+  }
+
+  private getProjectedFreeSpace(params: {
+    sourcePoint: ConnectionPoint
+    candidate: Point2D
+    sourceLayer: string
+    sourceObstacle?: Obstacle
+  }): number {
+    const { sourcePoint, candidate } = params
+    const dx = candidate.x - sourcePoint.x
+    const dy = candidate.y - sourcePoint.y
+
+    if (
+      Math.abs(dx) <= GEOMETRIC_TOLERANCE ||
+      Math.abs(dy) <= GEOMETRIC_TOLERANCE
+    ) {
+      return this.getProjectedFreeSpaceAlongDirection({
+        ...params,
+        direction: {
+          x: dx,
+          y: dy,
+        },
+        travelDistance: distance(sourcePoint, candidate),
+      })
+    }
+
+    return Math.min(
+      this.getProjectedFreeSpaceAlongDirection({
+        ...params,
+        direction: {
+          x: 0,
+          y: Math.sign(dy),
+        },
+        travelDistance: Math.abs(dy),
+      }),
+      this.getProjectedFreeSpaceAlongDirection({
+        ...params,
+        direction: {
+          x: Math.sign(dx),
+          y: Math.sign(dy),
+        },
+        travelDistance: distance(sourcePoint, candidate),
+      }),
+      this.getProjectedFreeSpaceAlongDirection({
+        ...params,
+        direction: {
+          x: Math.sign(dx),
+          y: 0,
+        },
+        travelDistance: Math.abs(dx),
+      }),
+    )
+  }
+
+  private getProjectedFreeSpaceAlongDirection(params: {
+    sourcePoint: ConnectionPoint
+    candidate: Point2D
+    sourceLayer: string
+    sourceObstacle?: Obstacle
+    direction: Point2D
+    travelDistance: number
+  }): number {
+    const {
+      sourcePoint,
+      sourceLayer,
+      sourceObstacle,
+      direction,
+      travelDistance,
+    } = params
+    const directionLength = Math.hypot(direction.x, direction.y)
+    if (
+      directionLength <= GEOMETRIC_TOLERANCE ||
+      travelDistance <= GEOMETRIC_TOLERANCE
+    ) {
+      return 0
+    }
+
+    const probeDistance = this.getRayProbeDistance()
+    const directionX = direction.x / directionLength
+    const directionY = direction.y / directionLength
+    const rayEnd = {
+      x: sourcePoint.x + directionX * probeDistance,
+      y: sourcePoint.y + directionY * probeDistance,
+    }
+
+    let firstHitDistance = Number.POSITIVE_INFINITY
+
+    for (const obstacle of this.ogSrj.obstacles) {
+      if (obstacle === sourceObstacle) continue
+      if (!obstacle.layers.includes(sourceLayer)) continue
+
+      for (const segment of obstacleToSegments(obstacle)) {
+        const hitDistance = this.getRayIntersectionDistance({
+          rayStart: sourcePoint,
+          rayEnd,
+          segmentStart: segment.start,
+          segmentEnd: segment.end,
+        })
+        if (hitDistance !== null) {
+          firstHitDistance = Math.min(firstHitDistance, hitDistance)
+        }
+      }
+    }
+
+    for (const segment of this.getBoardBoundarySegments()) {
+      const hitDistance = this.getRayIntersectionDistance({
+        rayStart: sourcePoint,
+        rayEnd,
+        segmentStart: segment.start,
+        segmentEnd: segment.end,
+      })
+      if (hitDistance !== null) {
+        firstHitDistance = Math.min(firstHitDistance, hitDistance)
+      }
+    }
+
+    if (!Number.isFinite(firstHitDistance)) {
+      return 0
+    }
+
+    return Math.max(0, firstHitDistance - travelDistance)
   }
 
   private getMinBlockingClearance(params: {
@@ -483,11 +699,23 @@ export class EscapeViaLocationSolver extends BaseSolver {
         ) {
           continue
         }
+        const projectedFreeSpace = this.getProjectedFreeSpace({
+          sourcePoint: point,
+          candidate,
+          sourceLayer,
+          sourceObstacle,
+        })
+        const cappedProjectedFreeSpace = Math.min(
+          projectedFreeSpace,
+          MAX_PROJECTED_FREE_SPACE_BONUS,
+        )
+        const distanceToCandidate = distance(point, candidate)
 
         const score =
           minClearance * 100 -
-          distance(point, candidate) -
+          distanceToCandidate -
           Math.abs(targetZ - sourceZ) * 0.5 +
+          cappedProjectedFreeSpace * 2 +
           (Number.isFinite(minPlacedEscapeViaClearance)
             ? Math.min(
                 minPlacedEscapeViaClearance,
