@@ -93,6 +93,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       },
       { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
     )
+    const routeSegmentMargin = this.OBSTACLE_MARGIN + this.TRACE_THICKNESS
     const boundsBox = {
       center: {
         x: (bounds.minX + bounds.maxX) / 2,
@@ -144,16 +145,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           const start = route[i]
           const end = route[i + 1]
 
-          const minX = Math.min(start.x, end.x)
-          const maxX = Math.max(start.x, end.x)
-          const minY = Math.min(start.y, end.y)
-          const maxY = Math.max(start.y, end.y)
-
           if (
-            minX <= bounds.maxX &&
-            maxX >= bounds.minX &&
-            minY <= bounds.maxY &&
-            maxY >= bounds.minY
+            segmentToBoundsMinDistance(start, end, bounds) <= routeSegmentMargin
           ) {
             segments.push([start, end])
           }
