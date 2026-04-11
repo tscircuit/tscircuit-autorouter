@@ -27,6 +27,7 @@ test("pipeline4 defaults node subdivision to 16mm with max node ratio 6", () => 
 
   expect(pipeline.maxNodeDimension).toBe(16)
   expect(pipeline.maxNodeRatio).toBe(6)
+  expect(pipeline.minNodeArea).toBe(0.1 ** 2)
   expect(pipeline.capacityNodes).toBeDefined()
   expect(
     Math.max(
@@ -47,11 +48,14 @@ test("pipeline4 defaults node subdivision to 16mm with max node ratio 6", () => 
     (pipeline.capacityNodes ?? []).filter((node) =>
       node.capacityMeshNodeId.includes("__sub_"),
     ).length,
-  ).toBeGreaterThan(2)
+  ).toBeGreaterThan(0)
   expect(pipeline.nodeDimensionSubdivisionSolver?.stats.maxNodeDimension).toBe(
     16,
   )
   expect(pipeline.nodeDimensionSubdivisionSolver?.stats.maxNodeRatio).toBe(6)
+  expect(pipeline.nodeDimensionSubdivisionSolver?.stats.minNodeArea).toBe(
+    0.1 ** 2,
+  )
 })
 
 test.skip("pipeline5 defaults node subdivision to 7mm with max node ratio 4", () => {

@@ -52,6 +52,7 @@ interface CapacityMeshSolverOptions {
   effort?: number
   maxNodeDimension?: number
   maxNodeRatio?: number
+  minNodeArea?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -114,6 +115,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   effort: number
   maxNodeDimension: number
   maxNodeRatio: number
+  minNodeArea: number
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -175,7 +177,12 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     definePipelineStep(
       "nodeDimensionSubdivisionSolver",
       NodeDimensionSubdivisionSolver,
-      (cms) => [cms.capacityNodes!, cms.maxNodeDimension, cms.maxNodeRatio],
+      (cms) => [
+        cms.capacityNodes!,
+        cms.maxNodeDimension,
+        cms.maxNodeRatio,
+        cms.minNodeArea,
+      ],
       {
         onSolved: (cms) => {
           cms.capacityNodes =
@@ -399,6 +406,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     this.effort = mutableOpts.effort ?? 1
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
+    this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = srj.bounds.maxX - srj.bounds.minX

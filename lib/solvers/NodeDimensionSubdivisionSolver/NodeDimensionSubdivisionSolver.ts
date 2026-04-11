@@ -2,6 +2,8 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 
+const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
+
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
 
@@ -9,6 +11,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     private readonly nodes: CapacityMeshNode[],
     private readonly maxNodeDimension: number,
     private readonly maxNodeRatio: number = Number.POSITIVE_INFINITY,
+    private readonly minNodeArea: number = DEFAULT_MIN_NODE_AREA,
   ) {
     super()
     this.outputNodes = []
@@ -58,7 +61,18 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     return { cols, rows }
   }
 
+  private shouldRemoveNode(node: CapacityMeshNode): boolean {
+    const hasMinAreaLimit =
+      Number.isFinite(this.minNodeArea) && this.minNodeArea > 0
+
+    return hasMinAreaLimit && node.width * node.height < this.minNodeArea
+  }
+
   private subdivideNode(node: CapacityMeshNode): CapacityMeshNode[] {
+    if (this.shouldRemoveNode(node)) {
+      return []
+    }
+
     const { cols, rows } = this.getSubdivisionGrid(node)
 
     if (cols === 1 && rows === 1) {
@@ -94,9 +108,15 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
   override _step() {
     const inputCount = this.nodes.length
     let subdividedNodeCount = 0
+    let removedSmallNodeCount = 0
 
     for (const node of this.nodes) {
       const subdividedNodes = this.subdivideNode(node)
+      if (subdividedNodes.length === 0) {
+        removedSmallNodeCount++
+        continue
+      }
+
       if (subdividedNodes.length > 1) {
         subdividedNodeCount++
       }
@@ -107,8 +127,10 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       inputNodeCount: inputCount,
       outputNodeCount: this.outputNodes.length,
       subdividedNodeCount,
+      removedSmallNodeCount,
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
+      minNodeArea: this.minNodeArea,
     }
     this.solved = true
   }

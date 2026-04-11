@@ -7,6 +7,7 @@ import { AutoroutingPipelineSolver } from "../../../lib"
 import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import type { SimpleRouteJson } from "../../../lib/types"
 import { isPointInRect } from "../../../lib/utils/isPointInRect"
+import { mapLayerNameToZ } from "../../../lib/utils/mapLayerNameToZ"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -78,12 +79,46 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
   const requiredViaSpacing =
     (srj.minViaDiameter ?? 0.3) + (srj.defaultObstacleMargin ?? 0.15)
   const allEscapePoints = [...vccEscapePoints, ...gndEscapePoints]
+  const escapeViaObstacles = output.obstacles.filter((obstacle) =>
+    obstacle.obstacleId?.startsWith("escape-via-obstacle:"),
+  )
+
+  expect(escapeViaObstacles).toHaveLength(allEscapePoints.length)
+
   for (let i = 0; i < allEscapePoints.length; i++) {
     for (let j = i + 1; j < allEscapePoints.length; j++) {
       expect(
         distance(allEscapePoints[i]!, allEscapePoints[j]!),
       ).toBeGreaterThan(requiredViaSpacing - 1e-3)
     }
+  }
+
+  for (const point of allEscapePoints) {
+    const metadata = metadataByPointId.get(point.pointId!)
+    expect(metadata).toBeDefined()
+
+    const escapeViaObstacle = output.obstacles.find(
+      (obstacle) =>
+        obstacle.obstacleId === `escape-via-obstacle:${point.pointId}`,
+    )
+    expect(escapeViaObstacle).toBeDefined()
+    expect(escapeViaObstacle?.center.x).toBeCloseTo(point.x, 6)
+    expect(escapeViaObstacle?.center.y).toBeCloseTo(point.y, 6)
+    expect(escapeViaObstacle?.width).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6)
+    expect(escapeViaObstacle?.height).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6)
+    expect(escapeViaObstacle?.connectedTo).toContain(metadata!.connectionName)
+    expect(escapeViaObstacle?.layers).toContain(metadata!.sourceLayer)
+    expect(escapeViaObstacle?.layers).toContain(metadata!.targetLayer)
+
+    const sourceZ = mapLayerNameToZ(metadata!.sourceLayer, srj.layerCount)
+    const targetZ = mapLayerNameToZ(metadata!.targetLayer, srj.layerCount)
+    const expectedZLayers = Array.from(
+      {
+        length: Math.abs(targetZ - sourceZ) + 1,
+      },
+      (_, index) => Math.min(sourceZ, targetZ) + index,
+    )
+    expect(escapeViaObstacle?.zLayers).toEqual(expectedZLayers)
   }
 })
 
