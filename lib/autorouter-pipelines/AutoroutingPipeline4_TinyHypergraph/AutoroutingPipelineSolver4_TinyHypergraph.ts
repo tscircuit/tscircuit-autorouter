@@ -31,7 +31,7 @@ import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/Capacit
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
-import { Pipeline4HighDensityForceImproveSolver } from "../../solvers/HighDensityForceImproveSolver/Pipeline4HighDensityForceImproveSolver"
+import { Pipeline4HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
