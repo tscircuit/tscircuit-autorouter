@@ -98,7 +98,8 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
     expect(metadata).toBeDefined()
 
     const escapeViaObstacle = output.obstacles.find(
-      (obstacle) => obstacle.obstacleId === `escape-via-obstacle:${point.pointId}`,
+      (obstacle) =>
+        obstacle.obstacleId === `escape-via-obstacle:${point.pointId}`,
     )
     expect(escapeViaObstacle).toBeDefined()
     expect(escapeViaObstacle?.center.x).toBeCloseTo(point.x, 6)

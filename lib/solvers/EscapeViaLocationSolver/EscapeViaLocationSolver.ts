@@ -149,7 +149,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
     )
   }
 
-  private getViaSpanLayers(sourceLayer: string, targetLayer: string): {
+  private getViaSpanLayers(
+    sourceLayer: string,
+    targetLayer: string,
+  ): {
     layers: string[]
     zLayers: number[]
   } {
@@ -157,8 +160,9 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
     const minZ = Math.min(sourceZ, targetZ)
     const maxZ = Math.max(sourceZ, targetZ)
-    const zLayers = Array.from({ length: maxZ - minZ + 1 }, (_, index) =>
-      minZ + index,
+    const zLayers = Array.from(
+      { length: maxZ - minZ + 1 },
+      (_, index) => minZ + index,
     )
 
     return {
