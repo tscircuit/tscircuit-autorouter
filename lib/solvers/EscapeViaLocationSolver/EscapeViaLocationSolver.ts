@@ -15,6 +15,7 @@ import {
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getPointKey } from "lib/utils/getPointKey"
 import {
   doesSegmentCrossPolygonBoundary,
@@ -146,6 +147,49 @@ export class EscapeViaLocationSolver extends BaseSolver {
     return obstacle.layers.map((layer) =>
       mapLayerNameToZ(layer, this.ogSrj.layerCount),
     )
+  }
+
+  private getViaSpanLayers(sourceLayer: string, targetLayer: string): {
+    layers: string[]
+    zLayers: number[]
+  } {
+    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
+    const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
+    const minZ = Math.min(sourceZ, targetZ)
+    const maxZ = Math.max(sourceZ, targetZ)
+    const zLayers = Array.from({ length: maxZ - minZ + 1 }, (_, index) =>
+      minZ + index,
+    )
+
+    return {
+      zLayers,
+      layers: zLayers.map((z) => mapZToLayerName(z, this.ogSrj.layerCount)),
+    }
+  }
+
+  private createEscapeViaObstacle(params: {
+    escapeVia: EscapeViaMetadata
+    connectionNetIds: Set<string>
+  }): Obstacle {
+    const { escapeVia, connectionNetIds } = params
+    const { layers, zLayers } = this.getViaSpanLayers(
+      escapeVia.sourceLayer,
+      escapeVia.targetLayer,
+    )
+
+    return {
+      obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
+      type: "rect",
+      layers,
+      zLayers,
+      center: {
+        x: escapeVia.x,
+        y: escapeVia.y,
+      },
+      width: this.viaDiameter,
+      height: this.viaDiameter,
+      connectedTo: Array.from(connectionNetIds),
+    }
   }
 
   private selectSourceObstacle(params: {
@@ -818,6 +862,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const clonedConnectionByName = new Map(
       newConnections.map((connection) => [connection.name, connection]),
     )
+    const newObstacles = structuredClone(this.ogSrj.obstacles)
     const mergedConnections = mergeConnections([...originalConnections])
 
     for (const mergedConnection of mergedConnections) {
@@ -898,6 +943,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
           escapeViaCandidate,
         )
         this.createdEscapeVias.push(escapeViaCandidate)
+        newObstacles.push(
+          this.createEscapeViaObstacle({
+            escapeVia: escapeViaCandidate,
+            connectionNetIds: this.getConnectionNetIds(pointOwner.connection),
+          }),
+        )
 
         const pointIds = groupedEscapePointIds.get(
           escapeViaCandidate.targetPourKey,
@@ -944,6 +995,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.outputSrj = {
       ...structuredClone(this.ogSrj),
       connections: newConnections,
+      obstacles: newObstacles,
     }
     this.solved = true
   }
@@ -995,7 +1047,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
         strokeColor: "#0f766e",
         label: `${escapeVia.connectionName}\n${escapeVia.targetLayer}`,
       })),
-      rects: this.ogSrj.obstacles
+      rects: this.outputSrj.obstacles
         .filter((obstacle) => !obstacle.isCopperPour)
         .map((obstacle) => ({
           ...obstacle,
