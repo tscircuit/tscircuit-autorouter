@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test"
 import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver } from "lib"
-import bugReport from "../../fixtures/bug-reports/bugreport50-da4a24/bugreport50-da4a24.json" with {
+import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape02.json" with {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test(
-  "bugreport50-da4a24.json",
+  "pour-via-escape02.json",
   () => {
     expect(srj.layerCount).toBe(4)
     expect(

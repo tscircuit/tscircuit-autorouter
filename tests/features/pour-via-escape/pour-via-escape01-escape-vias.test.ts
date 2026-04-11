@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test"
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
-import bugReport from "../../fixtures/bug-reports/bugreport49-634662/bugreport49-634662.json" with {
+import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape01.json" with {
   type: "json",
 }
-import { AutoroutingPipelineSolver } from "../../lib"
-import { EscapeViaLocationSolver } from "../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
-import type { SimpleRouteJson } from "../../lib/types"
-import { isPointInRect } from "../../lib/utils/isPointInRect"
+import { AutoroutingPipelineSolver } from "../../../lib"
+import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
+import type { SimpleRouteJson } from "../../../lib/types"
+import { isPointInRect } from "../../../lib/utils/isPointInRect"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport49 adds escape via points for copper pour nets", () => {
+test("pour-via-escape01 adds escape via points for copper pour nets", () => {
   const solver = new EscapeViaLocationSolver(srj)
   solver.solve()
 
@@ -188,7 +188,7 @@ test("escape via placement keeps same-obstacle vias separated using obstacle siz
   }
 })
 
-test("bugreport49 serializes VCC escape vias into the pour", () => {
+test("pour-via-escape01 serializes VCC escape vias into the pour", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
 

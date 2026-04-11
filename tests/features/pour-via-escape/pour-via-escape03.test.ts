@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
-import bugReport from "../../fixtures/bug-reports/bugreport53-1ce31b/bugreport53-1ce31b.json" with {
+import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape03.json" with {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test.skip("bugreport53-1ce31b.json", () => {
+test("pour-via-escape03.json", () => {
   expect(srj.layerCount).toBe(4)
   expect(
     srj.obstacles.some(

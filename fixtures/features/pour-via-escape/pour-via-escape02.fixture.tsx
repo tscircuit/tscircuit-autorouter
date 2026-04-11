@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
-import bugReportJson from "./bugreport51-f1e2d3.json"
+import bugReportJson from "./pour-via-escape02.json"
 export default () => {
   return <AutoroutingPipelineDebugger srj={bugReportJson.simple_route_json} />
 }
