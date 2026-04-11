@@ -49,6 +49,21 @@ const srj: SimpleRouteJson = {
   },
 }
 
+const getPipeline4StageNumber = (stageName: string) => {
+  const stageIndex = new AutoroutingPipelineSolver4(srj).pipelineDef.findIndex(
+    (stage) => stage.solverName === stageName,
+  )
+
+  if (stageIndex === -1) {
+    throw new Error(`Missing pipeline4 stage: ${stageName}`)
+  }
+
+  return stageIndex + 1
+}
+
+const formatStageArtifactName = (stageNumber: number, stageName: string) =>
+  `stage${String(stageNumber).padStart(2, "0")}-${stageName}.png`
+
 test("loadScenarioBySampleNumber follows benchmark dataset ordering", async () => {
   const sample = await loadScenarioBySampleNumber("dataset01", 1)
 
@@ -79,6 +94,13 @@ test(
     const result = await runner.run()
     const outputFiles = readdirSync(outputDir).sort()
     const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
+    const netToPointPairsStage = getPipeline4StageNumber(
+      "netToPointPairsSolver",
+    )
+    const highDensityRepairStage = getPipeline4StageNumber(
+      "highDensityRepairSolver",
+    )
+    const traceWidthStage = getPipeline4StageNumber("traceWidthSolver")
 
     expect(result.solved).toBe(true)
     expect(result.failed).toBe(false)
@@ -86,17 +108,31 @@ test(
       runner.pipelineSolver.pipelineDef.length,
     )
     expect(outputFiles).toContain("logs.txt")
-    expect(outputFiles).toContain("stage01-netToPointPairsSolver.png")
-    expect(outputFiles).toContain("stage10-highDensityForceImproveSolver.png")
-    expect(outputFiles).toContain("stage11-highDensityRepairSolver.png")
-    expect(outputFiles).toContain("stage14-traceWidthSolver.png")
-    expect(logs).toContain("enter stage=1 name=netToPointPairsSolver")
-    expect(logs).toContain(
-      "captured stage=10 name=highDensityForceImproveSolver",
+    expect(outputFiles).toContain(
+      formatStageArtifactName(netToPointPairsStage, "netToPointPairsSolver"),
     )
-    expect(logs).toContain("captured stage=11 name=highDensityRepairSolver")
+    expect(outputFiles).toContain(
+      formatStageArtifactName(
+        highDensityRepairStage,
+        "highDensityRepairSolver",
+      ),
+    )
+    expect(outputFiles).toContain(
+      formatStageArtifactName(traceWidthStage, "traceWidthSolver"),
+    )
+    expect(logs).toContain(
+      `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
+    )
+    expect(logs).toContain(
+      `captured stage=${highDensityRepairStage} name=highDensityRepairSolver`,
+    )
     expect(
-      statSync(path.join(outputDir, "stage14-traceWidthSolver.png")).size,
+      statSync(
+        path.join(
+          outputDir,
+          formatStageArtifactName(traceWidthStage, "traceWidthSolver"),
+        ),
+      ).size,
     ).toBeGreaterThan(0)
   },
   { timeout: 120_000 },
@@ -137,12 +173,20 @@ test(
     const stdout = proc.stdout.toString()
     const stderr = proc.stderr.toString()
     const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
+    const netToPointPairsStage = getPipeline4StageNumber(
+      "netToPointPairsSolver",
+    )
+    const traceWidthStage = getPipeline4StageNumber("traceWidthSolver")
 
     expect(proc.exitCode).toBe(0)
     expect(stderr).toBe("")
     expect(stdout).toContain("startedAt=")
-    expect(stdout).toContain("enter stage=1 name=netToPointPairsSolver")
-    expect(stdout).toContain("captured stage=14 name=traceWidthSolver")
+    expect(stdout).toContain(
+      `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
+    )
+    expect(stdout).toContain(
+      `captured stage=${traceWidthStage} name=traceWidthSolver`,
+    )
     expect(stdout).toContain("postrun")
     expect(stdout).toContain("drc.relaxedPassed=true")
     expect(stdout).toContain("drc.errorCount=0")

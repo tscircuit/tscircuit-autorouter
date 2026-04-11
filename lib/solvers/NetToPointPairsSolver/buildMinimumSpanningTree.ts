@@ -247,9 +247,14 @@ interface Edge<T extends Point> {
   weight: number
 }
 
+interface BuildMinimumSpanningTreeOptions<T extends Point> {
+  extraEdges?: Edge<T>[]
+}
+
 // Main function to build a minimum spanning tree using Kruskal's algorithm
 export function buildMinimumSpanningTree<T extends Point>(
   points: T[],
+  opts: BuildMinimumSpanningTreeOptions<T> = {},
 ): Edge<T>[] {
   if (points.length <= 1) {
     return []
@@ -285,6 +290,10 @@ export function buildMinimumSpanningTree<T extends Point>(
         weight: distance,
       })
     }
+  }
+
+  if (opts.extraEdges) {
+    edges.push(...opts.extraEdges)
   }
 
   // Sort edges by weight (distance)

@@ -551,23 +551,25 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         ),
       ],
       rects: [
-        ...(this.srj.obstacles ?? []).map((o) => ({
-          ...o,
-          fill: o.layers?.includes("top")
-            ? "rgba(255,0,0,0.25)"
-            : o.layers?.includes("bottom")
-              ? "rgba(0,0,255,0.25)"
-              : "rgba(255,0,0,0.25)",
-          label: [
-            "obstacle",
-            o.offBoardConnectsTo
-              ? `offboardConnections: ${o.offBoardConnectsTo?.join(", ")}`
-              : "",
-            o.layers?.join(", "),
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        })),
+        ...(this.srj.obstacles ?? [])
+          .filter((o) => !o.isCopperPour)
+          .map((o) => ({
+            ...o,
+            fill: o.layers?.includes("top")
+              ? "rgba(255,0,0,0.25)"
+              : o.layers?.includes("bottom")
+                ? "rgba(0,0,255,0.25)"
+                : "rgba(255,0,0,0.25)",
+            label: [
+              "obstacle",
+              o.offBoardConnectsTo
+                ? `offboardConnections: ${o.offBoardConnectsTo?.join(", ")}`
+                : "",
+              o.layers?.join(", "),
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          })),
       ],
       lines: problemLines,
     } as GraphicsObject

@@ -4,7 +4,11 @@ import {
   ConnectionPoint,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
-import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import {
+  areExternallyConnected,
+  getExternalConnectionState,
+  NetToPointPairsSolver,
+} from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 
 /**
@@ -120,30 +124,13 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const externalConnectionGroups =
-      currentConnection.externallyConnectedPointIds ?? []
-    const connectionPointIdToGroupMap = new Map<string, number>()
-    externalConnectionGroups.forEach((group, idx) =>
-      group.forEach((pointId) => connectionPointIdToGroupMap.set(pointId, idx)),
-    )
-
-    const areExternallyConnected = (
-      firstPointInPair: { pointId?: string },
-      secondPointInPair: { pointId?: string },
-    ) => {
-      if (!firstPointInPair.pointId || !secondPointInPair.pointId) return false
-      const firstGroup = connectionPointIdToGroupMap.get(
-        firstPointInPair.pointId,
-      )
-      const secondGroup = connectionPointIdToGroupMap.get(
-        secondPointInPair.pointId,
-      )
-      return firstGroup !== undefined && firstGroup === secondGroup
-    }
+    const { pointIdToGroup, zeroWeightEdges } =
+      getExternalConnectionState(currentConnection)
 
     if (currentConnection.pointsToConnect.length === 2) {
       if (
         areExternallyConnected(
+          pointIdToGroup,
           currentConnection.pointsToConnect[0],
           currentConnection.pointsToConnect[1],
         )
@@ -165,11 +152,14 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
+      { extraEdges: zeroWeightEdges },
     )
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
-      if (areExternallyConnected(mstEdge.from, mstEdge.to)) continue
+      if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
+        continue
+      }
 
       const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
         mstEdge.from,

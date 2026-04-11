@@ -83,12 +83,8 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
         return false
       }
 
-      for (let j = 0; j < trace.route.length - 1; j++) {
-        const routePoint = trace.route[j]
-        const nextRoutePoint = trace.route[j + 1]
-
+      for (const routePoint of trace.route) {
         if (routePoint.route_type === "via") {
-          // Add a circle for the via
           circles.push({
             center: { x: routePoint.x, y: routePoint.y },
             radius: viaRadius,
@@ -96,7 +92,14 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
             stroke: "none",
             layer: "z0,1",
           })
-        } else if (routePoint.route_type === "jumper") {
+        }
+      }
+
+      for (let j = 0; j < trace.route.length - 1; j++) {
+        const routePoint = trace.route[j]
+        const nextRoutePoint = trace.route[j + 1]
+
+        if (routePoint.route_type === "jumper") {
           // Draw jumper pads and body
           const color =
             colorMap[trace.connection_name] ?? "rgba(255, 165, 0, 0.8)"
@@ -191,6 +194,7 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
 
   // Add obstacle rects
   for (const o of srj.obstacles) {
+    if (o.isCopperPour) continue
     rects.push({
       center: o.center,
       width: o.width,

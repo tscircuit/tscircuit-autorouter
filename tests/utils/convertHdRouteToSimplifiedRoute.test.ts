@@ -1,5 +1,6 @@
 import { expect, test, describe } from "bun:test"
 import { convertHdRouteToSimplifiedRoute } from "../../lib/utils/convertHdRouteToSimplifiedRoute"
+import type { ConnectionPoint } from "../../lib/types"
 import { HighDensityIntraNodeRoute } from "../../lib/types/high-density-types"
 
 describe("convertHdRouteToSimplifiedRoute", () => {
@@ -220,6 +221,74 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "width": 0.2,
           "x": 4,
           "y": 4,
+        },
+      ]
+    `)
+  })
+
+  test("serializes terminal vias from single-layer connection points", () => {
+    const input: HighDensityIntraNodeRoute = {
+      connectionName: "terminal-via-route",
+      traceThickness: 0.2,
+      viaDiameter: 0.4,
+      route: [
+        { x: 1, y: 1, z: 0 },
+        { x: 2, y: 1, z: 0 },
+      ],
+      vias: [],
+    }
+    const connectionPoints = [
+      {
+        x: 1,
+        y: 1,
+        layer: "top",
+        pointId: "start",
+        terminalVia: { toLayer: "inner1", viaDiameter: 0.35 },
+      },
+      {
+        x: 2,
+        y: 1,
+        layer: "top",
+        pointId: "end",
+        terminalVia: { toLayer: "inner2" },
+      },
+    ] satisfies ConnectionPoint[]
+
+    const result = convertHdRouteToSimplifiedRoute(input, 4, {
+      connectionPoints,
+    })
+
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "from_layer": "top",
+          "route_type": "via",
+          "to_layer": "inner1",
+          "via_diameter": 0.35,
+          "x": 1,
+          "y": 1,
+        },
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.2,
+          "x": 1,
+          "y": 1,
+        },
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.2,
+          "x": 2,
+          "y": 1,
+        },
+        {
+          "from_layer": "top",
+          "route_type": "via",
+          "to_layer": "inner2",
+          "via_diameter": 0.4,
+          "x": 2,
+          "y": 1,
         },
       ]
     `)

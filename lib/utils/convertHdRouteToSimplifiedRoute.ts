@@ -1,8 +1,20 @@
-import { SimplifiedPcbTraces } from "lib/types"
+import { distance } from "@tscircuit/math-utils"
+import {
+  type ConnectionPoint,
+  type SimplifiedPcbTraces,
+  type SingleLayerConnectionPoint,
+  isSingleLayerConnectionPoint,
+} from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = { x: number; y: number; z: number }
+const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
+
+export interface ConvertHdRouteToSimplifiedRouteOptions {
+  connectionPoints?: ReadonlyArray<ConnectionPoint>
+  terminalViaAttachTolerance?: number
+}
 
 /**
  * Extended HD route type that may contain jumpers (from HighDensitySolver)
@@ -11,9 +23,156 @@ type HdRouteWithOptionalJumpers = HighDensityIntraNodeRoute & {
   jumpers?: Jumper[]
 }
 
+const findNearestTerminalViaPoint = ({
+  endpoint,
+  endpointLayer,
+  connectionPoints,
+  tolerance,
+}: {
+  endpoint: Point
+  endpointLayer: string
+  connectionPoints: ReadonlyArray<ConnectionPoint>
+  tolerance: number
+}): SingleLayerConnectionPoint | undefined => {
+  let nearestTerminalViaPoint:
+    | { point: SingleLayerConnectionPoint; distance: number }
+    | undefined
+
+  for (const point of connectionPoints) {
+    if (!isSingleLayerConnectionPoint(point) || !point.terminalVia) continue
+    if (point.layer !== endpointLayer) continue
+
+    const endpointDistance = distance(point, endpoint)
+    if (endpointDistance > tolerance) continue
+
+    if (
+      !nearestTerminalViaPoint ||
+      endpointDistance < nearestTerminalViaPoint.distance
+    ) {
+      nearestTerminalViaPoint = { point, distance: endpointDistance }
+    }
+  }
+
+  return nearestTerminalViaPoint?.point
+}
+
+const attachTerminalViasToSimplifiedRoute = ({
+  route,
+  hdRoute,
+  layerCount,
+  connectionPoints = [],
+  tolerance = DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE,
+}: {
+  route: SimplifiedPcbTraces[number]["route"]
+  hdRoute: HdRouteWithOptionalJumpers
+  layerCount: number
+  connectionPoints?: ReadonlyArray<ConnectionPoint>
+  tolerance?: number
+}): SimplifiedPcbTraces[number]["route"] => {
+  if (
+    route.length === 0 ||
+    hdRoute.route.length === 0 ||
+    !connectionPoints.length
+  ) {
+    return route
+  }
+
+  const linearRoute = route.filter(
+    (segment) => segment.route_type !== "jumper",
+  ) as SimplifiedPcbTraces[number]["route"]
+  const jumpers = route.filter(
+    (segment) => segment.route_type === "jumper",
+  ) as SimplifiedPcbTraces[number]["route"]
+
+  if (linearRoute.length === 0) {
+    return route
+  }
+
+  const startPoint = hdRoute.route[0]!
+  const endPoint = hdRoute.route[hdRoute.route.length - 1]!
+  const startLayer = mapZToLayerName(startPoint.z, layerCount)
+  const endLayer = mapZToLayerName(endPoint.z, layerCount)
+  const startTerminalViaPoint = findNearestTerminalViaPoint({
+    endpoint: startPoint,
+    endpointLayer: startLayer,
+    connectionPoints,
+    tolerance,
+  })
+  const endTerminalViaPoint = findNearestTerminalViaPoint({
+    endpoint: endPoint,
+    endpointLayer: endLayer,
+    connectionPoints,
+    tolerance,
+  })
+
+  const prependSegments: SimplifiedPcbTraces[number]["route"] = []
+  const appendSegments: SimplifiedPcbTraces[number]["route"] = []
+  const firstLinearRouteSegment = linearRoute[0]
+  const lastLinearRouteSegment = linearRoute[linearRoute.length - 1]
+
+  if (startTerminalViaPoint?.terminalVia) {
+    prependSegments.push({
+      route_type: "via",
+      x: startTerminalViaPoint.x,
+      y: startTerminalViaPoint.y,
+      from_layer: startTerminalViaPoint.layer,
+      to_layer: startTerminalViaPoint.terminalVia.toLayer,
+      via_diameter:
+        startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
+    })
+
+    if (
+      !(
+        firstLinearRouteSegment?.route_type === "wire" &&
+        firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
+        distance(firstLinearRouteSegment, startTerminalViaPoint) <= 1e-3
+      )
+    ) {
+      prependSegments.push({
+        route_type: "wire",
+        x: startTerminalViaPoint.x,
+        y: startTerminalViaPoint.y,
+        width: hdRoute.traceThickness,
+        layer: startTerminalViaPoint.layer,
+      })
+    }
+  }
+
+  if (endTerminalViaPoint?.terminalVia) {
+    if (
+      !(
+        lastLinearRouteSegment?.route_type === "wire" &&
+        lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
+        distance(lastLinearRouteSegment, endTerminalViaPoint) <= 1e-3
+      )
+    ) {
+      appendSegments.push({
+        route_type: "wire",
+        x: endTerminalViaPoint.x,
+        y: endTerminalViaPoint.y,
+        width: hdRoute.traceThickness,
+        layer: endTerminalViaPoint.layer,
+      })
+    }
+
+    appendSegments.push({
+      route_type: "via",
+      x: endTerminalViaPoint.x,
+      y: endTerminalViaPoint.y,
+      from_layer: endTerminalViaPoint.layer,
+      to_layer: endTerminalViaPoint.terminalVia.toLayer,
+      via_diameter:
+        endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
+    })
+  }
+
+  return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers]
+}
+
 export const convertHdRouteToSimplifiedRoute = (
   hdRoute: HdRouteWithOptionalJumpers,
   layerCount: number,
+  opts: ConvertHdRouteToSimplifiedRouteOptions = {},
 ): SimplifiedPcbTraces[number]["route"] => {
   const result: SimplifiedPcbTraces[number]["route"] = []
   if (hdRoute.route.length === 0) return result
@@ -100,5 +259,11 @@ export const convertHdRouteToSimplifiedRoute = (
     }
   }
 
-  return result
+  return attachTerminalViasToSimplifiedRoute({
+    route: result,
+    hdRoute,
+    layerCount,
+    connectionPoints: opts.connectionPoints,
+    tolerance: opts.terminalViaAttachTolerance,
+  })
 }

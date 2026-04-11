@@ -521,6 +521,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     // Draw obstacles
     for (const obstacle of this.srj.obstacles) {
+      if (obstacle.isCopperPour) continue
       const obstacleZLayers = this.getObstacleZLayers(obstacle)
       graphics.rects!.push({
         center: obstacle.center,

@@ -29,7 +29,9 @@ export const visualizeUniformPortDistribution = ({
   currentOwnerPairBeingProcessed: OwnerPairKey | null
   mapOfNodeIdToBounds: Map<string, Bounds>
 }): GraphicsObject => {
-  const rects: Rect[] = obstacles.map((o) => ({ ...o, fill: "#ec000070" }))
+  const rects: Rect[] = obstacles
+    .filter((o) => !o.isCopperPour)
+    .map((o) => ({ ...o, fill: "#ec000070" }))
   const points: Array<{ x: number; y: number; label?: string }> = []
   const lines: Line[] = []
 

@@ -4,12 +4,17 @@ export type PointId = string
 export type OffBoardConnectionId = string
 export type ObstacleId = string
 export type RootConnectionName = string
+export type TerminalViaHint = {
+  toLayer: string
+  viaDiameter?: number
+}
 export type SingleLayerConnectionPoint = {
   x: number
   y: number
   layer: string
   pointId?: PointId
   pcb_port_id?: string
+  terminalVia?: TerminalViaHint
 }
 export type MultiLayerConnectionPoint = {
   x: number
