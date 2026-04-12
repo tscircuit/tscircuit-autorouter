@@ -37,7 +37,10 @@ test("pour-via-escape03.json", () => {
 
   const output = solver.getOutputSimpleRouteJson()
   const forbiddenLayer = mapZToLayerName(1, srj.layerCount)
-  const expectedBottomLayer = mapZToLayerName(srj.layerCount - 1, srj.layerCount)
+  const expectedBottomLayer = mapZToLayerName(
+    srj.layerCount - 1,
+    srj.layerCount,
+  )
 
   expect(
     output.traces?.flatMap((trace) =>
@@ -52,7 +55,8 @@ test("pour-via-escape03.json", () => {
     output.traces?.flatMap((trace) =>
       trace.route.filter(
         (segment) =>
-          segment.route_type === "wire" && segment.layer === expectedBottomLayer,
+          segment.route_type === "wire" &&
+          segment.layer === expectedBottomLayer,
       ),
     ) ?? [],
   ).not.toHaveLength(0)

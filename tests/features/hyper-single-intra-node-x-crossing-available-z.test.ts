@@ -36,11 +36,12 @@ const getSolvedRoutes = (solver: {
 }) =>
   typeof solver.getOutput === "function"
     ? solver.getOutput()
-    : solver.solvedRoutes ?? []
+    : (solver.solvedRoutes ?? [])
 
 const getUsedZ = (routes: HighDensityIntraNodeRoute[]) =>
-  [...new Set(routes.flatMap((route) => route.route.map((point) => point.z)))]
-    .sort((a, b) => a - b)
+  [
+    ...new Set(routes.flatMap((route) => route.route.map((point) => point.z))),
+  ].sort((a, b) => a - b)
 
 const toRenderedArtifacts = (routes: HighDensityIntraNodeRoute[]) => {
   const srj: SimpleRouteJson = {
@@ -143,7 +144,8 @@ const expectMultilayerCrossingSolution = (
   expect(
     srj.traces!.flatMap((trace) =>
       trace.route.filter(
-        (segment) => segment.route_type === "wire" && segment.layer === "bottom",
+        (segment) =>
+          segment.route_type === "wire" && segment.layer === "bottom",
       ),
     ),
   ).not.toHaveLength(0)
