@@ -4,6 +4,8 @@ import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escap
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { getLastStepGraphicsObject } from "../../fixtures/getLastStepGraphicsObject"
 import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
@@ -32,6 +34,37 @@ test("pour-via-escape03.json", () => {
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+
+  const output = solver.getOutputSimpleRouteJson()
+  const forbiddenLayer = mapZToLayerName(1, srj.layerCount)
+  const expectedBottomLayer = mapZToLayerName(srj.layerCount - 1, srj.layerCount)
+
+  expect(
+    output.traces?.flatMap((trace) =>
+      trace.route.filter(
+        (segment) =>
+          segment.route_type === "wire" && segment.layer === forbiddenLayer,
+      ),
+    ) ?? [],
+  ).toHaveLength(0)
+
+  expect(
+    output.traces?.flatMap((trace) =>
+      trace.route.filter(
+        (segment) =>
+          segment.route_type === "wire" && segment.layer === expectedBottomLayer,
+      ),
+    ) ?? [],
+  ).not.toHaveLength(0)
+
+  const lastStepGraphics = getLastStepGraphicsObject(solver.visualize())
+
+  expect(
+    lastStepGraphics.lines?.filter((line) => line.layer === "z1") ?? [],
+  ).toHaveLength(0)
+  expect(
+    lastStepGraphics.lines?.filter((line) => line.layer === "z3") ?? [],
+  ).not.toHaveLength(0)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,

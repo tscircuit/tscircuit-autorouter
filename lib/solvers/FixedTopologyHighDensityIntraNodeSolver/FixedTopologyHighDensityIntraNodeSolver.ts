@@ -96,6 +96,20 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     return this.constructorParams
   }
 
+  private _getBottomLayerZ(): number {
+    if (this.nodeWithPortPoints.availableZ?.length) {
+      const availableZ = [...new Set(this.nodeWithPortPoints.availableZ)].sort(
+        (a, b) => a - b,
+      )
+      return availableZ[availableZ.length - 1]!
+    }
+
+    // The fixed-via solver only models top/bottom traversal. When the node
+    // doesn't declare an explicit bottom layer, preserve the legacy z=1
+    // fallback.
+    return 1
+  }
+
   private _getViaTileDiameter(viaTile: ViaTile): number {
     for (const vias of Object.values(viaTile.viasByNet)) {
       if (vias.length > 0) return vias[0].diameter
@@ -406,6 +420,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
   private _processResults(viaGraphSolver: FixedViaHypergraphSolver) {
     this.solvedRoutes = []
     const viaTile = viaGraphSolver.viaTile
+    const bottomLayerZ = this._getBottomLayerZ()
     const fallbackViaDiameter = viaTile
       ? this._getViaTileDiameter(viaTile)
       : 0.3
@@ -523,17 +538,21 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
         this._appendRoutePoint(routePoints, {
           x: entryVia.position.x,
           y: entryVia.position.y,
-          z: 1,
+          z: bottomLayerZ,
         })
 
         for (const point of bottomPoints) {
-          this._appendRoutePoint(routePoints, { x: point.x, y: point.y, z: 1 })
+          this._appendRoutePoint(routePoints, {
+            x: point.x,
+            y: point.y,
+            z: bottomLayerZ,
+          })
         }
 
         this._appendRoutePoint(routePoints, {
           x: exitVia.position.x,
           y: exitVia.position.y,
-          z: 1,
+          z: bottomLayerZ,
         })
         this._appendRoutePoint(routePoints, {
           x: exitVia.position.x,
