@@ -8,14 +8,7 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": [
-      "cosmos-export",
-      "dist",
-      "package.json",
-      "fixtures/legacy/assets/*.json",
-      "fixtures/unassigned-obstacles/AssignableViaCapacityPathingSolver_DirectiveSubOptimal/AssignableViaCapacityPathingSolver_DirectiveSubOptimal01.json",
-      "fixtures/features/portpointpathing/portpointpathing01-input.json"
-    ]
+    "ignore": ["cosmos-export", "dist", "**/*.json"]
   },
   "javascript": {
     "formatter": {
