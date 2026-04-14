@@ -174,6 +174,32 @@ test("pipeline4 stitch stage consumes repaired high density routes", () => {
   expect(stitchParams.hdRoutes).toEqual([repairedRoute])
 })
 
+test("pipeline4 preview falls back to tiny hypergraph pathing output", () => {
+  const pathingPreview = {
+    lines: [
+      {
+        points: [
+          { x: -0.5, y: 0 },
+          { x: 0.5, y: 0 },
+        ],
+        strokeColor: "#123456",
+      },
+    ],
+  }
+
+  const solver = new AutoroutingPipelineSolver4(srj)
+  solver.netToPointPairsSolver = {
+    visualize: () => ({
+      points: [{ x: 99, y: 99, color: "red" }],
+    }),
+  } as any
+  solver.portPointPathingSolver = {
+    preview: () => pathingPreview,
+  } as any
+
+  expect(solver.preview()).toEqual(pathingPreview)
+})
+
 test(
   "pipeline4 real case repair changes output routes",
   () => {

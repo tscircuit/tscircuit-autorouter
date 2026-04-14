@@ -618,6 +618,11 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       }
       return { lines }
     }
+
+    if (this.portPointPathingSolver) {
+      return this.portPointPathingSolver.preview()
+    }
+
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
