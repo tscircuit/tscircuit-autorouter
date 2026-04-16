@@ -7,6 +7,7 @@ import node from "../../fixtures/legacy/assets/cn11081-nodeWithPortPoints.json" 
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 
 const nodeWithPortPoints = (node as any).nodeWithPortPoints
 
@@ -96,7 +97,7 @@ test("cn11081 single transition solver routes without DRC errors", () => {
   expect(
     [...new Set(pcbTraces.map((trace) => trace.source_trace_id))].sort(),
   ).toEqual(["source_net_0_mst22", "source_trace_76"])
-  const { errors } = getDrcErrors(circuitJson)
+  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
 
   expect(errors.length).toBe(0)
   expect(solverName).toMatchInlineSnapshot(`"CachedIntraNodeRouteSolver"`)

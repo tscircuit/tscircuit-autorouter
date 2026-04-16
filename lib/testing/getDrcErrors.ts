@@ -1,5 +1,6 @@
 import { Point } from "graphics-debug"
 import {
+  checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
   checkSameNetViaSpacing,
 } from "@tscircuit/checks"
@@ -8,7 +9,11 @@ type CircuitJson = Parameters<typeof checkEachPcbTraceNonOverlapping>[0]
 type CircuitJsonElement = CircuitJson[number]
 
 type TraceError = ReturnType<typeof checkEachPcbTraceNonOverlapping>[number]
-type ViaError = ReturnType<typeof checkSameNetViaSpacing>[number]
+type SameNetViaError = ReturnType<typeof checkSameNetViaSpacing>[number]
+type DifferentNetViaError = ReturnType<
+  typeof checkDifferentNetViaSpacing
+>[number]
+type ViaError = SameNetViaError | DifferentNetViaError
 
 type DrcError = TraceError | ViaError
 
@@ -34,9 +39,14 @@ export const getDrcErrors = (
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     minSpacing: options.traceClearance,
   })
-  const viaErrors = checkSameNetViaSpacing(circuitJson, {
-    minSpacing: options.viaClearance,
-  })
+  const viaErrors = [
+    ...checkSameNetViaSpacing(circuitJson, {
+      minSpacing: options.viaClearance,
+    }),
+    ...checkDifferentNetViaSpacing(circuitJson, {
+      minSpacing: options.viaClearance,
+    }),
+  ]
 
   const errors: DrcError[] = [...traceErrors, ...viaErrors]
 
@@ -58,13 +68,38 @@ export const getDrcErrors = (
       return error as DrcErrorWithCenter
     }
 
+    if ("pcb_center" in error && error.pcb_center) {
+      return {
+        ...error,
+        center: error.pcb_center,
+      }
+    }
+
+    if ("pcb_via_ids" in error && Array.isArray(error.pcb_via_ids)) {
+      const [viaAId, viaBId] = error.pcb_via_ids
+      const viaA = viasById.get(viaAId)
+      const viaB = viasById.get(viaBId)
+
+      if (viaA && viaB) {
+        return {
+          ...error,
+          center: {
+            x: (viaA.x + viaB.x) / 2,
+            y: (viaA.y + viaB.y) / 2,
+          },
+        }
+      }
+    }
+
     if (
-      "pcb_placement_error_id" in error &&
-      typeof error.pcb_placement_error_id === "string" &&
-      error.pcb_placement_error_id.startsWith("same_net_vias_close_")
+      "pcb_error_id" in error &&
+      typeof error.pcb_error_id === "string" &&
+      (error.pcb_error_id.startsWith("same_net_vias_close_") ||
+        error.pcb_error_id.startsWith("different_net_vias_close_"))
     ) {
-      const viaIds = error.pcb_placement_error_id
+      const viaIds = error.pcb_error_id
         .replace("same_net_vias_close_", "")
+        .replace("different_net_vias_close_", "")
         .split("_")
         .filter(Boolean)
 
