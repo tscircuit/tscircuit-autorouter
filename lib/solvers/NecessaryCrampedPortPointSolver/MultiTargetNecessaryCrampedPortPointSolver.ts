@@ -19,6 +19,13 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
+  /**
+   * The number of cramped port points to keep.
+   * This is useful when there are multiple connections.
+   * Setting this to more than one (e.g., 2) ensures that at least two connections can be routed.
+   * Higher values may be beneficial, but can lead to more DRC errors.
+   */
+  numberOfCrampedPortPointsToKeep: number
 }
 
 /**
@@ -179,11 +186,20 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       this.candidatesAtDepth = [...crampedCandidates].sort(
         (a, b) => costFunction(a) - costFunction(b),
       )
-      const bestCandidate = this.candidatesAtDepth[0]
-      if (!bestCandidate || crampedCandidates.length === 0) {
+      if (this.candidatesAtDepth.length === 0) {
         this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
       } else {
-        this.crampedPortPointsToKeep.add(bestCandidate.port)
+        for (const candidate of this.candidatesAtDepth.slice(
+          0,
+          this.input.numberOfCrampedPortPointsToKeep,
+        )) {
+          this.crampedPortPointsToKeep.add(candidate.port)
+          let parent = candidate.parent
+          while (parent) {
+            this.crampedPortPointsToKeep.add(parent.port)
+            parent = parent.parent
+          }
+        }
       }
 
       this.isRunningCrampedPass = false
