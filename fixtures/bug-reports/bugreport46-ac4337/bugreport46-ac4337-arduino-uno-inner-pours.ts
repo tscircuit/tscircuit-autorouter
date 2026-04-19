@@ -7,6 +7,7 @@ export const ARDUINO_UNO_POWER_NET = "source_net_0"
 export const ARDUINO_UNO_GROUND_NET = "source_net_3"
 
 const baseSrj = bugReportJson.simple_route_json as SimpleRouteJson
+type CopperPourLayer = "bottom" | "inner1" | "inner2"
 
 const createCopperPour = ({
   obstacleId,
@@ -15,7 +16,7 @@ const createCopperPour = ({
   srj,
 }: {
   obstacleId: string
-  layer: "inner1" | "inner2"
+  layer: CopperPourLayer
   connectedTo: string[]
   srj: SimpleRouteJson
 }): Obstacle => ({
@@ -32,25 +33,43 @@ const createCopperPour = ({
   isCopperPour: true,
 })
 
-export const arduinoUnoWithPowerGroundInnerPours: SimpleRouteJson = (() => {
+const createArduinoUnoWithPowerGroundPours = ({
+  powerLayer,
+  groundLayer,
+}: {
+  powerLayer: CopperPourLayer
+  groundLayer: CopperPourLayer
+}): SimpleRouteJson => {
   const srj = structuredClone(baseSrj) as SimpleRouteJson
 
   srj.layerCount = 4
   srj.obstacles = [
     ...srj.obstacles,
     createCopperPour({
-      obstacleId: "arduino-uno-inner1-power-pour",
-      layer: "inner1",
+      obstacleId: `arduino-uno-${powerLayer}-power-pour`,
+      layer: powerLayer,
       connectedTo: [ARDUINO_UNO_POWER_NET],
       srj,
     }),
     createCopperPour({
-      obstacleId: "arduino-uno-inner2-ground-pour",
-      layer: "inner2",
+      obstacleId: `arduino-uno-${groundLayer}-ground-pour`,
+      layer: groundLayer,
       connectedTo: [ARDUINO_UNO_GROUND_NET],
       srj,
     }),
   ]
 
   return srj
-})()
+}
+
+export const arduinoUnoWithPowerGroundInnerPours: SimpleRouteJson =
+  createArduinoUnoWithPowerGroundPours({
+    powerLayer: "inner1",
+    groundLayer: "inner2",
+  })
+
+export const arduinoUnoWithPowerGroundBottomInner2Pours: SimpleRouteJson =
+  createArduinoUnoWithPowerGroundPours({
+    powerLayer: "bottom",
+    groundLayer: "inner2",
+  })
