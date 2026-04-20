@@ -66,6 +66,8 @@ export interface Obstacle {
   center: { x: number; y: number }
   width: number
   height: number
+  /** Optional counter-clockwise rotation metadata in degrees. */
+  ccwRotationDegrees?: number
   connectedTo: Array<TraceId | NetId>
   isCopperPour?: boolean
   netIsAssignable?: boolean

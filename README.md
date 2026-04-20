@@ -69,6 +69,7 @@ interface Obstacle {
   center: { x: number; y: number }
   width: number
   height: number
+  ccwRotationDegrees?: number
   connectedTo: string[] // TraceIds
   isCopperPour?: boolean
   offBoardConnectsTo?: string[] // TraceIds connected off-board
