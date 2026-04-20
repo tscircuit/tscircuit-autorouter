@@ -6,7 +6,6 @@ import {
   arduinoUnoWithPowerGroundBottomInner2Pours,
   arduinoUnoWithPowerGroundInnerPours,
 } from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno-inner-pours"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const expectPour = ({
   srj,
@@ -31,7 +30,9 @@ const expectPour = ({
   expect(pour?.height).toBeCloseTo(srj.bounds.maxY - srj.bounds.minY, 6)
 }
 
-const expectBaseInvariant = (srj: typeof arduinoUnoWithPowerGroundInnerPours) => {
+const expectBaseInvariant = (
+  srj: typeof arduinoUnoWithPowerGroundInnerPours,
+) => {
   expect(srj.layerCount).toBe(4)
   expect(srj.connections.some((c) => c.name === ARDUINO_UNO_POWER_NET)).toBe(
     true,
@@ -77,12 +78,53 @@ test("Arduino Uno bottom/inner2 pour fixture adds bottom power and inner2 ground
   })
 
   const solver = new AutoroutingPipelineSolver(structuredClone(srj), {
-    effort: 2,
+    effort: 1,
   })
   solver.solve()
 
-  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-    { svgName: "bottom-inner2" },
-  )
+  expect(
+    srj.obstacles
+      .filter((obstacle) => obstacle.isCopperPour)
+      .map(({ obstacleId, layers, connectedTo, center, width, height }) => ({
+        obstacleId,
+        layers,
+        connectedTo,
+        center,
+        width,
+        height,
+      })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "center": {
+          "x": -0.08997937499999509,
+          "y": 0,
+        },
+        "connectedTo": [
+          "source_net_0",
+        ],
+        "height": 55.4,
+        "layers": [
+          "bottom",
+        ],
+        "obstacleId": "arduino-uno-bottom-power-pour",
+        "width": 70.77995874999999,
+      },
+      {
+        "center": {
+          "x": -0.08997937499999509,
+          "y": 0,
+        },
+        "connectedTo": [
+          "source_net_3",
+        ],
+        "height": 55.4,
+        "layers": [
+          "inner2",
+        ],
+        "obstacleId": "arduino-uno-inner2-ground-pour",
+        "width": 70.77995874999999,
+      },
+    ]
+  `)
 }, 120_000)

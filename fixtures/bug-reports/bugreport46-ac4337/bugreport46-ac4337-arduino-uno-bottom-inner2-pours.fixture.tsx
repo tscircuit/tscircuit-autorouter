@@ -12,8 +12,8 @@ export default () => {
         Arduino Uno with bottom/inner2 power/ground pours
       </div>
       <div className="mb-3 text-xs text-gray-700">
-        Uno mapping: `bottom` =&gt; {ARDUINO_UNO_POWER_NET} (5V/IOREF),
-        `inner2` =&gt; {ARDUINO_UNO_GROUND_NET} (GND).
+        Uno mapping: `bottom` =&gt; {ARDUINO_UNO_POWER_NET} (5V/IOREF), `inner2`
+        =&gt; {ARDUINO_UNO_GROUND_NET} (GND).
       </div>
       <AutoroutingPipelineDebugger
         srj={arduinoUnoWithPowerGroundBottomInner2Pours}
