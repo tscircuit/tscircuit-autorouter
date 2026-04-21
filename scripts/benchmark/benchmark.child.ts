@@ -42,6 +42,8 @@ for await (const line of rl) {
         didSolve: false,
         didTimeout: false,
         relaxedDrcPassed: false,
+        relaxedDrcErrorCount: 0,
+        relaxedDrcErrorTypes: {},
         error: error instanceof Error ? error.message : String(error),
       },
     }

@@ -30,12 +30,19 @@ type DrcSnapshot = {
   count: number
   traceRouteIndexById: Map<string, number>
 }
+type GlobalDrcForceImproveSolverParams = {
+  srj: SimpleRouteJson
+  hdRoutes: HighDensityRoute[]
+  effort?: number
+}
 
 const POSITION_EPSILON = 1e-6
 const COORDINATE_EPSILON = 1e-3
 const MAX_ERROR_MOVE = 0.14
-const MAX_PASSES = 40
-const ERROR_FORCE_SCALES = [1, 1.75, 2.5, -1, -1.75] as const
+const BASE_MAX_PASSES = 14
+const BASE_MAX_CANDIDATE_ATTEMPTS = 28
+const FAST_ERROR_FORCE_SCALES = [1, 1.75, -1] as const
+const DEEP_ERROR_FORCE_SCALES = [1, 1.75, 2.5, -1, -1.75] as const
 
 const cloneRoutes = (routes: HighDensityRoute[]): MutableRoute[] =>
   routes.map((route) => ({
@@ -516,6 +523,18 @@ const getErrorCenter = (error: Record<string, unknown>): Point | undefined => {
     : undefined
 }
 
+const getCenteredErrors = (errors: Array<Record<string, unknown>>) =>
+  errors.filter((error) => Boolean(getErrorCenter(error)))
+
+const getForceScalesForEffort = (effort: number) =>
+  effort >= 2 ? DEEP_ERROR_FORCE_SCALES : FAST_ERROR_FORCE_SCALES
+
+const getMaxPassesForEffort = (effort: number) =>
+  Math.max(8, Math.round(BASE_MAX_PASSES * Math.max(1, effort)))
+
+const getMaxCandidateAttemptsForEffort = (effort: number) =>
+  Math.max(12, Math.round(BASE_MAX_CANDIDATE_ATTEMPTS * Math.max(1, effort)))
+
 const applyDrcErrorForces = (
   srj: SimpleRouteJson,
   routes: MutableRoute[],
@@ -581,33 +600,43 @@ const applyDrcErrorForces = (
 export class GlobalDrcForceImproveSolver extends BaseSolver {
   readonly srj: SimpleRouteJson
   readonly inputHdRoutes: HighDensityRoute[]
+  readonly effort: number
   outputHdRoutes: HighDensityRoute[]
 
-  constructor(params: {
-    srj: SimpleRouteJson
-    hdRoutes: HighDensityRoute[]
-  }) {
+  constructor(params: GlobalDrcForceImproveSolverParams) {
     super()
     this.srj = params.srj
     this.inputHdRoutes = params.hdRoutes
+    this.effort = params.effort ?? 1
     this.outputHdRoutes = params.hdRoutes
     this.MAX_ITERATIONS = 1
   }
 
   override getConstructorParams() {
-    return [{ srj: this.srj, hdRoutes: this.inputHdRoutes }] as const
+    return [
+      { srj: this.srj, hdRoutes: this.inputHdRoutes, effort: this.effort },
+    ] as const
   }
 
   override _step() {
     let bestRoutes = this.inputHdRoutes
     let bestSnapshot = getDrcSnapshot(this.srj, bestRoutes)
     let bestIssueCount = bestSnapshot.count
+    const initialDrcIssueCount = bestIssueCount
+    const forceScales = getForceScalesForEffort(this.effort)
+    const maxPasses = getMaxPassesForEffort(this.effort)
+    const maxCandidateAttempts = getMaxCandidateAttemptsForEffort(this.effort)
+    let candidateAttempts = 0
 
-    for (let pass = 0; pass < MAX_PASSES && bestIssueCount > 0; pass += 1) {
+    for (let pass = 0; pass < maxPasses && bestIssueCount > 0; pass += 1) {
       let accepted = false
+      const errorsWithCenters = getCenteredErrors(bestSnapshot.errors)
+      if (errorsWithCenters.length === 0) break
 
-      for (const error of bestSnapshot.errors) {
-        for (const scale of ERROR_FORCE_SCALES) {
+      for (const error of errorsWithCenters) {
+        for (const scale of forceScales) {
+          if (candidateAttempts >= maxCandidateAttempts) break
+          candidateAttempts += 1
           const candidateRoutes = cloneRoutes(bestRoutes)
           const changed = applyDrcErrorForces(
             this.srj,
@@ -635,17 +664,21 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         if (accepted) {
           break
         }
+        if (candidateAttempts >= maxCandidateAttempts) {
+          break
+        }
       }
 
-      if (!accepted) {
+      if (!accepted || candidateAttempts >= maxCandidateAttempts) {
         break
       }
     }
 
     this.outputHdRoutes = bestRoutes
     this.stats = {
-      initialDrcIssueCount: getDrcSnapshot(this.srj, this.inputHdRoutes).count,
+      initialDrcIssueCount,
       finalDrcIssueCount: bestIssueCount,
+      globalDrcForceImproveCandidateAttempts: candidateAttempts,
     }
     this.solved = true
   }

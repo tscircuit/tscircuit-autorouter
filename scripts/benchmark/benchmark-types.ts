@@ -18,6 +18,8 @@ export type WorkerResult = {
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
+  relaxedDrcErrorCount: number
+  relaxedDrcErrorTypes: Record<string, number>
   error?: string
 }
 
@@ -35,11 +37,17 @@ export type SolverRunSummary = {
   p95TimeMs: number | null
 }
 
+export type DrcErrorTypeSummary = {
+  type: string
+  count: number
+}
+
 export type BenchmarkReport = {
   version: 1
   datasetName: string
   scenarioCount: number
   effortLabel: string
   summary: SolverRunSummary[]
+  drcErrorTypes: DrcErrorTypeSummary[]
   tests: WorkerResult[]
 }

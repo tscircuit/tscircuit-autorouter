@@ -405,6 +405,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           srj: cms.srjWithPointPairs!,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          effort: cms.effort,
         },
       ],
     ),
