@@ -37,7 +37,8 @@ import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/Capacit
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { GlobalDrcForceImproveSolver } from "../../solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver"
+import { HighDensityForceImproveSolver } from "../../solvers/HighDensityForceImproveSolver/HighDensityForceImproveSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
@@ -105,6 +106,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
+  globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -396,6 +398,16 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         layerCount: cms.srj.layerCount,
       },
     ]),
+    definePipelineStep(
+      "globalDrcForceImproveSolver",
+      GlobalDrcForceImproveSolver,
+      (cms) => [
+        {
+          srj: cms.srjWithPointPairs!,
+          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -636,6 +648,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
