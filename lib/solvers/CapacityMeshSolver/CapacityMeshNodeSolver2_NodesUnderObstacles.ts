@@ -14,6 +14,7 @@ import {
 import { COLORS } from "../colors"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { doRectsOverlap } from "lib/utils/doRectsOverlap"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { CapacityMeshNodeSolver } from "./CapacityMeshNodeSolver1"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -46,7 +47,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
     public opts: CapacityMeshNodeSolverOptions = {},
   ) {
     super(srj, opts)
-    this.VIA_DIAMETER = srj.minViaDiameter ?? this.VIA_DIAMETER
+    this.VIA_DIAMETER = getViaDimensions(srj).padDiameter
   }
 
   isNodeCompletelyOutsideBounds(node: CapacityMeshNode): boolean {

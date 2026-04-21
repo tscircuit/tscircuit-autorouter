@@ -59,6 +59,21 @@ test("falls back to srj.minViaDiameter when actual diameter is missing", () => {
   expect(vias[0].outer_diameter).toBe(0.24)
 })
 
+test("uses srj min via pad and hole diameters when actual diameters are missing", () => {
+  const circuitJson = convertToCircuitJson(
+    {
+      ...createSrj(0.24),
+      min_via_pad_diameter: 0.52,
+      min_via_hole_diameter: 0.2,
+    },
+    createSimplifiedTraces(),
+  )
+  const vias = circuitJson.filter((e) => e.type === "pcb_via")
+  expect(vias).toHaveLength(1)
+  expect(vias[0].outer_diameter).toBe(0.52)
+  expect(vias[0].hole_diameter).toBe(0.2)
+})
+
 test("falls back to 0.3 when neither actual nor srj min via diameter is available", () => {
   const circuitJson = convertToCircuitJson(
     createSrj(),

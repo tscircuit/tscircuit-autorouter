@@ -17,6 +17,7 @@ import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getPointKey } from "lib/utils/getPointKey"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
@@ -107,7 +108,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     opts: EscapeViaLocationSolverOptions = {},
   ) {
     super()
-    this.viaDiameter = opts.viaDiameter ?? ogSrj.minViaDiameter ?? 0.3
+    this.viaDiameter = opts.viaDiameter ?? getViaDimensions(ogSrj).padDiameter
     this.viaRadius = this.viaDiameter / 2
     this.minTraceWidth = opts.minTraceWidth ?? ogSrj.minTraceWidth
     this.obstacleMargin =

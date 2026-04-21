@@ -31,6 +31,7 @@ import {
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -116,6 +117,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   viaDiameter: number
+  viaHoleDiameter: number
   minTraceWidth: number
   effort: number
   maxNodeDimension: number
@@ -406,7 +408,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     this.srj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    this.viaDiameter = srj.minViaDiameter ?? 0.3
+    const viaDimensions = getViaDimensions(srj)
+    this.viaDiameter = viaDimensions.padDiameter
+    this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -671,6 +675,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
             connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
+            defaultViaHoleDiameter: this.viaHoleDiameter,
           }),
         }
 

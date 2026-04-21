@@ -8,6 +8,7 @@ import {
   getGraphicsLayerForObstacle,
   getGraphicsLayerFromLayerNames,
 } from "lib/utils/getGraphicsObjectLayer"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -19,7 +20,7 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
 
   const colorMap: Record<string, string> = getColorMap(srj)
   const layerCount = srj.layerCount
-  const viaRadius = (srj.minViaDiameter ?? 0.3) / 2
+  const viaDimensions = getViaDimensions(srj)
   const formatObstacleLabel = createObstacleLabelFormatter(srj)
 
   // Add points for each connection's pointsToConnect
@@ -86,6 +87,8 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
         if (routePoint.route_type === "via") {
           const fromZ = mapLayerNameToZ(routePoint.from_layer, layerCount)
           const toZ = mapLayerNameToZ(routePoint.to_layer, layerCount)
+          const viaRadius =
+            (routePoint.via_diameter ?? viaDimensions.padDiameter) / 2
           const zLayers = Array.from(
             { length: Math.abs(toZ - fromZ) + 1 },
             (_, index) => Math.min(fromZ, toZ) + index,

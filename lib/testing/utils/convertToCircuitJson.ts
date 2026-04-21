@@ -2,6 +2,7 @@ import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { LayerName, mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 
@@ -453,6 +454,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   minViaDiameter = 0.3,
+  minViaHoleDiameter = minViaDiameter * 0.5,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -464,6 +466,8 @@ function extractViasFromRoutes(
         trace.route.forEach((segment) => {
           if (segment.route_type === "via") {
             const viaDiameter = segment.via_diameter ?? minViaDiameter
+            const viaHoleDiameter =
+              segment.via_hole_diameter ?? minViaHoleDiameter
             const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
             if (!viaLocations.has(locationKey)) {
               vias.push({
@@ -473,7 +477,7 @@ function extractViasFromRoutes(
                 x: segment.x,
                 y: segment.y,
                 outer_diameter: viaDiameter,
-                hole_diameter: viaDiameter * 0.5,
+                hole_diameter: viaHoleDiameter,
                 layers: [segment.from_layer, segment.to_layer] as LayerName[],
               })
               viaLocations.add(locationKey)
@@ -486,6 +490,7 @@ function extractViasFromRoutes(
       ;(routes as HighDensityRoute[]).forEach((route, routeIndex) => {
         const traceId = `trace_${routeIndex}`
         const viaDiameter = route.viaDiameter ?? minViaDiameter
+        const viaHoleDiameter = minViaHoleDiameter
         for (let i = 1; i < route.route.length; i++) {
           const prevPoint = route.route[i - 1]
           const currPoint = route.route[i]
@@ -508,7 +513,7 @@ function extractViasFromRoutes(
                 x: currPoint.x,
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
-                hole_diameter: viaDiameter * 0.5,
+                hole_diameter: viaHoleDiameter,
                 layers: [fromLayer, toLayer] as LayerName[],
               })
               viaLocations.add(locationKey)
@@ -528,13 +533,27 @@ function extractViasFromRoutes(
  * @param routes The SimplifiedPcbTraces or HighDensityRoutes to convert
  * @param minTraceWidth Default width for traces if not specified
  * @param minViaDiameter Default diameter for vias if not specified
+ * @param minViaHoleDiameter Default hole diameter for vias if not specified
  */
 export function convertToCircuitJson(
   srjWithPointPairs: SimpleRouteJson,
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   minTraceWidth = 0.1,
-  minViaDiameter = srjWithPointPairs.minViaDiameter ?? 0.3,
+  minViaDiameter?: number,
+  minViaHoleDiameter?: number,
 ): AnyCircuitElement[] {
+  const viaDimensions = getViaDimensions(srjWithPointPairs)
+  const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
+  const requestedMinViaHoleDiameter =
+    srjWithPointPairs.min_via_hole_diameter ??
+    srjWithPointPairs.minViaHoleDiameter
+  const resolvedMinViaHoleDiameter =
+    minViaHoleDiameter ??
+    requestedMinViaHoleDiameter ??
+    (minViaDiameter !== undefined
+      ? resolvedMinViaDiameter * 0.5
+      : viaDimensions.holeDiameter)
+
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
 
@@ -548,7 +567,13 @@ export function convertToCircuitJson(
   circuitJson.push(...createPcbPadElements(srjWithPointPairs))
 
   // Extract and add vias as independent pcb_via elements
-  circuitJson.push(...extractViasFromRoutes(routes, minViaDiameter))
+  circuitJson.push(
+    ...extractViasFromRoutes(
+      routes,
+      resolvedMinViaDiameter,
+      resolvedMinViaHoleDiameter,
+    ),
+  )
 
   // Build a map of connection names to simplify lookups
   const connectionMap = new Map<string, string>()

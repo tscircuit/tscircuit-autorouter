@@ -14,6 +14,7 @@ const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
 export interface ConvertHdRouteToSimplifiedRouteOptions {
   connectionPoints?: ReadonlyArray<ConnectionPoint>
   terminalViaAttachTolerance?: number
+  defaultViaHoleDiameter?: number
 }
 
 /**
@@ -62,12 +63,14 @@ const attachTerminalViasToSimplifiedRoute = ({
   layerCount,
   connectionPoints = [],
   tolerance = DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE,
+  defaultViaHoleDiameter,
 }: {
   route: SimplifiedPcbTraces[number]["route"]
   hdRoute: HdRouteWithOptionalJumpers
   layerCount: number
   connectionPoints?: ReadonlyArray<ConnectionPoint>
   tolerance?: number
+  defaultViaHoleDiameter?: number
 }): SimplifiedPcbTraces[number]["route"] => {
   if (
     route.length === 0 ||
@@ -119,6 +122,9 @@ const attachTerminalViasToSimplifiedRoute = ({
       to_layer: startTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
+      ...(defaultViaHoleDiameter !== undefined
+        ? { via_hole_diameter: defaultViaHoleDiameter }
+        : {}),
     })
 
     if (
@@ -163,6 +169,9 @@ const attachTerminalViasToSimplifiedRoute = ({
       to_layer: endTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
+      ...(defaultViaHoleDiameter !== undefined
+        ? { via_hole_diameter: defaultViaHoleDiameter }
+        : {}),
     })
   }
 
@@ -218,6 +227,9 @@ export const convertHdRouteToSimplifiedRoute = (
           from_layer: fromLayer,
           to_layer: toLayer,
           via_diameter: hdRoute.viaDiameter,
+          ...(opts.defaultViaHoleDiameter !== undefined
+            ? { via_hole_diameter: opts.defaultViaHoleDiameter }
+            : {}),
         })
       }
 
@@ -265,5 +277,6 @@ export const convertHdRouteToSimplifiedRoute = (
     layerCount,
     connectionPoints: opts.connectionPoints,
     tolerance: opts.terminalViaAttachTolerance,
+    defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
   })
 }
