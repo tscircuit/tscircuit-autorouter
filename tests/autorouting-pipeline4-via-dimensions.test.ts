@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
@@ -49,6 +48,39 @@ const nodeWithPortPoints: NodeWithPortPoints = {
   ],
 }
 
+const simpleViaSrj: SimpleRouteJson = {
+  layerCount: 2,
+  minTraceWidth: 0.15,
+  minViaDiameter: 0.3,
+  min_via_pad_diameter: 1.5,
+  min_via_hole_diameter: 0.4,
+  bounds: {
+    minX: -6,
+    maxX: 6,
+    minY: -2,
+    maxY: 2,
+  },
+  obstacles: [
+    {
+      type: "rect",
+      layers: ["top"],
+      center: { x: 0, y: 0 },
+      width: 6.5,
+      height: 3.6,
+      connectedTo: ["blocker"],
+    },
+  ],
+  connections: [
+    {
+      name: "net1",
+      pointsToConnect: [
+        { x: -5.5, y: 0, layer: "top" },
+        { x: 5.5, y: 0, layer: "top" },
+      ],
+    },
+  ],
+}
+
 test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
   const solver = new AutoroutingPipelineSolver4({
     ...srj,
@@ -84,15 +116,9 @@ test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
 })
 
 test(
-  "pipeline4 emits requested via pad and hole diameters on a real routed case",
+  "pipeline4 emits requested via pad and hole diameters on a simple forced-via circuit",
   () => {
-    const circuit155 = structuredClone(
-      (dataset01 as Record<string, unknown>).circuit155 as SimpleRouteJson,
-    )
-    circuit155.min_via_hole_diameter = 0.4
-    circuit155.min_via_pad_diameter = 1.5
-
-    const solver = new AutoroutingPipelineSolver4(circuit155)
+    const solver = new AutoroutingPipelineSolver4(structuredClone(simpleViaSrj))
     solver.solve()
 
     expect(solver.solved).toBe(true)
