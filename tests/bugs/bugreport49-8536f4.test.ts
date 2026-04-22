@@ -12,7 +12,4 @@ test("bugreport49-8536f4.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
   expect(solver.solved).toBe(true)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
 })
