@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.441",
+  "version": "0.0.444",
   "type": "module",
   "files": [
     "dist"
@@ -69,8 +69,8 @@
     "vite": "^6.0.11",
     "vite-tsconfig-paths": "^5.1.4",
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
-    "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#8296695fb591cf401f68318a1cb7a2f3e36ecb77",
-    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/705bad054f1f391b92080755a75283ceaaaa6438"
+    "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#37f0f1263577931c339b2b166e0ae52b93a2cba5",
+    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/2afc0cbba3bf2f7eb6b9cd33615d21e9ad9352d4"
   },
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.25",

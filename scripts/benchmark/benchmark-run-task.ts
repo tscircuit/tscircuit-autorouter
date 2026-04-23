@@ -21,6 +21,41 @@ type SolverOptions = {
   effort?: number
 }
 
+const getDrcErrorType = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return "unknown"
+  }
+
+  const record = error as Record<string, unknown>
+  for (const key of ["error_type", "type", "pcb_error_type", "name"]) {
+    const value = record[key]
+    if (typeof value === "string" && value.trim()) {
+      return value
+    }
+  }
+
+  const pcbErrorId = record.pcb_error_id
+  if (typeof pcbErrorId === "string") {
+    if (pcbErrorId.startsWith("same_net_vias_close_")) {
+      return "same_net_vias_close"
+    }
+    if (pcbErrorId.startsWith("different_net_vias_close_")) {
+      return "different_net_vias_close"
+    }
+  }
+
+  return "unknown"
+}
+
+const countDrcErrorTypes = (errors: unknown[]) => {
+  const counts: Record<string, number> = {}
+  for (const error of errors) {
+    const type = getDrcErrorType(error)
+    counts[type] = (counts[type] ?? 0) + 1
+  }
+  return counts
+}
+
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
 ): SolverOptions | undefined => {
@@ -87,6 +122,8 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      relaxedDrcErrorCount: 0,
+      relaxedDrcErrorTypes: {},
       error: solveError,
     }
   }
@@ -103,6 +140,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
     )
     const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
     const relaxedDrcPassed = errors.length === 0
+    const relaxedDrcErrorTypes = countDrcErrorTypes(errors)
 
     return {
       solverName: task.solverName,
@@ -111,6 +149,8 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       didSolve,
       didTimeout: false,
       relaxedDrcPassed,
+      relaxedDrcErrorCount: errors.length,
+      relaxedDrcErrorTypes,
     }
   } catch (error) {
     return {
@@ -120,6 +160,8 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      relaxedDrcErrorCount: 0,
+      relaxedDrcErrorTypes: {},
       error: error instanceof Error ? error.message : String(error),
     }
   }
