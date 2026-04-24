@@ -42,7 +42,27 @@ type ProfileSolverRow = {
 
 // --- Global profiling state ---
 let currentScenarioName = ""
+let currentScenarioIndex = 0
+let currentScenarioStartedAt = 0
+let lastHeartbeatAt = 0
+let scenarioCount = 0
 const allRecords: SolverRecord[] = []
+
+const getHeartbeatIntervalMs = () => {
+  const rawInterval = Bun.env.PROFILE_SOLVERS_HEARTBEAT_INTERVAL_MS?.trim()
+  if (!rawInterval) return 30_000
+
+  const intervalMs = Number.parseInt(rawInterval, 10)
+  if (!Number.isFinite(intervalMs) || intervalMs < 0) {
+    throw new Error(
+      "PROFILE_SOLVERS_HEARTBEAT_INTERVAL_MS must be a non-negative integer",
+    )
+  }
+
+  return intervalMs
+}
+
+const heartbeatIntervalMs = getHeartbeatIntervalMs()
 
 // --- Monkey-patch BaseSolver.step() to capture timing/iteration data ---
 const origStep = BaseSolver.prototype.step
@@ -63,6 +83,18 @@ BaseSolver.prototype.step = function (
   try {
     origStep.call(this)
   } finally {
+    const now = performance.now()
+    if (
+      heartbeatIntervalMs > 0 &&
+      currentScenarioName &&
+      now - lastHeartbeatAt >= heartbeatIntervalMs
+    ) {
+      lastHeartbeatAt = now
+      console.log(
+        `[profile-solvers] active ${currentScenarioIndex}/${scenarioCount} ${currentScenarioName} ${formatTime(now - currentScenarioStartedAt)} (${allRecords.length} solver records)`,
+      )
+    }
+
     // Record once when solver transitions to solved/failed
     if (!wasDone && !this.__profilingRecorded && (this.solved || this.failed)) {
       this.__profilingRecorded = true
@@ -221,16 +253,24 @@ const main = async () => {
   }
 
   console.log(
-    `Profiling ${scenarios.length} scenarios from ${opts.datasetName} with AutoroutingPipelineSolver...\n`,
+    `Running ${scenarios.length} profile-solver tasks (dataset: ${opts.datasetName})`,
   )
 
   let solved = 0
   let total = 0
+  scenarioCount = scenarios.length
 
   for (const [scenarioName, scenario] of scenarios) {
     currentScenarioName = scenarioName
+    currentScenarioIndex = total + 1
+    currentScenarioStartedAt = performance.now()
+    lastHeartbeatAt = currentScenarioStartedAt
     total++
     const solver = new AutoroutingPipelineSolver(scenario)
+
+    console.log(
+      `[profile-solvers] ${((solved / total) * 100).toFixed(1)}% success (${solved}/${total}) running ${scenarioName}`,
+    )
 
     try {
       solver.solve()
@@ -239,11 +279,11 @@ const main = async () => {
     if (solver.solved) {
       solved++
       console.log(
-        `  [OK]   ${scenarioName} ${formatTime(solver.timeToSolve ?? 0)}`,
+        `[profile-solvers] ${((solved / total) * 100).toFixed(1)}% success (${solved}/${total}) solved ${scenarioName} ${formatTime(solver.timeToSolve ?? 0)}`,
       )
     } else {
       console.log(
-        `  [FAIL] ${scenarioName} ${formatTime(solver.timeToSolve ?? 0)}`,
+        `[profile-solvers] ${((solved / total) * 100).toFixed(1)}% success (${solved}/${total}) failed ${scenarioName} ${formatTime(solver.timeToSolve ?? 0)}`,
       )
     }
   }
