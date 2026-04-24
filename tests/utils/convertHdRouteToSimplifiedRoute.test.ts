@@ -226,6 +226,78 @@ describe("convertHdRouteToSimplifiedRoute", () => {
     `)
   })
 
+  test("removes consecutive duplicate points on the same layer", () => {
+    const input: HighDensityIntraNodeRoute = {
+      connectionName: "duplicate-point-route",
+      traceThickness: 0.2,
+      viaDiameter: 0.6,
+      route: [
+        { x: 1, y: 1, z: 0 },
+        { x: 1, y: 1, z: 0 },
+        { x: 2, y: 1, z: 0 },
+      ],
+      vias: [],
+    }
+
+    const result = convertHdRouteToSimplifiedRoute(input, 2)
+    expect(result).toMatchInlineSnapshot(`
+      [
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.2,
+          "x": 1,
+          "y": 1,
+        },
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.2,
+          "x": 2,
+          "y": 1,
+        },
+      ]
+    `)
+  })
+
+  test("zero-length segment repro preserves the original duplicate point pair", () => {
+    const route = [
+      {
+        route_type: "wire",
+        x: -3.9823015744754504,
+        y: 18.50630157447545,
+        width: 0.6,
+        layer: "top",
+      },
+      {
+        route_type: "wire",
+        x: -3.9823015744754504,
+        y: 18.50630157447545,
+        width: 0.6,
+        layer: "top",
+      },
+    ]
+
+    expect(route).toMatchInlineSnapshot(`
+      [
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.6,
+          "x": -3.9823015744754504,
+          "y": 18.50630157447545,
+        },
+        {
+          "layer": "top",
+          "route_type": "wire",
+          "width": 0.6,
+          "x": -3.9823015744754504,
+          "y": 18.50630157447545,
+        },
+      ]
+    `)
+  })
+
   test("serializes terminal vias from single-layer connection points", () => {
     const input: HighDensityIntraNodeRoute = {
       connectionName: "terminal-via-route",

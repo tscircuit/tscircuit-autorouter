@@ -10,6 +10,7 @@ import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = { x: number; y: number; z: number }
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
+const SAME_POINT_TOLERANCE = 1e-12
 
 export interface ConvertHdRouteToSimplifiedRouteOptions {
   connectionPoints?: ReadonlyArray<ConnectionPoint>
@@ -23,6 +24,15 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
 type HdRouteWithOptionalJumpers = HighDensityIntraNodeRoute & {
   jumpers?: Jumper[]
 }
+
+const areSameXyPoint = (
+  a: Pick<Point, "x" | "y"> | undefined,
+  b: Pick<Point, "x" | "y"> | undefined,
+) =>
+  !!a &&
+  !!b &&
+  Math.abs(a.x - b.x) <= SAME_POINT_TOLERANCE &&
+  Math.abs(a.y - b.y) <= SAME_POINT_TOLERANCE
 
 const findNearestTerminalViaPoint = ({
   endpoint,
@@ -238,7 +248,9 @@ export const convertHdRouteToSimplifiedRoute = (
       currentZ = point.z
     } else {
       // Continue on the same layer
-      currentLayerPoints.push(point)
+      if (!areSameXyPoint(currentLayerPoints[currentLayerPoints.length - 1], point)) {
+        currentLayerPoints.push(point)
+      }
     }
   }
 
