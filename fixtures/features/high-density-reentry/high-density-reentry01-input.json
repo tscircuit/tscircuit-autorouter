@@ -1,0 +1,80 @@
+{
+  "nodePortPoints": [
+    {
+      "capacityMeshNodeId": "cmn_32",
+      "center": {
+        "x": 6.299999999999999,
+        "y": -0.22112599999999993
+      },
+      "width": 3.3,
+      "height": 2.69,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "ce159_pp0_z0::0",
+          "x": 7.949999999999999,
+          "y": 0.823873870689486,
+          "z": 0,
+          "connectionName": "source_trace_12",
+          "rootConnectionName": "source_trace_12"
+        },
+        {
+          "portPointId": "ce67_pp0_z0::0",
+          "x": 4.649999999999999,
+          "y": 0.188874,
+          "z": 0,
+          "connectionName": "source_trace_12",
+          "rootConnectionName": "source_trace_12"
+        },
+        {
+          "portPointId": "ce158_pp0_z0::0",
+          "x": 7.949999999999999,
+          "y": -0.44612612931051393,
+          "z": 0,
+          "connectionName": "source_trace_11",
+          "rootConnectionName": "source_trace_11"
+        },
+        {
+          "portPointId": "ce63_pp0_z0::0",
+          "x": 4.649999999999999,
+          "y": -1.081126,
+          "z": 0,
+          "connectionName": "source_trace_11",
+          "rootConnectionName": "source_trace_11"
+        },
+        {
+          "portPointId": "ce153_pp0_z0::0",
+          "x": 4.6499999999999995,
+          "y": -0.44612612931051393,
+          "z": 0,
+          "connectionName": "source_trace_8",
+          "rootConnectionName": "source_trace_8"
+        },
+        {
+          "portPointId": "ce136_pp0_z0::0",
+          "x": 7.949999999999999,
+          "y": 0.188874,
+          "z": 0,
+          "connectionName": "source_trace_8",
+          "rootConnectionName": "source_trace_8"
+        },
+        {
+          "portPointId": "ce133_pp0_z0::0",
+          "x": 7.949999999999999,
+          "y": -1.081126,
+          "z": 0,
+          "connectionName": "source_trace_8",
+          "rootConnectionName": "source_trace_8"
+        },
+        {
+          "portPointId": "ce140_pp0_z0::0",
+          "x": 4.874999999999998,
+          "y": -1.5661259999999997,
+          "z": 0,
+          "connectionName": "source_trace_8",
+          "rootConnectionName": "source_trace_8"
+        }
+      ]
+    }
+  ]
+}

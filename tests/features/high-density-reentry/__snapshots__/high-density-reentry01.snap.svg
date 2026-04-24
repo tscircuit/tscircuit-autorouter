@@ -1,0 +1,79 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="7.949999999999999,-0.44612612931051393 4.649999999999999,-1.081126" data-type="line" data-label="source_trace_11" points="600,358.18184012542054 39.999999999999886,465.93939393939394" fill="none" stroke="hsl(135, 100%, 50%)" stroke-width="25.45454545454545"/></g><g><polyline data-points="4.6499999999999995,-0.44612612931051393 4.649999999999999,-1.081126 4.874999999999998,-1.5661259999999997" data-type="line" data-label="source_trace_8" points="40,358.18184012542054 39.999999999999886,465.93939393939394 78.18181818181802,548.2424242424241" fill="none" stroke="hsl(315, 100%, 50%)" stroke-width="25.45454545454545"/></g><g><polyline data-points="7.949999999999999,0.188874 7.949999999999999,-0.44612612931051393 7.949999999999999,-1.081126" data-type="line" data-label="source_trace_8" points="600,250.42424242424246 600,358.18184012542054 600,465.93939393939394" fill="none" stroke="hsl(315, 100%, 50%)" stroke-width="25.45454545454545"/></g><g><polyline data-points="7.949999999999999,-1.081126 4.874999999999998,-1.5661259999999997" data-type="line" data-label="source_trace_8" points="600,465.93939393939394 78.18181818181802,548.2424242424241" fill="none" stroke="hsl(315, 100%, 50%)" stroke-width="25.45454545454545"/></g><g><polyline data-points="7.949999999999999,0.823873870689486 4.649999999999999,0.188874" data-type="line" data-label="source_trace_12" points="600,142.6666886102691 39.999999999999886,250.42424242424246" fill="none" stroke="hsl(45, 100%, 50%)" stroke-width="25.45454545454545"/></g><g><polyline data-points="4.649999999999999,-1.566126 7.949999999999999,-1.566126" data-type="line" data-label="hd_node_marker
+node: cmn_32
+status: solved
+solver: SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
+iterations: 1
+routes: 5
+nodePf: n/a
+portPoints: 8" points="39.999999999999886,548.2424242424242 600,548.2424242424242" fill="none" stroke="blue" stroke-width="5.09090909090909" stroke-dasharray="6, 4"/></g><g><polyline data-points="7.949999999999999,-1.566126 7.949999999999999,1.123874" data-type="line" data-label="hd_node_marker
+node: cmn_32
+status: solved
+solver: SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
+iterations: 1
+routes: 5
+nodePf: n/a
+portPoints: 8" points="600,548.2424242424242 600,91.75757575757581" fill="none" stroke="blue" stroke-width="5.09090909090909" stroke-dasharray="6, 4"/></g><g><polyline data-points="7.949999999999999,1.123874 4.649999999999999,1.123874" data-type="line" data-label="hd_node_marker
+node: cmn_32
+status: solved
+solver: SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
+iterations: 1
+routes: 5
+nodePf: n/a
+portPoints: 8" points="600,91.75757575757581 39.999999999999886,91.75757575757581" fill="none" stroke="blue" stroke-width="5.09090909090909" stroke-dasharray="6, 4"/></g><g><polyline data-points="4.649999999999999,1.123874 4.649999999999999,-1.566126" data-type="line" data-label="hd_node_marker
+node: cmn_32
+status: solved
+solver: SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
+iterations: 1
+routes: 5
+nodePf: n/a
+portPoints: 8" points="39.999999999999886,91.75757575757581 39.999999999999886,548.2424242424242" fill="none" stroke="blue" stroke-width="5.09090909090909" stroke-dasharray="6, 4"/></g><g><circle data-type="point" data-label="hd_node_marker
+node: cmn_32
+status: solved
+solver: SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
+iterations: 1
+routes: 5
+nodePf: n/a
+portPoints: 8" data-x="6.299999999999999" data-y="-0.22112599999999993" cx="320" cy="320" r="3" fill="blue"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":169.69696969696966,"c":0,"e":-749.0909090909088,"b":0,"d":-169.69696969696966,"f":282.4755878787879};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>

@@ -1,4 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -105,6 +106,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
+  globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -396,6 +398,17 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         layerCount: cms.srj.layerCount,
       },
     ]),
+    definePipelineStep(
+      "globalDrcForceImproveSolver",
+      GlobalDrcForceImproveSolver,
+      (cms) => [
+        {
+          srj: cms.srjWithPointPairs!,
+          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          effort: cms.effort,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -636,6 +649,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes

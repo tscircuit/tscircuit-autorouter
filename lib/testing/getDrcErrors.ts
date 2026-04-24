@@ -1,9 +1,9 @@
-import { Point } from "graphics-debug"
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
   checkSameNetViaSpacing,
 } from "@tscircuit/checks"
+import { Point } from "graphics-debug"
 
 type CircuitJson = Parameters<typeof checkEachPcbTraceNonOverlapping>[0]
 type CircuitJsonElement = CircuitJson[number]
@@ -21,6 +21,9 @@ type DrcErrorWithCenter = DrcError & { center?: Point }
 
 type LocationAwareDrcError = DrcError & { center: Point }
 
+export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
+export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
+
 export interface GetDrcErrorsResult {
   errors: DrcError[]
   errorsWithCenters: DrcErrorWithCenter[]
@@ -36,15 +39,19 @@ export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
+  const viaClearance = Math.max(
+    options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
+    MIN_VIA_TO_VIA_CLEARANCE,
+  )
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     minSpacing: options.traceClearance,
   })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
-      minSpacing: options.viaClearance,
+      minSpacing: viaClearance,
     }),
     ...checkDifferentNetViaSpacing(circuitJson, {
-      minSpacing: options.viaClearance,
+      minSpacing: viaClearance,
     }),
   ]
 

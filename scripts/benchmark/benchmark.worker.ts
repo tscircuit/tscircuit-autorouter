@@ -25,6 +25,8 @@ self.onmessage = async (event: MessageEvent<WorkerTaskMessage>) => {
         didSolve: false,
         didTimeout: false,
         relaxedDrcPassed: false,
+        relaxedDrcErrorCount: 0,
+        relaxedDrcErrorTypes: {},
         error: error instanceof Error ? error.message : String(error),
       } satisfies WorkerResult,
     } satisfies WorkerResultMessage)

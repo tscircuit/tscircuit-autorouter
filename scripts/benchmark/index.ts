@@ -9,6 +9,8 @@ import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
   BenchmarkReport,
   BenchmarkTask,
+  DrcErrorTypeSummary,
+  DrcFailingCircuitSummary,
   SolverRunSummary,
   WorkerResult,
   WorkerResultMessage,
@@ -433,6 +435,8 @@ const createFailedResult = (
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
+  relaxedDrcErrorCount: 0,
+  relaxedDrcErrorTypes: {},
   error,
 })
 
@@ -696,8 +700,13 @@ const runBenchmarkTasks = async (
           ? 0
           : (solverProgress.solved / solverProgress.completed) * 100
       const suffix = result.error ? ` (${result.error})` : ""
+      const drcSuffix = result.didSolve
+        ? result.relaxedDrcPassed
+          ? " drc=pass"
+          : ` drc=${result.relaxedDrcErrorCount} error${result.relaxedDrcErrorCount === 1 ? "" : "s"}`
+        : ""
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${drcSuffix}${suffix}`,
       )
 
       if (restartWorker) {
@@ -721,6 +730,79 @@ const runBenchmarkTasks = async (
   }
 
   return results
+}
+
+const summarizeDrcErrorTypes = (
+  results: WorkerResult[],
+): DrcErrorTypeSummary[] => {
+  const counts = new Map<string, number>()
+
+  for (const result of results) {
+    if (!result.didSolve) {
+      continue
+    }
+
+    for (const [type, count] of Object.entries(result.relaxedDrcErrorTypes)) {
+      counts.set(type, (counts.get(type) ?? 0) + count)
+    }
+  }
+
+  return [...counts.entries()]
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type))
+}
+
+const formatDrcErrorTypeSummary = (summary: DrcErrorTypeSummary[]) => {
+  if (summary.length === 0) {
+    return "Top DRC error types: none"
+  }
+
+  return [
+    "Top DRC error types:",
+    ...summary.map(
+      (entry, index) => `${index + 1}. ${entry.type}: ${entry.count}`,
+    ),
+  ].join("\n")
+}
+
+const summarizeDrcFailingCircuits = (
+  results: WorkerResult[],
+): DrcFailingCircuitSummary[] =>
+  results
+    .filter((result) => result.didSolve && !result.relaxedDrcPassed)
+    .map((result) => ({
+      solverName: result.solverName,
+      circuitId: result.scenarioName,
+      relaxedDrcErrorCount: result.relaxedDrcErrorCount,
+      relaxedDrcErrorTypes: result.relaxedDrcErrorTypes,
+    }))
+    .sort(
+      (a, b) =>
+        a.solverName.localeCompare(b.solverName) ||
+        a.circuitId.localeCompare(b.circuitId),
+    )
+
+const formatDrcFailingCircuitSummary = (
+  summary: DrcFailingCircuitSummary[],
+) => {
+  if (summary.length === 0) {
+    return "DRC failing circuits: none"
+  }
+
+  return [
+    "DRC failing circuits:",
+    ...summary.map((entry) => {
+      const errorTypes = Object.entries(entry.relaxedDrcErrorTypes)
+        .sort(
+          ([typeA, countA], [typeB, countB]) =>
+            countB - countA || typeA.localeCompare(typeB),
+        )
+        .map(([type, count]) => `${type}=${count}`)
+        .join(", ")
+      const errorTypeSuffix = errorTypes ? ` (${errorTypes})` : ""
+      return `- ${entry.circuitId} [${entry.solverName}]: ${entry.relaxedDrcErrorCount} error${entry.relaxedDrcErrorCount === 1 ? "" : "s"}${errorTypeSuffix}`
+    }),
+  ].join("\n")
 }
 
 const summarizeSolverResults = (
@@ -812,13 +894,20 @@ const main = async () => {
     ),
   )
   const table = formatTable(rows)
-  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n`
+  const drcErrorTypes = summarizeDrcErrorTypes(results)
+  const drcErrorTypeOutput = formatDrcErrorTypeSummary(drcErrorTypes)
+  const drcFailingCircuits = summarizeDrcFailingCircuits(results)
+  const drcFailingCircuitOutput =
+    formatDrcFailingCircuitSummary(drcFailingCircuits)
+  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\n${drcErrorTypeOutput}\n\n${drcFailingCircuitOutput}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n`
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,
+    drcErrorTypes,
+    drcFailingCircuits,
     tests: results,
   }
   await Bun.write("benchmark-result.txt", output)
@@ -826,6 +915,8 @@ const main = async () => {
 
   console.log(`\nBenchmark Results (${effortLabel})\n`)
   console.log(table)
+  console.log(`\n${drcErrorTypeOutput}`)
+  console.log(`\n${drcFailingCircuitOutput}`)
   console.log(`\nDataset: ${datasetName}`)
   console.log(`\nScenarios: ${scenarios.length}`)
   console.log(
