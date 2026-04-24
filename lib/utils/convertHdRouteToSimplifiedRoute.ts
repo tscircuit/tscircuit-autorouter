@@ -248,7 +248,12 @@ export const convertHdRouteToSimplifiedRoute = (
       currentZ = point.z
     } else {
       // Continue on the same layer
-      if (!areSameXyPoint(currentLayerPoints[currentLayerPoints.length - 1], point)) {
+      if (
+        !areSameXyPoint(
+          currentLayerPoints[currentLayerPoints.length - 1],
+          point,
+        )
+      ) {
         currentLayerPoints.push(point)
       }
     }
