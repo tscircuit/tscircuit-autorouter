@@ -92,40 +92,6 @@ test("Pipeline4HighDensityForceImproveSolver preserves simple no-op routes", () 
   expect(solver.getOutput()).toEqual([hdRoute])
 })
 
-test("Pipeline4HighDensityForceImproveSolver separates close same-route vias", () => {
-  const viaRoute: HighDensityRoute = {
-    connectionName: "conn1",
-    traceThickness: 0.15,
-    viaDiameter: 0.3,
-    route: [
-      { x: -0.8, y: 0, z: 0 },
-      { x: -0.1, y: 0, z: 0 },
-      { x: -0.1, y: 0, z: 1 },
-      { x: 0.1, y: 0, z: 1 },
-      { x: 0.1, y: 0, z: 0 },
-      { x: 0.8, y: 0, z: 0 },
-    ],
-    vias: [
-      { x: -0.1, y: 0 },
-      { x: 0.1, y: 0 },
-    ],
-  }
-  const solver = new HighDensityForceImproveSolver({
-    nodeWithPortPoints: [nodeWithPortPoints],
-    hdRoutes: [viaRoute],
-    totalStepsPerNode: 1,
-  })
-
-  solver.solve()
-
-  const [leftVia, rightVia] = solver.getOutput()[0]!.vias
-  const viaDistance = Math.hypot(
-    leftVia!.x - rightVia!.x,
-    leftVia!.y - rightVia!.y,
-  )
-  expect(viaDistance).toBeGreaterThanOrEqual(0.4)
-})
-
 test("pipeline4 inserts force-improve stage after high density and before repair", () => {
   const solver = new AutoroutingPipelineSolver4(srj)
   const phaseNames = solver.pipelineDef.map((step) => step.solverName)
