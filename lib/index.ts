@@ -36,3 +36,13 @@ export type {
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+export { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+export type {
+  DrcError,
+  DrcEvaluator,
+  DrcSnapshot,
+  GlobalDrcForceImproveSolverParams,
+  HighDensityRoute,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "high-density-repair03/lib"

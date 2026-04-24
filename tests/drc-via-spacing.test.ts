@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
+import {
+  MIN_VIA_TO_VIA_CLEARANCE,
+  getDrcErrors,
+} from "lib/testing/getDrcErrors"
 
-test("getDrcErrors reports different-net vias that are too close", () => {
-  const circuitJson = [
+const createViaPair = (centerDistance: number) =>
+  [
     {
       type: "pcb_via",
       pcb_via_id: "via_a",
@@ -15,13 +18,16 @@ test("getDrcErrors reports different-net vias that are too close", () => {
     {
       type: "pcb_via",
       pcb_via_id: "via_b",
-      x: 0.35,
+      x: centerDistance,
       y: 0,
       outer_diameter: 0.3,
       hole_diameter: 0.15,
       layers: ["top", "bottom"],
     },
   ] as any[]
+
+test("getDrcErrors reports different-net vias that are too close", () => {
+  const circuitJson = createViaPair(0.35)
 
   const { errors, locationAwareErrors } = getDrcErrors(circuitJson, {
     viaClearance: 0.1,
@@ -36,4 +42,24 @@ test("getDrcErrors reports different-net vias that are too close", () => {
   })
   expect(locationAwareErrors).toHaveLength(1)
   expect(locationAwareErrors[0].center).toEqual({ x: 0.175, y: 0 })
+})
+
+test("getDrcErrors enforces 0.1 minimum via-to-via clearance", () => {
+  const centerDistance = 0.3 + MIN_VIA_TO_VIA_CLEARANCE - 0.01
+  const { errors } = getDrcErrors(createViaPair(centerDistance), {
+    viaClearance: 0.05,
+  })
+
+  expect(errors).toHaveLength(1)
+  expect(errors[0]).toMatchObject({
+    type: "pcb_via_clearance_error",
+    pcb_via_ids: ["via_a", "via_b"],
+  })
+})
+
+test("getDrcErrors allows vias at 0.1 clearance", () => {
+  const centerDistance = 0.3 + MIN_VIA_TO_VIA_CLEARANCE
+  const { errors } = getDrcErrors(createViaPair(centerDistance))
+
+  expect(errors).toHaveLength(0)
 })
