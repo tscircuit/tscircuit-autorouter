@@ -37,6 +37,7 @@ import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPoint
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { ConvexRegionsCapacityMeshNodeSolver } from "../../solvers/CapacityMeshSolver/ConvexRegionsCapacityMeshNodeSolver"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -98,7 +99,7 @@ function definePipelineStep<
 export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
-  nodeSolver?: RectDiffPipeline
+  nodeSolver?: ConvexRegionsCapacityMeshNodeSolver
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -175,8 +176,11 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     ),
     definePipelineStep(
       "nodeSolver",
-      RectDiffPipeline,
-      (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! as any }],
+      ConvexRegionsCapacityMeshNodeSolver,
+      (cms) => [
+        cms.srjWithPointPairs!,
+        { clearance: cms.srj.defaultObstacleMargin ?? 0.15 },
+      ],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []

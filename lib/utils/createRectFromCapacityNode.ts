@@ -1,5 +1,6 @@
 import { Rect } from "graphics-debug"
 import { CapacityMeshNode } from "lib/types"
+import { getNodeBounds } from "./capacityMeshNodeGeometry"
 
 export const createRectFromCapacityNode = (
   node: CapacityMeshNode,
@@ -9,20 +10,34 @@ export const createRectFromCapacityNode = (
   } = {},
 ): Rect => {
   const lowestZ = Math.min(...node.availableZ)
+  const bounds = getNodeBounds(node)
   return {
     center:
       !opts.rectMargin || opts.zOffset
         ? {
-            x: node.center.x + lowestZ * node.width * (opts.zOffset ?? 0.05),
-            y: node.center.y - lowestZ * node.width * (opts.zOffset ?? 0.05),
+            x:
+              (bounds.minX + bounds.maxX) / 2 +
+              lowestZ * (bounds.maxX - bounds.minX) * (opts.zOffset ?? 0.05),
+            y:
+              (bounds.minY + bounds.maxY) / 2 -
+              lowestZ * (bounds.maxX - bounds.minX) * (opts.zOffset ?? 0.05),
           }
-        : node.center,
+        : {
+            x: (bounds.minX + bounds.maxX) / 2,
+            y: (bounds.minY + bounds.maxY) / 2,
+          },
     width: opts.rectMargin
-      ? node.width - opts.rectMargin * 2
-      : Math.max(node.width - 0.5, node.width * 0.8),
+      ? bounds.maxX - bounds.minX - opts.rectMargin * 2
+      : Math.max(
+          bounds.maxX - bounds.minX - 0.5,
+          (bounds.maxX - bounds.minX) * 0.8,
+        ),
     height: opts.rectMargin
-      ? node.height - opts.rectMargin * 2
-      : Math.max(node.height - 0.5, node.height * 0.8),
+      ? bounds.maxY - bounds.minY - opts.rectMargin * 2
+      : Math.max(
+          bounds.maxY - bounds.minY - 0.5,
+          (bounds.maxY - bounds.minY) * 0.8,
+        ),
     fill: node._containsObstacle
       ? "rgba(255,0,0,0.1)"
       : ({

@@ -1,5 +1,5 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectionPoint } from "lib/types"
+import { isPointInNode } from "lib/utils/capacityMeshNodeGeometry"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { sharedZLayers } from "./sharedZLayers"
 import type { RegionHg } from "./types"
@@ -10,7 +10,7 @@ export function checkIfConnectionPointIsInRegion(params: {
   region: RegionHg
   layerCount: number
 }): boolean {
-  if (pointToBoxDistance(params.point, params.region.d) === 0) {
+  if (isPointInNode(params.point, params.region.d)) {
     const layers =
       "layers" in params.point ? params.point.layers : [params.point.layer]
     const intLayers = layers.map((layer) => {

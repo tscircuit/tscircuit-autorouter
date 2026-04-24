@@ -89,6 +89,13 @@ export interface InputNodeWithPortPoints {
   center: { x: number; y: number }
   width: number
   height: number
+  bounds?: {
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  }
+  polygon?: Array<{ x: number; y: number }>
   /** Port points on this node's edges (without connectionName) */
   portPoints: InputPortPoint[]
   availableZ: number[]
@@ -601,6 +608,8 @@ export class PortPointPathingSolver extends BaseSolver {
       center: node.center,
       width: node.width,
       height: node.height,
+      bounds: node.bounds,
+      polygon: node.polygon,
       portPoints: allPortPoints,
       availableZ: node.availableZ,
     }
@@ -1627,6 +1636,8 @@ export class PortPointPathingSolver extends BaseSolver {
           center: node.center,
           width: node.width,
           height: node.height,
+          bounds: node.bounds,
+          polygon: node.polygon,
           portPoints: assignedPortPoints,
           availableZ: node.availableZ,
         })
@@ -1686,6 +1697,8 @@ export class PortPointPathingSolver extends BaseSolver {
       center: node.center,
       width: node.width,
       height: node.height,
+      bounds: node.bounds,
+      polygon: node.polygon,
       portPoints: filteredPortPoints,
       availableZ: node.availableZ,
     }

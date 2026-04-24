@@ -12,6 +12,13 @@ export type NodeWithPortPoints = {
   center: { x: number; y: number }
   width: number
   height: number
+  bounds?: {
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  }
+  polygon?: Array<{ x: number; y: number }>
   portPoints: PortPoint[]
   availableZ?: number[]
 }

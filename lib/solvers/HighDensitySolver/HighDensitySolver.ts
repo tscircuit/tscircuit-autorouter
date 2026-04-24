@@ -8,6 +8,8 @@ import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
+import { createNodeRectification } from "lib/utils/rectifyNodeWithPortPoints"
+import { getNodeBounds } from "lib/utils/capacityMeshNodeGeometry"
 import { BaseSolver } from "../BaseSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
@@ -36,6 +38,7 @@ export class HighDensitySolver extends BaseSolver {
     null
   connMap?: ConnectivityMap
   nodePfById: Map<CapacityMeshNodeId, number | null>
+  originalNodeById: Map<CapacityMeshNodeId, NodeWithPortPoints>
   nodeSolveMetadataById: Map<
     CapacityMeshNodeId,
     {
@@ -85,6 +88,9 @@ export class HighDensitySolver extends BaseSolver {
       nodePfById instanceof Map
         ? new Map(nodePfById)
         : new Map(Object.entries(nodePfById ?? {}))
+    this.originalNodeById = new Map(
+      nodePortPoints.map((node) => [node.capacityMeshNodeId, node]),
+    )
     this.nodeSolveMetadataById = new Map()
     this.stats = {
       solverNodeCount: {} as Record<string, number>,
@@ -105,7 +111,9 @@ export class HighDensitySolver extends BaseSolver {
     solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
     status: "solved" | "failed",
   ) {
-    const node = solver.nodeWithPortPoints
+    const node =
+      this.originalNodeById.get(solver.nodeWithPortPoints.capacityMeshNodeId) ??
+      solver.nodeWithPortPoints
     const nodePf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
     this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
       node,
@@ -217,11 +225,22 @@ export class HighDensitySolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.routes.push(...this.activeSubSolver.solvedRoutes)
+        const solvedNodeId =
+          this.activeSubSolver.nodeWithPortPoints.capacityMeshNodeId
+        const originalNode = this.originalNodeById.get(solvedNodeId)
+        const rectification = originalNode
+          ? createNodeRectification(originalNode)
+          : null
+
+        this.routes.push(
+          ...this.activeSubSolver.solvedRoutes.map((route) =>
+            rectification ? rectification.reverseRoute(route) : route,
+          ),
+        )
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
         this.recordSolvedNodeStats(
           this.activeSubSolver,
-          this.activeSubSolver.nodeWithPortPoints,
+          originalNode ?? this.activeSubSolver.nodeWithPortPoints,
         )
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
@@ -247,9 +266,10 @@ export class HighDensitySolver extends BaseSolver {
       return
     }
     const node = this.unsolvedNodePortPoints.pop()!
+    const rectification = createNodeRectification(node)
 
     this.activeSubSolver = new HyperSingleIntraNodeSolver({
-      nodeWithPortPoints: node,
+      nodeWithPortPoints: rectification.rectifiedNode,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -307,60 +327,68 @@ export class HighDensitySolver extends BaseSolver {
     }
     if (this.solved || this.failed) {
       for (const [capacityMeshNodeId, metadata] of this.nodeSolveMetadataById) {
-        const left = metadata.node.center.x - metadata.node.width / 2
-        const right = metadata.node.center.x + metadata.node.width / 2
-        const top = metadata.node.center.y - metadata.node.height / 2
-        const bottom = metadata.node.center.y + metadata.node.height / 2
+        const bounds = getNodeBounds(metadata.node as any)
 
         const label = this.createNodeMarkerLabel(capacityMeshNodeId, metadata)
         const markerColor = metadata.status === "solved" ? "blue" : "red"
 
-        graphics.lines!.push(
-          {
-            points: [
-              { x: left, y: top },
-              { x: right, y: top },
-            ],
+        if (metadata.node.polygon && metadata.node.polygon.length >= 3) {
+          graphics.lines!.push({
+            points: [...metadata.node.polygon, metadata.node.polygon[0]!],
             layer: "hd_node_boundaries",
             strokeColor: markerColor,
             strokeDash: "6, 4",
             strokeWidth: 0.03,
             label,
-          },
-          {
-            points: [
-              { x: right, y: top },
-              { x: right, y: bottom },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-          {
-            points: [
-              { x: right, y: bottom },
-              { x: left, y: bottom },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-          {
-            points: [
-              { x: left, y: bottom },
-              { x: left, y: top },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-        )
+          })
+        } else {
+          graphics.lines!.push(
+            {
+              points: [
+                { x: bounds.minX, y: bounds.minY },
+                { x: bounds.maxX, y: bounds.minY },
+              ],
+              layer: "hd_node_boundaries",
+              strokeColor: markerColor,
+              strokeDash: "6, 4",
+              strokeWidth: 0.03,
+              label,
+            },
+            {
+              points: [
+                { x: bounds.maxX, y: bounds.minY },
+                { x: bounds.maxX, y: bounds.maxY },
+              ],
+              layer: "hd_node_boundaries",
+              strokeColor: markerColor,
+              strokeDash: "6, 4",
+              strokeWidth: 0.03,
+              label,
+            },
+            {
+              points: [
+                { x: bounds.maxX, y: bounds.maxY },
+                { x: bounds.minX, y: bounds.maxY },
+              ],
+              layer: "hd_node_boundaries",
+              strokeColor: markerColor,
+              strokeDash: "6, 4",
+              strokeWidth: 0.03,
+              label,
+            },
+            {
+              points: [
+                { x: bounds.minX, y: bounds.maxY },
+                { x: bounds.minX, y: bounds.minY },
+              ],
+              layer: "hd_node_boundaries",
+              strokeColor: markerColor,
+              strokeDash: "6, 4",
+              strokeWidth: 0.03,
+              label,
+            },
+          )
+        }
 
         if (metadata.status === "solved") {
           graphics.points!.push({

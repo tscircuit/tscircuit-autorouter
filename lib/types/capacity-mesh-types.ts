@@ -1,5 +1,17 @@
 export type CapacityMeshNodeId = string
 
+export interface CapacityMeshPoint {
+  x: number
+  y: number
+}
+
+export interface CapacityMeshBounds {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
 export interface CapacityMesh {
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
@@ -12,6 +24,8 @@ export interface CapacityMeshNode {
   height: number
   layer: string
   availableZ: number[]
+  bounds?: CapacityMeshBounds
+  polygon?: CapacityMeshPoint[]
 
   _depth?: number
 

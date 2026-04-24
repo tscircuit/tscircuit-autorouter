@@ -13,6 +13,7 @@ import type {
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getNodeBounds } from "lib/utils/capacityMeshNodeGeometry"
 import {
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -196,6 +197,20 @@ const buildSerializedTinyGraph = (
         },
         width: TINY_TERMINAL_REGION_SIZE,
         height: TINY_TERMINAL_REGION_SIZE,
+        bounds: {
+          minX:
+            (startPoint?.x ?? connection.startRegion.d.center.x) -
+            TINY_TERMINAL_REGION_SIZE / 2,
+          maxX:
+            (startPoint?.x ?? connection.startRegion.d.center.x) +
+            TINY_TERMINAL_REGION_SIZE / 2,
+          minY:
+            (startPoint?.y ?? connection.startRegion.d.center.y) -
+            TINY_TERMINAL_REGION_SIZE / 2,
+          maxY:
+            (startPoint?.y ?? connection.startRegion.d.center.y) +
+            TINY_TERMINAL_REGION_SIZE / 2,
+        },
         availableZ: [startZ],
         _containsTarget: true,
         _tinyTerminal: true,
@@ -215,6 +230,20 @@ const buildSerializedTinyGraph = (
         },
         width: TINY_TERMINAL_REGION_SIZE,
         height: TINY_TERMINAL_REGION_SIZE,
+        bounds: {
+          minX:
+            (endPoint?.x ?? connection.endRegion.d.center.x) -
+            TINY_TERMINAL_REGION_SIZE / 2,
+          maxX:
+            (endPoint?.x ?? connection.endRegion.d.center.x) +
+            TINY_TERMINAL_REGION_SIZE / 2,
+          minY:
+            (endPoint?.y ?? connection.endRegion.d.center.y) -
+            TINY_TERMINAL_REGION_SIZE / 2,
+          maxY:
+            (endPoint?.y ?? connection.endRegion.d.center.y) +
+            TINY_TERMINAL_REGION_SIZE / 2,
+        },
         availableZ: [endZ],
         _containsTarget: true,
         _tinyTerminal: true,
@@ -457,6 +486,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       center: region.d.center,
       width: region.d.width,
       height: region.d.height,
+      bounds: getNodeBounds(region.d),
+      polygon: region.d.polygon,
       portPoints: region.ports.map((port) => {
         const connectsToOffBoardNode = port.d.regions.some((candidateRegion) =>
           Boolean(candidateRegion.d._offBoardConnectionId),
@@ -612,6 +643,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         center: originalRegion.d.center,
         width: originalRegion.d.width,
         height: originalRegion.d.height,
+        bounds: getNodeBounds(originalRegion.d),
+        polygon: originalRegion.d.polygon,
         portPoints,
         availableZ: originalRegion.d.availableZ,
       })

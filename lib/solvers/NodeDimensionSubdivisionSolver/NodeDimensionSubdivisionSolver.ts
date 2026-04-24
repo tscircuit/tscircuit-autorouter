@@ -73,6 +73,13 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       return []
     }
 
+    // Convex-region nodes already carry tighter geometry than the legacy
+    // rect mesh, so further rect subdivision mostly inflates the HG search
+    // space without adding meaningful routing freedom.
+    if (node.polygon && node.polygon.length >= 3) {
+      return [node]
+    }
+
     const { cols, rows } = this.getSubdivisionGrid(node)
 
     if (cols === 1 && rows === 1) {
@@ -91,12 +98,37 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
         childNodes.push({
           ...node,
           capacityMeshNodeId: `${node.capacityMeshNodeId}__sub_${row}_${col}`,
-          center: {
-            x: minX + childWidth * (col + 0.5),
-            y: minY + childHeight * (row + 0.5),
-          },
+          center: (() => {
+            const x = minX + childWidth * (col + 0.5)
+            const y = minY + childHeight * (row + 0.5)
+            return { x, y }
+          })(),
           width: childWidth,
           height: childHeight,
+          bounds: {
+            minX: minX + childWidth * col,
+            maxX: minX + childWidth * (col + 1),
+            minY: minY + childHeight * row,
+            maxY: minY + childHeight * (row + 1),
+          },
+          polygon: [
+            {
+              x: minX + childWidth * col,
+              y: minY + childHeight * row,
+            },
+            {
+              x: minX + childWidth * (col + 1),
+              y: minY + childHeight * row,
+            },
+            {
+              x: minX + childWidth * (col + 1),
+              y: minY + childHeight * (row + 1),
+            },
+            {
+              x: minX + childWidth * col,
+              y: minY + childHeight * (row + 1),
+            },
+          ],
           availableZ: [...node.availableZ],
         })
       }

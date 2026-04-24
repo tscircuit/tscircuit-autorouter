@@ -4,7 +4,6 @@ import {
   doSegmentsIntersect,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
@@ -13,6 +12,10 @@ import type {
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import type { GraphicsObject } from "graphics-debug"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { assertDefined } from "./assertDefined"
 import { mergeGraphicsArray } from "./mergeGraphicsArray"
 import type {
@@ -30,6 +33,7 @@ import { visualizeCandidate } from "./visualize/visualizeCandidate"
 import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
 import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
+import { getNodeBounds } from "lib/utils/capacityMeshNodeGeometry"
 
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -739,6 +743,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       center: region.d.center,
       width: region.d.width,
       height: region.d.height,
+      bounds: getNodeBounds(region.d),
+      polygon: region.d.polygon,
       portPoints,
       availableZ: region.d.availableZ,
     }
@@ -907,6 +913,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           center: region.d.center,
           width: region.d.width,
           height: region.d.height,
+          bounds: getNodeBounds(region.d),
+          polygon: region.d.polygon,
           portPoints: nodePortPoints,
           availableZ: region.d.availableZ,
         })
@@ -932,6 +940,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         center: region.d.center,
         width: region.d.width,
         height: region.d.height,
+        bounds: getNodeBounds(region.d),
+        polygon: region.d.polygon,
         portPoints: inputPortPoints,
         availableZ: region.d.availableZ,
         _containsObstacle: region.d._containsObstacle,

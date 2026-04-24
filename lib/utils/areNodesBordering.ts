@@ -1,9 +1,18 @@
 import { CapacityMeshNode } from "../types"
+import { getSharedNodeBoundarySegment } from "./capacityMeshNodeGeometry"
 
 export function areNodesBordering(
   node1: CapacityMeshNode,
   node2: CapacityMeshNode,
 ): boolean {
+  if (node1.capacityMeshNodeId === node2.capacityMeshNodeId) {
+    return false
+  }
+
+  if (node1.polygon || node2.polygon || node1.bounds || node2.bounds) {
+    return Boolean(getSharedNodeBoundarySegment(node1, node2))
+  }
+
   const n1Left = node1.center.x - node1.width / 2
   const n1Right = node1.center.x + node1.width / 2
   const n1Top = node1.center.y - node1.height / 2

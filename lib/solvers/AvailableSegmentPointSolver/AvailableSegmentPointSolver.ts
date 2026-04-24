@@ -7,6 +7,11 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import {
+  getNodeBounds,
+  getSharedNodeBoundarySegment,
+  isPointInNode,
+} from "lib/utils/capacityMeshNodeGeometry"
 
 export interface SegmentPortPoint {
   segmentPortPointId: string
@@ -321,11 +326,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         x: (offBoardNode.center.x + otherNode.center.x) / 2,
         y: (offBoardNode.center.y + otherNode.center.y) / 2,
       }
-      const insideMiddleNode =
-        midpoint.x >= middleNode.center.x - middleNode.width / 2 &&
-        midpoint.x <= middleNode.center.x + middleNode.width / 2 &&
-        midpoint.y >= middleNode.center.y - middleNode.height / 2 &&
-        midpoint.y <= middleNode.center.y + middleNode.height / 2
+      const insideMiddleNode = isPointInNode(midpoint, middleNode)
       if (insideMiddleNode) {
         return true
       }
@@ -337,27 +338,22 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     node: CapacityMeshNode,
     adjNode: CapacityMeshNode,
   ): { start: { x: number; y: number }; end: { x: number; y: number } } | null {
+    const sharedBoundary = getSharedNodeBoundarySegment(node, adjNode)
+    if (sharedBoundary) {
+      return sharedBoundary
+    }
+
     // Find overlapping ranges in x and y dimensions
+    const nodeBounds = getNodeBounds(node)
+    const adjNodeBounds = getNodeBounds(adjNode)
     const xOverlap = {
-      start: Math.max(
-        node.center.x - node.width / 2,
-        adjNode.center.x - adjNode.width / 2,
-      ),
-      end: Math.min(
-        node.center.x + node.width / 2,
-        adjNode.center.x + adjNode.width / 2,
-      ),
+      start: Math.max(nodeBounds.minX, adjNodeBounds.minX),
+      end: Math.min(nodeBounds.maxX, adjNodeBounds.maxX),
     }
 
     const yOverlap = {
-      start: Math.max(
-        node.center.y - node.height / 2,
-        adjNode.center.y - adjNode.height / 2,
-      ),
-      end: Math.min(
-        node.center.y + node.height / 2,
-        adjNode.center.y + adjNode.height / 2,
-      ),
+      start: Math.max(nodeBounds.minY, adjNodeBounds.minY),
+      end: Math.min(nodeBounds.maxY, adjNodeBounds.maxY),
     }
 
     const xRange = xOverlap.end - xOverlap.start
