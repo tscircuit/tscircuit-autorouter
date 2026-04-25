@@ -141,23 +141,7 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
     }))
 
     for (const seed of seeds) {
-      for (let otherLayer = 0; otherLayer < this.srj.layerCount; otherLayer++) {
-        if (otherLayer === layer) continue
-
-        const intersectsObstacleOnOtherLayer = (
-          obstaclePolygonsByLayer.get(otherLayer) ?? []
-        ).some((obstaclePolygon) =>
-          polygonsIntersect(seed.polygon, obstaclePolygon),
-        )
-
-        if (!intersectsObstacleOnOtherLayer) {
-          seed.availableZ.push(otherLayer)
-        }
-      }
-
-      seed.availableZ = Array.from(new Set(seed.availableZ)).sort(
-        (a, b) => a - b,
-      )
+      this.extendSeedAvailableZ(seed, layer, obstaclePolygonsByLayer)
     }
 
     for (const obstacle of layerObstacles) {
@@ -173,13 +157,26 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
       if (!containsTarget) {
         continue
       }
-      seeds.push({
+      const obstacleSeed: LayerNodeSeed = {
         polygon,
         availableZ: [layer],
         layer: `z${layer}`,
         _containsObstacle: true,
         _containsTarget: true,
-      })
+      }
+
+      const hasSameLayerExitSeed = seeds.some(
+        (seed) => !seed._containsObstacle && polygonsIntersect(seed.polygon, polygon),
+      )
+
+      // Only widen obstacle-backed targets when they are isolated on their
+      // native layer. Otherwise we preserve the original single-layer pad
+      // behavior to avoid reshaping ordinary convex bridge nodes.
+      if (!hasSameLayerExitSeed) {
+        this.extendSeedAvailableZ(obstacleSeed, layer, obstaclePolygonsByLayer)
+      }
+
+      seeds.push(obstacleSeed)
     }
 
     for (const point of layerPoints) {
@@ -201,6 +198,26 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
     }
 
     return seeds
+  }
+
+  private extendSeedAvailableZ(
+    seed: LayerNodeSeed,
+    sourceLayer: number,
+    obstaclePolygonsByLayer: Map<number, CapacityMeshPoint[][]>,
+  ) {
+    for (let otherLayer = 0; otherLayer < this.srj.layerCount; otherLayer++) {
+      if (otherLayer === sourceLayer) continue
+
+      const intersectsObstacleOnOtherLayer = (
+        obstaclePolygonsByLayer.get(otherLayer) ?? []
+      ).some((obstaclePolygon) => polygonsIntersect(seed.polygon, obstaclePolygon))
+
+      if (!intersectsObstacleOnOtherLayer) {
+        seed.availableZ.push(otherLayer)
+      }
+    }
+
+    seed.availableZ = Array.from(new Set(seed.availableZ)).sort((a, b) => a - b)
   }
 
   private mergeSeedsAcrossLayers(

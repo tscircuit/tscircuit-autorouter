@@ -7,6 +7,10 @@ import type {
 import { BaseSolver } from "../BaseSolver"
 import { distance } from "@tscircuit/math-utils"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import {
+  getNodeBounds,
+  getSharedNodeBoundarySegment,
+} from "lib/utils/capacityMeshNodeGeometry"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -74,6 +78,8 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       for (const node of this.nodes) {
         if (node._containsObstacle) continue
         if (node._containsTarget) continue
+        if (!this.doNodesHaveSharedLayer(targetNode, node)) continue
+        if (!this.areNodesGeometricallyConnectable(targetNode, node)) continue
         const dist = distance(targetNode.center, node.center)
         if (dist < nearestDistance) {
           nearestDistance = dist
@@ -97,6 +103,25 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     node2: CapacityMeshNode,
   ): boolean {
     return node1.availableZ.some((z) => node2.availableZ.includes(z))
+  }
+
+  private areNodesGeometricallyConnectable(
+    node1: CapacityMeshNode,
+    node2: CapacityMeshNode,
+  ): boolean {
+    if (getSharedNodeBoundarySegment(node1, node2)) {
+      return true
+    }
+
+    const bounds1 = getNodeBounds(node1)
+    const bounds2 = getNodeBounds(node2)
+    const epsilon = 1e-4
+    const xOverlap =
+      Math.min(bounds1.maxX, bounds2.maxX) - Math.max(bounds1.minX, bounds2.minX)
+    const yOverlap =
+      Math.min(bounds1.maxY, bounds2.maxY) - Math.max(bounds1.minY, bounds2.minY)
+
+    return xOverlap >= -epsilon && yOverlap >= -epsilon
   }
 
   visualize(): GraphicsObject {
