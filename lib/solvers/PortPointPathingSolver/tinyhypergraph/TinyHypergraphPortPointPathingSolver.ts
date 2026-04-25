@@ -626,13 +626,29 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const originalRegion = this.originalRegionById.get(originalRegionId)
       if (!originalRegion) continue
 
-      const portPoints = regionSegments[regionId].flatMap(
-        ([routeId, fromPortId, toPortId]) =>
-          [
-            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
-            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
-          ] satisfies PortPoint[],
+      const portPointPairs = regionSegments[regionId].map(
+        ([routeId, fromPortId, toPortId]) => {
+          const fromPortPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            fromPortId,
+          )
+          const toPortPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            toPortId,
+          )
+          return {
+            connectionName: fromPortPoint.connectionName,
+            portPointIds: [
+              fromPortPoint.portPointId ?? String(fromPortId),
+              toPortPoint.portPointId ?? String(toPortId),
+            ] as [string, string],
+            portPoints: [fromPortPoint, toPortPoint] as PortPoint[],
+          }
+        },
       )
+      const portPoints = portPointPairs.flatMap((pair) => pair.portPoints)
 
       if (portPoints.length === 0) {
         continue
@@ -646,6 +662,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         bounds: getNodeBounds(originalRegion.d),
         polygon: originalRegion.d.polygon,
         portPoints,
+        portPointPairs: portPointPairs.map(
+          ({ connectionName, portPointIds }) => ({
+            connectionName,
+            portPointIds,
+          }),
+        ),
         availableZ: originalRegion.d.availableZ,
       })
     }

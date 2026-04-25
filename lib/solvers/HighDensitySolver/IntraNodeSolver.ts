@@ -263,10 +263,189 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return true
   }
 
+  private isSlenderNode() {
+    return (
+      Math.min(this.nodeWithPortPoints.width, this.nodeWithPortPoints.height) <=
+      this.traceWidth + this.obstacleMargin
+    )
+  }
+
+  private trySolveNearbyLayerChange(unsolvedConnection: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }) {
+    const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
+    const obstacleChecker =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const { A, B } = opts
+    const shouldRelaxEdgeCheck = this.isSlenderNode()
+    const viaCandidates = [
+      { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 },
+      { x: A.x, y: A.y },
+      { x: B.x, y: B.y },
+    ]
+
+    for (const viaPoint of viaCandidates) {
+      const viaIsSafe = shouldRelaxEdgeCheck
+        ? !obstacleChecker.isNodeTooCloseToObstacle(
+            {
+              x: viaPoint.x,
+              y: viaPoint.y,
+              z: A.z,
+              parent: null,
+              g: 0,
+              h: 0,
+              f: 0,
+            },
+            obstacleChecker.viaDiameter / 2 +
+              obstacleChecker.obstacleMargin / 2,
+            true,
+          )
+        : isEndpointViaSafe(obstacleChecker, viaPoint, A, B)
+
+      if (!viaIsSafe) {
+        continue
+      }
+
+      const route = [
+        { x: A.x, y: A.y, z: A.z },
+        { ...viaPoint, z: A.z },
+        { ...viaPoint, z: B.z },
+        { x: B.x, y: B.y, z: B.z },
+      ].filter(
+        (pt, idx, arr) =>
+          idx === 0 ||
+          Math.abs(pt.x - arr[idx - 1].x) > 1e-6 ||
+          Math.abs(pt.y - arr[idx - 1].y) > 1e-6 ||
+          pt.z !== arr[idx - 1].z,
+      )
+
+      this.solvedRoutes.push({
+        connectionName: unsolvedConnection.connectionName,
+        traceThickness: this.traceWidth,
+        viaDiameter: this.viaDiameter,
+        route,
+        vias: [{ x: viaPoint.x, y: viaPoint.y }],
+      })
+      return true
+    }
+
+    return false
+  }
+
+  private trySolveDirectTrace(unsolvedConnection: {
+    connectionName: string
+    points: { x: number; y: number; z: number }[]
+  }) {
+    const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
+    const obstacleChecker =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const { A, B } = opts
+    const shouldRelaxEdgeCheck = this.isSlenderNode()
+    const sampleCount = Math.max(
+      3,
+      Math.ceil(
+        Math.hypot(A.x - B.x, A.y - B.y) / Math.max(this.traceWidth, 1e-3),
+      ),
+    )
+
+    type StraightTraceNode = {
+      x: number
+      y: number
+      z: number
+      g: number
+      h: number
+      f: number
+      parent: StraightTraceNode | null
+    }
+
+    let previousNode: StraightTraceNode | null = null
+
+    for (let i = 0; i <= sampleCount; i++) {
+      const t = i / sampleCount
+      const node: StraightTraceNode = {
+        x: A.x + (B.x - A.x) * t,
+        y: A.y + (B.y - A.y) * t,
+        z: A.z,
+        g: 0,
+        h: 0,
+        f: 0,
+        parent: previousNode,
+      }
+
+      if (obstacleChecker.isNodeTooCloseToObstacle(node, undefined, false)) {
+        return false
+      }
+
+      if (
+        !shouldRelaxEdgeCheck &&
+        obstacleChecker.isNodeTooCloseToEdge(node, false)
+      ) {
+        return false
+      }
+
+      if (
+        previousNode &&
+        obstacleChecker.doesPathToParentIntersectObstacle(node)
+      ) {
+        return false
+      }
+
+      previousNode = node
+    }
+
+    this.solvedRoutes.push({
+      connectionName: unsolvedConnection.connectionName,
+      traceThickness: this.traceWidth,
+      viaDiameter: this.viaDiameter,
+      route: [
+        { x: A.x, y: A.y, z: A.z },
+        { x: B.x, y: B.y, z: B.z },
+      ],
+      vias: [],
+    })
+    return true
+  }
+
   private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
     connectionName: string
     points: { x: number; y: number; z: number }[]
   }) {
+    const pairedPortPoints = this.nodeWithPortPoints.portPointPairs?.filter(
+      (pair) => pair.connectionName === unsolvedConnection.connectionName,
+    )
+
+    if (pairedPortPoints && pairedPortPoints.length > 0) {
+      const pointByPortPointId = new Map(
+        this.nodeWithPortPoints.portPoints
+          .filter(
+            (portPoint) =>
+              portPoint.connectionName === unsolvedConnection.connectionName &&
+              portPoint.portPointId,
+          )
+          .map((portPoint) => [portPoint.portPointId!, portPoint]),
+      )
+      const uniquePairs = new Set<string>()
+
+      for (const pair of pairedPortPoints) {
+        const a = pointByPortPointId.get(pair.portPointIds[0])
+        const b = pointByPortPointId.get(pair.portPointIds[1])
+        if (!a || !b) continue
+        const pairKey = [a.portPointId!, b.portPointId!].sort().join("::")
+        if (uniquePairs.has(pairKey)) continue
+        uniquePairs.add(pairKey)
+        this.unsolvedConnections.push({
+          connectionName: unsolvedConnection.connectionName,
+          points: [
+            { x: a.x, y: a.y, z: a.z },
+            { x: b.x, y: b.y, z: b.z },
+          ],
+        })
+      }
+
+      return uniquePairs.size > 0
+    }
+
     const [origin, ...extraPoints] = dedupeConnectionPoints(
       unsolvedConnection.points,
     )
@@ -427,12 +606,20 @@ export class IntraNodeRouteSolver extends BaseSolver {
         return
       }
 
+      if (A.z === B.z && this.trySolveDirectTrace(unsolvedConnection)) {
+        return
+      }
+
       // Fast-path: if the points share the same x/y but differ in layer,
       // prefer a pure via or a nearby obstacle-free via before invoking
       // the heavier search-based solvers. This keeps the degenerate case
       // fast, but avoids blindly routing through the node center.
       if (sameX && sameY && A.z !== B.z) {
         if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
+      }
+
+      if (A.z !== B.z && Math.hypot(A.x - B.x, A.y - B.y) <= this.viaDiameter) {
+        if (this.trySolveNearbyLayerChange(unsolvedConnection)) return
       }
     }
     this.activeSubSolver =

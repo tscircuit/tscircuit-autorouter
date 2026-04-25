@@ -12,7 +12,6 @@ import {
 type Point = { x: number; y: number }
 
 const EPSILON = 1e-9
-
 const normalizeDirection = (point: Point, center: Point) => {
   const dx = point.x - center.x
   const dy = point.y - center.y
@@ -105,10 +104,71 @@ export const createNodeRectification = (node: NodeWithPortPoints) => {
     },
     width: bounds.maxX - bounds.minX,
     height: bounds.maxY - bounds.minY,
-    portPoints: node.portPoints.map((portPoint) => ({
-      ...portPoint,
-      ...toRectPoint(portPoint),
-    })),
+    portPoints: node.portPoints.map((portPoint) => ({ ...portPoint })),
+  }
+
+  const rectifiedPortPointPairs = node.portPoints.map(
+    (originalPortPoint, i) => ({
+      originalPortPoint,
+      rectifiedPortPoint: rectifiedNode.portPoints[i]!,
+    }),
+  )
+
+  const snapToOriginalPortPoint = (
+    point: HighDensityIntraNodeRoute["route"][number],
+    route: HighDensityIntraNodeRoute,
+  ) => {
+    let bestMatch:
+      | {
+          x: number
+          y: number
+          z: number
+        }
+      | undefined
+    let bestDistance = Infinity
+
+    for (const {
+      originalPortPoint,
+      rectifiedPortPoint,
+    } of rectifiedPortPointPairs) {
+      if (
+        "portPointId" in point &&
+        point.portPointId &&
+        originalPortPoint.portPointId === point.portPointId
+      ) {
+        return {
+          x: originalPortPoint.x,
+          y: originalPortPoint.y,
+          z: originalPortPoint.z,
+        }
+      }
+
+      if (
+        rectifiedPortPoint.connectionName !== route.connectionName &&
+        rectifiedPortPoint.rootConnectionName !== route.rootConnectionName
+      ) {
+        continue
+      }
+
+      if (rectifiedPortPoint.z !== point.z) {
+        continue
+      }
+
+      const distance = Math.hypot(
+        rectifiedPortPoint.x - point.x,
+        rectifiedPortPoint.y - point.y,
+      )
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestMatch = {
+          x: originalPortPoint.x,
+          y: originalPortPoint.y,
+          z: originalPortPoint.z,
+        }
+      }
+    }
+
+    return bestMatch
   }
 
   return {
@@ -119,10 +179,21 @@ export const createNodeRectification = (node: NodeWithPortPoints) => {
       route: HighDensityIntraNodeRoute,
     ): HighDensityIntraNodeRoute => ({
       ...route,
-      route: route.route.map((point) => ({
-        ...point,
-        ...fromRectPoint(point),
-      })),
+      route: route.route.map((point, index) => {
+        const snappedPortPoint =
+          index === 0 || index === route.route.length - 1
+            ? snapToOriginalPortPoint(point, route)
+            : null
+        return snappedPortPoint
+          ? {
+              ...point,
+              ...snappedPortPoint,
+            }
+          : {
+              ...point,
+              ...fromRectPoint(point),
+            }
+      }),
       vias: route.vias.map((via) => fromRectPoint(via)),
     }),
   }

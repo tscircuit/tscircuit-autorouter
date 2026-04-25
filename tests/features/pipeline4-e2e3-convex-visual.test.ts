@@ -13,7 +13,17 @@ test("pipeline4 e2e3 convex-region visual snapshots", () => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.nodeSolver?.stats?.fallbackUsed ?? false).toBe(false)
+
+  const stitchedRoutes = solver.highDensityStitchSolver?.mergedHdRoutes ?? []
+  expect(
+    stitchedRoutes.filter((route) => route.connectionName === "source_trace_2"),
+  ).toHaveLength(1)
+  expect(
+    stitchedRoutes.filter((route) => route.connectionName === "source_trace_8"),
+  ).toHaveLength(1)
+  expect(
+    stitchedRoutes.filter((route) => route.connectionName === "source_trace_9"),
+  ).toHaveLength(1)
 
   expect(getLastStepSvg(solver.nodeSolver!.visualize())).toMatchSvgSnapshot(
     import.meta.path,

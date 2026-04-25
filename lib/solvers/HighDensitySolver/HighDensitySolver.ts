@@ -1,4 +1,5 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -8,6 +9,7 @@ import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
+import { createPairedConnectionNodeTransform } from "lib/utils/createPairedConnectionNodeTransform"
 import { createNodeRectification } from "lib/utils/rectifyNodeWithPortPoints"
 import { getNodeBounds } from "lib/utils/capacityMeshNodeGeometry"
 import { BaseSolver } from "../BaseSolver"
@@ -36,6 +38,9 @@ export class HighDensitySolver extends BaseSolver {
   failedSolvers: (IntraNodeRouteSolver | HyperSingleIntraNodeSolver)[]
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
     null
+  activeRouteRestorer:
+    | ((route: HighDensityIntraNodeRoute) => HighDensityIntraNodeRoute)
+    | null = null
   connMap?: ConnectivityMap
   nodePfById: Map<CapacityMeshNodeId, number | null>
   originalNodeById: Map<CapacityMeshNodeId, NodeWithPortPoints>
@@ -216,6 +221,169 @@ export class HighDensitySolver extends BaseSolver {
     }
   }
 
+  private trySolveNodeWithDirectPairHeuristic(node: NodeWithPortPoints) {
+    const pointsByConnection = new Map<
+      string,
+      NodeWithPortPoints["portPoints"]
+    >()
+    for (const portPoint of node.portPoints) {
+      if (!pointsByConnection.has(portPoint.connectionName)) {
+        pointsByConnection.set(portPoint.connectionName, [])
+      }
+      pointsByConnection.get(portPoint.connectionName)!.push(portPoint)
+    }
+
+    if (pointsByConnection.size === 0 || pointsByConnection.size > 8) {
+      return null
+    }
+
+    const directRoutes: HighDensityIntraNodeRoute[] = []
+    const routeSegments: Array<{
+      connectionName: string
+      rootConnectionName?: string
+      z: number
+      start: { x: number; y: number }
+      end: { x: number; y: number }
+    }> = []
+
+    for (const [connectionName, points] of pointsByConnection) {
+      if (points.length !== 2) {
+        return null
+      }
+
+      const [A, B] = points
+      if (!A || !B) return null
+
+      let route: HighDensityIntraNodeRoute
+      if (A.z === B.z) {
+        route = {
+          connectionName,
+          rootConnectionName: A.rootConnectionName,
+          traceThickness: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+          route: [
+            { x: A.x, y: A.y, z: A.z },
+            { x: B.x, y: B.y, z: B.z },
+          ],
+          vias: [],
+        }
+        routeSegments.push({
+          connectionName,
+          rootConnectionName: A.rootConnectionName,
+          z: A.z,
+          start: { x: A.x, y: A.y },
+          end: { x: B.x, y: B.y },
+        })
+      } else {
+        const candidateRoutes: HighDensityIntraNodeRoute[] = []
+        const midpointDistance = Math.hypot(A.x - B.x, A.y - B.y)
+        if (midpointDistance <= this.viaDiameter) {
+          const viaPoint = {
+            x: (A.x + B.x) / 2,
+            y: (A.y + B.y) / 2,
+          }
+          candidateRoutes.push({
+            connectionName,
+            rootConnectionName: A.rootConnectionName,
+            traceThickness: this.traceWidth,
+            viaDiameter: this.viaDiameter,
+            route: [
+              { x: A.x, y: A.y, z: A.z },
+              { x: viaPoint.x, y: viaPoint.y, z: A.z },
+              { x: viaPoint.x, y: viaPoint.y, z: B.z },
+              { x: B.x, y: B.y, z: B.z },
+            ].filter(
+              (point, index, arr) =>
+                index === 0 ||
+                Math.abs(point.x - arr[index - 1]!.x) > 1e-6 ||
+                Math.abs(point.y - arr[index - 1]!.y) > 1e-6 ||
+                point.z !== arr[index - 1]!.z,
+            ),
+            vias: [{ x: viaPoint.x, y: viaPoint.y }],
+          })
+        }
+
+        candidateRoutes.push(
+          {
+            connectionName,
+            rootConnectionName: A.rootConnectionName,
+            traceThickness: this.traceWidth,
+            viaDiameter: this.viaDiameter,
+            route: [
+              { x: A.x, y: A.y, z: A.z },
+              { x: A.x, y: A.y, z: B.z },
+              { x: B.x, y: B.y, z: B.z },
+            ],
+            vias: [{ x: A.x, y: A.y }],
+          },
+          {
+            connectionName,
+            rootConnectionName: A.rootConnectionName,
+            traceThickness: this.traceWidth,
+            viaDiameter: this.viaDiameter,
+            route: [
+              { x: A.x, y: A.y, z: A.z },
+              { x: B.x, y: B.y, z: A.z },
+              { x: B.x, y: B.y, z: B.z },
+            ],
+            vias: [{ x: B.x, y: B.y }],
+          },
+        )
+
+        const buildSegments = (candidateRoute: HighDensityIntraNodeRoute) =>
+          candidateRoute.route.slice(1).flatMap((point, index) => {
+            const prev = candidateRoute.route[index]!
+            if (prev.z !== point.z) return []
+            return [
+              {
+                connectionName,
+                rootConnectionName: A.rootConnectionName,
+                z: point.z,
+                start: { x: prev.x, y: prev.y },
+                end: { x: point.x, y: point.y },
+              },
+            ]
+          })
+
+        const selectedCandidate = candidateRoutes.find((candidateRoute) => {
+          const candidateSegments = buildSegments(candidateRoute)
+          return candidateSegments.every((newSegment) =>
+            routeSegments.every((existingSegment) => {
+              if (existingSegment.z !== newSegment.z) return true
+              if (
+                existingSegment.rootConnectionName &&
+                newSegment.rootConnectionName &&
+                this.connMap?.areIdsConnected(
+                  existingSegment.rootConnectionName,
+                  newSegment.rootConnectionName,
+                )
+              ) {
+                return true
+              }
+              return !doSegmentsIntersect(
+                existingSegment.start,
+                existingSegment.end,
+                newSegment.start,
+                newSegment.end,
+              )
+            }),
+          )
+        })
+
+        if (!selectedCandidate) {
+          return null
+        }
+
+        route = selectedCandidate
+        routeSegments.push(...buildSegments(selectedCandidate))
+      }
+
+      directRoutes.push(route)
+    }
+
+    return directRoutes
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -234,7 +402,11 @@ export class HighDensitySolver extends BaseSolver {
 
         this.routes.push(
           ...this.activeSubSolver.solvedRoutes.map((route) =>
-            rectification ? rectification.reverseRoute(route) : route,
+            rectification
+              ? rectification.reverseRoute(
+                  this.activeRouteRestorer?.(route) ?? route,
+                )
+              : (this.activeRouteRestorer?.(route) ?? route),
           ),
         )
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
@@ -243,10 +415,12 @@ export class HighDensitySolver extends BaseSolver {
           originalNode ?? this.activeSubSolver.nodeWithPortPoints,
         )
         this.activeSubSolver = null
+        this.activeRouteRestorer = null
       } else if (this.activeSubSolver.failed) {
         this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
+        this.activeRouteRestorer = null
       }
       this.updateCacheStats()
       return
@@ -267,9 +441,44 @@ export class HighDensitySolver extends BaseSolver {
     }
     const node = this.unsolvedNodePortPoints.pop()!
     const rectification = createNodeRectification(node)
+    const pairedConnectionTransform = createPairedConnectionNodeTransform(
+      rectification.rectifiedNode,
+    )
+    this.activeRouteRestorer = pairedConnectionTransform.restoreRoute
+
+    const directRoutes = this.trySolveNodeWithDirectPairHeuristic(
+      pairedConnectionTransform.nodeWithPortPoints,
+    )
+    if (directRoutes) {
+      const solvedNode =
+        this.originalNodeById.get(node.capacityMeshNodeId) ?? node
+      this.routes.push(
+        ...directRoutes.map((route) =>
+          rectification.reverseRoute(
+            this.activeRouteRestorer?.(route) ?? route,
+          ),
+        ),
+      )
+      this.nodeSolveMetadataById.set(solvedNode.capacityMeshNodeId, {
+        node: solvedNode,
+        status: "solved",
+        solverType: "DirectPairHeuristic",
+        iterations: 0,
+        routeCount: directRoutes.length,
+        nodePf: this.nodePfById.get(solvedNode.capacityMeshNodeId) ?? null,
+      })
+      const solverNodeCount = this.stats.solverNodeCount as Record<
+        string,
+        number
+      >
+      solverNodeCount.DirectPairHeuristic =
+        (solverNodeCount.DirectPairHeuristic ?? 0) + 1
+      this.activeRouteRestorer = null
+      return
+    }
 
     this.activeSubSolver = new HyperSingleIntraNodeSolver({
-      nodeWithPortPoints: rectification.rectifiedNode,
+      nodeWithPortPoints: pairedConnectionTransform.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

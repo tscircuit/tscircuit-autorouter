@@ -1,5 +1,5 @@
 import { computeConvexRegions } from "@tscircuit/find-convex-regions"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "../BaseSolver"
 import type {
@@ -14,8 +14,10 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   createNormalizedPolygonKey,
   getBoundsFromPoints,
+  getNodePolygon,
   isPointInNode,
 } from "lib/utils/capacityMeshNodeGeometry"
+import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 
 type LayerNodeSeed = {
   polygon: CapacityMeshPoint[]
@@ -56,9 +58,39 @@ const getObstacleZLayers = (obstacle: Obstacle, layerCount: number) =>
   obstacle.zLayers ??
   obstacle.layers.map((layerName) => mapLayerNameToZ(layerName, layerCount))
 
+const polygonsIntersect = (
+  polygonA: CapacityMeshPoint[],
+  polygonB: CapacityMeshPoint[],
+) => {
+  for (const point of polygonA) {
+    if (isPointInOrOnPolygon(point, polygonB)) {
+      return true
+    }
+  }
+
+  for (const point of polygonB) {
+    if (isPointInOrOnPolygon(point, polygonA)) {
+      return true
+    }
+  }
+
+  for (let i = 0; i < polygonA.length; i++) {
+    const a1 = polygonA[i]!
+    const a2 = polygonA[(i + 1) % polygonA.length]!
+    for (let j = 0; j < polygonB.length; j++) {
+      const b1 = polygonB[j]!
+      const b2 = polygonB[(j + 1) % polygonB.length]!
+      if (doSegmentsIntersect(a1, a2, b1, b2)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
 export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
   outputNodes: CapacityMeshNode[] = []
-  fallbackUsed = false
 
   constructor(
     private readonly srj: SimpleRouteJson,
@@ -72,7 +104,10 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
     return "ConvexRegionsCapacityMeshNodeSolver"
   }
 
-  private buildLayerSeeds(layer: number): LayerNodeSeed[] {
+  private buildLayerSeeds(
+    layer: number,
+    obstaclePolygonsByLayer: Map<number, CapacityMeshPoint[][]>,
+  ): LayerNodeSeed[] {
     const clearance =
       this.opts.clearance ?? this.srj.defaultObstacleMargin ?? 0.15
     const layerPoints = this.srj.connections.flatMap((connection) =>
@@ -104,6 +139,26 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
       availableZ: [layer],
       layer: `z${layer}`,
     }))
+
+    for (const seed of seeds) {
+      for (let otherLayer = 0; otherLayer < this.srj.layerCount; otherLayer++) {
+        if (otherLayer === layer) continue
+
+        const intersectsObstacleOnOtherLayer = (
+          obstaclePolygonsByLayer.get(otherLayer) ?? []
+        ).some((obstaclePolygon) =>
+          polygonsIntersect(seed.polygon, obstaclePolygon),
+        )
+
+        if (!intersectsObstacleOnOtherLayer) {
+          seed.availableZ.push(otherLayer)
+        }
+      }
+
+      seed.availableZ = Array.from(new Set(seed.availableZ)).sort(
+        (a, b) => a - b,
+      )
+    }
 
     for (const obstacle of layerObstacles) {
       const polygon = polygonFromObstacle(obstacle, clearance)
@@ -197,27 +252,25 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
   }
 
   _step() {
+    const clearance =
+      this.opts.clearance ?? this.srj.defaultObstacleMargin ?? 0.15
+    const obstaclePolygonsByLayer = new Map<number, CapacityMeshPoint[][]>()
+    for (let layer = 0; layer < this.srj.layerCount; layer++) {
+      obstaclePolygonsByLayer.set(
+        layer,
+        this.srj.obstacles
+          .filter((obstacle) =>
+            getObstacleZLayers(obstacle, this.srj.layerCount).includes(layer),
+          )
+          .map((obstacle) => polygonFromObstacle(obstacle, clearance)),
+      )
+    }
+
     const layerSeeds: LayerNodeSeed[] = []
     for (let layer = 0; layer < this.srj.layerCount; layer++) {
-      layerSeeds.push(...this.buildLayerSeeds(layer))
+      layerSeeds.push(...this.buildLayerSeeds(layer, obstaclePolygonsByLayer))
     }
     this.outputNodes = this.mergeSeedsAcrossLayers(layerSeeds)
-    const estimatedGraphComplexity =
-      this.outputNodes.length * this.srj.connections.length
-
-    if (estimatedGraphComplexity > 5_000) {
-      const legacySolver = new RectDiffPipeline({
-        simpleRouteJson: this.srj as any,
-      })
-      legacySolver.solve()
-      this.outputNodes = legacySolver.getOutput().meshNodes
-      this.fallbackUsed = true
-      this.stats = {
-        ...this.stats,
-        fallbackUsed: true,
-        estimatedGraphComplexity,
-      }
-    }
     this.solved = true
   }
 
@@ -228,8 +281,7 @@ export class ConvexRegionsCapacityMeshNodeSolver extends BaseSolver {
   visualize(): GraphicsObject {
     return {
       lines: this.outputNodes.flatMap((node) => {
-        const polygon = node.polygon ?? []
-        if (polygon.length === 0) return []
+        const polygon = getNodePolygon(node)
         return [
           {
             points: [...polygon, polygon[0]],

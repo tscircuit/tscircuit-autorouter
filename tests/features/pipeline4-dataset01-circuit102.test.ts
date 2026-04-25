@@ -8,19 +8,27 @@ import type { SimpleRouteJson } from "lib/types"
 const getCircuit102 = () =>
   (dataset01 as Record<string, unknown>).circuit102 as SimpleRouteJson
 
-const getNodeOrThrow = (
+const getConvexBridgeNodeOrThrow = (
   nodes: NodeWithPortPoints[] | undefined,
-  nodeId: string,
 ) => {
   const node = nodes?.find(
-    (candidate) => candidate.capacityMeshNodeId === nodeId,
+    (candidate) =>
+      candidate.portPoints.some(
+        (point) => point.connectionName === "source_net_10_mst0",
+      ) &&
+      candidate.portPoints.some(
+        (point) => point.connectionName === "source_net_2_mst1",
+      ) &&
+      candidate.portPoints.some(
+        (point) => point.connectionName === "source_net_15_mst0",
+      ),
   )
   expect(node).toBeDefined()
   return node!
 }
 
 test(
-  "pipeline4 dataset01 circuit102 changes cmn_159 reduction shape across node-cap and effort settings",
+  "pipeline4 dataset01 circuit102 solves the convex bridge node consistently across settings",
   () => {
     getGlobalInMemoryCache().clearCache()
 
@@ -33,18 +41,21 @@ test(
     expect(defaultSolver.failed).toBe(false)
     expect(defaultSolver.error).toBeNull()
 
-    const defaultMetadata =
-      defaultSolver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_159")
-    const defaultNode = getNodeOrThrow(
+    const defaultNode = getConvexBridgeNodeOrThrow(
       defaultSolver.highDensityNodePortPoints,
-      "cmn_159",
     )
+    const defaultMetadata =
+      defaultSolver.highDensityRouteSolver?.nodeSolveMetadataById.get(
+        defaultNode.capacityMeshNodeId,
+      )
 
     expect(defaultMetadata?.status).toBe("solved")
-    expect(defaultNode.portPoints.length).toBe(2)
+    expect(defaultMetadata?.solverType).toBe("DirectPairHeuristic")
+    expect(defaultNode.availableZ).toEqual([0, 1])
+    expect(defaultNode.portPoints.length).toBe(12)
     expect(
       new Set(defaultNode.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(1)
+    ).toBe(6)
 
     getGlobalInMemoryCache().clearCache()
 
@@ -57,32 +68,22 @@ test(
     expect(explicit8mmSolver.solved).toBe(true)
     expect(explicit8mmSolver.failed).toBe(false)
 
+    const explicit8mmNode = getConvexBridgeNodeOrThrow(
+      explicit8mmSolver.highDensityNodePortPoints,
+    )
     const explicit8mmMetadata =
       explicit8mmSolver.highDensityRouteSolver?.nodeSolveMetadataById.get(
-        "cmn_159",
+        explicit8mmNode.capacityMeshNodeId,
       )
-    const explicit8mmNode = getNodeOrThrow(
-      explicit8mmSolver.highDensityNodePortPoints,
-      "cmn_159",
-    )
 
     expect(explicit8mmMetadata?.status).toBe("solved")
-    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
-    expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
+    expect(explicit8mmMetadata?.solverType).toBe("DirectPairHeuristic")
+    expect(explicit8mmNode.capacityMeshNodeId).toBe(
+      defaultNode.capacityMeshNodeId,
     )
-    expect(
-      new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
-        .size,
-    ).toBe(2)
-    expect(
-      JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
-      ),
-    ).not.toBe(
-      JSON.stringify(
-        defaultNode.portPoints.map((point) => point.connectionName),
-      ),
+    expect(explicit8mmNode.availableZ).toEqual([0, 1])
+    expect(explicit8mmNode.portPoints.length).toBe(
+      defaultNode.portPoints.length,
     )
 
     getGlobalInMemoryCache().clearCache()
@@ -96,30 +97,19 @@ test(
     expect(effort2Solver.solved).toBe(true)
     expect(effort2Solver.failed).toBe(false)
 
-    const effort2Metadata =
-      effort2Solver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_159")
-    const effort2Node = getNodeOrThrow(
+    const effort2Node = getConvexBridgeNodeOrThrow(
       effort2Solver.highDensityNodePortPoints,
-      "cmn_159",
     )
+    const effort2Metadata =
+      effort2Solver.highDensityRouteSolver?.nodeSolveMetadataById.get(
+        effort2Node.capacityMeshNodeId,
+      )
 
     expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Node.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
-    )
-    expect(
-      new Set(effort2Node.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(2)
-    expect(
-      JSON.stringify(
-        effort2Node.portPoints.map((point) => point.connectionName),
-      ),
-    ).not.toBe(
-      JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
-      ),
-    )
-    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")
+    expect(effort2Metadata?.solverType).toBe("DirectPairHeuristic")
+    expect(effort2Node.capacityMeshNodeId).toBe(defaultNode.capacityMeshNodeId)
+    expect(effort2Node.portPoints.length).toBe(defaultNode.portPoints.length)
+    expect(effort2Node.availableZ).toEqual([0, 1])
   },
   { timeout: 120_000 },
 )

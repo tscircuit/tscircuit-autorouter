@@ -20,6 +20,10 @@ export type NodeWithPortPoints = {
   }
   polygon?: Array<{ x: number; y: number }>
   portPoints: PortPoint[]
+  portPointPairs?: Array<{
+    connectionName: string
+    portPointIds: [string, string]
+  }>
   availableZ?: number[]
 }
 

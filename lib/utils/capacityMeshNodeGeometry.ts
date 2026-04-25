@@ -149,6 +149,33 @@ const getEdgeOverlap = (
   }
 }
 
+const isPointOnSegment = (
+  point: CapacityMeshPoint,
+  start: CapacityMeshPoint,
+  end: CapacityMeshPoint,
+) => pointToSegmentDistance(point, start, end) <= EPSILON
+
+const getEdgeTouchPoint = (
+  a1: CapacityMeshPoint,
+  a2: CapacityMeshPoint,
+  b1: CapacityMeshPoint,
+  b2: CapacityMeshPoint,
+): CapacityMeshPoint | null => {
+  for (const candidate of [a1, a2]) {
+    if (isPointOnSegment(candidate, b1, b2)) {
+      return candidate
+    }
+  }
+
+  for (const candidate of [b1, b2]) {
+    if (isPointOnSegment(candidate, a1, a2)) {
+      return candidate
+    }
+  }
+
+  return null
+}
+
 export const getSharedNodeBoundarySegment = (
   nodeA: Pick<
     CapacityMeshNode,
@@ -165,6 +192,7 @@ export const getSharedNodeBoundarySegment = (
   let bestSegment: { start: CapacityMeshPoint; end: CapacityMeshPoint } | null =
     null
   let bestLength = 0
+  let touchPoint: CapacityMeshPoint | null = null
 
   for (let i = 0; i < polygonA.length; i++) {
     const a1 = polygonA[i]
@@ -173,7 +201,10 @@ export const getSharedNodeBoundarySegment = (
       const b1 = polygonB[j]
       const b2 = polygonB[(j + 1) % polygonB.length]
       const overlap = getEdgeOverlap(a1, a2, b1, b2)
-      if (!overlap) continue
+      if (!overlap) {
+        touchPoint ||= getEdgeTouchPoint(a1, a2, b1, b2)
+        continue
+      }
 
       const length = Math.hypot(
         overlap.end.x - overlap.start.x,
@@ -186,7 +217,18 @@ export const getSharedNodeBoundarySegment = (
     }
   }
 
-  return bestSegment
+  if (bestSegment) {
+    return bestSegment
+  }
+
+  if (touchPoint) {
+    return {
+      start: touchPoint,
+      end: touchPoint,
+    }
+  }
+
+  return null
 }
 
 export const getPolygonCentroid = (polygon: CapacityMeshPoint[]) => {

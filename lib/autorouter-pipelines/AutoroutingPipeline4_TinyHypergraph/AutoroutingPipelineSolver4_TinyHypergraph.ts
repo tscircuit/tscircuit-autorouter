@@ -33,6 +33,7 @@ import {
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { pruneSharedEdgeSegmentsForTinyHypergraph } from "lib/utils/pruneSharedEdgeSegmentsForTinyHypergraph"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -95,6 +96,21 @@ function definePipelineStep<
     onSolved: opts.onSolved,
   }
 }
+
+const getRawHighDensityRoutes = (
+  cms: AutoroutingPipelineSolver4_TinyHypergraph,
+) => cms.highDensityRouteSolver?.routes ?? []
+
+const getForceImprovedHighDensityRoutes = (
+  cms: AutoroutingPipelineSolver4_TinyHypergraph,
+) =>
+  cms.highDensityForceImproveSolver?.getOutput() ?? getRawHighDensityRoutes(cms)
+
+const getRepairedHighDensityRoutes = (
+  cms: AutoroutingPipelineSolver4_TinyHypergraph,
+) =>
+  cms.highDensityRepairSolver?.getOutput() ??
+  getForceImprovedHighDensityRoutes(cms)
 
 export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   escapeViaLocationSolver?: EscapeViaLocationSolver
@@ -242,9 +258,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
-        const sharedEdgeSegments =
+        const sharedEdgeSegments = pruneSharedEdgeSegmentsForTinyHypergraph(
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
-          cms.availableSegmentPointSolver!.getOutput()
+            cms.availableSegmentPointSolver!.getOutput(),
+        )
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
@@ -339,7 +356,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: cms.highDensityRouteSolver!.routes,
+          hdRoutes: getRawHighDensityRoutes(cms),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
@@ -352,9 +369,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes:
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: getForceImprovedHighDensityRoutes(cms),
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
@@ -367,10 +382,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       (cms) => [
         {
           connections: cms.srjWithPointPairs!.connections,
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: getRepairedHighDensityRoutes(cms),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
