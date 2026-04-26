@@ -242,6 +242,7 @@ const createRuntimeParams = (
     inputSolvedRoutes: params.inputSolvedRoutes,
     layerCount: params.layerCount,
     effort: params.effort,
+    minViaPadDiameter: params.minViaPadDiameter,
     flags: params.flags,
     weights: params.weights,
     opts: params.opts,

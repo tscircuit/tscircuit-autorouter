@@ -54,12 +54,21 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
+const getTinyViaSizeOptions = (
+  minViaPadDiameter?: number,
+): Pick<TinyHyperGraphSolverOptions, "minViaPadDiameter"> =>
+  Number.isFinite(minViaPadDiameter)
+    ? { minViaPadDiameter: minViaPadDiameter }
+    : {}
+
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
+  minViaPadDiameter?: number,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
+    ...getTinyViaSizeOptions(minViaPadDiameter),
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(10_000_000 * effortScale),
   }
@@ -67,10 +76,12 @@ const getTinyHyperGraphSolveGraphOptions = (
 
 const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
+  minViaPadDiameter?: number,
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
     ...TINY_SECTION_SOLVER_BASE_OPTIONS,
+    ...getTinyViaSizeOptions(minViaPadDiameter),
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
@@ -79,10 +90,17 @@ const getTinyHyperGraphSectionSolverOptions = (
 const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
+  minViaPadDiameter?: number,
 ): TinyHyperGraphSectionPipelineInput => ({
   serializedHyperGraph,
-  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(effort),
-  sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(effort),
+  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
+    effort,
+    minViaPadDiameter,
+  ),
+  sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
+    effort,
+    minViaPadDiameter,
+  ),
 })
 
 const getTinyHyperGraphPipelineMaxIterations = (
@@ -442,6 +460,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       serializedGraph,
       params.effort,
+      params.minViaPadDiameter,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput)
