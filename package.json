@@ -64,6 +64,7 @@
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
     "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#b2e4c0e25bb42b0ff5a2357a4e6b171ce1a290e9",
+    "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",
     "use-mouse-matrix-transform": "^1.3.0",
@@ -77,7 +78,6 @@
   "dependencies": {
     "@tscircuit/high-density-a01": "^0.0.37",
     "fast-json-stable-stringify": "^2.1.0",
-    "object-hash": "^3.0.0",
-    "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c"
+    "object-hash": "^3.0.0"
   }
 }
