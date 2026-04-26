@@ -53,6 +53,7 @@
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
     "kleur": "^4.1.5",
     "looks-same": "9",
+    "pcb-poly-hyper-graph": "https://codeload.github.com/tscircuit/pcb-poly-hyper-graph/tar.gz/ea38a9f3876006d70ad9d6b4f2bc66d68e16ce7e",
     "rbush": "^4.0.1",
     "react": "18",
     "react-cosmos": "^6.2.3",
@@ -77,7 +78,6 @@
     "@tscircuit/high-density-a01": "^0.0.37",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "pcb-poly-hyper-graph": "https://codeload.github.com/tscircuit/pcb-poly-hyper-graph/tar.gz/ea38a9f3876006d70ad9d6b4f2bc66d68e16ce7e",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c"
   }
 }
