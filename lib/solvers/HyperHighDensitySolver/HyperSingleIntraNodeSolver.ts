@@ -292,7 +292,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        viaMinDistFromBorder: 0.15,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin: 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
@@ -309,7 +309,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        viaMinDistFromBorder: 0.15,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin: 0.1,
         // This likely needs to be corrected to use the actual trace width-
         // but using anything but 0.1 for traceThickness is causing issues
