@@ -26,9 +26,16 @@ jobs:
         run: bun run build
 
       - name: Create npm package tarball
+        id: create-npm-package-tarball
         run: |
           mkdir -p npm-package
           npm pack --pack-destination npm-package
+          TARBALL_PATH=$(find npm-package -maxdepth 1 -name '*.tgz' -type f | head -n 1)
+          if [ -z "$TARBALL_PATH" ]; then
+            echo "No npm package tarball was created" >&2
+            exit 1
+          fi
+          echo "tarball-name=$(basename "$TARBALL_PATH")" >> "$GITHUB_OUTPUT"
 
       - name: Upload npm package artifact
         id: upload-npm-package-artifact
@@ -38,8 +45,28 @@ jobs:
           path: npm-package/*.tgz
           if-no-files-found: error
 
-      - name: Log npm package artifact URL
+      - name: Log npm package artifact URLs
+        env:
+          ARTIFACT_ID: ${{ steps.upload-npm-package-artifact.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.upload-npm-package-artifact.outputs.artifact-url }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          TARBALL_NAME: ${{ steps.create-npm-package-tarball.outputs.tarball-name }}
         run: |
-          echo "Download npm package artifact: ${{ steps.upload-npm-package-artifact.outputs.artifact-url }}"
+          ARTIFACT_ZIP_URL="https://api.github.com/repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip"
+          echo "Artifact page/download URL: $ARTIFACT_URL"
+          echo "Artifact zip API URL: $ARTIFACT_ZIP_URL"
+          echo "GitHub Actions artifacts download as zip files. Install the contained npm tarball with:"
+          echo "  gh run download $RUN_ID --repo $REPOSITORY --name npm-package-tarball --dir /tmp/npm-package-tarball"
+          echo "  bun add -D /tmp/npm-package-tarball/$TARBALL_NAME"
           echo "### npm package artifact" >> "$GITHUB_STEP_SUMMARY"
-          echo "[Download npm package artifact](${{ steps.upload-npm-package-artifact.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact page/download URL: $ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact zip API URL: $ARTIFACT_ZIP_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "GitHub Actions artifacts download as zip files. Install the contained npm tarball with:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```sh' >> "$GITHUB_STEP_SUMMARY"
+          echo "gh run download $RUN_ID --repo $REPOSITORY --name npm-package-tarball --dir /tmp/npm-package-tarball" >> "$GITHUB_STEP_SUMMARY"
+          echo "bun add -D /tmp/npm-package-tarball/$TARBALL_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
