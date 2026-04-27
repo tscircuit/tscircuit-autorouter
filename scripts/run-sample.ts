@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { appendFile, mkdir, readdir, readFile } from "node:fs/promises"
+import { appendFile, mkdir, readFile, readdir } from "node:fs/promises"
 import path from "node:path"
 import {
   AutoroutingPipeline1_OriginalUnravel,
@@ -8,19 +8,19 @@ import {
   AutoroutingPipelineSolver3_HgPortPointPathing,
   AutoroutingPipelineSolver4,
 } from "../lib"
-import { RELAXED_DRC_OPTIONS } from "../lib/testing/drcPresets"
-import { getDrcErrors } from "../lib/testing/getDrcErrors"
 import {
   PipelineStageDebugRunner,
   type StageDebuggablePipelineSolver,
 } from "../lib/testing/PipelineStageDebugRunner"
+import { RELAXED_DRC_OPTIONS } from "../lib/testing/drcPresets"
+import { getDrcErrors } from "../lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "../lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "../lib/types/srj-types"
 import {
-  DATASET_NAMES,
+  DATASET_OPTIONS_LABEL,
   type DatasetName,
-  isDatasetName,
   loadScenarioBySampleNumber,
+  parseDatasetName,
   toSimpleRouteJson,
 } from "./benchmark/scenarios"
 
@@ -86,7 +86,7 @@ const printHelp = () => {
       "  --pipeline N     Pipeline to run (1-4, defaults to 4)",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
-      `  --dataset NAME   Dataset used with --sample (${DATASET_NAMES.join(", ")}, defaults to dataset01)`,
+      `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
       "  --out-dir PATH   Override the output directory (default: ./tmp/run-N)",
       "  --png-size N     Square PNG size in pixels, min 1024 (default: 1536)",
       "  --effort N       Override solver effort",
@@ -294,12 +294,13 @@ const parseArgs = (): RunSampleOptions => {
       if (!dataset || dataset.startsWith("-")) {
         throw new Error("--dataset requires a value")
       }
-      if (!isDatasetName(dataset)) {
+      const datasetName = parseDatasetName(dataset)
+      if (!datasetName) {
         throw new Error(
-          `Unknown dataset "${dataset}". Available: ${DATASET_NAMES.join(", ")}`,
+          `Unknown dataset "${dataset}". Available: ${DATASET_OPTIONS_LABEL}`,
         )
       }
-      options.dataset = dataset
+      options.dataset = datasetName
       i += 1
       continue
     }
