@@ -24,3 +24,22 @@ jobs:
 
       - name: Run build
         run: bun run build
+
+      - name: Create npm package tarball
+        run: |
+          mkdir -p npm-package
+          npm pack --pack-destination npm-package
+
+      - name: Upload npm package artifact
+        id: upload-npm-package-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package-tarball
+          path: npm-package/*.tgz
+          if-no-files-found: error
+
+      - name: Log npm package artifact URL
+        run: |
+          echo "Download npm package artifact: ${{ steps.upload-npm-package-artifact.outputs.artifact-url }}"
+          echo "### npm package artifact" >> "$GITHUB_STEP_SUMMARY"
+          echo "[Download npm package artifact](${{ steps.upload-npm-package-artifact.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
