@@ -36,37 +36,57 @@ jobs:
             exit 1
           fi
           echo "tarball-name=$(basename "$TARBALL_PATH")" >> "$GITHUB_OUTPUT"
+          echo "tarball-path=$TARBALL_PATH" >> "$GITHUB_OUTPUT"
 
-      - name: Upload npm package artifact
-        id: upload-npm-package-artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-package-tarball
-          path: npm-package/*.tgz
-          if-no-files-found: error
-
-      - name: Log npm package artifact URLs
-        env:
-          ARTIFACT_ID: ${{ steps.upload-npm-package-artifact.outputs.artifact-id }}
-          ARTIFACT_URL: ${{ steps.upload-npm-package-artifact.outputs.artifact-url }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_ID: ${{ github.run_id }}
-          TARBALL_NAME: ${{ steps.create-npm-package-tarball.outputs.tarball-name }}
+      - name: Ensure AWS CLI is available
         run: |
-          ARTIFACT_ZIP_URL="https://api.github.com/repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip"
-          echo "Artifact page/download URL: $ARTIFACT_URL"
-          echo "Artifact zip API URL: $ARTIFACT_ZIP_URL"
-          echo "GitHub Actions artifacts download as zip files. Install the contained npm tarball with:"
-          echo "  gh run download $RUN_ID --repo $REPOSITORY --name npm-package-tarball --dir /tmp/npm-package-tarball"
-          echo "  bun add -D /tmp/npm-package-tarball/$TARBALL_NAME"
-          echo "### npm package artifact" >> "$GITHUB_STEP_SUMMARY"
+          if ! command -v aws >/dev/null 2>&1; then
+            python3 -m pip install --user awscli
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+          aws --version
+
+      - name: Upload npm package tarball to R2
+        id: upload-npm-package-tarball-to-r2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || vars.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || vars.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: true
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET || vars.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL || vars.R2_PUBLIC_BASE_URL }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          TARBALL_NAME: ${{ steps.create-npm-package-tarball.outputs.tarball-name }}
+          TARBALL_PATH: ${{ steps.create-npm-package-tarball.outputs.tarball-path }}
+        run: |
+          for name in CLOUDFLARE_ACCOUNT_ID R2_BUCKET R2_PUBLIC_BASE_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "$name is required" >&2
+              exit 1
+            fi
+          done
+
+          OBJECT_KEY="npm-tarballs/$RUN_ID-$RUN_ATTEMPT/$TARBALL_NAME"
+          R2_ENDPOINT="https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com"
+          PACKAGE_URL="${R2_PUBLIC_BASE_URL%/}/$OBJECT_KEY"
+
+          aws s3 cp "$TARBALL_PATH" "s3://$R2_BUCKET/$OBJECT_KEY" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --content-type "application/gzip"
+
+          echo "package-url=$PACKAGE_URL" >> "$GITHUB_OUTPUT"
+          echo "Uploaded npm package tarball to: $PACKAGE_URL"
+          echo "Install with:"
+          echo "  bun add -D $PACKAGE_URL"
+          echo "### npm package tarball" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Artifact page/download URL: $ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Artifact zip API URL: $ARTIFACT_ZIP_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $PACKAGE_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "GitHub Actions artifacts download as zip files. Install the contained npm tarball with:" >> "$GITHUB_STEP_SUMMARY"
+          echo "Install with:" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```sh' >> "$GITHUB_STEP_SUMMARY"
-          echo "gh run download $RUN_ID --repo $REPOSITORY --name npm-package-tarball --dir /tmp/npm-package-tarball" >> "$GITHUB_STEP_SUMMARY"
-          echo "bun add -D /tmp/npm-package-tarball/$TARBALL_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "bun add -D $PACKAGE_URL" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
