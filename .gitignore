@@ -193,3 +193,5 @@ benchmark-result.json
 profile-solvers.json
 result-*
 tmp
+
+*.received.svg
