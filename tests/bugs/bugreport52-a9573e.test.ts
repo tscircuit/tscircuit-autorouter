@@ -35,7 +35,6 @@ test("bugreport52-a9573e.json avoids a via inside multilayer pad cmn_184", () =>
   //expect(solver.solved).toBe(true)
   //expect(solver.failed).toBe(false)
 
-
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
