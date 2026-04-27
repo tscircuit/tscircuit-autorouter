@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test"
 import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
-import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno.json"
+import bugReport from "../../fixtures/bug-reports/bugreport22-2a75ce/bugreport22-2a75ce.json"
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "tests/fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport46-ac4337-arduino-uno.json-AutoroutingPipeline1_OriginalUnravel", () => {
+test("bugreport22-2a75ce.json-AutoroutingPipeline1_OriginalUnravel", () => {
   const solver = new AutoroutingPipeline1_OriginalUnravel(srj)
   solver.solve()
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
