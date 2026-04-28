@@ -52,6 +52,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -423,6 +424,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   ) {
     super()
     this.srj = filterObstaclesOutsideBoard(srj)
+    this.srj = addApproximatingRectsToSrj(this.srj)
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     const viaDimensions = getViaDimensions(this.srj)
