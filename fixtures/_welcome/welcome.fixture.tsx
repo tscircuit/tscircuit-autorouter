@@ -1,9 +1,28 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
-import { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
+import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import { useState } from "react"
 
 export default () => {
   const [srj, setSrj] = useState<SimpleRouteJson | null>(null)
+  const [useTracesAsObstacles, setUseTracesAsObstacles] = useState(true)
+
+  const srjForPreview =
+    srj && useTracesAsObstacles ? convertSrjTracesToObstacles(srj) : srj
+
+  const traceObstacleCheckbox = (
+    <div className="flex flex-wrap items-center gap-3 border bg-white px-4 py-3 text-sm shadow-sm">
+      <input
+        type="checkbox"
+        id="use-traces-as-obstacles"
+        checked={useTracesAsObstacles}
+        onChange={(event) => setUseTracesAsObstacles(event.target.checked)}
+      />
+      <label htmlFor="use-traces-as-obstacles" className="font-medium">
+        Treat SRJ traces as obstacles
+      </label>
+    </div>
+  )
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -76,8 +95,15 @@ export default () => {
     bounds: { minX: -15, maxX: 15, minY: -15, maxY: 15 },
   }
 
-  if (srj) {
-    return <AutoroutingPipelineDebugger srj={srj} />
+  if (srj && srjForPreview) {
+    return (
+      <div>
+        <AutoroutingPipelineDebugger
+          key={useTracesAsObstacles ? "trace-obstacles" : "plain-srj"}
+          srj={srjForPreview}
+        />
+      </div>
+    )
   }
 
   return (
@@ -92,6 +118,8 @@ export default () => {
         files to test the autorouter. If you're using tscircuit, you can find
         your Simple Route Json files in the "Errors" tab in "Autorouting Log"
       </p>
+
+      <div className="mb-6">{traceObstacleCheckbox}</div>
 
       <div className="flex gap-8 items-start">
         <div className="flex-1">
