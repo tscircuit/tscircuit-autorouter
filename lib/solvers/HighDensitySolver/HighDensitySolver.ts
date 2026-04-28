@@ -183,6 +183,10 @@ export class HighDensitySolver extends BaseSolver {
     if (hyperParameters?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return "SingleTransitionCrossingRouteSolver"
     }
+
+    if (hyperParameters?.HIGH_DENSITY_A08) {
+      return "HighDensitySolverA08"
+    }
     if (hyperParameters?.HIGH_DENSITY_A01) {
       return "HighDensitySolverA01"
     }

@@ -7,6 +7,7 @@ import type {
 } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import * as HighDensityA01Module from "@tscircuit/high-density-a01"
 
 const createCrossingNode = (): NodeWithPortPoints => ({
   capacityMeshNodeId: "x-crossing-available-z",
@@ -178,6 +179,19 @@ const solvingCases = [
       HIGH_DENSITY_A03: true,
     },
   },
+  ...(("HighDensitySolverA08" in HighDensityA01Module
+    ? [
+        {
+          name: "HighDensitySolverA08",
+          hyperParameters: {
+            HIGH_DENSITY_A08: true,
+          },
+        },
+      ]
+    : []) as Array<{
+    name: string
+    hyperParameters: Record<string, boolean>
+  }>),
 ] as const
 
 for (const { name, hyperParameters } of solvingCases) {
