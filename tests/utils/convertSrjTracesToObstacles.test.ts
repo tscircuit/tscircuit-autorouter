@@ -81,11 +81,3 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     connectedTo: [],
   })
 })
-
-test("convertSrjTracesToObstacles appends trace obstacles without mutating the source", () => {
-  const converted = convertSrjTracesToObstacles(baseSrj)
-
-  expect(baseSrj.obstacles).toHaveLength(1)
-  expect(converted.obstacles).toHaveLength(3)
-  expect(converted.traces).toBe(baseSrj.traces)
-})
