@@ -38,8 +38,9 @@ export const filterObstaclesOutsideBoard = (
   const obstacles = srj.obstacles.filter(
     (obstacle) => !shouldIgnoreObstacleForBoardAutorouting(obstacle, srj),
   )
+  const obstaclesWereFiltered = obstacles.length !== srj.obstacles.length
   const bounds =
-    srj.outline && srj.outline.length >= 3
+    obstaclesWereFiltered && srj.outline && srj.outline.length >= 3
       ? getBoardBounds({
           type: "pcb_board",
           pcb_board_id: "__autorouting_board_outline__",
@@ -51,7 +52,7 @@ export const filterObstaclesOutsideBoard = (
         } satisfies PcbBoard)
       : srj.bounds
 
-  if (obstacles.length === srj.obstacles.length && bounds === srj.bounds) {
+  if (!obstaclesWereFiltered) {
     return srj
   }
 
