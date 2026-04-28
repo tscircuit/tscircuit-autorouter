@@ -26,6 +26,7 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -421,13 +422,13 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = filterObstaclesOutsideBoard(srj)
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
-    const viaDimensions = getViaDimensions(srj)
+    const viaDimensions = getViaDimensions(this.srj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
-    this.minTraceWidth = srj.minTraceWidth
+    this.minTraceWidth = this.srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
@@ -435,8 +436,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
 
     if (mutableOpts.capacityDepth === undefined) {
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
+      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
+      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
       const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5
       mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
@@ -445,8 +446,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       )
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
-    this.colorMap = getColorMap(srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.colorMap = getColorMap(this.srj, this.connMap)
     this.cacheProvider =
       mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
