@@ -70,8 +70,8 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
-      ["highDensityA03"],
-      ["highDensityA08"],
+      ["highDensityA03", "orderings6"],
+      ["highDensityA08", "orderings6"],
     ]
   }
 
@@ -251,7 +251,12 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       (solver as any) instanceof HighDensityA08Solver ||
       (solver as any) instanceof HighDensityA03Solver
     ) {
-      return (solver as any).iterations / 1_000_000
+      const baseCost = (solver as any).iterations / 1_000_000
+      // Keep A08 as a last-choice rescue solver when present.
+      if ((solver as any) instanceof HighDensityA08Solver) {
+        return baseCost + 0.5
+      }
+      return baseCost
     }
     if (solver?.hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
       return (
