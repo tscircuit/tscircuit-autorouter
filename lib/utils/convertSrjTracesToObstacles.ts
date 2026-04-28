@@ -153,14 +153,6 @@ export const getObstaclesFromSrjTraces = (
   return traceObstacles
 }
 
-export function convertSrjTracesToObstacles(srj: null): null
-export function convertSrjTracesToObstacles(srj: undefined): undefined
-export function convertSrjTracesToObstacles(
-  srj: SimpleRouteJson,
-): SimpleRouteJson
-export function convertSrjTracesToObstacles(
-  srj: SimpleRouteJson | null | undefined,
-): SimpleRouteJson | null | undefined
 export function convertSrjTracesToObstacles(
   srj: SimpleRouteJson | null | undefined,
 ): SimpleRouteJson | null | undefined {
