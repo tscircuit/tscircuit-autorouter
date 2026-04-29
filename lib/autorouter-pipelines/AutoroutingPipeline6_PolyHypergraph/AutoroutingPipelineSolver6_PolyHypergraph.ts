@@ -292,7 +292,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.equivalentAreaExpansionFactor =
-      mutableOpts.equivalentAreaExpansionFactor ?? 0.25
+      mutableOpts.equivalentAreaExpansionFactor ?? 2
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = srj.bounds.maxX - srj.bounds.minX

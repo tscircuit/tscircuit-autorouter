@@ -35,6 +35,8 @@ test("Pipeline6 projectedRect area expansion preserves center and reaches polygo
 
   const insideRect = computeProjectedRect(rotatedSquare, 0)
   const equivalentAreaRect = computeProjectedRect(trapezoid, 1)
+  const expandedRect = computeProjectedRect(trapezoid, 2)
+  const lowerBoundRect = computeProjectedRect(trapezoid, -1)
 
   expectClose(insideRect.center.x, 0)
   expectClose(insideRect.center.y, 0)
@@ -45,6 +47,14 @@ test("Pipeline6 projectedRect area expansion preserves center and reaches polygo
     equivalentAreaRect.polygonArea,
   )
   expectClose(equivalentAreaRect.polygonArea, 20)
+  expectClose(
+    expandedRect.width * expandedRect.height,
+    equivalentAreaRect.polygonArea +
+      (equivalentAreaRect.polygonArea -
+        equivalentAreaRect.innerWidth * equivalentAreaRect.innerHeight),
+  )
+  expect(expandedRect.equivalentAreaExpansionFactor).toBe(2)
+  expect(lowerBoundRect.equivalentAreaExpansionFactor).toBe(0)
 
   for (const corner of getProjectedRectCorners(insideRect)) {
     expect(isPointInConvexPolygon(corner, rotatedSquare)).toBe(true)
@@ -76,6 +86,21 @@ test("Pipeline6 projectedRect handles sliver polygons without a singular homogra
   expect(projectedRect.targetQuad).toHaveLength(4)
   expect(projectedRect.rectToPolygonMatrix.every(Number.isFinite)).toBe(true)
   expect(projectedRect.polygonToRectMatrix.every(Number.isFinite)).toBe(true)
+})
+
+test("Pipeline6 defaults projectedRect area expansion above equivalent area", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    defaultObstacleMargin: 0.15,
+    bounds: { minX: 0, minY: 0, maxX: 10, maxY: 10 },
+    obstacles: [],
+    connections: [],
+  }
+
+  const solver = new AutoroutingPipelineSolver6(srj)
+
+  expect(solver.equivalentAreaExpansionFactor).toBe(2)
 })
 
 test("Pipeline6 falls back when constrained triangulation fails", async () => {

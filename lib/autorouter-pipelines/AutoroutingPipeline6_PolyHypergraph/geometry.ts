@@ -31,7 +31,7 @@ const EPSILON = 1e-9
 const RIGHT_ANGLE_RADIANS = Math.PI / 2
 const ROTATION_SAMPLE_COUNT = 90
 
-const clamp01 = (value: number) => Math.max(0, Math.min(1, value))
+const clampNonNegative = (value: number) => Math.max(0, value)
 
 const cross = (a: Point, b: Point) => a.x * b.y - a.y * b.x
 
@@ -598,7 +598,7 @@ export const computeProjectedRect = (
   )
   const polygonArea = getPolygonArea(workingPolygon)
   const innerArea = innerRect.width * innerRect.height
-  const expansionFactor = clamp01(equivalentAreaExpansionFactor)
+  const expansionFactor = clampNonNegative(equivalentAreaExpansionFactor)
   const targetArea =
     innerArea + Math.max(0, polygonArea - innerArea) * expansionFactor
   const scale =
