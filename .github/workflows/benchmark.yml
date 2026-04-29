@@ -192,7 +192,15 @@ jobs:
 
               for (let i = 0; i < args.length; i += 1) {
                 const arg = args[i]
-                if (arg === '--scenario-limit' || arg === '--dataset' || arg === '--effort') {
+                if (
+                  [
+                    '--scenario-limit',
+                    '--dataset',
+                    '--effort',
+                    '--concurrency',
+                    '--sample-timeout',
+                  ].includes(arg)
+                ) {
                   const value = args[i + 1]
                   if (value && !value.startsWith('-')) {
                     profileArgs.push(arg, value)
@@ -210,8 +218,6 @@ jobs:
                   [
                     '--solver',
                     '--pipeline',
-                    '--concurrency',
-                    '--sample-timeout',
                   ].includes(arg)
                 ) {
                   i += 1
@@ -283,6 +289,7 @@ jobs:
               }
               if (concurrency && concurrency.toLowerCase() !== 'auto') {
                 benchmarkConcurrency = concurrency
+                benchmarkArgs.push('--concurrency', concurrency)
               }
               ref = (inputs.ref || '').trim() || ref
             }
@@ -861,17 +868,30 @@ jobs:
               if (delta < 0) return `${label} ❌`
               return label
             }
-            const renderProfileFallback = (text, unavailableText) => [
-              '```',
-              truncate(text || unavailableText, maxLength),
-              '```',
+            const renderProfileRunSummary = (report) => {
+              if (!report) return []
+              const solved = formatNumber(report.solved)
+              const scenarioCount = formatNumber(report.scenarioCount)
+              const failed = formatNumber(report.failed)
+              const totalTime =
+                typeof report.totalTimeMs === 'number' && Number.isFinite(report.totalTimeMs)
+                  ? ` in ${formatTime(report.totalTimeMs)}`
+                  : ''
+              return [`${solved}/${scenarioCount} scenarios solved (${failed} failed)${totalTime}`, '']
+            }
+            const renderProfileUnavailable = (message) => [
+              message,
             ]
-            const renderMainProfileSolvers = (report, fallbackText) => {
+            const renderMainProfileSolvers = (report) => {
               if (!Array.isArray(report?.rows) || report.rows.length === 0) {
-                return renderProfileFallback(fallbackText, '(main profile-solvers output was not produced)')
+                return [
+                  ...renderProfileRunSummary(report),
+                  ...renderProfileUnavailable('(main profile-solvers JSON was not produced; see the workflow artifact for logs)'),
+                ]
               }
 
               return [
+                ...renderProfileRunSummary(report),
                 '| Solver | Scenarios | Success | Iterations | Total Time |',
                 '| --- | ---: | ---: | ---: | ---: |',
                 ...report.rows.map((row) =>
@@ -879,9 +899,12 @@ jobs:
                 ),
               ]
             }
-            const renderProfileComparison = (mainReport, prReport, fallbackText) => {
+            const renderProfileComparison = (mainReport, prReport) => {
               if (!Array.isArray(prReport?.rows) || prReport.rows.length === 0) {
-                return renderProfileFallback(fallbackText, '(PR profile-solvers output was not produced)')
+                return [
+                  ...renderProfileRunSummary(prReport),
+                  ...renderProfileUnavailable('(PR profile-solvers JSON was not produced; see the workflow artifact for logs)'),
+                ]
               }
 
               const mainIndex = buildProfileIndex(mainReport)
@@ -896,6 +919,7 @@ jobs:
               })
 
               return [
+                ...renderProfileRunSummary(prReport),
                 '| Solver | Main Scenarios | PR Scenarios | Main Success | PR Success | Main Iterations | PR Iterations | Main Total Time | PR Total Time | Success Delta |',
                 '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
                 ...solverNames.map((solverName) => {
@@ -959,7 +983,7 @@ jobs:
               ...renderReport(mainReport, mainText),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
-                    renderMainProfileSolvers(mainProfileSolversReport, mainProfileSolversText),
+                    renderMainProfileSolvers(mainProfileSolversReport),
                   )
                 : []),
               '</details>',
@@ -973,7 +997,6 @@ jobs:
                     renderProfileComparison(
                       mainProfileSolversReport,
                       prProfileSolversReport,
-                      prProfileSolversText,
                     ),
                   )
                 : []),
