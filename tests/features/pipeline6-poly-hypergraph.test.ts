@@ -35,6 +35,8 @@ test("Pipeline6 projectedRect area expansion preserves center and reaches polygo
 
   const insideRect = computeProjectedRect(rotatedSquare, 0)
   const equivalentAreaRect = computeProjectedRect(trapezoid, 1)
+  const expandedRect = computeProjectedRect(trapezoid, 2)
+  const lowerBoundRect = computeProjectedRect(trapezoid, -1)
 
   expectClose(insideRect.center.x, 0)
   expectClose(insideRect.center.y, 0)
@@ -45,6 +47,14 @@ test("Pipeline6 projectedRect area expansion preserves center and reaches polygo
     equivalentAreaRect.polygonArea,
   )
   expectClose(equivalentAreaRect.polygonArea, 20)
+  expectClose(
+    expandedRect.width * expandedRect.height,
+    equivalentAreaRect.polygonArea +
+      (equivalentAreaRect.polygonArea -
+        equivalentAreaRect.innerWidth * equivalentAreaRect.innerHeight),
+  )
+  expect(expandedRect.equivalentAreaExpansionFactor).toBe(2)
+  expect(lowerBoundRect.equivalentAreaExpansionFactor).toBe(0)
 
   for (const corner of getProjectedRectCorners(insideRect)) {
     expect(isPointInConvexPolygon(corner, rotatedSquare)).toBe(true)
@@ -78,6 +88,39 @@ test("Pipeline6 projectedRect handles sliver polygons without a singular homogra
   expect(projectedRect.polygonToRectMatrix.every(Number.isFinite)).toBe(true)
 })
 
+test("Pipeline6 projectedRect can enforce a minimum local routing dimension", () => {
+  const sliverPolygon = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 1, y: 0.05 },
+    { x: 0, y: 0.05 },
+  ]
+
+  const projectedRect = computeProjectedRect(sliverPolygon, 2, 0.45)
+
+  expect(projectedRect.width).toBeGreaterThanOrEqual(0.45)
+  expect(projectedRect.height).toBeGreaterThanOrEqual(0.45)
+  expect(projectedRect.targetQuad).toHaveLength(4)
+  expect(projectedRect.rectToPolygonMatrix.every(Number.isFinite)).toBe(true)
+  expect(projectedRect.polygonToRectMatrix.every(Number.isFinite)).toBe(true)
+})
+
+test("Pipeline6 defaults projectedRect area expansion above equivalent area", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    defaultObstacleMargin: 0.15,
+    bounds: { minX: 0, minY: 0, maxX: 10, maxY: 10 },
+    obstacles: [],
+    connections: [],
+  }
+
+  const solver = new AutoroutingPipelineSolver6(srj)
+
+  expect(solver.equivalentAreaExpansionFactor).toBe(2)
+  expect(solver.minProjectedRectDimension).toBeCloseTo(0.45)
+})
+
 test("Pipeline6 falls back when constrained triangulation fails", async () => {
   const scenarios = await loadScenarios("dataset01")
   const circuit100 = scenarios.find(([name]) => name === "circuit100")?.[1]
@@ -89,6 +132,21 @@ test("Pipeline6 falls back when constrained triangulation fails", async () => {
 
   expect(solver.usedUnconstrainedDelaunayFallback).toBe(true)
   expect(solver.convexRegions.regions.length).toBeGreaterThan(0)
+})
+
+test("Pipeline6 solves dataset01 circuit002 with minimum projected rect workspace", async () => {
+  const scenarios = await loadScenarios("dataset01")
+  const circuit002 = scenarios.find(([name]) => name === "circuit002")?.[1]
+  expect(circuit002).toBeDefined()
+
+  const solver = new AutoroutingPipelineSolver6(circuit002!, {
+    effort: 1,
+    equivalentAreaExpansionFactor: 2,
+  })
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 })
 
 test("PolySingleIntraNodeSolver solves in rect space before projection back to polygon", () => {
