@@ -14,6 +14,7 @@ export class AttachProjectedRectsSolver extends BaseSolver {
     public params: {
       nodesWithPortPoints: PolyNodeWithPortPoints[]
       equivalentAreaExpansionFactor?: number
+      minProjectedRectDimension?: number
     },
   ) {
     super()
@@ -25,6 +26,7 @@ export class AttachProjectedRectsSolver extends BaseSolver {
       const projectedRect = computeProjectedRect(
         node.polygon,
         this.params.equivalentAreaExpansionFactor ?? 0,
+        this.params.minProjectedRectDimension ?? 0,
       )
       return {
         ...node,

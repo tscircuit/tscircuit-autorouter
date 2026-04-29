@@ -43,6 +43,7 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   equivalentAreaExpansionFactor?: number
+  minProjectedRectDimension?: number
   polyConcavityTolerance?: number
   polyPortSpacing?: number
   polyPortMarginFromSegmentEndpoint?: number
@@ -103,6 +104,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   maxNodeRatio: number
   minNodeArea: number
   equivalentAreaExpansionFactor: number
+  minProjectedRectDimension: number
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -178,6 +180,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         {
           nodesWithPortPoints: cms.highDensityNodePortPoints ?? [],
           equivalentAreaExpansionFactor: cms.equivalentAreaExpansionFactor,
+          minProjectedRectDimension: cms.minProjectedRectDimension,
         },
       ],
       {
@@ -293,6 +296,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.equivalentAreaExpansionFactor =
       mutableOpts.equivalentAreaExpansionFactor ?? 2
+    this.minProjectedRectDimension =
+      mutableOpts.minProjectedRectDimension ?? this.minTraceWidth * 3
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = srj.bounds.maxX - srj.bounds.minX

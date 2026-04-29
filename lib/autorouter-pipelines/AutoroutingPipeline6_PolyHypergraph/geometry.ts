@@ -586,6 +586,7 @@ export const projectPointToRectBoundary = (
 export const computeProjectedRect = (
   polygon: readonly Point[],
   equivalentAreaExpansionFactor = 0,
+  minDimension = 0,
 ): ProjectedRect => {
   const initialCenter = getPolygonCentroid(polygon)
   const workingPolygon = isPointInConvexPolygon(initialCenter, polygon)
@@ -605,8 +606,9 @@ export const computeProjectedRect = (
     innerArea > EPSILON && targetArea > innerArea
       ? Math.sqrt(targetArea / innerArea)
       : 1
-  const width = innerRect.width * scale
-  const height = innerRect.height * scale
+  const minRectDimension = Math.max(0, minDimension)
+  const width = Math.max(innerRect.width * scale, minRectDimension)
+  const height = Math.max(innerRect.height * scale, minRectDimension)
   const ccwRotationRadians = normalizeRotationRadians(
     innerRect.ccwRotationRadians,
   )

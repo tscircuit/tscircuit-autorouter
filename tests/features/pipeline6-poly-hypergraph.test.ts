@@ -88,6 +88,23 @@ test("Pipeline6 projectedRect handles sliver polygons without a singular homogra
   expect(projectedRect.polygonToRectMatrix.every(Number.isFinite)).toBe(true)
 })
 
+test("Pipeline6 projectedRect can enforce a minimum local routing dimension", () => {
+  const sliverPolygon = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 1, y: 0.05 },
+    { x: 0, y: 0.05 },
+  ]
+
+  const projectedRect = computeProjectedRect(sliverPolygon, 2, 0.45)
+
+  expect(projectedRect.width).toBeGreaterThanOrEqual(0.45)
+  expect(projectedRect.height).toBeGreaterThanOrEqual(0.45)
+  expect(projectedRect.targetQuad).toHaveLength(4)
+  expect(projectedRect.rectToPolygonMatrix.every(Number.isFinite)).toBe(true)
+  expect(projectedRect.polygonToRectMatrix.every(Number.isFinite)).toBe(true)
+})
+
 test("Pipeline6 defaults projectedRect area expansion above equivalent area", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
@@ -101,6 +118,7 @@ test("Pipeline6 defaults projectedRect area expansion above equivalent area", ()
   const solver = new AutoroutingPipelineSolver6(srj)
 
   expect(solver.equivalentAreaExpansionFactor).toBe(2)
+  expect(solver.minProjectedRectDimension).toBeCloseTo(0.45)
 })
 
 test("Pipeline6 falls back when constrained triangulation fails", async () => {
@@ -114,6 +132,21 @@ test("Pipeline6 falls back when constrained triangulation fails", async () => {
 
   expect(solver.usedUnconstrainedDelaunayFallback).toBe(true)
   expect(solver.convexRegions.regions.length).toBeGreaterThan(0)
+})
+
+test("Pipeline6 solves dataset01 circuit002 with minimum projected rect workspace", async () => {
+  const scenarios = await loadScenarios("dataset01")
+  const circuit002 = scenarios.find(([name]) => name === "circuit002")?.[1]
+  expect(circuit002).toBeDefined()
+
+  const solver = new AutoroutingPipelineSolver6(circuit002!, {
+    effort: 1,
+    equivalentAreaExpansionFactor: 2,
+  })
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 })
 
 test("PolySingleIntraNodeSolver solves in rect space before projection back to polygon", () => {
