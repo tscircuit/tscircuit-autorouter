@@ -48,6 +48,7 @@ jobs:
           aws --version
 
       - name: Upload npm package tarball to R2
+        if: github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork
         id: upload-npm-package-tarball-to-r2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || vars.R2_ACCESS_KEY_ID }}
