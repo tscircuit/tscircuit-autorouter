@@ -313,7 +313,7 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
       (error) =>
         "message" in error &&
         typeof error.message === "string" &&
-        error.message.includes("overlaps with trace"),
+        error.message.includes("is too close to trace"),
     ),
   ).toBe(true)
 }, 60_000)
