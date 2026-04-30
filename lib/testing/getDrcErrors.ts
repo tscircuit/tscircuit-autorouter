@@ -44,14 +44,14 @@ export const getDrcErrors = (
     MIN_VIA_TO_VIA_CLEARANCE,
   )
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
-    minSpacing: options.traceClearance,
+    minClearance: options.traceClearance,
   })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
-      minSpacing: viaClearance,
+      minClearance: viaClearance,
     }),
     ...checkDifferentNetViaSpacing(circuitJson, {
-      minSpacing: viaClearance,
+      minClearance: viaClearance,
     }),
   ]
 

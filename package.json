@@ -26,7 +26,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#a8acf39c8d67ddde8878d42d92d22c11e235e28a",
     "@tscircuit/autorouting-dataset-01": "^1.0.32",
-    "@tscircuit/checks": "^0.0.114",
+    "@tscircuit/checks": "^0.0.125",
     "@tscircuit/circuit-json-util": "^0.0.90",
     "@tscircuit/core": "^0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
