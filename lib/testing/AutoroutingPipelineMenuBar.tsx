@@ -68,19 +68,10 @@ export const PIPELINE_OPTIONS = [
   {
     id: "KrtAutoroutingPipelineSolver",
     label: "KRT Autorouter (WASM)",
-    devOnly: true,
   },
 ] as const
 
 export type PipelineId = (typeof PIPELINE_OPTIONS)[number]["id"]
-
-const isDevelopmentMode = () =>
-  typeof import.meta !== "undefined" && Boolean((import.meta as any).env?.DEV)
-
-const getVisiblePipelineOptions = () =>
-  PIPELINE_OPTIONS.filter(
-    (option) => !("devOnly" in option) || isDevelopmentMode(),
-  )
 
 interface AutoroutingPipelineMenuBarProps {
   renderer: "canvas" | "vector"
@@ -151,7 +142,7 @@ export const AutoroutingPipelineMenuBar = ({
       <MenubarMenu>
         <MenubarTrigger>Pipeline</MenubarTrigger>
         <MenubarContent>
-          {getVisiblePipelineOptions().map((option) => (
+          {PIPELINE_OPTIONS.map((option) => (
             <MenubarItem
               key={option.id}
               onClick={() => onSetPipelineId(option.id)}
