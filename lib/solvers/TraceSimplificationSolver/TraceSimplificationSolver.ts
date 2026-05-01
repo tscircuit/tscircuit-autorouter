@@ -70,6 +70,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - outline: Optional board outline boundary
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
+   *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -81,6 +82,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly outline?: ReadonlyArray<{ x: number; y: number }>
       readonly defaultViaDiameter: number
       readonly layerCount: number
+      readonly minTraceToPadEdgeClearance?: number
     },
   ) {
     super()
