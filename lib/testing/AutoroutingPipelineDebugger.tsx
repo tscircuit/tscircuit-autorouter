@@ -49,6 +49,7 @@ import { extractCapacityMeshNodeIdFromObjectLabel } from "./utils/extractCapacit
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 import { getHighDensityNodeDownloadData } from "./utils/getHighDensityNodeDownloadData"
 import { prepareParamsForDownload } from "./utils/prepareParamsForDownload"
+import { KrtAutoroutingPipelineSolver } from "./KrtAutoroutingPipelineSolver"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -60,6 +61,7 @@ const PIPELINE_SOLVERS = {
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,
   AutoroutingPipeline1_OriginalUnravel,
+  KrtAutoroutingPipelineSolver,
 } as const
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
