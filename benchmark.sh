@@ -18,6 +18,7 @@ resolve_pipeline_solver_name() {
     4) echo "AutoroutingPipelineSolver4" ;;
     5) echo "AutoroutingPipelineSolver5" ;;
     6) echo "AutoroutingPipelineSolver6" ;;
+    krt|KRT) echo "KrtAutoroutingPipelineSolver" ;;
     *)
       echo "Unknown pipeline: $1" >&2
       exit 1
@@ -57,6 +58,7 @@ get_solvers() {
 
     const includeAssignable = process.env.INCLUDE_ASSIGNABLE === "true"
     const filtered = includeAssignable ? uniqueSolvers : uniqueSolvers.filter(name => !name.includes("Assignable"))
+    filtered.push("KrtAutoroutingPipelineSolver")
 
     console.log(filtered.join("\n"))
   ' 2>/dev/null || true
@@ -66,11 +68,11 @@ print_help() {
   cat <<'EOF'
 Usage:
   ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline N] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline N         Run a numbered pipeline alias (1-6)
+  --pipeline ID        Run a pipeline alias (1-6 or krt)
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
@@ -94,6 +96,7 @@ Examples:
   ./benchmark.sh --pipeline 4
   ./benchmark.sh --pipeline 5
   ./benchmark.sh --pipeline 6
+  ./benchmark.sh --pipeline krt
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset srj05 --scenario-limit 20
   ./benchmark.sh --dataset 11 --scenario-limit 20
   ./benchmark.sh --dataset 12 --scenario-limit 10

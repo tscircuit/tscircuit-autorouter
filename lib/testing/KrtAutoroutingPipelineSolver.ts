@@ -4,7 +4,12 @@ import {
 } from "@tscircuit/krt-wasm"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import type {
+  ConnectionPoint,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+} from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -13,6 +18,136 @@ import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoa
 export interface KrtAutoroutingPipelineSolverOptions {
   effort?: number
   krtOptions?: KiCadRoutingToolsAutorouterOptions
+}
+
+type KrtConnectionStitch = {
+  connectionName: string
+  from: Extract<ConnectionPoint, { layer: string }>
+  to: Extract<ConnectionPoint, { layer: string }>
+}
+
+const getKrtClearance = (
+  srj: SimpleRouteJson,
+  opts: KrtAutoroutingPipelineSolverOptions,
+) => opts.krtOptions?.clearance ?? srj.defaultObstacleMargin ?? 0.2
+
+const isSingleLayerPoint = (
+  point: ConnectionPoint,
+): point is Extract<ConnectionPoint, { layer: string }> =>
+  typeof (point as { layer?: unknown }).layer === "string"
+
+const distanceBetweenPoints = (
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+) => Math.hypot(a.x - b.x, a.y - b.y)
+
+const normalizeSrjForKrt = (
+  srj: SimpleRouteJson,
+  clearance: number,
+): { srj: SimpleRouteJson; stitches: KrtConnectionStitch[] } => {
+  const closePointThreshold = srj.minTraceWidth + clearance
+  const stitches: KrtConnectionStitch[] = []
+
+  const connections = srj.connections.map((connection) => {
+    const pointsToConnect: ConnectionPoint[] = []
+
+    for (const point of connection.pointsToConnect) {
+      const closePoint =
+        isSingleLayerPoint(point) &&
+        pointsToConnect.find(
+          (
+            candidate,
+          ): candidate is Extract<ConnectionPoint, { layer: string }> =>
+            isSingleLayerPoint(candidate) &&
+            candidate.layer === point.layer &&
+            distanceBetweenPoints(candidate, point) <= closePointThreshold,
+        )
+
+      if (closePoint) {
+        stitches.push({
+          connectionName: connection.name,
+          from: point,
+          to: closePoint,
+        })
+      } else {
+        pointsToConnect.push(point)
+      }
+    }
+
+    return {
+      ...connection,
+      pointsToConnect,
+    }
+  })
+
+  return {
+    srj: {
+      ...srj,
+      connections,
+      obstacles: srj.obstacles.map((obstacle) =>
+        (obstacle as { type: string }).type === "oval"
+          ? {
+              ...obstacle,
+              type: "rect",
+            }
+          : obstacle,
+      ),
+    },
+    stitches,
+  }
+}
+
+const toWirePoint = (
+  point: Extract<ConnectionPoint, { layer: string }>,
+  width: number,
+): SimplifiedPcbTrace["route"][number] => ({
+  route_type: "wire",
+  x: point.x,
+  y: point.y,
+  layer: point.layer,
+  width,
+})
+
+const addStitchesToTraces = (
+  traces: SimplifiedPcbTraces,
+  stitches: KrtConnectionStitch[],
+  width: number,
+): SimplifiedPcbTraces => {
+  if (stitches.length === 0) return traces
+
+  const tracesWithStitches = structuredClone(traces)
+
+  for (const stitch of stitches) {
+    const trace = tracesWithStitches.find(
+      (candidate) => candidate.connection_name === stitch.connectionName,
+    )
+    if (!trace) continue
+
+    const firstRoutePoint = trace.route.find(
+      (point) => "x" in point && "y" in point,
+    )
+    const lastRoutePoint = [...trace.route]
+      .reverse()
+      .find((point) => "x" in point && "y" in point)
+
+    const stitchRoute = [
+      toWirePoint(stitch.from, width),
+      toWirePoint(stitch.to, width),
+    ]
+
+    if (
+      firstRoutePoint &&
+      (!lastRoutePoint ||
+        distanceBetweenPoints(stitch.to, firstRoutePoint) <=
+          distanceBetweenPoints(stitch.to, lastRoutePoint))
+    ) {
+      trace.route.unshift(...stitchRoute)
+    } else {
+      trace.route.push(...stitchRoute.reverse())
+    }
+  }
+
+  return tracesWithStitches
 }
 
 class KrtAutorouterSolver extends BaseSolver {
@@ -33,13 +168,20 @@ class KrtAutorouterSolver extends BaseSolver {
 
   _step() {
     const effort = this.opts.effort ?? 1
-    this.router = new KiCadRoutingToolsAutorouter(this.srj as any, {
-      clearance: this.srj.defaultObstacleMargin ?? 0.2,
+    const clearance = getKrtClearance(this.srj, this.opts)
+    const normalized = normalizeSrjForKrt(this.srj, clearance)
+    this.router = new KiCadRoutingToolsAutorouter(normalized.srj as any, {
+      clearance,
       maxIterations: Math.max(300_000, Math.round(300_000 * effort)),
       ...this.opts.krtOptions,
     })
-    this.traces = this.router.solveSync() as SimplifiedPcbTraces
+    this.traces = addStitchesToTraces(
+      this.router.solveSync() as SimplifiedPcbTraces,
+      normalized.stitches,
+      this.srj.minTraceWidth,
+    )
     this.stats.traceCount = this.traces.length
+    this.stats.stitchCount = normalized.stitches.length
     this.solved = true
   }
 

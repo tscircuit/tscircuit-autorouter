@@ -283,6 +283,9 @@ const loadSolverNames = async (
     return [name, ...aliasMatches]
   })
   const uniqueSolverNames = [...new Set(solverNames)]
+  if (!uniqueSolverNames.includes("KrtAutoroutingPipelineSolver")) {
+    uniqueSolverNames.push("KrtAutoroutingPipelineSolver")
+  }
 
   if (!excludeAssignable) {
     return uniqueSolverNames

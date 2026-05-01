@@ -1,4 +1,5 @@
 import * as autorouterModule from "../../lib"
+import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
 import { getDrcErrors } from "../../lib/testing/getDrcErrors"
 import { RELAXED_DRC_OPTIONS } from "../../lib/testing/drcPresets"
 import { convertToCircuitJson } from "../../lib/testing/utils/convertToCircuitJson"
@@ -40,6 +41,13 @@ export const getBenchmarkSolverOptions = (
 }
 
 const getSolverConstructor = (solverName: string) => {
+  if (solverName === "KrtAutoroutingPipelineSolver") {
+    return KrtAutoroutingPipelineSolver as new (
+      srj: SimpleRouteJson,
+      opts?: SolverOptions,
+    ) => SolverInstance
+  }
+
   const ctor = (autorouterModule as Record<string, unknown>)[solverName]
   if (typeof ctor !== "function") {
     throw new Error(`Solver "${solverName}" was not found`)
