@@ -24,7 +24,7 @@
     "@radix-ui/react-menubar": "^1.1.14",
     "@react-hook/resize-observer": "^2.0.2",
     "@resvg/resvg-js": "^2.6.2",
-    "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#a8acf39c8d67ddde8878d42d92d22c11e235e28a",
+    "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#56db70039aeb28a76540fe951b5a96be60f9e949",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "^1.0.32",
     "@tscircuit/checks": "^0.0.125",
