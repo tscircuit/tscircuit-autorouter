@@ -10,6 +10,7 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { CachedHyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/CachedHyperSingleIntraNodeSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
@@ -254,7 +255,7 @@ export class HighDensitySolver extends BaseSolver {
     }
     const node = this.unsolvedNodePortPoints.pop()!
 
-    this.activeSubSolver = new HyperSingleIntraNodeSolver({
+    this.activeSubSolver = new CachedHyperSingleIntraNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,

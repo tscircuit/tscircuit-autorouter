@@ -18,13 +18,50 @@ type CachedSolvedHyperSingleIntraNode =
   | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
   | { success: false }
 
-// Define the transform type (currently unused but required by the interface)
-type CacheToHyperSingleIntraNodeTransform = Record<string, never> // Or define specific transform data if needed
+type CacheToHyperSingleIntraNodeTransform = {
+  center: { x: number; y: number }
+  realToCacheConnectionName: Record<string, string>
+  cacheToRealConnectionName: Record<string, string>
+}
 
 // Round coordinates to mitigate floating point inconsistencies in cache keys
 
 // Round to nearest 5um (0.005mm)
 const roundCoord = (n: number) => Math.round(n * 200) / 200
+
+const translateRoute = (
+  route: HighDensityIntraNodeRoute,
+  offset: { x: number; y: number },
+  connectionNameMap: Record<string, string>,
+): HighDensityIntraNodeRoute => ({
+  ...route,
+  connectionName:
+    connectionNameMap[route.connectionName] ?? route.connectionName,
+  rootConnectionName: route.rootConnectionName
+    ? (connectionNameMap[route.rootConnectionName] ?? route.rootConnectionName)
+    : undefined,
+  route: route.route.map((point) => ({
+    ...point,
+    x: point.x + offset.x,
+    y: point.y + offset.y,
+  })),
+  vias: route.vias.map((via) => ({
+    ...via,
+    x: via.x + offset.x,
+    y: via.y + offset.y,
+  })),
+  jumpers: route.jumpers?.map((jumper) => ({
+    ...jumper,
+    start: {
+      x: jumper.start.x + offset.x,
+      y: jumper.start.y + offset.y,
+    },
+    end: {
+      x: jumper.end.x + offset.x,
+      y: jumper.end.y + offset.y,
+    },
+  })),
+})
 
 setupGlobalCaches()
 
@@ -74,31 +111,64 @@ export class CachedHyperSingleIntraNodeSolver
     cacheKey: string
     cacheToSolveSpaceTransform: CacheToHyperSingleIntraNodeTransform
   } {
-    const connectionNameToNormNameMap = new Map<string, string>()
-
-    // TODO connection names need proper normalization
-
     // 1. Normalize NodeWithPortPoints
     const node = this.nodeWithPortPoints
     const center = node.center
-    const normalizedPortPoints = [...node.portPoints]
+    const normalizedConnectionGroups = Object.values(
+      node.portPoints.reduce(
+        (acc, portPoint) => {
+          acc[portPoint.connectionName] ??= {
+            realConnectionName: portPoint.connectionName,
+            points: [],
+          }
+          acc[portPoint.connectionName]!.points.push({
+            x: roundCoord(portPoint.x - center.x),
+            y: roundCoord(portPoint.y - center.y),
+            z: portPoint.z ?? 0,
+          })
+          return acc
+        },
+        {} as Record<
+          string,
+          {
+            realConnectionName: string
+            points: Array<{ x: number; y: number; z: number }>
+          }
+        >,
+      ),
+    )
+      .map((group) => ({
+        ...group,
+        points: group.points.sort(
+          (a, b) => a.x - b.x || a.y - b.y || a.z - b.z,
+        ),
+      }))
       .sort((a, b) => {
-        if (a.connectionName !== b.connectionName)
-          return a.connectionName.localeCompare(b.connectionName)
-        if (a.x !== b.x) return a.x - b.x
-        if (a.y !== b.y) return a.y - b.y
-        return (a.z ?? 0) - (b.z ?? 0)
+        const aKey = JSON.stringify(a.points)
+        const bKey = JSON.stringify(b.points)
+        return aKey.localeCompare(bKey)
       })
-      .map((pp) => {
-        return {
-          connectionName: pp.connectionName,
-          x: roundCoord(pp.x - center.x),
-          y: roundCoord(pp.y - center.y),
-          z: pp.z ?? 0,
-          // Include other relevant properties if they affect routing
-          // e.g., traceThickness, viaDiameter if they vary per portPoint
-        }
-      })
+
+    const realToCacheConnectionName = Object.fromEntries(
+      normalizedConnectionGroups.map(({ realConnectionName }, index) => [
+        realConnectionName,
+        `conn_${index}`,
+      ]),
+    )
+    const cacheToRealConnectionName = Object.fromEntries(
+      Object.entries(realToCacheConnectionName).map(([realName, cacheName]) => [
+        cacheName,
+        realName,
+      ]),
+    )
+
+    const normalizedPortPoints = normalizedConnectionGroups.flatMap(
+      ({ realConnectionName, points }) =>
+        points.map((point) => ({
+          connectionName: realToCacheConnectionName[realConnectionName],
+          ...point,
+        })),
+    )
 
     const normalizedNodeData = {
       width: roundCoord(node.width),
@@ -129,7 +199,11 @@ export class CachedHyperSingleIntraNodeSolver
     }
 
     const cacheKey = `intranode:${objectHash(keyData)}`
-    const cacheToSolveSpaceTransform = {} // No transform needed for this approach
+    const cacheToSolveSpaceTransform: CacheToHyperSingleIntraNodeTransform = {
+      center,
+      realToCacheConnectionName,
+      cacheToRealConnectionName,
+    }
 
     this.cacheKey = cacheKey
     this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
@@ -139,9 +213,17 @@ export class CachedHyperSingleIntraNodeSolver
 
   applyCachedSolution(cachedSolution: CachedSolvedHyperSingleIntraNode): void {
     if (cachedSolution.success) {
-      // Important: Deep clone the cached routes if they might be mutated later
-      // For now, assuming they are treated as immutable after retrieval.
-      this.solvedRoutes = cachedSolution.solvedRoutes
+      const transform =
+        this.cacheToSolveSpaceTransform ??
+        this.computeCacheKeyAndTransform().cacheToSolveSpaceTransform
+      this.solvedRoutes = structuredClone(cachedSolution.solvedRoutes).map(
+        (route) =>
+          translateRoute(
+            route,
+            transform.center,
+            transform.cacheToRealConnectionName,
+          ),
+      )
       this.solved = true
       this.failed = false
     } else {
@@ -223,8 +305,19 @@ export class CachedHyperSingleIntraNodeSolver
     if (this.failed) {
       solutionToCache = { success: false }
     } else if (this.solved) {
-      // Important: Deep clone routes if necessary before caching
-      solutionToCache = { success: true, solvedRoutes: this.solvedRoutes }
+      const transform =
+        this.cacheToSolveSpaceTransform ??
+        this.computeCacheKeyAndTransform().cacheToSolveSpaceTransform
+      solutionToCache = {
+        success: true,
+        solvedRoutes: structuredClone(this.solvedRoutes).map((route) =>
+          translateRoute(
+            route,
+            { x: -transform.center.x, y: -transform.center.y },
+            transform.realToCacheConnectionName,
+          ),
+        ),
+      }
     } else {
       // Solver finished without being solved or failed? Should not happen in typical flow.
       // console.warn("Attempting to save cache for solver that is neither solved nor failed.")

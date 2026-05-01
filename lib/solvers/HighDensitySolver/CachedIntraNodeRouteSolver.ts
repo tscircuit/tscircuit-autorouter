@@ -13,7 +13,11 @@ type CachedSolvedIntraNodeRouteSolver =
   | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
   | { success: false; error?: string }
 
-type CacheToIntraNodeSolverTransform = Record<string, never>
+type CacheToIntraNodeSolverTransform = {
+  center: { x: number; y: number }
+  realToCacheConnectionName: Record<string, string>
+  cacheToRealConnectionName: Record<string, string>
+}
 
 const roundCoord = (n: number) => Math.round(n * 200) / 200
 
@@ -24,7 +28,41 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 2
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+
+const translateRoute = (
+  route: HighDensityIntraNodeRoute,
+  offset: { x: number; y: number },
+  connectionNameMap: Record<string, string>,
+): HighDensityIntraNodeRoute => ({
+  ...route,
+  connectionName:
+    connectionNameMap[route.connectionName] ?? route.connectionName,
+  rootConnectionName: route.rootConnectionName
+    ? (connectionNameMap[route.rootConnectionName] ?? route.rootConnectionName)
+    : undefined,
+  route: route.route.map((point) => ({
+    ...point,
+    x: point.x + offset.x,
+    y: point.y + offset.y,
+  })),
+  vias: route.vias.map((via) => ({
+    ...via,
+    x: via.x + offset.x,
+    y: via.y + offset.y,
+  })),
+  jumpers: route.jumpers?.map((jumper) => ({
+    ...jumper,
+    start: {
+      x: jumper.start.x + offset.x,
+      y: jumper.start.y + offset.y,
+    },
+    end: {
+      x: jumper.end.x + offset.x,
+      y: jumper.end.y + offset.y,
+    },
+  })),
+})
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -94,14 +132,42 @@ export class CachedIntraNodeRouteSolver
     cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform
   } {
     const center = this.nodeWithPortPoints.center
-    const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, points }) => ({
-        connectionName,
+    const normalizedConnectionGroups = this.initialUnsolvedConnections
+      .map(({ connectionName, points }) => ({
+        realConnectionName: connectionName,
+        points: points
+          .map((point) => ({
+            x: roundCoord(point.x - center.x),
+            y: roundCoord(point.y - center.y),
+            z: point.z ?? 0,
+          }))
+          .sort((a, b) => a.x - b.x || a.y - b.y || a.z - b.z),
+      }))
+      .sort((a, b) => {
+        const aKey = JSON.stringify(a.points)
+        const bKey = JSON.stringify(b.points)
+        return aKey.localeCompare(bKey)
+      })
+
+    const realToCacheConnectionName = Object.fromEntries(
+      normalizedConnectionGroups.map(({ realConnectionName }, index) => [
+        realConnectionName,
+        `conn_${index}`,
+      ]),
+    )
+    const cacheToRealConnectionName = Object.fromEntries(
+      Object.entries(realToCacheConnectionName).map(([realName, cacheName]) => [
+        cacheName,
+        realName,
+      ]),
+    )
+
+    const normalizedConnections = normalizedConnectionGroups.map(
+      ({ realConnectionName, points }) => ({
+        connectionName: realToCacheConnectionName[realConnectionName],
         points: points.map((point) => ({
-          connectionName,
-          x: roundCoord(point.x - center.x),
-          y: roundCoord(point.y - center.y),
-          z: point.z ?? 0,
+          connectionName: realToCacheConnectionName[realConnectionName],
+          ...point,
         })),
       }),
     )
@@ -113,13 +179,22 @@ export class CachedIntraNodeRouteSolver
     )
 
     const normalizedConnMap = this.connMap
-      ? this.initialUnsolvedConnections.map(({ connectionName }) => ({
-          connectionName,
-          connectedIds: [
-            ...new Set(
-              this.connMap!.getIdsConnectedToNet(connectionName) ?? [],
-            ),
-          ].sort(),
+      ? normalizedConnectionGroups.map(({ realConnectionName }) => ({
+          connectionName: realToCacheConnectionName[realConnectionName],
+          connectedIds: normalizedConnectionGroups
+            .filter(
+              ({ realConnectionName: otherConnectionName }) =>
+                otherConnectionName !== realConnectionName &&
+                this.connMap!.areIdsConnected(
+                  realConnectionName,
+                  otherConnectionName,
+                ),
+            )
+            .map(
+              ({ realConnectionName: connectedConnectionName }) =>
+                realToCacheConnectionName[connectedConnectionName],
+            )
+            .sort(),
         }))
       : undefined
 
@@ -128,10 +203,6 @@ export class CachedIntraNodeRouteSolver
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),
-        center: {
-          x: roundCoord(this.nodeWithPortPoints.center.x),
-          y: roundCoord(this.nodeWithPortPoints.center.y),
-        },
         availableZ: this.nodeWithPortPoints.availableZ
           ? [...this.nodeWithPortPoints.availableZ].sort()
           : undefined,
@@ -148,7 +219,11 @@ export class CachedIntraNodeRouteSolver
     }
 
     const cacheKey = `intranode-solver:${objectHash(keyData)}`
-    const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
+    const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {
+      center,
+      realToCacheConnectionName,
+      cacheToRealConnectionName,
+    }
 
     this.cacheKey = cacheKey
     this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
@@ -158,7 +233,16 @@ export class CachedIntraNodeRouteSolver
 
   applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
     if (cachedSolution.success) {
-      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      const transform =
+        this.cacheToSolveSpaceTransform ??
+        this.computeCacheKeyAndTransform().cacheToSolveSpaceTransform
+      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes).map((route) =>
+        translateRoute(
+          route,
+          transform.center,
+          transform.cacheToRealConnectionName,
+        ),
+      )
       this.solved = true
       this.failed = false
     } else {
@@ -229,9 +313,21 @@ export class CachedIntraNodeRouteSolver
       return
     }
 
+    const transform =
+      this.cacheToSolveSpaceTransform ??
+      this.computeCacheKeyAndTransform().cacheToSolveSpaceTransform
     const solutionToCache: CachedSolvedIntraNodeRouteSolver = this.failed
       ? { success: false, error: this.error ?? undefined }
-      : { success: true, solvedRoutes: cloneValue(this.solvedRoutes) }
+      : {
+          success: true,
+          solvedRoutes: cloneValue(this.solvedRoutes).map((route) =>
+            translateRoute(
+              route,
+              { x: -transform.center.x, y: -transform.center.y },
+              transform.realToCacheConnectionName,
+            ),
+          ),
+        }
 
     try {
       this.cacheProvider.setCachedSolutionSync(this.cacheKey, solutionToCache)
