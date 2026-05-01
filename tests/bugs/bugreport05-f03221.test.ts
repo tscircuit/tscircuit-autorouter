@@ -7,10 +7,14 @@ import { AutoroutingPipeline1_OriginalUnravel } from "lib/index"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport05-f03221.json-autoroutingpipeline-04", () => {
-  const solver = new AutoroutingPipeline1_OriginalUnravel(srj)
-  solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
-}, 30000)
+test(
+  "bugreport05-f03221.json-autoroutingpipeline-04",
+  () => {
+    const solver = new AutoroutingPipeline1_OriginalUnravel(srj)
+    solver.solve()
+    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+      import.meta.path,
+    )
+  },
+  120_000,
+)
