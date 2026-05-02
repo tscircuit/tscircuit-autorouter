@@ -3,18 +3,67 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { computeProjectedRect } from "./geometry"
 import type { PolyNodeWithPortPoints } from "./types"
 
+const getRequiredRoutingCorridorWidth = ({
+  traceWidth,
+  viaDiameter,
+  obstacleMargin,
+  minProjectedRectDimension,
+}: {
+  traceWidth?: number
+  viaDiameter?: number
+  obstacleMargin?: number
+  minProjectedRectDimension: number
+}) =>
+  Math.max(
+    minProjectedRectDimension,
+    viaDiameter ?? 0,
+    (traceWidth ?? 0) + 2 * (obstacleMargin ?? 0),
+  )
+
+const shouldClampProjectionExpansion = (
+  projectedRect: ReturnType<typeof computeProjectedRect>,
+  conservativeProjectedRect: ReturnType<typeof computeProjectedRect>,
+  requiredRoutingCorridorWidth: number,
+  traceWidth?: number,
+) => {
+  if (requiredRoutingCorridorWidth <= 0) return false
+
+  const minDimension = Math.min(projectedRect.width, projectedRect.height)
+  const conservativeMinDimension = Math.min(
+    conservativeProjectedRect.width,
+    conservativeProjectedRect.height,
+  )
+  const nextTraceLaneWidth = requiredRoutingCorridorWidth + (traceWidth ?? 0)
+  const expandedLanesAcross = Math.floor(
+    minDimension / requiredRoutingCorridorWidth,
+  )
+  const conservativeLanesAcross = Math.floor(
+    conservativeMinDimension / requiredRoutingCorridorWidth,
+  )
+
+  return (
+    expandedLanesAcross <= conservativeLanesAcross &&
+    minDimension <= nextTraceLaneWidth &&
+    projectedRect.equivalentAreaExpansionFactor > 1
+  )
+}
+
 export class AttachProjectedRectsSolver extends BaseSolver {
   override getSolverName(): string {
     return "AttachProjectedRectsSolver"
   }
 
   outputNodes: PolyNodeWithPortPoints[] = []
+  projectionAdjustmentByNodeId = new Map<string, string>()
 
   constructor(
     public params: {
       nodesWithPortPoints: PolyNodeWithPortPoints[]
       equivalentAreaExpansionFactor?: number
       minProjectedRectDimension?: number
+      traceWidth?: number
+      viaDiameter?: number
+      obstacleMargin?: number
     },
   ) {
     super()
@@ -22,12 +71,45 @@ export class AttachProjectedRectsSolver extends BaseSolver {
   }
 
   _step() {
+    this.projectionAdjustmentByNodeId.clear()
     this.outputNodes = this.params.nodesWithPortPoints.map((node) => {
-      const projectedRect = computeProjectedRect(
+      const requestedExpansionFactor =
+        this.params.equivalentAreaExpansionFactor ?? 0
+      const minProjectedRectDimension =
+        this.params.minProjectedRectDimension ?? 0
+      const requiredRoutingCorridorWidth = getRequiredRoutingCorridorWidth({
+        traceWidth: this.params.traceWidth,
+        viaDiameter: this.params.viaDiameter,
+        obstacleMargin: this.params.obstacleMargin,
+        minProjectedRectDimension,
+      })
+      let projectedRect = computeProjectedRect(
         node.polygon,
-        this.params.equivalentAreaExpansionFactor ?? 0,
-        this.params.minProjectedRectDimension ?? 0,
+        requestedExpansionFactor,
+        minProjectedRectDimension,
       )
+
+      const conservativeProjectedRect = computeProjectedRect(
+        node.polygon,
+        1,
+        minProjectedRectDimension,
+      )
+
+      if (
+        shouldClampProjectionExpansion(
+          projectedRect,
+          conservativeProjectedRect,
+          requiredRoutingCorridorWidth,
+          this.params.traceWidth,
+        )
+      ) {
+        projectedRect = conservativeProjectedRect
+        this.projectionAdjustmentByNodeId.set(
+          node.capacityMeshNodeId,
+          "corridor-expansion-factor-1",
+        )
+      }
+
       return {
         ...node,
         center: projectedRect.center,

@@ -181,6 +181,9 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           nodesWithPortPoints: cms.highDensityNodePortPoints ?? [],
           equivalentAreaExpansionFactor: cms.equivalentAreaExpansionFactor,
           minProjectedRectDimension: cms.minProjectedRectDimension,
+          traceWidth: cms.minTraceWidth,
+          viaDiameter: cms.viaDiameter,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
       ],
       {
