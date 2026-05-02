@@ -37,6 +37,9 @@ type SerializedTinySolvedRoute = NonNullable<
 >[number]
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const TINY_LARGE_GRAPH_ROUTE_THRESHOLD = 200
+const TINY_LARGE_GRAPH_DEFER_MAX_PER_ROUTE = 5
+const TINY_LARGE_GRAPH_MAX_CONSECUTIVE_DEFERRALS = 48
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
@@ -330,12 +333,245 @@ const applyTerminalRegionNetIds = (loaded: {
   }
 }
 
+class LargeGraphAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
+  private shouldEnableLargeGraphRouteOrdering: boolean
+  private shortRankByRouteId: Int32Array
+  private deferCountByRouteId: Uint16Array
+  private consecutiveDeferrals = 0
+
+  constructor(
+    topology: ConstructorParameters<typeof TinyHyperGraphSolver>[0],
+    problem: ConstructorParameters<typeof TinyHyperGraphSolver>[1],
+    options?: ConstructorParameters<typeof TinyHyperGraphSolver>[2],
+  ) {
+    super(topology, problem, options)
+    this.shouldEnableLargeGraphRouteOrdering =
+      problem.routeCount >= TINY_LARGE_GRAPH_ROUTE_THRESHOLD
+    this.shortRankByRouteId = this.computeShortRankByRouteId()
+    this.deferCountByRouteId = new Uint16Array(problem.routeCount)
+  }
+
+  private computeRouteDistance(routeId: number) {
+    const routeMetadata = this.problem.routeMetadata?.[routeId] as
+      | {
+          simpleRouteConnection?: {
+            pointsToConnect?: Array<{
+              x?: number
+              y?: number
+            }>
+          }
+        }
+      | undefined
+    const point1 = routeMetadata?.simpleRouteConnection?.pointsToConnect?.[0]
+    const point2 = routeMetadata?.simpleRouteConnection?.pointsToConnect?.[1]
+
+    if (
+      point1 &&
+      point2 &&
+      Number.isFinite(point1.x) &&
+      Number.isFinite(point1.y) &&
+      Number.isFinite(point2.x) &&
+      Number.isFinite(point2.y)
+    ) {
+      return Math.hypot(point1.x - point2.x, point1.y - point2.y)
+    }
+
+    const startPortId = this.problem.routeStartPort[routeId]
+    const endPortId = this.problem.routeEndPort[routeId]
+    return Math.hypot(
+      this.topology.portX[startPortId] - this.topology.portX[endPortId],
+      this.topology.portY[startPortId] - this.topology.portY[endPortId],
+    )
+  }
+
+  private computeShortRankByRouteId() {
+    const routeIds = Array.from(
+      { length: this.problem.routeCount },
+      (_, routeId) => routeId,
+    )
+    const sortedByShortDistance = [...routeIds].sort(
+      (leftRouteId, rightRouteId) =>
+        this.computeRouteDistance(leftRouteId) -
+        this.computeRouteDistance(rightRouteId),
+    )
+    const shortRankByRouteId = new Int32Array(this.problem.routeCount)
+    for (
+      let rank = 0;
+      rank < sortedByShortDistance.length;
+      rank += 1
+    ) {
+      shortRankByRouteId[sortedByShortDistance[rank]!] = rank
+    }
+    return shortRankByRouteId
+  }
+
+  private getJitter(routeId: number, ripCount: number) {
+    let seed = (routeId + 1) * 1_103_515_245 + (ripCount + 7) * 12_345
+    seed ^= seed >>> 16
+    return (seed >>> 0) / 0xffffffff
+  }
+
+  private getPressureShortOrderedRouteIds(routeIds: number[], ripCount: number) {
+    if (routeIds.length === 0) {
+      return routeIds
+    }
+
+    let maxAttemptCount = 1
+    let maxSuccessCount = 1
+    for (const routeId of routeIds) {
+      maxAttemptCount = Math.max(
+        maxAttemptCount,
+        this.routeAttemptCountByRouteId[routeId] ?? 0,
+      )
+      maxSuccessCount = Math.max(
+        maxSuccessCount,
+        this.routeSuccessCountByRouteId[routeId] ?? 0,
+      )
+    }
+
+    const shortRankDenominator = Math.max(1, this.problem.routeCount - 1)
+
+    return [...routeIds].sort((leftRouteId, rightRouteId) => {
+      const leftAttempt =
+        (this.routeAttemptCountByRouteId[leftRouteId] ?? 0) / maxAttemptCount
+      const rightAttempt =
+        (this.routeAttemptCountByRouteId[rightRouteId] ?? 0) / maxAttemptCount
+      const leftSuccess =
+        (this.routeSuccessCountByRouteId[leftRouteId] ?? 0) / maxSuccessCount
+      const rightSuccess =
+        (this.routeSuccessCountByRouteId[rightRouteId] ?? 0) / maxSuccessCount
+
+      const leftShort =
+        this.shortRankByRouteId[leftRouteId]! / shortRankDenominator
+      const rightShort =
+        this.shortRankByRouteId[rightRouteId]! / shortRankDenominator
+
+      const leftScore =
+        leftShort +
+        0.35 * leftAttempt -
+        0.25 * leftSuccess +
+        0.05 * this.getJitter(leftRouteId, ripCount)
+      const rightScore =
+        rightShort +
+        0.35 * rightAttempt -
+        0.25 * rightSuccess +
+        0.05 * this.getJitter(rightRouteId, ripCount)
+
+      return leftScore - rightScore
+    })
+  }
+
+  override _setup() {
+    super._setup()
+    if (this.failed || !this.shouldEnableLargeGraphRouteOrdering) {
+      return
+    }
+    this.state.unroutedRoutes = this.getPressureShortOrderedRouteIds(
+      [...this.state.unroutedRoutes],
+      this.state.ripCount,
+    )
+  }
+
+  override resetRoutingStateForRerip() {
+    super.resetRoutingStateForRerip()
+    if (!this.shouldEnableLargeGraphRouteOrdering) {
+      return
+    }
+    this.state.unroutedRoutes = this.getPressureShortOrderedRouteIds(
+      [...this.state.unroutedRoutes],
+      this.state.ripCount,
+    )
+    this.consecutiveDeferrals = 0
+  }
+
+  override onOutOfCandidates() {
+    if (!this.shouldEnableLargeGraphRouteOrdering) {
+      super.onOutOfCandidates()
+      return
+    }
+
+    const currentRouteId = this.state.currentRouteId
+    if (currentRouteId === undefined) {
+      super.onOutOfCandidates()
+      return
+    }
+
+    const routeDeferrals = this.deferCountByRouteId[currentRouteId] ?? 0
+
+    if (
+      routeDeferrals < TINY_LARGE_GRAPH_DEFER_MAX_PER_ROUTE &&
+      this.consecutiveDeferrals < TINY_LARGE_GRAPH_MAX_CONSECUTIVE_DEFERRALS
+    ) {
+      this.deferCountByRouteId[currentRouteId] = routeDeferrals + 1
+      this.consecutiveDeferrals += 1
+
+      this.state.currentRouteId = undefined
+      this.state.currentRouteNetId = undefined
+      this.state.goalPortId = -1
+      this.state.candidateQueue.clear()
+      this.resetCandidateBestCosts()
+      this.state.unroutedRoutes.push(currentRouteId)
+      this.state.unroutedRoutes = this.getPressureShortOrderedRouteIds(
+        [...this.state.unroutedRoutes],
+        this.state.ripCount,
+      )
+      this.stats = {
+        ...this.stats,
+        reripReason: "defer_route",
+        deferredRouteId: currentRouteId,
+        deferredRouteCountForId: this.deferCountByRouteId[currentRouteId],
+        consecutiveDeferrals: this.consecutiveDeferrals,
+        ripCount: this.state.ripCount,
+      }
+      return
+    }
+
+    super.onOutOfCandidates()
+  }
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
+  private shouldEnableLargeGraphSolveTuning: boolean
 
   constructor(inputProblem: TinyHyperGraphSectionPipelineInput) {
     super(inputProblem)
+    const routeCount = inputProblem.serializedHyperGraph.connections?.length ?? 0
+    this.shouldEnableLargeGraphSolveTuning =
+      routeCount >= TINY_LARGE_GRAPH_ROUTE_THRESHOLD
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
+    this.pipelineDef = this.pipelineDef.map((pipelineStep) =>
+      pipelineStep.solverName !== "solveGraph"
+        ? pipelineStep
+        : ({
+            ...pipelineStep,
+            solverClass: LargeGraphAwareTinyHyperGraphSolver,
+            getConstructorParams: (
+              instance: TinyHyperGraphSectionPipelineSolver,
+            ) => {
+              const { topology, problem } = instance.loadHyperGraph(
+                instance.inputProblem.serializedHyperGraph,
+              )
+              return [
+                topology,
+                problem,
+                instance.getSolveGraphOptions(),
+              ] as ConstructorParameters<typeof TinyHyperGraphSolver>
+            },
+          } as typeof pipelineStep),
+    )
+  }
+
+  override getSolveGraphOptions() {
+    const options = super.getSolveGraphOptions()
+    if (!this.shouldEnableLargeGraphSolveTuning) {
+      return options
+    }
+
+    return {
+      ...options,
+      RIP_CONGESTION_REGION_COST_FACTOR: 0,
+    }
   }
 
   override _step() {
