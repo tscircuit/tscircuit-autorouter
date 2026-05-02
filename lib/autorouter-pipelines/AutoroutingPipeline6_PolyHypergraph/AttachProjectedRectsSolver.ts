@@ -21,6 +21,7 @@ const getRequiredRoutingCorridorWidth = ({
   )
 
 const shouldClampProjectionExpansion = (
+  node: PolyNodeWithPortPoints,
   projectedRect: ReturnType<typeof computeProjectedRect>,
   conservativeProjectedRect: ReturnType<typeof computeProjectedRect>,
   requiredRoutingCorridorWidth: number,
@@ -33,6 +34,11 @@ const shouldClampProjectionExpansion = (
     conservativeProjectedRect.width,
     conservativeProjectedRect.height,
   )
+  const maxDimension = Math.max(projectedRect.width, projectedRect.height)
+  const conservativeMaxDimension = Math.max(
+    conservativeProjectedRect.width,
+    conservativeProjectedRect.height,
+  )
   const nextTraceLaneWidth = requiredRoutingCorridorWidth + (traceWidth ?? 0)
   const expandedLanesAcross = Math.floor(
     minDimension / requiredRoutingCorridorWidth,
@@ -40,10 +46,15 @@ const shouldClampProjectionExpansion = (
   const conservativeLanesAcross = Math.floor(
     conservativeMinDimension / requiredRoutingCorridorWidth,
   )
+  const connectionCount = new Set(
+    node.portPoints.map((portPoint) => portPoint.connectionName),
+  ).size
 
   return (
+    connectionCount > 1 &&
     expandedLanesAcross <= conservativeLanesAcross &&
     minDimension <= nextTraceLaneWidth &&
+    maxDimension - conservativeMaxDimension >= requiredRoutingCorridorWidth &&
     projectedRect.equivalentAreaExpansionFactor > 1
   )
 }
@@ -89,6 +100,19 @@ export class AttachProjectedRectsSolver extends BaseSolver {
         minProjectedRectDimension,
       )
 
+      const minDimension = Math.min(projectedRect.width, projectedRect.height)
+      const nextTraceLaneWidth =
+        requiredRoutingCorridorWidth + (this.params.traceWidth ?? 0)
+      if (minDimension > nextTraceLaneWidth) {
+        return {
+          ...node,
+          center: projectedRect.center,
+          width: projectedRect.width,
+          height: projectedRect.height,
+          projectedRect,
+        }
+      }
+
       const conservativeProjectedRect = computeProjectedRect(
         node.polygon,
         1,
@@ -97,6 +121,7 @@ export class AttachProjectedRectsSolver extends BaseSolver {
 
       if (
         shouldClampProjectionExpansion(
+          node,
           projectedRect,
           conservativeProjectedRect,
           requiredRoutingCorridorWidth,
