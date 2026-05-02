@@ -1,63 +1,11 @@
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { computeProjectedRect } from "./geometry"
+import {
+  getRequiredRoutingCorridorWidth,
+  shouldClampProjectionExpansion,
+} from "./shouldClampProjectionExpansion"
 import type { PolyNodeWithPortPoints } from "./types"
-
-const getRequiredRoutingCorridorWidth = ({
-  traceWidth,
-  viaDiameter,
-  obstacleMargin,
-  minProjectedRectDimension,
-}: {
-  traceWidth?: number
-  viaDiameter?: number
-  obstacleMargin?: number
-  minProjectedRectDimension: number
-}) =>
-  Math.max(
-    minProjectedRectDimension,
-    viaDiameter ?? 0,
-    (traceWidth ?? 0) + 2 * (obstacleMargin ?? 0),
-  )
-
-const shouldClampProjectionExpansion = (
-  node: PolyNodeWithPortPoints,
-  projectedRect: ReturnType<typeof computeProjectedRect>,
-  conservativeProjectedRect: ReturnType<typeof computeProjectedRect>,
-  requiredRoutingCorridorWidth: number,
-  traceWidth?: number,
-) => {
-  if (requiredRoutingCorridorWidth <= 0) return false
-
-  const minDimension = Math.min(projectedRect.width, projectedRect.height)
-  const conservativeMinDimension = Math.min(
-    conservativeProjectedRect.width,
-    conservativeProjectedRect.height,
-  )
-  const maxDimension = Math.max(projectedRect.width, projectedRect.height)
-  const conservativeMaxDimension = Math.max(
-    conservativeProjectedRect.width,
-    conservativeProjectedRect.height,
-  )
-  const nextTraceLaneWidth = requiredRoutingCorridorWidth + (traceWidth ?? 0)
-  const expandedLanesAcross = Math.floor(
-    minDimension / requiredRoutingCorridorWidth,
-  )
-  const conservativeLanesAcross = Math.floor(
-    conservativeMinDimension / requiredRoutingCorridorWidth,
-  )
-  const connectionCount = new Set(
-    node.portPoints.map((portPoint) => portPoint.connectionName),
-  ).size
-
-  return (
-    connectionCount > 1 &&
-    expandedLanesAcross <= conservativeLanesAcross &&
-    minDimension <= nextTraceLaneWidth &&
-    maxDimension - conservativeMaxDimension >= requiredRoutingCorridorWidth &&
-    projectedRect.equivalentAreaExpansionFactor > 1
-  )
-}
 
 export class AttachProjectedRectsSolver extends BaseSolver {
   override getSolverName(): string {
@@ -120,13 +68,13 @@ export class AttachProjectedRectsSolver extends BaseSolver {
       )
 
       if (
-        shouldClampProjectionExpansion(
+        shouldClampProjectionExpansion({
           node,
           projectedRect,
           conservativeProjectedRect,
           requiredRoutingCorridorWidth,
-          this.params.traceWidth,
-        )
+          traceWidth: this.params.traceWidth,
+        })
       ) {
         projectedRect = conservativeProjectedRect
         this.projectionAdjustmentByNodeId.set(
