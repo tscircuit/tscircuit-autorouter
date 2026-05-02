@@ -56,6 +56,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value)
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
@@ -365,15 +367,18 @@ class LargeGraphAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
     const point1 = routeMetadata?.simpleRouteConnection?.pointsToConnect?.[0]
     const point2 = routeMetadata?.simpleRouteConnection?.pointsToConnect?.[1]
 
+    const point1X = point1?.x
+    const point1Y = point1?.y
+    const point2X = point2?.x
+    const point2Y = point2?.y
+
     if (
-      point1 &&
-      point2 &&
-      Number.isFinite(point1.x) &&
-      Number.isFinite(point1.y) &&
-      Number.isFinite(point2.x) &&
-      Number.isFinite(point2.y)
+      isFiniteNumber(point1X) &&
+      isFiniteNumber(point1Y) &&
+      isFiniteNumber(point2X) &&
+      isFiniteNumber(point2Y)
     ) {
-      return Math.hypot(point1.x - point2.x, point1.y - point2.y)
+      return Math.hypot(point1X - point2X, point1Y - point2Y)
     }
 
     const startPortId = this.problem.routeStartPort[routeId]
@@ -395,11 +400,7 @@ class LargeGraphAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
         this.computeRouteDistance(rightRouteId),
     )
     const shortRankByRouteId = new Int32Array(this.problem.routeCount)
-    for (
-      let rank = 0;
-      rank < sortedByShortDistance.length;
-      rank += 1
-    ) {
+    for (let rank = 0; rank < sortedByShortDistance.length; rank += 1) {
       shortRankByRouteId[sortedByShortDistance[rank]!] = rank
     }
     return shortRankByRouteId
@@ -411,7 +412,10 @@ class LargeGraphAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
     return (seed >>> 0) / 0xffffffff
   }
 
-  private getPressureShortOrderedRouteIds(routeIds: number[], ripCount: number) {
+  private getPressureShortOrderedRouteIds(
+    routeIds: number[],
+    ripCount: number,
+  ) {
     if (routeIds.length === 0) {
       return routeIds
     }
@@ -536,7 +540,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   constructor(inputProblem: TinyHyperGraphSectionPipelineInput) {
     super(inputProblem)
-    const routeCount = inputProblem.serializedHyperGraph.connections?.length ?? 0
+    const routeCount =
+      inputProblem.serializedHyperGraph.connections?.length ?? 0
     this.shouldEnableLargeGraphSolveTuning =
       routeCount >= TINY_LARGE_GRAPH_ROUTE_THRESHOLD
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
