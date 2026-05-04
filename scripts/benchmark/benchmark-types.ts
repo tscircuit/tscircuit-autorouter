@@ -18,6 +18,8 @@ export type WorkerResult = {
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
+  errorPhaseName?: string
+  errorSolverName?: string
   error?: string
 }
 

@@ -1,7 +1,7 @@
 import * as autorouterModule from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
-import { getDrcErrors } from "../../lib/testing/getDrcErrors"
 import { RELAXED_DRC_OPTIONS } from "../../lib/testing/drcPresets"
+import { getDrcErrors } from "../../lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "../../lib/testing/utils/convertToCircuitJson"
 import type {
   SimpleRouteJson,
@@ -12,10 +12,20 @@ import type { BenchmarkTask, WorkerResult } from "./benchmark-types"
 type SolverInstance = {
   solved?: boolean
   failed?: boolean
+  error?: string | null
+  activeSubSolver?: SolverInstance | null
+  currentPipelineStepIndex?: number
+  pipelineDef?: Array<{
+    solverName?: string
+    solverClass?: {
+      name?: string
+    }
+  }>
   srjWithPointPairs?: SimpleRouteJson
   solve?: () => void | Promise<void>
   solveAsync?: () => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
+  getSolverName?: () => string
 }
 
 type SolverOptions = {
@@ -66,6 +76,48 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   )
 }
 
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (error === undefined || error === null) {
+    return undefined
+  }
+  return error instanceof Error ? error.message : String(error)
+}
+
+const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
+  if (!solver) {
+    return undefined
+  }
+
+  const nameFromMethod = solver.getSolverName?.()
+  if (nameFromMethod) {
+    return nameFromMethod
+  }
+
+  return solver.constructor?.name
+}
+
+const getFailureInfo = (
+  solver: SolverInstance,
+  fallbackError?: string,
+): Pick<WorkerResult, "error" | "errorPhaseName" | "errorSolverName"> => {
+  const pipelineStep =
+    Array.isArray(solver.pipelineDef) &&
+    typeof solver.currentPipelineStepIndex === "number"
+      ? solver.pipelineDef[solver.currentPipelineStepIndex]
+      : undefined
+  const activeSubSolver = solver.activeSubSolver ?? null
+
+  return {
+    errorPhaseName: pipelineStep?.solverName,
+    errorSolverName:
+      pipelineStep?.solverClass?.name ?? getSolverInstanceName(activeSubSolver),
+    error:
+      getErrorMessage(activeSubSolver?.error) ??
+      getErrorMessage(solver.error) ??
+      fallbackError,
+  }
+}
+
 export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
   const solver = createSolverForTask(task)
   const start = performance.now()
@@ -81,13 +133,14 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
     }
   } catch (error) {
     solver.solved = false
-    solveError = error instanceof Error ? error.message : String(error)
+    solveError = getErrorMessage(error)
   }
 
   const elapsedTimeMs = performance.now() - start
   const didSolve = Boolean(solver.solved)
 
   if (!didSolve) {
+    const failureInfo = getFailureInfo(solver, solveError)
     return {
       solverName: task.solverName,
       scenarioName: task.scenarioName,
@@ -95,7 +148,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
-      error: solveError,
+      ...failureInfo,
     }
   }
 
