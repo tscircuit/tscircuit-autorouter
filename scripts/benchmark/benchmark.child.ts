@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
 import * as readline from "node:readline"
-import type { WorkerResultMessage, WorkerTaskMessage } from "./benchmark-types"
 import { runTask } from "./benchmark-run-task"
+import type { WorkerResultMessage, WorkerTaskMessage } from "./benchmark-types"
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -38,6 +38,7 @@ for await (const line of rl) {
       result: {
         solverName: message.task.solverName,
         scenarioName: message.task.scenarioName,
+        sampleNumber: message.task.sampleNumber,
         elapsedTimeMs: 0,
         didSolve: false,
         didTimeout: false,

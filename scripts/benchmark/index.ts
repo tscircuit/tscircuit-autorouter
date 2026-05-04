@@ -431,6 +431,7 @@ const createFailedResult = (
 ): WorkerResult => ({
   solverName: task.solverName,
   scenarioName: task.scenarioName,
+  sampleNumber: task.sampleNumber,
   elapsedTimeMs,
   didSolve: false,
   didTimeout,
@@ -783,10 +784,11 @@ const main = async () => {
 
   const tasks = solvers.flatMap((solver) =>
     scenarios.map(
-      ([scenarioName, scenario]) =>
+      ([scenarioName, scenario], scenarioIndex) =>
         ({
           solverName: solver,
           scenarioName,
+          sampleNumber: scenarioIndex + 1,
           scenario,
         }) satisfies BenchmarkTask,
     ),
@@ -809,6 +811,7 @@ const main = async () => {
       getTaskEffort({
         solverName: solvers[0] ?? "",
         scenarioName: "",
+        sampleNumber: 0,
         scenario,
       }),
     ),

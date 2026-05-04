@@ -1,10 +1,10 @@
+import { runTask } from "./benchmark-run-task"
 import type {
   BenchmarkTask,
   WorkerResult,
   WorkerResultMessage,
   WorkerTaskMessage,
 } from "./benchmark-types"
-import { runTask } from "./benchmark-run-task"
 
 self.onmessage = async (event: MessageEvent<WorkerTaskMessage>) => {
   const { taskId, task } = event.data
@@ -21,6 +21,7 @@ self.onmessage = async (event: MessageEvent<WorkerTaskMessage>) => {
       result: {
         solverName: task.solverName,
         scenarioName: task.scenarioName,
+        sampleNumber: task.sampleNumber,
         elapsedTimeMs: 0,
         didSolve: false,
         didTimeout: false,

@@ -404,6 +404,13 @@ jobs:
                 .replace(/\|/g, '&#124;')
             const formatSolverName = (solverName) =>
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
+            const getSampleLabel = (test) => {
+              if (typeof test?.sampleNumber === 'number' && Number.isFinite(test.sampleNumber)) {
+                return String(test.sampleNumber)
+              }
+              const match = String(test?.scenarioName ?? '').match(/\d+/)
+              return match ? String(Number.parseInt(match[0], 10)) : String(test?.scenarioName ?? '')
+            }
             const getErrorCell = (test) => {
               if (!test?.error) return ''
               const label = test.errorSolverName || test.errorPhaseName || (test.didTimeout ? 'Timeout' : 'Error')
@@ -465,19 +472,19 @@ jobs:
               }
               const header = includeDelta
                 ? [
-                    '| Solver | Scenario | Status | Time | Relaxed DRC | Error | Delta |',
+                    '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
                     '| --- | --- | --- | --- | --- | --- | --- |',
                   ]
                 : [
-                    '| Solver | Scenario | Status | Time | Relaxed DRC | Error |',
+                    '| Solver | Sample | Status | Time | Relaxed DRC | Error |',
                     '| --- | --- | --- | --- | --- | --- |',
                   ]
               return [
                 ...header,
                 ...report.tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${test.scenarioName} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${test.scenarioName} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }
@@ -778,6 +785,13 @@ jobs:
                 .replace(/\|/g, '&#124;')
             const formatSolverName = (solverName) =>
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
+            const getSampleLabel = (test) => {
+              if (typeof test?.sampleNumber === 'number' && Number.isFinite(test.sampleNumber)) {
+                return String(test.sampleNumber)
+              }
+              const match = String(test?.scenarioName ?? '').match(/\d+/)
+              return match ? String(Number.parseInt(match[0], 10)) : String(test?.scenarioName ?? '')
+            }
             const getErrorCell = (test) => {
               if (!test?.error) return ''
               const label = test.errorSolverName || test.errorPhaseName || (test.didTimeout ? 'Timeout' : 'Error')
@@ -839,19 +853,19 @@ jobs:
               }
               const header = includeDelta
                 ? [
-                    '| Solver | Scenario | Status | Time | Relaxed DRC | Error | Delta |',
+                    '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
                     '| --- | --- | --- | --- | --- | --- | --- |',
                   ]
                 : [
-                    '| Solver | Scenario | Status | Time | Relaxed DRC | Error |',
+                    '| Solver | Sample | Status | Time | Relaxed DRC | Error |',
                     '| --- | --- | --- | --- | --- | --- |',
                   ]
               return [
                 ...header,
                 ...report.tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${test.scenarioName} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${test.scenarioName} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }

@@ -144,6 +144,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
     return {
       solverName: task.solverName,
       scenarioName: task.scenarioName,
+      sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
       didTimeout: false,
@@ -168,6 +169,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
     return {
       solverName: task.solverName,
       scenarioName: task.scenarioName,
+      sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
       didTimeout: false,
@@ -177,6 +179,7 @@ export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
     return {
       solverName: task.solverName,
       scenarioName: task.scenarioName,
+      sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
       didTimeout: false,
