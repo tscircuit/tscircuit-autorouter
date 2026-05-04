@@ -12,6 +12,19 @@ export type WorkerTaskMessage = {
   task: BenchmarkTask
 }
 
+export type WorkerProgress = {
+  solverName: string
+  scenarioName: string
+  sampleNumber: number
+  elapsedTimeMs: number
+  phaseName?: string
+  phaseSolverName?: string
+  solverProgress?: number
+  solverIterations?: number
+  activeSubSolverProgress?: number
+  activeSubSolverIterations?: number
+}
+
 export type WorkerResult = {
   solverName: string
   scenarioName: string
@@ -29,6 +42,13 @@ export type WorkerResultMessage = {
   taskId: number
   result: WorkerResult
 }
+
+export type WorkerProgressMessage = {
+  taskId: number
+  progress: WorkerProgress
+}
+
+export type WorkerChildMessage = WorkerResultMessage | WorkerProgressMessage
 
 export type SolverRunSummary = {
   solverName: string

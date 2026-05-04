@@ -26,7 +26,15 @@ for await (const line of rl) {
   }
 
   try {
-    const result = await runTask(message.task)
+    const result = await runTask(message.task, {
+      onProgress: (progress) => {
+        const payload = {
+          taskId: message.taskId,
+          progress,
+        }
+        process.stdout.write(`${JSON.stringify(payload)}\n`)
+      },
+    })
     const payload: WorkerResultMessage = {
       taskId: message.taskId,
       result,

@@ -10,8 +10,9 @@ import type {
   BenchmarkReport,
   BenchmarkTask,
   SolverRunSummary,
+  WorkerChildMessage,
+  WorkerProgress,
   WorkerResult,
-  WorkerResultMessage,
   WorkerTaskMessage,
 } from "./benchmark-types"
 import {
@@ -35,6 +36,7 @@ type WorkerTaskAssignment = {
   request: WorkerTaskMessage
   startedAtMs: number
   timeout: ReturnType<typeof setTimeout>
+  latestProgress?: WorkerProgress
 }
 
 type WorkerSlot = {
@@ -428,6 +430,7 @@ const createFailedResult = (
   elapsedTimeMs: number,
   error: string,
   didTimeout = false,
+  latestProgress?: WorkerProgress,
 ): WorkerResult => ({
   solverName: task.solverName,
   scenarioName: task.scenarioName,
@@ -436,6 +439,8 @@ const createFailedResult = (
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
+  errorPhaseName: latestProgress?.phaseName,
+  errorSolverName: latestProgress?.phaseSolverName,
   error,
 })
 
@@ -486,6 +491,31 @@ const formatPercentWithTimeoutRate = (
   return `${ratePercent.toFixed(1)}% (🕒${timeoutPercent.toFixed(1)}%)`
 }
 
+const formatProgressDetails = (progress?: WorkerProgress) => {
+  if (!progress) {
+    return ""
+  }
+
+  const details = [
+    progress.phaseName ? `phase=${progress.phaseName}` : null,
+    progress.phaseSolverName ? `solver=${progress.phaseSolverName}` : null,
+    Number.isFinite(progress.solverIterations)
+      ? `pipelineIterations=${progress.solverIterations}`
+      : null,
+    Number.isFinite(progress.activeSubSolverIterations)
+      ? `phaseIterations=${progress.activeSubSolverIterations}`
+      : null,
+    Number.isFinite(progress.solverProgress)
+      ? `pipelineProgress=${Math.round((progress.solverProgress ?? 0) * 100)}%`
+      : null,
+    Number.isFinite(progress.activeSubSolverProgress)
+      ? `phaseProgress=${Math.round((progress.activeSubSolverProgress ?? 0) * 100)}%`
+      : null,
+  ].filter(Boolean)
+
+  return details.length > 0 ? `\nLast progress: ${details.join(", ")}` : ""
+}
+
 const executeTaskOnWorker = (
   slot: WorkerSlot,
   request: WorkerTaskMessage,
@@ -516,14 +546,21 @@ const executeTaskOnWorker = (
       Math.max(0, Math.round(performance.now() - startedAtMs))
 
     const onLine = (line: string) => {
-      let message: WorkerResultMessage
+      let message: WorkerChildMessage
       try {
-        message = JSON.parse(line) as WorkerResultMessage
+        message = JSON.parse(line) as WorkerChildMessage
       } catch {
         return
       }
 
       if (message.taskId !== request.taskId) {
+        return
+      }
+
+      if ("progress" in message) {
+        if (slot.currentTask) {
+          slot.currentTask.latestProgress = message.progress
+        }
         return
       }
 
@@ -539,7 +576,9 @@ const executeTaskOnWorker = (
         createFailedResult(
           request.task,
           getElapsedTimeMs(),
-          `Child process error: ${error.message}`,
+          `Child process error: ${error.message}${formatProgressDetails(slot.currentTask?.latestProgress)}`,
+          false,
+          slot.currentTask?.latestProgress,
         ),
         true,
       )
@@ -550,19 +589,23 @@ const executeTaskOnWorker = (
         createFailedResult(
           request.task,
           getElapsedTimeMs(),
-          `Child process exited unexpectedly (code=${code ?? "null"}, signal=${signal ?? "null"})`,
+          `Child process exited unexpectedly (code=${code ?? "null"}, signal=${signal ?? "null"})${formatProgressDetails(slot.currentTask?.latestProgress)}`,
+          false,
+          slot.currentTask?.latestProgress,
         ),
         true,
       )
     }
 
     const timeout = setTimeout(() => {
+      const latestProgress = slot.currentTask?.latestProgress
       finish(
         createFailedResult(
           request.task,
           taskTimeoutMs,
-          `Timed out after ${formatDurationLabel(taskTimeoutMs)}`,
+          `Timed out after ${formatDurationLabel(taskTimeoutMs)}${formatProgressDetails(latestProgress)}`,
           true,
+          latestProgress,
         ),
         true,
       )

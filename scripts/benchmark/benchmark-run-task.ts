@@ -7,11 +7,17 @@ import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
 } from "../../lib/types/srj-types"
-import type { BenchmarkTask, WorkerResult } from "./benchmark-types"
+import type {
+  BenchmarkTask,
+  WorkerProgress,
+  WorkerResult,
+} from "./benchmark-types"
 
 type SolverInstance = {
   solved?: boolean
   failed?: boolean
+  progress?: number
+  iterations?: number
   error?: string | null
   activeSubSolver?: SolverInstance | null
   currentPipelineStepIndex?: number
@@ -22,6 +28,7 @@ type SolverInstance = {
     }
   }>
   srjWithPointPairs?: SimpleRouteJson
+  step?: () => void
   solve?: () => void | Promise<void>
   solveAsync?: () => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
@@ -31,6 +38,13 @@ type SolverInstance = {
 type SolverOptions = {
   effort?: number
 }
+
+type RunTaskOptions = {
+  onProgress?: (progress: WorkerProgress) => void
+  progressIntervalMs?: number
+}
+
+const DEFAULT_PROGRESS_INTERVAL_MS = 1000
 
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
@@ -118,19 +132,114 @@ const getFailureInfo = (
   }
 }
 
-export const runTask = async (task: BenchmarkTask): Promise<WorkerResult> => {
+const getProgressInfo = (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+  elapsedTimeMs: number,
+): WorkerProgress => {
+  const pipelineStep =
+    Array.isArray(solver.pipelineDef) &&
+    typeof solver.currentPipelineStepIndex === "number"
+      ? solver.pipelineDef[solver.currentPipelineStepIndex]
+      : undefined
+  const activeSubSolver = solver.activeSubSolver ?? null
+
+  return {
+    solverName: task.solverName,
+    scenarioName: task.scenarioName,
+    sampleNumber: task.sampleNumber,
+    elapsedTimeMs,
+    phaseName: pipelineStep?.solverName,
+    phaseSolverName:
+      pipelineStep?.solverClass?.name ?? getSolverInstanceName(activeSubSolver),
+    solverProgress: solver.progress,
+    solverIterations: solver.iterations,
+    activeSubSolverProgress: activeSubSolver?.progress,
+    activeSubSolverIterations: activeSubSolver?.iterations,
+  }
+}
+
+const getProgressKey = (progress: WorkerProgress) =>
+  [progress.phaseName ?? "", progress.phaseSolverName ?? ""].join("|")
+
+const solveWithProgress = async (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+  start: number,
+  options: RunTaskOptions,
+) => {
+  const progressIntervalMs =
+    options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS
+  let lastProgressAt = -Infinity
+  let lastProgressKey = ""
+
+  const emitProgress = (force = false) => {
+    if (!options.onProgress) {
+      return
+    }
+
+    const elapsedTimeMs = performance.now() - start
+    const progress = getProgressInfo(task, solver, elapsedTimeMs)
+    const progressKey = getProgressKey(progress)
+    if (
+      !force &&
+      progressKey === lastProgressKey &&
+      elapsedTimeMs - lastProgressAt < progressIntervalMs
+    ) {
+      return
+    }
+
+    lastProgressAt = elapsedTimeMs
+    lastProgressKey = progressKey
+    options.onProgress(progress)
+  }
+
+  emitProgress(true)
+
+  if (typeof solver.solveAsync === "function") {
+    const interval =
+      options.onProgress && progressIntervalMs > 0
+        ? setInterval(() => emitProgress(true), progressIntervalMs)
+        : null
+    try {
+      await solver.solveAsync()
+    } finally {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+    emitProgress(true)
+    return
+  }
+
+  if (typeof solver.step === "function") {
+    while (!solver.solved && !solver.failed) {
+      solver.step()
+      emitProgress()
+    }
+    emitProgress(true)
+    return
+  }
+
+  if (typeof solver.solve === "function") {
+    await solver.solve()
+    emitProgress(true)
+    return
+  }
+
+  throw new Error("Solver does not implement step(), solve(), or solveAsync()")
+}
+
+export const runTask = async (
+  task: BenchmarkTask,
+  options: RunTaskOptions = {},
+): Promise<WorkerResult> => {
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined
 
   try {
-    if (typeof solver.solveAsync === "function") {
-      await solver.solveAsync()
-    } else if (typeof solver.solve === "function") {
-      await solver.solve()
-    } else {
-      throw new Error("Solver does not implement solve() or solveAsync()")
-    }
+    await solveWithProgress(task, solver, start, options)
   } catch (error) {
     solver.solved = false
     solveError = getErrorMessage(error)
