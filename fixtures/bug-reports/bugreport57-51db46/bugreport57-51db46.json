@@ -2258,6 +2258,7 @@
     "minTraceWidth": 0.33,
     "minViaDiameter": 2.6,
     "minViaPadDiameter": 2.6,
+    "minViaEdgeToPadEdgeClearance": 0.25,
     "nominalTraceWidth": null,
     "minViaHoleDiameter": 1.5,
     "min_via_pad_diameter": 2.6,
