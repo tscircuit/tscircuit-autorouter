@@ -1,0 +1,150 @@
+{
+  "sourceDataset": "dataset01",
+  "sourceCircuit": "circuit219",
+  "generatedWith": "AutoroutingPipelineSolver4",
+  "randomSeed": 219004,
+  "sampleCount": 20,
+  "solvedTraceCount": 59,
+  "samples": [
+    {
+      "file": "sample01-source_net_5_mst1_0.srj.json",
+      "removedTraceIndex": 46,
+      "removedTraceId": "source_net_5_mst1_0",
+      "removedConnectionName": "source_net_5",
+      "pointPairConnectionName": "source_net_5_mst1"
+    },
+    {
+      "file": "sample02-source_net_3_mst0_0.srj.json",
+      "removedTraceIndex": 49,
+      "removedTraceId": "source_net_3_mst0_0",
+      "removedConnectionName": "source_net_3",
+      "pointPairConnectionName": "source_net_3_mst0"
+    },
+    {
+      "file": "sample03-source_net_5_mst0_0.srj.json",
+      "removedTraceIndex": 45,
+      "removedTraceId": "source_net_5_mst0_0",
+      "removedConnectionName": "source_net_5",
+      "pointPairConnectionName": "source_net_5_mst0"
+    },
+    {
+      "file": "sample04-source_net_20_mst0_0.srj.json",
+      "removedTraceIndex": 12,
+      "removedTraceId": "source_net_20_mst0_0",
+      "removedConnectionName": "source_net_20",
+      "pointPairConnectionName": "source_net_20_mst0"
+    },
+    {
+      "file": "sample05-source_net_20_mst2_0.srj.json",
+      "removedTraceIndex": 14,
+      "removedTraceId": "source_net_20_mst2_0",
+      "removedConnectionName": "source_net_20",
+      "pointPairConnectionName": "source_net_20_mst2"
+    },
+    {
+      "file": "sample06-source_net_14_mst0_0.srj.json",
+      "removedTraceIndex": 26,
+      "removedTraceId": "source_net_14_mst0_0",
+      "removedConnectionName": "source_net_14",
+      "pointPairConnectionName": "source_net_14_mst0"
+    },
+    {
+      "file": "sample07-source_net_23_mst1_0.srj.json",
+      "removedTraceIndex": 7,
+      "removedTraceId": "source_net_23_mst1_0",
+      "removedConnectionName": "source_net_23",
+      "pointPairConnectionName": "source_net_23_mst1"
+    },
+    {
+      "file": "sample08-source_net_24_mst1_0.srj.json",
+      "removedTraceIndex": 5,
+      "removedTraceId": "source_net_24_mst1_0",
+      "removedConnectionName": "source_net_24",
+      "pointPairConnectionName": "source_net_24_mst1"
+    },
+    {
+      "file": "sample09-source_net_19_mst1_0.srj.json",
+      "removedTraceIndex": 17,
+      "removedTraceId": "source_net_19_mst1_0",
+      "removedConnectionName": "source_net_19",
+      "pointPairConnectionName": "source_net_19_mst1"
+    },
+    {
+      "file": "sample10-source_net_0_mst2_0.srj.json",
+      "removedTraceIndex": 58,
+      "removedTraceId": "source_net_0_mst2_0",
+      "removedConnectionName": "source_net_0",
+      "pointPairConnectionName": "source_net_0_mst2"
+    },
+    {
+      "file": "sample11-source_net_11_0.srj.json",
+      "removedTraceIndex": 33,
+      "removedTraceId": "source_net_11_0",
+      "removedConnectionName": "source_net_11",
+      "pointPairConnectionName": "source_net_11"
+    },
+    {
+      "file": "sample12-source_net_15_mst1_0.srj.json",
+      "removedTraceIndex": 24,
+      "removedTraceId": "source_net_15_mst1_0",
+      "removedConnectionName": "source_net_15",
+      "pointPairConnectionName": "source_net_15_mst1"
+    },
+    {
+      "file": "sample13-source_net_15_mst2_0.srj.json",
+      "removedTraceIndex": 25,
+      "removedTraceId": "source_net_15_mst2_0",
+      "removedConnectionName": "source_net_15",
+      "pointPairConnectionName": "source_net_15_mst2"
+    },
+    {
+      "file": "sample14-source_net_22_0.srj.json",
+      "removedTraceIndex": 9,
+      "removedTraceId": "source_net_22_0",
+      "removedConnectionName": "source_net_22",
+      "pointPairConnectionName": "source_net_22"
+    },
+    {
+      "file": "sample15-source_net_1_mst2_0.srj.json",
+      "removedTraceIndex": 55,
+      "removedTraceId": "source_net_1_mst2_0",
+      "removedConnectionName": "source_net_1",
+      "pointPairConnectionName": "source_net_1_mst2"
+    },
+    {
+      "file": "sample16-source_net_7_mst0_0.srj.json",
+      "removedTraceIndex": 40,
+      "removedTraceId": "source_net_7_mst0_0",
+      "removedConnectionName": "source_net_7",
+      "pointPairConnectionName": "source_net_7_mst0"
+    },
+    {
+      "file": "sample17-source_net_13_mst0_0.srj.json",
+      "removedTraceIndex": 29,
+      "removedTraceId": "source_net_13_mst0_0",
+      "removedConnectionName": "source_net_13",
+      "pointPairConnectionName": "source_net_13_mst0"
+    },
+    {
+      "file": "sample18-source_net_26_0.srj.json",
+      "removedTraceIndex": 0,
+      "removedTraceId": "source_net_26_0",
+      "removedConnectionName": "source_net_26",
+      "pointPairConnectionName": "source_net_26"
+    },
+    {
+      "file": "sample19-source_net_12_mst0_0.srj.json",
+      "removedTraceIndex": 31,
+      "removedTraceId": "source_net_12_mst0_0",
+      "removedConnectionName": "source_net_12",
+      "pointPairConnectionName": "source_net_12_mst0"
+    },
+    {
+      "file": "sample20-source_net_2_mst1_0.srj.json",
+      "removedTraceIndex": 52,
+      "removedTraceId": "source_net_2_mst1_0",
+      "removedConnectionName": "source_net_2",
+      "pointPairConnectionName": "source_net_2_mst1"
+    }
+  ]
+}
