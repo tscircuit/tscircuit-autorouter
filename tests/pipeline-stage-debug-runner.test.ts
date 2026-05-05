@@ -124,6 +124,9 @@ test(
     )
     expect(outputFiles).toContain("logs.txt")
     expect(outputFiles).toContain(
+      formatStageArtifactName(1, "preprocessSimpleRouteJsonSolver"),
+    )
+    expect(outputFiles).toContain(
       formatStageArtifactName(netToPointPairsStage, "netToPointPairsSolver"),
     )
     expect(outputFiles).toContain(
@@ -135,6 +138,7 @@ test(
     expect(outputFiles).toContain(
       formatStageArtifactName(traceWidthStage, "traceWidthSolver"),
     )
+    expect(logs).toContain("enter stage=1 name=preprocessSimpleRouteJsonSolver")
     expect(logs).toContain(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
     )
