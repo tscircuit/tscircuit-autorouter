@@ -81,32 +81,24 @@ export function generateApproximatingRects(
 ): Rect[] {
   const { center, width, height, rotation } = rotatedRect
   const rects: Rect[] = []
+  const rectCount = Math.max(1, Math.ceil(numRects))
 
   const angleRad = (rotation * Math.PI) / 180
   const cosAngle = Math.cos(angleRad)
   const sinAngle = Math.sin(angleRad)
 
-  const normalizedRotation = ((rotation % 360) + 360) % 360
-  const sliceAlongWidth =
-    height <= width
-      ? (normalizedRotation >= 45 && normalizedRotation < 135) ||
-        (normalizedRotation >= 225 && normalizedRotation < 315)
-      : (normalizedRotation >= 135 && normalizedRotation < 225) ||
-        normalizedRotation >= 315 ||
-        normalizedRotation < 45
+  if (width >= height) {
+    const sliceWidth = width / rectCount
 
-  if (sliceAlongWidth) {
-    const sliceWidth = width / numRects
+    for (let i = 0; i < rectCount; i++) {
+      const x = (i - rectCount / 2 + 0.5) * sliceWidth
+      const rotatedX = x * cosAngle
+      const rotatedY = x * sinAngle
 
-    for (let i = 0; i < numRects; i++) {
-      const x = (i - numRects / 2 + 0.5) * sliceWidth
-
-      const rotatedX = -x * cosAngle
-      const rotatedY = -x * sinAngle
-
-      const coverageWidth = sliceWidth * 1.1
+      const coverageWidth =
+        Math.abs(sliceWidth * cosAngle) + Math.abs(height * sinAngle)
       const coverageHeight =
-        Math.abs(height * cosAngle) + Math.abs(sliceWidth * sinAngle)
+        Math.abs(sliceWidth * sinAngle) + Math.abs(height * cosAngle)
 
       rects.push({
         center: {
@@ -118,17 +110,17 @@ export function generateApproximatingRects(
       })
     }
   } else {
-    const sliceHeight = height / numRects
+    const sliceHeight = height / rectCount
 
-    for (let i = 0; i < numRects; i++) {
-      const y = (i - numRects / 2 + 0.5) * sliceHeight
-
+    for (let i = 0; i < rectCount; i++) {
+      const y = (i - rectCount / 2 + 0.5) * sliceHeight
       const rotatedX = -y * sinAngle
       const rotatedY = y * cosAngle
 
       const coverageWidth =
         Math.abs(width * cosAngle) + Math.abs(sliceHeight * sinAngle)
-      const coverageHeight = sliceHeight * 1.1
+      const coverageHeight =
+        Math.abs(width * sinAngle) + Math.abs(sliceHeight * cosAngle)
 
       rects.push({
         center: {
