@@ -71,11 +71,9 @@ test("cn11081 single transition solver routes without DRC errors", () => {
   const solverName = solver.winningSolver?.constructor.name
 
   // Convert routes to circuit json and run DRC
-  const circuitJson = convertToCircuitJson(
-    srj,
-    solver.solvedRoutes,
-    srj.minTraceWidth,
-  )
+  const circuitJson = convertToCircuitJson(srj, solver.solvedRoutes, {
+    minTraceWidth: srj.minTraceWidth,
+  })
   const pcbTraces = circuitJson.filter(
     (
       element,

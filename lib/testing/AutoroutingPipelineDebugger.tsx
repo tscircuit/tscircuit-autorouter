@@ -44,7 +44,6 @@ import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import { getDrcErrors } from "./getDrcErrors"
 import { getCurrentCircuitJson } from "./autorouting-pipeline-debugger/getCurrentCircuitJson"
-import { convertToCircuitJson } from "./utils/convertToCircuitJson"
 import { extractCapacityMeshNodeIdFromObjectLabel } from "./utils/extractCapacityMeshNodeIdFromObjectLabel"
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 import { getHighDensityNodeDownloadData } from "./utils/getHighDensityNodeDownloadData"
@@ -792,12 +791,14 @@ export const AutoroutingPipelineDebugger = ({
         return
       }
 
-      // Convert to circuit-json format with both connection information and routes
-      const circuitJson = convertToCircuitJson(
-        srjWithPointPairs,
-        routes,
-        solver.srj.minTraceWidth,
-      )
+      // Convert to circuit-json format with both connection information and
+      // original physical obstacle geometry for DRC.
+      const circuitJson =
+        getCurrentCircuitJson(solver, (message) => window.alert(message)) ?? []
+
+      if (circuitJson.length === 0) {
+        return
+      }
 
       const { errors: allErrors, locationAwareErrors } =
         mode === "relaxed"

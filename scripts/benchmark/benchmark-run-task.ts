@@ -269,8 +269,10 @@ export const runTask = async (
     const circuitJson = convertToCircuitJson(
       solver.srjWithPointPairs ?? task.scenario,
       traces,
-      task.scenario.minTraceWidth,
-      task.scenario.minViaDiameter,
+      {
+        minTraceWidth: task.scenario.minTraceWidth,
+        minViaDiameter: task.scenario.minViaDiameter,
+      },
     )
     const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
     const relaxedDrcPassed = errors.length === 0

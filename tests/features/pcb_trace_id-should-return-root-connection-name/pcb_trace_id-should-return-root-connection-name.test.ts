@@ -27,12 +27,10 @@ test("board#23 trace keeps original connection name", () => {
     ]),
   )
 
-  const circuitJson = convertToCircuitJson(
-    boardSrj,
-    traces,
-    boardSrj.minTraceWidth,
-    boardSrj.minViaDiameter ?? 0.6,
-  )
+  const circuitJson = convertToCircuitJson(boardSrj, traces, {
+    minTraceWidth: boardSrj.minTraceWidth,
+    minViaDiameter: boardSrj.minViaDiameter ?? 0.6,
+  })
   const { errors } = getDrcErrors(circuitJson)
   expect(errors.length).toBeGreaterThan(0)
   let mixedErrorVIz = getLastStepGraphicsObject(solver.visualize())

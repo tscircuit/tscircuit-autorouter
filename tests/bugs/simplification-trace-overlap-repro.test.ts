@@ -46,7 +46,7 @@ const getTraceOverlapErrors = (
     convertToCircuitJson(
       srjWithPointPairs,
       convertHdRoutesToPcbTraces(srjWithPointPairs, hdRoutes),
-      srj.minTraceWidth,
+      { minTraceWidth: srj.minTraceWidth },
     ),
   ).locationAwareErrors.filter((error) =>
     error.message.includes("overlaps with trace"),

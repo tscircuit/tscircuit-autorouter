@@ -38,11 +38,9 @@ describe.skip("bug d3f3be1b path simplification", () => {
     const lastSegment = targetTrace!.route[targetTrace!.route.length - 1]
     expect(lastSegment).toMatchObject({ x: 1.175, y: -5 })
 
-    circuitJson = convertToCircuitJson(
-      srjWithPointPairs,
-      simplifiedTraces,
-      srj.minTraceWidth,
-    )
+    circuitJson = convertToCircuitJson(srjWithPointPairs, simplifiedTraces, {
+      minTraceWidth: srj.minTraceWidth,
+    })
 
     pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
   })

@@ -34,11 +34,9 @@ test("FixedTopologyHighDensityIntraNodeSolver test", () => {
 
   const srj = createSrjFromNodeWithPortPoints(input03.nodeWithPortPoints as any)
 
-  const circuitJson = convertToCircuitJson(
-    srj,
-    solver.solvedRoutes,
-    srj.minTraceWidth,
-  )
+  const circuitJson = convertToCircuitJson(srj, solver.solvedRoutes, {
+    minTraceWidth: srj.minTraceWidth,
+  })
 
   const hasBottomLayerTrace = circuitJson.some(
     (element) =>
@@ -66,7 +64,7 @@ test("FixedTopologyHighDensityIntraNodeSolver test", () => {
   const circuitJsonFromSimplified = convertToCircuitJson(
     srj,
     simplifiedTraces,
-    srj.minTraceWidth,
+    { minTraceWidth: srj.minTraceWidth },
   )
   expect(
     circuitJsonFromSimplified

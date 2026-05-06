@@ -305,7 +305,9 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
   )
 
   const srj = createSrjFromNodeWithPortPoints(node)
-  const drc = getDrcErrors(convertToCircuitJson(srj, routes, srj.minTraceWidth))
+  const drc = getDrcErrors(
+    convertToCircuitJson(srj, routes, { minTraceWidth: srj.minTraceWidth }),
+  )
 
   expect(drc.errors.length).toBeGreaterThan(0)
   expect(

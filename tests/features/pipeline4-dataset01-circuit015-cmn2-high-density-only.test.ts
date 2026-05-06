@@ -53,11 +53,9 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
   expect(solver.failed).toBe(false)
 
   const nodeSrj = createSrjFromNodeWithPortPoints(cmn2Input)
-  const circuitJson = convertToCircuitJson(
-    nodeSrj,
-    solver.routes,
-    circuit015.minTraceWidth,
-  )
+  const circuitJson = convertToCircuitJson(nodeSrj, solver.routes, {
+    minTraceWidth: circuit015.minTraceWidth,
+  })
   const { locationAwareErrors } = getDrcErrors(circuitJson)
   const accidentalContacts = locationAwareErrors.filter((error) =>
     error.message.includes("accidental contact"),

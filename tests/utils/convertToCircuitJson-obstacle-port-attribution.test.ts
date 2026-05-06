@@ -92,7 +92,9 @@ test("obstacles use the nearest pcb_port_id instead of the first connected port"
     },
   ]
 
-  const circuitJson = convertToCircuitJson(srj, traces, srj.minTraceWidth)
+  const circuitJson = convertToCircuitJson(srj, traces, {
+    minTraceWidth: srj.minTraceWidth,
+  })
   const smtPads = circuitJson.filter(
     (
       element,
@@ -108,4 +110,80 @@ test("obstacles use the nearest pcb_port_id instead of the first connected port"
     "pcb_port_1",
     "pcb_port_2",
   ])
+})
+
+test("uses original SRJ obstacle rotation when creating circuit-json pads", () => {
+  const originalSrj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 2,
+        height: 0.4,
+        ccwRotationDegrees: 45,
+        connectedTo: ["pcb_smtpad_0", "pcb_port_0"],
+      },
+    ],
+    connections: [
+      {
+        name: "source_trace_0",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "pcb_port_0" },
+          { x: 1, y: 1, layer: "top", pcb_port_id: "pcb_port_1" },
+        ],
+      },
+    ],
+  }
+  const srjWithApproximatedObstacle: SimpleRouteJson = {
+    ...originalSrj,
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 2,
+        height: 0.4,
+        connectedTo: ["pcb_smtpad_0", "pcb_port_0"],
+      },
+    ],
+  }
+  const traces: SimplifiedPcbTrace[] = [
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "source_trace_0_0",
+      connection_name: "source_trace_0",
+      route: [
+        { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+        { route_type: "wire", x: 1, y: 1, width: 0.1, layer: "top" },
+      ],
+    },
+  ]
+
+  const circuitJson = convertToCircuitJson(
+    srjWithApproximatedObstacle,
+    traces,
+    {
+      minTraceWidth: originalSrj.minTraceWidth,
+      originalSrj,
+    },
+  )
+  const pad = circuitJson.find(
+    (
+      element,
+    ): element is Extract<
+      (typeof circuitJson)[number],
+      { type: "pcb_smtpad" }
+    > => element.type === "pcb_smtpad",
+  )
+
+  expect(pad).toMatchObject({
+    type: "pcb_smtpad",
+    pcb_smtpad_id: "pcb_smtpad_0",
+    shape: "rotated_rect",
+    ccw_rotation: 45,
+  })
 })

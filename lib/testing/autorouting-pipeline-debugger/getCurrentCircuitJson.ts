@@ -1,10 +1,12 @@
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import type { SimpleRouteJson } from "lib/types"
 
 type SolverLike = {
   netToPointPairsSolver?: {
     getNewSimpleRouteJson?: () => any
   }
   srjWithPointPairs?: any
+  originalSrj?: SimpleRouteJson
   getOutputSimplifiedPcbTraces: () => any
   srj: {
     minTraceWidth?: number
@@ -34,9 +36,8 @@ export const getCurrentCircuitJson = (
     return null
   }
 
-  return convertToCircuitJson(
-    srjWithPointPairs,
-    routes,
-    solver.srj.minTraceWidth,
-  )
+  return convertToCircuitJson(srjWithPointPairs, routes, {
+    minTraceWidth: solver.srj.minTraceWidth,
+    originalSrj: solver.originalSrj,
+  })
 }

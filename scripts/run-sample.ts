@@ -429,8 +429,10 @@ const main = async () => {
     const circuitJson = convertToCircuitJson(
       pipelineSolver.srjWithPointPairs ?? input.scenario,
       traces as any,
-      input.scenario.minTraceWidth,
-      input.scenario.minViaDiameter,
+      {
+        minTraceWidth: input.scenario.minTraceWidth,
+        minViaDiameter: input.scenario.minViaDiameter,
+      },
     ) as Array<Record<string, unknown>>
     const drcResult = getDrcErrors(circuitJson as any, RELAXED_DRC_OPTIONS)
     relaxedDrcPassed = drcResult.errors.length === 0

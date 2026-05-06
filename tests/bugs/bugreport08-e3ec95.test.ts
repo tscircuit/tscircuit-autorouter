@@ -28,11 +28,9 @@ describe("bugreport8-e3ec95", () => {
 
     const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
 
-    circuitJson = convertToCircuitJson(
-      srjWithPointPairs,
-      simplifiedTraces,
-      srj.minTraceWidth,
-    )
+    circuitJson = convertToCircuitJson(srjWithPointPairs, simplifiedTraces, {
+      minTraceWidth: srj.minTraceWidth,
+    })
 
     const layersUsed = new Set(
       circuitJson

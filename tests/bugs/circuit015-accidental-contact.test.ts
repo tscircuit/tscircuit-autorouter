@@ -30,7 +30,7 @@ test(
     const circuitJson = convertToCircuitJson(
       srjWithPointPairs,
       simplifiedTraces,
-      circuit15.minTraceWidth,
+      { minTraceWidth: circuit15.minTraceWidth },
     )
 
     const { locationAwareErrors } = getDrcErrors(circuitJson)

@@ -23,7 +23,7 @@ test.skip("pipeline4 failing on github actions", async () => {
   const circuitJson = convertToCircuitJson(
     srjWithPointPairs,
     simplifiedTraces,
-    srj.minTraceWidth,
+    { minTraceWidth: srj.minTraceWidth },
   )
 
   const { errors, locationAwareErrors } = getDrcErrors(circuitJson)

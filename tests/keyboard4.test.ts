@@ -31,11 +31,9 @@ describe.skip("keyboard4 autorouting", () => {
 
     const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
 
-    circuitJson = convertToCircuitJson(
-      srjWithPointPairs,
-      simplifiedTraces,
-      keyboard4Srj.minTraceWidth,
-    )
+    circuitJson = convertToCircuitJson(srjWithPointPairs, simplifiedTraces, {
+      minTraceWidth: keyboard4Srj.minTraceWidth,
+    })
 
     pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
   })

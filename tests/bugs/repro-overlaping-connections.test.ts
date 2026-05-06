@@ -23,7 +23,7 @@ test("overlap detection between different nets", async () => {
   const circuitJson = convertToCircuitJson(
     srjWithPointPairs,
     simplifiedTraces,
-    srj.minTraceWidth,
+    { minTraceWidth: srj.minTraceWidth },
   )
 
   const { errors, locationAwareErrors } = getDrcErrors(circuitJson)

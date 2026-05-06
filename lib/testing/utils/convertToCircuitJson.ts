@@ -1,10 +1,10 @@
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { LayerName, mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -20,16 +20,33 @@ function convertSimplifiedPcbTraceToCircuitJson(
     route: simplifiedTrace.route
       .map((segment) => {
         if (segment.route_type === "wire") {
+          if (!isLayerName(segment.layer)) return null
+          const startPcbPortId =
+            "start_pcb_port_id" in segment &&
+            typeof segment.start_pcb_port_id === "string"
+              ? segment.start_pcb_port_id
+              : undefined
+          const endPcbPortId =
+            "end_pcb_port_id" in segment &&
+            typeof segment.end_pcb_port_id === "string"
+              ? segment.end_pcb_port_id
+              : undefined
           return {
             route_type: "wire" as const,
             x: segment.x,
             y: segment.y,
             width: segment.width,
-            layer: segment.layer as LayerName,
-            start_pcb_port_id: (segment as any).start_pcb_port_id,
-            end_pcb_port_id: (segment as any).end_pcb_port_id,
+            layer: segment.layer,
+            ...(startPcbPortId ? { start_pcb_port_id: startPcbPortId } : {}),
+            ...(endPcbPortId ? { end_pcb_port_id: endPcbPortId } : {}),
           }
         } else if (segment.route_type === "via") {
+          if (
+            !isLayerName(segment.from_layer) ||
+            !isLayerName(segment.to_layer)
+          ) {
+            return null
+          }
           return {
             route_type: "via" as const,
             x: segment.x,
@@ -344,6 +361,19 @@ function getBestObstaclePcbPortId(
   return bestPcbPortId ?? candidatePortIds[0]
 }
 
+const layerNames = new Set<string>([
+  "top",
+  "bottom",
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+])
+
+const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
+
 /**
  * Create pad-like circuit-json elements from SRJ obstacles.
  * Multi-layer obstacles represent plated holes and must not be deduped away
@@ -374,13 +404,14 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
-    const layers = obstacle.layers
+    const layers = obstacle.layers.filter(isLayerName)
     if (layers.length === 0) continue
 
     const width = obstacle.width
     const height = obstacle.height
     const x = obstacle.center.x
     const y = obstacle.center.y
+    const rotationDegrees = obstacle.ccwRotationDegrees
 
     const isMultiLayerObstacle = layers.length > 1
 
@@ -389,6 +420,33 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`
       if (addedPlatedHoleIds.has(id)) continue
       addedPlatedHoleIds.add(id)
+
+      if (
+        typeof rotationDegrees === "number" &&
+        Number.isFinite(rotationDegrees)
+      ) {
+        const holeDiameter = Math.max(Math.min(width, height) * 0.5, 0.1)
+        pads.push({
+          type: "pcb_plated_hole",
+          pcb_plated_hole_id: id,
+          shape: "rotated_pill_hole_with_rect_pad",
+          hole_shape: "rotated_pill",
+          pad_shape: "rect",
+          hole_width: holeDiameter,
+          hole_height: holeDiameter,
+          hole_ccw_rotation: rotationDegrees,
+          rect_pad_width: width,
+          rect_pad_height: height,
+          rect_ccw_rotation: rotationDegrees,
+          hole_offset_x: 0,
+          hole_offset_y: 0,
+          x,
+          y,
+          layers,
+          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+        })
+        continue
+      }
 
       const isCircularLike = Math.abs(width - height) < 0.001
 
@@ -403,7 +461,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           y,
           layers,
           ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
-        } as any)
+        })
         continue
       }
 
@@ -428,6 +486,25 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const id = smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`
     if (addedSmtPadIds.has(id)) continue
     addedSmtPadIds.add(id)
+
+    if (
+      typeof rotationDegrees === "number" &&
+      Number.isFinite(rotationDegrees)
+    ) {
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        layer: layers[0],
+        shape: "rotated_rect",
+        x,
+        y,
+        width,
+        height,
+        ccw_rotation: rotationDegrees,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      })
+      continue
+    }
 
     pads.push({
       type: "pcb_smtpad",
@@ -531,17 +608,25 @@ function extractViasFromRoutes(
  * Convert the autorouter output to circuit-json format
  * @param srjWithPointPairs The SimpleRouteJson created by the NetToPointPairsSolver
  * @param routes The SimplifiedPcbTraces or HighDensityRoutes to convert
- * @param minTraceWidth Default width for traces if not specified
- * @param minViaDiameter Default diameter for vias if not specified
- * @param minViaHoleDiameter Default hole diameter for vias if not specified
  */
+export type ConvertToCircuitJsonOptions = {
+  minTraceWidth?: number
+  minViaDiameter?: number
+  minViaHoleDiameter?: number
+  originalSrj?: SimpleRouteJson
+}
+
 export function convertToCircuitJson(
   srjWithPointPairs: SimpleRouteJson,
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
-  minTraceWidth = 0.1,
-  minViaDiameter?: number,
-  minViaHoleDiameter?: number,
+  options: ConvertToCircuitJsonOptions = {},
 ): AnyCircuitElement[] {
+  const {
+    minTraceWidth = 0.1,
+    minViaDiameter,
+    minViaHoleDiameter,
+    originalSrj,
+  } = options
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
   const requestedMinViaHoleDiameter =
@@ -564,7 +649,7 @@ export function convertToCircuitJson(
   circuitJson.push(...createPcbPorts(srjWithPointPairs))
 
   // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(srjWithPointPairs))
+  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(
