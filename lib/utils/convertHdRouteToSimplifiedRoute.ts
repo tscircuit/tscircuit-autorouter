@@ -283,6 +283,8 @@ export const convertHdRouteToSimplifiedRoute = (
       ) {
         result.push({
           route_type: "through_obstacle",
+          x: previousPoint.x,
+          y: previousPoint.y,
           start: { x: previousPoint.x, y: previousPoint.y },
           end: { x: point.x, y: point.y },
           from_layer: layerName,

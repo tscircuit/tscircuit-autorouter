@@ -126,6 +126,8 @@ export interface SimplifiedPcbTrace {
       }
     | {
         route_type: "through_obstacle"
+        x: number
+        y: number
         start: { x: number; y: number }
         end: { x: number; y: number }
         from_layer: string

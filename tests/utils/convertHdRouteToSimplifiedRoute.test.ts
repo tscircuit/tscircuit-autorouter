@@ -181,6 +181,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           },
           "to_layer": "bottom",
           "width": 0.2,
+          "x": 1,
+          "y": 0,
         },
         {
           "layer": "bottom",
