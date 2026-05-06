@@ -593,28 +593,25 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         return
       }
 
-      // No valid 45-degree path to the end. Revert to the original
-      // geometry for this segment to guarantee connectivity.
-      this.lastValidPath = null
-      this.tailDistanceAlongPath = this.totalPathLength
-      this.headDistanceAlongPath = this.totalPathLength
+      // No valid 45-degree path to the end. Keep any valid simplified prefix
+      // and preserve only the remaining original tail to guarantee connectivity.
+      const connectorStartDistance = this.lastValidPath
+        ? this.lastValidPathHeadDistance
+        : this.tailDistanceAlongPath
 
-      const dedupedOriginalRoute: Point[] = []
-      for (const point of this.inputRoute.route) {
-        if (
-          dedupedOriginalRoute.length === 0 ||
-          !this.arePointsEqual(
-            dedupedOriginalRoute[dedupedOriginalRoute.length - 1],
-            point,
-          )
-        ) {
-          dedupedOriginalRoute.push(point)
-        }
+      if (this.lastValidPath) {
+        this.addPathToResult(this.lastValidPath)
+        this.lastValidPath = null
       }
 
-      this.newRoute = dedupedOriginalRoute
-      this.newVias = [...this.inputRoute.vias]
+      const startIndex = this.getNearestIndexForDistance(connectorStartDistance)
+      this.appendOriginalRouteSlice(
+        connectorStartDistance,
+        this.inputRoute.route.length - 1,
+      )
 
+      this.tailDistanceAlongPath = this.totalPathLength
+      this.headDistanceAlongPath = this.totalPathLength
       this.solved = true
       return
     }
