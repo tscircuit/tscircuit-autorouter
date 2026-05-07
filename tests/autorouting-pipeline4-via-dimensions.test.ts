@@ -187,7 +187,9 @@ test("pipeline4 applies top-level nominalTraceWidth to connections without overr
   const highDensityStep = solver.pipelineDef.find(
     (step) => step.solverName === "highDensityRouteSolver",
   )
-  const [highDensityParams] = highDensityStep!.getConstructorParams(solver) as any
+  const [highDensityParams] = highDensityStep!.getConstructorParams(
+    solver,
+  ) as any
 
   expect(highDensityParams.traceWidth).toBe(0.6)
 })
