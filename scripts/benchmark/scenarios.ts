@@ -9,6 +9,7 @@ export const DATASET_NAMES = [
   "srj13",
   "srj14",
   "srj15",
+  "srj16",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -16,7 +17,7 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16"
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -45,6 +46,11 @@ const datasetAliases: Record<string, DatasetName> = {
   "15": "srj15",
   srj15: "srj15",
   "dataset-srj15": "srj15",
+  "16": "srj16",
+  srj16: "srj16",
+  "dataset-srj16": "srj16",
+  "dataset-srj16-bga-breakouts": "srj16",
+  "@tsci/tscircuit.dataset-srj16-bga-breakouts": "srj16",
   zdwiel: "zdwiel",
 }
 
@@ -130,6 +136,12 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
       getSpecifier: (sampleId) =>
         `../../fixtures/datasets/dataset-srj15/sample${sampleId.slice(1)}-region-reroute.srj.json`,
     }),
+  srj16: async () =>
+    loadNumberedJsonDatasetModule({
+      sampleCount: 200,
+      getSpecifier: (sampleId) =>
+        `@tsci/tscircuit.dataset-srj16-bga-breakouts/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
+    }),
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -141,6 +153,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj13: /^example_\d+$/,
   srj14: /^sample\d{3}Circuit$/,
   srj15: /^sample\d{3}Circuit$/,
+  srj16: /^sample\d{3}Circuit$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
