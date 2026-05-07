@@ -1,6 +1,6 @@
 # @tscircuit/capacity-autorouter
 
-An MIT-licensed full-pipeline PCB autorouter library for node.js and TypeScript projects. Part of [tscircuit](https://github.com/tscircuit/tscircuit)
+An MIT-licensed full-pipeline PCB autorouter for node.js and TypeScript projects. Part of [tscircuit](https://github.com/tscircuit/tscircuit)
 
 [View Online Playground](https://autorouter.tscircuit.com) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com) &middot; [Report/Debug Autorouter Bugs](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
@@ -25,10 +25,10 @@ bun add @tscircuit/capacity-autorouter
 ### Basic Usage
 
 ```typescript
-import { CapacityMeshSolver } from "@tscircuit/capacity-autorouter"
+import { AutoroutingPipelineSolver } from "@tscircuit/capacity-autorouter"
 
 // Create a solver with SimpleRouteJson input
-const solver = new CapacityMeshSolver(simpleRouteJson)
+const solver = new AutoroutingPipelineSolver(simpleRouteJson)
 
 // Run the solver until completion
 while (!solver.solved && !solver.failed) {
