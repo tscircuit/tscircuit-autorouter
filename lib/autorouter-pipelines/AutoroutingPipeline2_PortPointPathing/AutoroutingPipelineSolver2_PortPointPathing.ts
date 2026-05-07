@@ -120,6 +120,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   traceWidthSolver?: TraceWidthSolver
   viaDiameter: number
   minTraceWidth: number
+  nominalTraceWidth?: number
   effort: number
 
   startTimeOfPhase: Record<string, number>
@@ -229,7 +230,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: false,
         },
@@ -351,7 +352,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
         effort: cms.effort,
       },
     ]),
@@ -392,7 +393,12 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           connMap: cms.connMap,
           colorMap: cms.colorMap,
           minTraceWidth: cms.minTraceWidth,
-          connection: cms.srj.connections,
+          connection: cms.nominalTraceWidth
+            ? cms.srj.connections.map((c) => ({
+                ...c,
+                nominalTraceWidth: c.nominalTraceWidth ?? cms.nominalTraceWidth,
+              }))
+            : cms.srj.connections,
           layerCount: cms.srj.layerCount,
         },
       ]
@@ -409,6 +415,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
+    this.nominalTraceWidth = srj.nominalTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
 

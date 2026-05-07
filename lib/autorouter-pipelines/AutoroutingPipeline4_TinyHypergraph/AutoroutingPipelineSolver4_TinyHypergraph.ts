@@ -124,6 +124,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
+  nominalTraceWidth?: number
   effort: number
   maxNodeDimension: number
   maxNodeRatio: number
@@ -232,7 +233,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
         },
@@ -341,7 +342,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -416,7 +417,12 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        connection: cms.nominalTraceWidth
+          ? cms.srj.connections.map((c) => ({
+              ...c,
+              nominalTraceWidth: c.nominalTraceWidth ?? cms.nominalTraceWidth,
+            }))
+          : cms.srj.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         layerCount: cms.srj.layerCount,
       },
@@ -477,6 +483,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
+    this.nominalTraceWidth = this.srj.nominalTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }

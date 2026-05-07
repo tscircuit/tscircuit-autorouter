@@ -102,6 +102,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
+  nominalTraceWidth?: number
   effort: number
   maxNodeDimension: number
   maxNodeRatio: number
@@ -197,7 +198,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           nodesWithPortPoints: cms.highDensityNodePortPoints ?? [],
           equivalentAreaExpansionFactor: cms.equivalentAreaExpansionFactor,
           minProjectedRectDimension: cms.minProjectedRectDimension,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
@@ -226,7 +227,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           effort: cms.effort,
         },
@@ -279,7 +280,12 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        connection: cms.nominalTraceWidth
+          ? cms.srj.connections.map((c) => ({
+              ...c,
+              nominalTraceWidth: c.nominalTraceWidth ?? cms.nominalTraceWidth,
+            }))
+          : cms.srj.connections,
         layerCount: cms.srj.layerCount,
       },
     ]),
@@ -343,6 +349,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
+    this.nominalTraceWidth = this.srj.nominalTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }

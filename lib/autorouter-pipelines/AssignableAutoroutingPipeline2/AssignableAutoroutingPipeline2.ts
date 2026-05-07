@@ -128,6 +128,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   viaDiameter: number
   minTraceWidth: number
+  nominalTraceWidth?: number
   effort: number
 
   startTimeOfPhase: Record<string, number>
@@ -203,7 +204,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: false,
         },
@@ -328,7 +329,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           [],
         colorMap: cms.colorMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: cms.nominalTraceWidth ?? cms.minTraceWidth,
         connMap: cms.connMap,
       },
     ]),
@@ -388,7 +389,12 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceKeepoutSolver?.redrawnHdRoutes ?? [],
-        connection: cms.srj.connections,
+        connection: cms.nominalTraceWidth
+          ? cms.srj.connections.map((c) => ({
+              ...c,
+              nominalTraceWidth: c.nominalTraceWidth ?? cms.nominalTraceWidth,
+            }))
+          : cms.srj.connections,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
@@ -409,6 +415,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
+    this.nominalTraceWidth = srj.nominalTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
 

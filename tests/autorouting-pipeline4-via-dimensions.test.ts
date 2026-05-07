@@ -153,3 +153,41 @@ test(
   },
   { timeout: 120_000 },
 )
+
+test("pipeline4 applies top-level nominalTraceWidth to connections without overrides", () => {
+  const solver = new AutoroutingPipelineSolver4({
+    ...srj,
+    nominalTraceWidth: 0.6,
+  })
+
+  expect(solver.nominalTraceWidth).toBe(0.6)
+
+  solver.traceSimplificationSolver = {
+    simplifiedHdRoutes: [
+      {
+        connectionName: "conn1",
+        traceThickness: solver.minTraceWidth,
+        viaDiameter: solver.viaDiameter,
+        route: [
+          { x: -0.5, y: 0, z: 0 },
+          { x: 0.5, y: 0, z: 0 },
+        ],
+        vias: [],
+      },
+    ],
+  } as any
+
+  const traceWidthStep = solver.pipelineDef.find(
+    (step) => step.solverName === "traceWidthSolver",
+  )
+  const [traceWidthParams] = traceWidthStep!.getConstructorParams(solver) as any
+
+  expect(traceWidthParams.connection[0].nominalTraceWidth).toBe(0.6)
+
+  const highDensityStep = solver.pipelineDef.find(
+    (step) => step.solverName === "highDensityRouteSolver",
+  )
+  const [highDensityParams] = highDensityStep!.getConstructorParams(solver) as any
+
+  expect(highDensityParams.traceWidth).toBe(0.6)
+})
