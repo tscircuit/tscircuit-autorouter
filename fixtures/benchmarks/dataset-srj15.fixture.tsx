@@ -5,6 +5,7 @@ import {
 
 const samplePathPattern = /\/sample(\d+)-region-reroute\.srj\.json$/
 
+// @ts-ignore
 const srjModules = import.meta.glob("../datasets/dataset-srj15/*.srj.json", {
   eager: true,
   import: "default",
