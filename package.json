@@ -37,7 +37,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
-    "@tscircuit/math-utils": "^0.0.27",
+    "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#4af388d",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",
