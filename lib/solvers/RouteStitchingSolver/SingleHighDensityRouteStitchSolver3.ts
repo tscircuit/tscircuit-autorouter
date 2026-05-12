@@ -7,9 +7,57 @@ import { BaseSolver } from "../BaseSolver"
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
+const DISTANCE_TIE_TOLERANCE = 1e-9
 export const MAX_STITCH_GAP_DISTANCE_3 = 1
 export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
+type Point3 = { x: number; y: number; z: number }
+
+const compareNumbers = (a: number, b: number) => {
+  if (a < b) return -1
+  if (a > b) return 1
+  return 0
+}
+
+const comparePoints = (a: Point3, b: Point3) =>
+  compareNumbers(a.z, b.z) ||
+  compareNumbers(a.x, b.x) ||
+  compareNumbers(a.y, b.y)
+
+const pointKey = (point: Point3) =>
+  `${point.z.toFixed(6)}:${point.x.toFixed(6)}:${point.y.toFixed(6)}`
+
+const getCanonicalRoutePointKey = (route: HighDensityIntraNodeRoute) => {
+  const forwardKey = route.route.map(pointKey).join("|")
+  const reverseKey = [...route.route].reverse().map(pointKey).join("|")
+  return forwardKey <= reverseKey ? forwardKey : reverseKey
+}
+
+const compareRoutes = (
+  a: HighDensityIntraNodeRoute,
+  b: HighDensityIntraNodeRoute,
+) => {
+  const connectionNameCmp = a.connectionName.localeCompare(b.connectionName)
+  if (connectionNameCmp !== 0) return connectionNameCmp
+
+  const rootConnectionNameCmp = (a.rootConnectionName ?? "").localeCompare(
+    b.rootConnectionName ?? "",
+  )
+  if (rootConnectionNameCmp !== 0) return rootConnectionNameCmp
+
+  const routeKeyCmp = getCanonicalRoutePointKey(a).localeCompare(
+    getCanonicalRoutePointKey(b),
+  )
+  if (routeKeyCmp !== 0) return routeKeyCmp
+
+  return (
+    compareNumbers(a.traceThickness, b.traceThickness) ||
+    compareNumbers(a.viaDiameter, b.viaDiameter) ||
+    compareNumbers(a.route.length, b.route.length) ||
+    compareNumbers(a.vias.length, b.vias.length) ||
+    compareNumbers(a.jumpers?.length ?? 0, b.jumpers?.length ?? 0)
+  )
+}
 
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
@@ -51,10 +99,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
   }) {
     super()
-    this.remainingHdRoutes = [...opts.hdRoutes]
+    const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
+    this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
 
-    if (opts.hdRoutes.length === 0) {
+    if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
       this.end = opts.end
       const routePoints = [
@@ -70,7 +119,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       this.mergedHdRoute = {
         connectionName: opts.connectionName,
-        rootConnectionName: opts.hdRoutes[0]?.rootConnectionName,
+        rootConnectionName: canonicalHdRoutes[0]?.rootConnectionName,
         route: routePoints,
         vias,
         jumpers: [],
@@ -82,10 +131,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     let bestDist = Infinity
-    let firstRoute = opts.hdRoutes[0]
+    let firstRoute = canonicalHdRoutes[0]
     let orientation: "start-to-end" | "end-to-start" = "start-to-end"
 
-    for (const route of opts.hdRoutes) {
+    for (const route of canonicalHdRoutes) {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
@@ -101,12 +150,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         distEndToLast,
       )
 
-      if (minDist < bestDist) {
+      if (
+        minDist < bestDist - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(minDist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
+          compareRoutes(route, firstRoute!) < 0)
+      ) {
         bestDist = minDist
         firstRoute = route
         if (
           Math.min(distEndToFirst, distEndToLast) <
-          Math.min(distStartToFirst, distStartToLast)
+            Math.min(distStartToFirst, distStartToLast) -
+              DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(
+            Math.min(distEndToFirst, distEndToLast) -
+              Math.min(distStartToFirst, distStartToLast),
+          ) <= DISTANCE_TIE_TOLERANCE &&
+            comparePoints(opts.end, opts.start) < 0)
         ) {
           orientation = "end-to-start"
         } else {
@@ -128,7 +187,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
     const closestFirstRoutePoint =
-      distToFirst <= distToLast ? firstRouteFirstPoint : firstRouteLastPoint
+      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
+      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
+        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        ? firstRouteFirstPoint
+        : firstRouteLastPoint
 
     this.mergedHdRoute = {
       connectionName: opts.connectionName,
