@@ -87,15 +87,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     Array<{ key: string; point: Point3 }>
   >()
 
-  private getEndpointKey(
-    connectionName: string,
-    point: Point3,
-  ) {
+  private getEndpointKey(connectionName: string, point: Point3) {
     const clusters = this.endpointClusters.get(connectionName) ?? []
 
-    let bestCluster:
-      | { key: string; point: Point3 }
-      | undefined
+    let bestCluster: { key: string; point: Point3 } | undefined
     let bestDistance = Infinity
 
     for (const cluster of clusters) {
@@ -104,8 +99,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       if (
         clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
         (clusterDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(clusterDistance - bestDistance) <=
-            DISTANCE_TIE_TOLERANCE &&
+          (Math.abs(clusterDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
             (!bestCluster ||
               comparePoints(cluster.point, bestCluster.point) < 0)))
       ) {
@@ -181,7 +175,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       end,
     )
 
-    if (!startHash || !endHash || startHash === endHash) return canonicalHdRoutes
+    if (!startHash || !endHash || startHash === endHash)
+      return canonicalHdRoutes
 
     const adjacency = new Map<
       string,
