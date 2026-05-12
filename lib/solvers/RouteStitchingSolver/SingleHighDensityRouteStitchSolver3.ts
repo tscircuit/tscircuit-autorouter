@@ -1,63 +1,24 @@
-import { distance } from "@tscircuit/math-utils"
+import { distance, type Point3 } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { BaseSolver } from "../BaseSolver"
+import {
+  comparePoints,
+  compareRoutes,
+  DISTANCE_TIE_TOLERANCE,
+  MAX_STITCH_GAP_DISTANCE_3,
+  MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+} from "./routeStitchingShared"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
-const DISTANCE_TIE_TOLERANCE = 1e-9
-export const MAX_STITCH_GAP_DISTANCE_3 = 1
-export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
-type Point3 = { x: number; y: number; z: number }
-
-const compareNumbers = (a: number, b: number) => {
-  if (a < b) return -1
-  if (a > b) return 1
-  return 0
-}
-
-const comparePoints = (a: Point3, b: Point3) =>
-  compareNumbers(a.z, b.z) ||
-  compareNumbers(a.x, b.x) ||
-  compareNumbers(a.y, b.y)
-
-const pointKey = (point: Point3) =>
-  `${point.z.toFixed(6)}:${point.x.toFixed(6)}:${point.y.toFixed(6)}`
-
-const getCanonicalRoutePointKey = (route: HighDensityIntraNodeRoute) => {
-  const forwardKey = route.route.map(pointKey).join("|")
-  const reverseKey = [...route.route].reverse().map(pointKey).join("|")
-  return forwardKey <= reverseKey ? forwardKey : reverseKey
-}
-
-const compareRoutes = (
-  a: HighDensityIntraNodeRoute,
-  b: HighDensityIntraNodeRoute,
-) => {
-  const connectionNameCmp = a.connectionName.localeCompare(b.connectionName)
-  if (connectionNameCmp !== 0) return connectionNameCmp
-
-  const rootConnectionNameCmp = (a.rootConnectionName ?? "").localeCompare(
-    b.rootConnectionName ?? "",
-  )
-  if (rootConnectionNameCmp !== 0) return rootConnectionNameCmp
-
-  const routeKeyCmp = getCanonicalRoutePointKey(a).localeCompare(
-    getCanonicalRoutePointKey(b),
-  )
-  if (routeKeyCmp !== 0) return routeKeyCmp
-
-  return (
-    compareNumbers(a.traceThickness, b.traceThickness) ||
-    compareNumbers(a.viaDiameter, b.viaDiameter) ||
-    compareNumbers(a.route.length, b.route.length) ||
-    compareNumbers(a.vias.length, b.vias.length) ||
-    compareNumbers(a.jumpers?.length ?? 0, b.jumpers?.length ?? 0)
-  )
-}
+export {
+  MAX_STITCH_GAP_DISTANCE_3,
+  MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+} from "./routeStitchingShared"
 
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
@@ -85,15 +46,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   mergedHdRoute: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
-  start: { x: number; y: number; z: number }
-  end: { x: number; y: number; z: number }
+  start: Point3
+  end: Point3
   colorMap: Record<string, string>
 
   constructor(opts: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
-    start: { x: number; y: number; z: number }
-    end: { x: number; y: number; z: number }
+    start: Point3
+    end: Point3
     colorMap?: Record<string, string>
     defaultTraceThickness?: number
     defaultViaDiameter?: number
