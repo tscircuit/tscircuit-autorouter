@@ -10,6 +10,7 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import {
   MAX_STITCH_GAP_DISTANCE_3,
+  MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
   SingleHighDensityRouteStitchSolver3,
 } from "./SingleHighDensityRouteStitchSolver3"
 
@@ -115,8 +116,26 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const adjacency = new Map<
       string,
-      Array<{ nextHash: string; routeIndex: number }>
+      Array<{ nextHash: string; routeIndex: number | null }>
     >()
+
+    const addAdjacencyEdge = (
+      fromHash: string,
+      edge: { nextHash: string; routeIndex: number | null },
+    ) => {
+      const entries = adjacency.get(fromHash) ?? []
+      if (
+        entries.some(
+          (existingEdge) =>
+            existingEdge.nextHash === edge.nextHash &&
+            existingEdge.routeIndex === edge.routeIndex,
+        )
+      ) {
+        return
+      }
+      entries.push(edge)
+      adjacency.set(fromHash, entries)
+    }
 
     for (let i = 0; i < hdRoutes.length; i++) {
       const route = hdRoutes[i]!
@@ -129,20 +148,43 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         route.route[route.route.length - 1]!,
       )
 
-      const startEntries = adjacency.get(routeStartHash) ?? []
-      startEntries.push({ nextHash: routeEndHash, routeIndex: i })
-      adjacency.set(routeStartHash, startEntries)
+      addAdjacencyEdge(routeStartHash, {
+        nextHash: routeEndHash,
+        routeIndex: i,
+      })
+      addAdjacencyEdge(routeEndHash, {
+        nextHash: routeStartHash,
+        routeIndex: i,
+      })
+    }
 
-      const endEntries = adjacency.get(routeEndHash) ?? []
-      endEntries.push({ nextHash: routeStartHash, routeIndex: i })
-      adjacency.set(routeEndHash, endEntries)
+    const endpointClusters = this.endpointClusters.get(connectionName) ?? []
+    for (let i = 0; i < endpointClusters.length; i++) {
+      const endpointA = endpointClusters[i]!
+      for (let j = i + 1; j < endpointClusters.length; j++) {
+        const endpointB = endpointClusters[j]!
+        if (endpointA.point.z !== endpointB.point.z) continue
+        if (
+          distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
+        )
+          continue
+
+        addAdjacencyEdge(endpointA.key, {
+          nextHash: endpointB.key,
+          routeIndex: null,
+        })
+        addAdjacencyEdge(endpointB.key, {
+          nextHash: endpointA.key,
+          routeIndex: null,
+        })
+      }
     }
 
     const queue = [startHash]
     const visitedHashes = new Set<string>([startHash])
     const prevByHash = new Map<
       string,
-      { prevHash: string; routeIndex: number }
+      { prevHash: string; routeIndex: number | null }
     >()
 
     while (queue.length > 0) {
@@ -162,18 +204,78 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     if (!visitedHashes.has(endHash)) return hdRoutes
 
-    const selectedRouteIndexes = new Set<number>()
+    const selectedRouteIndexesInReverse: number[] = []
     let cursorHash = endHash
     while (cursorHash !== startHash) {
       const prev = prevByHash.get(cursorHash)
       if (!prev) return hdRoutes
-      selectedRouteIndexes.add(prev.routeIndex)
+      if (prev.routeIndex !== null) {
+        selectedRouteIndexesInReverse.push(prev.routeIndex)
+      }
       cursorHash = prev.prevHash
     }
 
-    if (selectedRouteIndexes.size === 0) return hdRoutes
+    if (selectedRouteIndexesInReverse.length === 0) return hdRoutes
 
-    return hdRoutes.filter((_, index) => selectedRouteIndexes.has(index))
+    const selectedHdRoutes = selectedRouteIndexesInReverse
+      .reverse()
+      .map((routeIndex) => hdRoutes[routeIndex]!)
+
+    if (
+      selectedHdRoutes.length > 0 &&
+      !this.canStitchBetweenTerminals(
+        connectionName,
+        selectedHdRoutes,
+        start,
+        end,
+      )
+    ) {
+      return hdRoutes
+    }
+
+    return selectedHdRoutes
+  }
+
+  private canStitchBetweenTerminals(
+    connectionName: string,
+    hdRoutes: HighDensityIntraNodeRoute[],
+    start: { x: number; y: number; z: number },
+    end: { x: number; y: number; z: number },
+  ) {
+    const stitchSolver = new SingleHighDensityRouteStitchSolver3({
+      connectionName,
+      hdRoutes,
+      start,
+      end,
+      colorMap: this.colorMap,
+      defaultTraceThickness: this.defaultTraceThickness,
+      defaultViaDiameter: this.defaultViaDiameter,
+    })
+
+    while (
+      !stitchSolver.solved &&
+      !stitchSolver.failed &&
+      stitchSolver.iterations < stitchSolver.MAX_ITERATIONS
+    ) {
+      stitchSolver.step()
+    }
+
+    if (stitchSolver.failed) return false
+
+    const routeStart = stitchSolver.mergedHdRoute.route[0]
+    const routeEnd =
+      stitchSolver.mergedHdRoute.route[
+        stitchSolver.mergedHdRoute.route.length - 1
+      ]
+
+    const directDistance = distance(routeStart, start) + distance(routeEnd, end)
+    const swappedDistance =
+      distance(routeStart, end) + distance(routeEnd, start)
+
+    return (
+      Math.min(directDistance, swappedDistance) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    )
   }
 
   private selectIslandEndpoints(params: {
@@ -204,6 +306,26 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
 
     return { start, end }
+  }
+
+  private snapIslandEndpointToNearestTerminal(params: {
+    islandEndpoint: { x: number; y: number; z: number }
+    terminals: Array<{ x: number; y: number; z: number }>
+  }) {
+    let closestTerminal = params.terminals[0]
+    let closestDistance = distance(params.islandEndpoint, closestTerminal)
+
+    for (const terminal of params.terminals.slice(1)) {
+      const terminalDistance = distance(params.islandEndpoint, terminal)
+      if (terminalDistance < closestDistance) {
+        closestTerminal = terminal
+        closestDistance = terminalDistance
+      }
+    }
+
+    return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      ? closestTerminal
+      : params.islandEndpoint
   }
 
   private hasStitchableGapBetweenUnsolvedRoutes(
@@ -322,22 +444,24 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       let end: { x: number; y: number; z: number }
 
       if (candidateEndpoints.length >= 2) {
+        const globalStart = {
+          ...connection.pointsToConnect[0],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[0]),
+            params.layerCount,
+          ),
+        }
+        const globalEnd = {
+          ...connection.pointsToConnect[1],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[1]),
+            params.layerCount,
+          ),
+        }
         ;({ start, end } = this.selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
-          globalStart: {
-            ...connection.pointsToConnect[0],
-            z: mapLayerNameToZ(
-              getConnectionPointLayer(connection.pointsToConnect[0]),
-              params.layerCount,
-            ),
-          },
-          globalEnd: {
-            ...connection.pointsToConnect[1],
-            z: mapLayerNameToZ(
-              getConnectionPointLayer(connection.pointsToConnect[1]),
-              params.layerCount,
-            ),
-          },
+          globalStart,
+          globalEnd,
         }))
 
         if (
@@ -346,6 +470,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
+
+        start = this.snapIslandEndpointToNearestTerminal({
+          islandEndpoint: start,
+          terminals: [globalStart, globalEnd],
+        })
+        end = this.snapIslandEndpointToNearestTerminal({
+          islandEndpoint: end,
+          terminals: [globalStart, globalEnd],
+        })
       } else {
         start = {
           ...connection.pointsToConnect[0],

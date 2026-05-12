@@ -8,7 +8,7 @@ const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 export const MAX_STITCH_GAP_DISTANCE_3 = 1
-const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
+export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
