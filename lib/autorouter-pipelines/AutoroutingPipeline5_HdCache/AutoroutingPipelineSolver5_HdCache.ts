@@ -71,7 +71,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
             colorMap: cms.colorMap,
             connMap: cms.connMap as ConnectivityMap | undefined,
             viaDiameter: cms.viaDiameter,
-            traceWidth: cms.minTraceWidth,
+            traceWidth: cms.srj.nominalTraceWidth ?? cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,

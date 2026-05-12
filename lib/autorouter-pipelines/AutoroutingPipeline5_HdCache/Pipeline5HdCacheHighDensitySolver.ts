@@ -75,6 +75,9 @@ type NodeSolveMetadata = {
 }
 
 const DEFAULT_HD_CACHE_BASE_URL = "https://hd-cache.tscircuit.com"
+const DEFAULT_HD_CACHE_TRACE_WIDTH = 0.15
+const isDefaultHdCacheTraceWidth = (traceWidth: number) =>
+  Math.abs(traceWidth - DEFAULT_HD_CACHE_TRACE_WIDTH) < 1e-9
 
 const getHdCacheSolveUrl = (baseUrl: string) =>
   /\/solve\/?$/.test(baseUrl)
@@ -175,7 +178,14 @@ const getPercentile = (sortedValues: number[], percentile: number) => {
 const getNodePairCount = (node: NodeWithPortPoints) =>
   new Set(node.portPoints.map((point) => point.connectionName)).size
 
-const shouldSolveNodeViaHdCache = (node: NodeWithPortPoints) => {
+const shouldSolveNodeViaHdCache = (
+  node: NodeWithPortPoints,
+  traceWidth = DEFAULT_HD_CACHE_TRACE_WIDTH,
+) => {
+  if (!isDefaultHdCacheTraceWidth(traceWidth)) {
+    return false
+  }
+
   if (getNodePairCount(node) < 3) {
     return false
   }
@@ -570,7 +580,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     const pendingEffects: PendingEffect[] = []
 
     this.unsolvedNodePortPoints.forEach((node, nodeIndex) => {
-      if (!shouldSolveNodeViaHdCache(node)) {
+      if (!shouldSolveNodeViaHdCache(node, this.traceWidth)) {
         this.solveNodeLocally(node, nodeIndex)
         return
       }
@@ -675,7 +685,10 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
         pairCount: getNodePairCount(failedResult.node),
         routeCount: 0,
         remoteAttempt: {
-          attempted: shouldSolveNodeViaHdCache(failedResult.node),
+          attempted: shouldSolveNodeViaHdCache(
+            failedResult.node,
+            this.traceWidth,
+          ),
           source: "error",
           error: failedResult.error,
         },
