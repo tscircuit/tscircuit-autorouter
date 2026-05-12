@@ -10,6 +10,9 @@ import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
+const isFiniteTraceWidth = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value)
+
 interface Point2D {
   x: number
   y: number
@@ -26,6 +29,7 @@ export interface TraceWidthSolverInput {
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
   minTraceWidth: number
+  nominalTraceWidth?: number
   obstacleMargin?: number
   layerCount: number
 }
@@ -40,8 +44,9 @@ export interface TraceWidthSolverInput {
  * narrower width in the schedule.
  *
  * It only runs width adjustments for routes whose connection provides a
- * nominalTraceWidth; routes without one are passed through unchanged.
- * The schedule is built per-route from that connection's nominalTraceWidth.
+ * nominalTraceWidth or when the route request has a top-level nominalTraceWidth.
+ * Per-connection nominalTraceWidth takes precedence over the top-level default.
+ * Routes without either value are passed through unchanged.
  */
 export class TraceWidthSolver extends BaseSolver {
   override getSolverName(): string {
@@ -52,6 +57,7 @@ export class TraceWidthSolver extends BaseSolver {
   hdRoutesWithWidths: HighDensityRoute[] = []
 
   nominalTraceWidth: number
+  defaultNominalTraceWidth?: number
   minTraceWidth: number
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
@@ -86,6 +92,9 @@ export class TraceWidthSolver extends BaseSolver {
 
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
+    this.defaultNominalTraceWidth = isFiniteTraceWidth(input.nominalTraceWidth)
+      ? input.nominalTraceWidth
+      : undefined
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
@@ -101,7 +110,7 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
+      if (!isFiniteTraceWidth(connection.nominalTraceWidth)) {
         continue
       }
       this.connectionNominalTraceWidthMap.set(
@@ -128,9 +137,14 @@ export class TraceWidthSolver extends BaseSolver {
       return byName
     }
     if (route.rootConnectionName) {
-      return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
+      const byRootName = this.connectionNominalTraceWidthMap.get(
+        route.rootConnectionName,
+      )
+      if (byRootName !== undefined) {
+        return byRootName
+      }
     }
-    return undefined
+    return this.defaultNominalTraceWidth
   }
 
   _step() {

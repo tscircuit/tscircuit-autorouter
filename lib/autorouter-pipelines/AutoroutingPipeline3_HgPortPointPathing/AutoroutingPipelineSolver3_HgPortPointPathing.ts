@@ -357,6 +357,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        nominalTraceWidth: cms.srj.nominalTraceWidth,
         connection: cms.srj.connections,
         layerCount: cms.srj.layerCount,
       },

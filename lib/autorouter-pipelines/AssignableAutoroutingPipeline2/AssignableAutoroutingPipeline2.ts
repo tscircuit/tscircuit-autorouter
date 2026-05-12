@@ -393,6 +393,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        nominalTraceWidth: cms.srj.nominalTraceWidth,
         obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         layerCount: cms.srj.layerCount,
       },
