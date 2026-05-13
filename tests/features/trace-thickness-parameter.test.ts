@@ -96,6 +96,24 @@ test("TraceWidthSolver applies a connection multiplier through root connection n
   expect(solver.getHdRoutesWithWidths()[0]?.traceThickness).toBe(1.2)
 })
 
+test("TraceWidthSolver applies top-level defaults through root connection names", () => {
+  const solver = new TraceWidthSolver({
+    hdRoutes: [
+      makeRoute("power_mst0", {
+        rootConnectionName: "power",
+      }),
+    ],
+    connection: [makeConnection({ name: "power" })],
+    minTraceWidth: 0.15,
+    traceWidthMultiplier: 4,
+    layerCount: 2,
+  })
+
+  solver.solve()
+
+  expect(solver.getHdRoutesWithWidths()[0]?.traceThickness).toBe(0.6)
+})
+
 test("NetToPointPairsSolver preserves trace width settings when it splits a multi-point net", () => {
   const srj = makeSimpleSrj({
     connections: [
