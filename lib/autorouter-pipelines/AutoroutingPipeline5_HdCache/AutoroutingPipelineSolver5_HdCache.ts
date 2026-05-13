@@ -1,6 +1,7 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { getDefaultTraceWidthForSimpleRouteJson } from "lib/utils/getTraceWidth"
 import {
   AutoroutingPipelineSolver4_TinyHypergraph,
   type AutoroutingPipelineSolverOptions,
@@ -71,7 +72,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
             colorMap: cms.colorMap,
             connMap: cms.connMap as ConnectivityMap | undefined,
             viaDiameter: cms.viaDiameter,
-            traceWidth: cms.minTraceWidth,
+            traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,

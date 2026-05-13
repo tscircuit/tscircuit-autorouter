@@ -27,6 +27,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { getDefaultTraceWidthForSimpleRouteJson } from "lib/utils/getTraceWidth"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AttachProjectedRectsSolver } from "./AttachProjectedRectsSolver"
@@ -197,7 +198,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           nodesWithPortPoints: cms.highDensityNodePortPoints ?? [],
           equivalentAreaExpansionFactor: cms.equivalentAreaExpansionFactor,
           minProjectedRectDimension: cms.minProjectedRectDimension,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
@@ -226,7 +227,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           effort: cms.effort,
         },
@@ -279,6 +280,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        nominalTraceWidth: cms.srj.nominalTraceWidth,
+        traceWidthMultiplier: cms.srj.traceWidthMultiplier,
         connection: cms.srj.connections,
         layerCount: cms.srj.layerCount,
       },

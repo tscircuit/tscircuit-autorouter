@@ -7,6 +7,11 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import {
+  getConnectionRequestedTraceWidth,
+  getOptionalDefaultTraceWidth,
+  isFinitePositiveTraceWidth,
+} from "lib/utils/getTraceWidth"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
@@ -26,6 +31,8 @@ export interface TraceWidthSolverInput {
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
   minTraceWidth: number
+  nominalTraceWidth?: number
+  traceWidthMultiplier?: number
   obstacleMargin?: number
   layerCount: number
 }
@@ -39,9 +46,10 @@ export interface TraceWidthSolverInput {
  * If clearance is insufficient for the current width, it tries the next
  * narrower width in the schedule.
  *
- * It only runs width adjustments for routes whose connection provides a
- * nominalTraceWidth; routes without one are passed through unchanged.
- * The schedule is built per-route from that connection's nominalTraceWidth.
+ * It only runs width adjustments for routes whose connection provides
+ * nominalTraceWidth/traceWidthMultiplier, or when the request has a top-level
+ * nominalTraceWidth/traceWidthMultiplier default. Per-connection values take
+ * precedence over the top-level default.
  */
 export class TraceWidthSolver extends BaseSolver {
   override getSolverName(): string {
@@ -52,6 +60,7 @@ export class TraceWidthSolver extends BaseSolver {
   hdRoutesWithWidths: HighDensityRoute[] = []
 
   nominalTraceWidth: number
+  defaultTraceWidth?: number
   minTraceWidth: number
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
@@ -86,6 +95,11 @@ export class TraceWidthSolver extends BaseSolver {
 
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
+    this.defaultTraceWidth = getOptionalDefaultTraceWidth({
+      minTraceWidth: input.minTraceWidth,
+      nominalTraceWidth: input.nominalTraceWidth,
+      traceWidthMultiplier: input.traceWidthMultiplier,
+    })
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
@@ -101,13 +115,29 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
+      const requestedTraceWidth = getConnectionRequestedTraceWidth(connection, {
+        minTraceWidth: this.minTraceWidth,
+      })
+      if (!isFinitePositiveTraceWidth(requestedTraceWidth)) {
         continue
       }
       this.connectionNominalTraceWidthMap.set(
         connection.name,
-        connection.nominalTraceWidth,
+        requestedTraceWidth,
       )
+      if (connection.rootConnectionName) {
+        this.connectionNominalTraceWidthMap.set(
+          connection.rootConnectionName,
+          requestedTraceWidth,
+        )
+      }
+      for (const mergedConnectionName of connection.mergedConnectionNames ??
+        []) {
+        this.connectionNominalTraceWidthMap.set(
+          mergedConnectionName,
+          requestedTraceWidth,
+        )
+      }
     }
 
     if (this.obstacles.length > 0) {
@@ -130,7 +160,7 @@ export class TraceWidthSolver extends BaseSolver {
     if (route.rootConnectionName) {
       return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
     }
-    return undefined
+    return this.defaultTraceWidth
   }
 
   _step() {

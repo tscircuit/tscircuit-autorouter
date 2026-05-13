@@ -148,6 +148,8 @@ export class NetToPointPairsSolver extends BaseSolver {
         rootConnectionName: connection.name,
         mergedConnectionNames: connection.mergedConnectionNames,
         netConnectionName: connection.netConnectionName,
+        nominalTraceWidth: connection.nominalTraceWidth,
+        traceWidthMultiplier: connection.traceWidthMultiplier,
       })
     }
   }

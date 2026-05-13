@@ -45,6 +45,7 @@ export interface SimpleRouteJson {
   layerCount: number
   minTraceWidth: number
   nominalTraceWidth?: number
+  traceWidthMultiplier?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */
   minViaDiameter?: number
   minViaHoleDiameter?: number
@@ -89,6 +90,7 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
+  traceWidthMultiplier?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

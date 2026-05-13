@@ -56,6 +56,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getDefaultTraceWidthForSimpleRouteJson } from "lib/utils/getTraceWidth"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -321,7 +322,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
       },
     ]),
     definePipelineStep(

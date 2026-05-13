@@ -30,6 +30,7 @@ import {
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getDefaultTraceWidthForSimpleRouteJson } from "lib/utils/getTraceWidth"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -164,7 +165,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
         },
@@ -318,7 +319,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
       },
     ]),
     definePipelineStep(
@@ -357,6 +358,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        nominalTraceWidth: cms.srj.nominalTraceWidth,
+        traceWidthMultiplier: cms.srj.traceWidthMultiplier,
         connection: cms.srj.connections,
         layerCount: cms.srj.layerCount,
       },

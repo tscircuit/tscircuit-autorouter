@@ -20,6 +20,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getDefaultTraceWidthForSimpleRouteJson } from "lib/utils/getTraceWidth"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -211,7 +212,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: false,
         },
@@ -370,7 +371,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
           [],
         colorMap: cms.colorMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: getDefaultTraceWidthForSimpleRouteJson(cms.srj),
         obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         connMap: cms.connMap,
         capacityMeshNodes: cms.capacityNodes ?? [],

@@ -57,6 +57,8 @@ The input to the autorouter is a `SimpleRouteJson` object with the following str
 interface SimpleRouteJson {
   layerCount: number
   minTraceWidth: number
+  nominalTraceWidth?: number // Optional default output trace width, e.g. 0.6
+  traceWidthMultiplier?: number // Optional multiplier of minTraceWidth, e.g. 2, 4, 8
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
@@ -77,6 +79,8 @@ interface Obstacle {
 
 interface SimpleRouteConnection {
   name: string
+  nominalTraceWidth?: number // Optional per-connection output trace width
+  traceWidthMultiplier?: number // Optional per-connection multiplier of minTraceWidth
   pointsToConnect: Array<{ x: number; y: number; layer: string }>
 }
 ```

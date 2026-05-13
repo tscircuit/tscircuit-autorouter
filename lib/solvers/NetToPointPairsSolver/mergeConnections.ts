@@ -7,6 +7,7 @@ import {
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
+import { isFinitePositiveTraceWidth } from "lib/utils/getTraceWidth"
 
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
@@ -89,6 +90,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    let traceWidthMultiplier: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -119,13 +121,27 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.netConnectionName)
       }
 
-      // Take the nominalTraceWidth from the first connection for now
-      // A more robust solution might average or pick the max/min based on context
+      // When merged nets disagree, preserve the widest requested trace.
+      if (isFinitePositiveTraceWidth(simpleRouteConnection.nominalTraceWidth)) {
+        nominalTraceWidth =
+          nominalTraceWidth === undefined
+            ? simpleRouteConnection.nominalTraceWidth
+            : Math.max(
+                nominalTraceWidth,
+                simpleRouteConnection.nominalTraceWidth,
+              )
+      }
+
       if (
-        nominalTraceWidth === undefined &&
-        simpleRouteConnection.nominalTraceWidth !== undefined
+        isFinitePositiveTraceWidth(simpleRouteConnection.traceWidthMultiplier)
       ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+        traceWidthMultiplier =
+          traceWidthMultiplier === undefined
+            ? simpleRouteConnection.traceWidthMultiplier
+            : Math.max(
+                traceWidthMultiplier,
+                simpleRouteConnection.traceWidthMultiplier,
+              )
       }
     })
 
@@ -144,7 +160,8 @@ export function mergeConnections(
         mergedNetConnectionNames.size > 0
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      nominalTraceWidth,
+      traceWidthMultiplier,
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)
