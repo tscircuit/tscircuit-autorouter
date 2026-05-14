@@ -249,8 +249,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
-          enableTargetEdgeFallbackPortPoints:
-            hasRootConnectedEndpointObstacle(cms.srjWithPointPairs!),
+          enableTargetEdgeFallbackPortPoints: hasRootConnectedEndpointObstacle(
+            cms.srjWithPointPairs!,
+          ),
         },
       ],
     ),
