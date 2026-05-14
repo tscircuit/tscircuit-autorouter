@@ -46,7 +46,7 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline4 Tiny Hypergraph Port Point Pathing",
   },
   {
-    id: "AutoroutingPipelineSolver4_MultiGraph",
+    id: "AutoroutingPipelineSolver7_MultiGraph",
     label: "Pipeline4 MultiGraph Component Topology",
   },
   {

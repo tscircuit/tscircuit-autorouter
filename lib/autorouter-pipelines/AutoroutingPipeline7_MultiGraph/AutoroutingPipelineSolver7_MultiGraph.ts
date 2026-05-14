@@ -73,9 +73,9 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
   getConstructorParams: (
-    instance: AutoroutingPipelineSolver4_MultiGraph,
+    instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
-  onSolved?: (instance: AutoroutingPipelineSolver4_MultiGraph) => void
+  onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
 function definePipelineStep<
@@ -84,11 +84,11 @@ function definePipelineStep<
   ) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
-  solverName: keyof AutoroutingPipelineSolver4_MultiGraph,
+  solverName: keyof AutoroutingPipelineSolver7_MultiGraph,
   solverClass: T,
-  getConstructorParams: (instance: AutoroutingPipelineSolver4_MultiGraph) => P,
+  getConstructorParams: (instance: AutoroutingPipelineSolver7_MultiGraph) => P,
   opts: {
-    onSolved?: (instance: AutoroutingPipelineSolver4_MultiGraph) => void
+    onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
   } = {},
 ): PipelineStep<T> {
   return {
@@ -99,7 +99,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver4_MultiGraph extends BaseSolver {
+export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
