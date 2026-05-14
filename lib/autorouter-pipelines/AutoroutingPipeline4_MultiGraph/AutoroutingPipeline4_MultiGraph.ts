@@ -252,18 +252,18 @@ export class AutoroutingPipeline4_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep(
-      "necessaryCrampedPortPointSolver",
-      MultiTargetNecessaryCrampedPortPointSolver,
-      (cms) => [
-        {
-          capacityMeshNodes: cms.capacityNodes!,
-          sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
-          simpleRouteJson: cms.srjWithPointPairs!,
-          numberOfCrampedPortPointsToKeep: 5,
-        },
-      ],
-    ),
+    // definePipelineStep(
+    //   "necessaryCrampedPortPointSolver",
+    //   MultiTargetNecessaryCrampedPortPointSolver,
+    //   (cms) => [
+    //     {
+    //       capacityMeshNodes: cms.capacityNodes!,
+    //       sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
+    //       simpleRouteJson: cms.srjWithPointPairs!,
+    //       numberOfCrampedPortPointsToKeep: 5,
+    //     },
+    //   ],
+    // ),
     definePipelineStep(
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
