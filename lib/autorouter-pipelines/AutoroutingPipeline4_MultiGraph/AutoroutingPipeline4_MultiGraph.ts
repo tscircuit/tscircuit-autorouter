@@ -785,4 +785,6 @@ export class AutoroutingPipeline4_MultiGraph extends BaseSolver {
   }
 }
 
-export { AutoroutingPipeline4_MultiGraph as AutoroutingPipelineSolver4 }
+export {
+  AutoroutingPipeline4_MultiGraph as AutoroutingPipelineSolver4_MultiGraph,
+}
