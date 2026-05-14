@@ -6,6 +6,7 @@ export { AutoroutingPipeline1_OriginalUnravel } from "./autorouter-pipelines/Aut
 export { AssignableAutoroutingPipeline2 } from "./autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 export { AssignableAutoroutingPipeline3 } from "./autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
 export { AutoroutingPipelineSolver3_HgPortPointPathing } from "./autorouter-pipelines/AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
+export { AutoroutingPipeline4_MultiGraph } from "./autorouter-pipelines/AutoroutingPipeline4_MultiGraph/AutoroutingPipeline4_MultiGraph"
 export {
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver4_TinyHypergraph,
