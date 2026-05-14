@@ -58,11 +58,26 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
   }
 
   handleTargetNodes() {
+    const targetNodes = this.nodes.filter((node) => node._containsTarget)
+    for (let i = 0; i < targetNodes.length; i++) {
+      for (let j = i + 1; j < targetNodes.length; j++) {
+        const nodeA = targetNodes[i]!
+        const nodeB = targetNodes[j]!
+        if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
+        if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
+        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+
+        this.edges.push({
+          capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
+          nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
+        })
+      }
+    }
+
     // If a target node is not connected to any other node, then it is "inside
     // an obstacle" (this is the case almost 100% of the time when we place
     // targets inside of PCB pads)
     // To fix this we connect it to the nearest nodes without obstacles
-    const targetNodes = this.nodes.filter((node) => node._containsTarget)
     for (const targetNode of targetNodes) {
       const hasEdge = this.edges.some((edge) =>
         edge.nodeIds.includes(targetNode.capacityMeshNodeId),
@@ -97,6 +112,36 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     node2: CapacityMeshNode,
   ): boolean {
     return node1.availableZ.some((z) => node2.availableZ.includes(z))
+  }
+
+  hasEdgeBetween(node1: CapacityMeshNode, node2: CapacityMeshNode): boolean {
+    return this.edges.some(
+      (edge) =>
+        edge.nodeIds.includes(node1.capacityMeshNodeId) &&
+        edge.nodeIds.includes(node2.capacityMeshNodeId),
+    )
+  }
+
+  doNodesTouchOrOverlap(
+    node1: CapacityMeshNode,
+    node2: CapacityMeshNode,
+  ): boolean {
+    const epsilon = 0.001
+    const n1Left = node1.center.x - node1.width / 2
+    const n1Right = node1.center.x + node1.width / 2
+    const n1Top = node1.center.y - node1.height / 2
+    const n1Bottom = node1.center.y + node1.height / 2
+    const n2Left = node2.center.x - node2.width / 2
+    const n2Right = node2.center.x + node2.width / 2
+    const n2Top = node2.center.y - node2.height / 2
+    const n2Bottom = node2.center.y + node2.height / 2
+
+    return (
+      n1Left <= n2Right + epsilon &&
+      n1Right + epsilon >= n2Left &&
+      n1Top <= n2Bottom + epsilon &&
+      n1Bottom + epsilon >= n2Top
+    )
   }
 
   visualize(): GraphicsObject {
