@@ -29,11 +29,11 @@ export interface ComponentTopologyBatchSolverOutput {
  *
  * Important:
  * - component bounds come from the detected member obstacles.
- * - every original SRJ obstacle whose geometry overlaps those bounds is
- *   included, even if it was not marked as a member pad.
- * - obstacles electrically connected to the component member obstacles are
- *   also included, even when they sit outside the component bounds.
+ * - only original SRJ obstacles whose geometry overlaps those bounds are
+ *   included in the component-local topology solve.
  * - included obstacle geometry is copied from the original SRJ unchanged.
+ * - electrically connected obstacles outside the component bounds remain part
+ *   of the global topology, not the component-local BGP matrix.
  */
 export function createComponentSrj({
   inputSrj,
@@ -43,16 +43,9 @@ export function createComponentSrj({
   component: SerializedTopologyComponentInput
 }): SimpleRouteJson {
   const componentBounds = getBoundsForObstacles(component.memberObstacles)
-  const componentConnectedTo = new Set(
-    component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
-  )
   const componentObstacles = inputSrj.obstacles
-    .filter(
-      (obstacle) =>
-        doBoundsOverlap(getBoundingBox(obstacle), componentBounds) ||
-        obstacle.connectedTo.some((connectedTo) =>
-          componentConnectedTo.has(connectedTo),
-        ),
+    .filter((obstacle) =>
+      doBoundsOverlap(getBoundingBox(obstacle), componentBounds),
     )
     .map((obstacle) => ({ ...obstacle }))
 

@@ -38,6 +38,22 @@ function createRectRegion(bounds: Bounds): RectRegion {
   }
 }
 
+function getTopologyAxisObstacles({
+  bounds,
+  obstacles,
+}: {
+  bounds: Bounds
+  obstacles: Obstacle[]
+}) {
+  return obstacles.filter((obstacle) =>
+    doBoundsOverlap(getBoundingBox(obstacle), bounds),
+  )
+}
+
+function clusterBoundaryValues(values: number[]) {
+  return clusterAxisValues(values)
+}
+
 /** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
 function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
   return obstacle.zLayers && obstacle.zLayers.length > 0
@@ -64,6 +80,17 @@ function regionContainsObstacle({
   const obstacleBounds = getBoundingBox(obstacle)
 
   if (!doBoundsOverlap(regionBounds, obstacleBounds)) {
+    return false
+  }
+
+  const overlapWidth =
+    Math.min(regionBounds.maxX, obstacleBounds.maxX) -
+    Math.max(regionBounds.minX, obstacleBounds.minX)
+  const overlapHeight =
+    Math.min(regionBounds.maxY, obstacleBounds.maxY) -
+    Math.max(regionBounds.minY, obstacleBounds.minY)
+
+  if (overlapWidth <= MIN_AXIS_EPSILON || overlapHeight <= MIN_AXIS_EPSILON) {
     return false
   }
 
@@ -240,59 +267,131 @@ function createFallbackRingNodes({
   ]
 }
 
-/** Identifies the corner cells of a ring that would otherwise become diagonal nodes. */
-function isDiagonalCell({
-  row,
-  col,
-  rowCount,
-  colCount,
-}: {
-  row: number
-  col: number
-  rowCount: number
-  colCount: number
-}) {
-  const ringIndex = Math.min(row, col, rowCount - 1 - row, colCount - 1 - col)
-  const rowMin = ringIndex
-  const rowMax = rowCount - 1 - ringIndex
-  const colMin = ringIndex
-  const colMax = colCount - 1 - ringIndex
-  return (
-    (row === rowMin || row === rowMax) && (col === colMin || col === colMax)
-  )
-}
-
-/** Builds cell edges from clustered obstacle centers using midpoint partitioning. */
 function createGridAxisEdges({
   start,
   end,
-  centers,
+  obstacles,
+  axis,
 }: {
   start: number
   end: number
-  centers: number[]
+  obstacles: Obstacle[]
+  axis: "x" | "y"
 }) {
-  const edges = [start]
+  const rawEdges = [start, end]
 
-  for (let index = 0; index < centers.length - 1; index++) {
-    edges.push((centers[index]! + centers[index + 1]!) / 2)
+  for (const obstacle of obstacles) {
+    if (axis === "x") {
+      rawEdges.push(
+        obstacle.center.x - obstacle.width / 2,
+        obstacle.center.x + obstacle.width / 2,
+      )
+      continue
+    }
+
+    rawEdges.push(
+      obstacle.center.y - obstacle.height / 2,
+      obstacle.center.y + obstacle.height / 2,
+    )
   }
 
-  edges.push(end)
-  return edges
+  return clusterBoundaryValues(rawEdges)
+}
+
+function createCellRegion({
+  row,
+  col,
+  xEdges,
+  yEdges,
+}: {
+  row: number
+  col: number
+  xEdges: number[]
+  yEdges: number[]
+}): RectRegion {
+  return createRectRegion({
+    minX: xEdges[col]!,
+    maxX: xEdges[col + 1]!,
+    minY: yEdges[row]!,
+    maxY: yEdges[row + 1]!,
+  })
+}
+
+function getExactObstacleForRegion({
+  region,
+  obstacles,
+}: {
+  region: RectRegion
+  obstacles: Obstacle[]
+}) {
+  const regionBounds = getBoundFromCenteredRect(region)
+
+  return (
+    obstacles.find((obstacle) => {
+      const obstacleBounds = getBoundingBox(obstacle)
+      return (
+        Math.abs(regionBounds.minX - obstacleBounds.minX) <= MIN_AXIS_EPSILON &&
+        Math.abs(regionBounds.maxX - obstacleBounds.maxX) <= MIN_AXIS_EPSILON &&
+        Math.abs(regionBounds.minY - obstacleBounds.minY) <= MIN_AXIS_EPSILON &&
+        Math.abs(regionBounds.maxY - obstacleBounds.maxY) <= MIN_AXIS_EPSILON
+      )
+    }) ?? null
+  )
+}
+
+function isFreeSpaceCellSurroundedByDiagonalObstacles({
+  row,
+  col,
+  xEdges,
+  yEdges,
+  obstacles,
+}: {
+  row: number
+  col: number
+  xEdges: number[]
+  yEdges: number[]
+  obstacles: Obstacle[]
+}) {
+  if (
+    row <= 0 ||
+    col <= 0 ||
+    row >= yEdges.length - 2 ||
+    col >= xEdges.length - 2
+  ) {
+    return false
+  }
+
+  const diagonalCells = [
+    { row: row - 1, col: col - 1 },
+    { row: row - 1, col: col + 1 },
+    { row: row + 1, col: col - 1 },
+    { row: row + 1, col: col + 1 },
+  ]
+
+  return diagonalCells.every(({ row: diagonalRow, col: diagonalCol }) =>
+    Boolean(
+      getExactObstacleForRegion({
+        region: createCellRegion({
+          row: diagonalRow,
+          col: diagonalCol,
+          xEdges,
+          yEdges,
+        }),
+        obstacles,
+      }),
+    ),
+  )
 }
 
 /**
- * Creates routing regions for one grid cell.
+ * Creates routing regions for one exact rectangular partition cell.
  *
- * Diagonal cells are merged across layers only when they do not overlap any
- * obstacle. Obstacle-overlapping diagonal cells are split per layer.
+ * Cells are carved from board bounds and obstacle boundaries, so obstacle
+ * rectangles remain exact and free-space cells are built around them.
  */
 function createCellMeshNodes({
   row,
   col,
-  rowCount,
-  colCount,
   xEdges,
   yEdges,
   availableZ,
@@ -302,8 +401,6 @@ function createCellMeshNodes({
 }: {
   row: number
   col: number
-  rowCount: number
-  colCount: number
   xEdges: number[]
   yEdges: number[]
   availableZ: number[]
@@ -311,36 +408,42 @@ function createCellMeshNodes({
   layerCount: number
   nodeScopeId: string
 }): CapacityMeshNode[] {
-  const region = createRectRegion({
-    minX: xEdges[col]!,
-    maxX: xEdges[col + 1]!,
-    minY: yEdges[row]!,
-    maxY: yEdges[row + 1]!,
+  const region = createCellRegion({
+    row,
+    col,
+    xEdges,
+    yEdges,
   })
 
-  if (isDiagonalCell({ row, col, rowCount, colCount })) {
-    const shouldSplitByLayer = regionContainsAnyObstacle({
-      region,
-      obstacles,
-      availableZ,
-      layerCount,
-    })
+  const exactObstacle = getExactObstacleForRegion({
+    region,
+    obstacles,
+  })
 
-    if (shouldSplitByLayer) {
-      return availableZ.map((z) =>
-        createMeshNode({
-          nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:diag:z${z}`,
-          region,
-          availableZ: [z],
-          obstacles,
-          layerCount,
-        }),
-      )
-    }
-
+  if (exactObstacle) {
     return [
       createMeshNode({
-        nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:diag`,
+        nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:obstacle`,
+        region,
+        availableZ: [...availableZ],
+        obstacles: [exactObstacle],
+        layerCount,
+      }),
+    ]
+  }
+
+  if (
+    isFreeSpaceCellSurroundedByDiagonalObstacles({
+      row,
+      col,
+      xEdges,
+      yEdges,
+      obstacles,
+    })
+  ) {
+    return [
+      createMeshNode({
+        nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:free-multilayer`,
         region,
         availableZ: [...availableZ],
         obstacles,
@@ -417,32 +520,27 @@ export function createMeshNodesForSrj({
     })
   }
 
-  const xCenters = clusterAxisValues(
-    obstacles.map((obstacle) => obstacle.center.x),
-  )
-  const yCenters = clusterAxisValues(
-    obstacles.map((obstacle) => obstacle.center.y),
-  )
+  const axisObstacles = getTopologyAxisObstacles({ bounds, obstacles })
   const xEdges = createGridAxisEdges({
     start: bounds.minX,
     end: bounds.maxX,
-    centers: xCenters,
+    obstacles: axisObstacles,
+    axis: "x",
   })
   const yEdges = createGridAxisEdges({
     start: bounds.minY,
     end: bounds.maxY,
-    centers: yCenters,
+    obstacles: axisObstacles,
+    axis: "y",
   })
   const meshNodes: CapacityMeshNode[] = []
 
-  for (let row = 0; row < rowCount; row++) {
-    for (let col = 0; col < colCount; col++) {
+  for (let row = 0; row < yEdges.length - 1; row++) {
+    for (let col = 0; col < xEdges.length - 1; col++) {
       meshNodes.push(
         ...createCellMeshNodes({
           row,
           col,
-          rowCount,
-          colCount,
           xEdges,
           yEdges,
           availableZ,

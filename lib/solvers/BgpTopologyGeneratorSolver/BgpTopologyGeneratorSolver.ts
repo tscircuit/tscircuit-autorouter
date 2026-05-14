@@ -1,4 +1,5 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
+import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import {
   clusterAxisValues,
@@ -47,16 +48,19 @@ export class BgpTopologyGeneratorSolver extends BaseSolver {
     }
 
     const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
+    const topologyAxisObstacles = obstacles.filter((obstacle) =>
+      doBoundsOverlap(getBoundingBox(obstacle), bounds),
+    )
     const availableZ = getLayerRange(layerCount)
     const nodeScopeId =
       this.inputProblem.componentId ??
       this.inputProblem.replacementObstacleId ??
       "component"
     const rowCount = clusterAxisValues(
-      obstacles.map((obstacle) => obstacle.center.y),
+      topologyAxisObstacles.map((obstacle) => obstacle.center.y),
     ).length
     const colCount = clusterAxisValues(
-      obstacles.map((obstacle) => obstacle.center.x),
+      topologyAxisObstacles.map((obstacle) => obstacle.center.x),
     ).length
     const meshNodes = createMeshNodesForSrj({
       bounds,

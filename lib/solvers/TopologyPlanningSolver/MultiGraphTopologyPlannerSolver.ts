@@ -130,8 +130,8 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
           center: obstacle.center,
           width: obstacle.width,
           height: obstacle.height,
-          fill: safeTransparentize(componentColor, 0.82),
-          stroke: safeTransparentize(componentColor, 0.45),
+          fill: safeTransparentize("red", 0.75),
+          stroke: safeTransparentize("red", 0.2),
           label:
             obstacle.obstacleId ?? component?.componentId ?? "component-pad",
           layer: obstacle.layers.join(","),
@@ -155,8 +155,12 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
           const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
           return {
             ...rect,
-            fill: safeTransparentize(componentColor, 0.8),
-            stroke: safeTransparentize(componentColor, 0.2),
+            fill: node._containsObstacle
+              ? safeTransparentize("red", 0.82)
+              : safeTransparentize(componentColor, 0.88),
+            stroke: node._containsObstacle
+              ? safeTransparentize("red", 0.3)
+              : safeTransparentize(componentColor, 0.25),
           }
         }),
       ],
