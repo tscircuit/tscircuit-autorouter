@@ -47,11 +47,12 @@ export function createComponentSrj({
     component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
   )
   const componentObstacles = inputSrj.obstacles
-    .filter((obstacle) =>
-      doBoundsOverlap(getBoundingBox(obstacle), componentBounds) ||
-      obstacle.connectedTo.some((connectedTo) =>
-        componentConnectedTo.has(connectedTo),
-      ),
+    .filter(
+      (obstacle) =>
+        doBoundsOverlap(getBoundingBox(obstacle), componentBounds) ||
+        obstacle.connectedTo.some((connectedTo) =>
+          componentConnectedTo.has(connectedTo),
+        ),
     )
     .map((obstacle) => ({ ...obstacle }))
 
