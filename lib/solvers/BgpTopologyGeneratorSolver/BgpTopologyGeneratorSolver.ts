@@ -7,13 +7,13 @@ import {
   getLayerRange,
 } from "./bgpTopologyGeneratorShared"
 
-export interface BgpTopologyGeneratorSolverParams {
+export interface BgaTopologyGeneratorSolverParams {
   inputSrj: SimpleRouteJson
   componentId?: string
   replacementObstacleId?: string
 }
 
-export interface BgpTopologyGeneratorSolverOutput {
+export interface BgaTopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from obstacle layout. These are not obstacle rectangles. */
@@ -21,7 +21,7 @@ export interface BgpTopologyGeneratorSolverOutput {
 }
 
 /**
- * Builds a coarse topology for BGP-style routing from an SRJ obstacle field.
+ * Builds a coarse topology for BGA-style routing from an SRJ obstacle field.
  *
  * Important:
  * - `obstacles` in the output preserve the original SRJ geometry exactly.
@@ -29,10 +29,10 @@ export interface BgpTopologyGeneratorSolverOutput {
  * - obstacle-overlapping regions are split per layer instead of being emitted
  *   as one multi-layer region.
  */
-export class BgpTopologyGeneratorSolver extends BaseSolver {
-  private output: BgpTopologyGeneratorSolverOutput | null = null
+export class BgaTopologyGeneratorSolver extends BaseSolver {
+  private output: BgaTopologyGeneratorSolverOutput | null = null
 
-  constructor(public readonly inputProblem: BgpTopologyGeneratorSolverParams) {
+  constructor(public readonly inputProblem: BgaTopologyGeneratorSolverParams) {
     super()
   }
 
@@ -95,9 +95,9 @@ export class BgpTopologyGeneratorSolver extends BaseSolver {
     this.solved = true
   }
 
-  getOutput(): BgpTopologyGeneratorSolverOutput {
+  getOutput(): BgaTopologyGeneratorSolverOutput {
     if (!this.output) {
-      throw new Error("BgpTopologyGeneratorSolver has not solved yet")
+      throw new Error("BgaTopologyGeneratorSolver has not solved yet")
     }
 
     return this.output

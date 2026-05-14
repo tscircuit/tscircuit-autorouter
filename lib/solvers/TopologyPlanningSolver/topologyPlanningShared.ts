@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
-import { BgpTopologyGeneratorSolver } from "lib/solvers/BgpTopologyGeneratorSolver/BgpTopologyGeneratorSolver"
+import { BgaTopologyGeneratorSolver } from "lib/solvers/BgpTopologyGeneratorSolver/BgpTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
@@ -25,7 +25,7 @@ export interface ComponentTopologyBatchSolverOutput {
 }
 
 /**
- * Builds the component-local SRJ passed into BGP topology generation.
+ * Builds the component-local SRJ passed into BGA topology generation.
  *
  * Important:
  * - component bounds come from the detected member obstacles.
@@ -33,7 +33,7 @@ export interface ComponentTopologyBatchSolverOutput {
  *   included in the component-local topology solve.
  * - included obstacle geometry is copied from the original SRJ unchanged.
  * - electrically connected obstacles outside the component bounds remain part
- *   of the global topology, not the component-local BGP matrix.
+ *   of the global topology, not the component-local BGA matrix.
  */
 export function createComponentSrj({
   inputSrj,
@@ -130,9 +130,9 @@ function isReplacementRegionNode({
   )
 }
 
-/** Runs one BGP topology solve per component SRJ and collects the routing regions. */
+/** Runs one BGA topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver?: BgpTopologyGeneratorSolver | null = null
+  activeSubSolver?: BgaTopologyGeneratorSolver | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
 
@@ -173,7 +173,7 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       return
     }
 
-    this.activeSubSolver = new BgpTopologyGeneratorSolver({
+    this.activeSubSolver = new BgaTopologyGeneratorSolver({
       inputSrj: this.inputProblem.componentSrjs[this.currentIndex]!,
       componentId: this.inputProblem.componentIds[this.currentIndex],
       replacementObstacleId:
