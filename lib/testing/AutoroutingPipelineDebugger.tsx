@@ -10,7 +10,7 @@ import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/Assigna
 import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
 import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
 import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/autorouter-pipelines/AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
-import { AutoroutingPipeline4_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline4_MultiGraph/AutoroutingPipeline4_MultiGraph"
+import { AutoroutingPipelineSolver4_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline4_MultiGraph/AutoroutingPipeline4_MultiGraph"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { AutoroutingPipelineSolver5 } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache"
 import { AutoroutingPipelineSolver6 } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
@@ -54,7 +54,7 @@ import { KrtAutoroutingPipelineSolver } from "./KrtAutoroutingPipelineSolver"
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
   AutoroutingPipelineSolver3_HgPortPointPathing,
-  AutoroutingPipeline4_MultiGraph,
+  AutoroutingPipelineSolver4_MultiGraph,
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver5,
   AutoroutingPipelineSolver6,
