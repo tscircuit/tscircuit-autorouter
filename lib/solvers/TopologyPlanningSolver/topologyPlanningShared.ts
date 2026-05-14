@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
-import { BgaTopologyGeneratorSolver } from "lib/solvers/BgpTopologyGeneratorSolver/BgpTopologyGeneratorSolver"
+import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
