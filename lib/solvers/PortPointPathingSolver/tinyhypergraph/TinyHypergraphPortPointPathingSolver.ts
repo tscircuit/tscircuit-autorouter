@@ -101,6 +101,9 @@ const getTinyHyperGraphPipelineInput = (
     effort,
     minViaPadDiameter,
   ),
+  chokepointSolverOptions: {
+    MAX_CHOKEPOINT_EXPANSION_PASSES: 8,
+  },
 })
 
 const getTinyHyperGraphPipelineMaxIterations = (
@@ -116,6 +119,9 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.rootConnectionName ??
   routeMetadata.mutuallyConnectedNetworkId
+
+const getTinyRouteNetId = (routeMetadata: RouteMetadata) =>
+  getRouteRootConnectionName(routeMetadata)
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
@@ -139,6 +145,31 @@ const getSharedConnectionZ = (params: {
   return sharedZ ?? params.fallbackZ
 }
 
+const getRegionBounds = (
+  region: HgPortPointPathingSolverParams["graph"]["regions"][number],
+) => ({
+  minX: region.d.center.x - region.d.width / 2,
+  maxX: region.d.center.x + region.d.width / 2,
+  minY: region.d.center.y - region.d.height / 2,
+  maxY: region.d.center.y + region.d.height / 2,
+})
+
+const areRegionsTouching = (
+  region1: HgPortPointPathingSolverParams["graph"]["regions"][number],
+  region2: HgPortPointPathingSolverParams["graph"]["regions"][number],
+) => {
+  const bounds1 = getRegionBounds(region1)
+  const bounds2 = getRegionBounds(region2)
+  const epsilon = 1e-4
+
+  return (
+    bounds1.minX <= bounds2.maxX + epsilon &&
+    bounds1.maxX + epsilon >= bounds2.minX &&
+    bounds1.minY <= bounds2.maxY + epsilon &&
+    bounds1.maxY + epsilon >= bounds2.minY
+  )
+}
+
 const buildSerializedTinyGraph = (
   params: HgPortPointPathingSolverParams,
 ): SerializedHyperGraph => {
@@ -160,14 +191,22 @@ const buildSerializedTinyGraph = (
   )
 
   const connections: SerializedTinyConnection[] = params.connections.map(
-    (connection) => ({
-      connectionId: connection.connectionId,
-      mutuallyConnectedNetworkId:
-        connection.mutuallyConnectedNetworkId ?? connection.connectionId,
-      startRegionId: connection.startRegion.regionId,
-      endRegionId: connection.endRegion.regionId,
-      simpleRouteConnection: connection.simpleRouteConnection,
-    }),
+    (connection) => {
+      const routeMetadata: RouteMetadata = {
+        connectionId: connection.connectionId,
+        mutuallyConnectedNetworkId:
+          connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        simpleRouteConnection: connection.simpleRouteConnection,
+      }
+
+      return {
+        connectionId: connection.connectionId,
+        mutuallyConnectedNetworkId: getTinyRouteNetId(routeMetadata),
+        startRegionId: connection.startRegion.regionId,
+        endRegionId: connection.endRegion.regionId,
+        simpleRouteConnection: connection.simpleRouteConnection,
+      }
+    },
   )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
@@ -179,6 +218,7 @@ const buildSerializedTinyGraph = (
         connection.mutuallyConnectedNetworkId ?? connection.connectionId,
       simpleRouteConnection: connection.simpleRouteConnection,
     }
+    const routeNetId = getTinyRouteNetId(routeMetadata)
     const startPoint = getRoutePoint(routeMetadata, 0)
     const endPoint = getRoutePoint(routeMetadata, 1)
     const fallbackStartZ = connection.startRegion.d.availableZ[0] ?? 0
@@ -197,6 +237,9 @@ const buildSerializedTinyGraph = (
       regionAvailableZ: connection.endRegion.d.availableZ,
       layerCount: params.layerCount,
     })
+    const sharedEndpointZ = connection.startRegion.d.availableZ.find((z) =>
+      connection.endRegion.d.availableZ.includes(z),
+    )
 
     const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
     const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
@@ -217,8 +260,7 @@ const buildSerializedTinyGraph = (
         availableZ: [startZ],
         _containsTarget: true,
         _tinyTerminal: true,
-        _tinyTerminalNetId:
-          connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        _tinyTerminalNetId: routeNetId,
       },
     })
 
@@ -236,8 +278,7 @@ const buildSerializedTinyGraph = (
         availableZ: [endZ],
         _containsTarget: true,
         _tinyTerminal: true,
-        _tinyTerminalNetId:
-          connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        _tinyTerminalNetId: routeNetId,
       },
     })
 
@@ -277,6 +318,36 @@ const buildSerializedTinyGraph = (
     )
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
+
+    if (
+      routeNetId !== undefined &&
+      routeNetId !== getRouteConnectionName(routeMetadata) &&
+      sharedEndpointZ !== undefined &&
+      areRegionsTouching(connection.startRegion, connection.endRegion)
+    ) {
+      const endpointBridgePortId = `tiny-endpoint-bridge:${connection.connectionId}`
+      ports.push({
+        portId: endpointBridgePortId,
+        region1Id: connection.startRegion.regionId,
+        region2Id: connection.endRegion.regionId,
+        d: {
+          portId: endpointBridgePortId,
+          x:
+            ((startPoint?.x ?? connection.startRegion.d.center.x) +
+              (endPoint?.x ?? connection.endRegion.d.center.x)) /
+            2,
+          y:
+            ((startPoint?.y ?? connection.startRegion.d.center.y) +
+              (endPoint?.y ?? connection.endRegion.d.center.y)) /
+            2,
+          z: sharedEndpointZ,
+          distToCentermostPortOnZ: 0,
+          _tinyEndpointBridge: true,
+        },
+      })
+      startRegion?.pointIds.push(endpointBridgePortId)
+      endRegion?.pointIds.push(endpointBridgePortId)
+    }
 
     solvedRoutes.push({
       connection: {

@@ -97,6 +97,20 @@ function definePipelineStep<
   }
 }
 
+const hasRootConnectedEndpointObstacle = (srj: SimpleRouteJson) =>
+  srj.connections.some((connection) => {
+    const rootConnectionName = connection.rootConnectionName
+    if (!rootConnectionName || rootConnectionName === connection.name) {
+      return false
+    }
+
+    return srj.obstacles.some(
+      (obstacle) =>
+        obstacle.connectedTo?.includes(connection.name) &&
+        obstacle.connectedTo.includes(rootConnectionName),
+    )
+  })
+
 export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
@@ -235,6 +249,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
+          enableTargetEdgeFallbackPortPoints:
+            hasRootConnectedEndpointObstacle(cms.srjWithPointPairs!),
         },
       ],
     ),
@@ -257,12 +273,37 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         const sharedEdgeSegments =
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
+        const segmentPortPoints = sharedEdgeSegments.flatMap(
+          (seg) => seg.portPoints,
+        )
+        if (hasRootConnectedEndpointObstacle(cms.srjWithPointPairs!)) {
+          const includedPortPointIds = new Set(
+            segmentPortPoints.map((portPoint) => portPoint.segmentPortPointId),
+          )
+          const targetNodeIds = new Set(
+            cms
+              .capacityNodes!.filter((node) => node._containsTarget)
+              .map((node) => node.capacityMeshNodeId),
+          )
+          for (const segment of cms.availableSegmentPointSolver!.getOutput()) {
+            for (const portPoint of segment.portPoints) {
+              if (includedPortPointIds.has(portPoint.segmentPortPointId)) {
+                continue
+              }
+              if (
+                portPoint.cramped &&
+                portPoint.nodeIds.some((nodeId) => targetNodeIds.has(nodeId))
+              ) {
+                segmentPortPoints.push(portPoint)
+                includedPortPointIds.add(portPoint.segmentPortPointId)
+              }
+            }
+          }
+        }
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
+          segmentPortPoints,
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 

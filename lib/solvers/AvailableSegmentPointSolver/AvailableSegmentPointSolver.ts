@@ -74,6 +74,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
+  enableTargetEdgeFallbackPortPoints: boolean
 
   // edgeMargin = 0.25
 
@@ -84,6 +85,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    enableTargetEdgeFallbackPortPoints,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -91,6 +93,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    enableTargetEdgeFallbackPortPoints?: boolean
   }) {
     super()
     this.nodes = nodes
@@ -98,6 +101,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     this.traceWidth = traceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.shouldReturnCrampedPortPoints = shouldReturnCrampedPortPoints
+    this.enableTargetEdgeFallbackPortPoints =
+      enableTargetEdgeFallbackPortPoints ?? false
     // Port spacing: each trace extends traceWidth/2 from center, plus obstacleMargin clearance
     // Center-to-center distance = traceWidth + obstacleMargin
     this.minPortSpacing = this.traceWidth + this.obstacleMargin
@@ -140,7 +145,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     node1: CapacityMeshNode,
     node2: CapacityMeshNode,
   ): SharedEdgeSegment | null {
-    const overlap = this.findOverlappingSegment(node1, node2)
+    const overlap =
+      this.findOverlappingSegment(node1, node2) ??
+      (this.enableTargetEdgeFallbackPortPoints
+        ? this.findClosestSegmentForTargetEdge(node1, node2)
+        : null)
     if (!overlap) return null
 
     // Compute mutually available Z layers
@@ -162,8 +171,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     if (
       effectiveLength <= 0 &&
-      !node1._containsTarget &&
-      !node2._containsTarget
+      (this.enableTargetEdgeFallbackPortPoints ||
+        (!node1._containsTarget && !node2._containsTarget))
     ) {
       if (!this.shouldReturnCrampedPortPoints) {
         return null
@@ -331,6 +340,26 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       }
     }
     return false
+  }
+
+  private findClosestSegmentForTargetEdge(
+    node: CapacityMeshNode,
+    adjNode: CapacityMeshNode,
+  ): { start: { x: number; y: number }; end: { x: number; y: number } } | null {
+    if (!node._containsTarget && !adjNode._containsTarget) {
+      return null
+    }
+
+    return {
+      start: {
+        x: (node.center.x + adjNode.center.x) / 2,
+        y: (node.center.y + adjNode.center.y) / 2,
+      },
+      end: {
+        x: (node.center.x + adjNode.center.x) / 2,
+        y: (node.center.y + adjNode.center.y) / 2,
+      },
+    }
   }
 
   private findOverlappingSegment(
