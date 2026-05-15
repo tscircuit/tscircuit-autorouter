@@ -1,8 +1,8 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
   ComponentDetectionSolverOutput,
   ComponentDetectionSolverParams,
@@ -11,26 +11,6 @@ import type {
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
-const getMergedObstacleBounds = (
-  obstacles: Obstacle[],
-): SimpleRouteJson["bounds"] => {
-  const bounds: SimpleRouteJson["bounds"] = {
-    minX: Number.POSITIVE_INFINITY,
-    maxX: Number.NEGATIVE_INFINITY,
-    minY: Number.POSITIVE_INFINITY,
-    maxY: Number.NEGATIVE_INFINITY,
-  }
-
-  for (const obstacle of obstacles) {
-    const obstacleBounds = getBoundingBox(obstacle)
-    bounds.minX = Math.min(bounds.minX, obstacleBounds.minX)
-    bounds.maxX = Math.max(bounds.maxX, obstacleBounds.maxX)
-    bounds.minY = Math.min(bounds.minY, obstacleBounds.minY)
-    bounds.maxY = Math.max(bounds.maxY, obstacleBounds.maxY)
-  }
-
-  return bounds
-}
 
 /**
  * Current detection stage: groups SRJ obstacles by component and replaces each
@@ -286,7 +266,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     memberObstacles: Obstacle[]
   }): DetectedComponent {
     const copiedMemberObstacles = cloneObstacles(memberObstacles)
-    const bounds = getMergedObstacleBounds(copiedMemberObstacles)
+    const bounds = getBoundsForObstacles(copiedMemberObstacles)
     const replacementObstacle = this.createReplacementObstacle({
       componentId,
       memberObstacles: copiedMemberObstacles,
