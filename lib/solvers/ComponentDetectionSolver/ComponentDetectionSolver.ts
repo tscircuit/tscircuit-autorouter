@@ -21,6 +21,14 @@ export interface ComponentDetectionSolverOutput {
   components: DetectedComponent[]
 }
 
+const formatObstacleLabel = (obstacle: Obstacle) => {
+  if (obstacle.componentId && obstacle.obstacleId) {
+    return `${obstacle.componentId}\n${obstacle.obstacleId}`
+  }
+
+  return obstacle.componentId ?? obstacle.obstacleId ?? "obstacle"
+}
+
 /**
  * Pipeline wrapper for component detection stages. The current pipeline only
  * runs the rectangular bounds stage, but later shape-specific stages can be
@@ -59,28 +67,44 @@ export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetect
   }
 
   override initialVisualize(): GraphicsObject | null {
-    return {
-      title: "Component Detection: pipeline setup",
-      rects: this.inputProblem.inputSrj.obstacles.map((obstacle) => {
-        const componentColor = obstacle.componentId
-          ? getStringColor(obstacle.componentId)
-          : null
+    const { bounds } = this.inputProblem.inputSrj
 
-        return {
-          center: obstacle.center,
-          width: obstacle.width,
-          height: obstacle.height,
-          fill: componentColor
-            ? safeTransparentize(componentColor, 0.82)
-            : "rgba(120, 120, 120, 0.10)",
-          stroke: componentColor
-            ? safeTransparentize(componentColor, 0.45)
-            : "rgba(120, 120, 120, 0.40)",
-          label: obstacle.componentId ?? obstacle.obstacleId,
-          layer: obstacle.layers.join(","),
+    return {
+      title: "Component Detection: board and grouped component pads",
+      rects: [
+        {
+          center: {
+            x: (bounds.minX + bounds.maxX) / 2,
+            y: (bounds.minY + bounds.maxY) / 2,
+          },
+          width: bounds.maxX - bounds.minX,
+          height: bounds.maxY - bounds.minY,
+          fill: "rgba(0, 0, 0, 0)",
+          stroke: "rgba(40, 40, 40, 0.7)",
+          label: "Board bounds",
           step: 0,
-        }
-      }),
+        },
+        ...this.inputProblem.inputSrj.obstacles.map((obstacle) => {
+          const componentColor = obstacle.componentId
+            ? getStringColor(obstacle.componentId)
+            : null
+
+          return {
+            center: obstacle.center,
+            width: obstacle.width,
+            height: obstacle.height,
+            fill: componentColor
+              ? safeTransparentize(componentColor, 0.72)
+              : "rgba(120, 120, 120, 0.10)",
+            stroke: componentColor
+              ? safeTransparentize(componentColor, 0.28)
+              : "rgba(120, 120, 120, 0.40)",
+            label: formatObstacleLabel(obstacle),
+            layer: obstacle.layers.join(","),
+            step: obstacle.componentId ? 1 : 0,
+          }
+        }),
+      ],
       lines: [],
       points: [],
       circles: [],
