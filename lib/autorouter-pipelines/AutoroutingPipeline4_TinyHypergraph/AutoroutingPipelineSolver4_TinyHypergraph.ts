@@ -699,9 +699,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
-      (this.highDensityRepairSolver?.getOutput() ??
+      this.highDensityRepairSolver?.getOutput() ??
         this.highDensityForceImproveSolver?.getOutput() ??
-        this.highDensityRouteSolver!.routes)
+      this.highDensityRouteSolver!.routes
     )
   }
 

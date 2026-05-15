@@ -318,8 +318,7 @@ export class HighDensitySolver extends BaseSolver {
                 (route._linkEndPortPointId &&
                   (endpointToRoutes.get(route._linkEndPortPointId)?.length ??
                     0) === 1)),
-          ) ??
-          Array.from(unvisitedRoutes)[0]
+          ) ?? Array.from(unvisitedRoutes)[0]
 
         if (!startRoute) break
 
