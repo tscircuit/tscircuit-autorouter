@@ -75,7 +75,7 @@ const createObstacleVisualization = ({
         label:
           obstacle.componentId && obstacle.obstacleId
             ? `${obstacle.componentId}\n${obstacle.obstacleId}`
-            : obstacle.componentId ?? obstacle.obstacleId ?? rect.label,
+            : (obstacle.componentId ?? obstacle.obstacleId ?? rect.label),
         layer: obstacle.layers.join(","),
       }
     }),
