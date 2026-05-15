@@ -2263,7 +2263,7 @@
     "minViaHoleDiameter": 1.5,
     "min_via_pad_diameter": 2.6,
     "min_via_hole_diameter": 1.5,
-    "minTraceToPadEdgeClearance": 0.25
+    "minTraceToPadEdgeClearance": 0.5
   },
   "circuit_json": null,
   "subcircuit_id": null,

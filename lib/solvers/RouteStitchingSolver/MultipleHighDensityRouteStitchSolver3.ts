@@ -84,6 +84,49 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
   }
 
+  private getSharedRootPathRoutes(params: {
+    connectionName: string
+    rootConnectionName?: string
+    hdRoutes: HighDensityIntraNodeRoute[]
+    allHdRoutes: HighDensityIntraNodeRoute[]
+    start: Point3
+    end: Point3
+  }) {
+    const rootConnectionName = params.rootConnectionName
+    if (!rootConnectionName) return null
+
+    const currentRouteSet = new Set(params.hdRoutes)
+    const sameRootRoutes = params.allHdRoutes.filter(
+      (route) =>
+        (route.rootConnectionName ?? route.connectionName) ===
+        rootConnectionName,
+    )
+
+    if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
+      return null
+    }
+
+    const pathRoutes = selectRoutesAlongEndpointPath({
+      connectionName: params.connectionName,
+      hdRoutes: sameRootRoutes,
+      start: params.start,
+      end: params.end,
+      endpointIndex: this.endpointIndex,
+      canStitchBetweenTerminals: (selection) =>
+        this.canStitchBetweenTerminals(selection),
+    })
+
+    const includesSharedRootBridge = pathRoutes.some(
+      (route) => !currentRouteSet.has(route),
+    )
+    // The endpoint path helper returns all candidate routes as a fallback when
+    // no path is found, so only accept a strict same-root subset.
+    if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
+      return null
+
+    return pathRoutes
+  }
+
   constructor(params: {
     connections: SimpleRouteConnection[]
     hdRoutes: HighDensityIntraNodeRoute[]
@@ -267,6 +310,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.unsolvedRoutes = Array.from(
       unsolvedRoutesByConnection.entries(),
     ).flatMap(([connectionName, unsolvedRoutes]) => {
+      const connection = params.connections.find(
+        (c) => c.name === connectionName,
+      )
       const hasDegenerateRoute = unsolvedRoutes.some((unsolvedRoute) =>
         unsolvedRoute.hdRoutes.some((hdRoute) => hdRoute.route.length < 2),
       )
@@ -274,13 +320,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         unsolvedRoutes.length > 1 &&
         hasStitchableGapBetweenUnsolvedRoutes(unsolvedRoutes)
 
-      if (!hasDegenerateRoute && !hasStitchableGap) {
-        return unsolvedRoutes
-      }
-
-      const connection = params.connections.find(
-        (c) => c.name === connectionName,
-      )
       if (!connection) return unsolvedRoutes
 
       const start = {
@@ -301,19 +340,38 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
+      const sharedRootPathRoutes =
+        unsolvedRoutes.length > 1
+          ? this.getSharedRootPathRoutes({
+              connectionName,
+              rootConnectionName:
+                connection.rootConnectionName ??
+                hdRoutes[0]?.rootConnectionName,
+              hdRoutes,
+              allHdRoutes: canonicalHdRoutes,
+              start,
+              end,
+            })
+          : null
+
+      if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
+        return unsolvedRoutes
+      }
 
       return [
         {
           connectionName,
-          hdRoutes: selectRoutesAlongEndpointPath({
-            connectionName,
-            hdRoutes,
-            start,
-            end,
-            endpointIndex: this.endpointIndex,
-            canStitchBetweenTerminals: (selection) =>
-              this.canStitchBetweenTerminals(selection),
-          }),
+          hdRoutes:
+            sharedRootPathRoutes ??
+            selectRoutesAlongEndpointPath({
+              connectionName,
+              hdRoutes,
+              start,
+              end,
+              endpointIndex: this.endpointIndex,
+              canStitchBetweenTerminals: (selection) =>
+                this.canStitchBetweenTerminals(selection),
+            }),
           start,
           end,
         },
