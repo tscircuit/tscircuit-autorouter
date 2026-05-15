@@ -19,6 +19,18 @@ import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
+type OrderedPortPoint = NodeWithPortPoints["portPoints"][number] & {
+  _tinyRouteId?: number
+  _tinyRegionSegmentIndex?: number
+  _tinySegmentEndpointIndex?: 0 | 1
+}
+
+type OrderedNodeWithPortPoints = Omit<NodeWithPortPoints, "portPoints"> & {
+  portPoints: OrderedPortPoint[]
+}
+
+type OrderedPortPointWithOwnerPair = PortPointWithOwnerPair & OrderedPortPoint
+
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
@@ -40,15 +52,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
   }
 
   mapOfNodeIdToBounds = new Map<string, Bounds>()
-  mapOfOwnerPairToPortPoints = new Map<OwnerPairKey, PortPointWithOwnerPair[]>()
+  mapOfOwnerPairToPortPoints = new Map<
+    OwnerPairKey,
+    OrderedPortPointWithOwnerPair[]
+  >()
   mapOfOwnerPairToSharedEdge = new Map<OwnerPairKey, SharedEdge>()
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
-  redistributedNodes: NodeWithPortPoints[] = []
+  redistributedNodes: OrderedNodeWithPortPoints[] = []
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
-    for (const node of input.nodeWithPortPoints) {
+    for (const node of input.nodeWithPortPoints as OrderedNodeWithPortPoints[]) {
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
         getBoundsFromNodeWithPortPoints(node),
@@ -56,7 +71,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
-    for (const node of input.nodeWithPortPoints) {
+    for (const node of input.nodeWithPortPoints as OrderedNodeWithPortPoints[]) {
       for (const portPoint of node.portPoints) {
         if (!portPoint.portPointId) continue
         const ownerNodeIds = determineOwnerPair({
@@ -97,6 +112,66 @@ export class UniformPortDistributionSolver extends BaseSolver {
     })
   }
 
+  private comparePortPointsForRedistribution(
+    a: OrderedPortPointWithOwnerPair,
+    b: OrderedPortPointWithOwnerPair,
+    sharedEdge: SharedEdge,
+  ) {
+    const aHasTinyOrdering =
+      a._tinyRouteId !== undefined || a._tinyRegionSegmentIndex !== undefined
+    const bHasTinyOrdering =
+      b._tinyRouteId !== undefined || b._tinyRegionSegmentIndex !== undefined
+
+    if (aHasTinyOrdering || bHasTinyOrdering) {
+      return (
+        (a._tinyRouteId ?? Number.MAX_SAFE_INTEGER) -
+          (b._tinyRouteId ?? Number.MAX_SAFE_INTEGER) ||
+        (a._tinyRegionSegmentIndex ?? Number.MAX_SAFE_INTEGER) -
+          (b._tinyRegionSegmentIndex ?? Number.MAX_SAFE_INTEGER) ||
+        (a._tinySegmentEndpointIndex ?? Number.MAX_SAFE_INTEGER) -
+          (b._tinySegmentEndpointIndex ?? Number.MAX_SAFE_INTEGER) ||
+        a.connectionName.localeCompare(b.connectionName) ||
+        (sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y)
+      )
+    }
+
+    return sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y
+  }
+
+  private createRedistributionInput(params: {
+    sharedEdge: SharedEdge
+    family: OrderedPortPointWithOwnerPair[]
+  }): OrderedPortPointWithOwnerPair[] {
+    const { sharedEdge, family } = params
+    const familyByZ = new Map<number, OrderedPortPointWithOwnerPair[]>()
+
+    for (const portPoint of family) {
+      const z = portPoint.z ?? 0
+      const existing = familyByZ.get(z) ?? []
+      existing.push(portPoint)
+      familyByZ.set(z, existing)
+    }
+
+    const redistributionInput: OrderedPortPointWithOwnerPair[] = []
+
+    for (const portsOnZ of familyByZ.values()) {
+      const sortedPorts = [...portsOnZ].sort((a, b) =>
+        this.comparePortPointsForRedistribution(a, b, sharedEdge),
+      )
+
+      for (let index = 0; index < sortedPorts.length; index++) {
+        const portPoint = sortedPorts[index]!
+        redistributionInput.push({
+          ...portPoint,
+          x: sharedEdge.orientation === "horizontal" ? index : portPoint.x,
+          y: sharedEdge.orientation === "horizontal" ? portPoint.y : index,
+        })
+      }
+    }
+
+    return redistributionInput
+  }
+
   step(): void {
     if (this.ownerPairsToProcess.length === 0) {
       this.rebuildNodes()
@@ -116,7 +191,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-    const family: PortPointWithOwnerPair[] = []
+    const family: OrderedPortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
       if (
         !shouldIgnorePortPoint({
@@ -131,8 +206,11 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
-      portPoints: family,
-    })
+      portPoints: this.createRedistributionInput({
+        sharedEdge,
+        family,
+      }),
+    }) as OrderedPortPointWithOwnerPair[]
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

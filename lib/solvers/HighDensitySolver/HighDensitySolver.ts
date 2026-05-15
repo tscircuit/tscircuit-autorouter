@@ -15,13 +15,30 @@ import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
+type LinkedHighDensityRoute = HighDensityIntraNodeRoute & {
+  previous?: LinkedHighDensityRoute
+  next?: LinkedHighDensityRoute
+  _linkStartPortPointId?: string
+  _linkEndPortPointId?: string
+}
+
+const pointDistanceSquared = (
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number },
+) => {
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  const dz = a.z - b.z
+  return dx * dx + dy * dy + dz * dz
+}
+
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
     return "HighDensitySolver"
   }
 
   unsolvedNodePortPoints: NodeWithPortPoints[]
-  routes: HighDensityIntraNodeRoute[]
+  routes: LinkedHighDensityRoute[]
   colorMap: Record<string, string>
 
   // Defaults as specified: viaDiameter of 0.3 and traceThickness of 0.15
@@ -214,6 +231,136 @@ export class HighDensitySolver extends BaseSolver {
     }
   }
 
+  private attachLogicalEndpoints(
+    node: NodeWithPortPoints,
+    route: HighDensityIntraNodeRoute,
+  ): LinkedHighDensityRoute {
+    const uniquePortPoints = node.portPoints.filter(
+      (portPoint, index, allPortPoints) =>
+        portPoint.connectionName === route.connectionName &&
+        allPortPoints.findIndex(
+          (candidate) => candidate.portPointId === portPoint.portPointId,
+        ) === index,
+    )
+
+    if (uniquePortPoints.length < 2) {
+      return route as LinkedHighDensityRoute
+    }
+
+    const routeStart = route.route[0]
+    const routeEnd = route.route[route.route.length - 1]
+    if (!routeStart || !routeEnd) {
+      return route as LinkedHighDensityRoute
+    }
+
+    let startPortPoint = uniquePortPoints[0]
+    let endPortPoint = uniquePortPoints[1]
+
+    if (uniquePortPoints.length === 2) {
+      const [firstPortPoint, secondPortPoint] = uniquePortPoints
+      const keepOrientationDistance =
+        pointDistanceSquared(routeStart, firstPortPoint) +
+        pointDistanceSquared(routeEnd, secondPortPoint)
+      const flippedOrientationDistance =
+        pointDistanceSquared(routeStart, secondPortPoint) +
+        pointDistanceSquared(routeEnd, firstPortPoint)
+
+      if (flippedOrientationDistance < keepOrientationDistance) {
+        startPortPoint = secondPortPoint
+        endPortPoint = firstPortPoint
+      }
+    }
+
+    return {
+      ...route,
+      _linkStartPortPointId: startPortPoint.portPointId,
+      _linkEndPortPointId: endPortPoint.portPointId,
+    }
+  }
+
+  private relinkRoutes() {
+    for (const route of this.routes) {
+      route.previous = undefined
+      route.next = undefined
+    }
+
+    const routesByConnection = new Map<string, LinkedHighDensityRoute[]>()
+    for (const route of this.routes) {
+      const existing = routesByConnection.get(route.connectionName) ?? []
+      existing.push(route)
+      routesByConnection.set(route.connectionName, existing)
+    }
+
+    for (const connectionRoutes of routesByConnection.values()) {
+      const endpointToRoutes = new Map<string, LinkedHighDensityRoute[]>()
+
+      for (const route of connectionRoutes) {
+        for (const endpointId of [
+          route._linkStartPortPointId,
+          route._linkEndPortPointId,
+        ]) {
+          if (!endpointId) continue
+          const existing = endpointToRoutes.get(endpointId) ?? []
+          existing.push(route)
+          endpointToRoutes.set(endpointId, existing)
+        }
+      }
+
+      const unvisitedRoutes = new Set(connectionRoutes)
+      while (unvisitedRoutes.size > 0) {
+        const startRoute =
+          connectionRoutes.find(
+            (route) =>
+              unvisitedRoutes.has(route) &&
+              ((route._linkStartPortPointId &&
+                (endpointToRoutes.get(route._linkStartPortPointId)?.length ??
+                  0) === 1) ||
+                (route._linkEndPortPointId &&
+                  (endpointToRoutes.get(route._linkEndPortPointId)?.length ??
+                    0) === 1)),
+          ) ??
+          Array.from(unvisitedRoutes)[0]
+
+        if (!startRoute) break
+
+        let currentRoute = startRoute
+        let entryEndpointId =
+          (currentRoute._linkStartPortPointId &&
+          (endpointToRoutes.get(currentRoute._linkStartPortPointId)?.length ??
+            0) === 1
+            ? currentRoute._linkStartPortPointId
+            : currentRoute._linkEndPortPointId) ??
+          currentRoute._linkStartPortPointId ??
+          currentRoute._linkEndPortPointId
+
+        while (currentRoute) {
+          unvisitedRoutes.delete(currentRoute)
+
+          const nextEndpointId =
+            entryEndpointId === currentRoute._linkStartPortPointId
+              ? currentRoute._linkEndPortPointId
+              : currentRoute._linkStartPortPointId
+
+          const nextRoute =
+            nextEndpointId &&
+            endpointToRoutes
+              .get(nextEndpointId)
+              ?.find(
+                (candidate) =>
+                  candidate !== currentRoute && unvisitedRoutes.has(candidate),
+              )
+
+          if (!nextRoute) break
+
+          currentRoute.next = nextRoute
+          nextRoute.previous = currentRoute
+          currentRoute = nextRoute
+          entryEndpointId = nextEndpointId
+        }
+      }
+    }
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -223,7 +370,15 @@ export class HighDensitySolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.routes.push(...this.activeSubSolver.solvedRoutes)
+        this.routes.push(
+          ...this.activeSubSolver.solvedRoutes.map((route) =>
+            this.attachLogicalEndpoints(
+              this.activeSubSolver!.nodeWithPortPoints,
+              route,
+            ),
+          ),
+        )
+        this.relinkRoutes()
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
         this.recordSolvedNodeStats(
           this.activeSubSolver,

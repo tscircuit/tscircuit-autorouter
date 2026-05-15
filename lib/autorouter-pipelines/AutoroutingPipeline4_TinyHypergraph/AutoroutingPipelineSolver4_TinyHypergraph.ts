@@ -47,7 +47,6 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
@@ -109,7 +108,6 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   highDensityRouteSolver?: HighDensitySolver
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -377,27 +375,14 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver3,
-      (cms) => [
-        {
-          connections: cms.srjWithPointPairs!.connections,
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-          defaultViaDiameter: cms.viaDiameter,
-        },
-      ],
-    ),
-    definePipelineStep(
       "traceSimplificationSolver",
       TraceSimplificationSolver,
       (cms) => [
         {
-          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
+          hdRoutes:
+            cms.highDensityRepairSolver?.getOutput() ??
+            cms.highDensityForceImproveSolver?.getOutput() ??
+            cms.highDensityRouteSolver!.routes,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
@@ -533,6 +518,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     if (!this.solved && this.activeSubSolver) {
       return this.activeSubSolver.visualize()
     }
+    const preprocessSimpleRouteJsonViz =
+      this.preprocessSimpleRouteJsonSolver?.visualize()
     const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const nodeViz = this.nodeSolver?.visualize()
@@ -552,11 +539,12 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     const highDensityForceImproveViz =
       this.highDensityForceImproveSolver?.visualize()
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
-    const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const traceWidthViz = this.traceWidthSolver?.visualize()
+    const globalDrcForceImproveViz =
+      this.globalDrcForceImproveSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
-    const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const srjToVisualize = this.originalSrj
     const problemOutline = srjToVisualize.outline
     const problemLines: Line[] = []
@@ -638,6 +626,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
     const visualizations = [
       problemViz,
+      // preprocessSimpleRouteJsonViz,
       escapeViaLocationViz,
       netToPPSolver,
       nodeViz,
@@ -657,8 +646,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         : null,
       highDensityForceImproveViz,
       highDensityRepairViz,
-      highDensityStitchViz,
       traceSimplificationViz,
+      traceWidthViz,
+      globalDrcForceImproveViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -709,7 +699,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
-      this.highDensityStitchSolver!.mergedHdRoutes
+      (this.highDensityRepairSolver?.getOutput() ??
+        this.highDensityForceImproveSolver?.getOutput() ??
+        this.highDensityRouteSolver!.routes)
     )
   }
 

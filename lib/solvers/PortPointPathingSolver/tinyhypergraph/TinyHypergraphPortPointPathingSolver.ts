@@ -35,6 +35,11 @@ type SerializedTinyConnection = NonNullable<
 type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
+type OrderedPortPoint = PortPoint & {
+  _tinyRouteId?: number
+  _tinyRegionSegmentIndex?: number
+  _tinySegmentEndpointIndex?: 0 | 1
+}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
@@ -576,7 +581,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     solvedTinySolver: TinyHyperGraphSolver,
     routeId: number,
     portId: number,
-  ): PortPoint {
+    regionSegmentIndex?: number,
+    segmentEndpointIndex?: 0 | 1,
+  ): OrderedPortPoint {
     const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
     const connectionName = routeMetadata
       ? getRouteConnectionName(routeMetadata)
@@ -593,6 +600,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      _tinyRouteId: routeId,
+      _tinyRegionSegmentIndex: regionSegmentIndex,
+      _tinySegmentEndpointIndex: segmentEndpointIndex,
     }
   }
 
@@ -615,11 +625,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (!originalRegion) continue
 
       const portPoints = regionSegments[regionId].flatMap(
-        ([routeId, fromPortId, toPortId]) =>
+        ([routeId, fromPortId, toPortId], regionSegmentIndex) =>
           [
-            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
-            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
-          ] satisfies PortPoint[],
+            this.createAssignedPortPoint(
+              solvedTinySolver,
+              routeId,
+              fromPortId,
+              regionSegmentIndex,
+              0,
+            ),
+            this.createAssignedPortPoint(
+              solvedTinySolver,
+              routeId,
+              toPortId,
+              regionSegmentIndex,
+              1,
+            ),
+          ] satisfies OrderedPortPoint[],
       )
 
       if (portPoints.length === 0) {
