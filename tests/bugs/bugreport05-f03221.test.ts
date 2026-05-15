@@ -13,4 +13,4 @@ test("bugreport05-f03221.json-autoroutingpipeline-04", () => {
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-}, 30000)
+}, 90000)

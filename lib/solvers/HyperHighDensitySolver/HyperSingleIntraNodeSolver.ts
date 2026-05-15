@@ -20,6 +20,7 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
+import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -362,7 +363,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     } else {
       routes = solver.solver.solvedRoutes
     }
-    this.solvedRoutes = routes.map((route) => {
+    const routesWithRootConnectionNames = routes.map((route) => {
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
         (p) => p.connectionName === route.connectionName,
       )
@@ -374,5 +375,10 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       }
       return route
     })
+
+    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+      routesWithRootConnectionNames,
+      this.nodeWithPortPoints,
+    )
   }
 }
