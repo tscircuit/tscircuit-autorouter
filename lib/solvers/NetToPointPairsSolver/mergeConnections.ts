@@ -85,6 +85,7 @@ export function mergeConnections(
 
     const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>()
     const mergedNames: Set<string> = new Set()
+    const mergedRootConnectionNames: Set<string> = new Set()
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
@@ -101,6 +102,9 @@ export function mergeConnections(
 
       // Collect names
       mergedNames.add(simpleRouteConnection.name)
+      if (simpleRouteConnection.rootConnectionName) {
+        mergedRootConnectionNames.add(simpleRouteConnection.rootConnectionName)
+      }
 
       // Merge isOffBoard property
       if (simpleRouteConnection.isOffBoard) {
@@ -143,6 +147,10 @@ export function mergeConnections(
       netConnectionName:
         mergedNetConnectionNames.size > 0
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
+          : undefined,
+      rootConnectionName:
+        mergedRootConnectionNames.size === 1
+          ? Array.from(mergedRootConnectionNames)[0]
           : undefined,
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
