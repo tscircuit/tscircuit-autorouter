@@ -26,6 +26,32 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
     this.edgeSet = new Set<string>()
   }
 
+  private areTargetNodesTouchingOrOverlapping(
+    node1: CapacityMeshNode,
+    node2: CapacityMeshNode,
+  ): boolean {
+    if (!node1._containsTarget && !node2._containsTarget) {
+      return false
+    }
+
+    const epsilon = 1e-4
+    const node1MinX = node1.center.x - node1.width / 2
+    const node1MaxX = node1.center.x + node1.width / 2
+    const node1MinY = node1.center.y - node1.height / 2
+    const node1MaxY = node1.center.y + node1.height / 2
+    const node2MinX = node2.center.x - node2.width / 2
+    const node2MaxX = node2.center.x + node2.width / 2
+    const node2MinY = node2.center.y - node2.height / 2
+    const node2MaxY = node2.center.y + node2.height / 2
+
+    return (
+      node1MinX <= node2MaxX + epsilon &&
+      node1MaxX + epsilon >= node2MinX &&
+      node1MinY <= node2MaxY + epsilon &&
+      node1MaxY + epsilon >= node2MinY
+    )
+  }
+
   _step() {
     if (this.currentNodeIndex >= this.nodes.length) {
       this.handleTargetNodes()
@@ -42,8 +68,9 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
     )
 
     for (const B of maybeAdjNodes) {
-      const areBordering = areNodesBordering(A, B)
-      if (!areBordering) continue
+      const areAdjacent =
+        areNodesBordering(A, B) || this.areTargetNodesTouchingOrOverlapping(A, B)
+      if (!areAdjacent) continue
       const strawNodesWithSameParent =
         A._strawNode &&
         B._strawNode &&

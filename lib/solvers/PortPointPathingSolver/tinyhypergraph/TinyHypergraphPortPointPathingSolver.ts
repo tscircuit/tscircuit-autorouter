@@ -139,31 +139,6 @@ const getSharedConnectionZ = (params: {
   return sharedZ ?? params.fallbackZ
 }
 
-const getRegionBounds = (
-  region: HgPortPointPathingSolverParams["graph"]["regions"][number],
-) => ({
-  minX: region.d.center.x - region.d.width / 2,
-  maxX: region.d.center.x + region.d.width / 2,
-  minY: region.d.center.y - region.d.height / 2,
-  maxY: region.d.center.y + region.d.height / 2,
-})
-
-const areRegionsTouching = (
-  region1: HgPortPointPathingSolverParams["graph"]["regions"][number],
-  region2: HgPortPointPathingSolverParams["graph"]["regions"][number],
-) => {
-  const bounds1 = getRegionBounds(region1)
-  const bounds2 = getRegionBounds(region2)
-  const epsilon = 1e-4
-
-  return (
-    bounds1.minX <= bounds2.maxX + epsilon &&
-    bounds1.maxX + epsilon >= bounds2.minX &&
-    bounds1.minY <= bounds2.maxY + epsilon &&
-    bounds1.maxY + epsilon >= bounds2.minY
-  )
-}
-
 const buildSerializedTinyGraph = (
   params: HgPortPointPathingSolverParams,
 ): SerializedHyperGraph => {
@@ -222,9 +197,6 @@ const buildSerializedTinyGraph = (
       regionAvailableZ: connection.endRegion.d.availableZ,
       layerCount: params.layerCount,
     })
-    const sharedEndpointZ = connection.startRegion.d.availableZ.find((z) =>
-      connection.endRegion.d.availableZ.includes(z),
-    )
 
     const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
     const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
@@ -305,36 +277,6 @@ const buildSerializedTinyGraph = (
     )
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
-
-    if (
-      connection.mutuallyConnectedNetworkId !== undefined &&
-      connection.mutuallyConnectedNetworkId !== connection.connectionId &&
-      sharedEndpointZ !== undefined &&
-      areRegionsTouching(connection.startRegion, connection.endRegion)
-    ) {
-      const endpointBridgePortId = `tiny-endpoint-bridge:${connection.connectionId}`
-      ports.push({
-        portId: endpointBridgePortId,
-        region1Id: connection.startRegion.regionId,
-        region2Id: connection.endRegion.regionId,
-        d: {
-          portId: endpointBridgePortId,
-          x:
-            ((startPoint?.x ?? connection.startRegion.d.center.x) +
-              (endPoint?.x ?? connection.endRegion.d.center.x)) /
-            2,
-          y:
-            ((startPoint?.y ?? connection.startRegion.d.center.y) +
-              (endPoint?.y ?? connection.endRegion.d.center.y)) /
-            2,
-          z: sharedEndpointZ,
-          distToCentermostPortOnZ: 0,
-          _tinyEndpointBridge: true,
-        },
-      })
-      startRegion?.pointIds.push(endpointBridgePortId)
-      endRegion?.pointIds.push(endpointBridgePortId)
-    }
 
     solvedRoutes.push({
       connection: {
