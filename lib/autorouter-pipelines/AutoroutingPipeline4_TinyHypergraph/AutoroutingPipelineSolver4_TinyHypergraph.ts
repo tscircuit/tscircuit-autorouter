@@ -26,7 +26,6 @@ import {
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { dedupeSameRootPortPoints } from "lib/utils/dedupeSameRootPortPoints"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -324,14 +323,12 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
-      const highDensityNodePortPoints =
-        dedupeSameRootPortPoints(nodePortPointsSource)
 
-      cms.highDensityNodePortPoints = structuredClone(highDensityNodePortPoints)
+      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
 
       return [
         {
-          nodePortPoints: highDensityNodePortPoints,
+          nodePortPoints: nodePortPointsSource,
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
