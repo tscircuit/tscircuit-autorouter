@@ -20,7 +20,10 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
-import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import {
+  finalizeRoutesWithSameRootSharedJunctions,
+  normalizeSameRootSharedJunctions,
+} from "./sameRootSharedJunctions"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -37,7 +40,9 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
   constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
   solvedRoutes: HighDensityIntraNodeRoute[] = []
+  originalNodeWithPortPoints: NodeWithPortPoints
   nodeWithPortPoints: NodeWithPortPoints
+  removedSharedJunctionConnectionNames: Set<string>
   connMap?: ConnectivityMap
   effort: number
 
@@ -47,9 +52,16 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     },
   ) {
     super()
-    this.nodeWithPortPoints = opts.nodeWithPortPoints
+    const normalized = normalizeSameRootSharedJunctions(opts.nodeWithPortPoints)
+    this.originalNodeWithPortPoints = opts.nodeWithPortPoints
+    this.nodeWithPortPoints = normalized.node
+    this.removedSharedJunctionConnectionNames =
+      normalized.removedConnectionNames
     this.connMap = opts.connMap
-    this.constructorParams = opts
+    this.constructorParams = {
+      ...opts,
+      nodeWithPortPoints: normalized.node,
+    }
     this.effort = opts.effort ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -376,9 +388,13 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
-      routesWithRootConnectionNames,
-      this.nodeWithPortPoints,
-    )
+    this.solvedRoutes = finalizeRoutesWithSameRootSharedJunctions({
+      routes: routesWithRootConnectionNames,
+      originalNodeWithPortPoints: this.originalNodeWithPortPoints,
+      normalizedNodeWithPortPoints: this.nodeWithPortPoints,
+      removedConnectionNames: this.removedSharedJunctionConnectionNames,
+      traceThickness: this.constructorParams.traceWidth ?? 0.15,
+      viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+    })
   }
 }
