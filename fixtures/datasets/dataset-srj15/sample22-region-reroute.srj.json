@@ -2715,23 +2715,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_24_reroute_source_net_24_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.427,
-        "y": 16.27
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_24_reroute_source_net_24_mst1_0_0",
-        "source_net_24"
-      ]
-    },
-    {
       "obstacleId": "source_net_24_reroute_source_net_24_mst1_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2970,23 +2953,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_1_reroute_source_net_1_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -8.86,
-        "y": 17.29
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_1_reroute_source_net_1_mst1_0_0",
-        "source_net_1"
-      ]
-    },
-    {
       "obstacleId": "source_net_1_reroute_source_net_1_mst2_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -2995,23 +2961,6 @@
       "center": {
         "x": -19.006,
         "y": 14.341451498589024
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_1_reroute_source_net_1_mst2_0_0",
-        "source_net_1"
-      ]
-    },
-    {
-      "obstacleId": "source_net_1_reroute_source_net_1_mst2_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -8.86,
-        "y": 17.29
       },
       "width": 0.15,
       "height": 0.15,

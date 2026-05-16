@@ -2698,23 +2698,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_25_reroute_source_net_25_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_25_reroute_source_net_25_mst1_0_0",
-        "source_net_25"
-      ]
-    },
-    {
       "obstacleId": "source_net_25_reroute_source_net_25_mst2_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -2732,40 +2715,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_25_reroute_source_net_25_mst2_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_25_reroute_source_net_25_mst2_0_0",
-        "source_net_25"
-      ]
-    },
-    {
-      "obstacleId": "source_net_22_reroute_source_net_22_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -15.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_22_reroute_source_net_22_0_0",
-        "source_net_22"
-      ]
-    },
-    {
       "obstacleId": "source_net_22_reroute_source_net_22_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2780,23 +2729,6 @@
       "connectedTo": [
         "source_net_22_reroute_source_net_22_0_0",
         "source_net_22"
-      ]
-    },
-    {
-      "obstacleId": "source_net_20_reroute_source_net_20_mst0_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -17.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_20_reroute_source_net_20_mst0_0_0",
-        "source_net_20"
       ]
     },
     {
@@ -2834,57 +2766,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_20_reroute_source_net_20_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -17.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_20_reroute_source_net_20_mst1_0_0",
-        "source_net_20"
-      ]
-    },
-    {
-      "obstacleId": "source_net_20_reroute_source_net_20_mst2_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -20.142,
-        "y": -9.86
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_20_reroute_source_net_20_mst2_0_0",
-        "source_net_20"
-      ]
-    },
-    {
-      "obstacleId": "source_net_20_reroute_source_net_20_mst2_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -17.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_20_reroute_source_net_20_mst2_0_0",
-        "source_net_20"
-      ]
-    },
-    {
       "obstacleId": "source_net_19_reroute_source_net_19_mst0_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -2893,23 +2774,6 @@
       "center": {
         "x": -12.84,
         "y": 0.38
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_19_reroute_source_net_19_mst0_0_0",
-        "source_net_19"
-      ]
-    },
-    {
-      "obstacleId": "source_net_19_reroute_source_net_19_mst0_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -12.84,
-        "y": -0.428
       },
       "width": 0.15,
       "height": 0.15,
@@ -2953,40 +2817,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_16_reroute_source_net_16_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.217,
-        "y": -9.86
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_16_reroute_source_net_16_0_0",
-        "source_net_16"
-      ]
-    },
-    {
-      "obstacleId": "source_net_16_reroute_source_net_16_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -13.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_16_reroute_source_net_16_0_0",
-        "source_net_16"
-      ]
-    },
-    {
       "obstacleId": "source_net_15_reroute_source_net_15_mst0_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -3000,57 +2830,6 @@
       "height": 0.15,
       "connectedTo": [
         "source_net_15_reroute_source_net_15_mst0_0_0",
-        "source_net_15"
-      ]
-    },
-    {
-      "obstacleId": "source_net_15_reroute_source_net_15_mst0_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_15_reroute_source_net_15_mst0_0_0",
-        "source_net_15"
-      ]
-    },
-    {
-      "obstacleId": "source_net_15_reroute_source_net_15_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "bottom"
-      ],
-      "center": {
-        "x": -14.16,
-        "y": -15.81
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_15_reroute_source_net_15_mst1_0_0",
-        "source_net_15"
-      ]
-    },
-    {
-      "obstacleId": "source_net_15_reroute_source_net_15_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -14.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_15_reroute_source_net_15_mst1_0_0",
         "source_net_15"
       ]
     },
@@ -3069,40 +2848,6 @@
       "connectedTo": [
         "source_net_15_reroute_source_net_15_mst2_0_0",
         "source_net_15"
-      ]
-    },
-    {
-      "obstacleId": "source_net_15_reroute_source_net_15_mst2_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "bottom"
-      ],
-      "center": {
-        "x": -14.16,
-        "y": -15.81
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_15_reroute_source_net_15_mst2_0_0",
-        "source_net_15"
-      ]
-    },
-    {
-      "obstacleId": "source_net_14_reroute_source_net_14_mst0_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -17.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_14_reroute_source_net_14_mst0_0_0",
-        "source_net_14"
       ]
     },
     {
@@ -3140,23 +2885,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_14_reroute_source_net_14_mst2_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -17.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_14_reroute_source_net_14_mst2_0_0",
-        "source_net_14"
-      ]
-    },
-    {
       "obstacleId": "source_net_13_reroute_source_net_13_mst1_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -3165,23 +2893,6 @@
       "center": {
         "x": -14.85,
         "y": -15.812
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_13_reroute_source_net_13_mst1_0_0",
-        "source_net_13"
-      ]
-    },
-    {
-      "obstacleId": "source_net_13_reroute_source_net_13_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -15.84,
-        "y": -0.428
       },
       "width": 0.15,
       "height": 0.15,
@@ -3208,23 +2919,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_12_reroute_source_net_12_mst0_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -13.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_12_reroute_source_net_12_mst0_0_0",
-        "source_net_12"
-      ]
-    },
-    {
       "obstacleId": "source_net_12_reroute_source_net_12_mst1_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -3233,23 +2927,6 @@
       "center": {
         "x": -6.594,
         "y": -2.5749355742491398
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_12_reroute_source_net_12_mst1_0_0",
-        "source_net_12"
-      ]
-    },
-    {
-      "obstacleId": "source_net_12_reroute_source_net_12_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -13.34,
-        "y": -0.428
       },
       "width": 0.15,
       "height": 0.15,
@@ -3276,23 +2953,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_7_reroute_source_net_7_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -16.84,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_7_reroute_source_net_7_mst1_0_0",
-        "source_net_7"
-      ]
-    },
-    {
       "obstacleId": "source_net_5_reroute_source_net_5_mst0_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -3310,23 +2970,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_5_reroute_source_net_5_mst0_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -16.34,
-        "y": -0.428
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_5_reroute_source_net_5_mst0_0_0",
-        "source_net_5"
-      ]
-    },
-    {
       "obstacleId": "source_net_5_reroute_source_net_5_mst1_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -3335,23 +2978,6 @@
       "center": {
         "x": -6.594,
         "y": -10.225674268841122
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_5_reroute_source_net_5_mst1_0_0",
-        "source_net_5"
-      ]
-    },
-    {
-      "obstacleId": "source_net_5_reroute_source_net_5_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -16.34,
-        "y": -0.428
       },
       "width": 0.15,
       "height": 0.15,
