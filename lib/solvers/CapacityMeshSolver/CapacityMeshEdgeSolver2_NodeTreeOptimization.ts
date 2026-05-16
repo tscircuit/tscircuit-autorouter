@@ -69,7 +69,8 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
 
     for (const B of maybeAdjNodes) {
       const areAdjacent =
-        areNodesBordering(A, B) || this.areTargetNodesTouchingOrOverlapping(A, B)
+        areNodesBordering(A, B) ||
+        this.areTargetNodesTouchingOrOverlapping(A, B)
       if (!areAdjacent) continue
       const strawNodesWithSameParent =
         A._strawNode &&
