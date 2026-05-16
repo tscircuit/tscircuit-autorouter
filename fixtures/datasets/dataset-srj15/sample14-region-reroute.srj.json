@@ -2698,23 +2698,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_26_reroute_source_net_26_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "bottom"
-      ],
-      "center": {
-        "x": 8.9,
-        "y": 3.42
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_26_reroute_source_net_26_0_0",
-        "source_net_26"
-      ]
-    },
-    {
       "obstacleId": "source_net_25_reroute_source_net_25_mst0_0_0_route_endpoint_0",
       "type": "rect",
       "layers": [
@@ -2766,40 +2749,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_14_reroute_source_net_14_mst1_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "bottom"
-      ],
-      "center": {
-        "x": 6.8,
-        "y": 3.42
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_14_reroute_source_net_14_mst1_0_0",
-        "source_net_14"
-      ]
-    },
-    {
-      "obstacleId": "source_net_14_reroute_source_net_14_mst2_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "bottom"
-      ],
-      "center": {
-        "x": 6.8,
-        "y": 3.42
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_14_reroute_source_net_14_mst2_0_0",
-        "source_net_14"
-      ]
-    },
-    {
       "obstacleId": "source_net_14_reroute_source_net_14_mst2_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2817,23 +2766,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_12_reroute_source_net_12_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 11.03,
-        "y": -2.83
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_12_reroute_source_net_12_mst1_0_0",
-        "source_net_12"
-      ]
-    },
-    {
       "obstacleId": "source_net_12_reroute_source_net_12_mst1_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2848,23 +2780,6 @@
       "connectedTo": [
         "source_net_12_reroute_source_net_12_mst1_0_0",
         "source_net_12"
-      ]
-    },
-    {
-      "obstacleId": "source_net_6_reroute_source_net_6_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 5.95,
-        "y": -2.83
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_6_reroute_source_net_6_mst1_0_0",
-        "source_net_6"
       ]
     },
     {

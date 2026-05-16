@@ -154,6 +154,55 @@ test("getRerouteSimpleRouteJson keeps trace endpoints inside the region connecta
   expect(rerouted.traces).toHaveLength(0)
 })
 
+test("getRerouteSimpleRouteJson does not add endpoint obstacles inside same-net obstacles", () => {
+  const rerouted = getRerouteSimpleRouteJson(
+    {
+      ...srj,
+      obstacles: [
+        {
+          obstacleId: "source_net_0_pad",
+          type: "rect",
+          layers: ["top"],
+          center: { x: -0.5, y: 0 },
+          width: 1,
+          height: 1,
+          connectedTo: ["source_net_0"],
+        },
+      ],
+      traces: [
+        {
+          type: "pcb_trace",
+          pcb_trace_id: "source_net_0_inside_pad",
+          connection_name: "source_net_0",
+          route: [
+            { route_type: "wire", x: -0.5, y: 0, width: 0.15, layer: "top" },
+            { route_type: "wire", x: 1, y: 0, width: 0.15, layer: "top" },
+          ],
+        },
+      ],
+    },
+    {
+      shape: "rect",
+      minX: -1,
+      maxX: 1,
+      minY: -1,
+      maxY: 1,
+    },
+  )
+
+  expect(rerouted.connections).toHaveLength(1)
+  expect(rerouted.connections[0]?.pointsToConnect).toEqual([
+    { x: -0.5, y: 0, layer: "top" },
+    { x: 1, y: 0, layer: "top" },
+  ])
+  expect(
+    rerouted.obstacles.map((obstacle) => obstacle.obstacleId).sort(),
+  ).toEqual([
+    "source_net_0_pad",
+    "source_net_0_reroute_source_net_0_inside_pad_0_route_endpoint_1",
+  ])
+})
+
 test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacles", () => {
   const rerouted = getRerouteSimpleRouteJson(
     {

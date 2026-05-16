@@ -56,6 +56,33 @@ const isThroughObstacleRoutePoint = (
   point: RoutePoint,
 ): point is ThroughObstacleRoutePoint => point.route_type === "through_obstacle"
 
+const doObstacleLayersOverlap = (a: Obstacle, b: Obstacle) =>
+  a.layers.some((layer) => b.layers.includes(layer))
+
+const doesObstacleContainObstacle = (outer: Obstacle, inner: Obstacle) => {
+  const outerBounds = getBoundingBox(outer)
+  const innerBounds = getBoundingBox(inner)
+
+  return (
+    outerBounds.minX <= innerBounds.minX + EPSILON &&
+    outerBounds.maxX >= innerBounds.maxX - EPSILON &&
+    outerBounds.minY <= innerBounds.minY + EPSILON &&
+    outerBounds.maxY >= innerBounds.maxY - EPSILON
+  )
+}
+
+const isRedundantEndpointObstacle = (
+  endpointObstacle: Obstacle,
+  existingObstacles: Obstacle[],
+  rootConnectionName: string,
+) =>
+  existingObstacles.some(
+    (obstacle) =>
+      obstacle.connectedTo.includes(rootConnectionName) &&
+      doObstacleLayersOverlap(obstacle, endpointObstacle) &&
+      doesObstacleContainObstacle(obstacle, endpointObstacle),
+  )
+
 const getRoutePointLocation = (
   point: RoutePoint,
 ): LocatableRoutePoint | null => {
@@ -321,6 +348,7 @@ const maybeCreateRerouteConnection = ({
   start,
   end,
   region,
+  existingObstacles,
   allowInteriorStart,
   allowInteriorEnd,
 }: {
@@ -329,6 +357,7 @@ const maybeCreateRerouteConnection = ({
   start: LocatedPoint
   end: LocatedPoint
   region: RerouteRectRegion
+  existingObstacles: Obstacle[]
   allowInteriorStart?: boolean
   allowInteriorEnd?: boolean
 }): RerouteConnectionResult | null => {
@@ -340,6 +369,7 @@ const maybeCreateRerouteConnection = ({
   }
 
   const connection = createRerouteConnection({ trace, ripIndex, start, end })
+  const rootConnectionName = connection.rootConnectionName ?? connection.name
   const endpointObstacles: Obstacle[] = [
     createRerouteEndpointObstacle({
       connection,
@@ -351,7 +381,14 @@ const maybeCreateRerouteConnection = ({
       point: end,
       endpointIndex: 1,
     }),
-  ]
+  ].filter(
+    (endpointObstacle) =>
+      !isRedundantEndpointObstacle(
+        endpointObstacle,
+        existingObstacles,
+        rootConnectionName,
+      ),
+  )
 
   return { connection, endpointObstacles }
 }
@@ -360,6 +397,7 @@ const getClippedTracePieces = (
   trace: SimplifiedPcbTrace,
   region: RerouteRectRegion,
   fallbackWidth: number,
+  existingObstacles: Obstacle[],
 ) => {
   const keptTraces: SimplifiedPcbTrace[] = []
   const rerouteConnections: SimpleRouteConnection[] = []
@@ -453,6 +491,7 @@ const getClippedTracePieces = (
         start: activeRipStart,
         end: rerouteEnd,
         region,
+        existingObstacles,
         allowInteriorStart: activeRipStartAllowsInterior,
       })
       if (rerouteConnection) {
@@ -501,6 +540,7 @@ const getClippedTracePieces = (
           width: activeRipStart.width,
         },
         region,
+        existingObstacles,
         allowInteriorStart: activeRipStartAllowsInterior,
         allowInteriorEnd: true,
       })
@@ -535,6 +575,7 @@ export const getRerouteSimpleRouteJson = (
       trace,
       region,
       simpleRouteJson.minTraceWidth,
+      simpleRouteJson.obstacles,
     )
 
     if (!clippedPieces) {

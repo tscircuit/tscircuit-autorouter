@@ -2681,23 +2681,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_20_reroute_source_net_20_mst2_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": -20.142,
-        "y": -9.86
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_20_reroute_source_net_20_mst2_0_0",
-        "source_net_20"
-      ]
-    },
-    {
       "obstacleId": "source_net_20_reroute_source_net_20_mst2_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [

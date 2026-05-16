@@ -2681,23 +2681,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_25_reroute_source_net_25_mst0_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 7.14,
-        "y": 8.41
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_25_reroute_source_net_25_mst0_0_0",
-        "source_net_25"
-      ]
-    },
-    {
       "obstacleId": "source_net_25_reroute_source_net_25_mst0_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2728,40 +2711,6 @@
       "height": 0.15,
       "connectedTo": [
         "source_net_21_reroute_source_net_21_mst0_0_0",
-        "source_net_21"
-      ]
-    },
-    {
-      "obstacleId": "source_net_21_reroute_source_net_21_mst0_0_0_route_endpoint_1",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 5.363,
-        "y": 13.63
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_21_reroute_source_net_21_mst0_0_0",
-        "source_net_21"
-      ]
-    },
-    {
-      "obstacleId": "source_net_21_reroute_source_net_21_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 5.363,
-        "y": 13.63
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_21_reroute_source_net_21_mst1_0_0",
         "source_net_21"
       ]
     },
@@ -2851,23 +2800,6 @@
       ]
     },
     {
-      "obstacleId": "source_net_8_reroute_source_net_8_mst0_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 2.438,
-        "y": 13.63
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_8_reroute_source_net_8_mst0_0_0",
-        "source_net_8"
-      ]
-    },
-    {
       "obstacleId": "source_net_8_reroute_source_net_8_mst0_0_0_route_endpoint_1",
       "type": "rect",
       "layers": [
@@ -2881,23 +2813,6 @@
       "height": 0.15,
       "connectedTo": [
         "source_net_8_reroute_source_net_8_mst0_0_0",
-        "source_net_8"
-      ]
-    },
-    {
-      "obstacleId": "source_net_8_reroute_source_net_8_mst1_0_0_route_endpoint_0",
-      "type": "rect",
-      "layers": [
-        "top"
-      ],
-      "center": {
-        "x": 2.438,
-        "y": 13.63
-      },
-      "width": 0.15,
-      "height": 0.15,
-      "connectedTo": [
-        "source_net_8_reroute_source_net_8_mst1_0_0",
         "source_net_8"
       ]
     },
