@@ -13,7 +13,6 @@ import type {
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { dedupeSameRootPortPoints } from "lib/utils/dedupeSameRootPortPoints"
 import {
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -638,7 +637,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
 
     return {
-      nodesWithPortPoints: dedupeSameRootPortPoints(nodesWithPortPoints),
+      nodesWithPortPoints,
       inputNodeWithPortPoints: this.inputNodeWithPortPoints,
     }
   }
