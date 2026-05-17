@@ -21,8 +21,8 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import {
+  collapseSameRootSharedJunctionsForSolve,
   finalizeRoutesWithSameRootSharedJunctions,
-  normalizeSameRootSharedJunctions,
 } from "./sameRootSharedJunctions"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -52,15 +52,17 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     },
   ) {
     super()
-    const normalized = normalizeSameRootSharedJunctions(opts.nodeWithPortPoints)
+    const collapsedForSolve = collapseSameRootSharedJunctionsForSolve(
+      opts.nodeWithPortPoints,
+    )
     this.originalNodeWithPortPoints = opts.nodeWithPortPoints
-    this.nodeWithPortPoints = normalized.node
+    this.nodeWithPortPoints = collapsedForSolve.node
     this.removedSharedJunctionConnectionNames =
-      normalized.removedConnectionNames
+      collapsedForSolve.removedConnectionNames
     this.connMap = opts.connMap
     this.constructorParams = {
       ...opts,
-      nodeWithPortPoints: normalized.node,
+      nodeWithPortPoints: collapsedForSolve.node,
     }
     this.effort = opts.effort ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
@@ -391,7 +393,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     this.solvedRoutes = finalizeRoutesWithSameRootSharedJunctions({
       routes: routesWithRootConnectionNames,
       originalNodeWithPortPoints: this.originalNodeWithPortPoints,
-      normalizedNodeWithPortPoints: this.nodeWithPortPoints,
+      collapsedNodeWithPortPoints: this.nodeWithPortPoints,
       removedConnectionNames: this.removedSharedJunctionConnectionNames,
       traceThickness: this.constructorParams.traceWidth ?? 0.15,
       viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
