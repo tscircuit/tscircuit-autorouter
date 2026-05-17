@@ -33,7 +33,7 @@ const uniquePhysicalPoints = <T extends { x: number; y: number; z: number }>(
   return uniquePoints
 }
 
-export const normalizeSameRootSharedJunctions = (
+export const collapseSameRootSharedJunctionsForSolve = (
   node: NodeWithPortPoints,
 ): {
   node: NodeWithPortPoints
@@ -190,14 +190,14 @@ const isRouteLocallyClearOfDifferentRoots = (
 export const finalizeRoutesWithSameRootSharedJunctions = (params: {
   routes: HighDensityIntraNodeRoute[]
   originalNodeWithPortPoints: NodeWithPortPoints
-  normalizedNodeWithPortPoints: NodeWithPortPoints
+  collapsedNodeWithPortPoints: NodeWithPortPoints
   removedConnectionNames: Set<string>
   traceThickness: number
   viaDiameter: number
 }): HighDensityIntraNodeRoute[] => {
   const repairedRoutes = repairDisconnectedSameRootPortPoints(
     params.routes,
-    params.normalizedNodeWithPortPoints,
+    params.collapsedNodeWithPortPoints,
   )
   const expandedRoutes = [...repairedRoutes]
   const routedConnectionNames = new Set(
