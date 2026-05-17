@@ -3,7 +3,10 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+
+const RESTORED_ROUTE_TRACE_CLEARANCE = 0.1
 
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
@@ -126,6 +129,64 @@ const buildDirectSameRootRoute = (params: {
   }
 }
 
+const getRouteRootConnectionName = (route: HighDensityIntraNodeRoute) =>
+  route.rootConnectionName ?? route.connectionName
+
+const getRouteSegments = (route: HighDensityIntraNodeRoute) => {
+  const segments: Array<{
+    start: { x: number; y: number; z: number }
+    end: { x: number; y: number; z: number }
+  }> = []
+
+  for (let i = 0; i < route.route.length - 1; i++) {
+    const start = route.route[i]
+    const end = route.route[i + 1]
+    if (!start || !end) continue
+    if (start.z !== end.z) continue
+    segments.push({ start, end })
+  }
+
+  return segments
+}
+
+const isRouteLocallyClearOfDifferentRoots = (
+  candidateRoute: HighDensityIntraNodeRoute,
+  existingRoutes: HighDensityIntraNodeRoute[],
+) => {
+  const candidateRootConnectionName = getRouteRootConnectionName(candidateRoute)
+  const candidateSegments = getRouteSegments(candidateRoute)
+
+  for (const existingRoute of existingRoutes) {
+    if (
+      getRouteRootConnectionName(existingRoute) === candidateRootConnectionName
+    ) {
+      continue
+    }
+
+    for (const candidateSegment of candidateSegments) {
+      for (const existingSegment of getRouteSegments(existingRoute)) {
+        if (candidateSegment.start.z !== existingSegment.start.z) continue
+
+        const requiredCenterlineDistance =
+          (candidateRoute.traceThickness + existingRoute.traceThickness) / 2 +
+          RESTORED_ROUTE_TRACE_CLEARANCE
+        const actualDistance = minimumDistanceBetweenSegments(
+          candidateSegment.start,
+          candidateSegment.end,
+          existingSegment.start,
+          existingSegment.end,
+        )
+
+        if (actualDistance < requiredCenterlineDistance - 1e-6) {
+          return false
+        }
+      }
+    }
+  }
+
+  return true
+}
+
 export const finalizeRoutesWithSameRootSharedJunctions = (params: {
   routes: HighDensityIntraNodeRoute[]
   originalNodeWithPortPoints: NodeWithPortPoints
@@ -164,6 +225,7 @@ export const finalizeRoutesWithSameRootSharedJunctions = (params: {
     })
 
     if (!route) continue
+    if (!isRouteLocallyClearOfDifferentRoots(route, expandedRoutes)) continue
     expandedRoutes.push(route)
     routedConnectionNames.add(connectionName)
   }
