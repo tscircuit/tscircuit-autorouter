@@ -1,5 +1,6 @@
 export type TraceId = string
 export type NetId = string
+export type BusId = string
 export type PointId = string
 export type OffBoardConnectionId = string
 export type ObstacleId = string
@@ -21,6 +22,7 @@ export type MultiLayerConnectionPoint = {
   y: number
   layers: string[]
   pointId?: PointId
+  busId?: BusId
   pcb_port_id?: string
 }
 export type ConnectionPoint =
