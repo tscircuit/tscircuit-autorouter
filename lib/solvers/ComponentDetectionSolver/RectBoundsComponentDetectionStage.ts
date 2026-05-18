@@ -1,8 +1,8 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
   ComponentDetectionSolverOutput,
   ComponentDetectionSolverParams,
@@ -11,25 +11,12 @@ import type {
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
-const getMergedObstacleBounds = (
-  obstacles: Obstacle[],
-): SimpleRouteJson["bounds"] => {
-  const bounds: SimpleRouteJson["bounds"] = {
-    minX: Number.POSITIVE_INFINITY,
-    maxX: Number.NEGATIVE_INFINITY,
-    minY: Number.POSITIVE_INFINITY,
-    maxY: Number.NEGATIVE_INFINITY,
+const formatObstacleLabel = (obstacle: Obstacle) => {
+  if (obstacle.componentId && obstacle.obstacleId) {
+    return `${obstacle.componentId}\n${obstacle.obstacleId}`
   }
 
-  for (const obstacle of obstacles) {
-    const obstacleBounds = getBoundingBox(obstacle)
-    bounds.minX = Math.min(bounds.minX, obstacleBounds.minX)
-    bounds.maxX = Math.max(bounds.maxX, obstacleBounds.maxX)
-    bounds.minY = Math.min(bounds.minY, obstacleBounds.minY)
-    bounds.maxY = Math.max(bounds.maxY, obstacleBounds.maxY)
-  }
-
-  return bounds
+  return obstacle.componentId ?? obstacle.obstacleId ?? "obstacle"
 }
 
 /**
@@ -91,6 +78,20 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
   override visualize(): GraphicsObject {
     const rects: NonNullable<GraphicsObject["rects"]> = []
+    const { bounds } = this.inputSrj
+
+    rects.push({
+      center: {
+        x: (bounds.minX + bounds.maxX) / 2,
+        y: (bounds.minY + bounds.maxY) / 2,
+      },
+      width: bounds.maxX - bounds.minX,
+      height: bounds.maxY - bounds.minY,
+      fill: "rgba(0, 0, 0, 0)",
+      stroke: "rgba(40, 40, 40, 0.7)",
+      label: "Board bounds",
+      step: 0,
+    })
 
     rects.push(
       ...this.inputSrj.obstacles
@@ -101,7 +102,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           height: obstacle.height,
           fill: "rgba(120, 120, 120, 0.10)",
           stroke: "rgba(120, 120, 120, 0.40)",
-          label: obstacle.obstacleId,
+          label: formatObstacleLabel(obstacle),
           layer: obstacle.layers.join(","),
           step: 0,
         })),
@@ -123,13 +124,34 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         height: obstacle.height,
         fill: isActive
           ? safeTransparentize(color, 0.55)
-          : safeTransparentize(color, 0.82),
+          : safeTransparentize(color, 0.74),
         stroke: isActive
           ? safeTransparentize(color, 0.1)
-          : safeTransparentize(color, 0.45),
-        label: obstacle.componentId,
+          : safeTransparentize(color, 0.28),
+        label: formatObstacleLabel(obstacle),
         layer: obstacle.layers.join(","),
         step: isActive ? 1 : 0,
+      })
+    }
+
+    if (
+      this.currentComponentId !== null &&
+      this.currentMemberObstacles.length > 0
+    ) {
+      const color = getStringColor(this.currentComponentId)
+      const candidateBounds = getBoundsForObstacles(this.currentMemberObstacles)
+
+      rects.push({
+        center: {
+          x: (candidateBounds.minX + candidateBounds.maxX) / 2,
+          y: (candidateBounds.minY + candidateBounds.maxY) / 2,
+        },
+        width: candidateBounds.maxX - candidateBounds.minX,
+        height: candidateBounds.maxY - candidateBounds.minY,
+        fill: safeTransparentize(color, 0.9),
+        stroke: safeTransparentize(color, 0.08),
+        label: `${this.currentComponentId}\ncandidate region`,
+        step: 1,
       })
     }
 
@@ -141,9 +163,9 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           center: obstacle.center,
           width: obstacle.width,
           height: obstacle.height,
-          fill: safeTransparentize(color, 0.7),
+          fill: safeTransparentize(color, 0.66),
           stroke: safeTransparentize(color, 0.25),
-          label: component.componentId,
+          label: formatObstacleLabel(obstacle),
           layer: obstacle.layers.join(","),
           step: 1,
         })),
@@ -155,7 +177,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         height: component.replacementObstacle.height,
         fill: safeTransparentize(color, 0.88),
         stroke: safeTransparentize(color, 0.1),
-        label: `${component.componentId} region`,
+        label: `${component.componentId}\nmerged region`,
         layer: component.replacementObstacle.layers.join(","),
         step: 2,
       })
@@ -286,7 +308,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     memberObstacles: Obstacle[]
   }): DetectedComponent {
     const copiedMemberObstacles = cloneObstacles(memberObstacles)
-    const bounds = getMergedObstacleBounds(copiedMemberObstacles)
+    const bounds = getBoundsForObstacles(copiedMemberObstacles)
     const replacementObstacle = this.createReplacementObstacle({
       componentId,
       memberObstacles: copiedMemberObstacles,
