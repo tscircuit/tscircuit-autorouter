@@ -1,0 +1,195 @@
+{
+  "nodeWithPortPoints": [
+    {
+      "capacityMeshNodeId": "node_a",
+      "center": { "x": 0, "y": 0 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_left",
+          "connectionName": "connection:1",
+          "x": -4,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "portPointId": "p_ab",
+          "connectionName": "connection:1",
+          "x": 4,
+          "y": 0,
+          "z": 0
+        }
+      ]
+    },
+    {
+      "capacityMeshNodeId": "node_b",
+      "center": { "x": 8, "y": 0 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_ab",
+          "connectionName": "connection:1",
+          "x": 4,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "portPointId": "p_top",
+          "connectionName": "connection:1",
+          "x": 8,
+          "y": 4,
+          "z": 0
+        },
+        {
+          "portPointId": "p_top",
+          "connectionName": "connection:1",
+          "x": 8,
+          "y": 4,
+          "z": 0
+        },
+        {
+          "portPointId": "p_right",
+          "connectionName": "connection:1",
+          "x": 12,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "portPointId": "p_right",
+          "connectionName": "connection:1",
+          "x": 12,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "portPointId": "p_bc",
+          "connectionName": "connection:1",
+          "x": 8,
+          "y": -4,
+          "z": 0
+        }
+      ]
+    },
+    {
+      "capacityMeshNodeId": "node_c",
+      "center": { "x": 8, "y": -8 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_bc",
+          "connectionName": "connection:1",
+          "x": 8,
+          "y": -4,
+          "z": 0
+        },
+        {
+          "portPointId": "p_bottom",
+          "connectionName": "connection:1",
+          "x": 8,
+          "y": -12,
+          "z": 0
+        }
+      ]
+    }
+  ],
+  "inputNodesWithPortPoints": [
+    {
+      "capacityMeshNodeId": "node_a",
+      "center": { "x": 0, "y": 0 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_left",
+          "x": -4,
+          "y": 0,
+          "z": 0,
+          "connectionNodeIds": ["node_a", "node_a"],
+          "distToCentermostPortOnZ": 0
+        },
+        {
+          "portPointId": "p_ab",
+          "x": 4,
+          "y": 0,
+          "z": 0,
+          "connectionNodeIds": ["node_a", "node_b"],
+          "distToCentermostPortOnZ": 0
+        }
+      ]
+    },
+    {
+      "capacityMeshNodeId": "node_b",
+      "center": { "x": 8, "y": 0 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_ab",
+          "x": 4,
+          "y": 0,
+          "z": 0,
+          "connectionNodeIds": ["node_a", "node_b"],
+          "distToCentermostPortOnZ": 0
+        },
+        {
+          "portPointId": "p_top",
+          "x": 8,
+          "y": 4,
+          "z": 0,
+          "connectionNodeIds": ["node_b", "node_b"],
+          "distToCentermostPortOnZ": 0
+        },
+        {
+          "portPointId": "p_right",
+          "x": 12,
+          "y": 0,
+          "z": 0,
+          "connectionNodeIds": ["node_b", "node_b"],
+          "distToCentermostPortOnZ": 0
+        },
+        {
+          "portPointId": "p_bc",
+          "x": 8,
+          "y": -4,
+          "z": 0,
+          "connectionNodeIds": ["node_b", "node_c"],
+          "distToCentermostPortOnZ": 0
+        }
+      ]
+    },
+    {
+      "capacityMeshNodeId": "node_c",
+      "center": { "x": 8, "y": -8 },
+      "width": 8,
+      "height": 8,
+      "availableZ": [0],
+      "portPoints": [
+        {
+          "portPointId": "p_bc",
+          "x": 8,
+          "y": -4,
+          "z": 0,
+          "connectionNodeIds": ["node_b", "node_c"],
+          "distToCentermostPortOnZ": 0
+        },
+        {
+          "portPointId": "p_bottom",
+          "x": 8,
+          "y": -12,
+          "z": 0,
+          "connectionNodeIds": ["node_c", "node_c"],
+          "distToCentermostPortOnZ": 0
+        }
+      ]
+    }
+  ],
+  "obstacles": []
+}
