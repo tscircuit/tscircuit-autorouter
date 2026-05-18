@@ -9,6 +9,7 @@ import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/cal
 import { type CapacityMeshNodeId, getConnectionPointLayers } from "lib/types"
 import type {
   NodeWithPortPoints,
+  Path,
   PortPoint,
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
@@ -596,12 +597,100 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  /**
+   * Convert one solved tiny-hypergraph route into the local `Path` shape.
+   *
+   * The tiny solver already reports ports in start-to-end order, so this
+   * method mainly rehydrates each serialized port into a `PortPoint`,
+   * dropping any entries that no longer resolve against the solved topology,
+   * and attaches route-level metadata used by later solvers.
+   *
+   * @param solvedTinySolver Solved tiny-hypergraph instance that owns the
+   * topology arrays and optional route metadata.
+   * @param routeId Zero-based route index from the tiny solver output.
+   * @param solvedRoute Serialized solved route containing the ordered port id
+   * sequence.
+   * @returns A normalized `Path` for downstream consumers.
+   *
+   * Note: if route metadata is unavailable, the path falls back to
+   * `route-${routeId}`. Missing width or via sizing inputs fall back to `0`.
+   */
+  private createPathFromSolvedRoute(
+    solvedTinySolver: TinyHyperGraphSolver,
+    routeId: number,
+    solvedRoute: SerializedTinySolvedRoute,
+  ): Path {
+    const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+
+    let connectionName = `route-${routeId}`
+    if (routeMetadata) {
+      connectionName = getRouteConnectionName(routeMetadata)
+    }
+
+    let rootConnectionName: string | undefined
+    if (routeMetadata) {
+      rootConnectionName = getRouteRootConnectionName(routeMetadata)
+    }
+
+    let traceThickness = 0
+    if (routeMetadata?.simpleRouteConnection?.nominalTraceWidth) {
+      traceThickness = routeMetadata.simpleRouteConnection.nominalTraceWidth
+    }
+
+    let viaDiameter = 0
+    if (this.params.minViaPadDiameter) {
+      viaDiameter = this.params.minViaPadDiameter
+    }
+
+    const route: PortPoint[] = []
+
+    for (const candidate of solvedRoute.path) {
+      const portMetadata = solvedTinySolver.topology.portMetadata?.findIndex(
+        (metadata) => String(metadata?.portId) === candidate.portId,
+      )
+
+      if (portMetadata === undefined || portMetadata < 0) {
+        continue
+      }
+
+      route.push(
+        this.createAssignedPortPoint(solvedTinySolver, routeId, portMetadata),
+      )
+    }
+
+    return {
+      connectionName,
+      rootConnectionName,
+      traceThickness,
+      viaDiameter,
+      route,
+    }
+  }
+
+  /**
+   * Return the tiny-hypergraph solve output in the shapes expected by the rest
+   * of the autorouter pipeline.
+   *
+   * @returns Solved node assignments for intra-node analysis, the original
+   * input nodes used to seed this solver, and one ordered `Path` per solved
+   * connection.
+   *
+   * Note: only regions that map back to original input regions are emitted in
+   * `nodesWithPortPoints`.
+   *
+   * Edge case: missing or sparse `solvedRoutes` entries are skipped instead of
+   * producing placeholder paths.
+   */
   getOutput(): {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
+    paths: Path[]
   } {
     const solvedTinySolver = this.getSolvedTinySolver()
+    const serializedOutput = solvedTinySolver.getOutput()
+    const solvedRoutes = serializedOutput.solvedRoutes ?? []
     const nodesWithPortPoints: NodeWithPortPoints[] = []
+    const paths: Path[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
 
@@ -636,9 +725,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       })
     }
 
+    for (let routeId = 0; routeId < solvedRoutes.length; routeId++) {
+      const solvedRoute = solvedRoutes[routeId]
+
+      if (!solvedRoute) {
+        continue
+      }
+
+      paths.push(
+        this.createPathFromSolvedRoute(solvedTinySolver, routeId, solvedRoute),
+      )
+    }
+
     return {
       nodesWithPortPoints,
       inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      paths,
     }
   }
 

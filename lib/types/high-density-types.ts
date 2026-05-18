@@ -17,6 +17,26 @@ export type NodeWithPortPoints = {
 }
 
 /**
+ * Ordered end-to-end path for a routed connection before it is expanded into
+ * high-density intra-node segments.
+ *
+ * This shape keeps the solved port traversal in order, including layer
+ * changes through `z`.
+ *
+ * Note: `traceThickness` may be `0` when route metadata does not provide a
+ * nominal width, and `viaDiameter` may be `0` when the solver was not given a
+ * minimum via pad diameter.
+ */
+export type Path = {
+  connectionName: string
+  rootConnectionName?: string
+  traceThickness: number
+  viaDiameter: number
+  /** Port points in traversal order from source to target. */
+  route: PortPoint[]
+}
+
+/**
  * A path for a wire in high-density intra-node routing.
  *
  * Wires travel along a route, and are placed to avoid other
