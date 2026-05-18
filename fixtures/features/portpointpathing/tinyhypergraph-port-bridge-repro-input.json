@@ -1,0 +1,1092 @@
+{
+  "graph": {
+    "regions": [
+      {
+        "regionId": "bl",
+        "d": {
+          "capacityMeshNodeId": "bl",
+          "center": { "x": -4, "y": -2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p0",
+            "region1": {
+              "regionId": "bl",
+              "d": {
+                "capacityMeshNodeId": "bl",
+                "center": { "x": -4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "bl",
+                  "d": {
+                    "capacityMeshNodeId": "bl",
+                    "center": { "x": -4, "y": -2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "regionId": "left-bridge",
+        "d": {
+          "capacityMeshNodeId": "left-bridge",
+          "center": { "x": 0, "y": 0 },
+          "width": 6,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p0",
+            "region1": {
+              "regionId": "bl",
+              "d": {
+                "capacityMeshNodeId": "bl",
+                "center": { "x": -4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "bl",
+                  "d": {
+                    "capacityMeshNodeId": "bl",
+                    "center": { "x": -4, "y": -2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p1",
+            "region1": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p1",
+              "x": -2,
+              "y": 1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-left",
+                  "d": {
+                    "capacityMeshNodeId": "top-left",
+                    "center": { "x": -2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p4",
+            "region1": {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p4",
+              "x": 2,
+              "y": 1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-right",
+                  "d": {
+                    "capacityMeshNodeId": "top-right",
+                    "center": { "x": 2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p5",
+            "region1": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "br",
+              "d": {
+                "capacityMeshNodeId": "br",
+                "center": { "x": 4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "br",
+                  "d": {
+                    "capacityMeshNodeId": "br",
+                    "center": { "x": 4, "y": -2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "regionId": "top-left",
+        "d": {
+          "capacityMeshNodeId": "top-left",
+          "center": { "x": -2, "y": 2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p1",
+            "region1": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p1",
+              "x": -2,
+              "y": 1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-left",
+                  "d": {
+                    "capacityMeshNodeId": "top-left",
+                    "center": { "x": -2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p2",
+            "region1": {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p2",
+              "x": -1,
+              "y": 2,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-left",
+                  "d": {
+                    "capacityMeshNodeId": "top-left",
+                    "center": { "x": -2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-mid",
+                  "d": {
+                    "capacityMeshNodeId": "top-mid",
+                    "center": { "x": 0, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "regionId": "top-mid",
+        "d": {
+          "capacityMeshNodeId": "top-mid",
+          "center": { "x": 0, "y": 2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p2",
+            "region1": {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p2",
+              "x": -1,
+              "y": 2,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-left",
+                  "d": {
+                    "capacityMeshNodeId": "top-left",
+                    "center": { "x": -2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-mid",
+                  "d": {
+                    "capacityMeshNodeId": "top-mid",
+                    "center": { "x": 0, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p3",
+            "region1": {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p3",
+              "x": 1,
+              "y": 2,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-mid",
+                  "d": {
+                    "capacityMeshNodeId": "top-mid",
+                    "center": { "x": 0, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-right",
+                  "d": {
+                    "capacityMeshNodeId": "top-right",
+                    "center": { "x": 2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "regionId": "top-right",
+        "d": {
+          "capacityMeshNodeId": "top-right",
+          "center": { "x": 2, "y": 2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p3",
+            "region1": {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p3",
+              "x": 1,
+              "y": 2,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-mid",
+                  "d": {
+                    "capacityMeshNodeId": "top-mid",
+                    "center": { "x": 0, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "top-right",
+                  "d": {
+                    "capacityMeshNodeId": "top-right",
+                    "center": { "x": 2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "portId": "p4",
+            "region1": {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p4",
+              "x": 2,
+              "y": 1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "top-right",
+                  "d": {
+                    "capacityMeshNodeId": "top-right",
+                    "center": { "x": 2, "y": 2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "regionId": "br",
+        "d": {
+          "capacityMeshNodeId": "br",
+          "center": { "x": 4, "y": -2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        },
+        "ports": [
+          {
+            "portId": "p5",
+            "region1": {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "region2": {
+              "regionId": "br",
+              "d": {
+                "capacityMeshNodeId": "br",
+                "center": { "x": 4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            "d": {
+              "portId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "distToCentermostPortOnZ": 0,
+              "regions": [
+                {
+                  "regionId": "left-bridge",
+                  "d": {
+                    "capacityMeshNodeId": "left-bridge",
+                    "center": { "x": 0, "y": 0 },
+                    "width": 6,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                },
+                {
+                  "regionId": "br",
+                  "d": {
+                    "capacityMeshNodeId": "br",
+                    "center": { "x": 4, "y": -2 },
+                    "width": 2,
+                    "height": 2,
+                    "availableZ": [0]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "ports": [
+      {
+        "portId": "p0",
+        "region1": {
+          "regionId": "bl",
+          "d": {
+            "capacityMeshNodeId": "bl",
+            "center": { "x": -4, "y": -2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "left-bridge",
+          "d": {
+            "capacityMeshNodeId": "left-bridge",
+            "center": { "x": 0, "y": 0 },
+            "width": 6,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p0",
+          "x": -3,
+          "y": -1,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "bl",
+              "d": {
+                "capacityMeshNodeId": "bl",
+                "center": { "x": -4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "portId": "p1",
+        "region1": {
+          "regionId": "left-bridge",
+          "d": {
+            "capacityMeshNodeId": "left-bridge",
+            "center": { "x": 0, "y": 0 },
+            "width": 6,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "top-left",
+          "d": {
+            "capacityMeshNodeId": "top-left",
+            "center": { "x": -2, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p1",
+          "x": -2,
+          "y": 1,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "portId": "p2",
+        "region1": {
+          "regionId": "top-left",
+          "d": {
+            "capacityMeshNodeId": "top-left",
+            "center": { "x": -2, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "top-mid",
+          "d": {
+            "capacityMeshNodeId": "top-mid",
+            "center": { "x": 0, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p2",
+          "x": -1,
+          "y": 2,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "top-left",
+              "d": {
+                "capacityMeshNodeId": "top-left",
+                "center": { "x": -2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "portId": "p3",
+        "region1": {
+          "regionId": "top-mid",
+          "d": {
+            "capacityMeshNodeId": "top-mid",
+            "center": { "x": 0, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "top-right",
+          "d": {
+            "capacityMeshNodeId": "top-right",
+            "center": { "x": 2, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p3",
+          "x": 1,
+          "y": 2,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "top-mid",
+              "d": {
+                "capacityMeshNodeId": "top-mid",
+                "center": { "x": 0, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "portId": "p4",
+        "region1": {
+          "regionId": "top-right",
+          "d": {
+            "capacityMeshNodeId": "top-right",
+            "center": { "x": 2, "y": 2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "left-bridge",
+          "d": {
+            "capacityMeshNodeId": "left-bridge",
+            "center": { "x": 0, "y": 0 },
+            "width": 6,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p4",
+          "x": 2,
+          "y": 1,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "top-right",
+              "d": {
+                "capacityMeshNodeId": "top-right",
+                "center": { "x": 2, "y": 2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "portId": "p5",
+        "region1": {
+          "regionId": "left-bridge",
+          "d": {
+            "capacityMeshNodeId": "left-bridge",
+            "center": { "x": 0, "y": 0 },
+            "width": 6,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "region2": {
+          "regionId": "br",
+          "d": {
+            "capacityMeshNodeId": "br",
+            "center": { "x": 4, "y": -2 },
+            "width": 2,
+            "height": 2,
+            "availableZ": [0]
+          }
+        },
+        "d": {
+          "portId": "p5",
+          "x": 3,
+          "y": -1,
+          "z": 0,
+          "distToCentermostPortOnZ": 0,
+          "regions": [
+            {
+              "regionId": "left-bridge",
+              "d": {
+                "capacityMeshNodeId": "left-bridge",
+                "center": { "x": 0, "y": 0 },
+                "width": 6,
+                "height": 2,
+                "availableZ": [0]
+              }
+            },
+            {
+              "regionId": "br",
+              "d": {
+                "capacityMeshNodeId": "br",
+                "center": { "x": 4, "y": -2 },
+                "width": 2,
+                "height": 2,
+                "availableZ": [0]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": [
+    {
+      "connectionId": "bridge-repro",
+      "mutuallyConnectedNetworkId": "bridge-repro",
+      "startRegion": {
+        "regionId": "bl",
+        "d": {
+          "capacityMeshNodeId": "bl",
+          "center": { "x": -4, "y": -2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        }
+      },
+      "endRegion": {
+        "regionId": "br",
+        "d": {
+          "capacityMeshNodeId": "br",
+          "center": { "x": 4, "y": -2 },
+          "width": 2,
+          "height": 2,
+          "availableZ": [0]
+        }
+      },
+      "simpleRouteConnection": {
+        "name": "bridge-repro",
+        "rootConnectionName": "bridge-repro",
+        "pointsToConnect": [
+          { "x": -4, "y": -3, "layer": "top" },
+          { "x": 4, "y": -3, "layer": "top" }
+        ]
+      }
+    }
+  ],
+  "inputSolvedRoutes": [
+    {
+      "connectionId": "bridge-repro",
+      "path": [
+        { "portId": "p0" },
+        { "portId": "p1" },
+        { "portId": "p2" },
+        { "portId": "p3" },
+        { "portId": "p4" },
+        { "portId": "p5" }
+      ]
+    }
+  ],
+  "colorMap": {
+    "bridge-repro": "#d33"
+  },
+  "layerCount": 1,
+  "effort": 0.3,
+  "flags": {
+    "FORCE_CENTER_FIRST": true,
+    "RIPPING_ENABLED": false
+  },
+  "weights": {
+    "SHUFFLE_SEED": 0,
+    "CENTER_OFFSET_DIST_PENALTY_FACTOR": 0,
+    "CENTER_OFFSET_FOCUS_SHIFT": 0,
+    "GREEDY_MULTIPLIER": 1,
+    "NODE_PF_FACTOR": 0,
+    "LAYER_CHANGE_COST": 0,
+    "RIPPING_PF_COST": 0,
+    "NODE_PF_MAX_PENALTY": 100,
+    "MEMORY_PF_FACTOR": 0,
+    "BASE_CANDIDATE_COST": 0.5,
+    "MIN_ALLOWED_BOARD_SCORE": -10000,
+    "MAX_ITERATIONS_PER_PATH": 0,
+    "RANDOM_WALK_DISTANCE": 0,
+    "START_RIPPING_PF_THRESHOLD": 0.3,
+    "END_RIPPING_PF_THRESHOLD": 1,
+    "MAX_RIPS": 0,
+    "RANDOM_RIP_FRACTION": 0,
+    "STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR": 0
+  }
+}
