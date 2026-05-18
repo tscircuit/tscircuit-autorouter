@@ -48,7 +48,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
       solverClass: Pipeline5HdCacheHighDensitySolver as any,
       getConstructorParams: (cms: AutoroutingPipelineSolver5_HdCache) => {
         const uniformNodes =
-          cms.uniformPortDistributionSolver?.getOutput() ?? []
+          cms.uniformPortDistributionSolver?.getOutput().nodes ?? []
         const fallbackNodes =
           cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
         const nodePortPointsSource =

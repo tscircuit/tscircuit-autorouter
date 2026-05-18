@@ -318,7 +318,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       ],
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
-      const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
+      const uniformNodes =
+        cms.uniformPortDistributionSolver?.getOutput().nodes ?? []
       const fallbackNodes =
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =

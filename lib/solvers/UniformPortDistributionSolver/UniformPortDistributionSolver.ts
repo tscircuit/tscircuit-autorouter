@@ -1,7 +1,7 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints, Path } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -20,9 +20,17 @@ import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
+  /** Nodes whose port points may be redistributed. */
   nodeWithPortPoints: NodeWithPortPoints[]
+  /** Source node definitions used to determine each port point's owner pair. */
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
+  /** Obstacles that can cause a shared edge or port point family to be skipped. */
   obstacles: Obstacle[]
+  /**
+   * Optional routed paths to keep in sync with redistributed port point
+   * endpoints.
+   */
+  paths?: Path[]
 }
 
 /**
@@ -162,7 +170,64 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }))
   }
 
-  getOutput = () => this.redistributedNodes
+  /**
+   * Builds the path output with redistributed endpoint coordinates.
+   *
+   * Each route point with a `portPointId` matching a redistributed port point
+   * is updated in place by value, while non-port route points are preserved.
+   *
+   * Edge cases:
+   * - If `paths` input is not provided, returns `undefined`.
+   * - If a route point has no `portPointId`, it is left unchanged.
+   * - If a `portPointId` was not redistributed, the original route point is
+   *   returned unchanged.
+   */
+  private getRedistributedPaths(): Path[] | undefined {
+    const inputPaths = this.input.paths
+    if (!inputPaths) return undefined
+
+    const redistributedPositions = new Map<string, { x: number; y: number }>()
+    for (const node of this.redistributedNodes) {
+      for (const portPoint of node.portPoints) {
+        if (portPoint.portPointId) {
+          redistributedPositions.set(portPoint.portPointId, {
+            x: portPoint.x,
+            y: portPoint.y,
+          })
+        }
+      }
+    }
+
+    return inputPaths.map((path) => ({
+      ...path,
+      route: path.route.map((routePoint) => {
+        if (!routePoint.portPointId) return routePoint
+        const newPos = redistributedPositions.get(routePoint.portPointId)
+        if (!newPos) return routePoint
+        return { ...routePoint, x: newPos.x, y: newPos.y }
+      }),
+    }))
+  }
+
+  /**
+   * Returns redistributed nodes and, when provided, paths with updated route
+   * endpoint coordinates.
+   *
+   * @returns Solver output containing:
+   * - `nodes`: all input nodes with any redistributed port point coordinates
+   *   applied.
+   * - `paths`: optional input paths with route points updated where their
+   *   `portPointId` matches a redistributed node port point.
+   */
+  getOutput(): {
+    nodes: NodeWithPortPoints[]
+    paths?: Path[]
+  } {
+    return {
+      nodes: this.redistributedNodes,
+      paths: this.getRedistributedPaths(),
+    }
+  }
 
   visualize(): GraphicsObject {
     return visualizeUniformPortDistribution({

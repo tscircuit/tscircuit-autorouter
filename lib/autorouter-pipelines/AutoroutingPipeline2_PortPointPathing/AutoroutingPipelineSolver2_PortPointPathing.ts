@@ -336,7 +336,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => [
       {
         nodePortPoints:
-          cms.uniformPortDistributionSolver?.getOutput() ??
+          cms.uniformPortDistributionSolver?.getOutput().nodes ??
           cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
           cms.portPointPathingSolver?.getNodesWithPortPoints() ??
           [],
