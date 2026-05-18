@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import { BaseSolver, type PendingEffect } from "../../solvers/BaseSolver"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
@@ -10,6 +11,7 @@ import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
+import type { GraphicsObject } from "lib/types/graphics-debug-types"
 import type { Obstacle } from "../../types/srj-types"
 
 // ---------------------------------------------------------------------------
@@ -125,7 +127,7 @@ class CorridorCollisionIndex {
    */
   addRoute(route: HighDensityIntraNodeRoute): void {
     const thickness = route.traceThickness ?? 0.15
-    const halfWidth = thickness / 2 + this.globalMinClearance
+    const halfWidth = thickness / 2
 
     const resolvedRoute = route.route ?? []
     if (resolvedRoute.length < 2) return
@@ -138,7 +140,7 @@ class CorridorCollisionIndex {
       const layerZA = a.z ?? 0
       const layerZB = b.z ?? 0
 
-      const addSegmentToLayer = (z: number, seg: any) => {
+      const addSegmentToLayer = (z: number, seg: CorridorSegment) => {
         let layer = this.segmentsByZ.get(z)
         if (!layer) {
           layer = []
@@ -165,44 +167,56 @@ class CorridorCollisionIndex {
    */
   checkCollision(candidate: HighDensityIntraNodeRoute): number {
     const thickness = candidate.traceThickness ?? 0.15
-    const halfWidth = thickness / 2 + this.globalMinClearance
+    const candidateHalfWidth = thickness / 2
     const resolvedRoute = candidate.route ?? []
 
     for (let i = 0; i < resolvedRoute.length - 1; i++) {
       const a = resolvedRoute[i]!
       const b = resolvedRoute[i + 1]!
-      const z = a.z ?? b.z ?? 0
-      const layer = this.segmentsByZ.get(z)
-      if (!layer || layer.length === 0) continue
 
-      for (const existing of layer) {
-        // Quick bounding-box rejection to avoid expensive segment-to-segment
-        // distance computation.
-        const minAx = Math.min(a.x, b.x)
-        const maxAx = Math.max(a.x, b.x)
-        const minAy = Math.min(a.y, b.y)
-        const maxAy = Math.max(a.y, b.y)
-        const minBx = Math.min(existing.a.x, existing.b.x)
-        const maxBx = Math.max(existing.a.x, existing.b.x)
-        const minBy = Math.min(existing.a.y, existing.b.y)
-        const maxBy = Math.max(existing.a.y, existing.b.y)
+      // Collect unique layers to check (for via transitions, check both layers)
+      const layersToCheck = new Set<number>()
+      const zA = a.z ?? 0
+      const zB = b.z ?? 0
+      layersToCheck.add(zA)
+      if (zA !== zB) {
+        layersToCheck.add(zB)
+      }
 
-        const minRequiredClearance = halfWidth + existing.halfWidth
+      for (const z of layersToCheck) {
+        const layer = this.segmentsByZ.get(z)
+        if (!layer || layer.length === 0) continue
 
-        // Bounding-box expansion check
-        if (
-          maxAx + minRequiredClearance < minBx ||
-          maxBx + minRequiredClearance < minAx ||
-          maxAy + minRequiredClearance < minBy ||
-          maxBy + minRequiredClearance < minAy
-        ) {
-          continue
-        }
+        for (const existing of layer) {
+          // Quick bounding-box rejection to avoid expensive segment-to-segment
+          // distance computation.
+          const minAx = Math.min(a.x, b.x)
+          const maxAx = Math.max(a.x, b.x)
+          const minAy = Math.min(a.y, b.y)
+          const maxAy = Math.max(a.y, b.y)
+          const minBx = Math.min(existing.a.x, existing.b.x)
+          const maxBx = Math.max(existing.a.x, existing.b.x)
+          const minBy = Math.min(existing.a.y, existing.b.y)
+          const maxBy = Math.max(existing.a.y, existing.b.y)
 
-        // Pixel-perfect check: segment-to-segment centerline distance
-        const segDist = segmentToSegmentDistance(a, b, existing.a, existing.b)
-        if (segDist < minRequiredClearance) {
-          return minRequiredClearance - segDist
+          const minRequiredClearance =
+            candidateHalfWidth + existing.halfWidth + this.globalMinClearance
+
+          // Bounding-box expansion check
+          if (
+            maxAx + minRequiredClearance < minBx ||
+            maxBx + minRequiredClearance < minAx ||
+            maxAy + minRequiredClearance < minBy ||
+            maxBy + minRequiredClearance < minAy
+          ) {
+            continue
+          }
+
+          // Pixel-perfect check: segment-to-segment centerline distance
+          const segDist = segmentToSegmentDistance(a, b, existing.a, existing.b)
+          if (segDist < minRequiredClearance) {
+            return minRequiredClearance - segDist
+          }
         }
       }
     }
@@ -230,6 +244,11 @@ function segmentToSegmentDistance(
   c: { x: number; y: number },
   d: { x: number; y: number },
 ): number {
+  // Gate: if the segments intersect in their interiors, distance is 0
+  if (doSegmentsIntersect(a, b, c, d)) {
+    return 0
+  }
+
   const abx = b.x - a.x
   const aby = b.y - a.y
   const cdx = d.x - c.x
@@ -252,8 +271,11 @@ function segmentToSegmentDistance(
 
   // Robust 2D segment distance: fall back to minimum of the four
   // endpoint-to-segment distances instead of independent clamping.
-  const distToSeg = (p: any, s1: any, s2: any) =>
-    pointToSegmentDistancePoint(p, s1, s2)
+  const distToSeg = (
+    p: { x: number; y: number },
+    s1: { x: number; y: number },
+    s2: { x: number; y: number },
+  ) => pointToSegmentDistancePoint(p, s1, s2)
   return Math.min(
     distToSeg(c, a, b),
     distToSeg(d, a, b),
@@ -616,8 +638,8 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
         const currentCount =
           this.corridorCollisionCountByNodeIndex.get(nodeIndex) ?? 0
         this.corridorCollisionCountByNodeIndex.set(nodeIndex, currentCount + 1)
-        ;(this.stats as any).corridorCollisionCount =
-          ((this.stats as any).corridorCollisionCount ?? 0) + 1
+        this.stats.corridorCollisionCount =
+          (this.stats.corridorCollisionCount ?? 0) + 1
         continue
       }
 
@@ -710,12 +732,14 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
             localSolver.solvedRoutes,
           )
 
-          // If the retry still produces too many collisions or we
-          // end up with zero accepted routes (floating trace), fail
-          // the node explicitly instead of silently succeeding.
+          // If the retry still produces too many collisions, we
+          // end up with zero accepted routes (floating trace), or
+          // fewer routes were accepted than produced (silent dropout),
+          // fail the node explicitly instead of silently succeeding.
           if (
             this.shouldAbandonNodeDueToCollisions(nodeIndex) ||
-            retryAccepted.length === 0
+            retryAccepted.length === 0 ||
+            retryAccepted.length < localSolver.solvedRoutes.length
           ) {
             const errorMessage =
               `Retry solve for ${node.capacityMeshNodeId} produced no ` +
@@ -1215,8 +1239,13 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     this.solved = true
   }
 
-  override visualize(): any {
-    const graphics: any = { lines: [], points: [], rects: [], circles: [] }
+  override visualize(): GraphicsObject {
+    const graphics: GraphicsObject = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+    }
 
     for (const route of this.getVisibleRoutes()) {
       const mergedSegments = mergeRouteSegments(
@@ -1226,7 +1255,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       )
 
       for (const segment of mergedSegments) {
-        graphics.lines.push({
+        graphics.lines!.push({
           points: segment.points,
           label: segment.connectionName,
           strokeColor:
@@ -1240,7 +1269,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       }
 
       for (const via of route.vias) {
-        graphics.circles.push({
+        graphics.circles!.push({
           center: via,
           layer: "z0,1",
           radius: route.viaDiameter / 2,
@@ -1259,7 +1288,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       const markerColor = metadata.status === "solved" ? "blue" : "red"
       const boundaryStrokeWidth = metadata.status === "solved" ? 0.03 : 0.08
 
-      graphics.lines.push(
+      graphics.lines!.push(
         {
           points: [
             { x: left, y: top },
@@ -1307,7 +1336,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       )
 
       if (metadata.status === "solved") {
-        graphics.points.push({
+        graphics.points!.push({
           x: metadata.node.center.x,
           y: metadata.node.center.y,
           color: markerColor,
@@ -1315,7 +1344,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
           label,
         })
       } else {
-        graphics.lines.push({
+        graphics.lines!.push({
           points: [
             { x: 0, y: 0 },
             {
@@ -1334,7 +1363,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
         const halfRectWidth = rectWidth / 2
         const halfRectHeight = rectHeight / 2
 
-        graphics.rects.push({
+        graphics.rects!.push({
           center: metadata.node.center,
           layer: "hd_node_markers",
           width: rectWidth,
@@ -1343,7 +1372,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
           stroke: markerColor,
           label,
         })
-        graphics.circles.push({
+        graphics.circles!.push({
           center: metadata.node.center,
           radius: Math.max(Math.max(rectWidth, rectHeight) * 0.6, 1.1),
           layer: "hd_node_markers",
@@ -1351,7 +1380,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
           stroke: markerColor,
           label,
         })
-        graphics.lines.push(
+        graphics.lines!.push(
           {
             points: [
               {

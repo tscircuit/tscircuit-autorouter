@@ -12,6 +12,10 @@ export interface GraphicsObject {
     layer?: string
     step?: number
     stroke?: string
+    strokeColor?: string
+    strokeWidth?: number
+    strokeDash?: string
+    label?: string
   }[]
   rects?: Array<{
     center: { x: number; y: number }
@@ -30,6 +34,7 @@ export interface GraphicsObject {
     stroke?: string
     layer?: string
     step?: number
+    label?: string
   }>
   grid?: { cellSize: number; label?: boolean }
   coordinateSystem?: "cartesian" | "screen"
