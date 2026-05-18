@@ -4,11 +4,11 @@ import input from "../../fixtures/features/portpointpathing/tinyhypergraph-port-
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
 test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", () => {
-  const solver = new TinyHypergraphPortPointPathingSolver(
-    input,
-  )
+  const solver = new TinyHypergraphPortPointPathingSolver(input)
 
   solver.solve()
 
-  expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(import.meta.path)
+  expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
