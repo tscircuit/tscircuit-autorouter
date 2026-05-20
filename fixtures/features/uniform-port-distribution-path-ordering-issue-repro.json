@@ -21,6 +21,24 @@
           "y": 0,
           "z": 0
         }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "p_left",
+            "connectionName": "connection:1",
+            "x": -4,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "portPointId": "p_ab",
+            "connectionName": "connection:1",
+            "x": 4,
+            "y": 0,
+            "z": 0
+          }
+        ]
       ]
     },
     {
@@ -45,20 +63,6 @@
           "z": 0
         },
         {
-          "portPointId": "p_top",
-          "connectionName": "connection:1",
-          "x": 8,
-          "y": 4,
-          "z": 0
-        },
-        {
-          "portPointId": "p_right",
-          "connectionName": "connection:1",
-          "x": 12,
-          "y": 0,
-          "z": 0
-        },
-        {
           "portPointId": "p_right",
           "connectionName": "connection:1",
           "x": 12,
@@ -72,6 +76,56 @@
           "y": -4,
           "z": 0
         }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "p_ab",
+            "connectionName": "connection:1",
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "portPointId": "p_top",
+            "connectionName": "connection:1",
+            "x": 8,
+            "y": 4,
+            "z": 0
+          }
+        ],
+        [
+          {
+            "portPointId": "p_top",
+            "connectionName": "connection:1",
+            "x": 8,
+            "y": 4,
+            "z": 0
+          },
+          {
+            "portPointId": "p_right",
+            "connectionName": "connection:1",
+            "x": 12,
+            "y": 0,
+            "z": 0
+          }
+        ],
+        [
+          {
+            "portPointId": "p_right",
+            "connectionName": "connection:1",
+            "x": 12,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "portPointId": "p_bc",
+            "connectionName": "connection:1",
+            "x": 8,
+            "y": -4,
+            "z": 0
+          }
+        ]
       ]
     },
     {
@@ -95,6 +149,24 @@
           "y": -12,
           "z": 0
         }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "p_bc",
+            "connectionName": "connection:1",
+            "x": 8,
+            "y": -4,
+            "z": 0
+          },
+          {
+            "portPointId": "p_bottom",
+            "connectionName": "connection:1",
+            "x": 8,
+            "y": -12,
+            "z": 0
+          }
+        ]
       ]
     }
   ],
