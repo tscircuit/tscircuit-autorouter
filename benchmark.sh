@@ -18,6 +18,7 @@ resolve_pipeline_solver_name() {
     4) echo "AutoroutingPipelineSolver4" ;;
     5) echo "AutoroutingPipelineSolver5" ;;
     6) echo "AutoroutingPipelineSolver6" ;;
+    7) echo "AutoroutingPipelineSolver7_MultiGraph" ;;
     krt|KRT) echo "KrtAutoroutingPipelineSolver" ;;
     *)
       echo "Unknown pipeline: $1" >&2
@@ -72,7 +73,7 @@ Usage:
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline ID        Run a pipeline alias (1-6 or krt)
+  --pipeline ID        Run a pipeline alias (1-7 or krt)
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
@@ -96,6 +97,7 @@ Examples:
   ./benchmark.sh --pipeline 4
   ./benchmark.sh --pipeline 5
   ./benchmark.sh --pipeline 6
+  ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline krt
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset srj05 --scenario-limit 20
   ./benchmark.sh --dataset 11 --scenario-limit 20

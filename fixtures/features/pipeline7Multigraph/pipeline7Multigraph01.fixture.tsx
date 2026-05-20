@@ -1,6 +1,6 @@
 import { GenericSolverDebugger } from "@tscircuit/solver-utils/react"
 import * as datasetSrj16 from "@tsci/tscircuit.dataset-srj16-bga-breakouts"
-import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { useEffect, useState } from "react"
 
@@ -124,10 +124,13 @@ const CircuitSelector = ({
 }
 
 const SolverView = ({ circuit }: { circuit: DatasetCircuit }) => {
-  const solver = new BgaTopologyGeneratorSolver({ inputSrj: circuit.srj })
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(circuit.srj)
 
   return (
-    <GenericSolverDebugger key={`bga-topology-${circuit.id}`} solver={solver} />
+    <GenericSolverDebugger
+      key={`pipeline7-${circuit.id}`}
+      solver={solver as any}
+    />
   )
 }
 
