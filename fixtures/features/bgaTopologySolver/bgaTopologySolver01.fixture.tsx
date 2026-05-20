@@ -126,7 +126,9 @@ const CircuitSelector = ({
 const SolverView = ({ circuit }: { circuit: DatasetCircuit }) => {
   const solver = new BgaTopologyGeneratorSolver({ inputSrj: circuit.srj })
 
-  return <GenericSolverDebugger key={`bga-topology-${circuit.id}`} solver={solver} />
+  return (
+    <GenericSolverDebugger key={`bga-topology-${circuit.id}`} solver={solver} />
+  )
 }
 
 export default () => {

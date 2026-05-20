@@ -126,7 +126,12 @@ const CircuitSelector = ({
 const SolverView = ({ circuit }: { circuit: DatasetCircuit }) => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(circuit.srj)
 
-  return <GenericSolverDebugger key={`pipeline7-${circuit.id}`} solver={solver as any} />
+  return (
+    <GenericSolverDebugger
+      key={`pipeline7-${circuit.id}`}
+      solver={solver as any}
+    />
+  )
 }
 
 export default () => {
