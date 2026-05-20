@@ -38,6 +38,21 @@ export const visualizeUniformPortDistribution = ({
   const portPointMap = new Map<string, { x: number; y: number }>()
   const portPointZMap = new Map<string, number>()
   const portPointOwnerPairMap = new Map<string, string>()
+  const getPortPointPosition = (portPoint: {
+    portPointId?: string
+    x: number
+    y: number
+  }) => {
+    if (portPoint.portPointId) {
+      return (
+        portPointMap.get(portPoint.portPointId) ?? {
+          x: portPoint.x,
+          y: portPoint.y,
+        }
+      )
+    }
+    return { x: portPoint.x, y: portPoint.y }
+  }
 
   for (const node of nodeWithPortPoints) {
     for (const pp of node.portPoints) {
@@ -91,15 +106,24 @@ export const visualizeUniformPortDistribution = ({
         label: `z:${zLayer}\no:${ownerPair}`,
       })
 
-      element.portPoints.forEach((f) => {
-        if (!f.portPointId || e === f) return
-        if (e.connectionName === f.connectionName) {
-          const posF = portPointMap.get(f.portPointId)!
-          lines.push({
-            points: [posE, posF],
-            strokeColor: "#fff822c9",
-          })
-        }
+      if (!element.portPointsInPairs?.length) {
+        element.portPoints.forEach((f) => {
+          if (!f.portPointId || e === f) return
+          if (e.connectionName === f.connectionName) {
+            const posF = portPointMap.get(f.portPointId)!
+            lines.push({
+              points: [posE, posF],
+              strokeColor: "#fff822c9",
+            })
+          }
+        })
+      }
+    })
+
+    element.portPointsInPairs?.forEach(([start, end]) => {
+      lines.push({
+        points: [getPortPointPosition(start), getPortPointPosition(end)],
+        strokeColor: "#fff822c9",
       })
     })
   })
