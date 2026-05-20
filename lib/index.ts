@@ -45,6 +45,7 @@ export { IntraNodeSolverWithJumpers } from "./solvers/HighDensitySolver/IntraNod
 export { SingleHighDensityRouteWithJumpersSolver } from "./solvers/HighDensitySolver/SingleHighDensityRouteWithJumpersSolver"
 export { JumperHighDensitySolver as HighDensitySolver } from "./autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 export { CurvyIntraNodeSolver } from "./solvers/CurvyIntraNodeSolver/CurvyIntraNodeSolver"
+export { NominalTraceWidthSolver } from "./solvers/NominalTraceWidthSolver/NominalTraceWidthSolver"
 export type {
   Jumper,
   HighDensityIntraNodeRouteWithJumpers,
