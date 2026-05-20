@@ -1,17 +1,42 @@
 {
-  "sourceDataset": "dataset01",
-  "sourceCircuit": "circuit219",
   "generatedWith": "AutoroutingPipelineSolver4",
   "rerouteMethod": "getRerouteSimpleRouteJson",
-  "randomSeed": 219015,
-  "sampleCount": 25,
+  "sampleCount": 55,
   "minRegionSize": 10,
   "maxRegionSize": 20,
   "gridColumns": 5,
   "gridRows": 5,
+  "sources": [
+    {
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
+      "randomSeed": 219015,
+      "sampleCount": 25
+    },
+    {
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "randomSeed": 49015,
+      "sampleCount": 10
+    },
+    {
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "randomSeed": 50015,
+      "sampleCount": 10
+    },
+    {
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "randomSeed": 51015,
+      "sampleCount": 10
+    }
+  ],
   "samples": [
     {
       "file": "sample01-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -27.489,
@@ -20,10 +45,12 @@
         "maxY": -6.956
       },
       "rippedConnectionCount": 1,
-      "retainedTraceCount": 60
+      "retainedTraceCount": 58
     },
     {
       "file": "sample02-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -20.949,
@@ -32,10 +59,12 @@
         "maxY": -9.454
       },
       "rippedConnectionCount": 9,
-      "retainedTraceCount": 97
+      "retainedTraceCount": 95
     },
     {
       "file": "sample03-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -5.987,
@@ -43,11 +72,13 @@
         "minY": -20.852,
         "maxY": -8.564
       },
-      "rippedConnectionCount": 6,
-      "retainedTraceCount": 108
+      "rippedConnectionCount": 7,
+      "retainedTraceCount": 125
     },
     {
       "file": "sample04-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 1.928,
@@ -56,10 +87,12 @@
         "maxY": -13.941
       },
       "rippedConnectionCount": 2,
-      "retainedTraceCount": 72
+      "retainedTraceCount": 77
     },
     {
       "file": "sample05-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 13.996,
@@ -72,6 +105,8 @@
     },
     {
       "file": "sample06-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -26.465,
@@ -79,11 +114,13 @@
         "minY": -15.812,
         "maxY": 0.38
       },
-      "rippedConnectionCount": 21,
-      "retainedTraceCount": 194
+      "rippedConnectionCount": 22,
+      "retainedTraceCount": 197
     },
     {
       "file": "sample07-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -12.133,
@@ -92,10 +129,12 @@
         "maxY": -4.507
       },
       "rippedConnectionCount": 7,
-      "retainedTraceCount": 127
+      "retainedTraceCount": 111
     },
     {
       "file": "sample08-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -8.182,
@@ -103,11 +142,13 @@
         "minY": -21.297,
         "maxY": -2.465
       },
-      "rippedConnectionCount": 10,
-      "retainedTraceCount": 144
+      "rippedConnectionCount": 9,
+      "retainedTraceCount": 139
     },
     {
       "file": "sample09-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 0.586,
@@ -115,11 +156,13 @@
         "minY": -13.681,
         "maxY": 3.273
       },
-      "rippedConnectionCount": 9,
-      "retainedTraceCount": 148
+      "rippedConnectionCount": 8,
+      "retainedTraceCount": 126
     },
     {
       "file": "sample10-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 11.648,
@@ -128,10 +171,12 @@
         "maxY": 2.176
       },
       "rippedConnectionCount": 2,
-      "retainedTraceCount": 64
+      "retainedTraceCount": 65
     },
     {
       "file": "sample11-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -27.641,
@@ -139,11 +184,13 @@
         "minY": -13.739,
         "maxY": 6.109
       },
-      "rippedConnectionCount": 26,
-      "retainedTraceCount": 189
+      "rippedConnectionCount": 25,
+      "retainedTraceCount": 187
     },
     {
       "file": "sample12-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -21.183,
@@ -151,11 +198,13 @@
         "minY": -10.066,
         "maxY": 4.195
       },
-      "rippedConnectionCount": 34,
-      "retainedTraceCount": 241
+      "rippedConnectionCount": 35,
+      "retainedTraceCount": 256
     },
     {
       "file": "sample13-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -7.715,
@@ -163,11 +212,13 @@
         "minY": -12.01,
         "maxY": 7.836
       },
-      "rippedConnectionCount": 22,
-      "retainedTraceCount": 215
+      "rippedConnectionCount": 23,
+      "retainedTraceCount": 237
     },
     {
       "file": "sample14-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 2.086,
@@ -176,10 +227,12 @@
         "maxY": 5.829
       },
       "rippedConnectionCount": 7,
-      "retainedTraceCount": 128
+      "retainedTraceCount": 116
     },
     {
       "file": "sample15-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 12.114,
@@ -188,10 +241,12 @@
         "maxY": 6.195
       },
       "rippedConnectionCount": 3,
-      "retainedTraceCount": 59
+      "retainedTraceCount": 60
     },
     {
       "file": "sample16-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -30.339,
@@ -199,11 +254,13 @@
         "minY": -1.798,
         "maxY": 11.022
       },
-      "rippedConnectionCount": 31,
-      "retainedTraceCount": 189
+      "rippedConnectionCount": 32,
+      "retainedTraceCount": 185
     },
     {
       "file": "sample17-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -18.567,
@@ -211,11 +268,13 @@
         "minY": -0.195,
         "maxY": 10.551
       },
-      "rippedConnectionCount": 30,
-      "retainedTraceCount": 229
+      "rippedConnectionCount": 32,
+      "retainedTraceCount": 270
     },
     {
       "file": "sample18-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -3.75,
@@ -224,10 +283,12 @@
         "maxY": 16.376
       },
       "rippedConnectionCount": 17,
-      "retainedTraceCount": 187
+      "retainedTraceCount": 198
     },
     {
       "file": "sample19-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 1.815,
@@ -235,11 +296,13 @@
         "minY": -0.839,
         "maxY": 11.8
       },
-      "rippedConnectionCount": 11,
-      "retainedTraceCount": 155
+      "rippedConnectionCount": 12,
+      "retainedTraceCount": 179
     },
     {
       "file": "sample20-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 5.189,
@@ -248,10 +311,12 @@
         "maxY": 14.703
       },
       "rippedConnectionCount": 15,
-      "retainedTraceCount": 170
+      "retainedTraceCount": 161
     },
     {
       "file": "sample21-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -25.525,
@@ -260,10 +325,12 @@
         "maxY": 19.492
       },
       "rippedConnectionCount": 17,
-      "retainedTraceCount": 195
+      "retainedTraceCount": 183
     },
     {
       "file": "sample22-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -19.006,
@@ -272,10 +339,12 @@
         "maxY": 29.022
       },
       "rippedConnectionCount": 12,
-      "retainedTraceCount": 131
+      "retainedTraceCount": 136
     },
     {
       "file": "sample23-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": -5.297,
@@ -283,11 +352,13 @@
         "minY": 8.352,
         "maxY": 27.823
       },
-      "rippedConnectionCount": 9,
-      "retainedTraceCount": 135
+      "rippedConnectionCount": 12,
+      "retainedTraceCount": 202
     },
     {
       "file": "sample24-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 4.496,
@@ -296,10 +367,12 @@
         "maxY": 26.605
       },
       "rippedConnectionCount": 4,
-      "retainedTraceCount": 97
+      "retainedTraceCount": 105
     },
     {
       "file": "sample25-region-reroute.srj.json",
+      "sourceDataset": "dataset01",
+      "sourceCircuit": "circuit219",
       "region": {
         "shape": "rect",
         "minX": 7.014,
@@ -308,7 +381,427 @@
         "maxY": 23.985
       },
       "rippedConnectionCount": 5,
-      "retainedTraceCount": 118
+      "retainedTraceCount": 124
+    },
+    {
+      "file": "sample26-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -41.558,
+        "maxX": -24.519,
+        "minY": -33.765,
+        "maxY": -14.71
+      },
+      "rippedConnectionCount": 5,
+      "retainedTraceCount": 163
+    },
+    {
+      "file": "sample27-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -26.632,
+        "maxX": -7.618,
+        "minY": -33.662,
+        "maxY": -15.082
+      },
+      "rippedConnectionCount": 16,
+      "retainedTraceCount": 198
+    },
+    {
+      "file": "sample28-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -7.254,
+        "maxX": 2.859,
+        "minY": -32.944,
+        "maxY": -14.331
+      },
+      "rippedConnectionCount": 11,
+      "retainedTraceCount": 197
+    },
+    {
+      "file": "sample29-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": 2.81,
+        "maxX": 21.386,
+        "minY": -24.469,
+        "maxY": -13.733
+      },
+      "rippedConnectionCount": 14,
+      "retainedTraceCount": 260
+    },
+    {
+      "file": "sample30-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": 11.529,
+        "maxX": 30.934,
+        "minY": -32.663,
+        "maxY": -21.736
+      },
+      "rippedConnectionCount": 6,
+      "retainedTraceCount": 245
+    },
+    {
+      "file": "sample31-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -33.532,
+        "maxX": -19.845,
+        "minY": -19.077,
+        "maxY": -4.615
+      },
+      "rippedConnectionCount": 4,
+      "retainedTraceCount": 176
+    },
+    {
+      "file": "sample32-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -26.43,
+        "maxX": -6.878,
+        "minY": -25.556,
+        "maxY": -6.166
+      },
+      "rippedConnectionCount": 29,
+      "retainedTraceCount": 192
+    },
+    {
+      "file": "sample33-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": -15.339,
+        "maxX": 2.81,
+        "minY": -24.043,
+        "maxY": -8.549
+      },
+      "rippedConnectionCount": 29,
+      "retainedTraceCount": 204
+    },
+    {
+      "file": "sample34-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": 10.45,
+        "maxX": 24.131,
+        "minY": -23.097,
+        "maxY": -5.831
+      },
+      "rippedConnectionCount": 9,
+      "retainedTraceCount": 231
+    },
+    {
+      "file": "sample35-region-reroute.srj.json",
+      "sourceDataset": "bugreport49",
+      "sourceCircuit": "bugreport49-8536f4",
+      "region": {
+        "shape": "rect",
+        "minX": 19.984,
+        "maxX": 34.076,
+        "minY": -16.099,
+        "maxY": -2.589
+      },
+      "rippedConnectionCount": 6,
+      "retainedTraceCount": 239
+    },
+    {
+      "file": "sample36-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": -33.789,
+        "maxX": -21.669,
+        "minY": -47.878,
+        "maxY": -29.11
+      },
+      "rippedConnectionCount": 3,
+      "retainedTraceCount": 330
+    },
+    {
+      "file": "sample37-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": -30.578,
+        "maxX": -16.15,
+        "minY": -37.387,
+        "maxY": -22.582
+      },
+      "rippedConnectionCount": 11,
+      "retainedTraceCount": 351
+    },
+    {
+      "file": "sample38-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": 5.104,
+        "maxX": 15.482,
+        "minY": -40.767,
+        "maxY": -25.695
+      },
+      "rippedConnectionCount": 4,
+      "retainedTraceCount": 336
+    },
+    {
+      "file": "sample39-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": 6.276,
+        "maxX": 25.773,
+        "minY": -38.24,
+        "maxY": -18.7
+      },
+      "rippedConnectionCount": 12,
+      "retainedTraceCount": 371
+    },
+    {
+      "file": "sample40-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": 22.554,
+        "maxX": 37.381,
+        "minY": -38.502,
+        "maxY": -20.44
+      },
+      "rippedConnectionCount": 8,
+      "retainedTraceCount": 328
+    },
+    {
+      "file": "sample41-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": -46.572,
+        "maxX": -28.706,
+        "minY": -20.793,
+        "maxY": -10.51
+      },
+      "rippedConnectionCount": 13,
+      "retainedTraceCount": 432
+    },
+    {
+      "file": "sample42-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": -19.538,
+        "maxX": -9.07,
+        "minY": -27.107,
+        "maxY": -15.042
+      },
+      "rippedConnectionCount": 14,
+      "retainedTraceCount": 394
+    },
+    {
+      "file": "sample43-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": -8.296,
+        "maxX": 7.751,
+        "minY": -17.526,
+        "maxY": 1.434
+      },
+      "rippedConnectionCount": 56,
+      "retainedTraceCount": 430
+    },
+    {
+      "file": "sample44-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": 8.332,
+        "maxX": 22.106,
+        "minY": -23.736,
+        "maxY": -7.083
+      },
+      "rippedConnectionCount": 16,
+      "retainedTraceCount": 431
+    },
+    {
+      "file": "sample45-region-reroute.srj.json",
+      "sourceDataset": "bugreport50",
+      "sourceCircuit": "bugreport50-e1c376",
+      "region": {
+        "shape": "rect",
+        "minX": 33.276,
+        "maxX": 52.737,
+        "minY": -30.235,
+        "maxY": -11.348
+      },
+      "rippedConnectionCount": 8,
+      "retainedTraceCount": 328
+    },
+    {
+      "file": "sample46-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -44.575,
+        "maxX": -25.104,
+        "minY": -35.352,
+        "maxY": -15.466
+      },
+      "rippedConnectionCount": 7,
+      "retainedTraceCount": 253
+    },
+    {
+      "file": "sample47-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -15.804,
+        "maxX": 1.621,
+        "minY": -38.062,
+        "maxY": -25.783
+      },
+      "rippedConnectionCount": 8,
+      "retainedTraceCount": 205
+    },
+    {
+      "file": "sample48-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -12.777,
+        "maxX": 5.621,
+        "minY": -37.71,
+        "maxY": -22.211
+      },
+      "rippedConnectionCount": 14,
+      "retainedTraceCount": 209
+    },
+    {
+      "file": "sample49-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": 1.293,
+        "maxX": 16.055,
+        "minY": -34.986,
+        "maxY": -22.487
+      },
+      "rippedConnectionCount": 22,
+      "retainedTraceCount": 302
+    },
+    {
+      "file": "sample50-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": 26.48,
+        "maxX": 41.574,
+        "minY": -43.868,
+        "maxY": -25.665
+      },
+      "rippedConnectionCount": 8,
+      "retainedTraceCount": 238
+    },
+    {
+      "file": "sample51-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -39.478,
+        "maxX": -22.712,
+        "minY": -22.565,
+        "maxY": -4.116
+      },
+      "rippedConnectionCount": 7,
+      "retainedTraceCount": 241
+    },
+    {
+      "file": "sample52-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -18.752,
+        "maxX": -0.378,
+        "minY": -19.067,
+        "maxY": -7.919
+      },
+      "rippedConnectionCount": 26,
+      "retainedTraceCount": 295
+    },
+    {
+      "file": "sample53-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": -6.744,
+        "maxX": 3.854,
+        "minY": -20.183,
+        "maxY": -4.089
+      },
+      "rippedConnectionCount": 15,
+      "retainedTraceCount": 284
+    },
+    {
+      "file": "sample54-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": 5.008,
+        "maxX": 19.47,
+        "minY": -23.693,
+        "maxY": -10.603
+      },
+      "rippedConnectionCount": 15,
+      "retainedTraceCount": 424
+    },
+    {
+      "file": "sample55-region-reroute.srj.json",
+      "sourceDataset": "bugreport51",
+      "sourceCircuit": "bugreport51-7db9f8",
+      "region": {
+        "shape": "rect",
+        "minX": 23.586,
+        "maxX": 35.794,
+        "minY": -12.405,
+        "maxY": -1.982
+      },
+      "rippedConnectionCount": 13,
+      "retainedTraceCount": 344
     }
   ]
 }
