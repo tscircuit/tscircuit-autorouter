@@ -3,15 +3,23 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
+import bugReport49 from "../fixtures/bug-reports/bugreport49-8536f4/bugreport49-8536f4.json" with {
+  type: "json",
+}
+import bugReport50 from "../fixtures/bug-reports/bugreport50-e1c376/bugreport50-e1c376.json" with {
+  type: "json",
+}
+import bugReport51 from "../fixtures/bug-reports/bugreport51-7db9f8/bugreport51-7db9f8.json" with {
+  type: "json",
+}
 import {
   AutoroutingPipelineSolver4,
-  getRerouteSimpleRouteJson,
   type RerouteRectRegion,
+  getRerouteSimpleRouteJson,
 } from "../lib"
 import type { SimpleRouteJson } from "../lib/types"
 
 const OUTPUT_DIR = path.join(process.cwd(), "fixtures/datasets/dataset-srj15")
-const SAMPLE_COUNT = 25
 const RANDOM_SEED = 219_015
 const MIN_REGION_SIZE = 10
 const MAX_REGION_SIZE = 20
@@ -19,8 +27,54 @@ const MAX_REGION_ATTEMPTS = 100
 const GRID_COLUMNS = 5
 const GRID_ROWS = 5
 
+type BugReportJson = {
+  simple_route_json: SimpleRouteJson
+}
+
+type DatasetSource = {
+  sourceDataset: string
+  sourceCircuit: string
+  randomSeed: number
+  sampleCount: number
+  getSrj: () => SimpleRouteJson
+}
+
 const getCircuit219 = () =>
   (dataset01 as Record<string, unknown>).circuit219 as SimpleRouteJson
+
+const getBugReportSrj = (bugReport: BugReportJson) =>
+  bugReport.simple_route_json
+
+const DATASET_SOURCES: DatasetSource[] = [
+  {
+    sourceDataset: "dataset01",
+    sourceCircuit: "circuit219",
+    randomSeed: RANDOM_SEED,
+    sampleCount: 25,
+    getSrj: getCircuit219,
+  },
+  {
+    sourceDataset: "bugreport49",
+    sourceCircuit: "bugreport49-8536f4",
+    randomSeed: 49_015,
+    sampleCount: 10,
+    getSrj: () => getBugReportSrj(bugReport49 as BugReportJson),
+  },
+  {
+    sourceDataset: "bugreport50",
+    sourceCircuit: "bugreport50-e1c376",
+    randomSeed: 50_015,
+    sampleCount: 10,
+    getSrj: () => getBugReportSrj(bugReport50 as BugReportJson),
+  },
+  {
+    sourceDataset: "bugreport51",
+    sourceCircuit: "bugreport51-7db9f8",
+    randomSeed: 51_015,
+    sampleCount: 10,
+    getSrj: () => getBugReportSrj(bugReport51 as BugReportJson),
+  },
+]
 
 const createSeededRandom = (seed: number) => {
   let state = seed >>> 0
@@ -71,18 +125,10 @@ const roundRegion = (region: RerouteRectRegion): RerouteRectRegion => ({
 })
 
 const main = async () => {
-  const inputSrj = structuredClone(getCircuit219())
-  const solver = new AutoroutingPipelineSolver4(inputSrj)
-  solver.solve()
-
-  if (!solver.solved || solver.failed) {
-    throw new Error(`Pipeline4 failed to solve circuit219: ${solver.error}`)
-  }
-
-  const solvedSrj = solver.getOutputSimpleRouteJson()
-  const random = createSeededRandom(RANDOM_SEED)
   const samples: Array<{
     file: string
+    sourceDataset: string
+    sourceCircuit: string
     region: RerouteRectRegion
     rippedConnectionCount: number
     retainedTraceCount: number
@@ -90,59 +136,92 @@ const main = async () => {
 
   await mkdir(OUTPUT_DIR, { recursive: true })
 
-  for (let sampleIndex = 0; sampleIndex < SAMPLE_COUNT; sampleIndex++) {
-    let sampleSrj: SimpleRouteJson | null = null
-    let region: RerouteRectRegion | null = null
+  for (const source of DATASET_SOURCES) {
+    const inputSrj = structuredClone(source.getSrj())
+    const solver = new AutoroutingPipelineSolver4(inputSrj)
+    solver.solve()
 
-    for (let attempt = 0; attempt < MAX_REGION_ATTEMPTS; attempt++) {
-      const candidateRegion = roundRegion(
-        getStratifiedRandomRegion(solvedSrj.bounds, random, sampleIndex),
-      )
-      const candidateSrj = getRerouteSimpleRouteJson(solvedSrj, candidateRegion)
-
-      if (candidateSrj.connections.length === 0) continue
-
-      sampleSrj = candidateSrj
-      region = candidateRegion
-      break
-    }
-
-    if (!sampleSrj || !region) {
+    if (!solver.solved || solver.failed) {
       throw new Error(
-        `Unable to generate sample ${sampleIndex + 1} with ripped routes`,
+        `Pipeline4 failed to solve ${source.sourceCircuit}: ${solver.error}`,
       )
     }
 
-    const file = `sample${String(sampleIndex + 1).padStart(2, "0")}-region-reroute.srj.json`
-    await writeFile(path.join(OUTPUT_DIR, file), stringifyJson(sampleSrj))
+    const solvedSrj = solver.getOutputSimpleRouteJson()
+    const random = createSeededRandom(source.randomSeed)
 
-    samples.push({
-      file,
-      region,
-      rippedConnectionCount: sampleSrj.connections.length,
-      retainedTraceCount: sampleSrj.traces?.length ?? 0,
-    })
+    for (
+      let sourceSampleIndex = 0;
+      sourceSampleIndex < source.sampleCount;
+      sourceSampleIndex++
+    ) {
+      let sampleSrj: SimpleRouteJson | null = null
+      let region: RerouteRectRegion | null = null
+
+      for (let attempt = 0; attempt < MAX_REGION_ATTEMPTS; attempt++) {
+        const candidateRegion = roundRegion(
+          getStratifiedRandomRegion(
+            solvedSrj.bounds,
+            random,
+            sourceSampleIndex,
+          ),
+        )
+        const candidateSrj = getRerouteSimpleRouteJson(
+          solvedSrj,
+          candidateRegion,
+        )
+
+        if (candidateSrj.connections.length === 0) continue
+
+        sampleSrj = candidateSrj
+        region = candidateRegion
+        break
+      }
+
+      const sampleNumber = samples.length + 1
+
+      if (!sampleSrj || !region) {
+        throw new Error(
+          `Unable to generate sample ${sampleNumber} with ripped routes`,
+        )
+      }
+
+      const file = `sample${String(sampleNumber).padStart(2, "0")}-region-reroute.srj.json`
+      await writeFile(path.join(OUTPUT_DIR, file), stringifyJson(sampleSrj))
+
+      samples.push({
+        file,
+        sourceDataset: source.sourceDataset,
+        sourceCircuit: source.sourceCircuit,
+        region,
+        rippedConnectionCount: sampleSrj.connections.length,
+        retainedTraceCount: sampleSrj.traces?.length ?? 0,
+      })
+    }
   }
 
   await writeFile(
     path.join(OUTPUT_DIR, "manifest.json"),
     stringifyJson({
-      sourceDataset: "dataset01",
-      sourceCircuit: "circuit219",
       generatedWith: "AutoroutingPipelineSolver4",
       rerouteMethod: "getRerouteSimpleRouteJson",
-      randomSeed: RANDOM_SEED,
-      sampleCount: SAMPLE_COUNT,
+      sampleCount: samples.length,
       minRegionSize: MIN_REGION_SIZE,
       maxRegionSize: MAX_REGION_SIZE,
       gridColumns: GRID_COLUMNS,
       gridRows: GRID_ROWS,
+      sources: DATASET_SOURCES.map((source) => ({
+        sourceDataset: source.sourceDataset,
+        sourceCircuit: source.sourceCircuit,
+        randomSeed: source.randomSeed,
+        sampleCount: source.sampleCount,
+      })),
       samples,
     }),
   )
 
   console.log(
-    `Wrote ${SAMPLE_COUNT} samples to ${path.relative(process.cwd(), OUTPUT_DIR)}`,
+    `Wrote ${samples.length} samples to ${path.relative(process.cwd(), OUTPUT_DIR)}`,
   )
 }
 
