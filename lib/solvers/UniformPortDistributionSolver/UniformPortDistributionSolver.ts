@@ -147,18 +147,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
+    const updatePortPointPosition = <
+      T extends { portPointId?: string; x: number; y: number },
+    >(
+      portPoint: T,
+    ): T => {
+      if (
+        portPoint.portPointId &&
+        redistributedPositions.has(portPoint.portPointId)
+      ) {
+        const newPos = redistributedPositions.get(portPoint.portPointId)!
+        return { ...portPoint, x: newPos.x, y: newPos.y }
+      }
+      return portPoint
+    }
+
     this.redistributedNodes = this.input.nodeWithPortPoints.map((node) => ({
       ...node,
-      portPoints: node.portPoints.map((portPoint) => {
-        if (
-          portPoint.portPointId &&
-          redistributedPositions.has(portPoint.portPointId)
-        ) {
-          const newPos = redistributedPositions.get(portPoint.portPointId)!
-          return { ...portPoint, x: newPos.x, y: newPos.y }
-        }
-        return portPoint
-      }),
+      portPoints: node.portPoints.map(updatePortPointPosition),
+      portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
+        updatePortPointPosition(start),
+        updatePortPointPosition(end),
+      ]),
     }))
   }
 
