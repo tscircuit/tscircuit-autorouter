@@ -56,7 +56,7 @@ test("srj11, srj12, srj13, srj15, and srj16 benchmark datasets load in sample or
   expect(srj13Scenarios[49][0]).toBe("example_50")
   expect(srj13Scenarios[0][1].bounds).toBeDefined()
 
-  expect(srj15Scenarios).toHaveLength(25)
+  expect(srj15Scenarios).toHaveLength(55)
   expect(srj15Scenarios[0][0]).toBe("sample001Circuit")
   expect(srj15Scenarios[24][0]).toBe("sample025Circuit")
   expect(srj15Scenarios[0][1].connections.length).toBeGreaterThan(0)
