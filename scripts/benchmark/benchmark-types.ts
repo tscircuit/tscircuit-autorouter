@@ -33,9 +33,23 @@ export type WorkerResult = {
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
+  drcErrorCount?: number
+  drcErrorTypes?: Record<string, number>
+  drcErrorMessages?: Array<{
+    message: string
+    count: number
+  }>
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+}
+
+export type FailureSummary = {
+  failureKind: string
+  failureKey: string
+  affectedSamples: number
+  occurrences: number
+  sampleNumbers: number[]
 }
 
 export type WorkerResultMessage = {
@@ -65,5 +79,8 @@ export type BenchmarkReport = {
   scenarioCount: number
   effortLabel: string
   summary: SolverRunSummary[]
+  solverFailureSummary: FailureSummary[]
+  timeoutSummary: FailureSummary[]
+  failureSummary: FailureSummary[]
   tests: WorkerResult[]
 }
