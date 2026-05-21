@@ -35,7 +35,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { getAssignableViaPointKeys } from "lib/utils/assignableViaUtils"
+import { getAssignableViaPointKeys } from "./assignableViaUtils"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -54,7 +54,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
-import { SingleLayerNodePortPointSolver } from "./SingleLayerNodePortPointSolver"
+import { SplitNodesIntoSingleLayerNodeSolver } from "./SplitNodesIntoSingleLayerNodeSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -117,7 +117,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  singleLayerNodePortPointSolver?: SingleLayerNodePortPointSolver
+  splitNodesIntoSingleLayerNodeSolver?: SplitNodesIntoSingleLayerNodeSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
@@ -253,8 +253,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "singleLayerNodePortPointSolver",
-      SingleLayerNodePortPointSolver,
+      "splitNodesIntoSingleLayerNodeSolver",
+      SplitNodesIntoSingleLayerNodeSolver,
       (cms) => [
         {
           capacityMeshNodes: cms.capacityNodes!,
@@ -266,7 +266,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.capacityNodes =
-            cms.singleLayerNodePortPointSolver!.getOutput().capacityMeshNodes
+            cms.splitNodesIntoSingleLayerNodeSolver!.getOutput().capacityMeshNodes
         },
       },
     ),
@@ -275,7 +275,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
         const singleLayerOutput =
-          cms.singleLayerNodePortPointSolver!.getOutput()
+          cms.splitNodesIntoSingleLayerNodeSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: singleLayerOutput.capacityMeshNodes,
           layerCount: cms.srj.layerCount,
@@ -567,8 +567,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     const deadEndViz = this.deadEndSolver?.visualize()
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
-    const singleLayerNodePortPointViz =
-      this.singleLayerNodePortPointSolver?.visualize()
+    const splitNodesIntoSingleLayerNodeSolverViz =
+      this.splitNodesIntoSingleLayerNodeSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
     const uniformPortDistributionViz =
@@ -674,7 +674,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       deadEndViz,
       availableSegmentPointViz,
       necessaryCrampedPortPointSolverViz,
-      singleLayerNodePortPointViz,
+      splitNodesIntoSingleLayerNodeSolverViz,
       portPointPathingViz,
       multiSectionOptViz,
       uniformPortDistributionViz,

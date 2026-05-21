@@ -7,7 +7,7 @@ import type {
 import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
-type SingleLayerNodePortPointSolverParams = {
+type SplitNodesIntoSingleLayerNodeSolverParams = {
   capacityMeshNodes: CapacityMeshNode[]
   sharedEdgeSegments: SharedEdgeSegment[]
 }
@@ -18,18 +18,20 @@ const getSingleLayerNodeId = (nodeId: CapacityMeshNodeId, z: number) =>
 const uniqueSorted = (values: number[]) =>
   [...new Set(values)].sort((a, b) => a - b)
 
-export class SingleLayerNodePortPointSolver extends BaseSolver {
+export class SplitNodesIntoSingleLayerNodeSolver extends BaseSolver {
   outputNodes: CapacityMeshNode[] = []
   outputSharedEdgeSegments: SharedEdgeSegment[] = []
   private nodeIdByOriginalAndZ = new Map<string, CapacityMeshNodeId>()
 
-  constructor(public readonly params: SingleLayerNodePortPointSolverParams) {
+  constructor(
+    public readonly params: SplitNodesIntoSingleLayerNodeSolverParams,
+  ) {
     super()
     this.MAX_ITERATIONS = 1
   }
 
   override getSolverName() {
-    return "SingleLayerNodePortPointSolver"
+    return "SplitNodesIntoSingleLayerNodeSolver"
   }
 
   override _step() {

@@ -2,7 +2,7 @@ import { distance, type Point3 } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { getXyPointKey } from "lib/utils/getXyPointKey"
+import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import {
   comparePoints,

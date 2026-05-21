@@ -9,7 +9,7 @@ import {
   getAssignableViaAvailableZ,
   getAssignableViaId,
   isAssignableViaObstacle,
-} from "lib/utils/assignableViaUtils"
+} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
 import { checkIfConnectionPointIsInRegion } from "./checkIfConnectionPointIsInRegion"
 import type {

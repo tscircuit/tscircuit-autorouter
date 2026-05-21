@@ -1,5 +1,5 @@
 import type { Obstacle } from "lib/types"
-import { mapLayerNameToZ } from "./mapLayerNameToZ"
+import { mapLayerNameToZ } from "../../utils/mapLayerNameToZ"
 import { getXyPointKey } from "./getXyPointKey"
 
 export const isAssignableViaObstacle = (obstacle: Obstacle) =>
