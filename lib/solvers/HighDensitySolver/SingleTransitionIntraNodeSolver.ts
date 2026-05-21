@@ -13,6 +13,11 @@ type Route = {
   connectionName: string
 }
 
+const clampWithFallback = (value: number, min: number, max: number) => {
+  if (min <= max) return clamp(value, min, max)
+  return value
+}
+
 export class SingleTransitionIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleTransitionIntraNodeSolver"
@@ -63,12 +68,12 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     const margin = this.viaDiameter / 2 + this.obstacleMargin
 
     const viaPosition = {
-      x: clamp(
+      x: clampWithFallback(
         (route.A.x + route.B.x) / 2,
         this.bounds.minX + margin,
         this.bounds.maxX - margin,
       ),
-      y: clamp(
+      y: clampWithFallback(
         (route.A.y + route.B.y) / 2,
         this.bounds.minY + margin,
         this.bounds.maxY - margin,
