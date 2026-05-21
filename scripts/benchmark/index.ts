@@ -53,12 +53,6 @@ type WorkerExecutionResult = {
   restartWorker: boolean
 }
 
-type TaskTimeoutBudget = {
-  effectiveTimeoutMs: number
-  baseTimeoutMs: number
-  concurrencyScale: number
-}
-
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
@@ -348,7 +342,7 @@ const formatSampleNumbers = (sampleNumbers: number[]) => {
 const getFailureKeyForResult = (result: WorkerResult) => {
   if (result.didTimeout) {
     return {
-      failureKind: "timeout",
+      failureKind: "timeout at last observed phase",
       failureKeys: [
         [
           result.errorPhaseName ?? "unknown phase",
@@ -434,7 +428,12 @@ const summarizeFailures = (results: WorkerResult[]): FailureSummary[] => {
 }
 
 const summarizeSolverFailures = (results: WorkerResult[]): FailureSummary[] =>
-  summarizeFailures(results.filter((result) => !result.didSolve))
+  summarizeFailures(
+    results.filter((result) => !result.didSolve && !result.didTimeout),
+  )
+
+const summarizeTimeouts = (results: WorkerResult[]): FailureSummary[] =>
+  summarizeFailures(results.filter((result) => result.didTimeout))
 
 const formatFailureSummary = (failureSummary: FailureSummary[]) => {
   if (failureSummary.length === 0) {
@@ -570,26 +569,13 @@ const getTaskEffort = (task: BenchmarkTask) => {
   return rawEffort
 }
 
-const getConcurrencyTimeoutScale = (workerCount: number) =>
-  Math.max(1, workerCount)
-
-const getTaskTimeoutBudget = (
-  task: BenchmarkTask,
-  workerCount: number,
-  sampleTimeoutMs?: number,
-): TaskTimeoutBudget => {
-  const baseTimeoutMs =
-    sampleTimeoutMs !== undefined
-      ? sampleTimeoutMs
-      : getTaskTimeoutPerEffortMs() +
-        getTaskTimeoutPerEffortMs() * getTaskEffort(task)
-  const concurrencyScale = getConcurrencyTimeoutScale(workerCount)
-
-  return {
-    effectiveTimeoutMs: baseTimeoutMs * concurrencyScale,
-    baseTimeoutMs,
-    concurrencyScale,
+const getTaskTimeoutMs = (task: BenchmarkTask, sampleTimeoutMs?: number) => {
+  if (sampleTimeoutMs !== undefined) {
+    return sampleTimeoutMs
   }
+
+  const baseTimeoutMs = getTaskTimeoutPerEffortMs()
+  return baseTimeoutMs + baseTimeoutMs * getTaskEffort(task)
 }
 
 const formatEffortLabel = (efforts: number[]) => {
@@ -649,15 +635,10 @@ const formatProgressDetails = (progress?: WorkerProgress) => {
 const executeTaskOnWorker = (
   slot: WorkerSlot,
   request: WorkerTaskMessage,
-  workerCount: number,
   sampleTimeoutMs?: number,
 ): Promise<WorkerExecutionResult> => {
   return new Promise((resolve) => {
-    const taskTimeoutBudget = getTaskTimeoutBudget(
-      request.task,
-      workerCount,
-      sampleTimeoutMs,
-    )
+    const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
     const startedAtMs = performance.now()
     let settled = false
 
@@ -734,21 +715,17 @@ const executeTaskOnWorker = (
 
     const timeout = setTimeout(() => {
       const latestProgress = slot.currentTask?.latestProgress
-      const timeoutLabel =
-        taskTimeoutBudget.concurrencyScale === 1
-          ? formatDurationLabel(taskTimeoutBudget.effectiveTimeoutMs)
-          : `${formatDurationLabel(taskTimeoutBudget.effectiveTimeoutMs)} (base ${formatDurationLabel(taskTimeoutBudget.baseTimeoutMs)} x ${taskTimeoutBudget.concurrencyScale} concurrency scale)`
       finish(
         createFailedResult(
           request.task,
-          taskTimeoutBudget.effectiveTimeoutMs,
-          `Timed out after ${timeoutLabel}${formatProgressDetails(latestProgress)}`,
+          taskTimeoutMs,
+          `Timed out after ${formatDurationLabel(taskTimeoutMs)}${formatProgressDetails(latestProgress)}`,
           true,
           latestProgress,
         ),
         true,
       )
-    }, taskTimeoutBudget.effectiveTimeoutMs)
+    }, taskTimeoutMs)
 
     slot.currentTask = {
       request,
@@ -856,7 +833,6 @@ const runBenchmarkTasks = async (
       const { result, restartWorker } = await executeTaskOnWorker(
         slot,
         request,
-        workerCount,
         sampleTimeoutMs,
       )
       results[request.taskId - 1] = result
@@ -1002,9 +978,11 @@ const main = async () => {
   const table = formatTable(rows)
   const solverFailureSummary = summarizeSolverFailures(results)
   const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
+  const timeoutSummary = summarizeTimeouts(results)
+  const timeoutSummaryText = formatFailureSummary(timeoutSummary)
   const failureSummary = summarizeFailures(results)
   const failureSummaryText = formatFailureSummary(failureSummary)
-  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
+  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
@@ -1012,6 +990,7 @@ const main = async () => {
     effortLabel,
     summary: rows,
     solverFailureSummary,
+    timeoutSummary,
     failureSummary,
     tests: results,
   }
@@ -1024,6 +1003,8 @@ const main = async () => {
   console.log(`\nScenarios: ${scenarios.length}`)
   console.log("\nTop solver failure buckets:")
   console.log(solverFailureSummaryText)
+  console.log("\nTop timeout buckets:")
+  console.log(timeoutSummaryText)
   console.log("\nTop failure buckets:")
   console.log(failureSummaryText)
   console.log(

@@ -80,6 +80,7 @@ export type BenchmarkReport = {
   effortLabel: string
   summary: SolverRunSummary[]
   solverFailureSummary: FailureSummary[]
+  timeoutSummary: FailureSummary[]
   failureSummary: FailureSummary[]
   tests: WorkerResult[]
 }
