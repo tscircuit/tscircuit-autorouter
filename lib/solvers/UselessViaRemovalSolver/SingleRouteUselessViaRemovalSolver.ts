@@ -235,6 +235,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection
     targetZ: number
   }): boolean {
+    const currentTraceThickness =
+      this.unsimplifiedRoute.traceThickness ?? this.TRACE_THICKNESS
+
     // Evaluate if the section layer can be changed without hitting anything
     for (let i = 0; i < currentSection.points.length - 1; i++) {
       const A = { ...currentSection.points[i], z: targetZ }
@@ -243,7 +246,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       const conflictingRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
         A,
         B,
-        this.TRACE_THICKNESS,
+        currentTraceThickness / 2,
       )
 
       for (const { conflictingRoute, distance } of conflictingRoutes) {
@@ -253,7 +256,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         )
           continue
         // TODO connMap test
-        if (distance < this.TRACE_THICKNESS + conflictingRoute.traceThickness) {
+        const otherTraceThickness =
+          conflictingRoute.traceThickness ?? this.TRACE_THICKNESS
+        const minDistance = currentTraceThickness / 2 + otherTraceThickness / 2
+        if (distance < minDistance) {
           return false
         }
       }
@@ -265,12 +271,14 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         height: Math.abs(A.y - B.y),
       }
 
+      const searchMargin = currentTraceThickness / 2 + this.OBSTACLE_MARGIN
+
       // Obstacle check
       const obstacles = this.obstacleSHI.searchArea(
         segmentBox.centerX,
         segmentBox.centerY,
-        segmentBox.width + (this.TRACE_THICKNESS + this.OBSTACLE_MARGIN) * 2, // Expand search width
-        segmentBox.height + (this.TRACE_THICKNESS + this.OBSTACLE_MARGIN) * 2, // Expand search height
+        segmentBox.width + searchMargin * 2, // Expand search width
+        segmentBox.height + searchMargin * 2, // Expand search height
       )
 
       for (const obstacle of obstacles) {
@@ -298,7 +306,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
         const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
 
-        if (distToObstacle < this.TRACE_THICKNESS + this.OBSTACLE_MARGIN) {
+        if (distToObstacle < searchMargin) {
           return false
         }
       }
