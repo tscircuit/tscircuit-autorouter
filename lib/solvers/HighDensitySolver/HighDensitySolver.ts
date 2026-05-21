@@ -111,6 +111,7 @@ export class HighDensitySolver extends BaseSolver {
     this.stats = {
       solverNodeCount: {} as Record<string, number>,
       difficultNodePfs: {} as Record<string, number[]>,
+      highDensityResizeCount: 0,
     }
   }
 
@@ -231,6 +232,12 @@ export class HighDensitySolver extends BaseSolver {
     }
   }
 
+  private recordResizeStats(solver: HighDensityIntraNodeSolver) {
+    if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
+    this.stats.highDensityResizeCount =
+      (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -246,9 +253,11 @@ export class HighDensitySolver extends BaseSolver {
           this.activeSubSolver,
           this.activeSubSolver.nodeWithPortPoints,
         )
+        this.recordResizeStats(this.activeSubSolver)
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
         this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
+        this.recordResizeStats(this.activeSubSolver)
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }

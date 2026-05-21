@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
@@ -112,4 +113,33 @@ test("Pipeline4 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   expect(
     (highDensityParams as any).useGrowShrinkHighDensityIntraNodeSolver,
   ).toBe(true)
+})
+
+test("HighDensitySolver stats exposes highDensityResizeCount", () => {
+  const node = makeNode()
+  const route: HighDensityIntraNodeRoute = {
+    connectionName: "a",
+    traceThickness: 0.15,
+    viaDiameter: 0.3,
+    route: [
+      { x: 9.5, y: 20, z: 0 },
+      { x: 10.5, y: 20, z: 0 },
+    ],
+    vias: [],
+  }
+  const highDensitySolver = new HighDensitySolver({
+    nodePortPoints: [],
+    useGrowShrinkHighDensityIntraNodeSolver: true,
+  })
+  const growShrinkSolver = new GrowShrinkHighDensityIntraNodeSolver({
+    nodeWithPortPoints: node,
+  })
+  growShrinkSolver.solved = true
+  growShrinkSolver.solvedRoutes = [route]
+  growShrinkSolver.growthAttempts = 2
+  highDensitySolver.activeSubSolver = growShrinkSolver
+
+  highDensitySolver.step()
+
+  expect(highDensitySolver.stats.highDensityResizeCount).toBe(2)
 })
