@@ -157,7 +157,10 @@ const incrementCount = (counts: Record<string, number>, key: string) => {
 
 const summarizeDrcErrors = (
   errors: object[],
-): Pick<WorkerResult, "drcErrorCount" | "drcErrorTypes" | "drcErrorMessages"> => {
+): Pick<
+  WorkerResult,
+  "drcErrorCount" | "drcErrorTypes" | "drcErrorMessages"
+> => {
   const drcErrorTypes: Record<string, number> = {}
   const messageCounts: Record<string, number> = {}
 

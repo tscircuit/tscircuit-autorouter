@@ -402,14 +402,12 @@ const summarizeFailures = (results: WorkerResult[]): FailureSummary[] => {
 
     for (const failureKey of failure.failureKeys) {
       const bucketKey = `${failure.failureKind}\0${failureKey}`
-      const bucket =
-        buckets.get(bucketKey) ??
-        {
-          failureKind: failure.failureKind,
-          failureKey,
-          occurrences: 0,
-          sampleNumbers: new Set<number>(),
-        }
+      const bucket = buckets.get(bucketKey) ?? {
+        failureKind: failure.failureKind,
+        failureKey,
+        occurrences: 0,
+        sampleNumbers: new Set<number>(),
+      }
       bucket.sampleNumbers.add(result.sampleNumber)
       bucket.occurrences +=
         failure.failureKind === "relaxed DRC"
