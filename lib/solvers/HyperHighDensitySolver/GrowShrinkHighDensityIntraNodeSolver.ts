@@ -11,6 +11,8 @@ type HyperSingleIntraNodeSolverParams = ConstructorParameters<
   typeof HyperSingleIntraNodeSolver
 >[0]
 
+export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
+
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   HyperSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
@@ -82,7 +84,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.maxGrowthAttempts = params.maxGrowthAttempts ?? 8
+    this.maxGrowthAttempts =
+      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
   }
@@ -148,7 +151,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
       this.failed = true
-      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after ${this.maxGrowthAttempts} growth attempts. Last scale factor: ${this.scaleFactor}. Last error: ${this.error}`
+      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
       return
     }
 

@@ -43,6 +43,47 @@ test("GrowShrinkHighDensityIntraNodeSolver grows after an inner solver failure",
   expect(solver.failedSolvers.length).toBe(1)
 })
 
+test("GrowShrinkHighDensityIntraNodeSolver fails after an 8x resize fails", () => {
+  const solver = new GrowShrinkHighDensityIntraNodeSolver({
+    nodeWithPortPoints: makeNode(),
+  })
+
+  const forceFailure = () => {
+    solver.activeSubSolver = {
+      failed: false,
+      solved: false,
+      error: null,
+      solvedRoutes: [],
+      step() {
+        this.failed = true
+        this.error = `forced failure at ${solver.scaleFactor}x`
+      },
+      visualize() {
+        return { lines: [], points: [], rects: [], circles: [] }
+      },
+    } as any
+    solver.step()
+  }
+
+  forceFailure()
+  expect(solver.failed).toBe(false)
+  expect(solver.scaleFactor).toBe(2)
+
+  forceFailure()
+  expect(solver.failed).toBe(false)
+  expect(solver.scaleFactor).toBe(4)
+
+  forceFailure()
+  expect(solver.failed).toBe(false)
+  expect(solver.scaleFactor).toBe(8)
+
+  forceFailure()
+  expect(solver.failed).toBe(true)
+  expect(solver.growthAttempts).toBe(3)
+  expect(solver.failedSolvers.length).toBe(4)
+  expect(solver.error).toContain("resizing to 8x")
+})
+
 test("GrowShrinkHighDensityIntraNodeSolver shrinks solved routes back to the original node", () => {
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeNode(),

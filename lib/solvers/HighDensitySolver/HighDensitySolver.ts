@@ -10,7 +10,10 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
-import { GrowShrinkHighDensityIntraNodeSolver } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
+import {
+  DEFAULT_MAX_GROWTH_ATTEMPTS,
+  GrowShrinkHighDensityIntraNodeSolver,
+} from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
@@ -102,7 +105,9 @@ export class HighDensitySolver extends BaseSolver {
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
-      (this.useGrowShrinkHighDensityIntraNodeSolver ? 9 : 1)
+      (this.useGrowShrinkHighDensityIntraNodeSolver
+        ? DEFAULT_MAX_GROWTH_ATTEMPTS + 1
+        : 1)
     this.nodePfById =
       nodePfById instanceof Map
         ? new Map(nodePfById)
