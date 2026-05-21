@@ -77,7 +77,7 @@ Options:
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
-  --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 60s + 60s * effort
+  --sample-timeout D   Override isolated per-sample timeout; benchmark scales it by concurrency for wall-clock execution
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, or 16/srj16
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help

@@ -97,6 +97,90 @@ const getErrorMessage = (error: unknown): string | undefined => {
   return error instanceof Error ? error.message : String(error)
 }
 
+const toErrorRecord = (error: object): Record<string, unknown> =>
+  error as unknown as Record<string, unknown>
+
+const normalizeDrcMessage = (message: unknown) =>
+  typeof message === "string" && message.trim().length > 0
+    ? message.replace(/\s+/g, " ").trim()
+    : "no message"
+
+const getDrcErrorType = (error: object) => {
+  const errorRecord = toErrorRecord(error)
+  const message = normalizeDrcMessage(errorRecord.message)
+  if (
+    message.includes("overlaps with pcb_smtpad") &&
+    message.includes("accidental contact")
+  ) {
+    return "trace_smtpad_accidental_contact"
+  }
+  if (
+    message.includes("overlaps with pcb_plated_hole") &&
+    message.includes("accidental contact")
+  ) {
+    return "trace_plated_hole_accidental_contact"
+  }
+  if (message.includes("is too close to pcb_smtpad")) {
+    return "trace_smtpad_clearance"
+  }
+  if (message.includes("is too close to pcb_plated_hole")) {
+    return "trace_plated_hole_clearance"
+  }
+  if (message.includes("overlaps with pcb_trace")) {
+    return "trace_trace_overlap"
+  }
+  if (message.includes("overlaps with pcb_via")) {
+    return "trace_via_overlap"
+  }
+
+  const explicitType = errorRecord.error_type ?? errorRecord.type
+  if (typeof explicitType === "string" && explicitType.length > 0) {
+    return explicitType
+  }
+
+  const errorId = errorRecord.pcb_error_id
+  if (typeof errorId === "string") {
+    if (errorId.startsWith("same_net_vias_close_")) {
+      return "same_net_vias_close"
+    }
+    if (errorId.startsWith("different_net_vias_close_")) {
+      return "different_net_vias_close"
+    }
+  }
+
+  return "unknown_drc_error"
+}
+
+const incrementCount = (counts: Record<string, number>, key: string) => {
+  counts[key] = (counts[key] ?? 0) + 1
+}
+
+const summarizeDrcErrors = (
+  errors: object[],
+): Pick<WorkerResult, "drcErrorCount" | "drcErrorTypes" | "drcErrorMessages"> => {
+  const drcErrorTypes: Record<string, number> = {}
+  const messageCounts: Record<string, number> = {}
+
+  for (const error of errors) {
+    incrementCount(drcErrorTypes, getDrcErrorType(error))
+    incrementCount(
+      messageCounts,
+      normalizeDrcMessage(toErrorRecord(error).message),
+    )
+  }
+
+  const drcErrorMessages = Object.entries(messageCounts)
+    .sort(([, countA], [, countB]) => countB - countA)
+    .slice(0, 5)
+    .map(([message, count]) => ({ message, count }))
+
+  return {
+    drcErrorCount: errors.length,
+    drcErrorTypes,
+    drcErrorMessages,
+  }
+}
+
 const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
   if (!solver) {
     return undefined
@@ -276,6 +360,7 @@ export const runTask = async (
     )
     const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
     const relaxedDrcPassed = errors.length === 0
+    const drcSummary = summarizeDrcErrors(errors as object[])
 
     return {
       solverName: task.solverName,
@@ -285,6 +370,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed,
+      ...drcSummary,
     }
   } catch (error) {
     return {

@@ -9,6 +9,7 @@ import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
   BenchmarkReport,
   BenchmarkTask,
+  FailureSummary,
   SolverRunSummary,
   WorkerChildMessage,
   WorkerProgress,
@@ -50,6 +51,12 @@ type WorkerSlot = {
 type WorkerExecutionResult = {
   result: WorkerResult
   restartWorker: boolean
+}
+
+type TaskTimeoutBudget = {
+  effectiveTimeoutMs: number
+  baseTimeoutMs: number
+  concurrencyScale: number
 }
 
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
@@ -333,6 +340,118 @@ const formatTable = (rows: SolverRunSummary[]) => {
   return [separator, headerLine, separator, ...bodyLines, separator].join("\n")
 }
 
+const formatSampleNumbers = (sampleNumbers: number[]) => {
+  const shown = sampleNumbers.slice(0, 8).join(", ")
+  return sampleNumbers.length > 8 ? `${shown}, ...` : shown
+}
+
+const getFailureKeyForResult = (result: WorkerResult) => {
+  if (result.didTimeout) {
+    return {
+      failureKind: "timeout",
+      failureKeys: [
+        [
+          result.errorPhaseName ?? "unknown phase",
+          result.errorSolverName ?? "unknown solver",
+        ].join(" / "),
+      ],
+    }
+  }
+
+  if (!result.didSolve) {
+    return {
+      failureKind: "solver failure",
+      failureKeys: [
+        [
+          result.errorPhaseName ?? "unknown phase",
+          result.errorSolverName ?? "unknown solver",
+          result.error ?? "unknown error",
+        ].join(" / "),
+      ],
+    }
+  }
+
+  if (!result.relaxedDrcPassed) {
+    const drcErrorTypes = result.drcErrorTypes ?? {}
+    const failureKeys = Object.keys(drcErrorTypes)
+    return {
+      failureKind: "relaxed DRC",
+      failureKeys: failureKeys.length > 0 ? failureKeys : ["unknown DRC error"],
+    }
+  }
+
+  return null
+}
+
+const summarizeFailures = (results: WorkerResult[]): FailureSummary[] => {
+  const buckets = new Map<
+    string,
+    {
+      failureKind: string
+      failureKey: string
+      occurrences: number
+      sampleNumbers: Set<number>
+    }
+  >()
+
+  for (const result of results) {
+    const failure = getFailureKeyForResult(result)
+    if (!failure) {
+      continue
+    }
+
+    for (const failureKey of failure.failureKeys) {
+      const bucketKey = `${failure.failureKind}\0${failureKey}`
+      const bucket =
+        buckets.get(bucketKey) ??
+        {
+          failureKind: failure.failureKind,
+          failureKey,
+          occurrences: 0,
+          sampleNumbers: new Set<number>(),
+        }
+      bucket.sampleNumbers.add(result.sampleNumber)
+      bucket.occurrences +=
+        failure.failureKind === "relaxed DRC"
+          ? (result.drcErrorTypes?.[failureKey] ?? 1)
+          : 1
+      buckets.set(bucketKey, bucket)
+    }
+  }
+
+  return [...buckets.values()]
+    .map((bucket) => ({
+      failureKind: bucket.failureKind,
+      failureKey: bucket.failureKey,
+      affectedSamples: bucket.sampleNumbers.size,
+      occurrences: bucket.occurrences,
+      sampleNumbers: [...bucket.sampleNumbers].sort((a, b) => a - b),
+    }))
+    .sort((a, b) => {
+      if (b.affectedSamples !== a.affectedSamples) {
+        return b.affectedSamples - a.affectedSamples
+      }
+      return b.occurrences - a.occurrences
+    })
+}
+
+const summarizeSolverFailures = (results: WorkerResult[]): FailureSummary[] =>
+  summarizeFailures(results.filter((result) => !result.didSolve))
+
+const formatFailureSummary = (failureSummary: FailureSummary[]) => {
+  if (failureSummary.length === 0) {
+    return "No failures recorded."
+  }
+
+  return failureSummary
+    .slice(0, 10)
+    .map(
+      (failure, index) =>
+        `${index + 1}. ${failure.failureKind}: ${failure.failureKey} - ${failure.affectedSamples} sample${failure.affectedSamples === 1 ? "" : "s"}, ${failure.occurrences} occurrence${failure.occurrences === 1 ? "" : "s"} (samples: ${formatSampleNumbers(failure.sampleNumbers)})`,
+    )
+    .join("\n")
+}
+
 const createChildProcess = () =>
   spawn(process.execPath, ["scripts/benchmark/benchmark.child.ts"], {
     cwd: process.cwd(),
@@ -453,13 +572,26 @@ const getTaskEffort = (task: BenchmarkTask) => {
   return rawEffort
 }
 
-const getTaskTimeoutMs = (task: BenchmarkTask, sampleTimeoutMs?: number) => {
-  if (sampleTimeoutMs !== undefined) {
-    return sampleTimeoutMs
-  }
+const getConcurrencyTimeoutScale = (workerCount: number) =>
+  Math.max(1, workerCount)
 
-  const baseTimeoutMs = getTaskTimeoutPerEffortMs()
-  return baseTimeoutMs + baseTimeoutMs * getTaskEffort(task)
+const getTaskTimeoutBudget = (
+  task: BenchmarkTask,
+  workerCount: number,
+  sampleTimeoutMs?: number,
+): TaskTimeoutBudget => {
+  const baseTimeoutMs =
+    sampleTimeoutMs !== undefined
+      ? sampleTimeoutMs
+      : getTaskTimeoutPerEffortMs() +
+        getTaskTimeoutPerEffortMs() * getTaskEffort(task)
+  const concurrencyScale = getConcurrencyTimeoutScale(workerCount)
+
+  return {
+    effectiveTimeoutMs: baseTimeoutMs * concurrencyScale,
+    baseTimeoutMs,
+    concurrencyScale,
+  }
 }
 
 const formatEffortLabel = (efforts: number[]) => {
@@ -519,10 +651,15 @@ const formatProgressDetails = (progress?: WorkerProgress) => {
 const executeTaskOnWorker = (
   slot: WorkerSlot,
   request: WorkerTaskMessage,
+  workerCount: number,
   sampleTimeoutMs?: number,
 ): Promise<WorkerExecutionResult> => {
   return new Promise((resolve) => {
-    const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
+    const taskTimeoutBudget = getTaskTimeoutBudget(
+      request.task,
+      workerCount,
+      sampleTimeoutMs,
+    )
     const startedAtMs = performance.now()
     let settled = false
 
@@ -599,17 +736,21 @@ const executeTaskOnWorker = (
 
     const timeout = setTimeout(() => {
       const latestProgress = slot.currentTask?.latestProgress
+      const timeoutLabel =
+        taskTimeoutBudget.concurrencyScale === 1
+          ? formatDurationLabel(taskTimeoutBudget.effectiveTimeoutMs)
+          : `${formatDurationLabel(taskTimeoutBudget.effectiveTimeoutMs)} (base ${formatDurationLabel(taskTimeoutBudget.baseTimeoutMs)} x ${taskTimeoutBudget.concurrencyScale} concurrency scale)`
       finish(
         createFailedResult(
           request.task,
-          taskTimeoutMs,
-          `Timed out after ${formatDurationLabel(taskTimeoutMs)}${formatProgressDetails(latestProgress)}`,
+          taskTimeoutBudget.effectiveTimeoutMs,
+          `Timed out after ${timeoutLabel}${formatProgressDetails(latestProgress)}`,
           true,
           latestProgress,
         ),
         true,
       )
-    }, taskTimeoutMs)
+    }, taskTimeoutBudget.effectiveTimeoutMs)
 
     slot.currentTask = {
       request,
@@ -717,6 +858,7 @@ const runBenchmarkTasks = async (
       const { result, restartWorker } = await executeTaskOnWorker(
         slot,
         request,
+        workerCount,
         sampleTimeoutMs,
       )
       results[request.taskId - 1] = result
@@ -860,13 +1002,19 @@ const main = async () => {
     ),
   )
   const table = formatTable(rows)
-  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n`
+  const solverFailureSummary = summarizeSolverFailures(results)
+  const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
+  const failureSummary = summarizeFailures(results)
+  const failureSummaryText = formatFailureSummary(failureSummary)
+  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,
+    solverFailureSummary,
+    failureSummary,
     tests: results,
   }
   await Bun.write("benchmark-result.txt", output)
@@ -876,6 +1024,10 @@ const main = async () => {
   console.log(table)
   console.log(`\nDataset: ${datasetName}`)
   console.log(`\nScenarios: ${scenarios.length}`)
+  console.log("\nTop solver failure buckets:")
+  console.log(solverFailureSummaryText)
+  console.log("\nTop failure buckets:")
+  console.log(failureSummaryText)
   console.log(
     "Results written to benchmark-result.txt and benchmark-result.json",
   )
