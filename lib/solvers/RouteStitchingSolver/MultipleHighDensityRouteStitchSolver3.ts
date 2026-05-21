@@ -39,6 +39,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   colorMap: Record<string, string> = {}
   defaultTraceThickness: number
   defaultViaDiameter: number
+  allowedLayerTransitionPointKeys?: Set<string>
   private endpointIndex = new EndpointClusterIndex()
 
   private canStitchBetweenTerminals(params: {
@@ -55,6 +56,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       colorMap: this.colorMap,
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
+      allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
     })
 
     while (
@@ -133,9 +135,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     colorMap?: Record<string, string>
     layerCount: number
     defaultViaDiameter?: number
+    allowedLayerTransitionPointKeys?: Set<string>
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
+    this.allowedLayerTransitionPointKeys =
+      params.allowedLayerTransitionPointKeys
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
@@ -411,6 +416,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       colorMap: this.colorMap,
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
+      allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
     })
   }
 
