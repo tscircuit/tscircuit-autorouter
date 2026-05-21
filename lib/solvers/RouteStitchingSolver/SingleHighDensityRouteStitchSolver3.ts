@@ -2,6 +2,7 @@ import { distance, type Point3 } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import {
   comparePoints,
@@ -44,11 +45,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     return "SingleHighDensityRouteStitchSolver3"
   }
 
-  mergedHdRoute: HighDensityIntraNodeRoute
+  mergedHdRoute!: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
   colorMap: Record<string, string>
+  allowedLayerTransitionPointKeys?: Set<string>
 
   constructor(opts: {
     connectionName: string
@@ -58,11 +60,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     colorMap?: Record<string, string>
     defaultTraceThickness?: number
     defaultViaDiameter?: number
+    allowedLayerTransitionPointKeys?: Set<string>
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
+    this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -73,6 +77,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const vias = []
 
       if (opts.start.z !== opts.end.z) {
+        if (
+          opts.allowedLayerTransitionPointKeys &&
+          !opts.allowedLayerTransitionPointKeys.has(getXyPointKey(opts.start))
+        ) {
+          this.failed = true
+          this.error = `Layer transition at ${getXyPointKey(
+            opts.start,
+          )} is not allowed`
+          return
+        }
         routePoints.push({ x: opts.start.x, y: opts.start.y, z: opts.end.z })
         vias.push({ x: opts.start.x, y: opts.start.y })
       }
@@ -244,7 +258,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreFirst = GAP_PENALTY + distToFirst
         }
-      } else if (distToFirst < GEOMETRIC_TOLERANCE) {
+      } else if (
+        distToFirst < GEOMETRIC_TOLERANCE &&
+        (!this.allowedLayerTransitionPointKeys ||
+          this.allowedLayerTransitionPointKeys.has(
+            getXyPointKey(firstPointInCandidate),
+          ))
+      ) {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
@@ -261,7 +281,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreLast = GAP_PENALTY + distToLast
         }
-      } else if (distToLast < GEOMETRIC_TOLERANCE) {
+      } else if (
+        distToLast < GEOMETRIC_TOLERANCE &&
+        (!this.allowedLayerTransitionPointKeys ||
+          this.allowedLayerTransitionPointKeys.has(
+            getXyPointKey(lastPointInCandidate),
+          ))
+      ) {
         scoreLast = VIA_PENALTY + distToLast
       }
 

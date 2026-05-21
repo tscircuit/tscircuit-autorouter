@@ -1,8 +1,142 @@
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
+import type {
+  CapacityMeshNode,
+  Obstacle,
+  SimpleRouteConnection,
+} from "lib/types"
+import {
+  getAssignableViaAvailableZ,
+  getAssignableViaId,
+  isAssignableViaObstacle,
+} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
 import { checkIfConnectionPointIsInRegion } from "./checkIfConnectionPointIsInRegion"
-import type { RawPort, ConnectionHg, HyperGraphHg, RegionPortHg } from "./types"
+import type {
+  RawPort,
+  ConnectionHg,
+  HyperGraphHg,
+  RegionHg,
+  RegionPortHg,
+} from "./types"
+
+const GEOMETRIC_TOLERANCE = 1e-6
+
+const getCandidateRegionsForAssignableVia = (params: {
+  graph: HyperGraphHg
+  point: { x: number; y: number }
+  z: number
+  viaRadius: number
+}) => {
+  const candidates = params.graph.regions
+    .filter(
+      (region) =>
+        region.d.availableZ.includes(params.z) &&
+        !(region.d as any)._assignableVia,
+    )
+    .map((region) => ({
+      region,
+      distance: pointToBoxDistance(params.point, region.d),
+    }))
+    .sort(
+      (a, b) =>
+        a.distance - b.distance ||
+        a.region.d.width * a.region.d.height -
+          b.region.d.width * b.region.d.height,
+    )
+
+  const nearestDistance = candidates[0]?.distance
+  if (nearestDistance === undefined) {
+    return []
+  }
+
+  const maxConnectionDistance = Math.max(
+    nearestDistance + GEOMETRIC_TOLERANCE,
+    params.viaRadius + 0.15,
+  )
+
+  return candidates
+    .filter((candidate) => candidate.distance <= maxConnectionDistance)
+    .slice(0, 4)
+    .map((candidate) => candidate.region)
+}
+
+const addAssignableViaRegions = (params: {
+  graph: HyperGraphHg
+  assignableViaObstacles: Obstacle[]
+  layerCount: number
+}) => {
+  for (const [index, obstacle] of params.assignableViaObstacles.entries()) {
+    if (!isAssignableViaObstacle(obstacle)) continue
+
+    const availableZ = getAssignableViaAvailableZ({
+      obstacle,
+      layerCount: params.layerCount,
+    })
+    if (availableZ.length < 2) continue
+
+    const assignableViaId = getAssignableViaId(obstacle, index)
+    const viaRegionId = `assignable-via:${assignableViaId}`
+    const viaRadius = Math.min(obstacle.width, obstacle.height) / 2
+    const viaRegion: RegionHg = {
+      regionId: viaRegionId,
+      d: {
+        capacityMeshNodeId: viaRegionId,
+        center: { ...obstacle.center },
+        width: obstacle.width,
+        height: obstacle.height,
+        layer: `z${availableZ.join(",")}`,
+        availableZ,
+        _containsObstacle: false,
+        _completelyInsideObstacle: false,
+        _containsTarget: false,
+        _assignableVia: true,
+        _assignedViaObstacle: obstacle,
+      } as CapacityMeshNode,
+      ports: [],
+    }
+
+    const viaPorts: RegionPortHg[] = []
+    for (const z of availableZ) {
+      for (const region of getCandidateRegionsForAssignableVia({
+        graph: params.graph,
+        point: obstacle.center,
+        z,
+        viaRadius,
+      })) {
+        const rawPort: RawPort = {
+          portId: `${viaRegionId}:port:${region.regionId}:z${z}`,
+          x: obstacle.center.x,
+          y: obstacle.center.y,
+          z,
+          distToCentermostPortOnZ: 0,
+          regions: [region, viaRegion],
+        }
+        const hgPort: RegionPortHg = {
+          portId: rawPort.portId,
+          d: rawPort,
+          region1: region,
+          region2: viaRegion,
+        }
+        viaPorts.push(hgPort)
+        region.ports.push(hgPort)
+      }
+    }
+
+    if (new Set(viaPorts.map((port) => port.d.z)).size < 2) {
+      for (const port of viaPorts) {
+        port.region1.ports = port.region1.ports.filter(
+          (existingPort) => existingPort !== port,
+        )
+      }
+      continue
+    }
+
+    viaRegion.ports.push(...viaPorts)
+    params.graph.regions.push(viaRegion)
+    params.graph.ports.push(...viaPorts)
+  }
+}
 
 /**
  * Builds the hypergraph and connection list consumed by the HG pathing solver.
@@ -12,6 +146,7 @@ export function buildHyperGraph(params: {
   capacityMeshNodes: CapacityMeshNode[]
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
+  assignableViaObstacles?: Obstacle[]
 }): { graph: HyperGraphHg; connections: ConnectionHg[] } {
   const graph: HyperGraphHg = {
     ports: [],
@@ -65,6 +200,12 @@ export function buildHyperGraph(params: {
       region2.ports.push(hgPort)
     }
   }
+
+  addAssignableViaRegions({
+    graph,
+    assignableViaObstacles: params.assignableViaObstacles ?? [],
+    layerCount: params.layerCount,
+  })
 
   for (const connection of params.simpleRouteJsonConnections) {
     const [startPoint, endPoint] = connection.pointsToConnect

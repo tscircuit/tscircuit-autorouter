@@ -18,3 +18,4 @@ export {
   AutoroutingPipelineSolver6_PolyHypergraph,
 } from "./AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
 export { AutoroutingPipelineSolver7_MultiGraph } from "./AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+export { AutoroutingPipelineSolver8 } from "./AutoroutingPipeline8/AutoroutingPipelineSolver8"
