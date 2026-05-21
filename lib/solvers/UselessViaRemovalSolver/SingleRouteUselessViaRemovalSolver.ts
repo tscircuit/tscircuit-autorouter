@@ -258,8 +258,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         // TODO connMap test
         const otherTraceThickness =
           conflictingRoute.traceThickness ?? this.TRACE_THICKNESS
-        const minDistance =
-          currentTraceThickness / 2 + otherTraceThickness / 2
+        const minDistance = currentTraceThickness / 2 + otherTraceThickness / 2
         if (distance < minDistance) {
           return false
         }
