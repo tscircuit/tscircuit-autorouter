@@ -55,7 +55,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver8",
-    label: "Pipeline8 Fab Preplaced Vias",
+    label: "Pipeline8 Preplaced Vias (Fab)",
   },
   {
     id: "AssignableAutoroutingPipeline1Solver",
