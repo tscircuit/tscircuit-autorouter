@@ -345,6 +345,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
+          useGrowShrinkHighDensityIntraNodeSolver: true,
         },
       ]
     }),

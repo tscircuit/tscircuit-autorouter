@@ -52,6 +52,7 @@ export type {
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 export { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 export type {
   DrcError,

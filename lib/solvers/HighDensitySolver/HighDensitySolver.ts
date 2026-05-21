@@ -10,10 +10,16 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { GrowShrinkHighDensityIntraNodeSolver } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+
+type HighDensityIntraNodeSolver =
+  | IntraNodeRouteSolver
+  | HyperSingleIntraNodeSolver
+  | GrowShrinkHighDensityIntraNodeSolver
 
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
@@ -33,10 +39,10 @@ export class HighDensitySolver extends BaseSolver {
   effort: number
   obstacles: Obstacle[]
   layerCount: number
+  useGrowShrinkHighDensityIntraNodeSolver: boolean
 
-  failedSolvers: (IntraNodeRouteSolver | HyperSingleIntraNodeSolver)[]
-  activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
-    null
+  failedSolvers: HighDensityIntraNodeSolver[]
+  activeSubSolver: HighDensityIntraNodeSolver | null = null
   connMap?: ConnectivityMap
   nodePfById: Map<CapacityMeshNodeId, number | null>
   nodeSolveMetadataById: Map<
@@ -63,6 +69,7 @@ export class HighDensitySolver extends BaseSolver {
     nodePfById,
     obstacles,
     layerCount,
+    useGrowShrinkHighDensityIntraNodeSolver,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -73,6 +80,7 @@ export class HighDensitySolver extends BaseSolver {
     effort?: number
     obstacles?: Obstacle[]
     layerCount?: number
+    useGrowShrinkHighDensityIntraNodeSolver?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -84,12 +92,17 @@ export class HighDensitySolver extends BaseSolver {
     this.routes = []
     this.failedSolvers = []
     this.effort = effort ?? 1
-    this.MAX_ITERATIONS = 10e6 * this.effort
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.useGrowShrinkHighDensityIntraNodeSolver =
+      useGrowShrinkHighDensityIntraNodeSolver ?? false
+    this.MAX_ITERATIONS =
+      10e6 *
+      this.effort *
+      (this.useGrowShrinkHighDensityIntraNodeSolver ? 9 : 1)
     this.nodePfById =
       nodePfById instanceof Map
         ? new Map(nodePfById)
@@ -101,9 +114,13 @@ export class HighDensitySolver extends BaseSolver {
     }
   }
 
-  private getSolvedNodeSolverType(
-    solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
-  ): string {
+  private getSolvedNodeSolverType(solver: HighDensityIntraNodeSolver): string {
+    if (
+      solver instanceof GrowShrinkHighDensityIntraNodeSolver &&
+      solver.winningSolver
+    ) {
+      return this.getSolvedNodeSolverType(solver.winningSolver)
+    }
     if (solver instanceof HyperSingleIntraNodeSolver && solver.winningSolver) {
       return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
     }
@@ -111,7 +128,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private recordNodeSolveMetadata(
-    solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
+    solver: HighDensityIntraNodeSolver,
     status: "solved" | "failed",
   ) {
     const node = solver.nodeWithPortPoints
@@ -193,7 +210,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private recordSolvedNodeStats(
-    solver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver,
+    solver: HighDensityIntraNodeSolver,
     node: NodeWithPortPoints,
   ) {
     const solverType = this.getSolvedNodeSolverType(solver)
@@ -254,7 +271,7 @@ export class HighDensitySolver extends BaseSolver {
     }
     const node = this.unsolvedNodePortPoints.pop()!
 
-    this.activeSubSolver = new HyperSingleIntraNodeSolver({
+    const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -264,7 +281,10 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
-    })
+    }
+    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
+      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+      : new HyperSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }
 
