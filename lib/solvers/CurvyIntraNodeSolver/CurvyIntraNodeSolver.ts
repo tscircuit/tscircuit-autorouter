@@ -23,6 +23,7 @@ export interface CurvyIntraNodeSolverParams {
   viaDiameter?: number
   /** Obstacles from adjacent/solved nodes that might affect routing */
   adjacentObstacles?: AdjacentObstacle[]
+  connectionNominalTraceWidths?: Record<string, number>
 }
 
 /**
@@ -40,6 +41,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
   traceWidth: number
   viaDiameter: number
   adjacentObstacles: AdjacentObstacle[]
+  connectionNominalTraceWidths: Record<string, number>
 
   routes: HighDensityIntraNodeRoute[] = []
   curvyTraceSolver?: CurvyTraceSolver
@@ -52,6 +54,8 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.adjacentObstacles = params.adjacentObstacles ?? []
+    this.connectionNominalTraceWidths =
+      params.connectionNominalTraceWidths ?? {}
     this.MAX_ITERATIONS = 1000
   }
 
@@ -187,10 +191,13 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
       if (!info) continue
 
+      const customTraceWidth =
+        this.connectionNominalTraceWidths?.[info.connectionName] ??
+        this.traceWidth
       const route: HighDensityIntraNodeRoute = {
         connectionName: info.connectionName,
         rootConnectionName: info.rootConnectionName,
-        traceThickness: this.traceWidth,
+        traceThickness: customTraceWidth,
         viaDiameter: this.viaDiameter,
         route: outputTrace.points.map((pt) => ({
           x: pt.x,
@@ -211,6 +218,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       traceWidth: this.traceWidth,
       viaDiameter: this.viaDiameter,
       adjacentObstacles: this.adjacentObstacles,
+      connectionNominalTraceWidths: this.connectionNominalTraceWidths,
     }
   }
 

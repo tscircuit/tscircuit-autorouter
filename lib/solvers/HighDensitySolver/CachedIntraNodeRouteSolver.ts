@@ -95,15 +95,19 @@ export class CachedIntraNodeRouteSolver
   } {
     const center = this.nodeWithPortPoints.center
     const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, points }) => ({
-        connectionName,
-        points: points.map((point) => ({
+      ({ connectionName, points }) => {
+        const nominalWidth = this.connectionNominalTraceWidths?.[connectionName]
+        return {
           connectionName,
-          x: roundCoord(point.x - center.x),
-          y: roundCoord(point.y - center.y),
-          z: point.z ?? 0,
-        })),
-      }),
+          nominalWidth,
+          points: points.map((point) => ({
+            connectionName,
+            x: roundCoord(point.x - center.x),
+            y: roundCoord(point.y - center.y),
+            z: point.z ?? 0,
+          })),
+        }
+      },
     )
 
     const normalizedHyperParameters = Object.fromEntries(

@@ -85,6 +85,8 @@ export class JumperHighDensitySolver extends BaseSolver {
   hyperParameters?: Partial<HighDensityHyperParameters>
   availableJumperTypes: JumperType[]
 
+  connectionNominalTraceWidths: Record<string, number>
+
   // Capacity mesh data for obstacle computation
   capacityMeshNodes: CapacityMeshNode[]
   capacityMeshEdges: CapacityMeshEdge[]
@@ -122,6 +124,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     capacityMeshNodes = [],
     capacityMeshEdges = [],
     availableJumperTypes,
+    connectionNominalTraceWidths,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -134,6 +137,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     capacityMeshEdges?: CapacityMeshEdge[]
     /** Available jumper types. Defaults to ["0603"] */
     availableJumperTypes?: JumperType[]
+    connectionNominalTraceWidths?: Record<string, number>
   }) {
     super()
     this.allNodes = [...nodePortPoints]
@@ -147,6 +151,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     this.capacityMeshNodes = capacityMeshNodes
     this.capacityMeshEdges = capacityMeshEdges
     this.availableJumperTypes = availableJumperTypes ?? ["0603"]
+    this.connectionNominalTraceWidths = connectionNominalTraceWidths ?? {}
 
     // Build lookup maps for capacity mesh data
     this.capacityMeshNodeMap = new Map(
@@ -351,6 +356,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         traceWidth: this.traceWidth,
         viaDiameter: this.viaDiameter,
         adjacentObstacles,
+        connectionNominalTraceWidths: this.connectionNominalTraceWidths,
       })
       this.curvyIntraNodeSolvers.push(solver)
     }
@@ -406,6 +412,7 @@ export class JumperHighDensitySolver extends BaseSolver {
           traceWidth: this.traceWidth,
           viaDiameter: this.viaDiameter,
           adjacentObstacles: additionalObstacles,
+          connectionNominalTraceWidths: this.connectionNominalTraceWidths,
         })
         this.curvyIntraNodeSolvers[i] = newSolver
       }
@@ -535,6 +542,7 @@ export class JumperHighDensitySolver extends BaseSolver {
       capacityMeshNodes: this.capacityMeshNodes,
       capacityMeshEdges: this.capacityMeshEdges,
       availableJumperTypes: this.availableJumperTypes,
+      connectionNominalTraceWidths: this.connectionNominalTraceWidths,
     }
   }
 

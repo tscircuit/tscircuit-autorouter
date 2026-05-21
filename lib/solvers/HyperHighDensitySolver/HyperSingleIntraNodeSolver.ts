@@ -263,6 +263,8 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
           traceWidth: this.constructorParams.traceWidth,
           viaDiameter: this.constructorParams.viaDiameter,
           obstacleMargin: this.constructorParams.obstacleMargin,
+          connectionNominalTraceWidths:
+            this.constructorParams.connectionNominalTraceWidths,
         })
         ineligibleSolver.failed = true
         ineligibleSolver.error =

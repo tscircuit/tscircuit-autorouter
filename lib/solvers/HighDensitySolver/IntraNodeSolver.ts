@@ -62,6 +62,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
+  connectionNominalTraceWidths: Record<string, number>
 
   // Legacy compat
   get failedSolvers() {
@@ -83,6 +84,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacleMargin?: number
     obstacles?: Obstacle[]
     layerCount?: number
+    connectionNominalTraceWidths?: Record<string, number>
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -95,6 +97,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
+    this.connectionNominalTraceWidths =
+      params.connectionNominalTraceWidths ?? {}
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     for (const { connectionName, x, y, z } of nodeWithPortPoints.portPoints) {
       unsolvedConnectionsMap.set(connectionName, [
@@ -224,7 +228,29 @@ export class IntraNodeRouteSolver extends BaseSolver {
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      traceThickness: this.traceWidth,
+      traceThickness: (() => {
+        let traceThickness = this.traceWidth
+        const name = unsolvedConnection.connectionName
+        if (typeof this.connectionNominalTraceWidths[name] === "number") {
+          traceThickness = this.connectionNominalTraceWidths[name]
+        } else {
+          const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
+            (p) => p.connectionName === name,
+          )
+          if (
+            matchingPortPoint?.rootConnectionName &&
+            typeof this.connectionNominalTraceWidths[
+              matchingPortPoint.rootConnectionName
+            ] === "number"
+          ) {
+            traceThickness =
+              this.connectionNominalTraceWidths[
+                matchingPortPoint.rootConnectionName
+              ]
+          }
+        }
+        return traceThickness
+      })(),
       obstacleMargin: this.obstacleMargin,
     }
   }
@@ -258,7 +284,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     this.solvedRoutes.push({
       connectionName: unsolvedConnection.connectionName,
-      traceThickness: this.traceWidth,
+      traceThickness: opts.traceThickness,
       viaDiameter: this.viaDiameter,
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],

@@ -38,6 +38,7 @@ export class HighDensitySolver extends BaseSolver {
   activeSubSolver: IntraNodeRouteSolver | HyperSingleIntraNodeSolver | null =
     null
   connMap?: ConnectivityMap
+  connectionNominalTraceWidths: Record<string, number>
   nodePfById: Map<CapacityMeshNodeId, number | null>
   nodeSolveMetadataById: Map<
     CapacityMeshNodeId,
@@ -63,6 +64,7 @@ export class HighDensitySolver extends BaseSolver {
     nodePfById,
     obstacles,
     layerCount,
+    connectionNominalTraceWidths,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -76,6 +78,7 @@ export class HighDensitySolver extends BaseSolver {
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
+    connectionNominalTraceWidths?: Record<string, number>
   }) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
@@ -90,6 +93,7 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.connectionNominalTraceWidths = connectionNominalTraceWidths ?? {}
     this.nodePfById =
       nodePfById instanceof Map
         ? new Map(nodePfById)
@@ -264,6 +268,7 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      connectionNominalTraceWidths: this.connectionNominalTraceWidths,
     })
     this.updateCacheStats()
   }

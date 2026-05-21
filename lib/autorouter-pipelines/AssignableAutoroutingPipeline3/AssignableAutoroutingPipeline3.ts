@@ -376,6 +376,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         capacityMeshNodes: cms.capacityNodes ?? [],
         capacityMeshEdges: cms.capacityEdges ?? [],
         availableJumperTypes: cms.srj.availableJumperTypes,
+        connectionNominalTraceWidths: cms.connectionNominalTraceWidths,
       },
     ]),
     definePipelineStep(
@@ -448,6 +449,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     // ]),
   ]
 
+  connectionNominalTraceWidths: Record<string, number>
+
   constructor(
     public readonly srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
@@ -455,6 +458,21 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     super()
     this.srj = srj
     this.opts = { ...opts }
+    this.connectionNominalTraceWidths = {}
+    for (const conn of srj.connections) {
+      if (typeof conn.nominalTraceWidth === "number") {
+        this.connectionNominalTraceWidths[conn.name] = conn.nominalTraceWidth
+        if (conn.rootConnectionName) {
+          this.connectionNominalTraceWidths[conn.rootConnectionName] =
+            conn.nominalTraceWidth
+        }
+        if (conn.mergedConnectionNames) {
+          for (const name of conn.mergedConnectionNames) {
+            this.connectionNominalTraceWidths[name] = conn.nominalTraceWidth
+          }
+        }
+      }
+    }
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
