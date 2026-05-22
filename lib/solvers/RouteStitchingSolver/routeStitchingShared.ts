@@ -1,11 +1,18 @@
 import type { Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
+type RoutePoint = HighDensityIntraNodeRoute["route"][number]
+
 /**
  * Tie tolerance used when the stitch solver chooses between equally good
  * geometric candidates. Keeping this shared makes route selection stable.
  */
 export const DISTANCE_TIE_TOLERANCE = 1e-9
+
+/**
+ * Geometric equality tolerance used when route fragments share an endpoint.
+ */
+export const GEOMETRIC_TOLERANCE = 1e-3
 
 /**
  * Maximum same-layer gap that can be bridged while stitching route islands.
@@ -34,6 +41,28 @@ export const comparePoints = (a: Point3, b: Point3) =>
 
 export const getPoint3Key = (point: Point3) =>
   `${point.z.toFixed(6)}:${point.x.toFixed(6)}:${point.y.toFixed(6)}`
+
+/**
+ * Reverses a high-density route while preserving segment metadata direction.
+ */
+export const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
+  const reversed = [...points].reverse().map((point) => {
+    const { toNextSegmentType, ...rest } = point
+    return rest
+  }) as RoutePoint[]
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const segmentType = points[i]?.toNextSegmentType
+    if (!segmentType) continue
+    const reversedStartIndex = points.length - i - 2
+    reversed[reversedStartIndex] = {
+      ...reversed[reversedStartIndex]!,
+      toNextSegmentType: segmentType,
+    }
+  }
+
+  return reversed
+}
 
 /**
  * Canonicalizes a route so the same geometry compares equally regardless of

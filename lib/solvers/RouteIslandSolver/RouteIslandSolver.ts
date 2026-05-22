@@ -34,6 +34,19 @@ type RouteIslandRegion = RouteIslandRegionWithPortPointPairs & {
 /** Index into the per-connection region array. */
 type RegionIndex = number
 
+export const ROUTE_ISLAND_START_TERMINAL_PORT_ID_PREFIX =
+  "tiny-terminal:start-port:"
+export const ROUTE_ISLAND_END_TERMINAL_PORT_ID_PREFIX =
+  "tiny-terminal:end-port:"
+
+export const isRouteIslandStartTerminalPortPoint = (portPoint: PortPoint) =>
+  portPoint.portPointId?.includes(ROUTE_ISLAND_START_TERMINAL_PORT_ID_PREFIX) ??
+  false
+
+export const isRouteIslandEndTerminalPortPoint = (portPoint: PortPoint) =>
+  portPoint.portPointId?.includes(ROUTE_ISLAND_END_TERMINAL_PORT_ID_PREFIX) ??
+  false
+
 /**
  * Creates Island of conected regions that share port points for a single connection.
  *
@@ -139,10 +152,7 @@ export class RouteIslandSolver extends BaseSolver {
    */
   private regionHasStartTerminal(region: RouteIslandRegion) {
     return region.portPointPairs.some((portPointPair) =>
-      portPointPair.some(
-        (portPoint) =>
-          portPoint.portPointId?.includes("tiny-terminal:start-port:") ?? false,
-      ),
+      portPointPair.some(isRouteIslandStartTerminalPortPoint),
     )
   }
 

@@ -1,37 +1,16 @@
+import { distance } from "@tscircuit/math-utils"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import {
+  type RouteIsland,
+  isRouteIslandEndTerminalPortPoint,
+  isRouteIslandStartTerminalPortPoint,
+} from "lib/solvers/RouteIslandSolver/RouteIslandSolver"
 import { getStringColor } from "lib/solvers/colors"
-import type { RouteIsland } from "lib/solvers/RouteIslandSolver/RouteIslandSolver"
 import type { HighDensityRoute, PortPoint } from "lib/types/high-density-types"
+import { GEOMETRIC_TOLERANCE, reverseRoutePoints } from "./routeStitchingShared"
 
-const ROUTE_ISLAND_HD_ROUTE_MATCH_TOLERANCE = 1e-3
 type RoutePoint = HighDensityRoute["route"][number]
-
-/**
- * Reverses a high-density route while preserving segment metadata direction.
- *
- * @param points Route points to reverse.
- * @returns New route point array with `toNextSegmentType` moved to the correct
- * reversed segment.
- */
-const reverseHdRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
-  const reversed = [...points].reverse().map((point) => {
-    const { toNextSegmentType, ...rest } = point
-    return rest
-  }) as RoutePoint[]
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const segmentType = points[i]?.toNextSegmentType
-    if (!segmentType) continue
-    const reversedStartIndex = points.length - i - 2
-    reversed[reversedStartIndex] = {
-      ...reversed[reversedStartIndex]!,
-      toNextSegmentType: segmentType,
-    }
-  }
-
-  return reversed
-}
 
 /**
  * Matched high-density route segment for a route-island port-point pair.
@@ -91,7 +70,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     portPoint: PortPoint,
   ) {
     if (routePoint.z !== portPoint.z) return Infinity
-    return Math.hypot(routePoint.x - portPoint.x, routePoint.y - portPoint.y)
+    return distance(routePoint, portPoint)
   }
 
   /**
@@ -106,8 +85,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     portPoint: PortPoint,
   ) {
     return (
-      this.getPortPointDistance(routePoint, portPoint) <=
-      ROUTE_ISLAND_HD_ROUTE_MATCH_TOLERANCE
+      this.getPortPointDistance(routePoint, portPoint) <= GEOMETRIC_TOLERANCE
     )
   }
 
@@ -168,9 +146,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     return (
       firstRegion.portPointPairs
         .flat()
-        .find((portPoint) =>
-          portPoint.portPointId?.includes("tiny-terminal:start-port:"),
-        ) ??
+        .find(isRouteIslandStartTerminalPortPoint) ??
       firstRegion.portPointPairs[0]?.[0] ??
       null
     )
@@ -192,9 +168,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     return (
       lastRegion.portPointPairs
         .flat()
-        .find((portPoint) =>
-          portPoint.portPointId?.includes("tiny-terminal:end-port:"),
-        ) ??
+        .find(isRouteIslandEndTerminalPortPoint) ??
       lastRegion.portPointPairs.at(-1)?.[1] ??
       null
     )
@@ -255,11 +229,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
    * @returns True when both points are within tolerance on the same layer.
    */
   private pointMatchesPoint(left: RoutePoint, right: RoutePoint) {
-    return (
-      left.z === right.z &&
-      Math.hypot(left.x - right.x, left.y - right.y) <=
-        ROUTE_ISLAND_HD_ROUTE_MATCH_TOLERANCE
-    )
+    return left.z === right.z && distance(left, right) <= GEOMETRIC_TOLERANCE
   }
 
   /**
@@ -270,10 +240,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
    * @returns True when XY positions are within tolerance.
    */
   private pointXyMatchesPoint(left: RoutePoint, right: RoutePoint) {
-    return (
-      Math.hypot(left.x - right.x, left.y - right.y) <=
-      ROUTE_ISLAND_HD_ROUTE_MATCH_TOLERANCE
-    )
+    return distance(left, right) <= GEOMETRIC_TOLERANCE
   }
 
   /**
@@ -284,7 +251,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
    */
   private getRoutePointsForMatch(routeMatch: IslandRouteMatch) {
     return routeMatch.shouldReverse
-      ? reverseHdRoutePoints(routeMatch.hdRoute.route)
+      ? reverseRoutePoints(routeMatch.hdRoute.route)
       : [...routeMatch.hdRoute.route]
   }
 
@@ -480,7 +447,7 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     }
 
     return {
-      title: "New Stich Solver",
+      title: "Island Based Route Stitch Solver",
       lines,
       points,
     }

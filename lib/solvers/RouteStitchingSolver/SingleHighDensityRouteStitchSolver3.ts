@@ -1,44 +1,26 @@
-import { distance, type Point3 } from "@tscircuit/math-utils"
+import { type Point3, distance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
+import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import {
-  comparePoints,
-  compareRoutes,
   DISTANCE_TIE_TOLERANCE,
+  GEOMETRIC_TOLERANCE,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+  comparePoints,
+  compareRoutes,
+  reverseRoutePoints,
 } from "./routeStitchingShared"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
-const GEOMETRIC_TOLERANCE = 1e-3
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
-
-const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
-  const reversed = [...points].reverse().map((point) => {
-    const { toNextSegmentType, ...rest } = point
-    return rest
-  }) as RoutePoint[]
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const segmentType = points[i]?.toNextSegmentType
-    if (!segmentType) continue
-    const reversedStartIndex = points.length - i - 2
-    reversed[reversedStartIndex] = {
-      ...reversed[reversedStartIndex]!,
-      toNextSegmentType: segmentType,
-    }
-  }
-
-  return reversed
-}
 
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
