@@ -36,7 +36,5 @@ test("no better path", () => {
     .sort()
   expect(pointIds).toEqual(["A", "X"])
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    snapshotPath,
-  )
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })

@@ -20,7 +20,5 @@ test("pipeline4 dataset-srj15 sample02 visual snapshot", () => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    snapshotPath,
-  )
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 }, 120_000)

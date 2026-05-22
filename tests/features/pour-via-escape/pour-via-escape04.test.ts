@@ -37,7 +37,5 @@ test("pour-via-escape04.json", () => {
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    snapshotPath,
-  )
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })
