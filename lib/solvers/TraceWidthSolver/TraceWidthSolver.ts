@@ -238,15 +238,11 @@ export class TraceWidthSolver extends BaseSolver {
       // Build a graduated schedule so the router prefers the full requested
       // width but gracefully narrows if it can't fit:
       //   [full, 3/4, 1/2, minTraceWidth]
-      const mid1 =
-        targetWidth - (targetWidth - this.minTraceWidth) * (1 / 3)
-      const mid2 =
-        targetWidth - (targetWidth - this.minTraceWidth) * (2 / 3)
+      const mid1 = targetWidth - (targetWidth - this.minTraceWidth) * (1 / 3)
+      const mid2 = targetWidth - (targetWidth - this.minTraceWidth) * (2 / 3)
       // Deduplicate and keep only values > minTraceWidth
       const schedule = [targetWidth, mid1, mid2].filter(
-        (w, i, arr) =>
-          w > this.minTraceWidth + 0.001 &&
-          arr.indexOf(w) === i, // unique
+        (w, i, arr) => w > this.minTraceWidth + 0.001 && arr.indexOf(w) === i, // unique
       )
       schedule.push(this.minTraceWidth)
       this.TRACE_WIDTH_SCHEDULE = schedule
@@ -277,8 +273,7 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     const clearance = this.getClearanceAtPosition(this.cursorPosition!)
-    const requiredClearance =
-      this.currentTargetWidth / 2 + this.obstacleMargin
+    const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
 
     if (clearance < requiredClearance) {
       // Current width doesn't fit — try next narrower value
@@ -433,8 +428,16 @@ export class TraceWidthSolver extends BaseSolver {
         const obstacleMinY = obstacle.center.y - obstacle.height / 2
         const obstacleMaxY = obstacle.center.y + obstacle.height / 2
 
-        const dx = Math.max(obstacleMinX - position.x, 0, position.x - obstacleMaxX)
-        const dy = Math.max(obstacleMinY - position.y, 0, position.y - obstacleMaxY)
+        const dx = Math.max(
+          obstacleMinX - position.x,
+          0,
+          position.x - obstacleMaxX,
+        )
+        const dy = Math.max(
+          obstacleMinY - position.y,
+          0,
+          position.y - obstacleMaxY,
+        )
         const distToObstacle = Math.sqrt(dx * dx + dy * dy)
 
         const requiredObstacleClearance =
@@ -463,7 +466,8 @@ export class TraceWidthSolver extends BaseSolver {
         continue
       }
 
-      const otherTraceHalfWidth = (conflictingRoute.traceThickness ?? this.minTraceWidth) / 2
+      const otherTraceHalfWidth =
+        (conflictingRoute.traceThickness ?? this.minTraceWidth) / 2
       const clearance = distance - otherTraceHalfWidth
 
       const requiredTraceClearance =
@@ -501,9 +505,9 @@ export class TraceWidthSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) =>
-      w.toFixed(2),
-    ).join(", ")
+    const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) => w.toFixed(2)).join(
+      ", ",
+    )
 
     const visualization: GraphicsObject & {
       lines: NonNullable<GraphicsObject["lines"]>
@@ -561,10 +565,16 @@ export class TraceWidthSolver extends BaseSolver {
 
       // Color by thickness: green = requested width, yellow = reduced, orange = fallback
       const targetWidth = this._getTargetWidthForRoute(route)
-      const isFullWidth = targetWidth !== undefined &&
+      const isFullWidth =
+        targetWidth !== undefined &&
         Math.abs((route.traceThickness ?? 0) - targetWidth) < 0.001
-      const isMinWidth = Math.abs((route.traceThickness ?? 0) - this.minTraceWidth) < 0.001
-      const strokeColor = isFullWidth ? "green" : isMinWidth ? "orange" : "yellow"
+      const isMinWidth =
+        Math.abs((route.traceThickness ?? 0) - this.minTraceWidth) < 0.001
+      const strokeColor = isFullWidth
+        ? "green"
+        : isMinWidth
+          ? "orange"
+          : "yellow"
 
       for (let i = 0; i < route.route.length - 1; i++) {
         const current = route.route[i]!

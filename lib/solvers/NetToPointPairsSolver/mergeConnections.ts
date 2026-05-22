@@ -126,15 +126,19 @@ export function mergeConnections(
 
       // Take the largest nominalTraceWidth across merged connections
       if (simpleRouteConnection.nominalTraceWidth !== undefined) {
-        if (nominalTraceWidth === undefined ||
-            simpleRouteConnection.nominalTraceWidth > nominalTraceWidth) {
+        if (
+          nominalTraceWidth === undefined ||
+          simpleRouteConnection.nominalTraceWidth > nominalTraceWidth
+        ) {
           nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
         }
       }
       // Same for traceWidthMultiplier — largest wins
       if (simpleRouteConnection.traceWidthMultiplier !== undefined) {
-        if (traceWidthMultiplier === undefined ||
-            simpleRouteConnection.traceWidthMultiplier > traceWidthMultiplier) {
+        if (
+          traceWidthMultiplier === undefined ||
+          simpleRouteConnection.traceWidthMultiplier > traceWidthMultiplier
+        ) {
           traceWidthMultiplier = simpleRouteConnection.traceWidthMultiplier
         }
       }
