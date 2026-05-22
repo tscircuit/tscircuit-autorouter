@@ -11,6 +11,11 @@ import {
 import { MultiSectionPortPointOptimizer } from "../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer"
 import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"
 
+const snapshotBasePath =
+  process.platform === "linux"
+    ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+    : import.meta.path
+
 test("should solve e2e3 board and produce valid SimpleRouteJson output", async () => {
   const simpleSrj = e2e3Fixture as SimpleRouteJson
 
@@ -21,15 +26,15 @@ test("should solve e2e3 board and produce valid SimpleRouteJson output", async (
   solver.solve()
 
   expect(solver.availableSegmentPointSolver!.visualize()).toMatchGraphicsSvg(
-    `${import.meta.path}-availableSegmentPointSolver`,
+    `${snapshotBasePath}-availableSegmentPointSolver`,
   )
   expect(solver.portPointPathingSolver!.visualize()).toMatchGraphicsSvg(
-    `${import.meta.path}-portPointPathingSolver`,
+    `${snapshotBasePath}-portPointPathingSolver`,
   )
 
   const result = solver.getOutputSimpleRouteJson()
   expect(convertSrjToGraphicsObject(result)).toMatchGraphicsSvg(
-    import.meta.path,
+    snapshotBasePath,
   )
 }, 20_000)
 
@@ -98,7 +103,7 @@ test("createPortPointSection creates valid section from center node", async () =
   // Visualize the section
   const sectionViz = visualizeSection(section, solver.colorMap)
   expect(sectionViz).toMatchGraphicsSvg(
-    `${import.meta.path}-section-expansion2`,
+    `${snapshotBasePath}-section-expansion2`,
   )
 }, 20_000)
 
@@ -176,12 +181,12 @@ test("createPortPointSection with different expansion degrees", async () => {
 
   // Visualize section with expansion 1
   expect(visualizeSection(section1, solver.colorMap)).toMatchGraphicsSvg(
-    `${import.meta.path}-section-expansion1`,
+    `${snapshotBasePath}-section-expansion1`,
   )
 
   // Visualize section with expansion 3
   expect(visualizeSection(section3, solver.colorMap)).toMatchGraphicsSvg(
-    `${import.meta.path}-section-expansion3`,
+    `${snapshotBasePath}-section-expansion3`,
   )
 }, 20_000)
 
@@ -291,6 +296,6 @@ test("createSectionSimpleRouteJson includes cut paths with low expansion degrees
 
   // Visualize the section to verify cut paths are shown
   expect(visualizeSection(testSection, solver.colorMap)).toMatchGraphicsSvg(
-    `${import.meta.path}-section-with-cut-paths`,
+    `${snapshotBasePath}-section-with-cut-paths`,
   )
 })

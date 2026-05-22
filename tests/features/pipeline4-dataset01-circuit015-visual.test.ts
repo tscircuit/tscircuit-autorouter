@@ -7,6 +7,10 @@ import { getLastStepSvg } from "tests/fixtures/getLastStepSvg"
 
 test("pipeline4 dataset01 circuit015 visual snapshot", () => {
   getGlobalInMemoryCache().clearCache()
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
 
   const circuit015 = (dataset01 as Record<string, unknown>)
     .circuit015 as SimpleRouteJson
@@ -17,6 +21,6 @@ test("pipeline4 dataset01 circuit015 visual snapshot", () => {
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
+    snapshotPath,
   )
 }, 120_000)

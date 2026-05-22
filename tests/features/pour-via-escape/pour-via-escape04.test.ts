@@ -29,11 +29,15 @@ test("pour-via-escape04.json", () => {
 
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
+    snapshotPath,
   )
 })
