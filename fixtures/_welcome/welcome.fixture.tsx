@@ -544,7 +544,9 @@ export default () => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Welcome to the tscircuit autorouter</h1>
+      <h1 className="text-3xl font-bold mb-4">
+        Welcome to the tscircuit autorouter
+      </h1>
       <p className="mb-6">
         The tscircuit autorouter is an MIT-licensed open-source autorouter. You
         can upload{" "}
