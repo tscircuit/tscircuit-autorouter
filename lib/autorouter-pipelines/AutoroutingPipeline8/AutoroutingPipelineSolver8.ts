@@ -38,6 +38,7 @@ import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceV
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getAssignableViaPointKeys } from "./assignableViaUtils"
+import { getXyPointKey } from "./getXyPointKey"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -764,13 +765,30 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    const globalDrcRoutes = this.globalDrcForceImproveSolver?.getOutput()
+    if (globalDrcRoutes && this.routesOnlyUsePreplacedVias(globalDrcRoutes)) {
+      return globalDrcRoutes
+    }
+
     return (
-      this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityRepairRoutes ??
       this.highDensityForceImproveRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
+    )
+  }
+
+  private routesOnlyUsePreplacedVias(routes: HighDensityRoute[]) {
+    const allowedLayerTransitionPointKeys = getAssignableViaPointKeys(
+      this.originalSrj.obstacles,
+    )
+    if (allowedLayerTransitionPointKeys.size === 0) return true
+
+    return routes.every((route) =>
+      route.vias.every((via) =>
+        allowedLayerTransitionPointKeys.has(getXyPointKey(via)),
+      ),
     )
   }
 
