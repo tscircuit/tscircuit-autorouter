@@ -279,7 +279,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        connections: cms.srjWithPointPairs?.connections ?? cms.srj.connections,
         layerCount: cms.srj.layerCount,
       },
     ]),
