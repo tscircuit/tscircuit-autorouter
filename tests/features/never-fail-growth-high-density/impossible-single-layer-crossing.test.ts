@@ -22,4 +22,5 @@ test("GrowShrinkHighDensityIntraNodeSolver immediately returns invalid geometry 
   expect(doSegmentsIntersect(routeA[0], routeA[1], routeB[0], routeB[1])).toBe(
     true,
   )
+  expect(solver.visualize().lines).toHaveLength(2)
 })
