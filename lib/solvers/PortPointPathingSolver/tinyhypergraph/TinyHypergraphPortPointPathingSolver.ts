@@ -650,14 +650,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
-    const tinySolveEffort =
-      this.duplicatedPortCount > 220 ? params.effort * 5 : params.effort
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
         solvedRoutes: serializedGraph.solvedRoutes,
       },
-      tinySolveEffort,
+      params.effort,
       params.minViaPadDiameter,
     )
     this.tinyPipelineSolver =
