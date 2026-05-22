@@ -83,6 +83,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly connections?: any[]
     },
   ) {
     super()
@@ -262,6 +263,7 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
+            connections: this.simplificationConfig.connections,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes

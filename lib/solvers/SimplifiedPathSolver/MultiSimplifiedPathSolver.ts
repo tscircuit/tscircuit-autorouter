@@ -25,6 +25,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   defaultViaDiameter: number
+  connections?: any[]
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -33,6 +34,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     defaultViaDiameter?: number
+    connections?: any[]
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
@@ -53,6 +55,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
+    this.connections = params.connections
 
     this.simplifiedHdRoutes = []
   }
@@ -75,6 +78,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         connMap: this.connMap,
         colorMap: this.colorMap,
         outline: this.outline,
+        connections: this.connections,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return

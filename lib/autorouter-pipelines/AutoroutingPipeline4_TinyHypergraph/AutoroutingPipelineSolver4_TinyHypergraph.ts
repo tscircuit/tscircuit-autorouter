@@ -407,6 +407,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           iterations: 2,
+          connections: cms.srjWithPointPairs!.connections,
         },
       ],
     ),

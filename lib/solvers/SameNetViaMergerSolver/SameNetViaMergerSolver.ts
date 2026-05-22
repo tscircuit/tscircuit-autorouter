@@ -142,11 +142,18 @@ export class SameNetViaMergerSolver extends BaseSolver {
           route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
 
           const r = this.mergedViaHdRoutes[viaToRemove.routeIndex]
-          r.vias = r.vias.map((vx) =>
+          const mappedVias = r.vias.map((vx) =>
             vx.x === viaToRemove.x && vx.y === viaToRemove.y
               ? { x: viaKeep.x, y: viaKeep.y }
               : vx,
           )
+          const seen = new Set<string>()
+          r.vias = mappedVias.filter((vx) => {
+            const key = `${vx.x.toFixed(6)},${vx.y.toFixed(6)}`
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
 
           this.rebuildVias()
           return

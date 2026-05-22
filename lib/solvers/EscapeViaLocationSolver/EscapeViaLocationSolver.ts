@@ -115,8 +115,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       opts.obstacleMargin ?? ogSrj.defaultObstacleMargin ?? 0.15
     this.escapeOffset =
       this.viaRadius + Math.max(this.minTraceWidth / 2, this.obstacleMargin)
-    this.requiredTraceClearance =
-      this.minTraceWidth / 2 + this.obstacleMargin / 2
+    this.requiredTraceClearance = this.minTraceWidth / 2 + this.obstacleMargin
     this.requiredViaToViaClearance = this.viaDiameter + this.obstacleMargin
     this.outputSrj = ogSrj
     this.escapeViaMetadataByPointId = new Map()
@@ -766,10 +765,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
           Math.abs(targetZ - sourceZ) * 0.5 +
           cappedProjectedFreeSpace * 2 +
           (Number.isFinite(minPlacedEscapeViaClearance)
-            ? Math.min(
-                minPlacedEscapeViaClearance,
-                this.requiredViaToViaClearance,
-              ) * 10
+            ? Math.min(minPlacedEscapeViaClearance, this.obstacleMargin) * 10
             : 0)
 
         if (!bestCandidate || score > bestCandidate.score) {

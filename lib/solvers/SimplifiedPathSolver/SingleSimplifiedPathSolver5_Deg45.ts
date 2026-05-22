@@ -61,6 +61,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
   /** Indices in inputRoute.route that correspond to jumper pad points (must be preserved) */
   jumperPadPointIndices: Set<number> = new Set()
+  connectionPointIndices: Set<number> = new Set()
 
   segmentTree!: SegmentTree
 
@@ -291,6 +292,31 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
               Math.abs(p.y - jumper.end.y) < 0.01)
           ) {
             this.jumperPadPointIndices.add(i)
+          }
+        }
+      }
+    }
+
+    // Identify which route points correspond to connection points (pins/ports)
+    // These points MUST be preserved during simplification
+    if (params.connections && Array.isArray(params.connections)) {
+      const connName = this.inputRoute.connectionName
+      const rootConnName = this.inputRoute.rootConnectionName
+      const matchingConns = params.connections.filter(
+        (c: any) =>
+          c.name === connName ||
+          c.rootConnectionName === rootConnName ||
+          c.name === rootConnName,
+      )
+      for (const conn of matchingConns) {
+        if (conn.pointsToConnect && Array.isArray(conn.pointsToConnect)) {
+          for (const pt of conn.pointsToConnect) {
+            for (let i = 0; i < this.inputRoute.route.length; i++) {
+              const p = this.inputRoute.route[i]
+              if (Math.abs(p.x - pt.x) < 0.01 && Math.abs(p.y - pt.y) < 0.01) {
+                this.connectionPointIndices.add(i)
+              }
+            }
           }
         }
       }
@@ -664,7 +690,10 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     let jumperPadAtDistance = -1
 
     for (let i = tailIndex + 1; i <= headIndex; i++) {
-      if (this.jumperPadPointIndices.has(i)) {
+      if (
+        this.jumperPadPointIndices.has(i) ||
+        this.connectionPointIndices.has(i)
+      ) {
         jumperPadBtwHeadAndTail = true
         jumperPadAtIndex = i
         // Find the distance to this jumper pad point
