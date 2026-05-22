@@ -57,6 +57,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   MAX_RIPS_WITHOUT_MAX_REGION_COST_IMPROVEMENT: 6,
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST: Number.POSITIVE_INFINITY,
 }
+const DUPLICATE_PORT_TRAVERSAL_PENALTY = 1_000
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -453,12 +454,50 @@ const applyTerminalRegionNetIds = (loaded: {
   }
 }
 
+const applyDuplicatePortPenalties = (loaded: {
+  topology: { portCount: number; portMetadata?: any[] }
+  problem: { portPenalty?: Float64Array }
+}) => {
+  let duplicatePortPenaltyCount = 0
+  const portPenalty = loaded.problem.portPenalty
+    ? new Float64Array(loaded.problem.portPenalty)
+    : new Float64Array(loaded.topology.portCount)
+
+  for (let portId = 0; portId < loaded.topology.portCount; portId++) {
+    const metadata = loaded.topology.portMetadata?.[portId]
+    if (typeof metadata?.duplicatedFromPortId !== "string") {
+      continue
+    }
+
+    portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
+    duplicatePortPenaltyCount++
+  }
+
+  if (duplicatePortPenaltyCount > 0) {
+    loaded.problem.portPenalty = portPenalty
+  }
+
+  return duplicatePortPenaltyCount
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
+  duplicatePortPenaltyCount = 0
 
   constructor(inputProblem: TinyHyperGraphSectionPipelineInput) {
     super(inputProblem)
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
+  }
+
+  override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
+    const loaded = super.loadHyperGraph(serializedHyperGraph)
+    const duplicatePortPenaltyCount = applyDuplicatePortPenalties(loaded)
+    applyTerminalRegionNetIds(loaded)
+    this.duplicatePortPenaltyCount = Math.max(
+      this.duplicatePortPenaltyCount,
+      duplicatePortPenaltyCount,
+    )
+    return loaded
   }
 
   override _step() {
@@ -572,6 +611,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
+  private duplicatedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -605,13 +645,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
     }
-    const duplicatedPortCount =
+    this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
     const tinySolveEffort =
-      duplicatedPortCount > 220 ? params.effort * 5 : params.effort
+      this.duplicatedPortCount > 220 ? params.effort * 5 : params.effort
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -669,6 +709,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),
+      duplicateCongestedPortPenalty:
+        this.duplicatedPortCount > 0 ? DUPLICATE_PORT_TRAVERSAL_PENALTY : 0,
+      duplicateCongestedPortPenaltyCount:
+        this.tinyPipelineSolver.duplicatePortPenaltyCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
