@@ -10,7 +10,7 @@ import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivi
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
-import { getColorMap } from "lib/solvers/colors"
+import { getColorMap, getStringColor } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -47,12 +47,14 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { RouteIslandSolver } from "../../solvers/RouteIslandSolver/RouteIslandSolver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "./PreprocessSimpleRouteJsonSolver"
+import { IslandBasedRouteStichSolver } from "lib/solvers/RouteStitchingSolver/IslandBasedRouteStichSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -109,7 +111,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   highDensityRouteSolver?: HighDensitySolver
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
+  highDensityStitchSolver?: IslandBasedRouteStichSolver
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -121,6 +123,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
+  routeIslandSolver?: RouteIslandSolver
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
@@ -317,6 +320,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep("routeIslandSolver", RouteIslandSolver, (cms) => [
+      cms.uniformPortDistributionSolver?.getOutput()!,
+    ]),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
       const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
       const fallbackNodes =
@@ -377,19 +383,32 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         },
       ],
     ),
+    // definePipelineStep(
+    //   "highDensityStitchSolver",
+    //   MultipleHighDensityRouteStitchSolver3,
+    //   (cms) => [
+    //     {
+    //       connections: cms.srjWithPointPairs!.connections,
+    //       hdRoutes:
+    //         cms.highDensityRepairSolver?.getOutput() ??
+    //         cms.highDensityForceImproveSolver?.getOutput() ??
+    //         cms.highDensityRouteSolver!.routes,
+    //       colorMap: cms.colorMap,
+    //       layerCount: cms.srj.layerCount,
+    //       defaultViaDiameter: cms.viaDiameter,
+    //     },
+    //   ],
+    // ),
     definePipelineStep(
       "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver3,
+      IslandBasedRouteStichSolver,
       (cms) => [
         {
-          connections: cms.srjWithPointPairs!.connections,
+          islands: cms.routeIslandSolver!.getOutput(),
           hdRoutes:
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-          defaultViaDiameter: cms.viaDiameter,
         },
       ],
     ),
@@ -546,6 +565,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
+    const routeIslandViz = this.routeIslandSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
@@ -653,6 +673,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       portPointPathingViz,
       multiSectionOptViz,
       uniformPortDistributionViz,
+      routeIslandViz,
       highDensityViz
         ? combineVisualizations(problemBaseViz, highDensityViz)
         : null,
@@ -766,4 +787,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
 export {
   AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver4,
+  RouteIslandSolver,
 }
+export type {
+  RouteIsland,
+  RouteIslandRegionWithPortPointPairs,
+} from "../../solvers/RouteIslandSolver/RouteIslandSolver"
