@@ -14,6 +14,8 @@ import type {
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
+  DuplicateCongestedPortSolver,
+  type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
   TinyHyperGraphSolver,
@@ -42,12 +44,16 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
+  ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+  GREEDY_FINAL_ROUTE_ITERS: 4,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
+  ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+  GREEDY_FINAL_ROUTE_ITERS: 4,
   MAX_RIPS_WITHOUT_MAX_REGION_COST_IMPROVEMENT: 6,
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST: Number.POSITIVE_INFINITY,
 }
@@ -70,7 +76,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(10_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
 }
 
@@ -93,6 +99,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
 ): TinyHyperGraphSectionPipelineInput => ({
   serializedHyperGraph,
+  createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
   solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
     effort,
     minViaPadDiameter,
@@ -139,6 +146,50 @@ const getSharedConnectionZ = (params: {
   return sharedZ ?? params.fallbackZ
 }
 
+const toSerializedRegionData = (
+  region: HgPortPointPathingSolverParams["graph"]["regions"][number],
+) => {
+  const bounds = (region.d as any).bounds
+
+  return {
+    capacityMeshNodeId: region.d.capacityMeshNodeId,
+    center: {
+      x: region.d.center.x,
+      y: region.d.center.y,
+    },
+    width: region.d.width,
+    height: region.d.height,
+    availableZ: [...region.d.availableZ],
+    ...(bounds
+      ? {
+          bounds: {
+            minX: bounds.minX,
+            maxX: bounds.maxX,
+            minY: bounds.minY,
+            maxY: bounds.maxY,
+          },
+        }
+      : {}),
+    _containsObstacle: region.d._containsObstacle,
+    _containsTarget: region.d._containsTarget,
+    _offBoardConnectionId: region.d._offBoardConnectionId,
+    _offBoardConnectedCapacityMeshNodeIds:
+      region.d._offBoardConnectedCapacityMeshNodeIds === undefined
+        ? undefined
+        : [...region.d._offBoardConnectedCapacityMeshNodeIds],
+  }
+}
+
+const toSerializedPortData = (
+  port: HgPortPointPathingSolverParams["graph"]["ports"][number],
+) => ({
+  portId: port.d.portId,
+  x: port.d.x,
+  y: port.d.y,
+  z: port.d.z,
+  distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
+})
+
 const buildSerializedTinyGraph = (
   params: HgPortPointPathingSolverParams,
 ): SerializedHyperGraph => {
@@ -146,7 +197,7 @@ const buildSerializedTinyGraph = (
     (region) => ({
       regionId: region.regionId,
       pointIds: region.ports.map((port) => port.d.portId),
-      d: region.d,
+      d: toSerializedRegionData(region),
     }),
   )
 
@@ -155,7 +206,7 @@ const buildSerializedTinyGraph = (
       portId: port.d.portId,
       region1Id: port.region1.regionId,
       region2Id: port.region2.regionId,
-      d: port.d,
+      d: toSerializedPortData(port),
     }),
   )
 
@@ -171,6 +222,17 @@ const buildSerializedTinyGraph = (
   )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
+  const netIndexById = new Map<string, number>()
+  const getNetIndex = (routeMetadata: RouteMetadata) => {
+    const netId =
+      routeMetadata.mutuallyConnectedNetworkId ?? routeMetadata.connectionId
+    let netIndex = netIndexById.get(netId)
+    if (netIndex === undefined) {
+      netIndex = netIndexById.size
+      netIndexById.set(netId, netIndex)
+    }
+    return netIndex
+  }
 
   for (const connection of params.connections) {
     const routeMetadata: RouteMetadata = {
@@ -179,6 +241,7 @@ const buildSerializedTinyGraph = (
         connection.mutuallyConnectedNetworkId ?? connection.connectionId,
       simpleRouteConnection: connection.simpleRouteConnection,
     }
+    const routeNetIndex = getNetIndex(routeMetadata)
     const startPoint = getRoutePoint(routeMetadata, 0)
     const endPoint = getRoutePoint(routeMetadata, 1)
     const fallbackStartZ = connection.startRegion.d.availableZ[0] ?? 0
@@ -219,6 +282,7 @@ const buildSerializedTinyGraph = (
         _tinyTerminal: true,
         _tinyTerminalNetId:
           connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        netId: routeNetIndex,
       },
     })
 
@@ -238,6 +302,7 @@ const buildSerializedTinyGraph = (
         _tinyTerminal: true,
         _tinyTerminalNetId:
           connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        netId: routeNetIndex,
       },
     })
 
@@ -447,6 +512,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -457,8 +523,32 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
     const serializedGraph = buildSerializedTinyGraph(params)
-    const tinyPipelineInput = getTinyHyperGraphPipelineInput(
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
       serializedGraph,
+      {
+        routeSolveOptions: {
+          ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+          GREEDY_FINAL_ROUTE_ITERS: 4,
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+          STATIC_REACHABILITY_PRECHECK: false,
+        },
+      },
+    )
+    duplicateCongestedPortSolver.solve()
+    if (duplicateCongestedPortSolver.failed) {
+      throw new Error(
+        `DuplicateCongestedPortSolver failed: ${duplicateCongestedPortSolver.error ?? "unknown error"}`,
+      )
+    }
+    this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+    const duplicatedGraph = duplicateCongestedPortSolver.getOutput()
+    const tinyPipelineInput = getTinyHyperGraphPipelineInput(
+      {
+        ...duplicatedGraph,
+        solvedRoutes: serializedGraph.solvedRoutes,
+      },
       params.effort,
       params.minViaPadDiameter,
     )
@@ -526,6 +616,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.error = this.tinyPipelineSolver.error ?? null
     this.progress = this.tinyPipelineSolver.progress
     this.stats = {
+      duplicateCongestedPortSourceCount:
+        this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
+      duplicateCongestedPortCount:
+        this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
+          (sum, duplicatedPort) =>
+            sum + duplicatedPort.duplicatePortIds.length,
+          0,
+        ) ?? 0,
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
@@ -587,7 +685,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
 
     return {
-      portPointId: String(portMetadata?.portId ?? `tiny-port-${portId}`),
+      portPointId: String(
+        portMetadata?.serializedPortId ??
+          portMetadata?.portId ??
+          `tiny-port-${portId}`,
+      ),
       x: solvedTinySolver.topology.portX[portId],
       y: solvedTinySolver.topology.portY[portId],
       z: solvedTinySolver.topology.portZ[portId],

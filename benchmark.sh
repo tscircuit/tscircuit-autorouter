@@ -5,6 +5,7 @@ SOLVER_NAME=""
 SCENARIO_LIMIT=""
 EFFORT=""
 SAMPLE_TIMEOUT=""
+SAMPLE_NUMBERS=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver4"
@@ -68,8 +69,8 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
@@ -78,6 +79,7 @@ Options:
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 60s + 60s * effort
+  --sample-numbers L   Run comma-separated 1-based sample numbers from the dataset order
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, or 16/srj16
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
@@ -92,6 +94,7 @@ Examples:
   ./benchmark.sh all 20 --concurrency auto
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --effort 2
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --sample-timeout 90s
+  ./benchmark.sh --sample-numbers 120,139,148 --concurrency 8 --sample-timeout 120s
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --scenario-limit 20
   ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset zdwiel --scenario-limit 20
   ./benchmark.sh --pipeline 4
@@ -164,6 +167,10 @@ while [ "$#" -gt 0 ]; do
       SAMPLE_TIMEOUT="${2:-}"
       shift 2
       ;;
+    --sample-numbers)
+      SAMPLE_NUMBERS="${2:-}"
+      shift 2
+      ;;
     --dataset)
       DATASET="${2:-}"
       shift 2
@@ -204,6 +211,10 @@ fi
 
 if [ -n "$SAMPLE_TIMEOUT" ]; then
   CMD+=("--sample-timeout" "$SAMPLE_TIMEOUT")
+fi
+
+if [ -n "$SAMPLE_NUMBERS" ]; then
+  CMD+=("--sample-numbers" "$SAMPLE_NUMBERS")
 fi
 
 if [ -n "$DATASET" ]; then
