@@ -11,6 +11,7 @@ type SrjConnection = SimpleRouteJson["connections"][number]
 type SrjObstacle = SimpleRouteJson["obstacles"][number]
 type SrjTrace = NonNullable<SimpleRouteJson["traces"]>[number]
 type SrjTraceRoutePoint = SrjTrace["route"][number]
+type TraceHandlingMode = "trace-obstacles" | "remove-traces" | "keep-traces"
 
 type KicadToCircuitJsonModule = {
   KicadToCircuitJsonConverter: new () => {
@@ -390,26 +391,58 @@ const convertKicadPcbToSimpleRouteJson = async (file: File) => {
   return circuitJsonToSimpleRouteJson(converter.getOutput())
 }
 
+const removeSrjTraces = (srj: SimpleRouteJson): SimpleRouteJson => {
+  const { traces, ...srjWithoutTraces } = srj
+  return srjWithoutTraces
+}
+
 export default () => {
   const [srj, setSrj] = useState<SimpleRouteJson | null>(null)
-  const [useTracesAsObstacles, setUseTracesAsObstacles] = useState(true)
+  const [traceHandlingMode, setTraceHandlingMode] =
+    useState<TraceHandlingMode>("remove-traces")
   const [isLoadingKicad, setIsLoadingKicad] = useState(false)
   const [uploadMessage, setUploadMessage] = useState<string | null>(null)
 
   const srjForPreview =
-    srj && useTracesAsObstacles ? convertSrjTracesToObstacles(srj) : srj
+    !srj || traceHandlingMode === "keep-traces"
+      ? srj
+      : traceHandlingMode === "trace-obstacles"
+        ? convertSrjTracesToObstacles(srj)
+        : removeSrjTraces(srj)
 
-  const traceObstacleCheckbox = (
-    <div className="flex flex-wrap items-center gap-3 border bg-white px-4 py-3 text-sm shadow-sm">
-      <input
-        type="checkbox"
-        id="use-traces-as-obstacles"
-        checked={useTracesAsObstacles}
-        onChange={(event) => setUseTracesAsObstacles(event.target.checked)}
-      />
-      <label htmlFor="use-traces-as-obstacles" className="font-medium">
-        Treat SRJ traces as obstacles
-      </label>
+  const traceHandlingControls = (
+    <div className="flex flex-wrap items-center gap-4 border bg-white px-4 py-3 text-sm shadow-sm">
+      <span className="font-medium">Traces</span>
+      {[
+        {
+          label: "Treat as obstacles",
+          value: "trace-obstacles",
+        },
+        {
+          label: "Remove SRJ traces",
+          value: "remove-traces",
+        },
+        {
+          label: "Keep SRJ traces",
+          value: "keep-traces",
+        },
+      ].map((option) => (
+        <label
+          key={option.value}
+          className="flex cursor-pointer items-center gap-2"
+        >
+          <input
+            type="radio"
+            name="trace-handling-mode"
+            value={option.value}
+            checked={traceHandlingMode === option.value}
+            onChange={() =>
+              setTraceHandlingMode(option.value as TraceHandlingMode)
+            }
+          />
+          {option.label}
+        </label>
+      ))}
     </div>
   )
 
@@ -535,7 +568,7 @@ export default () => {
     return (
       <div>
         <AutoroutingPipelineDebugger
-          key={useTracesAsObstacles ? "trace-obstacles" : "plain-srj"}
+          key={traceHandlingMode}
           srj={srjForPreview}
         />
       </div>
@@ -557,7 +590,7 @@ export default () => {
         your Simple Route Json files in the "Errors" tab in "Autorouting Log"
       </p>
 
-      <div className="mb-6">{traceObstacleCheckbox}</div>
+      <div className="mb-6">{traceHandlingControls}</div>
 
       {uploadMessage && (
         <div className="mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
