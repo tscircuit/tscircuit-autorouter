@@ -13,6 +13,7 @@ import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/autorouter-pi
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { AutoroutingPipelineSolver5 } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache"
 import { AutoroutingPipelineSolver6 } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver8 } from "lib/autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
 import {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -57,6 +58,7 @@ const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver5,
   AutoroutingPipelineSolver6,
+  AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver8,
   AssignableAutoroutingPipeline1Solver,
   AssignableAutoroutingPipeline2,
