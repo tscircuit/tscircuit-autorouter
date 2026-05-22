@@ -5,6 +5,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import {
+  createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
@@ -20,6 +21,8 @@ export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   HyperSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
+    maxInnerIterationsPerGrowthAttempt?: number
+    fallbackToInvalidGeometryOnFailure?: boolean
   }
 
 const scalePoint = <T extends { x: number; y: number }>(
@@ -129,6 +132,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.scaleFactor,
       ),
     })
+    if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
+      this.activeSubSolver.MAX_ITERATIONS =
+        this.constructorParams.maxInnerIterationsPerGrowthAttempt
+    }
   }
 
   private acceptSolution(solver: HyperSingleIntraNodeSolver) {
@@ -177,6 +184,25 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
+      if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
+        this.solvedRoutes = createInvalidDirectConnectionRoutes(
+          this.nodeWithPortPoints,
+          this.constructorParams.traceWidth ?? 0.15,
+          this.constructorParams.viaDiameter ?? 0.3,
+        )
+        this.solved = true
+        this.failed = false
+        this.progress = 1
+        this.stats = {
+          ...this.stats,
+          invalidGeometryFallback: true,
+          reason: "growth attempts exhausted",
+          lastError: this.error,
+        }
+        this.error = null
+        return
+      }
+
       this.failed = true
       this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
       return

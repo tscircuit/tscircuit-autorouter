@@ -43,6 +43,8 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+  growShrinkFallbackToInvalidGeometryOnFailure: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -73,6 +75,8 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    growShrinkMaxInnerIterationsPerGrowthAttempt,
+    growShrinkFallbackToInvalidGeometryOnFailure,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -84,6 +88,8 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+    growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -102,6 +108,10 @@ export class HighDensitySolver extends BaseSolver {
     this.layerCount = layerCount ?? 2
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
+    this.growShrinkMaxInnerIterationsPerGrowthAttempt =
+      growShrinkMaxInnerIterationsPerGrowthAttempt
+    this.growShrinkFallbackToInvalidGeometryOnFailure =
+      growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -295,6 +305,10 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      maxInnerIterationsPerGrowthAttempt:
+        this.growShrinkMaxInnerIterationsPerGrowthAttempt,
+      fallbackToInvalidGeometryOnFailure:
+        this.growShrinkFallbackToInvalidGeometryOnFailure,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

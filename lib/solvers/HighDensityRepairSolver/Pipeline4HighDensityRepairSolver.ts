@@ -179,6 +179,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly originalObstacles: Obstacle[]
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
+  readonly maxSampleEntries?: number
+  readonly skippedSampleEntryCount: number
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -191,9 +193,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     colorMap?: Record<string, string>
+    maxSampleEntries?: number
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
+    this.maxSampleEntries = params.maxSampleEntries
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -221,7 +225,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
-    this.sampleEntries = Array.from(routeIndexesByNode.entries()).map(
+    const allSampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
         return {
@@ -253,10 +257,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
+    this.sampleEntries =
+      params.maxSampleEntries === undefined
+        ? allSampleEntries
+        : allSampleEntries.slice(0, params.maxSampleEntries)
+    this.skippedSampleEntryCount =
+      allSampleEntries.length - this.sampleEntries.length
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
+      skippedSampleCount: this.skippedSampleEntryCount,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -274,6 +285,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         colorMap: this.colorMap,
+        maxSampleEntries: this.maxSampleEntries,
       },
     ] as const
   }
@@ -320,6 +332,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSampleIndex += 1
       this.stats = {
         sampleCount: this.sampleEntries.length,
+        skippedSampleCount: this.skippedSampleEntryCount,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,
       }
