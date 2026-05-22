@@ -54,6 +54,10 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline6 Poly Hypergraph",
   },
   {
+    id: "AutoroutingPipelineSolver7_MultiGraph",
+    label: "Pipeline7 Multi Graph",
+  },
+  {
     id: "AutoroutingPipelineSolver8",
     label: "Pipeline8 Preplaced Vias (Fab)",
   },
