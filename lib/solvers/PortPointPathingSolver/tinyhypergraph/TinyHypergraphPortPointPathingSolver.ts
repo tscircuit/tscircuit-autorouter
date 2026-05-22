@@ -518,6 +518,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     CapacityMeshNodeId,
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
+  private originalPortById: Map<
+    string,
+    HgPortPointPathingSolverParams["graph"]["ports"][number]
+  >
   private originalRegionIds: Set<CapacityMeshNodeId>
 
   constructor(private params: HgPortPointPathingSolverParams) {
@@ -526,6 +530,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
       serializedGraph,
       {
+        duplicatePortProximity: 0.05,
         routeSolveOptions: {
           ...getTinyViaSizeOptions(params.minViaPadDiameter),
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
@@ -559,6 +564,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
+    )
+    this.originalPortById = new Map(
+      params.graph.ports.map((port) => [port.d.portId, port]),
     )
     this.originalRegionIds = new Set(this.originalRegionById.keys())
     this.inputNodeWithPortPoints = params.graph.regions.map((region) => ({
@@ -683,16 +691,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? getRouteRootConnectionName(routeMetadata)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const serializedPortId =
+      portMetadata?.serializedPortId ?? portMetadata?.portId
+    const originalPortId =
+      typeof portMetadata?.duplicatedFromPortId === "string"
+        ? portMetadata.duplicatedFromPortId
+        : serializedPortId
+    const originalPort =
+      typeof originalPortId === "string"
+        ? this.originalPortById.get(originalPortId)
+        : undefined
 
     return {
-      portPointId: String(
-        portMetadata?.serializedPortId ??
-          portMetadata?.portId ??
-          `tiny-port-${portId}`,
-      ),
-      x: solvedTinySolver.topology.portX[portId],
-      y: solvedTinySolver.topology.portY[portId],
-      z: solvedTinySolver.topology.portZ[portId],
+      portPointId: String(originalPortId ?? serializedPortId ?? `tiny-port-${portId}`),
+      x: originalPort?.d.x ?? solvedTinySolver.topology.portX[portId],
+      y: originalPort?.d.y ?? solvedTinySolver.topology.portY[portId],
+      z: originalPort?.d.z ?? solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
     }
