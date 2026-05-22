@@ -432,12 +432,7 @@ export default () => {
     reader.readAsText(file)
   }
 
-  const handleKicadPcbUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  const loadKicadPcbFile = async (file: File) => {
     setUploadMessage(null)
     setIsLoadingKicad(true)
     try {
@@ -453,8 +448,35 @@ export default () => {
       console.error("KiCad PCB conversion error:", error)
     } finally {
       setIsLoadingKicad(false)
+    }
+  }
+
+  const handleKicadPcbUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      await loadKicadPcbFile(file)
+    } finally {
       event.target.value = ""
     }
+  }
+
+  const handleKicadPcbDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = isLoadingKicad ? "none" : "copy"
+  }
+
+  const handleKicadPcbDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    if (isLoadingKicad) return
+
+    const file = event.dataTransfer.files?.[0]
+    if (!file) return
+
+    await loadKicadPcbFile(file)
   }
 
   const handleTextareaInput = (
@@ -522,9 +544,9 @@ export default () => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Welcome to Unravel Autorouter</h1>
+      <h1 className="text-3xl font-bold mb-4">Welcome to the tscircuit autorouter</h1>
       <p className="mb-6">
-        The unravel autorouter is a new MIT-licensed open-source autorouter. You
+        The tscircuit autorouter is an MIT-licensed open-source autorouter. You
         can upload{" "}
         <a href="https://docs.tscircuit.com/advanced/simple-route-json">
           Simple Route Json
@@ -541,7 +563,11 @@ export default () => {
         </div>
       )}
 
-      <div className="mb-8 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+      <div
+        className="mb-8 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+        onDragOver={handleKicadPcbDragOver}
+        onDrop={handleKicadPcbDrop}
+      >
         <h2 className="text-xl font-semibold mb-3">Upload KiCad PCB</h2>
         <input
           type="file"
