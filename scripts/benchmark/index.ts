@@ -168,7 +168,9 @@ const parseSampleNumbersArg = (rawValue: string) => {
       (sampleNumber) => !Number.isFinite(sampleNumber) || sampleNumber < 1,
     )
   ) {
-    throw new Error("--sample-numbers must be comma-separated positive integers")
+    throw new Error(
+      "--sample-numbers must be comma-separated positive integers",
+    )
   }
 
   return sampleNumbers
