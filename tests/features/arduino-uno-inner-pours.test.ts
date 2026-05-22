@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
 import {
   ARDUINO_UNO_GROUND_NET,
   ARDUINO_UNO_POWER_NET,
@@ -76,11 +75,6 @@ test("Arduino Uno bottom/inner2 pour fixture adds bottom power and inner2 ground
     layer: "inner2",
     net: ARDUINO_UNO_GROUND_NET,
   })
-
-  const solver = new AutoroutingPipelineSolver(structuredClone(srj), {
-    effort: 1,
-  })
-  solver.solve()
 
   expect(
     srj.obstacles

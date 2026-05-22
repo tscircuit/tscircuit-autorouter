@@ -26,6 +26,7 @@ import {
 type BenchmarkOptions = {
   solverName?: string
   scenarioLimit?: number
+  sampleNumbers?: number[]
   concurrency: number
   effort?: number
   sampleTimeoutMs?: number
@@ -156,6 +157,25 @@ const parseDurationArg = (rawValue: string, flagName: string) => {
   return amount * multiplier
 }
 
+const parseSampleNumbersArg = (rawValue: string) => {
+  const sampleNumbers = rawValue
+    .split(",")
+    .map((part) => Number.parseInt(part.trim(), 10))
+
+  if (
+    sampleNumbers.length === 0 ||
+    sampleNumbers.some(
+      (sampleNumber) => !Number.isFinite(sampleNumber) || sampleNumber < 1,
+    )
+  ) {
+    throw new Error(
+      "--sample-numbers must be comma-separated positive integers",
+    )
+  }
+
+  return sampleNumbers
+}
+
 const parseArgs = (): BenchmarkOptions => {
   const args = process.argv.slice(2)
   const defaultConcurrency =
@@ -199,6 +219,11 @@ const parseArgs = (): BenchmarkOptions => {
         args[i + 1] ?? "",
         "--sample-timeout",
       )
+      i += 1
+      continue
+    }
+    if (arg === "--sample-numbers") {
+      options.sampleNumbers = parseSampleNumbersArg(args[i + 1] ?? "")
       i += 1
       continue
     }
@@ -918,6 +943,7 @@ const main = async () => {
   const {
     solverName,
     scenarioLimit,
+    sampleNumbers,
     concurrency,
     effort,
     sampleTimeoutMs,
@@ -933,21 +959,41 @@ const main = async () => {
     )
   }
 
-  const scenarios = await loadScenarios(datasetName, {
+  const loadedScenarios = await loadScenarios(datasetName, {
     scenarioLimit,
     effort,
   })
+  const scenarios =
+    sampleNumbers === undefined
+      ? loadedScenarios.map(([scenarioName, scenario], scenarioIndex) => ({
+          scenarioName,
+          scenario,
+          sampleNumber: scenarioIndex + 1,
+        }))
+      : sampleNumbers.map((sampleNumber) => {
+          const scenario = loadedScenarios[sampleNumber - 1]
+          if (!scenario) {
+            throw new Error(
+              `Sample ${sampleNumber} is out of range for dataset ${datasetName} (${loadedScenarios.length} samples)`,
+            )
+          }
+          return {
+            scenarioName: scenario[0],
+            scenario: scenario[1],
+            sampleNumber,
+          }
+        })
   if (scenarios.length === 0) {
     throw new Error(`No benchmark scenarios found for dataset "${datasetName}"`)
   }
 
   const tasks = solvers.flatMap((solver) =>
     scenarios.map(
-      ([scenarioName, scenario], scenarioIndex) =>
+      ({ scenarioName, sampleNumber, scenario }) =>
         ({
           solverName: solver,
           scenarioName,
-          sampleNumber: scenarioIndex + 1,
+          sampleNumber,
           scenario,
         }) satisfies BenchmarkTask,
     ),
@@ -966,7 +1012,7 @@ const main = async () => {
   )
 
   const effortLabel = formatEffortLabel(
-    scenarios.map(([, scenario]) =>
+    scenarios.map(({ scenario }) =>
       getTaskEffort({
         solverName: solvers[0] ?? "",
         scenarioName: "",
