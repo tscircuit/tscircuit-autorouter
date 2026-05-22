@@ -90,7 +90,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
-    let traceWidthMultiplier: 1 | 2 | 4 | 8 | undefined = undefined
+    let traceWidthMultiplier: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
