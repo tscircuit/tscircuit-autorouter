@@ -14,6 +14,20 @@ export const makeNode = (): NodeWithPortPoints => ({
   ],
 })
 
+export const makeCrossingSingleLayerNode = (): NodeWithPortPoints => ({
+  capacityMeshNodeId: "cn_crossing",
+  center: { x: 0, y: 0 },
+  width: 2,
+  height: 2,
+  availableZ: [0],
+  portPoints: [
+    { connectionName: "a", x: -1, y: 0, z: 0 },
+    { connectionName: "a", x: 1, y: 0, z: 0 },
+    { connectionName: "b", x: 0, y: -1, z: 0 },
+    { connectionName: "b", x: 0, y: 1, z: 0 },
+  ],
+})
+
 export const makeStraightRoute = (): HighDensityIntraNodeRoute => ({
   connectionName: "a",
   traceThickness: 0.15,
