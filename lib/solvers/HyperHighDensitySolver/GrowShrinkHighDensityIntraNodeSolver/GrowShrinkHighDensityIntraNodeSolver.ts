@@ -4,8 +4,12 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { HyperSingleIntraNodeSolver } from "./HyperSingleIntraNodeSolver"
+import {
+  createInvalidSameLayerCrossingRoutes,
+  hasImpossibleSameLayerCrossingGeometry,
+} from "./invalidSameLayerCrossingGeometry"
+import { BaseSolver } from "../../BaseSolver"
+import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
 
 type HyperSingleIntraNodeSolverParams = ConstructorParameters<
   typeof HyperSingleIntraNodeSolver
@@ -65,6 +69,15 @@ const scaleRoute = (
   })),
 })
 
+const routeColors = [
+  "#dc2626",
+  "#2563eb",
+  "#16a34a",
+  "#ca8a04",
+  "#9333ea",
+  "#0891b2",
+]
+
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
     return "GrowShrinkHighDensityIntraNodeSolver"
@@ -88,6 +101,20 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
+
+    if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
+      this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
+        this.nodeWithPortPoints,
+        params.traceWidth ?? 0.15,
+        params.viaDiameter ?? 0.3,
+      )
+      this.solved = true
+      this.progress = 1
+      this.stats = {
+        invalidGeometryFallback: true,
+        reason: "single-layer node has same-layer crossings",
+      }
+    }
   }
 
   getConstructorParams() {
@@ -160,9 +187,73 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
+    const delegatedVisualization =
+      this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize()
+    if (delegatedVisualization) return delegatedVisualization
+
+    if (this.solvedRoutes.length > 0) {
+      return {
+        title: this.stats.invalidGeometryFallback
+          ? "Invalid same-layer crossing geometry"
+          : "Grow/shrink high density routes",
+        lines: this.solvedRoutes.flatMap((route, routeIndex) =>
+          route.route.slice(0, -1).map((point, pointIndex) => {
+            const nextPoint = route.route[pointIndex + 1]
+            return {
+              points: [point, nextPoint],
+              strokeColor: routeColors[routeIndex % routeColors.length],
+              strokeWidth: route.traceThickness,
+              layer: `z${point.z}`,
+              label: [
+                route.connectionName,
+                this.stats.invalidGeometryFallback
+                  ? "invalid fallback route"
+                  : undefined,
+              ]
+                .filter(Boolean)
+                .join("\n"),
+            }
+          }),
+        ),
+        points: this.nodeWithPortPoints.portPoints.map((point) => ({
+          x: point.x,
+          y: point.y,
+          color:
+            routeColors[
+              Math.max(
+                0,
+                this.solvedRoutes.findIndex(
+                  (route) => route.connectionName === point.connectionName,
+                ),
+              ) % routeColors.length
+            ],
+          label: `${point.connectionName}\nz${point.z}`,
+        })),
+        rects: [
+          {
+            center: this.nodeWithPortPoints.center,
+            width: this.nodeWithPortPoints.width,
+            height: this.nodeWithPortPoints.height,
+            fill: this.stats.invalidGeometryFallback
+              ? "rgba(245, 158, 11, 0.12)"
+              : "rgba(14, 165, 233, 0.08)",
+            stroke: this.stats.invalidGeometryFallback
+              ? "rgba(217, 119, 6, 0.8)"
+              : "rgba(14, 165, 233, 0.55)",
+            label: [
+              this.nodeWithPortPoints.capacityMeshNodeId,
+              this.stats.reason,
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          },
+        ],
+        circles: [],
+      }
+    }
+
     return (
-      this.activeSubSolver?.visualize() ??
-      this.winningSolver?.visualize() ?? {
+      delegatedVisualization ?? {
         lines: [],
         points: [],
         rects: [],
