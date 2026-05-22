@@ -7,11 +7,14 @@ import type {
 } from "lib/types/high-density-types"
 
 /**
- * Capacity region and port-point pairs that belong to one route island.
+ * Capacity region visit and the port-point pair it contributes to one route
+ * island. A physical region may appear more than once when a connection
+ * re-enters it through different port-point pairs.
  */
-export type RouteIslandRegionWithPortPointPairs = {
+export type RouteIslandRegionWithPortPointPair = {
   region: NodeWithPortPoints
-  portPointPairs: [PortPoint, PortPoint][]
+  portPointPair: [PortPoint, PortPoint]
+  regionVisitId: string
 }
 
 /**
@@ -21,13 +24,13 @@ export type RouteIslandRegionWithPortPointPairs = {
 export type RouteIsland = {
   connectionName: string
   rootConnectionName?: string
-  regionsAndPortPointPairs: RouteIslandRegionWithPortPointPairs[]
+  regionsAndPortPointPairs: RouteIslandRegionWithPortPointPair[]
 }
 
 /**
  * Internal island region with root connection metadata preserved while grouping.
  */
-type RouteIslandRegion = RouteIslandRegionWithPortPointPairs & {
+type RouteIslandRegion = RouteIslandRegionWithPortPointPair & {
   rootConnectionName?: string
 }
 
@@ -98,25 +101,17 @@ export class RouteIslandSolver extends BaseSolver {
 
         const connectionRegions =
           this.regionsByConnectionName.get(connectionName) ?? []
-        let connectionRegion = connectionRegions.find(
-          (candidateRegion) =>
-            candidateRegion.region.capacityMeshNodeId ===
-            region.capacityMeshNodeId,
-        )
-
-        if (!connectionRegion) {
-          connectionRegion = {
-            region,
-            portPointPairs: [],
-            rootConnectionName:
-              portPointPair[0].rootConnectionName ??
-              portPointPair[1].rootConnectionName,
-          }
-          connectionRegions.push(connectionRegion)
-          this.regionsByConnectionName.set(connectionName, connectionRegions)
+        const connectionRegion: RouteIslandRegion = {
+          region,
+          portPointPair,
+          regionVisitId: `${region.capacityMeshNodeId}:${connectionName}:${connectionRegions.length}`,
+          rootConnectionName:
+            portPointPair[0].rootConnectionName ??
+            portPointPair[1].rootConnectionName,
         }
 
-        connectionRegion.portPointPairs.push(portPointPair)
+        connectionRegions.push(connectionRegion)
+        this.regionsByConnectionName.set(connectionName, connectionRegions)
       }
     }
   }
@@ -151,9 +146,7 @@ export class RouteIslandSolver extends BaseSolver {
    * @returns True when any pair contains a start terminal port id.
    */
   private regionHasStartTerminal(region: RouteIslandRegion) {
-    return region.portPointPairs.some((portPointPair) =>
-      portPointPair.some(isRouteIslandStartTerminalPortPoint),
-    )
+    return region.portPointPair.some(isRouteIslandStartTerminalPortPoint)
   }
 
   /**
@@ -167,15 +160,12 @@ export class RouteIslandSolver extends BaseSolver {
 
     for (let regionIndex = 0; regionIndex < regions.length; regionIndex++) {
       const region = regions[regionIndex]!
-      for (const portPointPair of region.portPointPairs) {
-        for (const portPoint of portPointPair) {
-          const sharedPortKey = this.getSharedPortKey(portPoint)
-          const regionIndexes =
-            sharedPortToRegionIndexes.get(sharedPortKey) ??
-            new Set<RegionIndex>()
-          regionIndexes.add(regionIndex)
-          sharedPortToRegionIndexes.set(sharedPortKey, regionIndexes)
-        }
+      for (const portPoint of region.portPointPair) {
+        const sharedPortKey = this.getSharedPortKey(portPoint)
+        const regionIndexes =
+          sharedPortToRegionIndexes.get(sharedPortKey) ?? new Set<RegionIndex>()
+        regionIndexes.add(regionIndex)
+        sharedPortToRegionIndexes.set(sharedPortKey, regionIndexes)
       }
     }
 
@@ -363,7 +353,8 @@ export class RouteIslandSolver extends BaseSolver {
         const routeIslandRegion = regions[regionIndex]!
         return {
           region: routeIslandRegion.region,
-          portPointPairs: routeIslandRegion.portPointPairs,
+          portPointPair: routeIslandRegion.portPointPair,
+          regionVisitId: routeIslandRegion.regionVisitId,
         }
       }),
     }
@@ -416,15 +407,7 @@ export class RouteIslandSolver extends BaseSolver {
       ),
       portPointPairCount: Array.from(
         this.regionsByConnectionName.values(),
-      ).reduce(
-        (sum, regions) =>
-          sum +
-          regions.reduce(
-            (regionSum, region) => regionSum + region.portPointPairs.length,
-            0,
-          ),
-        0,
-      ),
+      ).reduce((sum, regions) => sum + regions.length, 0),
       branchRegionCount: this.branchRegionCount,
       currentConnectionName: this.currentConnectionName,
     }
@@ -492,37 +475,30 @@ export class RouteIslandSolver extends BaseSolver {
         this.currentConnectionName === island.connectionName ? 1 : 0.75,
       )
       island.regionsAndPortPointPairs.forEach(
-        ({ region, portPointPairs }, regionIndex) => {
-          for (
-            let pairIndex = 0;
-            pairIndex < portPointPairs.length;
-            pairIndex++
-          ) {
-            const portPointPair = portPointPairs[pairIndex]!
-            lines.push({
-              points: [
-                { x: portPointPair[0].x, y: portPointPair[0].y },
-                { x: portPointPair[1].x, y: portPointPair[1].y },
-              ],
-              strokeColor: color,
-              strokeWidth: 0.035,
-              label: [
-                `route_island ${islandIndex}`,
-                `connection: ${island.connectionName}`,
-                `region: ${region.capacityMeshNodeId}`,
-                `region_index: ${regionIndex}`,
-                `pair: ${pairIndex}`,
-              ].join("\n"),
-            })
-          }
+        ({ region, portPointPair, regionVisitId }, regionIndex) => {
+          lines.push({
+            points: [
+              { x: portPointPair[0].x, y: portPointPair[0].y },
+              { x: portPointPair[1].x, y: portPointPair[1].y },
+            ],
+            strokeColor: color,
+            strokeWidth: 0.035,
+            label: [
+              `route_island ${islandIndex}`,
+              `connection: ${island.connectionName}`,
+              `region: ${region.capacityMeshNodeId}`,
+              `region_index: ${regionIndex}`,
+              `visit: ${regionVisitId}`,
+            ].join("\n"),
+          })
         },
       )
 
-      const firstPair = island.regionsAndPortPointPairs[0]?.portPointPairs[0]
+      const firstPair = island.regionsAndPortPointPairs[0]?.portPointPair
       const lastPair =
         island.regionsAndPortPointPairs[
           island.regionsAndPortPointPairs.length - 1
-        ]?.portPointPairs.at(-1)
+        ]?.portPointPair
       if (firstPair) {
         points.push({
           x: firstPair[0].x,

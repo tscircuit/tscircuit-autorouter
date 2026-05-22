@@ -128,8 +128,8 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
    * @returns Port-point pairs from all island regions.
    */
   private getIslandPortPointPairs(island: RouteIsland) {
-    return island.regionsAndPortPointPairs.flatMap(
-      ({ portPointPairs }) => portPointPairs,
+    return island.regionsAndPortPointPairs.map(
+      ({ portPointPair }) => portPointPair,
     )
   }
 
@@ -144,10 +144,8 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     if (!firstRegion) return null
 
     return (
-      firstRegion.portPointPairs
-        .flat()
-        .find(isRouteIslandStartTerminalPortPoint) ??
-      firstRegion.portPointPairs[0]?.[0] ??
+      firstRegion.portPointPair.find(isRouteIslandStartTerminalPortPoint) ??
+      firstRegion.portPointPair[0] ??
       null
     )
   }
@@ -166,10 +164,8 @@ export class IslandBasedRouteStichSolver extends BaseSolver {
     if (!lastRegion) return null
 
     return (
-      lastRegion.portPointPairs
-        .flat()
-        .find(isRouteIslandEndTerminalPortPoint) ??
-      lastRegion.portPointPairs.at(-1)?.[1] ??
+      lastRegion.portPointPair.find(isRouteIslandEndTerminalPortPoint) ??
+      lastRegion.portPointPair[1] ??
       null
     )
   }

@@ -787,9 +787,4 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
 export {
   AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver4,
-  RouteIslandSolver,
 }
-export type {
-  RouteIsland,
-  RouteIslandRegionWithPortPointPairs,
-} from "../../solvers/RouteIslandSolver/RouteIslandSolver"
