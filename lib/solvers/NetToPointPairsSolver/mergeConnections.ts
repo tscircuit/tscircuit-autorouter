@@ -90,6 +90,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    let traceWidthMultiplier: 1 | 2 | 4 | 8 | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -123,13 +124,19 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.netConnectionName)
       }
 
-      // Take the nominalTraceWidth from the first connection for now
-      // A more robust solution might average or pick the max/min based on context
-      if (
-        nominalTraceWidth === undefined &&
-        simpleRouteConnection.nominalTraceWidth !== undefined
-      ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+      // Take the largest nominalTraceWidth across merged connections
+      if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+        if (nominalTraceWidth === undefined ||
+            simpleRouteConnection.nominalTraceWidth > nominalTraceWidth) {
+          nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+        }
+      }
+      // Same for traceWidthMultiplier — largest wins
+      if (simpleRouteConnection.traceWidthMultiplier !== undefined) {
+        if (traceWidthMultiplier === undefined ||
+            simpleRouteConnection.traceWidthMultiplier > traceWidthMultiplier) {
+          traceWidthMultiplier = simpleRouteConnection.traceWidthMultiplier
+        }
       }
     })
 
@@ -152,7 +159,8 @@ export function mergeConnections(
         mergedRootConnectionNames.size === 1
           ? Array.from(mergedRootConnectionNames)[0]
           : undefined,
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      nominalTraceWidth: nominalTraceWidth,
+      traceWidthMultiplier: traceWidthMultiplier,
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)

@@ -1,3 +1,9 @@
+// ============================================================
+// FILE: lib/solvers/TraceWidthSolver/TraceWidthSolver.ts
+// CHANGE: Full rewrite that supports traceWidthMultiplier, fixes the
+//         broken constructor interface, and improves the width schedule.
+// ============================================================
+
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
@@ -10,6 +16,10 @@ import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
+// Allowed multiplier values — mirrors the type definition in srj-types.ts
+const VALID_MULTIPLIERS = [1, 2, 4, 8] as const
+type ValidMultiplier = (typeof VALID_MULTIPLIERS)[number]
+
 interface Point2D {
   x: number
   y: number
@@ -21,27 +31,42 @@ interface Point3D extends Point2D {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
-  connection: SimpleRouteConnection[]
+  /** All connections from the SimpleRouteJson (after NetToPointPairs expansion). */
+  connections: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
   minTraceWidth: number
+  /**
+   * Board-level nominal trace width. Used as the starting point for the
+   * width schedule when a connection only specifies a traceWidthMultiplier
+   * and no explicit nominalTraceWidth.
+   */
+  nominalTraceWidth?: number
   obstacleMargin?: number
   layerCount: number
 }
 
 /**
  * TraceWidthSolver determines the optimal trace width for each route.
- * It uses a TRACE_WIDTH_SCHEDULE to try progressively narrower widths:
- * [nominalTraceWidth, (nominalTraceWidth + minTraceWidth)/2, minTraceWidth]
  *
- * For each trace, it walks along with a cursor checking clearance.
- * If clearance is insufficient for the current width, it tries the next
- * narrower width in the schedule.
+ * For routes that carry a width request (via nominalTraceWidth or
+ * traceWidthMultiplier on their connection), the solver walks along the
+ * route with a cursor and checks clearance at each step.  It tries
+ * progressively narrower widths from the TRACE_WIDTH_SCHEDULE:
  *
- * It only runs width adjustments for routes whose connection provides a
- * nominalTraceWidth; routes without one are passed through unchanged.
- * The schedule is built per-route from that connection's nominalTraceWidth.
+ *   [requestedWidth, midpoint, minTraceWidth]
+ *
+ * If none fit, minTraceWidth is used as the fallback.
+ *
+ * Routes without any width request are passed through unchanged —
+ * they keep whatever traceThickness was set by the HighDensitySolver.
+ *
+ * ### Width resolution order (highest priority first)
+ * 1. connection.nominalTraceWidth  — exact absolute width
+ * 2. connection.traceWidthMultiplier × minTraceWidth  — relative multiplier
+ * 3. srj.nominalTraceWidth  — board-level default
+ * 4. Pass through unchanged
  */
 export class TraceWidthSolver extends BaseSolver {
   override getSolverName(): string {
@@ -55,7 +80,11 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceWidth: number
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
-  connectionNominalTraceWidthMap: Map<string, number>
+  /**
+   * Maps connectionName → resolved target width (before clearance check).
+   * Built once in the constructor so _step() is O(1) per route.
+   */
+  connectionTargetWidthMap: Map<string, number>
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -69,7 +98,7 @@ export class TraceWidthSolver extends BaseSolver {
   currentTargetWidth: number = 0
   hasInsufficientClearance = false
 
-  // For visualization - track colliding objects
+  // For visualization — track colliding objects
   lastCollidingObstacles: Obstacle[] = []
   lastCollidingRoutes: HighDensityRoute[] = []
   lastClearance: number = Infinity
@@ -87,27 +116,37 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
-    this.nominalTraceWidth = 0
-    this.TRACE_WIDTH_SCHEDULE = []
+    this.nominalTraceWidth = input.nominalTraceWidth ?? input.minTraceWidth
 
     this.unprocessedRoutes = [...this.hdRoutes]
     this.connMap = input.connMap
     this.colorMap = input.colorMap
+    this.TRACE_WIDTH_SCHEDULE = []
+
     const inferredLayerCount = input.layerCount
     this.obstacles = createObjectsWithZLayers(
       input.obstacles ?? [],
       inferredLayerCount,
     )
-    this.connectionNominalTraceWidthMap = new Map()
 
-    for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
-        continue
+    // Build the per-connection target width map.
+    // Resolution order: nominalTraceWidth > multiplier × min > board nominal > undefined
+    this.connectionTargetWidthMap = new Map()
+
+    for (const connection of input.connections) {
+      const resolved = this._resolveConnectionTargetWidth(connection)
+      if (resolved !== undefined) {
+        this.connectionTargetWidthMap.set(connection.name, resolved)
+        // Also map merged connection names so stitched sub-routes are found
+        if (connection.mergedConnectionNames) {
+          for (const merged of connection.mergedConnectionNames) {
+            // Don't overwrite a more specific mapping from an earlier iteration
+            if (!this.connectionTargetWidthMap.has(merged)) {
+              this.connectionTargetWidthMap.set(merged, resolved)
+            }
+          }
+        }
       }
-      this.connectionNominalTraceWidthMap.set(
-        connection.name,
-        connection.nominalTraceWidth,
-      )
     }
 
     if (this.obstacles.length > 0) {
@@ -120,95 +159,143 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
   }
 
-  private getNominalTraceWidthForRoute(
-    route: HighDensityRoute,
+  /**
+   * Returns the target width for a connection, or undefined if none requested.
+   */
+  private _resolveConnectionTargetWidth(
+    connection: SimpleRouteConnection,
   ): number | undefined {
-    const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
-    if (byName !== undefined) {
-      return byName
+    // 1. Explicit absolute width wins
+    if (connection.nominalTraceWidth !== undefined) {
+      return connection.nominalTraceWidth
     }
+
+    // 2. Multiplier × minTraceWidth
+    if (connection.traceWidthMultiplier !== undefined) {
+      const multiplier = this._clampMultiplier(connection.traceWidthMultiplier)
+      return this.minTraceWidth * multiplier
+    }
+
+    // 3. Board-level nominal (only if different from min — no-op otherwise)
+    if (
+      this.nominalTraceWidth !== undefined &&
+      this.nominalTraceWidth > this.minTraceWidth
+    ) {
+      return this.nominalTraceWidth
+    }
+
+    return undefined
+  }
+
+  /**
+   * Clamps a user-supplied multiplier to the nearest valid value.
+   * This prevents e.g. multiplier=3 from producing an unexpected width.
+   */
+  private _clampMultiplier(raw: number): ValidMultiplier {
+    // Find the largest valid multiplier that is <= raw
+    let best: ValidMultiplier = 1
+    for (const v of VALID_MULTIPLIERS) {
+      if (v <= raw) best = v
+    }
+    return best
+  }
+
+  private _getTargetWidthForRoute(route: HighDensityRoute): number | undefined {
+    const byConnectionName = this.connectionTargetWidthMap.get(
+      route.connectionName,
+    )
+    if (byConnectionName !== undefined) return byConnectionName
+
+    // Fall back to rootConnectionName for stitched sub-routes
     if (route.rootConnectionName) {
-      return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
+      return this.connectionTargetWidthMap.get(route.rootConnectionName)
     }
     return undefined
   }
 
   _step() {
-    // If no current trace, dequeue one
+    // If no current trace, dequeue the next one
     if (!this.currentTrace) {
       const nextTrace = this.unprocessedRoutes.shift()
 
       if (!nextTrace) {
-        // All traces processed
         this.hdRoutesWithWidths = this.processedRoutes
         this.solved = true
         return
       }
 
-      // Initialize the new trace processing
-      const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
-      if (nominalTraceWidth === undefined) {
+      const targetWidth = this._getTargetWidthForRoute(nextTrace)
+
+      // No width request — pass through unchanged
+      if (targetWidth === undefined) {
         this.processedRoutes.push({ ...nextTrace })
         this.currentTrace = null
         return
       }
 
       this.currentTrace = nextTrace
-      this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+
+      // Build a graduated schedule so the router prefers the full requested
+      // width but gracefully narrows if it can't fit:
+      //   [full, 3/4, 1/2, minTraceWidth]
+      const mid1 =
+        targetWidth - (targetWidth - this.minTraceWidth) * (1 / 3)
+      const mid2 =
+        targetWidth - (targetWidth - this.minTraceWidth) * (2 / 3)
+      // Deduplicate and keep only values > minTraceWidth
+      const schedule = [targetWidth, mid1, mid2].filter(
+        (w, i, arr) =>
+          w > this.minTraceWidth + 0.001 &&
+          arr.indexOf(w) === i, // unique
+      )
+      schedule.push(this.minTraceWidth)
+      this.TRACE_WIDTH_SCHEDULE = schedule
+
       if (this.currentTrace.route.length < 2) {
-        // Trace is too short to process, just pass it through with minTraceWidth
+        // Too short to walk — assign the full requested width directly
         this.processedRoutes.push({
           ...this.currentTrace,
-          traceThickness: this.minTraceWidth,
+          traceThickness: targetWidth,
         })
         this.currentTrace = null
         return
       }
 
-      // Start with the widest width in the schedule
       this.currentScheduleIndex = 0
       this.currentTargetWidth = this.TRACE_WIDTH_SCHEDULE[0]!
       this.initializeCursor()
       return
     }
 
-    // Step the cursor forward along the trace
+    // Step the cursor forward along the current trace
     const stepped = this.stepCursorForward()
 
     if (!stepped) {
-      // Reached end of trace without collision - this width works!
-      // Use this width and finalize immediately (widest possible that fits)
+      // Reached the end of the trace without a clearance failure → width fits!
       this.finalizeCurrentTrace(this.currentTargetWidth)
       return
     }
 
-    // Check clearance at current cursor position
     const clearance = this.getClearanceAtPosition(this.cursorPosition!)
+    const requiredClearance =
+      this.currentTargetWidth / 2 + this.obstacleMargin
 
-    // Check if there's enough clearance for the current target width + obstacle margin
-    const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     if (clearance < requiredClearance) {
-      // Collision found - this width doesn't work, try the next narrower width
+      // Current width doesn't fit — try next narrower value
       this.hasInsufficientClearance = true
       this.currentScheduleIndex++
 
       if (this.currentScheduleIndex < this.TRACE_WIDTH_SCHEDULE.length) {
-        // Try the next width in the schedule
         this.currentTargetWidth =
           this.TRACE_WIDTH_SCHEDULE[this.currentScheduleIndex]!
         this.initializeCursor()
       } else {
-        // Exhausted all widths in schedule, use minTraceWidth as fallback
+        // All schedule entries exhausted — fall back to minTraceWidth
         this.finalizeCurrentTrace(this.minTraceWidth)
       }
     }
   }
 
-  /**
-   * Initializes/resets the cursor for processing a trace
-   */
   private initializeCursor() {
     if (!this.currentTrace) return
     const startPoint = this.currentTrace.route[0]!
@@ -218,11 +305,6 @@ export class TraceWidthSolver extends BaseSolver {
     this.hasInsufficientClearance = false
   }
 
-  /**
-   * Steps the cursor forward by CURSOR_STEP_DISTANCE along the trace
-   * Returns false if we've reached the end of the trace
-   * Skips segments where both endpoints are inside jumper pads
-   */
   private stepCursorForward(): boolean {
     if (!this.currentTrace || !this.cursorPosition) return false
 
@@ -237,7 +319,6 @@ export class TraceWidthSolver extends BaseSolver {
       const segStart = route[this.currentTraceSegmentIndex]!
       const segEnd = route[this.currentTraceSegmentIndex + 1]!
 
-      // Skip segments entirely inside jumper pads
       if (segStart.insideJumperPad && segEnd.insideJumperPad) {
         this.currentTraceSegmentIndex++
         this.currentTraceSegmentT = 0
@@ -260,13 +341,11 @@ export class TraceWidthSolver extends BaseSolver {
       if (remainingDistance <= distToSegEnd) {
         const newDistInSeg = currentDistInSeg + remainingDistance
         this.currentTraceSegmentT = newDistInSeg / segLength
-
         this.cursorPosition = {
           x: segStart.x + segDx * this.currentTraceSegmentT,
           y: segStart.y + segDy * this.currentTraceSegmentT,
           z: segStart.z,
         }
-
         return true
       } else {
         remainingDistance -= distToSegEnd
@@ -284,17 +363,11 @@ export class TraceWidthSolver extends BaseSolver {
     return true
   }
 
-  /**
-   * Checks if an obstacle is a jumper pad belonging to the current trace's jumpers.
-   * This is needed because jumper pads may not have connectedTo set properly.
-   */
   private isObstacleOwnJumperPad(obstacle: Obstacle): boolean {
     if (!this.currentTrace?.jumpers) return false
-
-    const TOLERANCE = 0.01 // 0.01mm tolerance for position matching
+    const TOLERANCE = 0.01
 
     for (const jumper of this.currentTrace.jumpers) {
-      // Check if obstacle center is near jumper start or end
       const distToStart = Math.sqrt(
         (obstacle.center.x - jumper.start.x) ** 2 +
           (obstacle.center.y - jumper.start.y) ** 2,
@@ -303,35 +376,25 @@ export class TraceWidthSolver extends BaseSolver {
         (obstacle.center.x - jumper.end.x) ** 2 +
           (obstacle.center.y - jumper.end.y) ** 2,
       )
-
-      // Jumper pads are typically small rectangles at the start/end of jumpers
-      // Check if obstacle center is within half the pad width of the jumper endpoint
       const maxDist = Math.max(obstacle.width, obstacle.height) / 2 + TOLERANCE
       if (distToStart < maxDist || distToEnd < maxDist) {
         return true
       }
     }
-
     return false
   }
 
-  /**
-   * Gets the minimum clearance at a given position from obstacles and other traces
-   * Also updates lastCollidingObstacles and lastCollidingRoutes for visualization
-   */
   private getClearanceAtPosition(position: Point3D): number {
     if (!this.currentTrace) return Infinity
 
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
-    const searchRadius = this.nominalTraceWidth * 2
+    const searchRadius = this.currentTargetWidth * 3
     let minClearance = Infinity
 
-    // Reset colliding objects for visualization
     this.lastCollidingObstacles = []
     this.lastCollidingRoutes = []
 
-    // Check for obstacles within the search radius
     if (this.obstacleSHI) {
       const nearbyObstacles = this.obstacleSHI.searchArea(
         position.x,
@@ -344,10 +407,7 @@ export class TraceWidthSolver extends BaseSolver {
         if (obstacle.zLayers && !obstacle.zLayers.includes(position.z)) {
           continue
         }
-
-        if (obstacle.connectedTo.includes(rootConnectionName)) {
-          continue
-        }
+        if (obstacle.connectedTo.includes(rootConnectionName)) continue
 
         if (
           obstacle.obstacleId &&
@@ -366,30 +426,17 @@ export class TraceWidthSolver extends BaseSolver {
           }
         }
         if (isConnected) continue
-
-        // Skip obstacles that are jumper pads belonging to this trace
-        if (this.isObstacleOwnJumperPad(obstacle)) {
-          continue
-        }
+        if (this.isObstacleOwnJumperPad(obstacle)) continue
 
         const obstacleMinX = obstacle.center.x - obstacle.width / 2
         const obstacleMaxX = obstacle.center.x + obstacle.width / 2
         const obstacleMinY = obstacle.center.y - obstacle.height / 2
         const obstacleMaxY = obstacle.center.y + obstacle.height / 2
 
-        const dx = Math.max(
-          obstacleMinX - position.x,
-          0,
-          position.x - obstacleMaxX,
-        )
-        const dy = Math.max(
-          obstacleMinY - position.y,
-          0,
-          position.y - obstacleMaxY,
-        )
+        const dx = Math.max(obstacleMinX - position.x, 0, position.x - obstacleMaxX)
+        const dy = Math.max(obstacleMinY - position.y, 0, position.y - obstacleMaxY)
         const distToObstacle = Math.sqrt(dx * dx + dy * dy)
 
-        // Track obstacles that would violate clearance (width/2 + margin)
         const requiredObstacleClearance =
           this.currentTargetWidth / 2 + this.obstacleMargin
         if (distToObstacle < requiredObstacleClearance) {
@@ -402,7 +449,6 @@ export class TraceWidthSolver extends BaseSolver {
       }
     }
 
-    // Check for non-connected traces within the search radius
     const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesNearPoint(
       { x: position.x, y: position.y, z: position.z },
       searchRadius,
@@ -412,18 +458,14 @@ export class TraceWidthSolver extends BaseSolver {
       const routeRootName =
         conflictingRoute.rootConnectionName ?? conflictingRoute.connectionName
 
-      if (routeRootName === rootConnectionName) {
-        continue
-      }
-
+      if (routeRootName === rootConnectionName) continue
       if (this.connMap?.areIdsConnected(rootConnectionName, routeRootName)) {
         continue
       }
 
-      const otherTraceHalfWidth = (conflictingRoute.traceThickness ?? 0.15) / 2
+      const otherTraceHalfWidth = (conflictingRoute.traceThickness ?? this.minTraceWidth) / 2
       const clearance = distance - otherTraceHalfWidth
 
-      // Track routes that would violate clearance (width/2 + margin)
       const requiredTraceClearance =
         this.currentTargetWidth / 2 + this.obstacleMargin
       if (clearance < requiredTraceClearance) {
@@ -439,9 +481,6 @@ export class TraceWidthSolver extends BaseSolver {
     return minClearance
   }
 
-  /**
-   * Finalizes the current trace with the given width
-   */
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
 
@@ -452,7 +491,6 @@ export class TraceWidthSolver extends BaseSolver {
       viaDiameter: this.currentTrace.viaDiameter,
       route: [...this.currentTrace.route],
       vias: [...this.currentTrace.vias],
-      // Preserve jumpers from original route
       jumpers: this.currentTrace.jumpers,
     }
 
@@ -463,9 +501,9 @@ export class TraceWidthSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) => w.toFixed(2)).join(
-      ", ",
-    )
+    const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) =>
+      w.toFixed(2),
+    ).join(", ")
 
     const visualization: GraphicsObject & {
       lines: NonNullable<GraphicsObject["lines"]>
@@ -478,10 +516,9 @@ export class TraceWidthSolver extends BaseSolver {
       circles: [],
       rects: [],
       coordinateSystem: "cartesian",
-      title: `Trace Width Solver (schedule: [${scheduleStr}]mm, fallback: ${this.minTraceWidth.toFixed(2)}mm, margin: ${this.obstacleMargin.toFixed(2)}mm)`,
+      title: `TraceWidthSolver (schedule: [${scheduleStr}]mm, min: ${this.minTraceWidth.toFixed(2)}mm, margin: ${this.obstacleMargin.toFixed(2)}mm)`,
     }
 
-    // Build set of colliding obstacle IDs for quick lookup
     const collidingObstacleIds = new Set(
       this.lastCollidingObstacles.map((o) => o.obstacleId),
     )
@@ -489,7 +526,6 @@ export class TraceWidthSolver extends BaseSolver {
       this.lastCollidingRoutes.map((r) => r.connectionName),
     )
 
-    // Draw all obstacles (faded, with colliding ones highlighted)
     for (const obstacle of this.obstacles) {
       const isColliding = collidingObstacleIds.has(obstacle.obstacleId)
       const isOnLayer0 = obstacle.zLayers?.includes(0)
@@ -520,26 +556,21 @@ export class TraceWidthSolver extends BaseSolver {
       })
     }
 
-    // Draw processed routes with their determined widths
     for (const route of this.processedRoutes) {
       if (route.route.length === 0) continue
 
-      const isNominalWidth = route.traceThickness === this.nominalTraceWidth
-      const isMidWidth = route.traceThickness === this.TRACE_WIDTH_SCHEDULE[1]
-      const strokeColor = isNominalWidth
-        ? "green"
-        : isMidWidth
-          ? "yellow"
-          : "orange"
+      // Color by thickness: green = requested width, yellow = reduced, orange = fallback
+      const targetWidth = this._getTargetWidthForRoute(route)
+      const isFullWidth = targetWidth !== undefined &&
+        Math.abs((route.traceThickness ?? 0) - targetWidth) < 0.001
+      const isMinWidth = Math.abs((route.traceThickness ?? 0) - this.minTraceWidth) < 0.001
+      const strokeColor = isFullWidth ? "green" : isMinWidth ? "orange" : "yellow"
 
       for (let i = 0; i < route.route.length - 1; i++) {
         const current = route.route[i]!
         const next = route.route[i + 1]!
 
-        // Skip segments inside jumper pads (these are drawn by getJumpersGraphics)
-        if (current.insideJumperPad && next.insideJumperPad) {
-          continue
-        }
+        if (current.insideJumperPad && next.insideJumperPad) continue
 
         if (current.z === next.z) {
           visualization.lines.push({
@@ -549,7 +580,7 @@ export class TraceWidthSolver extends BaseSolver {
             ],
             strokeColor,
             strokeWidth: route.traceThickness,
-            label: `${route.connectionName} (w=${route.traceThickness.toFixed(2)})`,
+            label: `${route.connectionName} (w=${(route.traceThickness ?? 0).toFixed(2)})`,
           })
         }
       }
@@ -563,7 +594,6 @@ export class TraceWidthSolver extends BaseSolver {
         })
       }
 
-      // Draw jumpers
       if (route.jumpers && route.jumpers.length > 0) {
         const jumperGraphics = getJumpersGraphics(route.jumpers, {
           color: strokeColor,
@@ -574,16 +604,12 @@ export class TraceWidthSolver extends BaseSolver {
       }
     }
 
-    // Draw current trace being processed (if any)
     if (this.currentTrace) {
       for (let i = 0; i < this.currentTrace.route.length - 1; i++) {
         const current = this.currentTrace.route[i]!
         const next = this.currentTrace.route[i + 1]!
 
-        // Skip segments inside jumper pads
-        if (current.insideJumperPad && next.insideJumperPad) {
-          continue
-        }
+        if (current.insideJumperPad && next.insideJumperPad) continue
 
         if (current.z === next.z) {
           visualization.lines.push({
@@ -598,7 +624,6 @@ export class TraceWidthSolver extends BaseSolver {
         }
       }
 
-      // Draw cursor position
       if (this.cursorPosition) {
         visualization.circles.push({
           center: { x: this.cursorPosition.x, y: this.cursorPosition.y },
@@ -607,7 +632,6 @@ export class TraceWidthSolver extends BaseSolver {
           fill: "none",
           label: `Testing width: ${this.currentTargetWidth.toFixed(2)}mm (clearance: ${this.lastClearance.toFixed(2)}mm)`,
         })
-
         visualization.points.push({
           x: this.cursorPosition.x,
           y: this.cursorPosition.y,
@@ -617,10 +641,8 @@ export class TraceWidthSolver extends BaseSolver {
       }
     }
 
-    // Draw unprocessed routes (faded, with colliding ones highlighted)
     for (const route of this.unprocessedRoutes) {
       if (route.route.length === 0) continue
-
       const isColliding = collidingRouteNames.has(route.connectionName)
 
       for (let i = 0; i < route.route.length - 1; i++) {
@@ -648,7 +670,6 @@ export class TraceWidthSolver extends BaseSolver {
     return visualization
   }
 
-  /** Returns the routes with determined widths. This is the primary output of the solver. */
   getHdRoutesWithWidths(): HighDensityRoute[] {
     return this.hdRoutesWithWidths
   }

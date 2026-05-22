@@ -91,6 +91,12 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
+  /**
+   * Multiplier on minTraceWidth for power nets (VCC, GND, motor drivers).
+   * 2 → 0.30mm, 4 → 0.60mm, 8 → 1.20mm (with default 0.15mm min).
+   * Falls back gracefully to narrower widths if clearance is insufficient.
+   */
+  traceWidthMultiplier?: 1 | 2 | 4 | 8
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
