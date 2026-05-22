@@ -541,12 +541,30 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
+            const isUnchangedPassingTest = (test, mainIndex) => {
+              if (!mainIndex) return false
+              const key = `${test.solverName}::${test.scenarioName}`
+              const mainTest = mainIndex.get(key)
+              return (
+                Boolean(mainTest) &&
+                test.didSolve &&
+                test.relaxedDrcPassed &&
+                mainTest.didSolve &&
+                mainTest.relaxedDrcPassed
+              )
+            }
             const renderTests = (report, options = {}) => {
               const includeDelta = Boolean(options.includeDelta)
               const mainIndex = options.mainIndex
               if (!Array.isArray(report?.tests) || report.tests.length === 0) {
                 return ['Per-test results unavailable.']
               }
+              const omitUnchangedPassingSamples = Boolean(options.omitUnchangedPassingSamples)
+              const tests =
+                includeDelta && omitUnchangedPassingSamples
+                  ? report.tests.filter((test) => !isUnchangedPassingTest(test, mainIndex))
+                  : report.tests
+              const omittedCount = report.tests.length - tests.length
               const header = includeDelta
                 ? [
                     '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
@@ -557,8 +575,11 @@ jobs:
                     '| --- | --- | --- | --- | --- | --- |',
                   ]
               return [
+                ...(omittedCount > 0
+                  ? [`_${omittedCount} unchanged passing sample${omittedCount === 1 ? '' : 's'} omitted to keep the PR comment under GitHub's size limit._`, '']
+                  : []),
                 ...header,
-                ...report.tests.map((test) =>
+                ...tests.map((test) =>
                   includeDelta
                     ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
                     : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
@@ -624,7 +645,7 @@ jobs:
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
 
-            const body = [
+            const renderBody = (options = {}) => [
               '## 🏃 Autorouting Benchmark Results',
               '',
               ...(profileEnabled
@@ -642,7 +663,11 @@ jobs:
               '<details open>',
               '<summary>📊 PR Results</summary>',
               '',
-              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', { includeDelta: true, mainIndex }),
+              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
+                includeDelta: true,
+                mainIndex,
+                omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
+              }),
               ...(profileEnabled
                 ? [
                     '',
@@ -654,12 +679,17 @@ jobs:
               `🔗 Workflow: [View run](${runUrl})`,
               `📦 Artifact: ${runUrl}`,
             ].join('\n')
+            const fullBody = renderBody()
+            const filteredBody =
+              fullBody.length > maxLength
+                ? renderBody({ omitUnchangedPassingSamples: true })
+                : fullBody
 
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: Number('${{ steps.parse.outputs.status_comment_id }}'),
-              body: body.length > maxLength ? truncate(body, maxLength) : body,
+              body: filteredBody,
             })
 
       - name: Run profile-solvers (PR)
@@ -947,12 +977,30 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
+            const isUnchangedPassingTest = (test, mainIndex) => {
+              if (!mainIndex) return false
+              const key = `${test.solverName}::${test.scenarioName}`
+              const mainTest = mainIndex.get(key)
+              return (
+                Boolean(mainTest) &&
+                test.didSolve &&
+                test.relaxedDrcPassed &&
+                mainTest.didSolve &&
+                mainTest.relaxedDrcPassed
+              )
+            }
             const renderTests = (report, options = {}) => {
               const includeDelta = Boolean(options.includeDelta)
               const mainIndex = options.mainIndex
               if (!Array.isArray(report?.tests) || report.tests.length === 0) {
                 return ['Per-test results unavailable.']
               }
+              const omitUnchangedPassingSamples = Boolean(options.omitUnchangedPassingSamples)
+              const tests =
+                includeDelta && omitUnchangedPassingSamples
+                  ? report.tests.filter((test) => !isUnchangedPassingTest(test, mainIndex))
+                  : report.tests
+              const omittedCount = report.tests.length - tests.length
               const header = includeDelta
                 ? [
                     '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
@@ -963,8 +1011,11 @@ jobs:
                     '| --- | --- | --- | --- | --- | --- |',
                   ]
               return [
+                ...(omittedCount > 0
+                  ? [`_${omittedCount} unchanged passing sample${omittedCount === 1 ? '' : 's'} omitted to keep the PR comment under GitHub's size limit._`, '']
+                  : []),
                 ...header,
-                ...report.tests.map((test) =>
+                ...tests.map((test) =>
                   includeDelta
                     ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
                     : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
@@ -1141,7 +1192,7 @@ jobs:
                 prProfileSolversReport,
             )
 
-            const body = [
+            const renderBody = (options = {}) => [
               benchmarkFailed ? '## 🏃 Autorouting Benchmark Failed' : '## 🏃 Autorouting Benchmark Results',
               '',
               ...(profileEnabled
@@ -1174,7 +1225,11 @@ jobs:
               '<details open>',
               '<summary>📊 PR Results</summary>',
               '',
-              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', { includeDelta: true, mainIndex }),
+              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
+                includeDelta: true,
+                mainIndex,
+                omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
+              }),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
                     renderProfileComparison(
@@ -1189,7 +1244,12 @@ jobs:
               `📦 Artifact: ${runUrl}`,
             ].join('\n')
 
-            const finalBody = body.length > maxLength ? truncate(body, maxLength) : body
+            const fullBody = renderBody()
+            const filteredBody =
+              fullBody.length > maxLength
+                ? renderBody({ omitUnchangedPassingSamples: true })
+                : fullBody
+            const finalBody = filteredBody
 
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
