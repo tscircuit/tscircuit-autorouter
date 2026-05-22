@@ -4,7 +4,7 @@ import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacl
 import { useState } from "react"
 
 const KICAD_TO_CIRCUIT_JSON_ESM_URL =
-  "https://cdn.jsdelivr.net/npm/kicad-to-circuit-json@0.0.32/+esm"
+  "https://cdn.jsdelivr.net/npm/kicad-to-circuit-json@latest/+esm"
 
 type CircuitJsonElement = Record<string, any>
 type SrjConnection = SimpleRouteJson["connections"][number]
