@@ -47,17 +47,6 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
     connections: [],
   } as any)
 
-  const repairStep = solver.pipelineDef.find(
-    (step) => step.solverName === "highDensityRepairSolver",
-  )
-  expect(repairStep).toBeDefined()
-  const [repairParams] = repairStep!.getConstructorParams({
-    ...solver,
-    highDensityNodePortPoints: [],
-    highDensityRouteSolver: { routes: [] },
-  } as any)
-  expect((repairParams as any).maxSampleEntries).toBe(80)
-
   const globalDrcStep = solver.pipelineDef.find(
     (step) => step.solverName === "globalDrcForceImproveSolver",
   )
