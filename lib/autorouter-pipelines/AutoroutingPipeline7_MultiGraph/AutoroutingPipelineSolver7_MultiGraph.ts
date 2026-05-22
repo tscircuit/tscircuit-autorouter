@@ -4,10 +4,15 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import {
+  ComponentDetectionSolver,
+  type ComponentDetectionSolverOutput,
+} from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -34,7 +39,10 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import {
+  AvailableSegmentPointSolver,
+  type SharedEdgeSegment,
+} from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -51,11 +59,6 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import {
-  ComponentDetectionSolver,
-  type ComponentDetectionSolverOutput,
-} from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 
 interface CapacityMeshSolverOptions {
@@ -76,6 +79,93 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
+}
+
+/**
+ * Collects the capacity mesh node ids that belong to component-local topology
+ * regions.
+ *
+ * @param plannerOutput Output from the multi-graph topology planner.
+ * @returns A set of component-local capacity mesh node ids.
+ */
+function getComponentCapacityMeshNodeIds(
+  plannerOutput: ReturnType<MultiGraphTopologyPlannerSolver["getOutput"]>,
+) {
+  return new Set(
+    plannerOutput.componentMeshNodes
+      .flat()
+      .map((node) => node.capacityMeshNodeId),
+  )
+}
+
+/**
+ * Checks whether a shared edge segment touches a component-local mesh node.
+ *
+ * @param segment Shared edge segment produced by AvailableSegmentPointSolver.
+ * @param componentCapacityMeshNodeIds Component-local capacity mesh node ids.
+ * @returns True when either node on the segment belongs to a component region.
+ */
+function isComponentSharedEdgeSegment(
+  segment: SharedEdgeSegment,
+  componentCapacityMeshNodeIds: Set<string>,
+) {
+  return segment.nodeIds.some((nodeId) =>
+    componentCapacityMeshNodeIds.has(nodeId),
+  )
+}
+
+/**
+ * Removes component-region shared edge segments before running the necessary
+ * cramped port point solver.
+ *
+ * @param params.sharedEdgeSegments Candidate shared edge segments.
+ * @param params.componentCapacityMeshNodeIds Component-local capacity mesh node ids.
+ * @returns Shared edge segments that do not touch component-local mesh nodes.
+ */
+function getNonComponentSharedEdgeSegments({
+  sharedEdgeSegments,
+  componentCapacityMeshNodeIds,
+}: {
+  sharedEdgeSegments: SharedEdgeSegment[]
+  componentCapacityMeshNodeIds: Set<string>
+}) {
+  return sharedEdgeSegments.filter(
+    (segment) =>
+      !isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds),
+  )
+}
+
+/**
+ * Restores untouched component-region segments after the necessary cramped port
+ * point solver filters the non-component mesh.
+ *
+ * @param params.originalSharedEdgeSegments Original shared edge segments from AvailableSegmentPointSolver.
+ * @param params.filteredSharedEdgeSegments Solver-filtered shared edge segments for non-component regions.
+ * @param params.componentCapacityMeshNodeIds Component-local capacity mesh node ids.
+ * @returns Shared edge segments where component regions are untouched and other regions use solver output.
+ */
+function mergeComponentSharedEdgeSegments({
+  originalSharedEdgeSegments,
+  filteredSharedEdgeSegments,
+  componentCapacityMeshNodeIds,
+}: {
+  originalSharedEdgeSegments: SharedEdgeSegment[]
+  filteredSharedEdgeSegments: SharedEdgeSegment[]
+  componentCapacityMeshNodeIds: Set<string>
+}) {
+  const filteredSegmentsByEdgeId = new Map(
+    filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
+  )
+
+  return originalSharedEdgeSegments.map((segment) => {
+    // Component-local cramped points are intentionally preserved even if they
+    // would otherwise be filtered by the necessary cramped port point solver.
+    if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
+      return segment
+    }
+
+    return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
+  })
 }
 
 function definePipelineStep<
@@ -143,6 +233,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   originalSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
+  /** Available segment points after non-component cramped points are filtered. */
+  sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
@@ -252,23 +344,55 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    // definePipelineStep(
-    //   "necessaryCrampedPortPointSolver",
-    //   MultiTargetNecessaryCrampedPortPointSolver,
-    //   (cms) => [
-    //     {
-    //       capacityMeshNodes: cms.capacityNodes!,
-    //       sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
-    //       simpleRouteJson: cms.srjWithPointPairs!,
-    //       numberOfCrampedPortPointsToKeep: 5,
-    //     },
-    //   ],
-    // ),
+    definePipelineStep(
+      "necessaryCrampedPortPointSolver",
+      MultiTargetNecessaryCrampedPortPointSolver,
+      (cms) => {
+        const plannerOutput = cms.topologyPlanningSolver!.getOutput()
+        const componentCapacityMeshNodeIds =
+          getComponentCapacityMeshNodeIds(plannerOutput)
+
+        return [
+          {
+            capacityMeshNodes: cms.capacityNodes!.filter(
+              (node) =>
+                !componentCapacityMeshNodeIds.has(node.capacityMeshNodeId),
+            ),
+            // Do not let the cramped-port solver remove component-local port
+            // points. Those regions are generated by the topology planner and
+            // remain valid even when the generated port points are cramped.
+            sharedEdgeSegments: getNonComponentSharedEdgeSegments({
+              sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
+              componentCapacityMeshNodeIds,
+            }),
+            simpleRouteJson: cms.srjWithPointPairs!,
+            numberOfCrampedPortPointsToKeep: 5,
+          },
+        ]
+      },
+      {
+        onSolved: (cms) => {
+          const plannerOutput = cms.topologyPlanningSolver!.getOutput()
+          const componentCapacityMeshNodeIds =
+            getComponentCapacityMeshNodeIds(plannerOutput)
+
+          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
+            mergeComponentSharedEdgeSegments({
+              originalSharedEdgeSegments:
+                cms.availableSegmentPointSolver!.getOutput(),
+              filteredSharedEdgeSegments:
+                cms.necessaryCrampedPortPointSolver!.getOutput(),
+              componentCapacityMeshNodeIds,
+            })
+        },
+      },
+    ),
     definePipelineStep(
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
         const sharedEdgeSegments =
+          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
