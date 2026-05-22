@@ -14,11 +14,13 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
-const CURSOR_STEP_DISTANCE = 0.1
+const MIN_CURSOR_STEP = 0.05
+const MAX_CURSOR_STEP = 0.3
+const CURSOR_STEPS_PER_TRACE = 200
 
 // Allowed multiplier values — mirrors the type definition in srj-types.ts
-const VALID_MULTIPLIERS = [1, 2, 4, 8] as const
-type ValidMultiplier = (typeof VALID_MULTIPLIERS)[number]
+const MIN_MULTIPLIER = 0.5
+const MAX_MULTIPLIER = 16
 
 interface Point2D {
   x: number
@@ -97,6 +99,10 @@ export class TraceWidthSolver extends BaseSolver {
   currentScheduleIndex = 0
   currentTargetWidth: number = 0
   hasInsufficientClearance = false
+  /** Saved cursor position when a width fails — used to avoid re-scanning from start */
+  failureSegmentIndex = 0
+  failureSegmentT = 0
+  adaptiveCursorStep = 0.1
 
   // For visualization — track colliding objects
   lastCollidingObstacles: Obstacle[] = []
@@ -191,13 +197,8 @@ export class TraceWidthSolver extends BaseSolver {
    * Clamps a user-supplied multiplier to the nearest valid value.
    * This prevents e.g. multiplier=3 from producing an unexpected width.
    */
-  private _clampMultiplier(raw: number): ValidMultiplier {
-    // Find the largest valid multiplier that is <= raw
-    let best: ValidMultiplier = 1
-    for (const v of VALID_MULTIPLIERS) {
-      if (v <= raw) best = v
-    }
-    return best
+  private _clampMultiplier(raw: number): number {
+    return Math.min(Math.max(raw, MIN_MULTIPLIER), MAX_MULTIPLIER)
   }
 
   private _getTargetWidthForRoute(route: HighDensityRoute): number | undefined {
@@ -291,12 +292,39 @@ export class TraceWidthSolver extends BaseSolver {
     }
   }
 
-  private initializeCursor() {
+  private initializeCursor(resumeFromFailure = false) {
     if (!this.currentTrace) return
-    const startPoint = this.currentTrace.route[0]!
-    this.cursorPosition = { ...startPoint }
-    this.currentTraceSegmentIndex = 0
-    this.currentTraceSegmentT = 0
+
+    // Compute adaptive step size based on trace length
+    let totalLength = 0
+    const route = this.currentTrace.route
+    for (let i = 0; i < route.length - 1; i++) {
+      const dx = route[i + 1]!.x - route[i]!.x
+      const dy = route[i + 1]!.y - route[i]!.y
+      totalLength += Math.sqrt(dx * dx + dy * dy)
+    }
+    this.adaptiveCursorStep = Math.min(
+      MAX_CURSOR_STEP,
+      Math.max(MIN_CURSOR_STEP, totalLength / CURSOR_STEPS_PER_TRACE),
+    )
+
+    if (resumeFromFailure && this.failureSegmentIndex > 0) {
+      // Resume from the point where the previous width failed
+      this.currentTraceSegmentIndex = this.failureSegmentIndex
+      this.currentTraceSegmentT = this.failureSegmentT
+      const seg = route[this.failureSegmentIndex]!
+      const segNext = route[this.failureSegmentIndex + 1] ?? seg
+      this.cursorPosition = {
+        x: seg.x + (segNext.x - seg.x) * this.failureSegmentT,
+        y: seg.y + (segNext.y - seg.y) * this.failureSegmentT,
+        z: seg.z,
+      }
+    } else {
+      const startPoint = route[0]!
+      this.cursorPosition = { ...startPoint }
+      this.currentTraceSegmentIndex = 0
+      this.currentTraceSegmentT = 0
+    }
     this.hasInsufficientClearance = false
   }
 
@@ -304,7 +332,7 @@ export class TraceWidthSolver extends BaseSolver {
     if (!this.currentTrace || !this.cursorPosition) return false
 
     const route = this.currentTrace.route
-    let remainingDistance = CURSOR_STEP_DISTANCE
+    let remainingDistance = this.adaptiveCursorStep
 
     while (remainingDistance > 0) {
       if (this.currentTraceSegmentIndex >= route.length - 1) {

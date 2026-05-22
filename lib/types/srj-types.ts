@@ -96,7 +96,7 @@ export interface SimpleRouteConnection {
    * 2 → 0.30mm, 4 → 0.60mm, 8 → 1.20mm (with default 0.15mm min).
    * Falls back gracefully to narrower widths if clearance is insufficient.
    */
-  traceWidthMultiplier?: 1 | 2 | 4 | 8
+  traceWidthMultiplier?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
