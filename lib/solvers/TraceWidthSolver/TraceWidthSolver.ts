@@ -14,6 +14,20 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
+// ── Clearance cache key precision (mm rounded to 2 dp)
+const CACHE_PRECISION = 2
+
+// ── Metrics snapshot
+export interface TraceWidthMetrics {
+  totalTraces: number
+  tracesAtFullWidth: number
+  tracesNarrowed: number
+  tracesAtMinWidth: number
+  averageFinalWidth: number
+  cacheHits: number
+  cacheMisses: number
+}
+
 const MIN_CURSOR_STEP = 0.05
 const MAX_CURSOR_STEP = 0.3
 const CURSOR_STEPS_PER_TRACE = 200
@@ -46,6 +60,18 @@ export interface TraceWidthSolverInput {
    */
   nominalTraceWidth?: number
   obstacleMargin?: number
+  /**
+   * Per-connection clearance override (mm). Overrides the global obstacleMargin
+   * for the named connection. Useful for high-current traces that need more space.
+   * Example: { VCC: 0.3, GND: 0.3 }
+   */
+  clearanceOverride?: Record<string, number>
+  /**
+   * Per-connection, per-layer trace width (mm). Takes priority over all other
+   * width settings for the matching connection+layer combination.
+   * Example: { VCC: { top: 0.4, bottom: 0.6 } }
+   */
+  traceWidthByLayer?: Record<string, Record<string, number>>
   layerCount: number
 }
 
@@ -103,8 +129,22 @@ export class TraceWidthSolver extends BaseSolver {
   failureSegmentIndex = 0
   failureSegmentT = 0
   adaptiveCursorStep = 0.1
+  clearanceOverrideMap: Record<string, number> = {}
+  traceWidthByLayer: Record<string, Record<string, number>> = {}
 
   // For visualization — track colliding objects
+  // ── Clearance result cache: "x,y,z,width" → clearance
+  private clearanceCache = new Map<string, number>()
+  cacheHits = 0
+  cacheMisses = 0
+
+  // ── Metrics
+  private metricsTracesAtFullWidth = 0
+  private metricsTracesNarrowed = 0
+  private metricsTracesAtMinWidth = 0
+  private metricsFinalWidthSum = 0
+  private metricsTotalTraces = 0
+
   lastCollidingObstacles: Obstacle[] = []
   lastCollidingRoutes: HighDensityRoute[] = []
   lastClearance: number = Infinity
@@ -128,6 +168,8 @@ export class TraceWidthSolver extends BaseSolver {
     this.connMap = input.connMap
     this.colorMap = input.colorMap
     this.TRACE_WIDTH_SCHEDULE = []
+    this.clearanceOverrideMap = input.clearanceOverride ?? {}
+    this.traceWidthByLayer = input.traceWidthByLayer ?? {}
 
     const inferredLayerCount = input.layerCount
     this.obstacles = createObjectsWithZLayers(
@@ -170,7 +212,16 @@ export class TraceWidthSolver extends BaseSolver {
    */
   private _resolveConnectionTargetWidth(
     connection: SimpleRouteConnection,
+    layer?: string,
   ): number | undefined {
+    // 0. Per-connection per-layer width (highest priority)
+    if (
+      layer &&
+      this.traceWidthByLayer[connection.name]?.[layer] !== undefined
+    ) {
+      return this.traceWidthByLayer[connection.name]![layer]!
+    }
+
     // 1. Explicit absolute width wins
     if (connection.nominalTraceWidth !== undefined) {
       return connection.nominalTraceWidth
@@ -191,6 +242,14 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     return undefined
+  }
+
+  /**
+   * Returns the effective obstacle margin for a given connection name.
+   * Falls back to the global obstacleMargin if no override is set.
+   */
+  private _getObstacleMargin(connectionName: string): number {
+    return this.clearanceOverrideMap[connectionName] ?? this.obstacleMargin
   }
 
   /**
@@ -410,6 +469,15 @@ export class TraceWidthSolver extends BaseSolver {
   private getClearanceAtPosition(position: Point3D): number {
     if (!this.currentTrace) return Infinity
 
+    // Check cache first
+    const cacheKey = `${position.x.toFixed(CACHE_PRECISION)},${position.y.toFixed(CACHE_PRECISION)},${position.z},${this.currentTargetWidth.toFixed(CACHE_PRECISION)}`
+    const cached = this.clearanceCache.get(cacheKey)
+    if (cached !== undefined) {
+      this.cacheHits++
+      return cached
+    }
+    this.cacheMisses++
+
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
     const searchRadius = this.currentTargetWidth * 3
@@ -468,8 +536,11 @@ export class TraceWidthSolver extends BaseSolver {
         )
         const distToObstacle = Math.sqrt(dx * dx + dy * dy)
 
+        const effectiveObstacleMargin = this._getObstacleMargin(
+          this.currentTrace?.connectionName ?? "",
+        )
         const requiredObstacleClearance =
-          this.currentTargetWidth / 2 + this.obstacleMargin
+          this.currentTargetWidth / 2 + effectiveObstacleMargin
         if (distToObstacle < requiredObstacleClearance) {
           this.lastCollidingObstacles.push(obstacle)
         }
@@ -498,8 +569,11 @@ export class TraceWidthSolver extends BaseSolver {
         (conflictingRoute.traceThickness ?? this.minTraceWidth) / 2
       const clearance = distance - otherTraceHalfWidth
 
+      const effectiveTraceMargin = this._getObstacleMargin(
+        this.currentTrace?.connectionName ?? "",
+      )
       const requiredTraceClearance =
-        this.currentTargetWidth / 2 + this.obstacleMargin
+        this.currentTargetWidth / 2 + effectiveTraceMargin
       if (clearance < requiredTraceClearance) {
         this.lastCollidingRoutes.push(conflictingRoute)
       }
@@ -510,11 +584,26 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     this.lastClearance = minClearance
+    this.clearanceCache.set(cacheKey, minClearance)
     return minClearance
   }
 
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
+
+    // Update metrics
+    this.metricsTotalTraces++
+    this.metricsFinalWidthSum += traceWidth
+    const targetWidth = this._getTargetWidthForRoute(this.currentTrace)
+    if (targetWidth !== undefined) {
+      if (Math.abs(traceWidth - targetWidth) < 0.001) {
+        this.metricsTracesAtFullWidth++
+      } else if (Math.abs(traceWidth - this.minTraceWidth) < 0.001) {
+        this.metricsTracesAtMinWidth++
+      } else {
+        this.metricsTracesNarrowed++
+      }
+    }
 
     const routeWithWidth: HighDensityRoute = {
       connectionName: this.currentTrace.connectionName,
@@ -706,6 +795,24 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     return visualization
+  }
+
+  /**
+   * Returns a metrics snapshot after solving is complete.
+   */
+  getMetrics(): TraceWidthMetrics {
+    return {
+      totalTraces: this.metricsTotalTraces,
+      tracesAtFullWidth: this.metricsTracesAtFullWidth,
+      tracesNarrowed: this.metricsTracesNarrowed,
+      tracesAtMinWidth: this.metricsTracesAtMinWidth,
+      averageFinalWidth:
+        this.metricsTotalTraces > 0
+          ? this.metricsFinalWidthSum / this.metricsTotalTraces
+          : 0,
+      cacheHits: this.cacheHits,
+      cacheMisses: this.cacheMisses,
+    }
   }
 
   getHdRoutesWithWidths(): HighDensityRoute[] {
