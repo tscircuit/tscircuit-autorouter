@@ -11,7 +11,7 @@ import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/get
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport59-82431e.json", () => {
-  const solver = new AutoroutingPipelineSolver8(srj)
+  const solver = new AutoroutingPipelineSolver8(structuredClone(srj))
   solver.solve()
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
@@ -19,7 +19,9 @@ test("bugreport59-82431e.json", () => {
 }, 30_000)
 
 test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () => {
-  const solver = new AutoroutingPipelineSolver8(srj, { effort: 2 })
+  const solver = new AutoroutingPipelineSolver8(structuredClone(srj), {
+    effort: 2,
+  })
   solver.solve()
 
   const allowedViaPointKeys = getAssignableViaPointKeys(srj.obstacles)
