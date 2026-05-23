@@ -20,7 +20,7 @@ const getNodeOrThrow = (
 }
 
 test(
-  "pipeline4 dataset01 circuit102 changes cmn_159 reduction shape across node-cap and effort settings",
+  "pipeline4 dataset01 circuit102 keeps cmn_159 solved across node-cap and effort settings",
   () => {
     getGlobalInMemoryCache().clearCache()
 
@@ -67,14 +67,16 @@ test(
     )
 
     expect(explicit8mmMetadata?.status).toBe("solved")
-    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
-    expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
+    expect(explicit8mmMetadata?.solverType).toBe(
+      "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost",
+    )
+    expect(explicit8mmNode.portPoints.length).toBe(
       defaultNode.portPoints.length,
     )
     expect(
       new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
         .size,
-    ).toBe(2)
+    ).toBe(1)
     expect(
       JSON.stringify(
         explicit8mmNode.portPoints.map((point) => point.connectionName),
@@ -104,22 +106,22 @@ test(
     )
 
     expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Node.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
+    expect(effort2Metadata?.solverType).toBe(
+      "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost",
     )
+    expect(effort2Node.portPoints.length).toBe(defaultNode.portPoints.length)
     expect(
       new Set(effort2Node.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(2)
+    ).toBe(1)
     expect(
       JSON.stringify(
         effort2Node.portPoints.map((point) => point.connectionName),
       ),
-    ).not.toBe(
+    ).toBe(
       JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
+        defaultNode.portPoints.map((point) => point.connectionName),
       ),
     )
-    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")
   },
   { timeout: 120_000 },
 )

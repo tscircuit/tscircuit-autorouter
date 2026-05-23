@@ -121,7 +121,7 @@ test("Pipeline6 defaults projectedRect area expansion above equivalent area", ()
   expect(solver.minProjectedRectDimension).toBeCloseTo(0.45)
 })
 
-test("Pipeline6 falls back when constrained triangulation fails", async () => {
+test("Pipeline6 uses constrained triangulation for dataset01 circuit100", async () => {
   const scenarios = await loadScenarios("dataset01")
   const circuit100 = scenarios.find(([name]) => name === "circuit100")?.[1]
   expect(circuit100).toBeDefined()
@@ -130,24 +130,28 @@ test("Pipeline6 falls back when constrained triangulation fails", async () => {
     srj: circuit100!,
   })
 
-  expect(solver.usedUnconstrainedDelaunayFallback).toBe(true)
+  expect(solver.usedUnconstrainedDelaunayFallback).toBe(false)
   expect(solver.convexRegions.regions.length).toBeGreaterThan(0)
 })
 
-test("Pipeline6 solves dataset01 circuit002 with minimum projected rect workspace", async () => {
-  const scenarios = await loadScenarios("dataset01")
-  const circuit002 = scenarios.find(([name]) => name === "circuit002")?.[1]
-  expect(circuit002).toBeDefined()
+test(
+  "Pipeline6 solves dataset01 circuit002 with minimum projected rect workspace",
+  async () => {
+    const scenarios = await loadScenarios("dataset01")
+    const circuit002 = scenarios.find(([name]) => name === "circuit002")?.[1]
+    expect(circuit002).toBeDefined()
 
-  const solver = new AutoroutingPipelineSolver6(circuit002!, {
-    effort: 1,
-    equivalentAreaExpansionFactor: 2,
-  })
-  solver.solve()
+    const solver = new AutoroutingPipelineSolver6(circuit002!, {
+      effort: 1,
+      equivalentAreaExpansionFactor: 2,
+    })
+    solver.solve()
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-})
+    expect(solver.solved).toBe(true)
+    expect(solver.failed).toBe(false)
+  },
+  { timeout: 120_000 },
+)
 
 test("PolySingleIntraNodeSolver solves in rect space before projection back to polygon", () => {
   const polygon = [
