@@ -5,10 +5,6 @@ import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "tests/fixtures/getLastStepSvg"
 
 test("pipeline4 dataset01 circuit011 visual snapshot", () => {
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
   const circuit011 = (dataset01 as Record<string, unknown>)
     .circuit011 as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver4(circuit011)
@@ -17,5 +13,7 @@ test("pipeline4 dataset01 circuit011 visual snapshot", () => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 }, 60_000)

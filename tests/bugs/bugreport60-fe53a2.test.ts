@@ -32,9 +32,7 @@ test("bugreport60-fe53a2.json uses the preplaced via in pipeline8", () => {
     )
   expect(routedVias.map(getPointKey)).toEqual([...preplacedViaKeys])
 
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 }, 30_000)

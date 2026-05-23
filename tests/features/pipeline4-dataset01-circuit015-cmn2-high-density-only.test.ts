@@ -22,10 +22,6 @@ const getNodeOrThrow = (
 
 test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
   getGlobalInMemoryCache().clearCache()
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
 
   const circuit015 = (dataset01 as Record<string, unknown>)
     .circuit015 as SimpleRouteJson
@@ -66,5 +62,5 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
   )
 
   expect(accidentalContacts).toHaveLength(0)
-  expect(solver.visualize()).toMatchGraphicsSvg(snapshotPath)
+  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
 }, 120_000)

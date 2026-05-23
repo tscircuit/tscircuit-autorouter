@@ -24,11 +24,6 @@ test("no better path", () => {
   const srj: SimpleRouteJson = noBetterPathSrjData as any
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
-
   const newConnections = solver.srjWithPointPairs!.connections
   expect(newConnections).toHaveLength(1)
   const pointIds = newConnections[0].pointsToConnect
@@ -36,5 +31,7 @@ test("no better path", () => {
     .sort()
   expect(pointIds).toEqual(["A", "X"])
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })

@@ -11,10 +11,7 @@ import {
 import { MultiSectionPortPointOptimizer } from "../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer"
 import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"
 
-const snapshotBasePath =
-  process.platform === "linux"
-    ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-    : import.meta.path
+const snapshotBasePath = import.meta.path
 
 test("should solve e2e3 board and produce valid SimpleRouteJson output", async () => {
   const simpleSrj = e2e3Fixture as SimpleRouteJson
