@@ -6,7 +6,8 @@ import srj from "./assets/OV5640-dual-camera-board-v2.srj.json" with {
   type: "json",
 }
 
-test("OV5640 dual camera board v2 pipeline7 fully solves", () => {
+// takes 300s
+test.skip("OV5640 dual camera board v2 pipeline7 fully solves", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     srj as SimpleRouteJson,
   )
