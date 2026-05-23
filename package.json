@@ -27,7 +27,7 @@
     "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#56db70039aeb28a76540fe951b5a96be60f9e949",
     "@tsci/tscircuit.dataset-srj16-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj16-bga-breakouts.git#e8b2e70e1f50a0dba3ad977e140766f53b9b75fb",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
-    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#f9c0a8fe11e9bc05064bdafdf61f33eb38fa2b8e",
+    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#90c442307702520a2c0eb73f564dc28149d0536f",
     "@tscircuit/checks": "^0.0.126",
     "@tscircuit/circuit-json-util": "^0.0.94",
     "@tscircuit/core": "^0.0.337",
