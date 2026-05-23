@@ -40,6 +40,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private crampedPortPointsToKeep: Set<SegmentPortPoint> = new Set()
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
+  private filteredOutput?: SharedEdgeSegment[]
 
   override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
     null
@@ -228,15 +229,29 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override getOutput(): SharedEdgeSegment[] {
-    return this.input.sharedEdgeSegments.map((segment) => ({
+    if (this.filteredOutput) {
+      return this.filteredOutput
+    }
+
+    this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.filter((portPoint) => {
         if (portPoint.cramped) {
-          return this.crampedPortPointsToKeep.has(portPoint)
+          return (
+            this.crampedPortPointsToKeep.has(portPoint) ||
+            this.isMultilayerEscapePort(portPoint)
+          )
         }
         return true
       }),
     }))
+    return this.filteredOutput
+  }
+
+  private isMultilayerEscapePort(portPoint: SegmentPortPoint): boolean {
+    return portPoint.nodeIds.some(
+      (nodeId) => (this.nodeMap.get(nodeId)?.availableZ.length ?? 0) > 1,
+    )
   }
 
   override visualize(): GraphicsObject {
