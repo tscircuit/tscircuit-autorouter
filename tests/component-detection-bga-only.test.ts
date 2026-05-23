@@ -1,25 +1,33 @@
 import { expect, test } from "bun:test"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
+  type: "json",
+}
 
 const createPad = ({
   componentId,
   obstacleId,
   x,
   y,
+  width = 0.2,
+  height = 0.2,
 }: {
   componentId: string
   obstacleId: string
   x: number
   y: number
+  width?: number
+  height?: number
 }): Obstacle => ({
   obstacleId,
   componentId,
   type: "rect",
   layers: ["top"],
   center: { x, y },
-  width: 0.2,
-  height: 0.2,
+  width,
+  height,
   connectedTo: [],
 })
 
@@ -30,6 +38,33 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   connections: [],
   bounds: { minX: -2, maxX: 4, minY: -2, maxY: 4 },
 })
+
+const createGridPads = ({
+  componentId,
+  rows,
+  columns,
+  xStep = 1,
+  yStep = 1,
+  includedIndexes,
+}: {
+  componentId: string
+  rows: number
+  columns: number
+  xStep?: number
+  yStep?: number
+  includedIndexes?: number[]
+}) =>
+  Array.from(
+    includedIndexes ??
+      Array.from({ length: rows * columns }, (_, index) => index),
+    (index) =>
+      createPad({
+        componentId,
+        obstacleId: `${componentId}.${index + 1}`,
+        x: (index % columns) * xStep,
+        y: Math.floor(index / columns) * yStep,
+      }),
+  )
 
 test("component detection only creates regions for BGA-like components", () => {
   const passivePads = [
@@ -67,4 +102,110 @@ test("component detection only creates regions for BGA-like components", () => {
       (obstacle) => obstacle.obstacleId === "component-region:U_BGA",
     ),
   ).toBe(true)
+})
+
+test("component detection accepts two-row and two-column BGA-like components", () => {
+  const solver = new ComponentDetectionSolver({
+    inputSrj: createSrj([
+      ...createGridPads({ componentId: "U_2X4", rows: 2, columns: 4 }),
+      ...createGridPads({ componentId: "U_4X2", rows: 4, columns: 2 }),
+      ...createGridPads({ componentId: "U_2X5", rows: 2, columns: 5 }),
+      ...createGridPads({ componentId: "U_2X3", rows: 2, columns: 3 }),
+    ]),
+  })
+
+  solver.solve()
+
+  expect(
+    solver.getOutput().components.map((component) => component.componentId),
+  ).toEqual(["U_2X4", "U_2X5", "U_4X2"])
+})
+
+test("component detection rejects grids with pad dimensions outside one percent", () => {
+  const mismatchedPads = createGridPads({
+    componentId: "U_MISMATCHED_PADS",
+    rows: 3,
+    columns: 3,
+  })
+  mismatchedPads[0] = {
+    ...mismatchedPads[0]!,
+    width: mismatchedPads[0]!.width * 1.011,
+  }
+  const solver = new ComponentDetectionSolver({
+    inputSrj: createSrj([
+      ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
+      ...mismatchedPads,
+    ]),
+  })
+
+  solver.solve()
+
+  expect(
+    solver.getOutput().components.map((component) => component.componentId),
+  ).toEqual(["U_BGA"])
+})
+
+test("component detection does not require at least eight pads", () => {
+  const solver = new ComponentDetectionSolver({
+    inputSrj: createSrj([
+      ...createGridPads({
+        componentId: "U_SPARSE_2X4",
+        rows: 2,
+        columns: 4,
+        includedIndexes: [0, 1, 2, 7],
+      }),
+    ]),
+  })
+
+  solver.solve()
+
+  expect(
+    solver.getOutput().components.map((component) => component.componentId),
+  ).toEqual(["U_SPARSE_2X4"])
+})
+
+test("topology planning creates BGA component mesh nodes for two-row components", () => {
+  const inputSrj = createSrj(
+    createGridPads({ componentId: "U_2X4", rows: 2, columns: 4 }),
+  )
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const output = topologyPlanningSolver.getOutput()
+  expect(output.componentMeshNodes).toHaveLength(1)
+  expect(output.componentMeshNodes[0]!.length).toBeGreaterThan(0)
+  expect(
+    output.componentMeshNodes[0]!.every((node) =>
+      node.capacityMeshNodeId.includes("U_2X4"),
+    ),
+  ).toBe(true)
+})
+
+test("bugreport61 SOIC8 footprints use BGA topology planning", () => {
+  const inputSrj = bugReport61.simple_route_json as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const detectedComponentIds = componentDetectionSolver
+    .getOutput()
+    .components.map((component) => component.componentId)
+  expect(detectedComponentIds).toEqual(["pcb_component_0", "pcb_component_1"])
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const output = topologyPlanningSolver.getOutput()
+  expect(output.componentMeshNodes).toHaveLength(2)
+  expect(output.componentMeshNodes.every((nodes) => nodes.length > 0)).toBe(
+    true,
+  )
 })
