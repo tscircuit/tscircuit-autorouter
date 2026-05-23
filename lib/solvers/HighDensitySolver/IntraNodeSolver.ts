@@ -17,6 +17,21 @@ import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./Single
 
 type ConnectionPoint = { x: number; y: number; z: number }
 
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
+
 const pointKey = (point: ConnectionPoint) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
@@ -43,9 +58,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
   colorMap: Record<string, string>
   unsolvedConnections: {
     connectionName: string
+    rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
+  rootConnectionNameByConnectionName: Map<string, string>
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -96,7 +113,20 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
-    for (const { connectionName, x, y, z } of nodeWithPortPoints.portPoints) {
+    this.rootConnectionNameByConnectionName = new Map()
+    for (const {
+      connectionName,
+      rootConnectionName,
+      x,
+      y,
+      z,
+    } of nodeWithPortPoints.portPoints) {
+      if (rootConnectionName) {
+        this.rootConnectionNameByConnectionName.set(
+          connectionName,
+          rootConnectionName,
+        )
+      }
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
         { x, y, z: z ?? 0 },
@@ -113,6 +143,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.unsolvedConnections = Array.from(
       unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
         connectionName,
+        rootConnectionName:
+          this.rootConnectionNameByConnectionName.get(connectionName),
         points: dedupeConnectionPoints(points),
       })),
     )
@@ -188,11 +220,13 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private getSingleRouteSolverOpts(unsolvedConnection: {
     connectionName: string
+    rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }) {
-    const { connectionName, points } = unsolvedConnection
+    const { connectionName, rootConnectionName, points } = unsolvedConnection
     return {
       connectionName,
+      rootConnectionName,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
       A: { x: points[0].x, y: points[0].y, z: points[0].z },
@@ -231,6 +265,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private trySolveSamePointLayerChange(unsolvedConnection: {
     connectionName: string
+    rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }) {
     const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
@@ -258,6 +293,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     this.solvedRoutes.push({
       connectionName: unsolvedConnection.connectionName,
+      rootConnectionName: unsolvedConnection.rootConnectionName,
       traceThickness: this.traceWidth,
       viaDiameter: this.viaDiameter,
       route,
@@ -268,6 +304,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
     connectionName: string
+    rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }) {
     const [origin, ...extraPoints] = dedupeConnectionPoints(
@@ -279,6 +316,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     for (const point of extraPoints) {
       this.unsolvedConnections.push({
         connectionName: unsolvedConnection.connectionName,
+        rootConnectionName: unsolvedConnection.rootConnectionName,
         points: [origin, point],
       })
     }
@@ -354,6 +392,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
     this.unsolvedConnections.push({
       connectionName,
+      rootConnectionName:
+        this.rootConnectionNameByConnectionName.get(connectionName),
       points: points.map((point) => ({ ...point })),
     })
     this.rerouteAttemptsByConnection.set(
@@ -469,7 +509,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
       graphics.points!.push({
         x: pt.x,
         y: pt.y,
-        label: [pt.connectionName, `layer: ${pt.z}`].join("\n"),
+        label: connectionLabel(pt.connectionName, pt.rootConnectionName, [
+          `layer: ${pt.z}`,
+        ]),
         color: this.colorMap[pt.connectionName] ?? "blue",
       })
     }
@@ -483,6 +525,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
       const route = this.solvedRoutes[routeIndex]
       if (route.route.length > 0) {
         const routeColor = this.colorMap[route.connectionName] ?? "blue"
+        const rootConnectionName =
+          route.rootConnectionName ??
+          this.rootConnectionNameByConnectionName.get(route.connectionName)
 
         // Draw route segments between points
         for (let i = 0; i < route.route.length - 1; i++) {
@@ -491,6 +536,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
           graphics.lines!.push({
             points: [p1, p2],
+            label: connectionLabel(route.connectionName, rootConnectionName, [
+              `layer: ${p1.z}`,
+            ]),
             strokeColor:
               p1.z === 0
                 ? safeTransparentize(routeColor, 0.2)
@@ -509,6 +557,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
             fill: safeTransparentize(routeColor, 0.5),
             layer: "via",
             step: routeIndex,
+            label: connectionLabel(route.connectionName, rootConnectionName, [
+              "via",
+            ]),
           })
         }
       }

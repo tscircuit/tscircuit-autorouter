@@ -4,13 +4,13 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { BaseSolver } from "../../BaseSolver"
+import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
-import { BaseSolver } from "../../BaseSolver"
-import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
 
 type HyperSingleIntraNodeSolverParams = ConstructorParameters<
   typeof HyperSingleIntraNodeSolver
@@ -80,6 +80,21 @@ const routeColors = [
   "#9333ea",
   "#0891b2",
 ]
+
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
 
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -230,14 +245,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               strokeColor: routeColors[routeIndex % routeColors.length],
               strokeWidth: route.traceThickness,
               layer: `z${point.z}`,
-              label: [
+              label: connectionLabel(
                 route.connectionName,
-                this.stats.invalidGeometryFallback
-                  ? "invalid fallback route"
-                  : undefined,
-              ]
-                .filter(Boolean)
-                .join("\n"),
+                route.rootConnectionName,
+                [
+                  `z${point.z}`,
+                  this.stats.invalidGeometryFallback
+                    ? "invalid fallback route"
+                    : undefined,
+                ].filter(Boolean) as string[],
+              ),
             }
           }),
         ),
@@ -253,7 +270,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
                 ),
               ) % routeColors.length
             ],
-          label: `${point.connectionName}\nz${point.z}`,
+          label: connectionLabel(
+            point.connectionName,
+            point.rootConnectionName,
+            [`z${point.z}`],
+          ),
         })),
         rects: [
           {

@@ -24,6 +24,21 @@ type HighDensityIntraNodeSolver =
   | HyperSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
 
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
+
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
     return "HighDensitySolver"
@@ -341,7 +356,10 @@ export class HighDensitySolver extends BaseSolver {
       for (const segment of mergedSegments) {
         graphics.lines!.push({
           points: segment.points,
-          label: segment.connectionName,
+          label: connectionLabel(
+            route.connectionName,
+            route.rootConnectionName,
+          ),
           strokeColor:
             segment.z === 0
               ? segment.color
@@ -357,7 +375,11 @@ export class HighDensitySolver extends BaseSolver {
           layer: "z0,1",
           radius: route.viaDiameter / 2,
           fill: this.colorMap[route.connectionName],
-          label: `${route.connectionName} via`,
+          label: connectionLabel(
+            route.connectionName,
+            route.rootConnectionName,
+            ["via"],
+          ),
         })
       }
     }
