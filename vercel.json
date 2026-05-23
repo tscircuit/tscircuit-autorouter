@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "functions": {
-    "api/autorouting/solve.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
-}
