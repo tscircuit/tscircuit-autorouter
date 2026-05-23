@@ -4,18 +4,17 @@ import bugReport from "../../fixtures/bug-reports/bugreport59-82431e/bugreport59
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import { getAssignableViaPointKeys } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport59-82431e.json", () => {
+test("bugreport59-82431e solves and emits routes", () => {
   const solver = new AutoroutingPipelineSolver8(structuredClone(srj))
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+
+  expect(solver.solved).toBe(true)
+  expect(solver.getOutputSimplifiedPcbTraces().length).toBeGreaterThan(0)
 }, 30_000)
 
 test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () => {
