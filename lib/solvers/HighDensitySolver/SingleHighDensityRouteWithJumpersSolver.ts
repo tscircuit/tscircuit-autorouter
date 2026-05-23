@@ -1,25 +1,41 @@
-import { BaseSolver } from "../BaseSolver"
-import type {
-  HighDensityIntraNodeRouteWithJumpers,
-  Jumper,
-} from "lib/types/high-density-types"
 import {
   distance,
-  pointToSegmentDistance,
   doSegmentsIntersect,
+  pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import type { GraphicsObject } from "graphics-debug"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
 import {
   Node,
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import type {
+  HighDensityIntraNodeRouteWithJumpers,
+  Jumper,
+} from "lib/types/high-density-types"
+import { BaseSolver } from "../BaseSolver"
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
   connectionName: string
+  rootConnectionName?: string
   points: { x: number; y: number; z: number }[]
 }
+
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
 
 /**
  * 0603 footprint dimensions in mm
@@ -1493,6 +1509,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
     color: string,
     layer?: string,
     step?: number,
+    label?: string,
   ) {
     const dx = jumper.end.x - jumper.start.x
     const dy = jumper.end.y - jumper.start.y
@@ -1519,6 +1536,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: layer ?? "jumper",
       step,
+      label,
     })
 
     // End pad
@@ -1533,6 +1551,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: layer ?? "jumper",
       step,
+      label,
     })
 
     // Draw a line connecting the pads (representing the jumper body)
@@ -1542,6 +1561,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
       strokeWidth: padWidth * 0.3,
       layer: layer ?? "jumper-body",
       step,
+      label,
     })
   }
 
@@ -1557,13 +1577,19 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
     graphics.points!.push({
       x: this.A.x,
       y: this.A.y,
-      label: `Input A\nz: ${this.A.z}`,
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Input A",
+        `z: ${this.A.z}`,
+      ]),
       color: "orange",
     })
     graphics.points!.push({
       x: this.B.x,
       y: this.B.y,
-      label: `Input B\nz: ${this.B.z}`,
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Input B",
+        `z: ${this.B.z}`,
+      ]),
       color: "orange",
     })
 
@@ -1571,7 +1597,9 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
     graphics.lines!.push({
       points: [this.A, this.B],
       strokeColor: "rgba(255, 0, 0, 0.5)",
-      label: "Direct Input Connection",
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Direct Input Connection",
+      ]),
     })
 
     // Show obstacle routes
@@ -1586,7 +1614,11 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
           points: [route.route[i], route.route[i + 1]],
           strokeColor: "rgba(255, 0, 0, 0.75)",
           strokeWidth: route.traceThickness,
-          label: "Obstacle Route",
+          label: connectionLabel(
+            route.connectionName,
+            route.rootConnectionName,
+            ["Obstacle Route"],
+          ),
           layer: `obstacle${routeIndex.toString()}`,
         })
       }
@@ -1598,6 +1630,10 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
           jumper,
           "rgba(255, 0, 0, 0.5)",
           `obstacle-jumper-${routeIndex}`,
+          undefined,
+          connectionLabel(route.connectionName, route.rootConnectionName, [
+            "Obstacle Jumper",
+          ]),
         )
       }
     }
@@ -1612,7 +1648,9 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
         points: [start, end],
         strokeColor: "rgba(0, 100, 255, 0.6)",
         strokeWidth: this.traceThickness,
-        label: `Future: ${fc.connectionName}`,
+        label: connectionLabel(fc.connectionName, fc.rootConnectionName, [
+          "Future",
+        ]),
         layer: `future-connection-${i}`,
       })
     }
@@ -1770,7 +1808,11 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
       graphics.lines!.push({
         points: this.solvedPath.route,
         strokeColor: "green",
-        label: "Solved Route",
+        label: connectionLabel(
+          this.solvedPath.connectionName,
+          this.solvedPath.rootConnectionName,
+          ["Solved Route"],
+        ),
         strokeWidth: this.traceThickness,
       })
 
@@ -1781,6 +1823,12 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
           jumper,
           "rgba(0, 200, 0, 0.8)",
           "solved-jumper",
+          undefined,
+          connectionLabel(
+            this.solvedPath.connectionName,
+            this.solvedPath.rootConnectionName,
+            ["Solved Jumper"],
+          ),
         )
       }
     }

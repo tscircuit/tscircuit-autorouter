@@ -1,17 +1,17 @@
-import type { GraphicsObject } from "graphics-debug"
-import type {
-  HighDensityIntraNodeRouteWithJumpers,
-  NodeWithPortPoints,
-  Jumper,
-} from "../../types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { SingleHighDensityRouteWithJumpersSolver } from "./SingleHighDensityRouteWithJumpersSolver"
-import { safeTransparentize } from "../colors"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import type {
+  HighDensityIntraNodeRouteWithJumpers,
+  Jumper,
+  NodeWithPortPoints,
+} from "../../types/high-density-types"
+import { BaseSolver } from "../BaseSolver"
+import { safeTransparentize } from "../colors"
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+import { SingleHighDensityRouteWithJumpersSolver } from "./SingleHighDensityRouteWithJumpersSolver"
 
 /**
  * 0603 footprint dimensions in mm for visualization
@@ -22,6 +22,21 @@ const JUMPER_0603 = {
   padLength: 0.8,
   padWidth: 0.95,
 }
+
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
 
 /**
  * IntraNodeSolverWithJumpers is designed for single-layer nodes that use
@@ -236,6 +251,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     jumper: Jumper,
     color: string,
     step?: number,
+    label?: string,
   ) {
     const dx = jumper.end.x - jumper.start.x
     const dy = jumper.end.y - jumper.start.y
@@ -261,6 +277,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       fill: color,
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
+      label,
     })
 
     // End pad
@@ -274,6 +291,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       fill: color,
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
+      label,
     })
 
     // Draw a line connecting the pads (representing the jumper body)
@@ -282,6 +300,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       strokeColor: "rgba(100, 100, 100, 0.8)",
       strokeWidth: padWidth * 0.3,
       layer: "jumper-body",
+      label,
     })
   }
 
@@ -304,7 +323,9 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       graphics.points!.push({
         x: pt.x,
         y: pt.y,
-        label: [pt.connectionName, "layer: 0 (single-layer)"].join("\n"),
+        label: connectionLabel(pt.connectionName, pt.rootConnectionName, [
+          "layer: 0 (single-layer)",
+        ]),
         color: this.colorMap[pt.connectionName] ?? "blue",
       })
     }
@@ -329,6 +350,11 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
             strokeColor: safeTransparentize(routeColor, 0.2),
             layer: "route-layer-0",
             strokeWidth: route.traceThickness,
+            label: connectionLabel(
+              route.connectionName,
+              route.rootConnectionName,
+              ["layer: 0"],
+            ),
           })
         }
 
@@ -339,6 +365,9 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
             jumper,
             safeTransparentize(routeColor, 0.5),
             routeIndex,
+            connectionLabel(route.connectionName, route.rootConnectionName, [
+              "jumper",
+            ]),
           )
         }
       }
