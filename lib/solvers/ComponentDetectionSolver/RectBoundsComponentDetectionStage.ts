@@ -11,6 +11,47 @@ import type {
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
+const MIN_BGA_MEMBER_OBSTACLE_COUNT = 9
+const MIN_BGA_AXIS_COUNT = 3
+const MIN_BGA_GRID_OCCUPANCY = 0.5
+const AXIS_CLUSTER_EPSILON = 1e-3
+
+function clusterAxisValues(values: number[]) {
+  const sortedValues = [...values].sort((a, b) => a - b)
+  const clustered: number[] = []
+
+  for (const value of sortedValues) {
+    const previousValue = clustered[clustered.length - 1]
+    if (
+      previousValue === undefined ||
+      Math.abs(value - previousValue) > AXIS_CLUSTER_EPSILON
+    ) {
+      clustered.push(value)
+    }
+  }
+
+  return clustered
+}
+
+function isBgaLikeComponent(memberObstacles: Obstacle[]) {
+  if (memberObstacles.length < MIN_BGA_MEMBER_OBSTACLE_COUNT) return false
+
+  const rowCount = clusterAxisValues(
+    memberObstacles.map((obstacle) => obstacle.center.y),
+  ).length
+  const columnCount = clusterAxisValues(
+    memberObstacles.map((obstacle) => obstacle.center.x),
+  ).length
+  const gridCellCount = rowCount * columnCount
+  const gridOccupancy =
+    gridCellCount > 0 ? memberObstacles.length / gridCellCount : 0
+
+  return (
+    rowCount >= MIN_BGA_AXIS_COUNT &&
+    columnCount >= MIN_BGA_AXIS_COUNT &&
+    gridOccupancy >= MIN_BGA_GRID_OCCUPANCY
+  )
+}
 
 /**
  * Current detection stage: groups SRJ obstacles by component and replaces each
@@ -255,7 +296,11 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       grouped[obstacle.componentId].push(obstacle)
     }
 
-    return grouped
+    return Object.fromEntries(
+      Object.entries(grouped).filter(([, memberObstacles]) =>
+        isBgaLikeComponent(memberObstacles),
+      ),
+    )
   }
 
   private createDetectedComponent({
