@@ -16,8 +16,24 @@ import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
   connectionName: string
+  rootConnectionName?: string
   points: { x: number; y: number; z: number }[]
 }
+
+const connectionLabel = (
+  connectionName: string,
+  rootConnectionName?: string,
+  extraLines: string[] = [],
+) =>
+  [
+    connectionName,
+    rootConnectionName
+      ? `rootConnectionName: ${rootConnectionName}`
+      : undefined,
+    ...extraLines,
+  ]
+    .filter(Boolean)
+    .join("\n")
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
   override getSolverName(): string {
@@ -51,6 +67,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   candidates: SingleRouteCandidatePriorityQueue
 
   connectionName: string
+  rootConnectionName?: string
   solvedPath: HighDensityIntraNodeRoute | null = null
 
   futureConnections: FutureConnection[]
@@ -74,6 +91,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   constructor(opts: {
     connectionName: string
+    rootConnectionName?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
@@ -103,6 +121,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       y: (this.bounds.minY + this.bounds.maxY) / 2,
     }
     this.connectionName = opts.connectionName
+    this.rootConnectionName = opts.rootConnectionName
     this.obstacleRoutes = opts.obstacleRoutes
     this.A = opts.A
     this.B = opts.B
@@ -219,6 +238,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           ]
     this.solvedPath = {
       connectionName: this.connectionName,
+      rootConnectionName: this.rootConnectionName,
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
@@ -541,6 +561,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     this.solvedPath = {
       connectionName: this.connectionName,
+      rootConnectionName: this.rootConnectionName,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
       route: path
@@ -631,13 +652,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     graphics.points!.push({
       x: this.A.x,
       y: this.A.y,
-      label: `Input A\nz: ${this.A.z}`,
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Input A",
+        `z: ${this.A.z}`,
+      ]),
       color: "orange",
     })
     graphics.points!.push({
       x: this.B.x,
       y: this.B.y,
-      label: `Input B\nz: ${this.B.z}`,
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Input B",
+        `z: ${this.B.z}`,
+      ]),
       color: "orange",
     })
 
@@ -680,7 +707,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     graphics.lines!.push({
       points: [this.A, this.B],
       strokeColor: "rgba(255, 0, 0, 0.5)",
-      label: "Direct Input Connection",
+      label: connectionLabel(this.connectionName, this.rootConnectionName, [
+        "Direct Input Connection",
+      ]),
     })
 
     // Show any obstacle routes as background references
@@ -697,7 +726,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           strokeColor:
             z === 0 ? "rgba(255, 0, 0, 0.75)" : "rgba(255, 128, 0, 0.25)",
           strokeWidth: route.traceThickness,
-          label: "Obstacle Route",
+          label: connectionLabel(
+            route.connectionName,
+            route.rootConnectionName,
+            ["Obstacle Route"],
+          ),
           layer: `obstacle${routeIndex.toString()}`,
         })
       }
@@ -758,14 +791,22 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       graphics.lines!.push({
         points: this.solvedPath.route,
         strokeColor: "green",
-        label: "Solved Route",
+        label: connectionLabel(
+          this.solvedPath.connectionName,
+          this.solvedPath.rootConnectionName,
+          ["Solved Route"],
+        ),
       })
       for (const via of this.solvedPath.vias) {
         graphics.circles!.push({
           center: via,
           radius: this.viaDiameter / 2,
           fill: "green",
-          label: "Via",
+          label: connectionLabel(
+            this.solvedPath.connectionName,
+            this.solvedPath.rootConnectionName,
+            ["Via"],
+          ),
         })
       }
     }
