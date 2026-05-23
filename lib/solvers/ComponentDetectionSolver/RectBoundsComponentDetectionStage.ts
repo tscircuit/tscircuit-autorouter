@@ -11,9 +11,11 @@ import type {
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
-const MIN_BGA_MEMBER_OBSTACLE_COUNT = 9
 const MIN_BGA_AXIS_COUNT = 3
+const MIN_BGA_TWO_AXIS_COUNT = 2
+const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
 const MIN_BGA_GRID_OCCUPANCY = 0.5
+const MAX_BGA_PAD_SIZE_VARIANCE = 0.01
 const AXIS_CLUSTER_EPSILON = 1e-3
 
 function clusterAxisValues(values: number[]) {
@@ -33,24 +35,51 @@ function clusterAxisValues(values: number[]) {
   return clustered
 }
 
-function isBgaLikeComponent(memberObstacles: Obstacle[]) {
-  if (memberObstacles.length < MIN_BGA_MEMBER_OBSTACLE_COUNT) return false
+function hasUniformDimensionWithinTolerance(values: number[]) {
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
 
-  const rowCount = clusterAxisValues(
+  if (minValue <= 0) return false
+
+  return maxValue / minValue <= 1 + MAX_BGA_PAD_SIZE_VARIANCE
+}
+
+function hasUniformPadDimensions(memberObstacles: Obstacle[]) {
+  return (
+    hasUniformDimensionWithinTolerance(
+      memberObstacles.map((obstacle) => obstacle.width),
+    ) &&
+    hasUniformDimensionWithinTolerance(
+      memberObstacles.map((obstacle) => obstacle.height),
+    )
+  )
+}
+
+function isBgaLikeComponent(memberObstacles: Obstacle[]) {
+  if (!hasUniformPadDimensions(memberObstacles)) return false
+
+  const rowAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.y),
-  ).length
-  const columnCount = clusterAxisValues(
+  )
+  const columnAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.x),
-  ).length
+  )
+  const rowCount = rowAxisValues.length
+  const columnCount = columnAxisValues.length
   const gridCellCount = rowCount * columnCount
   const gridOccupancy =
     gridCellCount > 0 ? memberObstacles.length / gridCellCount : 0
+  const hasStandardBgaAxisCounts =
+    rowCount >= MIN_BGA_AXIS_COUNT && columnCount >= MIN_BGA_AXIS_COUNT
+  const hasTwoAxisBgaAxisCounts =
+    (rowCount === MIN_BGA_TWO_AXIS_COUNT &&
+      columnCount >= MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS) ||
+    (columnCount === MIN_BGA_TWO_AXIS_COUNT &&
+      rowCount >= MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS)
+  const hasSupportedAxisCounts =
+    hasStandardBgaAxisCounts || hasTwoAxisBgaAxisCounts
 
-  return (
-    rowCount >= MIN_BGA_AXIS_COUNT &&
-    columnCount >= MIN_BGA_AXIS_COUNT &&
-    gridOccupancy >= MIN_BGA_GRID_OCCUPANCY
-  )
+  return hasSupportedAxisCounts && gridOccupancy >= MIN_BGA_GRID_OCCUPANCY
 }
 
 /**
