@@ -46,6 +46,7 @@ export type JumperType = "1206x4" | "0603"
 export interface SimpleRouteJson {
   layerCount: number
   minTraceWidth: number
+  thickness?: number
   nominalTraceWidth?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */
   minViaDiameter?: number
@@ -91,6 +92,7 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
+  thickness?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

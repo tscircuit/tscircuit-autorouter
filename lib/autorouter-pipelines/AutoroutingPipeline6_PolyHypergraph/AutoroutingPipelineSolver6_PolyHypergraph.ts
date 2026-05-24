@@ -342,7 +342,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     const viaDimensions = getViaDimensions(this.srj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
-    this.minTraceWidth = this.srj.minTraceWidth
+    this.minTraceWidth = this.srj.thickness ?? this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }
