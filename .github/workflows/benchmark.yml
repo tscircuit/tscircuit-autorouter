@@ -33,7 +33,7 @@ on:
         default: false
         type: boolean
       dataset_name:
-        description: 'Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, or srj16)'
+        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, or srj18)"
         required: false
         type: string
       profile_solvers:
@@ -360,6 +360,14 @@ jobs:
             return nextArgs
           }
 
+          const withMainBranchDatasetArgs = (baseArgs, datasetName) => {
+            const nextArgs = withDataset(baseArgs, datasetName)
+            if (datasetName === 'srj18') {
+              nextArgs.push('--pipeline', '7')
+            }
+            return nextArgs
+          }
+
           const runBenchmark = (benchmarkArgs) => {
             const renderedArgs = benchmarkArgs.map((arg) => JSON.stringify(arg)).join(' ')
             console.log(`Running benchmark command: ./benchmark.sh${renderedArgs ? ` ${renderedArgs}` : ''}`)
@@ -383,7 +391,7 @@ jobs:
             const textReports = []
 
             for (const datasetName of mainBranchDatasets) {
-              runBenchmark(withDataset(args, datasetName))
+              runBenchmark(withMainBranchDatasetArgs(args, datasetName))
 
               const report = JSON.parse(fs.readFileSync('benchmark-result.json', 'utf8'))
               const text = fs.readFileSync('benchmark-result.txt', 'utf8').trim()
@@ -481,6 +489,15 @@ jobs:
                 .replace(/\|/g, '&#124;')
             const formatSolverName = (solverName) =>
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
+            const formatEffortSuffix = (effortLabel) => {
+              const label = String(effortLabel ?? '')
+              const match = label.match(/^(\d+)x effort$/)
+              if (!match) return label === 'mixed effort' ? '(mixed)' : ''
+              const effort = Number.parseInt(match[1], 10)
+              return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
+            }
+            const formatSolverDisplayName = (solverName, effortLabel) =>
+              `${formatSolverName(solverName)}${formatEffortSuffix(effortLabel)}`
             const getSampleLabel = (test) => {
               if (typeof test?.sampleNumber === 'number' && Number.isFinite(test.sampleNumber)) {
                 return String(test.sampleNumber)
@@ -512,7 +529,24 @@ jobs:
                 '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
                 '| --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverName(row.solverName)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                ),
+              ]
+            }
+            const renderCombinedSummary = (reports) => {
+              const rows = reports.flatMap((report) =>
+                Array.isArray(report?.summary)
+                  ? report.summary.map((row) => ({ report, row }))
+                  : [],
+              )
+              if (rows.length === 0) {
+                return []
+              }
+              return [
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                ...rows.map(({ report, row }) =>
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
@@ -591,7 +625,7 @@ jobs:
                 return ['```', truncate(fallbackText, maxLength), '```']
               }
               return [
-                ...renderSummary(report),
+                ...(options.omitSummary ? [] : renderSummary(report)),
                 '',
                 '<details>',
                 '<summary>Details</summary>',
@@ -615,15 +649,22 @@ jobs:
               if (reports.length === 0) {
                 return renderReport(null, fallbackText, options)
               }
-              if (reports.length === 1) {
+              if (reports.length === 1 && !options.forceCombinedSummary) {
                 return renderReport(reports[0], fallbackText, options)
               }
-              return reports.flatMap((datasetReport, index) => [
-                ...(index === 0 ? [] : ['']),
-                `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
+              return [
+                ...renderCombinedSummary(reports),
                 '',
-                ...renderReport(datasetReport, fallbackText, options),
-              ])
+                ...reports.flatMap((datasetReport, index) => [
+                  ...(index === 0 ? [] : ['']),
+                  `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
+                  '',
+                  ...renderReport(datasetReport, fallbackText, {
+                    ...options,
+                    omitSummary: true,
+                  }),
+                ]),
+              ]
             }
             const readJson = (path) => {
               if (!fs.existsSync(path)) return null
@@ -657,7 +698,9 @@ jobs:
               '<details>',
               '<summary>📊 Main Branch Results</summary>',
               '',
-              ...renderReportCollection(mainReport, mainText),
+              ...renderReportCollection(mainReport, mainText, {
+                forceCombinedSummary: true,
+              }),
               '</details>',
               '',
               '<details open>',
@@ -917,6 +960,15 @@ jobs:
                 .replace(/\|/g, '&#124;')
             const formatSolverName = (solverName) =>
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
+            const formatEffortSuffix = (effortLabel) => {
+              const label = String(effortLabel ?? '')
+              const match = label.match(/^(\d+)x effort$/)
+              if (!match) return label === 'mixed effort' ? '(mixed)' : ''
+              const effort = Number.parseInt(match[1], 10)
+              return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
+            }
+            const formatSolverDisplayName = (solverName, effortLabel) =>
+              `${formatSolverName(solverName)}${formatEffortSuffix(effortLabel)}`
             const getSampleLabel = (test) => {
               if (typeof test?.sampleNumber === 'number' && Number.isFinite(test.sampleNumber)) {
                 return String(test.sampleNumber)
@@ -948,7 +1000,24 @@ jobs:
                 '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
                 '| --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverName(row.solverName)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                ),
+              ]
+            }
+            const renderCombinedSummary = (reports) => {
+              const rows = reports.flatMap((report) =>
+                Array.isArray(report?.summary)
+                  ? report.summary.map((row) => ({ report, row }))
+                  : [],
+              )
+              if (rows.length === 0) {
+                return []
+              }
+              return [
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                ...rows.map(({ report, row }) =>
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
@@ -1028,7 +1097,7 @@ jobs:
               }
 
               return [
-                ...renderSummary(report),
+                ...(options.omitSummary ? [] : renderSummary(report)),
                 '',
                 '<details>',
                 '<summary>Details</summary>',
@@ -1052,15 +1121,22 @@ jobs:
               if (reports.length === 0) {
                 return renderReport(null, fallbackText, options)
               }
-              if (reports.length === 1) {
+              if (reports.length === 1 && !options.forceCombinedSummary) {
                 return renderReport(reports[0], fallbackText, options)
               }
-              return reports.flatMap((datasetReport, index) => [
-                ...(index === 0 ? [] : ['']),
-                `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
+              return [
+                ...renderCombinedSummary(reports),
                 '',
-                ...renderReport(datasetReport, fallbackText, options),
-              ])
+                ...reports.flatMap((datasetReport, index) => [
+                  ...(index === 0 ? [] : ['']),
+                  `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
+                  '',
+                  ...renderReport(datasetReport, fallbackText, {
+                    ...options,
+                    omitSummary: true,
+                  }),
+                ]),
+              ]
             }
             const readJson = (path) => {
               if (!fs.existsSync(path)) return null
@@ -1214,7 +1290,9 @@ jobs:
               '<details>',
               '<summary>📊 Main Branch Results</summary>',
               '',
-              ...renderReportCollection(mainReport, mainText),
+              ...renderReportCollection(mainReport, mainText, {
+                forceCombinedSummary: true,
+              }),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
                     renderMainProfileSolvers(mainProfileSolversReport),

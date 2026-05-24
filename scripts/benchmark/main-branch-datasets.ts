@@ -7,6 +7,7 @@ export const MAIN_BRANCH_BENCHMARK_DATASET_INPUTS = [
   "dataset1",
   "dataset15",
   "dataset16",
+  "dataset18",
 ] as const
 
 export const getMainBranchBenchmarkDatasets = (): DatasetName[] => {

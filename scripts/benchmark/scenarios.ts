@@ -153,12 +153,13 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
       getSpecifier: (sampleId) =>
         `@tsci/tscircuit.dataset-srj16-bga-breakouts/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
     }),
-  srj18: async () =>
-    loadNumberedJsonDatasetModule({
-      sampleCount: 16,
-      getSpecifier: (sampleId) =>
-        `dataset-srj18/samples/sample${sampleId}.json`,
-    }),
+  srj18: async () => {
+    const module = (await import("dataset-srj18")) as DatasetModule
+    const dataset = module.dataset
+    return dataset && typeof dataset === "object"
+      ? (dataset as DatasetModule)
+      : module
+  },
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -171,7 +172,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj14: /^sample\d{3}Circuit$/,
   srj15: /^sample\d{3}Circuit$/,
   srj16: /^sample\d{3}Circuit$/,
-  srj18: /^sample\d{3}Circuit$/,
+  srj18: /^sample\d{3}$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {

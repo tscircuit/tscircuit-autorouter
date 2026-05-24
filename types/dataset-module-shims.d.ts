@@ -13,6 +13,10 @@ declare module "@tsci/seveibar.dataset-srj13" {
   export = dataset
 }
 
+declare module "dataset-srj18" {
+  export const dataset: any
+}
+
 declare module "zdwiel-dataset" {
   const dataset: any
   export = dataset
