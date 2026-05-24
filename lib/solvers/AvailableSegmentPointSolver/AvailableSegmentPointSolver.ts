@@ -156,6 +156,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       (overlap.end.x - overlap.start.x) ** 2 +
         (overlap.end.y - overlap.start.y) ** 2,
     )
+    const edgeTouchesNarrowQfpPadGap = Boolean(
+      node1._isNarrowQfpPadGap || node2._isNarrowQfpPadGap,
+    )
 
     // Apply edge margin to avoid placing points too close to corners
     // The margin is half the port spacing to ensure points are at least that far from edges
@@ -273,7 +276,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ,
-          cramped: false,
+          cramped: edgeTouchesNarrowQfpPadGap,
         }
         portPoints.push(portPoint)
       }

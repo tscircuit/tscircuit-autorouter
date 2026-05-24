@@ -18,6 +18,8 @@ type RectRegion = {
 type QfpRoutingRegion = {
   key: string
   bounds: Bounds
+  regionType: "center" | "pad" | "pad-gap" | "corner"
+  isNarrowPadGap?: boolean
   containsObstacle?: boolean
 }
 
@@ -103,12 +105,16 @@ function createMeshNodesForRegion({
   bounds,
   availableZ,
   multiLayerThreshold,
+  regionType,
+  isNarrowPadGap = false,
   containsObstacle = false,
 }: {
   nodeId: string
   bounds: Bounds
   availableZ: number[]
   multiLayerThreshold: number
+  regionType: QfpRoutingRegion["regionType"]
+  isNarrowPadGap?: boolean
   containsObstacle?: boolean
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
@@ -126,6 +132,8 @@ function createMeshNodesForRegion({
         height: region.height,
         layer: `z${availableZ.join(",")}`,
         availableZ: [...availableZ],
+        _qfpRegionType: regionType,
+        _isNarrowQfpPadGap: isNarrowPadGap,
         _containsObstacle: containsObstacle,
       },
     ]
@@ -138,6 +146,8 @@ function createMeshNodesForRegion({
     height: region.height,
     layer: `z${z}`,
     availableZ: [z],
+    _qfpRegionType: regionType,
+    _isNarrowQfpPadGap: isNarrowPadGap,
     _containsObstacle: containsObstacle,
   }))
 }
@@ -146,8 +156,17 @@ function getPadRegions(obstacles: Obstacle[]) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
+    regionType: "pad" as const,
     containsObstacle: true,
   }))
+}
+
+function isNarrowPadGap(bounds: Bounds, narrowThreshold: number) {
+  if (!isValidBounds(bounds)) return false
+  return (
+    Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) <=
+    narrowThreshold
+  )
 }
 
 function createGapRegionsForSide({
@@ -155,59 +174,57 @@ function createGapRegionsForSide({
   sideObstacles,
   bounds,
   centralBounds,
+  narrowThreshold,
 }: {
   side: QfpSide
   sideObstacles: Obstacle[]
   bounds: Bounds
   centralBounds: Bounds
+  narrowThreshold: number
 }) {
   const regions: QfpRoutingRegion[] = []
 
   for (let index = 0; index < sideObstacles.length - 1; index++) {
     const currentBounds = getBoundingBox(sideObstacles[index]!)
     const nextBounds = getBoundingBox(sideObstacles[index + 1]!)
+    let gapBounds: Bounds
 
     if (side === "top") {
-      regions.push({
-        key: `top-gap-${index}`,
-        bounds: {
-          minX: currentBounds.maxX,
-          maxX: nextBounds.minX,
-          minY: bounds.minY,
-          maxY: centralBounds.minY,
-        },
-      })
+      gapBounds = {
+        minX: currentBounds.maxX,
+        maxX: nextBounds.minX,
+        minY: bounds.minY,
+        maxY: centralBounds.minY,
+      }
     } else if (side === "right") {
-      regions.push({
-        key: `right-gap-${index}`,
-        bounds: {
-          minX: centralBounds.maxX,
-          maxX: bounds.maxX,
-          minY: currentBounds.maxY,
-          maxY: nextBounds.minY,
-        },
-      })
+      gapBounds = {
+        minX: centralBounds.maxX,
+        maxX: bounds.maxX,
+        minY: currentBounds.maxY,
+        maxY: nextBounds.minY,
+      }
     } else if (side === "bottom") {
-      regions.push({
-        key: `bottom-gap-${index}`,
-        bounds: {
-          minX: currentBounds.maxX,
-          maxX: nextBounds.minX,
-          minY: centralBounds.maxY,
-          maxY: bounds.maxY,
-        },
-      })
+      gapBounds = {
+        minX: currentBounds.maxX,
+        maxX: nextBounds.minX,
+        minY: centralBounds.maxY,
+        maxY: bounds.maxY,
+      }
     } else {
-      regions.push({
-        key: `left-gap-${index}`,
-        bounds: {
-          minX: bounds.minX,
-          maxX: centralBounds.minX,
-          minY: currentBounds.maxY,
-          maxY: nextBounds.minY,
-        },
-      })
+      gapBounds = {
+        minX: bounds.minX,
+        maxX: centralBounds.minX,
+        minY: currentBounds.maxY,
+        maxY: nextBounds.minY,
+      }
     }
+
+    regions.push({
+      key: `${side}-gap-${index}`,
+      bounds: gapBounds,
+      regionType: "pad-gap",
+      isNarrowPadGap: isNarrowPadGap(gapBounds, narrowThreshold),
+    })
   }
 
   return regions
@@ -290,6 +307,7 @@ function getCornerRegions({
   return [
     {
       key: "corner-nw-outer",
+      regionType: "corner" as const,
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
@@ -299,6 +317,7 @@ function getCornerRegions({
     },
     {
       key: "corner-nw-top",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.minX,
         maxX: firstTopBounds?.minX ?? centralBounds.minX,
@@ -308,6 +327,7 @@ function getCornerRegions({
     },
     {
       key: "corner-nw-left",
+      regionType: "corner" as const,
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
@@ -317,6 +337,7 @@ function getCornerRegions({
     },
     {
       key: "corner-ne-outer",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -326,6 +347,7 @@ function getCornerRegions({
     },
     {
       key: "corner-ne-top",
+      regionType: "corner" as const,
       bounds: {
         minX: lastTopBounds?.maxX ?? centralBounds.maxX,
         maxX: centralBounds.maxX,
@@ -335,6 +357,7 @@ function getCornerRegions({
     },
     {
       key: "corner-ne-right",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -344,6 +367,7 @@ function getCornerRegions({
     },
     {
       key: "corner-se-outer",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -353,6 +377,7 @@ function getCornerRegions({
     },
     {
       key: "corner-se-right",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -362,6 +387,7 @@ function getCornerRegions({
     },
     {
       key: "corner-se-bottom",
+      regionType: "corner" as const,
       bounds: {
         minX: lastBottomBounds?.maxX ?? centralBounds.maxX,
         maxX: centralBounds.maxX,
@@ -371,6 +397,7 @@ function getCornerRegions({
     },
     {
       key: "corner-sw-outer",
+      regionType: "corner" as const,
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
@@ -380,6 +407,7 @@ function getCornerRegions({
     },
     {
       key: "corner-sw-bottom",
+      regionType: "corner" as const,
       bounds: {
         minX: centralBounds.minX,
         maxX: firstBottomBounds?.minX ?? centralBounds.minX,
@@ -389,6 +417,7 @@ function getCornerRegions({
     },
     {
       key: "corner-sw-left",
+      regionType: "corner" as const,
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
@@ -443,32 +472,38 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       this.inputProblem.inputSrj.defaultObstacleMargin ??
       0.15
     const multiLayerThreshold = viaDiameter + obstacleMargin * 2
+    const narrowPadGapThreshold =
+      this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
     const regions: QfpRoutingRegion[] = [
-      { key: "center", bounds: centralBounds },
+      { key: "center", bounds: centralBounds, regionType: "center" },
       ...getPadRegions(padRingObstacles),
       ...createGapRegionsForSide({
         side: "top",
         sideObstacles: sideGroups.top,
         bounds,
         centralBounds,
+        narrowThreshold: narrowPadGapThreshold,
       }),
       ...createGapRegionsForSide({
         side: "right",
         sideObstacles: sideGroups.right,
         bounds,
         centralBounds,
+        narrowThreshold: narrowPadGapThreshold,
       }),
       ...createGapRegionsForSide({
         side: "bottom",
         sideObstacles: sideGroups.bottom,
         bounds,
         centralBounds,
+        narrowThreshold: narrowPadGapThreshold,
       }),
       ...createGapRegionsForSide({
         side: "left",
         sideObstacles: sideGroups.left,
         bounds,
         centralBounds,
+        narrowThreshold: narrowPadGapThreshold,
       }),
       ...getCornerRegions({ bounds, centralBounds, sideGroups }),
     ]
@@ -478,6 +513,8 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
         bounds: region.bounds,
         availableZ,
         multiLayerThreshold,
+        regionType: region.regionType,
+        isNarrowPadGap: region.isNarrowPadGap,
         containsObstacle: region.containsObstacle,
       }),
     )
@@ -493,6 +530,10 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       viaDiameter,
       obstacleMargin,
       multiLayerThreshold,
+      narrowPadGapThreshold,
+      narrowPadGapNodeCount: routingRegions.filter(
+        (node) => node._isNarrowQfpPadGap,
+      ).length,
       topPadCount: sideGroups.top.length,
       rightPadCount: sideGroups.right.length,
       bottomPadCount: sideGroups.bottom.length,

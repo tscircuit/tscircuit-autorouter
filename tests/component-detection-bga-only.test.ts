@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
@@ -360,6 +363,68 @@ test("topology planning creates QFP central, gap, and corner mesh nodes", () => 
   expect(
     qfpNodes.every((node) => node.capacityMeshNodeId.includes("U_QFP")),
   ).toBe(true)
+})
+
+test("narrow QFP pad gap port points are marked cramped", () => {
+  const inputSrj = {
+    ...createSrj(createQfpPads({ componentId: "U_QFP" })),
+    layerCount: 4,
+    minViaPadDiameter: 0.8,
+    defaultObstacleMargin: 0.4,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+    viaDiameter: 0.8,
+    obstacleMargin: 0.4,
+  })
+  topologyPlanningSolver.solve()
+
+  const qfpNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!
+  const narrowGapNodeIds = new Set(
+    qfpNodes
+      .filter((node) => node._qfpRegionType === "pad-gap")
+      .filter((node) => node._isNarrowQfpPadGap)
+      .map((node) => node.capacityMeshNodeId),
+  )
+  expect(narrowGapNodeIds.size).toBeGreaterThan(0)
+
+  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(qfpNodes)
+  edgeSolver.solve()
+  const availableSegmentPointSolver = new AvailableSegmentPointSolver({
+    nodes: qfpNodes,
+    edges: edgeSolver.edges,
+    traceWidth: inputSrj.minTraceWidth,
+    obstacleMargin: inputSrj.defaultObstacleMargin,
+    shouldReturnCrampedPortPoints: true,
+  })
+  availableSegmentPointSolver.solve()
+
+  const narrowGapSegments = availableSegmentPointSolver
+    .getOutput()
+    .filter((segment) =>
+      segment.nodeIds.some((nodeId) => narrowGapNodeIds.has(nodeId)),
+    )
+  expect(narrowGapSegments.length).toBeGreaterThan(0)
+  expect(
+    narrowGapSegments.every((segment) =>
+      segment.portPoints.every((portPoint) => portPoint.cramped),
+    ),
+  ).toBe(true)
+
+  const { graph } = buildHyperGraph({
+    capacityMeshNodes: qfpNodes,
+    layerCount: inputSrj.layerCount,
+    segmentPortPoints: narrowGapSegments.flatMap(
+      (segment) => segment.portPoints,
+    ),
+    simpleRouteJsonConnections: [],
+  })
+  expect(graph.ports.length).toBeGreaterThan(0)
+  expect(graph.ports.every((port) => port.d.cramped)).toBe(true)
 })
 
 test("topology planning collapses perfectly bordered QFP corners", () => {
