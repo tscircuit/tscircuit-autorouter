@@ -11,6 +11,9 @@ import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-
 import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-0f6ca4.json" with {
   type: "json",
 }
+import bugReport63 from "../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with {
+  type: "json",
+}
 
 const createPad = ({
   componentId,
@@ -608,4 +611,83 @@ test("bugreport62 QFP footprints are clearly detected", () => {
     ["pcb_component_0", "qfp", 12],
     ["pcb_component_1", "qfp", 32],
   ])
+})
+
+test("bugreport63 QFP thermal-pad footprints are detected as qfp_thermalpad", () => {
+  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  expect(
+    componentDetectionSolver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+        component.memberObstacles.length,
+      ]),
+  ).toEqual([
+    ["pcb_component_0", "qfp_thermalpad", 13],
+    ["pcb_component_1", "qfp_thermalpad", 33],
+  ])
+})
+
+test("topology planning creates QFP thermal-pad inner and outer regions", () => {
+  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const output = topologyPlanningSolver.getOutput()
+  const firstQfpNodes = output.componentMeshNodes[0]!
+  const secondQfpNodes = output.componentMeshNodes[1]!
+  const allQfpNodeIds = output.componentMeshNodes.flatMap((nodes) =>
+    nodes.map((node) => node.capacityMeshNodeId),
+  )
+
+  expect(output.componentMeshNodes).toHaveLength(2)
+  expect(
+    allQfpNodeIds.some((nodeId) =>
+      nodeId.startsWith("qfp_thermalpad:pcb_component_0:thermal-pad:"),
+    ),
+  ).toBe(true)
+  expect(
+    allQfpNodeIds.some((nodeId) =>
+      nodeId.startsWith("qfp_thermalpad:pcb_component_1:thermal-pad:"),
+    ),
+  ).toBe(true)
+  expect(
+    allQfpNodeIds.some((nodeId) => nodeId.includes(":inner-corner-nw")),
+  ).toBe(true)
+  expect(
+    allQfpNodeIds.some((nodeId) => nodeId.includes(":corner-nw-outer")),
+  ).toBe(true)
+  expect(
+    allQfpNodeIds.some((nodeId) => nodeId.includes(":inner-left-pad-")),
+  ).toBe(true)
+  expect(allQfpNodeIds.some((nodeId) => nodeId.endsWith(":center"))).toBe(false)
+  expect(
+    new Set(
+      firstQfpNodes
+        .filter((node) => node.capacityMeshNodeId.includes(":inner-corner-"))
+        .map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
+    ).size,
+  ).toBe(12)
+  expect(
+    firstQfpNodes
+      .filter((node) => node.capacityMeshNodeId.includes(":inner-"))
+      .every((node) => node.availableZ.length === 1),
+  ).toBe(true)
+  expect(
+    secondQfpNodes.some(
+      (node) =>
+        node.capacityMeshNodeId.includes(":inner-corner-") &&
+        node.availableZ.length > 1,
+    ),
+  ).toBe(true)
 })

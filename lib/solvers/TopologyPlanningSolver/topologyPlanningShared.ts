@@ -2,6 +2,7 @@ import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
+import { QfpThermalPadTopologyGeneratorSolver } from "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
 import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
@@ -19,7 +20,7 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
-  componentKinds: Array<"bga" | "qfp" | "soic" | undefined>
+  componentKinds: Array<"bga" | "qfp" | "qfp_thermalpad" | "soic" | undefined>
   replacementObstacleIds: Array<string | undefined>
   viaDiameter?: number
   obstacleMargin?: number
@@ -169,7 +170,11 @@ function isReplacementRegionNode({
     Math.abs(node.width - replacementObstacle.width) <= epsilon &&
     Math.abs(node.height - replacementObstacle.height) <= epsilon
 
-  if (component.componentKind !== "qfp" && component.componentKind !== "soic") {
+  if (
+    component.componentKind !== "qfp" &&
+    component.componentKind !== "qfp_thermalpad" &&
+    component.componentKind !== "soic"
+  ) {
     return isExactReplacementNode
   }
 
@@ -195,6 +200,7 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
   activeSubSolver?:
     | BgaTopologyGeneratorSolver
     | QfpTopologyGeneratorSolver
+    | QfpThermalPadTopologyGeneratorSolver
     | SoicTopologyGeneratorSolver
     | null = null
   currentIndex = 0
@@ -248,6 +254,15 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
 
     if (componentKind === "qfp") {
       this.activeSubSolver = new QfpTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    if (componentKind === "qfp_thermalpad") {
+      this.activeSubSolver = new QfpThermalPadTopologyGeneratorSolver({
         ...solverInput,
         viaDiameter: this.inputProblem.viaDiameter,
         obstacleMargin: this.inputProblem.obstacleMargin,
