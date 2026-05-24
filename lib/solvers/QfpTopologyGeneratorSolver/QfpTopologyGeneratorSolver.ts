@@ -343,7 +343,7 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       this.inputProblem.obstacleMargin ??
       this.inputProblem.inputSrj.defaultObstacleMargin ??
       0.15
-    const multiLayerThreshold = viaDiameter + obstacleMargin / 2
+    const multiLayerThreshold = viaDiameter + obstacleMargin * 2
     const regions: QfpRoutingRegion[] = [
       { key: "center", bounds: centralBounds },
       ...getPadRegions(padRingObstacles),

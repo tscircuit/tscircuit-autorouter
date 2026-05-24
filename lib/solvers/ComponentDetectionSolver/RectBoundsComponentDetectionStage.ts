@@ -17,7 +17,8 @@ const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
 const MIN_BGA_GRID_OCCUPANCY = 0.5
 const MAX_BGA_PAD_SIZE_VARIANCE = 0.01
 const AXIS_CLUSTER_EPSILON = 1e-3
-const MIN_QFP_PADS_PER_SIDE = 4
+const MIN_QFP_PADS_PER_SIDE = 3
+const MAX_QFP_PAD_COUNT = 32
 const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
 
@@ -103,28 +104,35 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
   let maxNearestSideRatio = 0
 
   for (const obstacle of memberObstacles) {
+    const isHorizontalPad = obstacle.width > obstacle.height
     const distances = [
       {
         side: "top" as const,
         distance: Math.abs(obstacle.center.y - bounds.minY),
         axisSpan: height,
+        orientationMatches: !isHorizontalPad,
       },
       {
         side: "right" as const,
         distance: Math.abs(bounds.maxX - obstacle.center.x),
         axisSpan: width,
+        orientationMatches: isHorizontalPad,
       },
       {
         side: "bottom" as const,
         distance: Math.abs(bounds.maxY - obstacle.center.y),
         axisSpan: height,
+        orientationMatches: !isHorizontalPad,
       },
       {
         side: "left" as const,
         distance: Math.abs(obstacle.center.x - bounds.minX),
         axisSpan: width,
+        orientationMatches: isHorizontalPad,
       },
-    ].sort((a, b) => a.distance - b.distance)
+    ]
+      .filter((candidate) => candidate.orientationMatches)
+      .sort((a, b) => a.distance - b.distance)
     const nearest = distances[0]!
 
     counts[nearest.side] += 1
@@ -139,6 +147,7 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
 
 function isQfpLikeComponent(memberObstacles: Obstacle[]) {
   if (memberObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
+  if (memberObstacles.length > MAX_QFP_PAD_COUNT) return false
   if (
     !memberObstacles.every((obstacle) => {
       const minSide = Math.min(obstacle.width, obstacle.height)

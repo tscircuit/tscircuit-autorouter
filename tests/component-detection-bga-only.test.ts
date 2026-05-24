@@ -5,6 +5,9 @@ import type { Obstacle, SimpleRouteJson } from "lib/types"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
   type: "json",
 }
+import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-0f6ca4.json" with {
+  type: "json",
+}
 
 const createPad = ({
   componentId,
@@ -66,45 +69,51 @@ const createGridPads = ({
       }),
   )
 
-const createQfpPads = ({ componentId }: { componentId: string }) => {
-  const topPads = [0, 1, 2, 3].map((index) =>
+const createQfpPads = ({
+  componentId,
+  padsPerSide = 4,
+}: {
+  componentId: string
+  padsPerSide?: number
+}) => {
+  const topPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
       obstacleId: `${componentId}.T${index + 1}`,
       x: index,
       y: -1,
-      width: 0.4,
-      height: 0.2,
-    }),
-  )
-  const rightPads = [0, 1, 2, 3].map((index) =>
-    createPad({
-      componentId,
-      obstacleId: `${componentId}.R${index + 1}`,
-      x: 4,
-      y: index,
       width: 0.2,
       height: 0.4,
     }),
   )
-  const bottomPads = [0, 1, 2, 3].map((index) =>
+  const rightPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
-      obstacleId: `${componentId}.B${index + 1}`,
-      x: index,
-      y: 4,
+      obstacleId: `${componentId}.R${index + 1}`,
+      x: padsPerSide,
+      y: index,
       width: 0.4,
       height: 0.2,
     }),
   )
-  const leftPads = [0, 1, 2, 3].map((index) =>
+  const bottomPads = Array.from({ length: padsPerSide }, (_, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.B${index + 1}`,
+      x: index,
+      y: padsPerSide,
+      width: 0.2,
+      height: 0.4,
+    }),
+  )
+  const leftPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
       obstacleId: `${componentId}.L${index + 1}`,
       x: -1,
       y: index,
-      width: 0.2,
-      height: 0.4,
+      width: 0.4,
+      height: 0.2,
     }),
   )
 
@@ -170,6 +179,7 @@ test("component detection clearly labels QFP-like components", () => {
   const solver = new ComponentDetectionSolver({
     inputSrj: createSrj([
       ...createQfpPads({ componentId: "U_QFP" }),
+      ...createQfpPads({ componentId: "U_QFP12", padsPerSide: 3 }),
       ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
     ]),
   })
@@ -185,6 +195,7 @@ test("component detection clearly labels QFP-like components", () => {
   ).toEqual([
     ["U_BGA", "bga"],
     ["U_QFP", "qfp"],
+    ["U_QFP12", "qfp"],
   ])
   expect(
     solver.visualize().rects?.some((rect) => rect.label === "U_QFP QFP region"),
@@ -322,4 +333,21 @@ test("bugreport61 SOIC8 footprints use BGA topology planning", () => {
   expect(output.componentMeshNodes.every((nodes) => nodes.length > 0)).toBe(
     true,
   )
+})
+
+test("bugreport62 QFP footprints are clearly detected", () => {
+  const inputSrj = bugReport62.simple_route_json as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  expect(
+    componentDetectionSolver.getOutput().components.map((component) => [
+      component.componentId,
+      component.componentKind,
+      component.memberObstacles.length,
+    ]),
+  ).toEqual([
+    ["pcb_component_0", "qfp", 12],
+    ["pcb_component_1", "qfp", 32],
+  ])
 })

@@ -35,7 +35,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver2_PortPointPathing",
-    label: "Pipeline2 Port Point Pathing (Default)",
+    label: "Pipeline2 Port Point Pathing",
   },
   {
     id: "AutoroutingPipelineSolver3_HgPortPointPathing",
@@ -55,7 +55,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver7_MultiGraph",
-    label: "Pipeline7 Multi Graph",
+    label: "Pipeline7 Multi Graph (Default)",
   },
   {
     id: "AutoroutingPipelineSolver8",
