@@ -700,6 +700,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
@@ -782,8 +783,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     } as GraphicsObject
     const routeViz = getPresuppliedTraceVisualization(srjToVisualize)
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
+    const processedProblemViz =
+      this.preprocessSimpleRouteJsonSolver?.visualize()
+    const globalDrcForceImproveViz =
+      this.globalDrcForceImproveSolver?.visualize()
     const visualizations = [
       problemViz,
+      processedProblemViz,
       escapeViaLocationViz,
       netToPPSolver,
       componentDetectionViz,
@@ -806,6 +812,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       highDensityRepairViz,
       highDensityStitchViz,
       traceSimplificationViz,
+      traceWidthViz,
+      globalDrcForceImproveViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
