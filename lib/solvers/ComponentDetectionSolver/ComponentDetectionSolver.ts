@@ -1,6 +1,6 @@
-import type { GraphicsObject } from "graphics-debug"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
+import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { RectBoundsComponentDetectionStage } from "./RectBoundsComponentDetectionStage"
@@ -11,6 +11,7 @@ export interface ComponentDetectionSolverParams {
 
 export interface DetectedComponent {
   componentId: string
+  componentKind: "bga" | "qfp"
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
   replacementObstacle: Obstacle
@@ -45,10 +46,6 @@ export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetect
       ],
     ),
   ]
-
-  constructor(params: ComponentDetectionSolverParams) {
-    super(params)
-  }
 
   override getConstructorParams() {
     return [this.inputProblem] as const
