@@ -108,11 +108,11 @@ const addAssignableViaRegions = (params: {
           portId: `${viaRegionId}:port:${region.regionId}:z${z}`,
           x: obstacle.center.x,
           y: obstacle.center.y,
-        z,
-        distToCentermostPortOnZ: 0,
-        cramped: false,
-        regions: [region, viaRegion],
-      }
+          z,
+          distToCentermostPortOnZ: 0,
+          cramped: false,
+          regions: [region, viaRegion],
+        }
         const hgPort: RegionPortHg = {
           portId: rawPort.portId,
           d: rawPort,

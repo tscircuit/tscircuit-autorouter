@@ -570,9 +570,7 @@ test("bugreport61 SOIC8 footprints use SOIC topology planning", () => {
   expect(
     componentDetectionSolver
       .visualize()
-      .rects?.some(
-        (rect) => rect.label === "pcb_component_0 SOIC region",
-      ),
+      .rects?.some((rect) => rect.label === "pcb_component_0 SOIC region"),
   ).toBe(true)
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
@@ -599,11 +597,13 @@ test("bugreport62 QFP footprints are clearly detected", () => {
   componentDetectionSolver.solve()
 
   expect(
-    componentDetectionSolver.getOutput().components.map((component) => [
-      component.componentId,
-      component.componentKind,
-      component.memberObstacles.length,
-    ]),
+    componentDetectionSolver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+        component.memberObstacles.length,
+      ]),
   ).toEqual([
     ["pcb_component_0", "qfp", 12],
     ["pcb_component_1", "qfp", 32],
