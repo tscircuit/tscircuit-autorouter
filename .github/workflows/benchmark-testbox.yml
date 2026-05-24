@@ -1,0 +1,38 @@
+name: Blacksmith Testbox
+on:
+  workflow_dispatch:
+    inputs:
+      testbox_id:
+        type: string
+        description: "Testbox session ID"
+        required: true
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  benchmark:
+    name: Run benchmark
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+
+    steps:
+      - name: Begin Testbox
+        uses: useblacksmith/begin-testbox@v2
+        with:
+          testbox_id: ${{ inputs.testbox_id }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run Testbox
+        uses: useblacksmith/run-testbox@v2
+        if: always()
