@@ -189,6 +189,11 @@ function definePipelineStep<
   }
 }
 
+const getPortPointPathingEffort = (effort: number) =>
+  // Tiny-hypergraph effort scales internal iteration ceilings. In Pipeline 7,
+  // letting it grow with benchmark effort can block later stages from completing.
+  Math.min(effort, 1)
+
 export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
@@ -409,7 +414,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: getPortPointPathingEffort(cms.effort),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
