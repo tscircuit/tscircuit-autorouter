@@ -24,6 +24,8 @@ type CreateMeshNodesForSrjParams = {
   nodeScopeId: string
   rowCount: number
   colCount: number
+  viaDiameter: number
+  obstacleMargin: number
 }
 
 /** Converts bounds into the centered-rectangle representation used by routing regions. */
@@ -383,6 +385,84 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
   )
 }
 
+function getExactObstacleAtCell({
+  row,
+  col,
+  xEdges,
+  yEdges,
+  obstacles,
+}: {
+  row: number
+  col: number
+  xEdges: number[]
+  yEdges: number[]
+  obstacles: Obstacle[]
+}) {
+  if (
+    row < 0 ||
+    col < 0 ||
+    row >= yEdges.length - 1 ||
+    col >= xEdges.length - 1
+  ) {
+    return null
+  }
+
+  return getExactObstacleForRegion({
+    region: createCellRegion({
+      row,
+      col,
+      xEdges,
+      yEdges,
+    }),
+    obstacles,
+  })
+}
+
+function isFreeSpaceCellRightOfOrBelowObstacleWithViaSpace({
+  row,
+  col,
+  xEdges,
+  yEdges,
+  obstacles,
+  region,
+  viaDiameter,
+  obstacleMargin,
+}: {
+  row: number
+  col: number
+  xEdges: number[]
+  yEdges: number[]
+  obstacles: Obstacle[]
+  region: RectRegion
+  viaDiameter: number
+  obstacleMargin: number
+}) {
+  const minViaCellDimension = viaDiameter + obstacleMargin
+  if (
+    region.width <= minViaCellDimension + MIN_AXIS_EPSILON ||
+    region.height <= minViaCellDimension + MIN_AXIS_EPSILON
+  ) {
+    return false
+  }
+
+  return Boolean(
+    getExactObstacleAtCell({
+      row,
+      col: col - 1,
+      xEdges,
+      yEdges,
+      obstacles,
+    }) ||
+      getExactObstacleAtCell({
+        row: row - 1,
+        col,
+        xEdges,
+        yEdges,
+        obstacles,
+      }),
+  )
+}
+
 /**
  * Creates routing regions for one exact rectangular partition cell.
  *
@@ -398,6 +478,8 @@ function createCellMeshNodes({
   obstacles,
   layerCount,
   nodeScopeId,
+  viaDiameter,
+  obstacleMargin,
 }: {
   row: number
   col: number
@@ -407,6 +489,8 @@ function createCellMeshNodes({
   obstacles: Obstacle[]
   layerCount: number
   nodeScopeId: string
+  viaDiameter: number
+  obstacleMargin: number
 }): CapacityMeshNode[] {
   const region = createCellRegion({
     row,
@@ -439,6 +523,16 @@ function createCellMeshNodes({
       xEdges,
       yEdges,
       obstacles,
+    }) ||
+    isFreeSpaceCellRightOfOrBelowObstacleWithViaSpace({
+      row,
+      col,
+      xEdges,
+      yEdges,
+      obstacles,
+      region,
+      viaDiameter,
+      obstacleMargin,
     })
   ) {
     return [
@@ -509,6 +603,8 @@ export function createMeshNodesForSrj({
   nodeScopeId,
   rowCount,
   colCount,
+  viaDiameter,
+  obstacleMargin,
 }: CreateMeshNodesForSrjParams): CapacityMeshNode[] {
   if (rowCount === 0 || colCount === 0) {
     return createFallbackRingNodes({
@@ -547,6 +643,8 @@ export function createMeshNodesForSrj({
           obstacles,
           layerCount,
           nodeScopeId,
+          viaDiameter,
+          obstacleMargin,
         }),
       )
     }

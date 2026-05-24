@@ -1,6 +1,7 @@
-import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
+import { BaseSolver } from "@tscircuit/solver-utils"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   clusterAxisValues,
   createMeshNodesForSrj,
@@ -48,6 +49,9 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     }
 
     const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
+    const viaDiameter = getViaDimensions(this.inputProblem.inputSrj).padDiameter
+    const obstacleMargin =
+      this.inputProblem.inputSrj.defaultObstacleMargin ?? 0.15
     const topologyAxisObstacles = obstacles.filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), bounds),
     )
@@ -70,6 +74,8 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       nodeScopeId,
       rowCount,
       colCount,
+      viaDiameter,
+      obstacleMargin,
     })
     const diagonalNodeCount = meshNodes.filter(
       (node) => node.availableZ.length > 1,
