@@ -256,13 +256,40 @@ function getInnerQfpBounds({
 function getCornerRegions({
   bounds,
   centralBounds,
+  sideGroups,
 }: {
   bounds: Bounds
   centralBounds: Bounds
+  sideGroups: Record<QfpSide, Obstacle[]>
 }) {
+  const firstTopBounds = sideGroups.top[0]
+    ? getBoundingBox(sideGroups.top[0])
+    : null
+  const lastTopBounds = sideGroups.top.at(-1)
+    ? getBoundingBox(sideGroups.top.at(-1)!)
+    : null
+  const firstRightBounds = sideGroups.right[0]
+    ? getBoundingBox(sideGroups.right[0])
+    : null
+  const lastRightBounds = sideGroups.right.at(-1)
+    ? getBoundingBox(sideGroups.right.at(-1)!)
+    : null
+  const firstBottomBounds = sideGroups.bottom[0]
+    ? getBoundingBox(sideGroups.bottom[0])
+    : null
+  const lastBottomBounds = sideGroups.bottom.at(-1)
+    ? getBoundingBox(sideGroups.bottom.at(-1)!)
+    : null
+  const firstLeftBounds = sideGroups.left[0]
+    ? getBoundingBox(sideGroups.left[0])
+    : null
+  const lastLeftBounds = sideGroups.left.at(-1)
+    ? getBoundingBox(sideGroups.left.at(-1)!)
+    : null
+
   return [
     {
-      key: "corner-nw",
+      key: "corner-nw-outer",
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
@@ -271,7 +298,25 @@ function getCornerRegions({
       },
     },
     {
-      key: "corner-ne",
+      key: "corner-nw-top",
+      bounds: {
+        minX: centralBounds.minX,
+        maxX: firstTopBounds?.minX ?? centralBounds.minX,
+        minY: bounds.minY,
+        maxY: centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-nw-left",
+      bounds: {
+        minX: bounds.minX,
+        maxX: centralBounds.minX,
+        minY: centralBounds.minY,
+        maxY: firstLeftBounds?.minY ?? centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-ne-outer",
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -280,7 +325,25 @@ function getCornerRegions({
       },
     },
     {
-      key: "corner-se",
+      key: "corner-ne-top",
+      bounds: {
+        minX: lastTopBounds?.maxX ?? centralBounds.maxX,
+        maxX: centralBounds.maxX,
+        minY: bounds.minY,
+        maxY: centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-ne-right",
+      bounds: {
+        minX: centralBounds.maxX,
+        maxX: bounds.maxX,
+        minY: centralBounds.minY,
+        maxY: firstRightBounds?.minY ?? centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-se-outer",
       bounds: {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
@@ -289,12 +352,48 @@ function getCornerRegions({
       },
     },
     {
-      key: "corner-sw",
+      key: "corner-se-right",
+      bounds: {
+        minX: centralBounds.maxX,
+        maxX: bounds.maxX,
+        minY: lastRightBounds?.maxY ?? centralBounds.maxY,
+        maxY: centralBounds.maxY,
+      },
+    },
+    {
+      key: "corner-se-bottom",
+      bounds: {
+        minX: lastBottomBounds?.maxX ?? centralBounds.maxX,
+        maxX: centralBounds.maxX,
+        minY: centralBounds.maxY,
+        maxY: bounds.maxY,
+      },
+    },
+    {
+      key: "corner-sw-outer",
       bounds: {
         minX: bounds.minX,
         maxX: centralBounds.minX,
         minY: centralBounds.maxY,
         maxY: bounds.maxY,
+      },
+    },
+    {
+      key: "corner-sw-bottom",
+      bounds: {
+        minX: centralBounds.minX,
+        maxX: firstBottomBounds?.minX ?? centralBounds.minX,
+        minY: centralBounds.maxY,
+        maxY: bounds.maxY,
+      },
+    },
+    {
+      key: "corner-sw-left",
+      bounds: {
+        minX: bounds.minX,
+        maxX: centralBounds.minX,
+        minY: lastLeftBounds?.maxY ?? centralBounds.maxY,
+        maxY: centralBounds.maxY,
       },
     },
   ]
@@ -371,7 +470,7 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
         bounds,
         centralBounds,
       }),
-      ...getCornerRegions({ bounds, centralBounds }),
+      ...getCornerRegions({ bounds, centralBounds, sideGroups }),
     ]
     const routingRegions = regions.flatMap((region) =>
       createMeshNodesForRegion({

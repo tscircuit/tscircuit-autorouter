@@ -120,6 +120,56 @@ const createQfpPads = ({
   return [...topPads, ...rightPads, ...bottomPads, ...leftPads]
 }
 
+const createPerfectlyBorderedQfpPads = ({
+  componentId,
+}: {
+  componentId: string
+}) => {
+  const axisValues = [-0.7, 0.5, 1.7]
+  const topPads = axisValues.map((x, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.T${index + 1}`,
+      x,
+      y: -1,
+      width: 0.2,
+      height: 0.4,
+    }),
+  )
+  const rightPads = axisValues.map((y, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.R${index + 1}`,
+      x: 2,
+      y,
+      width: 0.4,
+      height: 0.2,
+    }),
+  )
+  const bottomPads = axisValues.map((x, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.B${index + 1}`,
+      x,
+      y: 2,
+      width: 0.2,
+      height: 0.4,
+    }),
+  )
+  const leftPads = axisValues.map((y, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.L${index + 1}`,
+      x: -1,
+      y,
+      width: 0.4,
+      height: 0.2,
+    }),
+  )
+
+  return [...topPads, ...rightPads, ...bottomPads, ...leftPads]
+}
+
 test("component detection only creates regions for BGA-like components", () => {
   const passivePads = [
     createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
@@ -305,11 +355,48 @@ test("topology planning creates QFP central, gap, and corner mesh nodes", () => 
   expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
   expect(sideGapNodes.length).toBeGreaterThan(0)
   expect(sideGapNodes.every((node) => node.availableZ.length === 1)).toBe(true)
-  expect(cornerRectIds.size).toBe(4)
+  expect(cornerRectIds.size).toBe(12)
   expect(cornerNodes.every((node) => node.availableZ.length === 1)).toBe(true)
   expect(
     qfpNodes.every((node) => node.capacityMeshNodeId.includes("U_QFP")),
   ).toBe(true)
+})
+
+test("topology planning collapses perfectly bordered QFP corners", () => {
+  const inputSrj = {
+    ...createSrj(createPerfectlyBorderedQfpPads({ componentId: "U_BORDERED" })),
+    bounds: { minX: -1.2, maxX: 2.2, minY: -1.2, maxY: 2.2 },
+    layerCount: 4,
+    minViaPadDiameter: 0.8,
+    defaultObstacleMargin: 0.4,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+    viaDiameter: 0.8,
+    obstacleMargin: 0.4,
+  })
+  topologyPlanningSolver.solve()
+
+  const cornerNodes = topologyPlanningSolver
+    .getOutput()
+    .componentMeshNodes[0]!.filter((node) =>
+      node.capacityMeshNodeId.includes(":corner-"),
+    )
+  const cornerRectIds = new Set(
+    cornerNodes.map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
+  )
+
+  expect(cornerRectIds.size).toBe(4)
+  expect([...cornerRectIds].sort()).toEqual([
+    "qfp:U_BORDERED:corner-ne-outer",
+    "qfp:U_BORDERED:corner-nw-outer",
+    "qfp:U_BORDERED:corner-se-outer",
+    "qfp:U_BORDERED:corner-sw-outer",
+  ])
 })
 
 test("bugreport61 SOIC8 footprints use BGA topology planning", () => {
