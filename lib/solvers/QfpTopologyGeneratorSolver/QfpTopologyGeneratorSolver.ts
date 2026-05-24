@@ -1,0 +1,416 @@
+import { getBoundingBox } from "@tscircuit/math-utils"
+import type { Bounds } from "@tscircuit/math-utils"
+import { BaseSolver } from "@tscircuit/solver-utils"
+import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+
+const MIN_REGION_SIDE = 1e-6
+
+type QfpSide = "top" | "right" | "bottom" | "left"
+
+type RectRegion = {
+  center: { x: number; y: number }
+  width: number
+  height: number
+}
+
+type QfpRoutingRegion = {
+  key: string
+  bounds: Bounds
+  containsObstacle?: boolean
+}
+
+export interface QfpTopologyGeneratorSolverParams {
+  inputSrj: SimpleRouteJson
+  componentId?: string
+  replacementObstacleId?: string
+  viaDiameter?: number
+  obstacleMargin?: number
+}
+
+export interface QfpTopologyGeneratorSolverOutput {
+  /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
+  obstacles: Obstacle[]
+  /** Routing regions derived from the QFP pad ring. These are not obstacle rectangles. */
+  routingRegions: CapacityMeshNode[]
+}
+
+function createRectRegion(bounds: Bounds): RectRegion {
+  return {
+    center: {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    },
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
+  }
+}
+
+function isValidBounds(bounds: Bounds) {
+  return (
+    bounds.maxX - bounds.minX > MIN_REGION_SIDE &&
+    bounds.maxY - bounds.minY > MIN_REGION_SIDE
+  )
+}
+
+function getObstacleSide(obstacle: Obstacle, bounds: Bounds): QfpSide {
+  const distances = [
+    {
+      side: "top" as const,
+      distance: Math.abs(obstacle.center.y - bounds.minY),
+    },
+    {
+      side: "right" as const,
+      distance: Math.abs(bounds.maxX - obstacle.center.x),
+    },
+    {
+      side: "bottom" as const,
+      distance: Math.abs(bounds.maxY - obstacle.center.y),
+    },
+    {
+      side: "left" as const,
+      distance: Math.abs(obstacle.center.x - bounds.minX),
+    },
+  ]
+
+  distances.sort((a, b) => a.distance - b.distance)
+  return distances[0]!.side
+}
+
+function groupObstaclesBySide(obstacles: Obstacle[], bounds: Bounds) {
+  const groups: Record<QfpSide, Obstacle[]> = {
+    top: [],
+    right: [],
+    bottom: [],
+    left: [],
+  }
+
+  for (const obstacle of obstacles) {
+    groups[getObstacleSide(obstacle, bounds)].push(obstacle)
+  }
+
+  groups.top.sort((a, b) => a.center.x - b.center.x)
+  groups.bottom.sort((a, b) => a.center.x - b.center.x)
+  groups.left.sort((a, b) => a.center.y - b.center.y)
+  groups.right.sort((a, b) => a.center.y - b.center.y)
+
+  return groups
+}
+
+function createMeshNodesForRegion({
+  nodeId,
+  bounds,
+  availableZ,
+  multiLayerThreshold,
+  containsObstacle = false,
+}: {
+  nodeId: string
+  bounds: Bounds
+  availableZ: number[]
+  multiLayerThreshold: number
+  containsObstacle?: boolean
+}): CapacityMeshNode[] {
+  if (!isValidBounds(bounds)) return []
+
+  const region = createRectRegion(bounds)
+  const isLargeEnoughForMultiZ =
+    Math.min(region.width, region.height) > multiLayerThreshold
+
+  if (isLargeEnoughForMultiZ) {
+    return [
+      {
+        capacityMeshNodeId: nodeId,
+        center: region.center,
+        width: region.width,
+        height: region.height,
+        layer: `z${availableZ.join(",")}`,
+        availableZ: [...availableZ],
+        _containsObstacle: containsObstacle,
+      },
+    ]
+  }
+
+  return availableZ.map((z) => ({
+    capacityMeshNodeId: `${nodeId}:z${z}`,
+    center: region.center,
+    width: region.width,
+    height: region.height,
+    layer: `z${z}`,
+    availableZ: [z],
+    _containsObstacle: containsObstacle,
+  }))
+}
+
+function getPadRegions(obstacles: Obstacle[]) {
+  return obstacles.map((obstacle, index) => ({
+    key: `pad:${obstacle.obstacleId ?? index}`,
+    bounds: getBoundingBox(obstacle),
+    containsObstacle: true,
+  }))
+}
+
+function createGapRegionsForSide({
+  side,
+  sideObstacles,
+  bounds,
+  centralBounds,
+}: {
+  side: QfpSide
+  sideObstacles: Obstacle[]
+  bounds: Bounds
+  centralBounds: Bounds
+}) {
+  const regions: QfpRoutingRegion[] = []
+
+  for (let index = 0; index < sideObstacles.length - 1; index++) {
+    const currentBounds = getBoundingBox(sideObstacles[index]!)
+    const nextBounds = getBoundingBox(sideObstacles[index + 1]!)
+
+    if (side === "top") {
+      regions.push({
+        key: `top-gap-${index}`,
+        bounds: {
+          minX: currentBounds.maxX,
+          maxX: nextBounds.minX,
+          minY: bounds.minY,
+          maxY: centralBounds.minY,
+        },
+      })
+    } else if (side === "right") {
+      regions.push({
+        key: `right-gap-${index}`,
+        bounds: {
+          minX: centralBounds.maxX,
+          maxX: bounds.maxX,
+          minY: currentBounds.maxY,
+          maxY: nextBounds.minY,
+        },
+      })
+    } else if (side === "bottom") {
+      regions.push({
+        key: `bottom-gap-${index}`,
+        bounds: {
+          minX: currentBounds.maxX,
+          maxX: nextBounds.minX,
+          minY: centralBounds.maxY,
+          maxY: bounds.maxY,
+        },
+      })
+    } else {
+      regions.push({
+        key: `left-gap-${index}`,
+        bounds: {
+          minX: bounds.minX,
+          maxX: centralBounds.minX,
+          minY: currentBounds.maxY,
+          maxY: nextBounds.minY,
+        },
+      })
+    }
+  }
+
+  return regions
+}
+
+function getInnerQfpBounds({
+  bounds,
+  sideGroups,
+}: {
+  bounds: Bounds
+  sideGroups: Record<QfpSide, Obstacle[]>
+}) {
+  const leftInner =
+    sideGroups.left.length > 0
+      ? Math.max(
+          ...sideGroups.left.map((obstacle) => getBoundingBox(obstacle).maxX),
+        )
+      : bounds.minX
+  const rightInner =
+    sideGroups.right.length > 0
+      ? Math.min(
+          ...sideGroups.right.map((obstacle) => getBoundingBox(obstacle).minX),
+        )
+      : bounds.maxX
+  const topInner =
+    sideGroups.top.length > 0
+      ? Math.max(
+          ...sideGroups.top.map((obstacle) => getBoundingBox(obstacle).maxY),
+        )
+      : bounds.minY
+  const bottomInner =
+    sideGroups.bottom.length > 0
+      ? Math.min(
+          ...sideGroups.bottom.map((obstacle) => getBoundingBox(obstacle).minY),
+        )
+      : bounds.maxY
+
+  return {
+    minX: leftInner,
+    maxX: rightInner,
+    minY: topInner,
+    maxY: bottomInner,
+  }
+}
+
+function getCornerRegions({
+  bounds,
+  centralBounds,
+}: {
+  bounds: Bounds
+  centralBounds: Bounds
+}) {
+  return [
+    {
+      key: "corner-nw",
+      bounds: {
+        minX: bounds.minX,
+        maxX: centralBounds.minX,
+        minY: bounds.minY,
+        maxY: centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-ne",
+      bounds: {
+        minX: centralBounds.maxX,
+        maxX: bounds.maxX,
+        minY: bounds.minY,
+        maxY: centralBounds.minY,
+      },
+    },
+    {
+      key: "corner-se",
+      bounds: {
+        minX: centralBounds.maxX,
+        maxX: bounds.maxX,
+        minY: centralBounds.maxY,
+        maxY: bounds.maxY,
+      },
+    },
+    {
+      key: "corner-sw",
+      bounds: {
+        minX: bounds.minX,
+        maxX: centralBounds.minX,
+        minY: centralBounds.maxY,
+        maxY: bounds.maxY,
+      },
+    },
+  ]
+}
+
+/**
+ * Builds the fixed QFP topology: one large central region plus perimeter gap
+ * and corner regions between the package pads.
+ */
+export class QfpTopologyGeneratorSolver extends BaseSolver {
+  private output: QfpTopologyGeneratorSolverOutput | null = null
+
+  constructor(public readonly inputProblem: QfpTopologyGeneratorSolverParams) {
+    super()
+  }
+
+  override getConstructorParams() {
+    return [this.inputProblem] as const
+  }
+
+  override _step() {
+    if (this.output) {
+      this.solved = true
+      return
+    }
+
+    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
+    const availableZ = getLayerRange(layerCount)
+    const topologyObstacles = this.inputProblem.componentId
+      ? obstacles.filter(
+          (obstacle) => obstacle.componentId === this.inputProblem.componentId,
+        )
+      : obstacles
+    const padRingObstacles =
+      topologyObstacles.length > 0 ? topologyObstacles : obstacles
+    const sideGroups = groupObstaclesBySide(padRingObstacles, bounds)
+    const centralBounds = getInnerQfpBounds({ bounds, sideGroups })
+    const nodeScopeId =
+      this.inputProblem.componentId ??
+      this.inputProblem.replacementObstacleId ??
+      "component"
+    const viaDiameter =
+      this.inputProblem.viaDiameter ??
+      getViaDimensions(this.inputProblem.inputSrj).padDiameter
+    const obstacleMargin =
+      this.inputProblem.obstacleMargin ??
+      this.inputProblem.inputSrj.defaultObstacleMargin ??
+      0.15
+    const multiLayerThreshold = viaDiameter + obstacleMargin / 2
+    const regions: QfpRoutingRegion[] = [
+      { key: "center", bounds: centralBounds },
+      ...getPadRegions(padRingObstacles),
+      ...createGapRegionsForSide({
+        side: "top",
+        sideObstacles: sideGroups.top,
+        bounds,
+        centralBounds,
+      }),
+      ...createGapRegionsForSide({
+        side: "right",
+        sideObstacles: sideGroups.right,
+        bounds,
+        centralBounds,
+      }),
+      ...createGapRegionsForSide({
+        side: "bottom",
+        sideObstacles: sideGroups.bottom,
+        bounds,
+        centralBounds,
+      }),
+      ...createGapRegionsForSide({
+        side: "left",
+        sideObstacles: sideGroups.left,
+        bounds,
+        centralBounds,
+      }),
+      ...getCornerRegions({ bounds, centralBounds }),
+    ]
+    const routingRegions = regions.flatMap((region) =>
+      createMeshNodesForRegion({
+        nodeId: `qfp:${nodeScopeId}:${region.key}`,
+        bounds: region.bounds,
+        availableZ,
+        multiLayerThreshold,
+        containsObstacle: region.containsObstacle,
+      }),
+    )
+
+    this.output = {
+      obstacles: obstacles.map((obstacle) => structuredClone(obstacle)),
+      routingRegions,
+    }
+    this.stats = {
+      componentId: this.inputProblem.componentId ?? null,
+      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
+      layerCount,
+      viaDiameter,
+      obstacleMargin,
+      multiLayerThreshold,
+      topPadCount: sideGroups.top.length,
+      rightPadCount: sideGroups.right.length,
+      bottomPadCount: sideGroups.bottom.length,
+      leftPadCount: sideGroups.left.length,
+      multiLayerNodeCount: routingRegions.filter(
+        (node) => node.availableZ.length > 1,
+      ).length,
+      totalMeshNodeCount: routingRegions.length,
+    }
+    this.solved = true
+  }
+
+  getOutput(): QfpTopologyGeneratorSolverOutput {
+    if (!this.output) {
+      throw new Error("QfpTopologyGeneratorSolver has not solved yet")
+    }
+
+    return this.output
+  }
+}

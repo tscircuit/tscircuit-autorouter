@@ -17,6 +17,11 @@ const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
 const MIN_BGA_GRID_OCCUPANCY = 0.5
 const MAX_BGA_PAD_SIZE_VARIANCE = 0.01
 const AXIS_CLUSTER_EPSILON = 1e-3
+const MIN_QFP_PADS_PER_SIDE = 4
+const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
+const MIN_QFP_PAD_ASPECT_RATIO = 1.5
+
+type ComponentKind = DetectedComponent["componentKind"]
 
 function clusterAxisValues(values: number[]) {
   const sortedValues = [...values].sort((a, b) => a - b)
@@ -82,6 +87,88 @@ function isBgaLikeComponent(memberObstacles: Obstacle[]) {
   return hasSupportedAxisCounts && gridOccupancy >= MIN_BGA_GRID_OCCUPANCY
 }
 
+function getNearestSideCounts(memberObstacles: Obstacle[]) {
+  const bounds = getBoundsForObstacles(memberObstacles)
+  const width = bounds.maxX - bounds.minX
+  const height = bounds.maxY - bounds.minY
+  const counts = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  }
+
+  if (width <= 0 || height <= 0) return { counts, maxNearestSideRatio: 1 }
+
+  let maxNearestSideRatio = 0
+
+  for (const obstacle of memberObstacles) {
+    const distances = [
+      {
+        side: "top" as const,
+        distance: Math.abs(obstacle.center.y - bounds.minY),
+        axisSpan: height,
+      },
+      {
+        side: "right" as const,
+        distance: Math.abs(bounds.maxX - obstacle.center.x),
+        axisSpan: width,
+      },
+      {
+        side: "bottom" as const,
+        distance: Math.abs(bounds.maxY - obstacle.center.y),
+        axisSpan: height,
+      },
+      {
+        side: "left" as const,
+        distance: Math.abs(obstacle.center.x - bounds.minX),
+        axisSpan: width,
+      },
+    ].sort((a, b) => a.distance - b.distance)
+    const nearest = distances[0]!
+
+    counts[nearest.side] += 1
+    maxNearestSideRatio = Math.max(
+      maxNearestSideRatio,
+      nearest.distance / nearest.axisSpan,
+    )
+  }
+
+  return { counts, maxNearestSideRatio }
+}
+
+function isQfpLikeComponent(memberObstacles: Obstacle[]) {
+  if (memberObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
+  if (
+    !memberObstacles.every((obstacle) => {
+      const minSide = Math.min(obstacle.width, obstacle.height)
+      const maxSide = Math.max(obstacle.width, obstacle.height)
+      return minSide > 0 && maxSide / minSide >= MIN_QFP_PAD_ASPECT_RATIO
+    })
+  ) {
+    return false
+  }
+
+  const { counts, maxNearestSideRatio } = getNearestSideCounts(memberObstacles)
+
+  return (
+    counts.top >= MIN_QFP_PADS_PER_SIDE &&
+    counts.right >= MIN_QFP_PADS_PER_SIDE &&
+    counts.bottom >= MIN_QFP_PADS_PER_SIDE &&
+    counts.left >= MIN_QFP_PADS_PER_SIDE &&
+    maxNearestSideRatio <= MAX_QFP_CENTER_NEAREST_SIDE_RATIO
+  )
+}
+
+function detectComponentKind(
+  memberObstacles: Obstacle[],
+): ComponentKind | null {
+  if (isQfpLikeComponent(memberObstacles)) return "qfp"
+  if (isBgaLikeComponent(memberObstacles)) return "bga"
+
+  return null
+}
+
 /**
  * Current detection stage: groups SRJ obstacles by component and replaces each
  * component's member pads with one rectangular bounds obstacle.
@@ -91,6 +178,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
   private initialized = false
   private groupedComponentObstacles: Record<string, Obstacle[]> = {}
+  private groupedComponentKinds: Record<string, ComponentKind> = {}
   private unprocessedComponentIds: string[] = []
   private passThroughObstacles: Obstacle[] = []
   private detectedComponents: DetectedComponent[] = []
@@ -167,6 +255,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
       const isActive = obstacle.componentId === this.currentComponentId
       const color = getStringColor(obstacle.componentId)
+      const componentKind = this.groupedComponentKinds[obstacle.componentId]
       rects.push({
         center: obstacle.center,
         width: obstacle.width,
@@ -177,7 +266,9 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         stroke: isActive
           ? safeTransparentize(color, 0.1)
           : safeTransparentize(color, 0.45),
-        label: obstacle.componentId,
+        label: componentKind
+          ? `${obstacle.componentId} ${componentKind.toUpperCase()}`
+          : obstacle.componentId,
         layer: obstacle.layers.join(","),
         step: isActive ? 1 : 0,
       })
@@ -193,7 +284,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           height: obstacle.height,
           fill: safeTransparentize(color, 0.7),
           stroke: safeTransparentize(color, 0.25),
-          label: component.componentId,
+          label: `${component.componentId} ${component.componentKind.toUpperCase()}`,
           layer: obstacle.layers.join(","),
           step: 1,
         })),
@@ -205,7 +296,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         height: component.replacementObstacle.height,
         fill: safeTransparentize(color, 0.88),
         stroke: safeTransparentize(color, 0.1),
-        label: `${component.componentId} region`,
+        label: `${component.componentId} ${component.componentKind.toUpperCase()} region`,
         layer: component.replacementObstacle.layers.join(","),
         step: 2,
       })
@@ -226,6 +317,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
   private initializeDetectionState() {
     this.initialized = true
+    this.groupedComponentKinds = {}
     this.groupedComponentObstacles = this.groupObstaclesByComponentId({
       obstacles: this.inputSrj.obstacles,
     })
@@ -269,6 +361,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     this.detectedComponents.push(
       this.createDetectedComponent({
         componentId: this.currentComponentId,
+        componentKind: this.groupedComponentKinds[this.currentComponentId]!,
         memberObstacles: this.currentMemberObstacles,
       }),
     )
@@ -302,6 +395,15 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       initialized: this.initialized,
       totalComponentCount: Object.keys(this.groupedComponentObstacles).length,
       detectedComponentCount: this.detectedComponents.length,
+      detectedBgaComponentCount: this.detectedComponents.filter(
+        (component) => component.componentKind === "bga",
+      ).length,
+      detectedQfpComponentCount: this.detectedComponents.filter(
+        (component) => component.componentKind === "qfp",
+      ).length,
+      detectedQfpComponentIds: this.detectedComponents
+        .filter((component) => component.componentKind === "qfp")
+        .map((component) => component.componentId),
       remainingComponentCount: this.unprocessedComponentIds.length,
       hasActiveComponent: this.currentComponentId !== null,
       replacedObstacleCount: this.detectedComponents.reduce(
@@ -318,6 +420,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     obstacles: Obstacle[]
   }): Record<string, Obstacle[]> {
     const grouped: Record<string, Obstacle[]> = {}
+    const componentKinds: Record<string, ComponentKind> = {}
 
     for (const obstacle of obstacles) {
       if (!obstacle.componentId) continue
@@ -325,18 +428,28 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       grouped[obstacle.componentId].push(obstacle)
     }
 
-    return Object.fromEntries(
-      Object.entries(grouped).filter(([, memberObstacles]) =>
-        isBgaLikeComponent(memberObstacles),
-      ),
+    const detectedEntries = Object.entries(grouped).filter(
+      ([componentId, memberObstacles]) => {
+        const componentKind = detectComponentKind(memberObstacles)
+        if (!componentKind) return false
+
+        componentKinds[componentId] = componentKind
+        return true
+      },
     )
+
+    this.groupedComponentKinds = componentKinds
+
+    return Object.fromEntries(detectedEntries)
   }
 
   private createDetectedComponent({
     componentId,
+    componentKind,
     memberObstacles,
   }: {
     componentId: string
+    componentKind: ComponentKind
     memberObstacles: Obstacle[]
   }): DetectedComponent {
     const copiedMemberObstacles = cloneObstacles(memberObstacles)
@@ -349,6 +462,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
     return {
       componentId,
+      componentKind,
       memberObstacleIds: copiedMemberObstacles.map(
         (obstacle, index) =>
           obstacle.obstacleId ?? `${componentId}:member:${index}`,

@@ -66,6 +66,51 @@ const createGridPads = ({
       }),
   )
 
+const createQfpPads = ({ componentId }: { componentId: string }) => {
+  const topPads = [0, 1, 2, 3].map((index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.T${index + 1}`,
+      x: index,
+      y: -1,
+      width: 0.4,
+      height: 0.2,
+    }),
+  )
+  const rightPads = [0, 1, 2, 3].map((index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.R${index + 1}`,
+      x: 4,
+      y: index,
+      width: 0.2,
+      height: 0.4,
+    }),
+  )
+  const bottomPads = [0, 1, 2, 3].map((index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.B${index + 1}`,
+      x: index,
+      y: 4,
+      width: 0.4,
+      height: 0.2,
+    }),
+  )
+  const leftPads = [0, 1, 2, 3].map((index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.L${index + 1}`,
+      x: -1,
+      y: index,
+      width: 0.2,
+      height: 0.4,
+    }),
+  )
+
+  return [...topPads, ...rightPads, ...bottomPads, ...leftPads]
+}
+
 test("component detection only creates regions for BGA-like components", () => {
   const passivePads = [
     createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
@@ -119,6 +164,31 @@ test("component detection accepts two-row and two-column BGA-like components", (
   expect(
     solver.getOutput().components.map((component) => component.componentId),
   ).toEqual(["U_2X4", "U_2X5", "U_4X2"])
+})
+
+test("component detection clearly labels QFP-like components", () => {
+  const solver = new ComponentDetectionSolver({
+    inputSrj: createSrj([
+      ...createQfpPads({ componentId: "U_QFP" }),
+      ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
+    ]),
+  })
+
+  solver.solve()
+
+  const output = solver.getOutput()
+  expect(
+    output.components.map((component) => [
+      component.componentId,
+      component.componentKind,
+    ]),
+  ).toEqual([
+    ["U_BGA", "bga"],
+    ["U_QFP", "qfp"],
+  ])
+  expect(
+    solver.visualize().rects?.some((rect) => rect.label === "U_QFP QFP region"),
+  ).toBe(true)
 })
 
 test("component detection rejects grids with pad dimensions outside one percent", () => {
@@ -184,6 +254,50 @@ test("topology planning creates BGA component mesh nodes for two-row components"
     output.componentMeshNodes[0]!.every((node) =>
       node.capacityMeshNodeId.includes("U_2X4"),
     ),
+  ).toBe(true)
+})
+
+test("topology planning creates QFP central, gap, and corner mesh nodes", () => {
+  const inputSrj = {
+    ...createSrj(createQfpPads({ componentId: "U_QFP" })),
+    layerCount: 4,
+    minViaPadDiameter: 0.8,
+    defaultObstacleMargin: 0.4,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+    viaDiameter: 0.8,
+    obstacleMargin: 0.4,
+  })
+  topologyPlanningSolver.solve()
+
+  const output = topologyPlanningSolver.getOutput()
+  const qfpNodes = output.componentMeshNodes[0]!
+  const centerNode = qfpNodes.find(
+    (node) => node.capacityMeshNodeId === "qfp:U_QFP:center",
+  )
+  const sideGapNodes = qfpNodes.filter((node) =>
+    node.capacityMeshNodeId.includes("-gap-"),
+  )
+  const cornerNodes = qfpNodes.filter((node) =>
+    node.capacityMeshNodeId.includes(":corner-"),
+  )
+  const cornerRectIds = new Set(
+    cornerNodes.map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
+  )
+
+  expect(output.componentMeshNodes).toHaveLength(1)
+  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
+  expect(sideGapNodes.length).toBeGreaterThan(0)
+  expect(sideGapNodes.every((node) => node.availableZ.length === 1)).toBe(true)
+  expect(cornerRectIds.size).toBe(4)
+  expect(cornerNodes.every((node) => node.availableZ.length === 1)).toBe(true)
+  expect(
+    qfpNodes.every((node) => node.capacityMeshNodeId.includes("U_QFP")),
   ).toBe(true)
 })
 
