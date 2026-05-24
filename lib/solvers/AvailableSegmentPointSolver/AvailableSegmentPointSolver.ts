@@ -25,6 +25,8 @@ export interface SegmentPortPoint {
    * ideally this port points should be discarded but we need them in some cases
    */
   cramped: boolean
+  /** Extra tiny-hypergraph traversal cost for fallback ports. */
+  tinyHypergraphPortPenalty?: number
 }
 
 export interface SharedEdgeSegment {
