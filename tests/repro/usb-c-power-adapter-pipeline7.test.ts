@@ -5,7 +5,7 @@ import usbCPowerAdapterSrj from "./assets/usb-c-power-adapter.srj.json" with {
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
 
-test("usb-c power adapter pipeline7 does not create non-BGA component regions", () => {
+test("usb-c power adapter pipeline7 creates only supported component regions", () => {
   const srj = usbCPowerAdapterSrj as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver7_MultiGraph(srj, {
     cacheProvider: null,
@@ -26,7 +26,13 @@ test("usb-c power adapter pipeline7 does not create non-BGA component regions", 
   const componentDetectionOutput = solver.componentDetectionSolver!.getOutput()
   const topologyOutput = solver.topologyPlanningSolver!.getOutput()
 
-  expect(componentDetectionOutput.components).toHaveLength(0)
-  expect(topologyOutput.componentMeshNodes.flat()).toHaveLength(0)
+  expect(
+    componentDetectionOutput.components.map((component) => [
+      component.componentId,
+      component.componentKind,
+      component.memberObstacles.length,
+    ]),
+  ).toEqual([["pcb_component_40", "qfp_thermalpad", 25]])
+  expect(topologyOutput.componentMeshNodes.flat().length).toBeGreaterThan(0)
   expect(topologyOutput.mergedMeshNodes.length).toBeLessThan(2_000)
 })
