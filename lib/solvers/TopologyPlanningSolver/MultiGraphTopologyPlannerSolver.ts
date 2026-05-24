@@ -19,7 +19,7 @@ export type TopologyMeshMergeStrategy = "concat"
 
 export interface SerializedTopologyComponentInput {
   componentId: string
-  componentKind?: "bga" | "qfp"
+  componentKind?: "bga" | "qfp" | "soic"
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
   replacementObstacle: Obstacle

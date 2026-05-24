@@ -228,6 +228,50 @@ test("component detection accepts two-row and two-column BGA-like components", (
   ).toEqual(["U_2X4", "U_2X5", "U_4X2"])
 })
 
+test("component detection marks large-gap two-row and two-column grids as SOIC", () => {
+  const solver = new ComponentDetectionSolver({
+    inputSrj: {
+      ...createSrj([
+        ...createGridPads({
+          componentId: "U_SOIC_ROWS",
+          rows: 2,
+          columns: 4,
+          yStep: 2,
+        }),
+        ...createGridPads({
+          componentId: "U_SOIC_COLUMNS",
+          rows: 4,
+          columns: 2,
+          xStep: 2,
+        }),
+        ...createGridPads({ componentId: "U_TIGHT_2X4", rows: 2, columns: 4 }),
+      ]),
+      minViaPadDiameter: 0.3,
+      defaultObstacleMargin: 0.15,
+    },
+  })
+
+  solver.solve()
+
+  expect(
+    solver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+      ]),
+  ).toEqual([
+    ["U_SOIC_COLUMNS", "soic"],
+    ["U_SOIC_ROWS", "soic"],
+    ["U_TIGHT_2X4", "bga"],
+  ])
+  expect(
+    solver
+      .visualize()
+      .rects?.some((rect) => rect.label === "U_SOIC_ROWS SOIC region"),
+  ).toBe(true)
+})
+
 test("component detection clearly labels QFP-like components", () => {
   const solver = new ComponentDetectionSolver({
     inputSrj: createSrj([
@@ -464,15 +508,72 @@ test("topology planning collapses perfectly bordered QFP corners", () => {
   ])
 })
 
-test("bugreport61 SOIC8 footprints use BGA topology planning", () => {
+test("topology planning creates SOIC central and pad-gap mesh nodes", () => {
+  const inputSrj = {
+    ...createSrj(
+      createGridPads({
+        componentId: "U_SOIC_ROWS",
+        rows: 2,
+        columns: 4,
+        yStep: 2,
+      }),
+    ),
+    layerCount: 4,
+    minViaPadDiameter: 0.3,
+    defaultObstacleMargin: 0.15,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+    viaDiameter: 0.3,
+    obstacleMargin: 0.15,
+  })
+  topologyPlanningSolver.solve()
+
+  const soicNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!
+  const centerNode = soicNodes.find(
+    (node) => node.capacityMeshNodeId === "soic:U_SOIC_ROWS:center",
+  )
+  const sideGapNodes = soicNodes.filter((node) =>
+    node.capacityMeshNodeId.includes("-gap-"),
+  )
+
+  expect(
+    componentDetectionSolver.getOutput().components[0]?.componentKind,
+  ).toBe("soic")
+  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
+  expect(sideGapNodes.length).toBeGreaterThan(0)
+  expect(
+    soicNodes.every((node) => node.capacityMeshNodeId.includes("U_SOIC_ROWS")),
+  ).toBe(true)
+})
+
+test("bugreport61 SOIC8 footprints use SOIC topology planning", () => {
   const inputSrj = bugReport61.simple_route_json as SimpleRouteJson
   const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
   componentDetectionSolver.solve()
 
-  const detectedComponentIds = componentDetectionSolver
-    .getOutput()
-    .components.map((component) => component.componentId)
-  expect(detectedComponentIds).toEqual(["pcb_component_0", "pcb_component_1"])
+  expect(
+    componentDetectionSolver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+      ]),
+  ).toEqual([
+    ["pcb_component_0", "soic"],
+    ["pcb_component_1", "soic"],
+  ])
+  expect(
+    componentDetectionSolver
+      .visualize()
+      .rects?.some(
+        (rect) => rect.label === "pcb_component_0 SOIC region",
+      ),
+  ).toBe(true)
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
@@ -485,6 +586,11 @@ test("bugreport61 SOIC8 footprints use BGA topology planning", () => {
   expect(output.componentMeshNodes.every((nodes) => nodes.length > 0)).toBe(
     true,
   )
+  expect(
+    output.componentMeshNodes.every((nodes) =>
+      nodes.every((node) => node.capacityMeshNodeId.startsWith("soic:")),
+    ),
+  ).toBe(true)
 })
 
 test("bugreport62 QFP footprints are clearly detected", () => {

@@ -2,6 +2,7 @@ import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
+import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
@@ -18,7 +19,7 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
-  componentKinds: Array<"bga" | "qfp" | undefined>
+  componentKinds: Array<"bga" | "qfp" | "soic" | undefined>
   replacementObstacleIds: Array<string | undefined>
   viaDiameter?: number
   obstacleMargin?: number
@@ -168,7 +169,7 @@ function isReplacementRegionNode({
     Math.abs(node.width - replacementObstacle.width) <= epsilon &&
     Math.abs(node.height - replacementObstacle.height) <= epsilon
 
-  if (component.componentKind !== "qfp") {
+  if (component.componentKind !== "qfp" && component.componentKind !== "soic") {
     return isExactReplacementNode
   }
 
@@ -194,6 +195,7 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
   activeSubSolver?:
     | BgaTopologyGeneratorSolver
     | QfpTopologyGeneratorSolver
+    | SoicTopologyGeneratorSolver
     | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
@@ -244,14 +246,25 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
         this.inputProblem.replacementObstacleIds[this.currentIndex],
     }
 
-    this.activeSubSolver =
-      componentKind === "qfp"
-        ? new QfpTopologyGeneratorSolver({
-            ...solverInput,
-            viaDiameter: this.inputProblem.viaDiameter,
-            obstacleMargin: this.inputProblem.obstacleMargin,
-          })
-        : new BgaTopologyGeneratorSolver(solverInput)
+    if (componentKind === "qfp") {
+      this.activeSubSolver = new QfpTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    if (componentKind === "soic") {
+      this.activeSubSolver = new SoicTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    this.activeSubSolver = new BgaTopologyGeneratorSolver(solverInput)
   }
 
   getOutput(): ComponentTopologyBatchSolverOutput {
