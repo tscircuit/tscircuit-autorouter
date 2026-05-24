@@ -21,6 +21,7 @@ export type RawPort = {
   z: number
   distToCentermostPortOnZ: number
   regions: RegionHg[]
+  tinyHypergraphPortPenalty?: number
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {

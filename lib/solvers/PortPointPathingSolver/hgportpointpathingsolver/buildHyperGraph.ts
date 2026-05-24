@@ -188,6 +188,7 @@ export function buildHyperGraph(params: {
         z,
         distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
         regions: [region1, region2],
+        tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

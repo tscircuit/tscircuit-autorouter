@@ -15,6 +15,8 @@ import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
+const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
+
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
@@ -235,14 +237,21 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
     this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
-      portPoints: segment.portPoints.filter((portPoint) => {
-        if (portPoint.cramped) {
-          return (
-            this.crampedPortPointsToKeep.has(portPoint) ||
-            this.isMultilayerEscapePort(portPoint)
-          )
+      portPoints: segment.portPoints.flatMap((portPoint) => {
+        if (!portPoint.cramped || this.crampedPortPointsToKeep.has(portPoint)) {
+          return [portPoint]
         }
-        return true
+
+        if (this.isMultilayerEscapePort(portPoint)) {
+          return [
+            {
+              ...portPoint,
+              tinyHypergraphPortPenalty: CRAMPED_NON_NECESSARY_PORT_PENALTY,
+            },
+          ]
+        }
+
+        return []
       }),
     }))
     return this.filteredOutput
