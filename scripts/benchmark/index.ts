@@ -57,6 +57,7 @@ type WorkerExecutionResult = {
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
+const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
 
 const formatTime = (timeMs: number | null) => {
   if (timeMs === null) {
@@ -951,11 +952,19 @@ const main = async () => {
     datasetName,
   } = parseArgs()
   const availableSolvers = await loadSolverNames(excludeAssignable)
-  const solvers = solverName ? [solverName] : availableSolvers
+  const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME]
 
   if (solverName && !availableSolvers.includes(solverName)) {
     throw new Error(
       `Unknown solver \"${solverName}\". Available: ${availableSolvers.join(", ")}`,
+    )
+  }
+  if (
+    !solverName &&
+    !availableSolvers.includes(DEFAULT_BENCHMARK_SOLVER_NAME)
+  ) {
+    throw new Error(
+      `Default benchmark solver "${DEFAULT_BENCHMARK_SOLVER_NAME}" was not found. Available: ${availableSolvers.join(", ")}`,
     )
   }
 

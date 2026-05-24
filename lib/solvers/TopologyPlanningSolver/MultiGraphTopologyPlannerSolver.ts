@@ -1,6 +1,6 @@
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { GraphicsObject } from "graphics-debug"
 import type { ComponentDetectionSolverOutput } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
@@ -19,6 +19,7 @@ export type TopologyMeshMergeStrategy = "concat"
 
 export interface SerializedTopologyComponentInput {
   componentId: string
+  componentKind?: "bga" | "qfp" | "soic"
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
   replacementObstacle: Obstacle
@@ -29,6 +30,8 @@ export interface MultiGraphTopologyPlannerSolverParams {
   globalNoConnectionSrj?: SimpleRouteJson
   components?: SerializedTopologyComponentInput[]
   componentDetectionOutput?: ComponentDetectionSolverOutput
+  viaDiameter?: number
+  obstacleMargin?: number
   brokenSrj?: {
     global: SimpleRouteJson
     components: SerializedTopologyComponentInput[]
@@ -70,9 +73,14 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
           componentIds: instance.normalizedInput.components.map(
             (component) => component.componentId,
           ),
+          componentKinds: instance.normalizedInput.components.map(
+            (component) => component.componentKind,
+          ),
           replacementObstacleIds: instance.normalizedInput.components.map(
             (component) => component.replacementObstacle.obstacleId,
           ),
+          viaDiameter: instance.inputProblem.viaDiameter,
+          obstacleMargin: instance.inputProblem.obstacleMargin,
         },
       ],
     ),
@@ -161,6 +169,9 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
             stroke: node._containsObstacle
               ? safeTransparentize("red", 0.3)
               : safeTransparentize(componentColor, 0.25),
+            label: component
+              ? `${component.componentKind?.toUpperCase() ?? "BGA"} ${node.capacityMeshNodeId}`
+              : node.capacityMeshNodeId,
           }
         }),
       ],

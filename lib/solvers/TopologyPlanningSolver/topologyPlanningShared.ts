@@ -1,6 +1,8 @@
-import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
+import { BaseSolver } from "@tscircuit/solver-utils"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
+import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
@@ -17,7 +19,10 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
+  componentKinds: Array<"bga" | "qfp" | "soic" | undefined>
   replacementObstacleIds: Array<string | undefined>
+  viaDiameter?: number
+  obstacleMargin?: number
 }
 
 export interface ComponentTopologyBatchSolverOutput {
@@ -42,7 +47,44 @@ export function createComponentSrj({
   inputSrj: SimpleRouteJson
   component: SerializedTopologyComponentInput
 }): SimpleRouteJson {
-  const componentBounds = getBoundsForObstacles(component.memberObstacles)
+  const obstacleBounds = getBoundsForObstacles(component.memberObstacles)
+  const localPointMargin = Math.max(
+    inputSrj.minViaPadDiameter ??
+      inputSrj.min_via_pad_diameter ??
+      inputSrj.minViaDiameter ??
+      0.3,
+    inputSrj.defaultObstacleMargin ?? 0.15,
+    inputSrj.minTraceWidth * 2,
+  )
+  const memberConnectionIds = new Set(
+    component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
+  )
+  const connectedPoints = inputSrj.connections.flatMap((connection) =>
+    connection.pointsToConnect.filter((point) => {
+      const pointIds = [point.pointId, point.pcb_port_id].filter(
+        (pointId): pointId is string => typeof pointId === "string",
+      )
+      const isConnectedToComponent = pointIds.some((pointId) =>
+        memberConnectionIds.has(pointId),
+      )
+      const isNearComponentBounds =
+        point.x >= obstacleBounds.minX - localPointMargin &&
+        point.x <= obstacleBounds.maxX + localPointMargin &&
+        point.y >= obstacleBounds.minY - localPointMargin &&
+        point.y <= obstacleBounds.maxY + localPointMargin
+
+      return isConnectedToComponent && isNearComponentBounds
+    }),
+  )
+  const componentBounds = connectedPoints.reduce(
+    (bounds, point) => ({
+      minX: Math.min(bounds.minX, point.x),
+      maxX: Math.max(bounds.maxX, point.x),
+      minY: Math.min(bounds.minY, point.y),
+      maxY: Math.max(bounds.maxY, point.y),
+    }),
+    obstacleBounds,
+  )
   const componentObstacles = inputSrj.obstacles
     .filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), componentBounds),
@@ -121,18 +163,40 @@ function isReplacementRegionNode({
 }) {
   const { replacementObstacle } = component
   const epsilon = 1e-9
-
-  return (
+  const isExactReplacementNode =
     Math.abs(node.center.x - replacementObstacle.center.x) <= epsilon &&
     Math.abs(node.center.y - replacementObstacle.center.y) <= epsilon &&
     Math.abs(node.width - replacementObstacle.width) <= epsilon &&
     Math.abs(node.height - replacementObstacle.height) <= epsilon
-  )
+
+  if (component.componentKind !== "qfp" && component.componentKind !== "soic") {
+    return isExactReplacementNode
+  }
+
+  const replacementMinX =
+    replacementObstacle.center.x - replacementObstacle.width / 2
+  const replacementMaxX =
+    replacementObstacle.center.x + replacementObstacle.width / 2
+  const replacementMinY =
+    replacementObstacle.center.y - replacementObstacle.height / 2
+  const replacementMaxY =
+    replacementObstacle.center.y + replacementObstacle.height / 2
+  const nodeCenterInsideReplacement =
+    node.center.x >= replacementMinX - epsilon &&
+    node.center.x <= replacementMaxX + epsilon &&
+    node.center.y >= replacementMinY - epsilon &&
+    node.center.y <= replacementMaxY + epsilon
+
+  return nodeCenterInsideReplacement || isExactReplacementNode
 }
 
-/** Runs one BGA topology solve per component SRJ and collects the routing regions. */
+/** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver?: BgaTopologyGeneratorSolver | null = null
+  activeSubSolver?:
+    | BgaTopologyGeneratorSolver
+    | QfpTopologyGeneratorSolver
+    | SoicTopologyGeneratorSolver
+    | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
 
@@ -173,12 +237,34 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       return
     }
 
-    this.activeSubSolver = new BgaTopologyGeneratorSolver({
+    const componentKind =
+      this.inputProblem.componentKinds[this.currentIndex] ?? "bga"
+    const solverInput = {
       inputSrj: this.inputProblem.componentSrjs[this.currentIndex]!,
       componentId: this.inputProblem.componentIds[this.currentIndex],
       replacementObstacleId:
         this.inputProblem.replacementObstacleIds[this.currentIndex],
-    })
+    }
+
+    if (componentKind === "qfp") {
+      this.activeSubSolver = new QfpTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    if (componentKind === "soic") {
+      this.activeSubSolver = new SoicTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    this.activeSubSolver = new BgaTopologyGeneratorSolver(solverInput)
   }
 
   getOutput(): ComponentTopologyBatchSolverOutput {

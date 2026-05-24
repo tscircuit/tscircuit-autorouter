@@ -76,6 +76,7 @@ export interface InputPortPoint {
   connectionNodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   /** XY distance to the centermost port on this Z level (centermost port has distance 0) */
   distToCentermostPortOnZ: number
+  cramped?: boolean
 
   connectsToOffBoardNode?: boolean
 }
@@ -99,6 +100,8 @@ export interface InputNodeWithPortPoints {
 
   _offBoardConnectionId?: string
   _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
+  _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
+  _isNarrowQfpPadGap?: boolean
 }
 
 /**

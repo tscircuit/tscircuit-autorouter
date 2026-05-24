@@ -21,6 +21,7 @@ type PortData = {
   y: number
   z: number
   distToCentermostPortOnZ: number
+  cramped?: boolean
 }
 
 type SerializedPort = {
@@ -116,6 +117,7 @@ const serializePort = (port: RuntimePortInput): SerializedPort => ({
     y: port.d.y,
     z: port.d.z,
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
+    cramped: (port.d as any).cramped,
   },
 })
 

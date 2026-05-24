@@ -110,6 +110,7 @@ const addAssignableViaRegions = (params: {
           y: obstacle.center.y,
           z,
           distToCentermostPortOnZ: 0,
+          cramped: false,
           regions: [region, viaRegion],
         }
         const hgPort: RegionPortHg = {
@@ -187,6 +188,7 @@ export function buildHyperGraph(params: {
         y: spp.y,
         z,
         distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
+        cramped: spp.cramped,
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
       }

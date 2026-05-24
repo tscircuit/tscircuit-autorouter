@@ -29,6 +29,10 @@ export interface CapacityMeshNode {
   _offBoardConnectionId?: string
   _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
 
+  _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
+  _isNarrowQfpPadGap?: boolean
+  _soicRegionType?: "center" | "pad" | "pad-gap"
+
   _parent?: CapacityMeshNode
 }
 

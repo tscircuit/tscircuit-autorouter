@@ -20,6 +20,7 @@ export type RawPort = {
   y: number
   z: number
   distToCentermostPortOnZ: number
+  cramped?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
 }

@@ -72,6 +72,7 @@ const EFFORT_STORAGE_KEY = "selectedEffort"
 const LAYER_OVERRIDE_STORAGE_KEY = "selectedLayerOverride"
 const AUTO_SOLVE_STORAGE_KEY = "autoSolve"
 const AUTO_RUN_DRC_STORAGE_KEY = "autoRunDrc"
+const DEFAULT_PIPELINE_ID: PipelineId = "AutoroutingPipelineSolver7_MultiGraph"
 
 const parseLayerOverride = (value: string | null): LayerOverride => {
   if (value === "auto") return "auto"
@@ -282,7 +283,7 @@ export const AutoroutingPipelineDebugger = ({
   const [selectedPipelineId, setSelectedPipelineIdState] = useState<PipelineId>(
     () =>
       (localStorage.getItem(PIPELINE_STORAGE_KEY) as PipelineId) ||
-      "AutoroutingPipelineSolver4",
+      DEFAULT_PIPELINE_ID,
   )
 
   const setSelectedPipelineId = (newPipelineId: PipelineId) => {
@@ -386,7 +387,7 @@ export const AutoroutingPipelineDebugger = ({
     // Read directly from localStorage for initial render to avoid closure issues
     const initialPipelineId =
       (localStorage.getItem(PIPELINE_STORAGE_KEY) as PipelineId) ||
-      "AutoroutingPipelineSolver4"
+      DEFAULT_PIPELINE_ID
     const initialCacheName =
       (localStorage.getItem("cacheProviderName") as CacheProviderName) ?? "None"
     const initialCacheProvider =
@@ -403,7 +404,7 @@ export const AutoroutingPipelineDebugger = ({
 
     if (!SolverClass) {
       // Fallback to default pipeline if stored ID is invalid
-      const fallbackClass = PIPELINE_SOLVERS.AutoroutingPipelineSolver4
+      const fallbackClass = PIPELINE_SOLVERS[DEFAULT_PIPELINE_ID]
       return createSolverProp
         ? createSolverProp(initialSrj, {
             cacheProvider: initialCacheProvider,
