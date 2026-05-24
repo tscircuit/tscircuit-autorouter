@@ -20,6 +20,7 @@ const MAX_BGA_PAD_SIZE_VARIANCE = 0.01
 const AXIS_CLUSTER_EPSILON = 1e-3
 const MIN_QFP_PADS_PER_SIDE = 3
 const MAX_QFP_PAD_COUNT = 32
+const MAX_QFP_THERMAL_PAD_COUNT = 4
 const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
 
@@ -246,20 +247,60 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
   return { counts, maxNearestSideRatio }
 }
 
-function isQfpLikeComponent(memberObstacles: Obstacle[]) {
-  if (memberObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
-  if (memberObstacles.length > MAX_QFP_PAD_COUNT) return false
-  if (
-    !memberObstacles.every((obstacle) => {
-      const minSide = Math.min(obstacle.width, obstacle.height)
-      const maxSide = Math.max(obstacle.width, obstacle.height)
-      return minSide > 0 && maxSide / minSide >= MIN_QFP_PAD_ASPECT_RATIO
-    })
-  ) {
-    return false
-  }
+function isQfpPerimeterPadObstacle(obstacle: Obstacle) {
+  const minSide = Math.min(obstacle.width, obstacle.height)
+  const maxSide = Math.max(obstacle.width, obstacle.height)
 
-  const { counts, maxNearestSideRatio } = getNearestSideCounts(memberObstacles)
+  return minSide > 0 && maxSide / minSide >= MIN_QFP_PAD_ASPECT_RATIO
+}
+
+function getQfpPerimeterPadObstacles(memberObstacles: Obstacle[]) {
+  return memberObstacles.filter(isQfpPerimeterPadObstacle)
+}
+
+function areCentralThermalPadObstacles({
+  perimeterPadObstacles,
+  thermalPadObstacles,
+}: {
+  perimeterPadObstacles: Obstacle[]
+  thermalPadObstacles: Obstacle[]
+}) {
+  if (thermalPadObstacles.length === 0) return true
+  if (thermalPadObstacles.length > MAX_QFP_THERMAL_PAD_COUNT) return false
+
+  const perimeterBounds = getBoundsForObstacles(perimeterPadObstacles)
+  const width = perimeterBounds.maxX - perimeterBounds.minX
+  const height = perimeterBounds.maxY - perimeterBounds.minY
+  const centralMinX = perimeterBounds.minX + width * 0.2
+  const centralMaxX = perimeterBounds.maxX - width * 0.2
+  const centralMinY = perimeterBounds.minY + height * 0.2
+  const centralMaxY = perimeterBounds.maxY - height * 0.2
+  const perimeterPadThickness = Math.min(
+    ...perimeterPadObstacles.map((obstacle) =>
+      Math.min(obstacle.width, obstacle.height),
+    ),
+  )
+
+  return thermalPadObstacles.every((obstacle) => {
+    const minSide = Math.min(obstacle.width, obstacle.height)
+
+    return (
+      obstacle.center.x >= centralMinX &&
+      obstacle.center.x <= centralMaxX &&
+      obstacle.center.y >= centralMinY &&
+      obstacle.center.y <= centralMaxY &&
+      minSide > perimeterPadThickness
+    )
+  })
+}
+
+function hasQfpPerimeterPadRing(perimeterPadObstacles: Obstacle[]) {
+  if (perimeterPadObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
+  if (perimeterPadObstacles.length > MAX_QFP_PAD_COUNT) return false
+
+  const { counts, maxNearestSideRatio } = getNearestSideCounts(
+    perimeterPadObstacles,
+  )
 
   return (
     counts.top >= MIN_QFP_PADS_PER_SIDE &&
@@ -270,10 +311,50 @@ function isQfpLikeComponent(memberObstacles: Obstacle[]) {
   )
 }
 
+function splitQfpMemberObstacles(memberObstacles: Obstacle[]) {
+  const perimeterPadObstacles = getQfpPerimeterPadObstacles(memberObstacles)
+  const thermalPadObstacles = memberObstacles.filter(
+    (obstacle) => !isQfpPerimeterPadObstacle(obstacle),
+  )
+
+  return { perimeterPadObstacles, thermalPadObstacles }
+}
+
+function isQfpThermalPadLikeComponent(memberObstacles: Obstacle[]) {
+  const { perimeterPadObstacles, thermalPadObstacles } =
+    splitQfpMemberObstacles(memberObstacles)
+
+  if (thermalPadObstacles.length === 0) return false
+  if (!hasQfpPerimeterPadRing(perimeterPadObstacles)) return false
+
+  return areCentralThermalPadObstacles({
+    perimeterPadObstacles,
+    thermalPadObstacles,
+  })
+}
+
+function isQfpLikeComponent(memberObstacles: Obstacle[]) {
+  const { perimeterPadObstacles, thermalPadObstacles } =
+    splitQfpMemberObstacles(memberObstacles)
+
+  if (thermalPadObstacles.length > 0) return false
+  if (
+    !areCentralThermalPadObstacles({
+      perimeterPadObstacles,
+      thermalPadObstacles,
+    })
+  ) {
+    return false
+  }
+
+  return hasQfpPerimeterPadRing(perimeterPadObstacles)
+}
+
 function detectComponentKind(
   memberObstacles: Obstacle[],
   inputSrj: SimpleRouteJson,
 ): ComponentKind | null {
+  if (isQfpThermalPadLikeComponent(memberObstacles)) return "qfp_thermalpad"
   if (isQfpLikeComponent(memberObstacles)) return "qfp"
   if (isSoicLikeComponent({ memberObstacles, inputSrj })) return "soic"
   if (isBgaLikeComponent(memberObstacles)) return "bga"
@@ -515,6 +596,12 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       ).length,
       detectedQfpComponentIds: this.detectedComponents
         .filter((component) => component.componentKind === "qfp")
+        .map((component) => component.componentId),
+      detectedQfpThermalPadComponentCount: this.detectedComponents.filter(
+        (component) => component.componentKind === "qfp_thermalpad",
+      ).length,
+      detectedQfpThermalPadComponentIds: this.detectedComponents
+        .filter((component) => component.componentKind === "qfp_thermalpad")
         .map((component) => component.componentId),
       detectedSoicComponentCount: this.detectedComponents.filter(
         (component) => component.componentKind === "soic",

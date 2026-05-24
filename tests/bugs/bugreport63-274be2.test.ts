@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  AutoroutingPipelineSolver,
+  AutoroutingPipelineSolver7_MultiGraph,
+} from "lib"
 import bugReport from "../../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with {
   type: "json",
 }
@@ -14,4 +17,15 @@ test("bugreport63-274be2.json", () => {
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
+})
+
+test("bugreport63-274be2.json solves with pipeline7 QFP thermal-pad topology", () => {
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(srj)
+
+  while (!solver.solved && !solver.failed) {
+    solver.step()
+  }
+
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
 })

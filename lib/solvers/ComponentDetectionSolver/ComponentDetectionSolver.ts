@@ -11,7 +11,7 @@ export interface ComponentDetectionSolverParams {
 
 export interface DetectedComponent {
   componentId: string
-  componentKind: "bga" | "qfp" | "soic"
+  componentKind: "bga" | "qfp" | "qfp_thermalpad" | "soic"
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
   replacementObstacle: Obstacle
