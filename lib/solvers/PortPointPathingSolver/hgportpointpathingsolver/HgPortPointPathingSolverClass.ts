@@ -7,6 +7,7 @@ import {
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { clonePortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import type {
   InputNodeWithPortPoints,
@@ -541,10 +542,25 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   private computeRegionPfFromAssignments(region: RegionHg): number {
     const existingPortPoints = this.getRegionAssignedPortPoints(region)
+    const existingPortPointPairIds = (region.assignments ?? []).flatMap(
+      (assignment) =>
+        assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
+          ? ([
+              [
+                assignment.regionPort1.d.portId,
+                assignment.regionPort2.d.portId,
+              ] as [string, string],
+            ] as [string, string][])
+          : [],
+    )
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: existingPortPoints,
+      portPointPairIds:
+        existingPortPointPairIds.length > 0
+          ? clonePortPointPairIds(existingPortPointPairIds)
+          : undefined,
     }
 
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
@@ -639,10 +655,32 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         rootConnectionName,
       },
     ]
+    const existingPortPointPairIds = (region.assignments ?? []).flatMap(
+      (assignment) =>
+        assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
+          ? ([
+              [
+                assignment.regionPort1.d.portId,
+                assignment.regionPort2.d.portId,
+              ] as [string, string],
+            ] as [string, string][])
+          : [],
+    )
+    const additionalPortPointPairIds =
+      port1.d.portId && port2.d.portId
+        ? ([[port1.d.portId, port2.d.portId]] as [string, string][])
+        : []
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: [...existingPortPoints, ...additionalPortPoints],
+      portPointPairIds:
+        existingPortPointPairIds.length + additionalPortPointPairIds.length > 0
+          ? clonePortPointPairIds([
+              ...existingPortPointPairIds,
+              ...additionalPortPointPairIds,
+            ])
+          : undefined,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
@@ -739,6 +777,32 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         ] as PortPoint[]
       },
     )
+    const existingPortPointPairIds = existingAssignments.flatMap((assignment) =>
+      assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
+        ? ([
+            [
+              assignment.regionPort1.d.portId,
+              assignment.regionPort2.d.portId,
+            ] as [string, string],
+          ] as [string, string][])
+        : [],
+    )
+    const newlySolvedRoutePortPointPairIds = newlySolvedRoute.path.flatMap(
+      (candidate) => {
+        if (!candidate.lastPort || candidate.lastRegion !== region) {
+          return []
+        }
+
+        return candidate.lastPort.d.portId && candidate.port.d.portId
+          ? ([
+              [
+                candidate.lastPort.d.portId,
+                candidate.port.d.portId,
+              ] as [string, string],
+            ] as [string, string][])
+          : []
+      },
+    )
 
     const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints]
 
@@ -748,6 +812,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       width: region.d.width,
       height: region.d.height,
       portPoints,
+      portPointPairIds:
+        existingPortPointPairIds.length +
+          newlySolvedRoutePortPointPairIds.length >
+        0
+          ? clonePortPointPairIds([
+              ...existingPortPointPairIds,
+              ...newlySolvedRoutePortPointPairIds,
+            ])
+          : undefined,
       availableZ: region.d.availableZ,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)

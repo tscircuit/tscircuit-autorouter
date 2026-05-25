@@ -251,6 +251,13 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     return 1 - (solver.progress || 0)
   }
 
+  /**
+   * Detect whether this node contains multiple logical pairs that share the
+   * same `connectionName`, which requires explicit pair-aware routing.
+   *
+   * @returns `true` when grouping by `connectionName` would merge distinct
+   * logical pairs, otherwise `false`.
+   */
   private requiresPairAwareSolver() {
     const pairCountByConnectionName = new Map<string, number>()
     for (const pair of getNodePortPointPairs(this.nodeWithPortPoints)) {

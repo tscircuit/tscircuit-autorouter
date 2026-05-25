@@ -15,6 +15,12 @@ type IndexedPortPoint = {
   portPoint: PortPoint
 }
 
+/**
+ * Clone ordered port-point id pairs so callers can safely mutate the result.
+ *
+ * @param portPointPairIds - Ordered `[startPortPointId, endPortPointId]` pairs.
+ * @returns A deep-cloned copy of the pair ids.
+ */
 export const clonePortPointPairIds = (
   portPointPairIds: [string, string][],
 ): [string, string][] =>
@@ -23,6 +29,13 @@ export const clonePortPointPairIds = (
       [startPortPointId, endPortPointId] as [string, string],
   )
 
+/**
+ * Derive ordered pair ids from legacy `portPointsInPairs` data.
+ *
+ * @param portPointsInPairs - Legacy pair data that may include endpoint ids.
+ * @returns Explicit pair ids when both endpoints have distinct ids, otherwise
+ * `undefined`.
+ */
 export const derivePortPointPairIdsFromPortPointsInPairs = (
   portPointsInPairs?: [
     Pick<PortPoint, "portPointId">,
@@ -42,6 +55,17 @@ export const derivePortPointPairIdsFromPortPointsInPairs = (
   return portPointPairIds.length > 0 ? portPointPairIds : undefined
 }
 
+/**
+ * Resolve the authoritative ordered port-point pairs for a node.
+ *
+ * Notes:
+ * - Explicit `portPointPairIds` take precedence.
+ * - `portPointsInPairs` is used only as a backwards-compatible fallback.
+ *
+ * @param nodeWithPortPoints - Node data that may contain explicit or legacy
+ * pairing metadata.
+ * @returns Ordered pair ids, or `undefined` when none are available.
+ */
 export const getExplicitPortPointPairIds = (
   nodeWithPortPoints: Pick<
     NodeWithPortPoints,
@@ -57,6 +81,15 @@ export const getExplicitPortPointPairIds = (
   )
 }
 
+/**
+ * Filter a node's explicit pair ids down to a selected subset of port points.
+ *
+ * @param nodeWithPortPoints - Source node containing explicit or legacy pair
+ * metadata.
+ * @param portPoints - Selected port points that define the subset.
+ * @returns Cloned pair ids fully contained in the subset, or `undefined` when
+ * no explicit pairs apply.
+ */
 export const getPortPointPairIdsForSubset = (
   nodeWithPortPoints: Pick<
     NodeWithPortPoints,
@@ -85,6 +118,18 @@ export const getPortPointPairIdsForSubset = (
     : undefined
 }
 
+/**
+ * Convert a node's port points into logical start/end pairs.
+ *
+ * Notes:
+ * - Explicit pair ids are consumed first.
+ * - Remaining unmatched points fall back to positional pairing by
+ *   `connectionName` for backwards compatibility.
+ *
+ * @param nodeWithPortPoints - Node data containing port points and optional
+ * pairing metadata.
+ * @returns Logical route segments with preserved connection metadata.
+ */
 export const getNodePortPointPairs = (
   nodeWithPortPoints: NodeWithPortPoints,
 ): NodePortPointPair[] => {
@@ -161,6 +206,14 @@ export const getNodePortPointPairs = (
   return pairs
 }
 
+/**
+ * Count the logical port-point pairs in a node after applying explicit pairing
+ * metadata and backwards-compatible fallbacks.
+ *
+ * @param nodeWithPortPoints - Node data containing port points and optional
+ * pairing metadata.
+ * @returns The number of logical start/end pairs in the node.
+ */
 export const getNodePortPointPairCount = (
   nodeWithPortPoints: NodeWithPortPoints,
 ) => getNodePortPointPairs(nodeWithPortPoints).length
