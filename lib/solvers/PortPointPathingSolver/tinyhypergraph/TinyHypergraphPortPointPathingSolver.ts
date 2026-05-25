@@ -876,11 +876,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           ] satisfies [PortPoint, PortPoint],
       )
       const portPoints = portPointPairs.flat()
-      const portPointPairIds = portPointPairs.flatMap(([start, end]) =>
-        start.portPointId && end.portPointId
-          ? ([[start.portPointId, end.portPointId]] as [string, string][])
-          : [],
-      )
 
       if (portPoints.length === 0) {
         continue
@@ -892,8 +887,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         width: originalRegion.d.width,
         height: originalRegion.d.height,
         portPoints,
-        portPointPairIds:
-          portPointPairIds.length > 0 ? portPointPairIds : undefined,
+        portPointsInPairs: portPointPairs,
         availableZ: originalRegion.d.availableZ,
       })
     }

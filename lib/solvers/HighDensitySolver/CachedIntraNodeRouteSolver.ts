@@ -6,6 +6,7 @@ import {
   setupGlobalCaches,
 } from "lib/cache/setupGlobalCaches"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
 
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
@@ -138,6 +139,9 @@ export class CachedIntraNodeRouteSolver
         availableZ: this.nodeWithPortPoints.availableZ
           ? [...this.nodeWithPortPoints.availableZ].sort()
           : undefined,
+        explicitPortPointPairIds: getExplicitPortPointPairIds(
+          this.nodeWithPortPoints,
+        ),
       },
       normalizedConnections,
       normalizedHyperParameters,

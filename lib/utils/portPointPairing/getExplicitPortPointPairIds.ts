@@ -1,16 +1,14 @@
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { clonePortPointPairIds } from "./clonePortPointPairIds"
-import { derivePortPointPairIdsFromPortPointsInPairs } from "./derivePortPointPairIdsFromPortPointsInPairs"
 
 /**
- * Reads explicit pair ids from a node, normalizing legacy paired-port input
- * when needed.
+ * Reads explicit pair ids from a node.
  *
- * @param nodeWithPortPoints - Node data that may define pair ids directly or
- * via `portPointsInPairs`.
+ * @param nodeWithPortPoints - Node data that may define pair ids directly.
  * @returns Cloned explicit pair ids, or `undefined` when the node does not
- * define any explicit pairing.
- * @note `portPointPairIds` takes precedence over `portPointsInPairs`.
+ * define any explicit id-based pairing.
+ * @note Legacy `portPointsInPairs` data is intentionally ignored here so older
+ * routing behavior is preserved unless callers opt into explicit id pairing.
  */
 export const getExplicitPortPointPairIds = (
   nodeWithPortPoints: Pick<
@@ -21,8 +19,5 @@ export const getExplicitPortPointPairIds = (
   if (nodeWithPortPoints.portPointPairIds?.length) {
     return clonePortPointPairIds(nodeWithPortPoints.portPointPairIds)
   }
-
-  return derivePortPointPairIdsFromPortPointsInPairs(
-    nodeWithPortPoints.portPointsInPairs,
-  )
+  return undefined
 }

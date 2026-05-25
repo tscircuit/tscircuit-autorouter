@@ -17,6 +17,7 @@ type Point3 = { x: number; y: number; z: number }
 type Point2 = { x: number; y: number }
 
 type PairTask = {
+  routeKey: string
   connectionName: string
   rootConnectionName: string
   A: PortPoint
@@ -450,17 +451,36 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
   }
 
   private buildTaskGroups() {
-    const groups = new Map<string, PortPoint[]>()
+    const groups = new Map<
+      string,
+      {
+        connectionName: string
+        rootConnectionName: string
+        points: PortPoint[]
+      }
+    >()
     if (getExplicitPortPointPairIds(this.nodeWithPortPoints)?.length) {
       for (const pair of getNodePortPointPairs(this.nodeWithPortPoints)) {
-        groups.set(pair.pairKey, [pair.start, pair.end])
+        groups.set(pair.pairKey, {
+          connectionName: pair.connectionName,
+          rootConnectionName: pair.rootConnectionName ?? pair.connectionName,
+          points: [pair.start, pair.end],
+        })
       }
       return groups
     }
     for (const portPoint of this.nodeWithPortPoints.portPoints) {
-      const existing = groups.get(portPoint.connectionName) ?? []
-      existing.push(portPoint)
-      groups.set(portPoint.connectionName, existing)
+      const existing = groups.get(portPoint.connectionName)
+      if (existing) {
+        existing.points.push(portPoint)
+        continue
+      }
+      groups.set(portPoint.connectionName, {
+        connectionName: portPoint.connectionName,
+        rootConnectionName:
+          portPoint.rootConnectionName ?? portPoint.connectionName,
+        points: [portPoint],
+      })
     }
     return groups
   }
@@ -469,11 +489,12 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
     const bounds = getBounds(this.nodeWithPortPoints)
     const groups = this.buildTaskGroups()
     const groupCandidates = Array.from(groups.entries()).map(
-      ([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName: points[0]?.rootConnectionName ?? connectionName,
-        points,
-        pairSets: getCandidatePairSetsForConnection(points, bounds),
+      ([routeKey, group]) => ({
+        routeKey,
+        connectionName: group.connectionName,
+        rootConnectionName: group.rootConnectionName,
+        points: group.points,
+        pairSets: getCandidatePairSetsForConnection(group.points, bounds),
       }),
     )
 
@@ -487,6 +508,7 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
       const candidate = groupCandidates[index]!
       for (const pairSet of candidate.pairSets) {
         const nextTasks = pairSet.map(({ a, b }) => ({
+          routeKey: candidate.routeKey,
           connectionName: candidate.connectionName,
           rootConnectionName: candidate.rootConnectionName,
           A: candidate.points[a]!,

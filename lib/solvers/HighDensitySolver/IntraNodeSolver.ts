@@ -4,7 +4,6 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
-import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -118,21 +117,33 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.rootConnectionNameByRouteKey = new Map()
     this.routeKeyBySolvedRoute = new WeakMap()
-    this.unsolvedConnections = getNodePortPointPairs(nodeWithPortPoints).map(
-      ({ pairKey, connectionName, rootConnectionName, start, end }) => {
-        if (rootConnectionName) {
-          this.rootConnectionNameByRouteKey.set(pairKey, rootConnectionName)
-        }
-        return {
-          routeKey: pairKey,
+    const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
+    for (const {
+      connectionName,
+      rootConnectionName,
+      x,
+      y,
+      z,
+    } of nodeWithPortPoints.portPoints) {
+      if (rootConnectionName) {
+        this.rootConnectionNameByRouteKey.set(
           connectionName,
           rootConnectionName,
-          points: dedupeConnectionPoints([
-            { x: start.x, y: start.y, z: start.z ?? 0 },
-            { x: end.x, y: end.y, z: end.z ?? 0 },
-          ]),
-        }
-      },
+        )
+      }
+      unsolvedConnectionsMap.set(connectionName, [
+        ...(unsolvedConnectionsMap.get(connectionName) ?? []),
+        { x, y, z: z ?? 0 },
+      ])
+    }
+    this.unsolvedConnections = Array.from(
+      unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
+        routeKey: connectionName,
+        connectionName,
+        rootConnectionName:
+          this.rootConnectionNameByRouteKey.get(connectionName),
+        points: dedupeConnectionPoints(points),
+      })),
     )
     this.originalConnectionPointsByRouteKey = new Map(
       this.unsolvedConnections.map(({ routeKey, points }) => [
@@ -229,10 +240,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
         z: points[points.length - 1].z,
       },
       obstacleRoutes: this.connMap
-        ? this.solvedRoutes.filter(
-            (sr) =>
-              !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
-          )
+        ? this.solvedRoutes.filter((sr) => {
+            const solvedRouteKey = this.routeKeyBySolvedRoute.get(sr)
+            if (
+              solvedRouteKey &&
+              solvedRouteKey !== unsolvedConnection.routeKey &&
+              sr.connectionName === connectionName
+            ) {
+              return true
+            }
+
+            return !this.connMap!.areIdsConnected(
+              sr.connectionName,
+              connectionName,
+            )
+          })
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
@@ -286,6 +308,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
 
     this.solvedRoutes.push({
+      routeKey: unsolvedConnection.routeKey,
       connectionName: unsolvedConnection.connectionName,
       rootConnectionName: unsolvedConnection.rootConnectionName,
       traceThickness: this.traceWidth,
@@ -355,8 +378,23 @@ export class IntraNodeRouteSolver extends BaseSolver {
           const conflicts = spatialIndex
             .getConflictingRoutesNearPoint({ x: via.x, y: via.y, z }, margin)
             .filter(({ conflictingRoute }) => {
-              if (conflictingRoute.connectionName === route.connectionName) {
+              const routeKey = this.routeKeyBySolvedRoute.get(route)
+              const conflictingRouteKey =
+                this.routeKeyBySolvedRoute.get(conflictingRoute)
+
+              if (
+                routeKey &&
+                conflictingRouteKey &&
+                routeKey === conflictingRouteKey
+              ) {
                 return false
+              }
+
+              if (
+                conflictingRoute.connectionName === route.connectionName &&
+                routeKey !== conflictingRouteKey
+              ) {
+                return true
               }
 
               return !(
@@ -381,11 +419,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return null
   }
 
-  private queueConnectionForPostrouteRepair(connectionName: string) {
-    const route = this.solvedRoutes.find(
-      (candidate) => candidate.connectionName === connectionName,
-    )
-    const routeKey = route ? this.routeKeyBySolvedRoute.get(route) : undefined
+  private queueConnectionForPostrouteRepair(route: HighDensityIntraNodeRoute) {
+    const routeKey = this.routeKeyBySolvedRoute.get(route)
     if (!routeKey) {
       return false
     }
@@ -400,7 +435,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
     this.unsolvedConnections.push({
       routeKey,
-      connectionName,
+      connectionName: route.connectionName,
       rootConnectionName: this.rootConnectionNameByRouteKey.get(routeKey),
       points: points.map((point) => ({ ...point })),
     })
@@ -416,7 +451,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
       if (this.activeSubSolver.solved) {
-        this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
+        this.solvedRoutes.push({
+          ...this.activeSubSolver.solvedPath!,
+          routeKey:
+            this.activeRouteKey ?? this.activeSubSolver.solvedPath!.routeKey,
+        })
         if (this.activeRouteKey) {
           this.routeKeyBySolvedRoute.set(
             this.solvedRoutes[this.solvedRoutes.length - 1]!,
@@ -456,11 +495,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
           return
         }
 
-        if (
-          this.queueConnectionForPostrouteRepair(
-            viaTraceConflict.route.connectionName,
-          )
-        ) {
+        if (this.queueConnectionForPostrouteRepair(viaTraceConflict.route)) {
           this.progress = this.computeProgress()
           return
         }

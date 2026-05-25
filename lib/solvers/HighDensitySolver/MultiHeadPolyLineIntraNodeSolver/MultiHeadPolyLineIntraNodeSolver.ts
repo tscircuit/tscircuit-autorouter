@@ -193,10 +193,20 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       const path1Vias = polyLineVias[i]
       // Start j from i + 1 to compare distinct pairs only once
       for (let j = i + 1; j < polyLines.length; j++) {
+        const polyLine1Metadata = this.pairMetadataByInternalName.get(
+          polyLines[i].connectionName,
+        )
+        const polyLine2Metadata = this.pairMetadataByInternalName.get(
+          polyLines[j].connectionName,
+        )
+        const polyLine1ConnectionName =
+          polyLine1Metadata?.connectionName ?? polyLines[i].connectionName
+        const polyLine2ConnectionName =
+          polyLine2Metadata?.connectionName ?? polyLines[j].connectionName
         if (
           this.connMap?.areIdsConnected(
-            polyLines[i].connectionName,
-            polyLines[j].connectionName,
+            polyLine1ConnectionName,
+            polyLine2ConnectionName,
           )
         ) {
           continue
