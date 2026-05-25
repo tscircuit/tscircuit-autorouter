@@ -46,6 +46,7 @@ export class CachedIntraNodeRouteSolver
     | CacheToIntraNodeSolverTransform
     | undefined
   initialUnsolvedConnections: {
+    routeKey: string
     connectionName: string
     points: { x: number; y: number; z: number }[]
   }[]
@@ -95,7 +96,8 @@ export class CachedIntraNodeRouteSolver
   } {
     const center = this.nodeWithPortPoints.center
     const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, points }) => ({
+      ({ routeKey, connectionName, points }) => ({
+        routeKey,
         connectionName,
         points: points.map((point) => ({
           connectionName,
@@ -113,7 +115,8 @@ export class CachedIntraNodeRouteSolver
     )
 
     const normalizedConnMap = this.connMap
-      ? this.initialUnsolvedConnections.map(({ connectionName }) => ({
+      ? this.initialUnsolvedConnections.map(({ routeKey, connectionName }) => ({
+          routeKey,
           connectionName,
           connectedIds: [
             ...new Set(

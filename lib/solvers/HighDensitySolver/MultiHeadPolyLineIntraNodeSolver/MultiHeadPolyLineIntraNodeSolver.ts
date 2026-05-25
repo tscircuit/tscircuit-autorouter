@@ -17,6 +17,7 @@ import {
 } from "lib/types/high-density-types"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import { HighDensityHyperParameters } from "../HighDensityHyperParameters"
 import { computeViaCountVariants } from "./computeViaCountVariants"
 import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWithViaPositions"
@@ -41,6 +42,10 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   unsolvedConnections: any[] = []
+  pairMetadataByInternalName: Map<
+    string,
+    { connectionName: string; rootConnectionName?: string }
+  > = new Map()
 
   SEGMENTS_PER_POLYLINE: number
 
@@ -106,9 +111,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     const areaPerVia =
       (this.viaDiameter + this.obstacleMargin * 2 + this.traceWidth / 2) ** 2
 
-    const uniqueConnections = new Set(
-      this.nodeWithPortPoints.portPoints.map((pp) => pp.connectionName),
-    ).size
+    this.pairMetadataByInternalName = new Map(
+      getNodePortPointPairs(this.nodeWithPortPoints).map((pair) => [
+        pair.pairKey,
+        {
+          connectionName: pair.connectionName,
+          rootConnectionName: pair.rootConnectionName,
+        },
+      ]),
+    )
+    const uniqueConnections = this.pairMetadataByInternalName.size
     this.uniqueConnections = uniqueConnections
 
     const { numSameLayerCrossings, numEntryExitLayerChanges } =
@@ -268,32 +280,23 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    * neighbors we never consider changing layers
    */
   setupInitialPolyLines() {
-    const portPairs: Map<string, { start: MHPoint; end: MHPoint }> = new Map()
-    this.nodeWithPortPoints.portPoints.forEach((portPoint) => {
-      if (!portPairs.has(portPoint.connectionName)) {
-        portPairs.set(portPoint.connectionName, {
+    const portPairs = new Map<string, { start: MHPoint; end: MHPoint }>(
+      getNodePortPointPairs(this.nodeWithPortPoints).map((pair) => [
+        pair.pairKey,
+        {
           start: {
-            ...portPoint,
-            z1: portPoint.z ?? 0,
-            z2: portPoint.z ?? 0,
+            ...pair.start,
+            z1: pair.start.z ?? 0,
+            z2: pair.start.z ?? 0,
           },
-          end: null as any,
-        })
-      } else {
-        portPairs.get(portPoint.connectionName)!.end = {
-          ...portPoint,
-          z1: portPoint.z ?? 0,
-          z2: portPoint.z ?? 0,
-        }
-      }
-    })
-
-    // Remove port pairs with only one point
-    for (const [connectionName, portPair] of portPairs.entries()) {
-      if (portPair.end === null) {
-        portPairs.delete(connectionName)
-      }
-    }
+          end: {
+            ...pair.end,
+            z1: pair.end.z ?? 0,
+            z2: pair.end.z ?? 0,
+          },
+        },
+      ]),
+    )
 
     if (portPairs.size === 0) {
       this.failed = true
@@ -1189,7 +1192,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     // Visualize the polylines (if a candidate exists)
     if (candidateToVisualize) {
       candidateToVisualize.polyLines.forEach((polyLine, polyLineIndex) => {
-        const color = this.colorMap[polyLine.connectionName] ?? "purple"
+        const polyLineMetadata = this.pairMetadataByInternalName.get(
+          polyLine.connectionName,
+        )
+        const displayConnectionName =
+          polyLineMetadata?.connectionName ?? polyLine.connectionName
+        const color = this.colorMap[displayConnectionName] ?? "purple"
         const pointsInPolyline = [
           polyLine.start,
           ...polyLine.mPoints,
@@ -1213,7 +1221,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             strokeColor: segmentColor,
             strokeWidth: this.traceWidth, // TODO: Use actual trace thickness from HighDensityRoute?
             strokeDash: !isLayer0 ? [0.15, 0.15] : undefined, // Dashed for layers > 0
-            label: `${polyLine.connectionName} segment (z=${segmentLayer})`,
+            label: `${displayConnectionName} segment (z=${segmentLayer})`,
           })
         }
 
@@ -1244,15 +1252,24 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   const applyingLineIndex = parseInt(parts[1], 10)
                   const applyingPolyline =
                     candidateToVisualize.polyLines[applyingLineIndex]
+                  const applyingPolylineMetadata =
+                    this.pairMetadataByInternalName.get(
+                      applyingPolyline.connectionName,
+                    )
                   const applyingColor =
-                    this.colorMap[applyingPolyline.connectionName] ?? "gray"
+                    this.colorMap[
+                      applyingPolylineMetadata?.connectionName ??
+                        applyingPolyline.connectionName
+                    ] ?? "gray"
                   const forceScale = 20 // Adjust scale for visibility
                   const forceEndPoint = {
                     x: point.x + force.fx * forceScale,
                     y: point.y + force.fy * forceScale,
                   }
 
-                  let sourceLabel = applyingPolyline.connectionName
+                  let sourceLabel =
+                    applyingPolylineMetadata?.connectionName ??
+                    applyingPolyline.connectionName
                   if (sourceType === "via") {
                     const pointIdx = parseInt(parts[2], 10)
                     sourceLabel += ` Via ${pointIdx}`
@@ -1267,7 +1284,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                     strokeColor: applyingColor, // Color by applying polyline
                     strokeWidth: 0.02,
                     strokeDash: "2,2", // Dashed line for force
-                    label: `Force by ${sourceLabel} on ${polyLine.connectionName} mPoint ${mPointIndex}`,
+                    label: `Force by ${sourceLabel} on ${displayConnectionName} mPoint ${mPointIndex}`,
                   })
                 }
               })
@@ -1283,7 +1300,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
           if (isVia) {
             // Draw Via
-            label = `Via (${polyLine.connectionName} z=${point.z1} -> z=${point.z2})${forceLabel}`
+            label = `Via (${displayConnectionName} z=${point.z1} -> z=${point.z2})${forceLabel}`
             graphicsObject.circles.push({
               center: point,
               radius: this.viaDiameter / 2,
@@ -1299,7 +1316,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
               const pointColor = isLayer0
                 ? color
                 : safeTransparentize(color, 0.5)
-              label = `mPoint (${polyLine.connectionName} z=${pointLayer})${forceLabel}`
+              label = `mPoint (${displayConnectionName} z=${pointLayer})${forceLabel}`
 
               // Draw the circle for the mPoint itself
               graphicsObject.circles.push({
@@ -1356,8 +1373,13 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
       // TODO: Optimize the route points (remove collinear points on the same layer)
 
+      const polyLineMetadata = this.pairMetadataByInternalName.get(
+        polyLine.connectionName,
+      )
       solvedRoutes.push({
-        connectionName: polyLine.connectionName,
+        connectionName:
+          polyLineMetadata?.connectionName ?? polyLine.connectionName,
+        rootConnectionName: polyLineMetadata?.rootConnectionName,
         traceThickness: this.traceWidth,
         viaDiameter: this.viaDiameter,
         route: routePoints,

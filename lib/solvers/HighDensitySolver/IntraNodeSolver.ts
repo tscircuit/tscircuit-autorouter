@@ -4,6 +4,7 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -57,12 +58,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {
+    routeKey: string
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }[]
-  originalConnectionPointsByName: Map<string, ConnectionPoint[]>
-  rootConnectionNameByConnectionName: Map<string, string>
+  originalConnectionPointsByRouteKey: Map<string, ConnectionPoint[]>
+  rootConnectionNameByRouteKey: Map<string, string>
+  routeKeyBySolvedRoute: WeakMap<HighDensityIntraNodeRoute, string>
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -72,7 +75,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
-  rerouteAttemptsByConnection: Map<string, number>
+  rerouteAttemptsByRouteKey: Map<string, number>
+  activeRouteKey: string | null = null
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
   MAX_POSTROUTE_REPAIR_ATTEMPTS = 2
@@ -112,43 +116,31 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
-    const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
-    this.rootConnectionNameByConnectionName = new Map()
-    for (const {
-      connectionName,
-      rootConnectionName,
-      x,
-      y,
-      z,
-    } of nodeWithPortPoints.portPoints) {
-      if (rootConnectionName) {
-        this.rootConnectionNameByConnectionName.set(
+    this.rootConnectionNameByRouteKey = new Map()
+    this.routeKeyBySolvedRoute = new WeakMap()
+    this.unsolvedConnections = getNodePortPointPairs(nodeWithPortPoints).map(
+      ({ pairKey, connectionName, rootConnectionName, start, end }) => {
+        if (rootConnectionName) {
+          this.rootConnectionNameByRouteKey.set(pairKey, rootConnectionName)
+        }
+        return {
+          routeKey: pairKey,
           connectionName,
           rootConnectionName,
-        )
-      }
-      unsolvedConnectionsMap.set(connectionName, [
-        ...(unsolvedConnectionsMap.get(connectionName) ?? []),
-        { x, y, z: z ?? 0 },
-      ])
-    }
-    this.originalConnectionPointsByName = new Map(
-      Array.from(unsolvedConnectionsMap.entries()).map(
-        ([connectionName, points]) => [
-          connectionName,
-          dedupeConnectionPoints(points),
-        ],
-      ),
+          points: dedupeConnectionPoints([
+            { x: start.x, y: start.y, z: start.z ?? 0 },
+            { x: end.x, y: end.y, z: end.z ?? 0 },
+          ]),
+        }
+      },
     )
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName:
-          this.rootConnectionNameByConnectionName.get(connectionName),
-        points: dedupeConnectionPoints(points),
-      })),
+    this.originalConnectionPointsByRouteKey = new Map(
+      this.unsolvedConnections.map(({ routeKey, points }) => [
+        routeKey,
+        points,
+      ]),
     )
-    this.rerouteAttemptsByConnection = new Map()
+    this.rerouteAttemptsByRouteKey = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
       this.unsolvedConnections = cloneAndShuffleArray(
@@ -219,6 +211,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private getSingleRouteSolverOpts(unsolvedConnection: {
+    routeKey: string
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
@@ -264,6 +257,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private trySolveSamePointLayerChange(unsolvedConnection: {
+    routeKey: string
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
@@ -299,10 +293,15 @@ export class IntraNodeRouteSolver extends BaseSolver {
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],
     })
+    this.routeKeyBySolvedRoute.set(
+      this.solvedRoutes[this.solvedRoutes.length - 1]!,
+      unsolvedConnection.routeKey,
+    )
     return true
   }
 
   private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
+    routeKey: string
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
@@ -315,6 +314,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     for (const point of extraPoints) {
       this.unsolvedConnections.push({
+        routeKey: `${unsolvedConnection.routeKey}::${pointKey(point)}`,
         connectionName: unsolvedConnection.connectionName,
         rootConnectionName: unsolvedConnection.rootConnectionName,
         points: [origin, point],
@@ -382,23 +382,31 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private queueConnectionForPostrouteRepair(connectionName: string) {
-    const points = this.originalConnectionPointsByName.get(connectionName)
+    const route = this.solvedRoutes.find(
+      (candidate) => candidate.connectionName === connectionName,
+    )
+    const routeKey = route ? this.routeKeyBySolvedRoute.get(route) : undefined
+    if (!routeKey) {
+      return false
+    }
+
+    const points = this.originalConnectionPointsByRouteKey.get(routeKey)
     if (!points || points.length < 2) {
       return false
     }
 
     this.solvedRoutes = this.solvedRoutes.filter(
-      (route) => route.connectionName !== connectionName,
+      (candidate) => this.routeKeyBySolvedRoute.get(candidate) !== routeKey,
     )
     this.unsolvedConnections.push({
+      routeKey,
       connectionName,
-      rootConnectionName:
-        this.rootConnectionNameByConnectionName.get(connectionName),
+      rootConnectionName: this.rootConnectionNameByRouteKey.get(routeKey),
       points: points.map((point) => ({ ...point })),
     })
-    this.rerouteAttemptsByConnection.set(
-      connectionName,
-      (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
+    this.rerouteAttemptsByRouteKey.set(
+      routeKey,
+      (this.rerouteAttemptsByRouteKey.get(routeKey) ?? 0) + 1,
     )
     return true
   }
@@ -409,9 +417,17 @@ export class IntraNodeRouteSolver extends BaseSolver {
       this.progress = this.computeProgress()
       if (this.activeSubSolver.solved) {
         this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
+        if (this.activeRouteKey) {
+          this.routeKeyBySolvedRoute.set(
+            this.solvedRoutes[this.solvedRoutes.length - 1]!,
+            this.activeRouteKey,
+          )
+        }
+        this.activeRouteKey = null
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
         this.failedSubSolvers.push(this.activeSubSolver)
+        this.activeRouteKey = null
         this.activeSubSolver = null
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
@@ -425,8 +441,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       const viaTraceConflict = this.getFirstSolvedViaTraceConflict()
       if (viaTraceConflict) {
         const repairAttempts =
-          this.rerouteAttemptsByConnection.get(
-            viaTraceConflict.route.connectionName,
+          this.rerouteAttemptsByRouteKey.get(
+            this.routeKeyBySolvedRoute.get(viaTraceConflict.route) ?? "",
           ) ?? 0
 
         if (repairAttempts >= this.MAX_POSTROUTE_REPAIR_ATTEMPTS) {
@@ -478,6 +494,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
       }
     }
+    this.activeRouteKey = unsolvedConnection.routeKey
     this.activeSubSolver =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
         this.getSingleRouteSolverOpts(unsolvedConnection),
@@ -526,8 +543,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
       if (route.route.length > 0) {
         const routeColor = this.colorMap[route.connectionName] ?? "blue"
         const rootConnectionName =
-          route.rootConnectionName ??
-          this.rootConnectionNameByConnectionName.get(route.connectionName)
+          (route.rootConnectionName ?? this.routeKeyBySolvedRoute.get(route))
+            ? this.rootConnectionNameByRouteKey.get(
+                this.routeKeyBySolvedRoute.get(route)!,
+              )
+            : undefined
 
         // Draw route segments between points
         for (let i = 0; i < route.route.length - 1; i++) {

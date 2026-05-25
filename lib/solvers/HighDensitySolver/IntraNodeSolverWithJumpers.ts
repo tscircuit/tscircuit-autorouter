@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import type {
   HighDensityIntraNodeRouteWithJumpers,
   Jumper,
@@ -54,6 +55,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   unsolvedConnections: {
+    routeKey: string
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
@@ -97,36 +99,16 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     this.connMap = params.connMap
     this.traceWidth = params.traceWidth ?? 0.15
 
-    const unsolvedConnectionsMap: Map<
-      string,
-      {
-        rootConnectionName?: string
-        points: { x: number; y: number; z: number }[]
-      }
-    > = new Map()
-
-    // For single-layer, force all port points to z=0
-    for (const {
-      connectionName,
-      rootConnectionName,
-      x,
-      y,
-    } of nodeWithPortPoints.portPoints) {
-      const existing = unsolvedConnectionsMap.get(connectionName)
-      unsolvedConnectionsMap.set(connectionName, {
-        rootConnectionName: existing?.rootConnectionName ?? rootConnectionName,
-        points: [...(existing?.points ?? []), { x, y, z: 0 }],
-      })
-    }
-
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap
-        .entries()
-        .map(([connectionName, { rootConnectionName, points }]) => ({
-          connectionName,
-          rootConnectionName,
-          points,
-        })),
+    this.unsolvedConnections = getNodePortPointPairs(nodeWithPortPoints).map(
+      ({ pairKey, connectionName, rootConnectionName, start, end }) => ({
+        routeKey: pairKey,
+        connectionName,
+        rootConnectionName,
+        points: [
+          { x: start.x, y: start.y, z: 0 },
+          { x: end.x, y: end.y, z: 0 },
+        ],
+      }),
     )
 
     if (this.hyperParameters.SHUFFLE_SEED) {

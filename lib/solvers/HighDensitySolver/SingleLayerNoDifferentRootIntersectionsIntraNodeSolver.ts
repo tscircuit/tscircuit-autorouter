@@ -9,6 +9,8 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import { BaseSolver } from "../BaseSolver"
 
 type Point3 = { x: number; y: number; z: number }
@@ -449,6 +451,12 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
 
   private buildTaskGroups() {
     const groups = new Map<string, PortPoint[]>()
+    if (getExplicitPortPointPairIds(this.nodeWithPortPoints)?.length) {
+      for (const pair of getNodePortPointPairs(this.nodeWithPortPoints)) {
+        groups.set(pair.pairKey, [pair.start, pair.end])
+      }
+      return groups
+    }
     for (const portPoint of this.nodeWithPortPoints.portPoints) {
       const existing = groups.get(portPoint.connectionName) ?? []
       existing.push(portPoint)

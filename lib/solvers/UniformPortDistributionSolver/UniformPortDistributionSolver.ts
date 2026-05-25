@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -165,10 +166,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.redistributedNodes = this.input.nodeWithPortPoints.map((node) => ({
       ...node,
       portPoints: node.portPoints.map(updatePortPointPosition),
-      portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-        updatePortPointPosition(start),
-        updatePortPointPosition(end),
-      ]),
+      portPointPairIds: getExplicitPortPointPairIds(node),
     }))
   }
 

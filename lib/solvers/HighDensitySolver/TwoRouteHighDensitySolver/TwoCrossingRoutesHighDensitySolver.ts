@@ -10,6 +10,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 import { computeDumbbellPaths } from "./computeDumbbellPaths"
 import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
@@ -18,6 +19,7 @@ type Route = {
   startPort: Point
   endPort: Point
   connectionName: string
+  rootConnectionName?: string
 }
 
 export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
@@ -113,32 +115,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
    * Extract routes that need to be connected from the node data
    */
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectedPorts = this.nodeWithPortPoints.portPoints!
-
-    // Group ports by connection name
-    const connectionGroups = new Map<string, Point[]>()
-
-    for (const connectedPort of connectedPorts) {
-      const { connectionName } = connectedPort
-      if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
-      }
-      connectionGroups.get(connectionName)?.push(connectedPort)
-    }
-
-    // Create routes for each connection (assuming each connection has exactly 2 points)
-    for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
-        routes.push({
-          startPort: { ...points[0], z: points[0].z ?? 0 },
-          endPort: { ...points[1], z: points[1].z ?? 0 },
-          connectionName,
-        })
-      }
-    }
-
-    return routes
+    return getNodePortPointPairs(this.nodeWithPortPoints).map(
+      ({ connectionName, rootConnectionName, start, end }) => ({
+        startPort: { ...start, z: start.z ?? 0 },
+        endPort: { ...end, z: end.z ?? 0 },
+        connectionName,
+        rootConnectionName,
+      }),
+    )
   }
 
   /**
@@ -386,6 +370,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     const routeASolution: HighDensityIntraNodeRoute = {
       connectionName: routeA.connectionName,
+      rootConnectionName: routeA.rootConnectionName,
       route: optimalPath.points.map((p) => ({
         x: p.x,
         y: p.y,
@@ -398,6 +383,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     jPair.line2.points.reverse()
     const routeBSolution: HighDensityIntraNodeRoute = {
       connectionName: routeB.connectionName,
+      rootConnectionName: routeB.rootConnectionName,
       route: [
         ...jPair.line1.points.map((p) => ({
           x: p.x,
@@ -606,6 +592,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Routes don't cross, create simple direct connections
     const routeASolution: HighDensityIntraNodeRoute = {
       connectionName: routeA.connectionName,
+      rootConnectionName: routeA.rootConnectionName,
       route: [
         {
           x: routeA.startPort.x,
@@ -625,6 +612,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     const routeBSolution: HighDensityIntraNodeRoute = {
       connectionName: routeB.connectionName,
+      rootConnectionName: routeB.rootConnectionName,
       route: [
         {
           x: routeB.startPort.x,

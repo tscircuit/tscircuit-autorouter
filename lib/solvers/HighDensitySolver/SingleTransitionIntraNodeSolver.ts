@@ -5,12 +5,14 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { getNodePortPointPairs } from "lib/utils/portPointPairing/getNodePortPointPairs"
 
 type Point = { x: number; y: number; z?: number }
 type Route = {
   A: Point
   B: Point
   connectionName: string
+  rootConnectionName?: string
 }
 
 const clampWithFallback = (value: number, min: number, max: number) => {
@@ -85,34 +87,21 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         route.B,
         viaPosition,
         route.connectionName,
+        route.rootConnectionName,
       ),
     )
     this.solved = true
   }
 
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectedPorts = this.nodeWithPortPoints.portPoints!
-    const connectionGroups = new Map<string, Point[]>()
-
-    for (const connectedPort of connectedPorts) {
-      const { connectionName } = connectedPort
-      if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
-      }
-      connectionGroups.get(connectionName)!.push(connectedPort)
-    }
-
-    for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
-        routes.push({
-          A: { ...points[0] },
-          B: { ...points[1] },
-          connectionName,
-        })
-      }
-    }
-    return routes
+    return getNodePortPointPairs(this.nodeWithPortPoints).map(
+      ({ connectionName, rootConnectionName, start, end }) => ({
+        A: { ...start },
+        B: { ...end },
+        connectionName,
+        rootConnectionName,
+      }),
+    )
   }
 
   private calculateBounds() {
@@ -133,6 +122,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     end: Point,
     via: Point,
     connectionName: string,
+    rootConnectionName?: string,
   ): HighDensityIntraNodeRoute {
     const route = [
       { x: start.x, y: start.y, z: start.z! },
@@ -143,6 +133,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
 
     return {
       connectionName,
+      rootConnectionName,
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,

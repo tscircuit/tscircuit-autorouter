@@ -1,6 +1,7 @@
 import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
 import {
   Bounds,
   OwnerPairKey,
@@ -106,7 +107,9 @@ export const visualizeUniformPortDistribution = ({
         label: `z:${zLayer}\no:${ownerPair}`,
       })
 
-      if (!element.portPointsInPairs?.length) {
+      const explicitPairIds = getExplicitPortPointPairIds(element)
+
+      if (!explicitPairIds?.length) {
         element.portPoints.forEach((f) => {
           if (!f.portPointId || e === f) return
           if (e.connectionName === f.connectionName) {
@@ -120,12 +123,19 @@ export const visualizeUniformPortDistribution = ({
       }
     })
 
-    element.portPointsInPairs?.forEach(([start, end]) => {
+    for (const [
+      startPortPointId,
+      endPortPointId,
+    ] of getExplicitPortPointPairIds(element) ?? []) {
+      const start = portPointMap.get(startPortPointId)
+      const end = portPointMap.get(endPortPointId)
+      if (!start || !end) continue
+
       lines.push({
-        points: [getPortPointPosition(start), getPortPointPosition(end)],
+        points: [start, end],
         strokeColor: "#fff822c9",
       })
-    })
+    }
   })
 
   for (const ownerPairKey of ownerPairsToProcess) {

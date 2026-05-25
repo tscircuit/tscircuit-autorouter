@@ -4,6 +4,7 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import { normalizeNodeWithPortPointPairIds } from "lib/utils/portPointPairing/normalizeNodeWithPortPointPairIds"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -110,7 +111,9 @@ export class HighDensitySolver extends BaseSolver {
       | Record<string, number | null>
   }) {
     super()
-    this.unsolvedNodePortPoints = nodePortPoints
+    this.unsolvedNodePortPoints = nodePortPoints.map(
+      normalizeNodeWithPortPointPairIds,
+    )
     this.colorMap = colorMap ?? {}
     this.connMap = connMap
     this.routes = []

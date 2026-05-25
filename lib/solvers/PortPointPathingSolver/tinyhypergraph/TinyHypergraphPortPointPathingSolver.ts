@@ -868,14 +868,19 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const originalRegion = this.originalRegionById.get(originalRegionId)
       if (!originalRegion) continue
 
-      const portPointsInPairs = regionSegments[regionId].map(
+      const portPointPairs = regionSegments[regionId].map(
         ([routeId, fromPortId, toPortId]) =>
           [
             this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
             this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
           ] satisfies [PortPoint, PortPoint],
       )
-      const portPoints = portPointsInPairs.flat()
+      const portPoints = portPointPairs.flat()
+      const portPointPairIds = portPointPairs.flatMap(([start, end]) =>
+        start.portPointId && end.portPointId
+          ? ([[start.portPointId, end.portPointId]] as [string, string][])
+          : [],
+      )
 
       if (portPoints.length === 0) {
         continue
@@ -887,7 +892,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         width: originalRegion.d.width,
         height: originalRegion.d.height,
         portPoints,
-        portPointsInPairs,
+        portPointPairIds:
+          portPointPairIds.length > 0 ? portPointPairIds : undefined,
         availableZ: originalRegion.d.availableZ,
       })
     }

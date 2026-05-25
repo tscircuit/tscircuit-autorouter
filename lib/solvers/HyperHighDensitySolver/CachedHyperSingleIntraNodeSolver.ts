@@ -12,6 +12,7 @@ import type {
 import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import objectHash from "object-hash"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
 
 // Define the structure of the cached data
 type CachedSolvedHyperSingleIntraNode =
@@ -92,6 +93,8 @@ export class CachedHyperSingleIntraNodeSolver
       .map((pp) => {
         return {
           connectionName: pp.connectionName,
+          rootConnectionName: pp.rootConnectionName,
+          portPointId: pp.portPointId,
           x: roundCoord(pp.x - center.x),
           y: roundCoord(pp.y - center.y),
           z: pp.z ?? 0,
@@ -104,6 +107,7 @@ export class CachedHyperSingleIntraNodeSolver
       width: roundCoord(node.width),
       height: roundCoord(node.height),
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
+      portPointPairIds: getExplicitPortPointPairIds(node),
       portPoints: normalizedPortPoints,
     }
 

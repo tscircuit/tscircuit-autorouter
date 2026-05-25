@@ -35,6 +35,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { normalizeNodeWithPortPointPairIds } from "lib/utils/portPointPairing/normalizeNodeWithPortPointPairIds"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -324,11 +325,15 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+      cms.highDensityNodePortPoints = structuredClone(
+        nodePortPointsSource.map(normalizeNodeWithPortPointPairIds),
+      )
 
       return [
         {
-          nodePortPoints: nodePortPointsSource,
+          nodePortPoints: nodePortPointsSource.map(
+            normalizeNodeWithPortPointPairIds,
+          ),
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??

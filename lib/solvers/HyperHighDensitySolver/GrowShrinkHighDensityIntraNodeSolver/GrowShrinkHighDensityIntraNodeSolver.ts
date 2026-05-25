@@ -4,6 +4,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getExplicitPortPointPairIds } from "lib/utils/portPointPairing/getExplicitPortPointPairIds"
 import { BaseSolver } from "../../BaseSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
 import {
@@ -51,10 +52,7 @@ const scaleNodeWithPortPoints = (
   portPoints: node.portPoints.map((portPoint) =>
     scalePortPoint(portPoint, node.center, scaleFactor),
   ),
-  portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-    scalePortPoint(start, node.center, scaleFactor),
-    scalePortPoint(end, node.center, scaleFactor),
-  ]),
+  portPointPairIds: getExplicitPortPointPairIds(node),
 })
 
 const scaleRoute = (
