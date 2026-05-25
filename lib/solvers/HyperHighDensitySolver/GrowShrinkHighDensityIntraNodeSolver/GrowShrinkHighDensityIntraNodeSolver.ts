@@ -4,6 +4,10 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { BaseSolver } from "../../BaseSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
 import {
@@ -48,13 +52,12 @@ const scaleNodeWithPortPoints = (
   ...node,
   width: node.width * scaleFactor,
   height: node.height * scaleFactor,
-  portPoints: node.portPoints.map((portPoint) =>
-    scalePortPoint(portPoint, node.center, scaleFactor),
+  portPointsInPairs: getPortPointPairsFromNodeWithPortPoints(node).map(
+    ([start, end]) => [
+      scalePortPoint(start, node.center, scaleFactor),
+      scalePortPoint(end, node.center, scaleFactor),
+    ],
   ),
-  portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-    scalePortPoint(start, node.center, scaleFactor),
-    scalePortPoint(end, node.center, scaleFactor),
-  ]),
 })
 
 const scaleRoute = (
@@ -258,7 +261,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             }
           }),
         ),
-        points: this.nodeWithPortPoints.portPoints.map((point) => ({
+        points: getPortPointsFromNodeWithPortPoints(
+          this.nodeWithPortPoints,
+        ).map((point) => ({
           x: point.x,
           y: point.y,
           color:

@@ -29,7 +29,7 @@ const getProjectedPortsForNode = (
     throw new Error("Poly node is missing projectedRect")
   }
 
-  return nodeWithPortPoints.portPoints.map((portPoint) => {
+  return nodeWithPortPoints.portPointsInPairs.flat().map((portPoint) => {
     const projectedPoint = projectPointToRectBoundary(
       portPoint,
       nodeWithPortPoints.projectedRect!,

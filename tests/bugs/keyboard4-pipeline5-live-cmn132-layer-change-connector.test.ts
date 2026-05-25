@@ -11,6 +11,7 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 const EPSILON = 1e-3
 
@@ -173,7 +174,7 @@ test.skip(
     expect(nodes.length).toBeGreaterThan(0)
 
     const targetNodes = nodes.filter((candidate) =>
-      candidate.portPoints.some(
+      getPortPointsFromNodeWithPortPoints(candidate).some(
         (portPoint) => portPoint.connectionName === "source_net_7_mst3",
       ),
     )

@@ -1,7 +1,7 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { AttachProjectedRectsSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AttachProjectedRectsSolver"
 import { PolySingleIntraNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
-
 test("pipeline6 free-6 extracted node uses conservative sliver projection", () => {
   const polygon = [
     { x: -3.2750030000000003, y: 2.625 },
@@ -13,7 +13,6 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
     { x: -2.725001, y: 2.624999 },
     { x: -3.2700010000000024, y: 9.08764216995614 },
   ]
-
   const attachProjectedRectsSolver = new AttachProjectedRectsSolver({
     equivalentAreaExpansionFactor: 2,
     minProjectedRectDimension: 0.45,
@@ -28,7 +27,7 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
         width: 0.5042195299138056,
         height: 11.869310003953185,
         availableZ: [0, 1],
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           {
             portPointId: "p1",
             x: -3.256382871980899,
@@ -141,12 +140,11 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
             connectionName: "source_net_15_mst0",
             rootConnectionName: "source_net_15",
           },
-        ],
+        ]),
       },
     ],
   })
   attachProjectedRectsSolver.solve()
-
   const nodeWithPortPoints = attachProjectedRectsSolver.outputNodes[0]!
   const solver = new PolySingleIntraNodeSolver({
     nodeWithPortPoints,
@@ -155,9 +153,7 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
     obstacleMargin: 0.15,
     effort: 1,
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.solvedRoutes.length).toBeGreaterThan(0)

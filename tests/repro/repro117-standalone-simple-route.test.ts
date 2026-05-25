@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import type { SimpleRouteJson } from "lib/types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import reproJson from "../../fixtures/repro/repro117-standalone-simple-route.json"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
@@ -78,12 +79,11 @@ test(
 
     expect(cmn68).toBeDefined()
 
-    const targetPortPoints =
-      cmn68!.portPoints.filter(
-        (point) =>
-          point.connectionName ===
-          "source_trace_5__source_trace_26__source_trace_28_mst1",
-      ) ?? []
+    const targetPortPoints = getPortPointsFromNodeWithPortPoints(cmn68!).filter(
+      (point) =>
+        point.connectionName ===
+        "source_trace_5__source_trace_26__source_trace_28_mst1",
+    )
     const targetPortKeys = targetPortPoints.map(pointKey)
     const connectedPointKeys = getConnectedPointKeys(
       solver.highDensityRouteSolver?.routes ?? [],

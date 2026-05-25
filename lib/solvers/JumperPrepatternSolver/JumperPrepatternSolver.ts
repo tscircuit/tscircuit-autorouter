@@ -1,6 +1,10 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
 import { RelateNodesToOffBoardConnectionsSolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
 import { SimpleHighDensitySolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver"
@@ -430,38 +434,17 @@ export class JumperPrepatternSolver extends BaseSolver {
   }
 
   _createSimpleRouteJson(): SimpleRouteJson {
-    // Extract connections from port points
-    const connectionMap = new Map<
-      string,
-      {
-        points: { x: number; y: number; z: number }[]
-        rootConnectionName?: string
-      }
-    >()
-
-    for (const pp of this.nodeWithPortPoints.portPoints) {
-      const existing = connectionMap.get(pp.connectionName)
-      if (existing) {
-        existing.points.push({ x: pp.x, y: pp.y, z: pp.z })
-      } else {
-        connectionMap.set(pp.connectionName, {
-          points: [{ x: pp.x, y: pp.y, z: pp.z }],
-          rootConnectionName: pp.rootConnectionName,
-        })
-      }
-    }
-
-    this.connections = Array.from(connectionMap.entries()).map(
-      ([name, data]) => ({
-        name,
-        rootConnectionName: data.rootConnectionName,
-        pointsToConnect: data.points.map((p) => ({
-          x: p.x,
-          y: p.y,
-          layer: "top" as const,
-        })),
-      }),
-    )
+    this.connections = getPortPointPairsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    ).map(([start, end]) => ({
+      name: start.connectionName,
+      rootConnectionName: start.rootConnectionName ?? end.rootConnectionName,
+      pointsToConnect: [start, end].map((p) => ({
+        x: p.x,
+        y: p.y,
+        layer: "top" as const,
+      })),
+    }))
 
     // Create obstacles for jumper pads
     const obstacles = this._createJumperPadObstacles()
@@ -494,7 +477,9 @@ export class JumperPrepatternSolver extends BaseSolver {
     // these are connection terminals that traces can connect to
     const padSize = this.traceWidth * 2
 
-    for (const pp of this.nodeWithPortPoints.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    )) {
       obstacles.push({
         type: "rect",
         obstacleId: `port_${pp.connectionName}_${pp.x.toFixed(3)}_${pp.y.toFixed(3)}`,
@@ -655,7 +640,9 @@ export class JumperPrepatternSolver extends BaseSolver {
       layer: "border",
     })
 
-    for (const pp of this.nodeWithPortPoints.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    )) {
       graphics.points!.push({
         x: pp.x,
         y: pp.y,

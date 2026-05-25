@@ -43,7 +43,8 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       throw new Error("Poly node is missing projectedRect")
     }
 
-    this.projectedPorts = nodeWithPortPoints.portPoints.map((portPoint) => {
+    const portPoints = nodeWithPortPoints.portPointsInPairs.flat()
+    this.projectedPorts = portPoints.map((portPoint) => {
       const projectedPoint = projectPointToRectBoundary(
         portPoint,
         nodeWithPortPoints.projectedRect!,
@@ -63,7 +64,14 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       width: nodeWithPortPoints.projectedRect.width,
       height: nodeWithPortPoints.projectedRect.height,
       availableZ: nodeWithPortPoints.availableZ,
-      portPoints: this.projectedPorts.map(({ projected }) => projected),
+      portPointsInPairs: nodeWithPortPoints.portPointsInPairs.map(
+        ([start, end]) => [
+          this.projectedPorts.find(({ original }) => original === start)!
+            .projected,
+          this.projectedPorts.find(({ original }) => original === end)!
+            .projected,
+        ],
+      ),
     }
     this.highDensitySolver = new HyperSingleIntraNodeSolver({
       nodeWithPortPoints: this.projectedNode,
@@ -134,7 +142,7 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
           ]
         : [],
       points: [
-        ...node.portPoints.map((point) => ({
+        ...node.portPointsInPairs.flat().map((point) => ({
           x: point.x,
           y: point.y,
           color: "rgba(0, 80, 160, 0.85)",

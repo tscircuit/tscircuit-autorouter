@@ -12,7 +12,9 @@ export const HighDensityInteractiveNodeDebugger = ({
 }: HighDensityInteractiveNodeDebuggerProps) => {
   const [editableNode, setEditableNode] = useState<NodeWithPortPoints>(() => ({
     ...nodeWithPortPoints,
-    portPoints: nodeWithPortPoints.portPoints.map((p) => ({ ...p })),
+    portPointsInPairs: nodeWithPortPoints.portPointsInPairs.map(
+      ([start, end]) => [{ ...start }, { ...end }],
+    ),
   }))
   const [mode, setMode] = useState<"build" | "solve">("build")
   const [animationSpeed, setAnimationSpeed] = useState<number>(10)

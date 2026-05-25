@@ -1,9 +1,9 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
-
 const nodePortPoints: NodeWithPortPoints[] = [
   {
     capacityMeshNodeId: "cmn_0",
@@ -13,7 +13,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 12.399999999999999,
     height: 22,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce13_pp1_z0",
         x: -6.199999999999999,
@@ -142,7 +142,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_6",
         rootConnectionName: "source_trace_6",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -153,7 +153,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9400000000000004,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce34_pp0_z0",
         x: -8.775,
@@ -170,7 +170,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -181,7 +181,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9399999999999995,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce38_pp0_z0",
         x: -8.775,
@@ -198,7 +198,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -209,7 +209,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9399999999999995,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce42_pp2_z0",
         x: -8.025,
@@ -226,7 +226,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -237,7 +237,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9400000000000004,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce46_pp1_z0",
         x: -8.4,
@@ -254,7 +254,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -265,7 +265,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9399999999999997,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce53_pp1_z0",
         x: 8.4,
@@ -314,7 +314,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -325,7 +325,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9399999999999997,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce54_pp0_z0",
         x: -8.775,
@@ -342,7 +342,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -353,7 +353,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9400000000000004,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce61_pp1_z0",
         x: 8.4,
@@ -402,7 +402,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -413,7 +413,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9399999999999995,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce65_pp1_z0",
         x: 8.4,
@@ -462,7 +462,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -473,7 +473,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9400000000000004,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce69_pp1_z0",
         x: 8.4,
@@ -506,7 +506,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -517,7 +517,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 2.8000000000000007,
     height: 0.9400000000000004,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce73_pp1_z0",
         x: 8.4,
@@ -566,7 +566,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -577,7 +577,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 5.450000000000001,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce68_pp1_z0",
         x: 8.4,
@@ -594,7 +594,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -605,7 +605,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 3.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce82_pp0_z0",
         x: -7.800000000000001,
@@ -622,7 +622,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -633,7 +633,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 4.0375000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce84_pp2_z0",
         x: -8.025,
@@ -650,7 +650,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -661,7 +661,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 4.0375000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce91_pp0_z0",
         x: 7.800000000000001,
@@ -694,7 +694,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -705,7 +705,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce39_pp0_z0",
         x: -8.775,
@@ -722,7 +722,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -733,7 +733,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 1.5999999999999999,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce55_pp0_z0",
         x: -8.775,
@@ -750,7 +750,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -761,7 +761,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 1.4124999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce43_pp2_z0",
         x: -8.025,
@@ -778,7 +778,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -789,7 +789,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce35_pp0_z0",
         x: -8.775,
@@ -806,7 +806,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -817,7 +817,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.2000000000000002,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce47_pp1_z0",
         x: -8.4,
@@ -834,7 +834,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -845,7 +845,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000014,
     height: 0.9400000000000022,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce101_pp1_z0",
         x: -7.191666666666666,
@@ -862,7 +862,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -873,7 +873,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000014,
     height: 0.9399999999999995,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce31_pp0_z0",
         x: 6.199999999999999,
@@ -906,7 +906,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -917,7 +917,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce60_pp1_z0",
         x: 8.4,
@@ -950,7 +950,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -961,7 +961,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce52_pp1_z0",
         x: 8.4,
@@ -1010,7 +1010,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1021,7 +1021,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 1.5999999999999999,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce64_pp1_z0",
         x: 8.4,
@@ -1070,7 +1070,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1081,7 +1081,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce72_pp1_z0",
         x: 8.4,
@@ -1130,7 +1130,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1141,7 +1141,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.1999999999999993,
     height: 1.4125000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce94_pp1_z0",
         x: 8.4,
@@ -1174,7 +1174,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1185,7 +1185,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000014,
     height: 1.3100000000000023,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce88_pp2_z0",
         x: -7.800000000000001,
@@ -1202,7 +1202,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1213,7 +1213,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce15_pp1_z0",
         x: -6.199999999999999,
@@ -1229,7 +1229,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1240,7 +1240,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce13_pp1_z0",
         x: -6.199999999999999,
@@ -1256,7 +1256,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_1",
         rootConnectionName: "source_trace_1",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1267,7 +1267,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce12_pp1_z0",
         x: -6.199999999999999,
@@ -1283,7 +1283,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1294,7 +1294,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999999,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce11_pp2_z0",
         x: -6.199999999999999,
@@ -1310,7 +1310,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_3",
         rootConnectionName: "source_trace_3",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1321,7 +1321,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce10_pp1_z0",
         x: -6.199999999999999,
@@ -1337,7 +1337,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_4",
         rootConnectionName: "source_trace_4",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1348,7 +1348,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce9_pp1_z0",
         x: -6.199999999999999,
@@ -1364,7 +1364,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_5",
         rootConnectionName: "source_trace_5",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1375,7 +1375,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce8_pp1_z0",
         x: -6.199999999999999,
@@ -1391,7 +1391,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_6",
         rootConnectionName: "source_trace_6",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1402,7 +1402,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce101_pp1_z0",
         x: -7.191666666666666,
@@ -1418,7 +1418,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1429,7 +1429,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce77_pp1_z0",
         x: 7.800000000000001,
@@ -1445,7 +1445,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_0",
         rootConnectionName: "source_trace_0",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1456,7 +1456,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce66_pp1_z0",
         x: 6.808333333333334,
@@ -1472,7 +1472,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_1",
         rootConnectionName: "source_trace_1",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1483,7 +1483,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce58_pp1_z0",
         x: 6.808333333333334,
@@ -1499,7 +1499,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_2",
         rootConnectionName: "source_trace_2",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1510,7 +1510,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce24_pp1_z0",
         x: 6.199999999999999,
@@ -1526,7 +1526,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_3",
         rootConnectionName: "source_trace_3",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1537,7 +1537,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999999,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce26_pp2_z0",
         x: 6.199999999999999,
@@ -1553,7 +1553,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_4",
         rootConnectionName: "source_trace_4",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1564,7 +1564,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce28_pp1_z0",
         x: 6.199999999999999,
@@ -1580,7 +1580,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_5",
         rootConnectionName: "source_trace_5",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1591,7 +1591,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.6000000000000005,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce30_pp1_z0",
         x: 6.199999999999999,
@@ -1607,7 +1607,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_6",
         rootConnectionName: "source_trace_6",
       },
-    ],
+    ]),
     availableZ: [0],
   },
   {
@@ -1618,7 +1618,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     },
     width: 1.6000000000000005,
     height: 1.5999999999999996,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         portPointId: "ce32_pp1_z0",
         x: 6.199999999999999,
@@ -1634,11 +1634,10 @@ const nodePortPoints: NodeWithPortPoints[] = [
         connectionName: "source_trace_7",
         rootConnectionName: "source_trace_7",
       },
-    ],
+    ]),
     availableZ: [0],
   },
 ]
-
 const colorMap = {
   connectivity_net7: "hsl(0, 100%, 50%)",
   source_trace_7: "hsl(0, 100%, 50%)",
@@ -1657,7 +1656,6 @@ const colorMap = {
   connectivity_net0: "hsl(262.5, 100%, 50%)",
   source_trace_0: "hsl(262.5, 100%, 50%)",
 }
-
 test(
   "high density solver with dip16-crossing data",
   () => {
@@ -1667,21 +1665,16 @@ test(
       traceWidth: 0.15,
       viaDiameter: 0.6,
     })
-
     solver.solve()
-
     expect(solver.solved).toBe(true)
     expect(solver.routes.length).toBe(70)
     // expect(solver.jumpers.length).toBeLessThanOrEqual(19)
-
     // Use getSvgFromGraphicsObject directly since the solver doesn't use step-based visualization
     const visualization = solver.visualize()
     const svgResult = getSvgFromGraphicsObject(visualization, {
       backgroundColor: "white",
     })
-
     expect(svgResult).toMatchSvgSnapshot(import.meta.path)
-
     const hypergraphVisualization =
       solver.jumperSolvers[0]?.winningSolver?.jumperGraphSolver?.visualize()
     if (hypergraphVisualization) {
@@ -1692,6 +1685,6 @@ test(
     }
   },
   {
-    timeout: 60_000,
+    timeout: 60000,
   },
 )

@@ -1,14 +1,16 @@
 import { SimpleRouteJson } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "./getPortPointsFromNodeWithPortPoints"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 export function createSrjFromNodeWithPortPoints(
   node: NodeWithPortPoints,
 ): SimpleRouteJson {
-  const { center, width, height, portPoints } = node
+  const { center, width, height } = node
+  const portPoints = getPortPointsFromNodeWithPortPoints(node)
 
   // Group port points by connection name
-  const connectionGroups = new Map<string, typeof portPoints>()
+  const connectionGroups = new Map<string, PortPoint[]>()
   for (const portPoint of portPoints) {
     if (!connectionGroups.has(portPoint.connectionName)) {
       connectionGroups.set(portPoint.connectionName, [])

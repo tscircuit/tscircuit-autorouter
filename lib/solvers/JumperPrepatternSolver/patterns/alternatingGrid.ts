@@ -1,6 +1,7 @@
 import type { JumperPrepatternSolver } from "../JumperPrepatternSolver"
 import type { SimpleRouteJson } from "../../../types"
 import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 /**
  * Maximum number of jumpers allowed. If exceeded, padding and margin are
@@ -144,7 +145,9 @@ function generateAlternatingGrid(
   ): boolean => {
     const margin = dims.width / 2 + jps.traceWidth * 2
 
-    for (const pp of jps.nodeWithPortPoints.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(
+      jps.nodeWithPortPoints,
+    )) {
       const distToStart = Math.sqrt(
         (pp.x - start.x) ** 2 + (pp.y - start.y) ** 2,
       )

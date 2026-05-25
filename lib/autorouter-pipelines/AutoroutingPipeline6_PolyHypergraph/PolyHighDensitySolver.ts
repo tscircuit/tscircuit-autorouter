@@ -168,7 +168,7 @@ export class PolyHighDensitySolver extends BaseSolver {
       lines: [],
       circles: [],
       points: this.nodePortPoints.flatMap((node) =>
-        node.portPoints.map((point) => ({
+        node.portPointsInPairs.flat().map((point) => ({
           x: point.x,
           y: point.y,
           color: "rgba(80, 80, 80, 0.5)",

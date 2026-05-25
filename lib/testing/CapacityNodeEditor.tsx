@@ -3,6 +3,10 @@ import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/cal
 import { CapacityMeshNode } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import {
+  createPortPointPairsFromPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { MetricsCard } from "./capacity-node-editor/MetricsCard"
@@ -125,8 +129,10 @@ export default function CapacityNodeEditor({
         setPanOffset({ x: 0, y: 0 })
         // 2. Set Pairs
         // Group ports by connectionName
-        const groupedPorts: Record<string, typeof initialNode.portPoints> = {}
-        initialNode.portPoints.forEach((p) => {
+        const initialPortPoints =
+          getPortPointsFromNodeWithPortPoints(initialNode)
+        const groupedPorts: Record<string, typeof initialPortPoints> = {}
+        initialPortPoints.forEach((p) => {
           if (!groupedPorts[p.connectionName])
             groupedPorts[p.connectionName] = []
           groupedPorts[p.connectionName].push(p)
@@ -143,7 +149,7 @@ export default function CapacityNodeEditor({
 
             // Helper to find edge/t
             const mapPortToEditorPoint = (
-              p: (typeof initialNode.portPoints)[0],
+              p: (typeof initialPortPoints)[0],
             ): PointDef => {
               const halfW = initialNode.width / 2
               const halfH = initialNode.height / 2
@@ -269,7 +275,7 @@ export default function CapacityNodeEditor({
       center: { x: 0, y: 0 },
       width,
       height,
-      portPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
     })
   }, [rect, pairs, pixelsPerMm])
 
@@ -502,7 +508,7 @@ export default function CapacityNodeEditor({
       center: { x: 0, y: 0 },
       width: widthMm,
       height: heightMm,
-      portPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
     }
 
     const diagnostics = getIntraNodeCrossings(nodeForCheck)

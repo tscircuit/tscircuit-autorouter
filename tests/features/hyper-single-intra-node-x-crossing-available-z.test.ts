@@ -1,3 +1,4 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import type { SimpleRouteJson } from "lib/types"
@@ -7,21 +8,19 @@ import type {
 } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-
 const createCrossingNode = (): NodeWithPortPoints => ({
   capacityMeshNodeId: "x-crossing-available-z",
   center: { x: 0, y: 0 },
   width: 6,
   height: 6,
   availableZ: [0, 3],
-  portPoints: [
+  portPointsInPairs: createPortPointPairsFromPortPoints([
     { connectionName: "connA", x: -2.5, y: -2.5, z: 0 },
     { connectionName: "connA", x: 2.5, y: 2.5, z: 0 },
     { connectionName: "connB", x: -2.5, y: 2.5, z: 0 },
     { connectionName: "connB", x: 2.5, y: -2.5, z: 0 },
-  ],
+  ]),
 })
-
 const createHyperSolver = () =>
   new HyperSingleIntraNodeSolver({
     nodeWithPortPoints: createCrossingNode(),
@@ -29,7 +28,6 @@ const createHyperSolver = () =>
     viaDiameter: 0.3,
     effort: 1,
   })
-
 const getSolvedRoutes = (solver: {
   getOutput?: () => HighDensityIntraNodeRoute[]
   solvedRoutes?: HighDensityIntraNodeRoute[]
@@ -37,12 +35,10 @@ const getSolvedRoutes = (solver: {
   typeof solver.getOutput === "function"
     ? solver.getOutput()
     : (solver.solvedRoutes ?? [])
-
 const getUsedZ = (routes: HighDensityIntraNodeRoute[]) =>
   [
     ...new Set(routes.flatMap((route) => route.route.map((point) => point.z))),
   ].sort((a, b) => a - b)
-
 const toRenderedArtifacts = (routes: HighDensityIntraNodeRoute[]) => {
   const srj: SimpleRouteJson = {
     layerCount: 4,
@@ -78,13 +74,11 @@ const toRenderedArtifacts = (routes: HighDensityIntraNodeRoute[]) => {
       route: convertHdRouteToSimplifiedRoute(route, 4),
     })),
   }
-
   return {
     srj,
     graphics: convertSrjToGraphicsObject(srj),
   }
 }
-
 const hasSegmentOnLayer = (
   routes: HighDensityIntraNodeRoute[],
   targetZ: number,
@@ -101,7 +95,6 @@ const hasSegmentOnLayer = (
       )
     }),
   )
-
 const expectMultilayerCrossingSolution = (
   routes: HighDensityIntraNodeRoute[],
 ) => {
@@ -114,13 +107,11 @@ const expectMultilayerCrossingSolution = (
   expect(routes.flatMap((route) => route.vias)).not.toHaveLength(0)
   expect(hasSegmentOnLayer(routes, 0)).toBe(true)
   expect(hasSegmentOnLayer(routes, 3)).toBe(true)
-
   for (const route of routes) {
     for (const point of route.route) {
       expect([0, 3]).toContain(point.z)
     }
   }
-
   const { srj, graphics } = toRenderedArtifacts(routes)
   const wireLayers = [
     ...new Set(
@@ -138,7 +129,6 @@ const expectMultilayerCrossingSolution = (
         .filter((layer): layer is string => typeof layer === "string"),
     ),
   ].sort()
-
   expect(wireLayers).toContain("bottom")
   expect(wireLayers).not.toContain("inner1")
   expect(
@@ -152,7 +142,6 @@ const expectMultilayerCrossingSolution = (
   expect(renderedLineLayers).toContain("z3")
   expect(renderedLineLayers).not.toContain("z1")
 }
-
 const solvingCases = [
   {
     name: "CachedIntraNodeRouteSolver",
@@ -179,49 +168,38 @@ const solvingCases = [
     },
   },
 ] as const
-
 for (const { name, hyperParameters } of solvingCases) {
   test(`${name} solves X-crossing node using only z=0 and z=3`, () => {
     const hyperSolver = createHyperSolver()
     const solver = hyperSolver.generateSolver(hyperParameters as any)
-
     solver.solve()
-
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
     expectMultilayerCrossingSolution(getSolvedRoutes(solver as any))
   })
 }
-
 test("HyperSingleIntraNodeSolver solves the X-crossing node without z=1 segments", () => {
   const solver = createHyperSolver()
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expectMultilayerCrossingSolution(solver.solvedRoutes)
 })
-
 test("SingleTransitionIntraNodeSolver candidate rejects the X-crossing node", () => {
   const hyperSolver = createHyperSolver()
   const solver = hyperSolver.generateSolver({
     CLOSED_FORM_SINGLE_TRANSITION: true,
   } as any)
-
   solver.solve()
-
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
   expect(String(solver.error)).toContain("Expected 1 route")
 })
-
 test("HyperSingleIntraNodeSolver does not apply the single-layer candidate to a multilayer node", () => {
   const hyperSolver = createHyperSolver()
   const solver = hyperSolver.generateSolver({
     SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS: true,
   } as any)
-
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
   expect(String(solver.error)).toContain("not applicable")

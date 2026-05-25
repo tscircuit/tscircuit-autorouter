@@ -12,8 +12,11 @@ import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "../../types/high-density-types"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "../../utils/getPortPointsFromNodeWithPortPoints"
 import { BaseSolver } from "../BaseSolver"
 import { buildColorMapFromPortPoints } from "./buildColorMapFromPortPoints"
 
@@ -81,9 +84,9 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
-    const nonTopLayerPortPoint = this.nodeWithPortPoints.portPoints.find(
-      (pp) => pp.z !== 0,
-    )
+    const nonTopLayerPortPoint = getPortPointsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    ).find((pp) => pp.z !== 0)
     if (nonTopLayerPortPoint) {
       this.error =
         "FixedTopologyHighDensityIntraNodeSolver only supports top-layer (z=0) port points; found bottom-layer input."
@@ -118,38 +121,20 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private _initializeGraph(): FixedViaHypergraphSolver | null {
-    // Build connections from port points
-    const connectionMap = new Map<
-      string,
-      { points: PortPoint[]; rootConnectionName?: string }
-    >()
-    for (const pp of this.nodeWithPortPoints.portPoints) {
-      const existing = connectionMap.get(pp.connectionName)
-      if (existing) {
-        existing.points.push(pp)
-      } else {
-        connectionMap.set(pp.connectionName, {
-          points: [pp],
-          rootConnectionName: pp.rootConnectionName,
-        })
-      }
-    }
-
     this.rootConnectionNameByConnectionId.clear()
     const inputConnections: HgXYConnection[] = []
-    for (const [connectionName, data] of connectionMap.entries()) {
-      if (data.points.length < 2) continue
+    for (const [start, end] of getPortPointPairsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    )) {
+      const connectionName = start.connectionName
       this.rootConnectionNameByConnectionId.set(
         connectionName,
-        data.rootConnectionName,
+        start.rootConnectionName ?? end.rootConnectionName,
       )
       inputConnections.push({
         connectionId: connectionName,
-        start: { x: data.points[0].x, y: data.points[0].y },
-        end: {
-          x: data.points[data.points.length - 1].x,
-          y: data.points[data.points.length - 1].y,
-        },
+        start: { x: start.x, y: start.y },
+        end: { x: end.x, y: end.y },
       })
     }
     if (inputConnections.length === 0) return null

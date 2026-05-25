@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 test("pipeline4 circuit011 cmn_6 routes the disconnected multipoint branch", () => {
   const pipeline = new AutoroutingPipelineSolver4(
@@ -12,7 +13,7 @@ test("pipeline4 circuit011 cmn_6 routes the disconnected multipoint branch", () 
 
   const branchNodes =
     pipeline.highDensityNodePortPoints?.filter((node) =>
-      node.portPoints.some(
+      getPortPointsFromNodeWithPortPoints(node).some(
         (portPoint) => portPoint.connectionName === "source_net_1_mst3",
       ),
     ) ?? []
@@ -43,7 +44,9 @@ test("pipeline4 circuit011 cmn_6 routes the disconnected multipoint branch", () 
   expect(
     routedBranchNodes.some(({ node }) => {
       const connectionNames = new Set(
-        node.portPoints.map((portPoint) => portPoint.connectionName),
+        getPortPointsFromNodeWithPortPoints(node).map(
+          (portPoint) => portPoint.connectionName,
+        ),
       )
 
       return (

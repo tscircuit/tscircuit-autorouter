@@ -2,6 +2,10 @@ import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
+import {
   Bounds,
   OwnerPairKey,
   PortPointWithOwnerPair,
@@ -55,7 +59,7 @@ export const visualizeUniformPortDistribution = ({
   }
 
   for (const node of nodeWithPortPoints) {
-    for (const pp of node.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(node)) {
       if (pp.portPointId) {
         portPointMap.set(pp.portPointId, { x: pp.x, y: pp.y })
         portPointZMap.set(pp.portPointId, pp.z ?? 0)
@@ -92,7 +96,7 @@ export const visualizeUniformPortDistribution = ({
       })
     }
 
-    element.portPoints.forEach((e) => {
+    getPortPointsFromNodeWithPortPoints(element).forEach((e) => {
       if (!e.portPointId) return
       const posE = portPointMap.get(e.portPointId)!
       const zLayer = portPointZMap.get(e.portPointId) ?? 0
@@ -105,22 +109,9 @@ export const visualizeUniformPortDistribution = ({
         y: posE.y,
         label: `z:${zLayer}\no:${ownerPair}`,
       })
-
-      if (!element.portPointsInPairs?.length) {
-        element.portPoints.forEach((f) => {
-          if (!f.portPointId || e === f) return
-          if (e.connectionName === f.connectionName) {
-            const posF = portPointMap.get(f.portPointId)!
-            lines.push({
-              points: [posE, posF],
-              strokeColor: "#fff822c9",
-            })
-          }
-        })
-      }
     })
 
-    element.portPointsInPairs?.forEach(([start, end]) => {
+    getPortPointPairsFromNodeWithPortPoints(element).forEach(([start, end]) => {
       lines.push({
         points: [getPortPointPosition(start), getPortPointPosition(end)],
         strokeColor: "#fff822c9",

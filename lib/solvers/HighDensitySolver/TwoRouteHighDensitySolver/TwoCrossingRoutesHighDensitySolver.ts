@@ -10,6 +10,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { computeDumbbellPaths } from "./computeDumbbellPaths"
 import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
@@ -113,32 +114,13 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
    * Extract routes that need to be connected from the node data
    */
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectedPorts = this.nodeWithPortPoints.portPoints!
-
-    // Group ports by connection name
-    const connectionGroups = new Map<string, Point[]>()
-
-    for (const connectedPort of connectedPorts) {
-      const { connectionName } = connectedPort
-      if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
-      }
-      connectionGroups.get(connectionName)?.push(connectedPort)
-    }
-
-    // Create routes for each connection (assuming each connection has exactly 2 points)
-    for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
-        routes.push({
-          startPort: { ...points[0], z: points[0].z ?? 0 },
-          endPort: { ...points[1], z: points[1].z ?? 0 },
-          connectionName,
-        })
-      }
-    }
-
-    return routes
+    return getPortPointPairsFromNodeWithPortPoints(this.nodeWithPortPoints).map(
+      ([start, end]) => ({
+        startPort: { ...start, z: start.z ?? 0 },
+        endPort: { ...end, z: end.z ?? 0 },
+        connectionName: start.connectionName,
+      }),
+    )
   }
 
   /**

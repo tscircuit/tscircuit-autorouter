@@ -27,6 +27,7 @@ import { getConnectionsWithNodes as getConnectionsWithNodesShared } from "./getC
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
 import { computeSectionScoreWithJumpers } from "../MultiSectionPortPointOptimizer/computeSectionScoreWithJumpers"
 import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 export interface PortPointPathingHyperParameters {
   SHUFFLE_SEED?: number
@@ -604,7 +605,7 @@ export class PortPointPathingSolver extends BaseSolver {
       center: node.center,
       width: node.width,
       height: node.height,
-      portPoints: allPortPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(allPortPoints),
       availableZ: node.availableZ,
     }
   }
@@ -1630,7 +1631,8 @@ export class PortPointPathingSolver extends BaseSolver {
           center: node.center,
           width: node.width,
           height: node.height,
-          portPoints: assignedPortPoints,
+          portPointsInPairs:
+            createPortPointPairsFromPortPoints(assignedPortPoints),
           availableZ: node.availableZ,
         })
       }
@@ -1689,7 +1691,7 @@ export class PortPointPathingSolver extends BaseSolver {
       center: node.center,
       width: node.width,
       height: node.height,
-      portPoints: filteredPortPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(filteredPortPoints),
       availableZ: node.availableZ,
     }
 

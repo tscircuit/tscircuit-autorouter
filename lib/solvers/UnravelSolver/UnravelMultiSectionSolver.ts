@@ -10,7 +10,8 @@ import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossin
 import { calculateNodeProbabilityOfFailure } from "./calculateCrossingProbabilityOfFailure"
 import { BaseSolver } from "../BaseSolver"
 import { GraphicsObject } from "graphics-debug"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import {
   PointModificationsMap,
   SegmentId,
@@ -406,15 +407,20 @@ export class UnravelMultiSectionSolver extends BaseSolver {
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
       )
     }
-    const nodeWithPortPointsMap = new Map<string, NodeWithPortPoints>()
+    const nodeDraftMap = new Map<
+      string,
+      Omit<NodeWithPortPoints, "portPointsInPairs"> & {
+        pendingPortPoints: PortPoint[]
+      }
+    >()
     for (const segment of this.dedupedSegments) {
       const segId = segment.nodePortSegmentId!
       for (const nodeId of this.segmentIdToNodeIds.get(segId)!) {
         const node = this.nodeMap.get(nodeId)!
-        if (!nodeWithPortPointsMap.has(nodeId)) {
-          nodeWithPortPointsMap.set(nodeId, {
+        if (!nodeDraftMap.has(nodeId)) {
+          nodeDraftMap.set(nodeId, {
             capacityMeshNodeId: nodeId,
-            portPoints: [],
+            pendingPortPoints: [],
             center: node.center,
             width: node.width,
             height: node.height,
@@ -425,9 +431,9 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
     for (const segmentPoint of this.segmentPointMap.values()) {
       for (const nodeId of segmentPoint.capacityMeshNodeIds) {
-        const nodeWithPortPoints = nodeWithPortPointsMap.get(nodeId)
-        if (nodeWithPortPoints) {
-          nodeWithPortPoints.portPoints.push({
+        const nodeDraft = nodeDraftMap.get(nodeId)
+        if (nodeDraft) {
+          nodeDraft.pendingPortPoints.push({
             x: segmentPoint.x,
             y: segmentPoint.y,
             z: segmentPoint.z,
@@ -438,6 +444,12 @@ export class UnravelMultiSectionSolver extends BaseSolver {
       }
     }
 
-    return Array.from(nodeWithPortPointsMap.values())
+    return Array.from(nodeDraftMap.values()).map(
+      ({ pendingPortPoints, ...node }) => ({
+        ...node,
+        portPointsInPairs:
+          createPortPointPairsFromPortPoints(pendingPortPoints),
+      }),
+    )
   }
 }

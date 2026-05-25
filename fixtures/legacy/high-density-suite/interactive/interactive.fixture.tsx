@@ -1,6 +1,7 @@
 import { useState } from "react"
 import defaultJson from "tests/high-density-suite/assets/highdensitysuite1.json"
 import { HighDensityInteractiveNodeDebugger } from "lib/testing/HighDensityInteractiveNodeDebugger"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 const getNodeWithPortPointsFromJson = (inputData: {
   nodeId?: string
@@ -15,7 +16,13 @@ const getNodeWithPortPointsFromJson = (inputData: {
   portPoints?: Array<number>
 }) => {
   if (inputData?.nodeWithPortPoints) return inputData.nodeWithPortPoints
-  if (inputData?.capacityMeshNodeId && inputData?.portPoints) return inputData
+  if (inputData?.capacityMeshNodeId && inputData?.portPoints) {
+    const { portPoints, ...node } = inputData
+    return {
+      ...node,
+      portPointsInPairs: createPortPointPairsFromPortPoints(portPoints as any),
+    }
+  }
   if (inputData?.capacityMeshNode && inputData?.portPoints) {
     const node = inputData.capacityMeshNode
     return {
@@ -24,7 +31,9 @@ const getNodeWithPortPointsFromJson = (inputData: {
       center: node.center,
       width: node.width,
       height: node.height,
-      portPoints: inputData.portPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(
+        inputData.portPoints as any,
+      ),
     }
   }
   return null

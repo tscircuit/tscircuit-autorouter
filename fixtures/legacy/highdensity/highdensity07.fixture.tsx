@@ -1,3 +1,4 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { InteractiveGraphics } from "graphics-debug/react"
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
@@ -5,11 +6,10 @@ import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorM
 import { useEffect, useMemo, useState } from "react"
 import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-
 const { nodeWithPortPoints } = {
   nodeWithPortPoints: {
     capacityMeshNodeId: "cn1255",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -16.66127472499999,
         y: -13.967746275390624,
@@ -214,13 +214,12 @@ const { nodeWithPortPoints } = {
         z: 0,
         connectionName: "source_trace_8",
       },
-    ],
+    ]),
     center: { x: -10.50409340624999, y: -9.73468411875 },
     width: 12.314362637500004,
     height: 12.314362637500004,
   },
 }
-
 export default () => {
   const [shuffleSeed, setShuffleSeed] = useState(0)
   const [iterations, setIterations] = useState(0)
@@ -240,7 +239,6 @@ export default () => {
       }),
     [shuffleSeed],
   )
-
   useEffect(() => {
     const interval = setInterval(() => {
       for (let i = 0; i < 200; i++) {
@@ -254,15 +252,12 @@ export default () => {
     }, 50)
     return () => clearInterval(interval)
   }, [solver])
-
   const numVias = solver.solvedRoutes.reduce(
     (total, route) => total + route.vias.length,
     0,
   )
-
   // Count the number of crossings
   const { numSameLayerCrossings } = getIntraNodeCrossings(nodeWithPortPoints)
-
   return (
     <div>
       <div className="border p-2 m-2 flex font-bold justify-between">

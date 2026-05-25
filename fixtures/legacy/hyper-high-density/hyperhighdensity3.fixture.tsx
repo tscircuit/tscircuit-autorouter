@@ -1,3 +1,4 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { InteractiveGraphics } from "graphics-debug/react"
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
@@ -5,11 +6,10 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { useMemo } from "react"
 import { useEffect, useState } from "react"
-
 const { nodeWithPortPoints } = {
   nodeWithPortPoints: {
     capacityMeshNodeId: "cn601",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -4.346912087499987,
         y: 3.8111147825000047,
@@ -178,25 +178,22 @@ const { nodeWithPortPoints } = {
         z: 0,
         connectionName: "source_trace_8",
       },
-    ],
+    ]),
     center: { x: -10.50409340624999, y: 2.579678518750004 },
     width: 12.314362637500004,
     height: 12.314362637500004,
   },
 }
-
 export default () => {
   const solver = useMemo(() => {
     const solver = new HyperSingleIntraNodeSolver({
       nodeWithPortPoints,
       colorMap: generateColorMapFromNodeWithPortPoints(nodeWithPortPoints),
     })
-
     return solver
   }, [])
   const [tab, setTab] = useState(0)
   const [iters, setIters] = useState(0)
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (solver.solved || solver.failed) {
@@ -208,7 +205,6 @@ export default () => {
     }, 10)
     return () => clearInterval(interval)
   }, [solver, setIters])
-
   return (
     <div>
       <div>

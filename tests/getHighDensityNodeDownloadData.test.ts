@@ -18,7 +18,12 @@ test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outp
         nodesWithPortPoints: [
           {
             capacityMeshNodeId: "cn_1",
-            portPoints: [{ portPointId: "pp1", x: 1, y: 1, z: 0 }],
+            portPointsInPairs: [
+              [
+                { portPointId: "pp1", x: 1, y: 1, z: 0 },
+                { portPointId: "pp2", x: 2, y: 1, z: 0 },
+              ],
+            ],
           },
         ],
         inputNodeWithPortPoints: [
@@ -33,7 +38,12 @@ test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outp
       getOutput: () => [
         {
           capacityMeshNodeId: "cn_1",
-          portPoints: [{ portPointId: "pp1", x: 3, y: 4, z: 0 }],
+          portPointsInPairs: [
+            [
+              { portPointId: "pp1", x: 3, y: 4, z: 0 },
+              { portPointId: "pp2", x: 4, y: 4, z: 0 },
+            ],
+          ],
         },
       ],
     },
@@ -47,7 +57,12 @@ test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outp
     },
     nodeWithPortPoints: {
       capacityMeshNodeId: "cn_1",
-      portPoints: [{ portPointId: "pp1", x: 3, y: 4, z: 0 }],
+      portPointsInPairs: [
+        [
+          { portPointId: "pp1", x: 3, y: 4, z: 0 },
+          { portPointId: "pp2", x: 4, y: 4, z: 0 },
+        ],
+      ],
     },
     inputNodeWithPortPoints: {
       capacityMeshNodeId: "cn_1",
@@ -90,10 +105,15 @@ test("getHighDensityNodeDownloadData prefers preserved high-density node input o
         center: { x: 5, y: 6 },
         width: 2,
         height: 2,
-        portPoints: [
-          { portPointId: "pp1", x: 4, y: 5, z: 0 },
-          { portPointId: "pp2", x: 6, y: 5, z: 0 },
-          { portPointId: "pp3", x: 5, y: 7, z: 1 },
+        portPointsInPairs: [
+          [
+            { portPointId: "pp1", x: 4, y: 5, z: 0 },
+            { portPointId: "pp2", x: 6, y: 5, z: 0 },
+          ],
+          [
+            { portPointId: "pp3", x: 5, y: 7, z: 1 },
+            { portPointId: "pp4", x: 5, y: 4, z: 1 },
+          ],
         ],
       },
     ],
@@ -104,7 +124,12 @@ test("getHighDensityNodeDownloadData prefers preserved high-density node input o
           center: { x: 5, y: 6 },
           width: 2,
           height: 2,
-          portPoints: [{ portPointId: "pp1", x: 4, y: 5, z: 0 }],
+          portPointsInPairs: [
+            [
+              { portPointId: "pp1", x: 4, y: 5, z: 0 },
+              { portPointId: "pp2", x: 6, y: 5, z: 0 },
+            ],
+          ],
         },
       ],
     },
@@ -117,10 +142,15 @@ test("getHighDensityNodeDownloadData prefers preserved high-density node input o
     center: { x: 5, y: 6 },
     width: 2,
     height: 2,
-    portPoints: [
-      { portPointId: "pp1", x: 4, y: 5, z: 0 },
-      { portPointId: "pp2", x: 6, y: 5, z: 0 },
-      { portPointId: "pp3", x: 5, y: 7, z: 1 },
+    portPointsInPairs: [
+      [
+        { portPointId: "pp1", x: 4, y: 5, z: 0 },
+        { portPointId: "pp2", x: 6, y: 5, z: 0 },
+      ],
+      [
+        { portPointId: "pp3", x: 5, y: 7, z: 1 },
+        { portPointId: "pp4", x: 5, y: 4, z: 1 },
+      ],
     ],
   })
 })
@@ -137,9 +167,11 @@ test("getHighDensityNodeDownloadData can read node data from high-density solver
               center: { x: 10, y: 11 },
               width: 3,
               height: 1,
-              portPoints: [
-                { portPointId: "pp1", x: 9, y: 11, z: 0 },
-                { portPointId: "pp2", x: 11, y: 11, z: 1 },
+              portPointsInPairs: [
+                [
+                  { portPointId: "pp1", x: 9, y: 11, z: 0 },
+                  { portPointId: "pp2", x: 11, y: 11, z: 1 },
+                ],
               ],
             },
           },
@@ -155,9 +187,11 @@ test("getHighDensityNodeDownloadData can read node data from high-density solver
     center: { x: 10, y: 11 },
     width: 3,
     height: 1,
-    portPoints: [
-      { portPointId: "pp1", x: 9, y: 11, z: 0 },
-      { portPointId: "pp2", x: 11, y: 11, z: 1 },
+    portPointsInPairs: [
+      [
+        { portPointId: "pp1", x: 9, y: 11, z: 0 },
+        { portPointId: "pp2", x: 11, y: 11, z: 1 },
+      ],
     ],
   })
 })
@@ -173,9 +207,11 @@ test("getHighDensityNodeDownloadData can fall back to constructor params in the 
               center: { x: 2, y: 3 },
               width: 1,
               height: 1,
-              portPoints: [
-                { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
-                { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+              portPointsInPairs: [
+                [
+                  { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
+                  { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+                ],
               ],
             },
           ],
@@ -192,9 +228,11 @@ test("getHighDensityNodeDownloadData can fall back to constructor params in the 
     center: { x: 2, y: 3 },
     width: 1,
     height: 1,
-    portPoints: [
-      { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
-      { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+    portPointsInPairs: [
+      [
+        { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
+        { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
+      ],
     ],
   })
 })
@@ -211,9 +249,11 @@ test("getHighDensityNodeDownloadData prefers solver metadata before touching thr
               center: { x: 1, y: 2 },
               width: 3,
               height: 4,
-              portPoints: [
-                { portPointId: "pp1", x: 1, y: 1, z: 0 },
-                { portPointId: "pp2", x: 2, y: 2, z: 1 },
+              portPointsInPairs: [
+                [
+                  { portPointId: "pp1", x: 1, y: 1, z: 0 },
+                  { portPointId: "pp2", x: 2, y: 2, z: 1 },
+                ],
               ],
             },
           },
@@ -235,9 +275,11 @@ test("getHighDensityNodeDownloadData prefers solver metadata before touching thr
     center: { x: 1, y: 2 },
     width: 3,
     height: 4,
-    portPoints: [
-      { portPointId: "pp1", x: 1, y: 1, z: 0 },
-      { portPointId: "pp2", x: 2, y: 2, z: 1 },
+    portPointsInPairs: [
+      [
+        { portPointId: "pp1", x: 1, y: 1, z: 0 },
+        { portPointId: "pp2", x: 2, y: 2, z: 1 },
+      ],
     ],
   })
 })
@@ -257,7 +299,12 @@ test("getHighDensityNodeDownloadData swallows throwing fallback getters during d
                 center: { x: 9, y: 9 },
                 width: 1,
                 height: 1,
-                portPoints: [{ portPointId: "pp1", x: 9, y: 9, z: 0 }],
+                portPointsInPairs: [
+                  [
+                    { portPointId: "pp1", x: 9, y: 9, z: 0 },
+                    { portPointId: "pp2", x: 10, y: 9, z: 0 },
+                  ],
+                ],
               },
             ],
           },
@@ -274,6 +321,11 @@ test("getHighDensityNodeDownloadData swallows throwing fallback getters during d
     center: { x: 9, y: 9 },
     width: 1,
     height: 1,
-    portPoints: [{ portPointId: "pp1", x: 9, y: 9, z: 0 }],
+    portPointsInPairs: [
+      [
+        { portPointId: "pp1", x: 9, y: 9, z: 0 },
+        { portPointId: "pp2", x: 10, y: 9, z: 0 },
+      ],
+    ],
   })
 })

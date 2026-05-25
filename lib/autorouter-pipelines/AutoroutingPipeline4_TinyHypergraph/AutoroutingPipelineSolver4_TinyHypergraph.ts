@@ -5,6 +5,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { toHighDensityRepair01NodesWithPortPoints } from "lib/utils/toHighDensityRepair01NodeWithPortPoints"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -354,7 +355,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       HighDensityForceImproveSolver,
       (cms) => [
         {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          nodeWithPortPoints: toHighDensityRepair01NodesWithPortPoints(
+            cms.highDensityNodePortPoints ?? [],
+          ),
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),

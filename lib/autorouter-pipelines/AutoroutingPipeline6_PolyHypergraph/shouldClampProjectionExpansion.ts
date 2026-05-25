@@ -51,7 +51,7 @@ export const shouldClampProjectionExpansion = ({
     conservativeMinDimension / requiredRoutingCorridorWidth,
   )
   const connectionCount = new Set(
-    node.portPoints.map((portPoint) => portPoint.connectionName),
+    node.portPointsInPairs.flat().map((portPoint) => portPoint.connectionName),
   ).size
 
   return (

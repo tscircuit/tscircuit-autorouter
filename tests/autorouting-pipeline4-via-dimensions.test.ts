@@ -1,10 +1,10 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-
 const srj: SimpleRouteJson = {
   layerCount: 2,
   minTraceWidth: 0.15,
@@ -26,13 +26,12 @@ const srj: SimpleRouteJson = {
     maxY: 5,
   },
 }
-
 const nodeWithPortPoints: NodeWithPortPoints = {
   capacityMeshNodeId: "cmn_1",
   center: { x: 0, y: 0 },
   width: 2,
   height: 2,
-  portPoints: [
+  portPointsInPairs: createPortPointPairsFromPortPoints([
     {
       connectionName: "conn1",
       x: -0.5,
@@ -45,9 +44,8 @@ const nodeWithPortPoints: NodeWithPortPoints = {
       y: 0,
       z: 0,
     },
-  ],
+  ]),
 }
-
 const simpleViaSrj: SimpleRouteJson = {
   layerCount: 2,
   minTraceWidth: 0.15,
@@ -80,7 +78,6 @@ const simpleViaSrj: SimpleRouteJson = {
     },
   ],
 }
-
 test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
   const solver = new AutoroutingPipelineSolver4({
     ...srj,
@@ -88,16 +85,13 @@ test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
     min_via_hole_diameter: 0.2,
     min_via_pad_diameter: 0.52,
   })
-
   expect(solver.viaDiameter).toBe(0.52)
   expect(solver.viaHoleDiameter).toBe(0.2)
-
   const escapeStep = solver.pipelineDef.find(
     (step) => step.solverName === "escapeViaLocationSolver",
   )
   const [, escapeOpts] = escapeStep!.getConstructorParams(solver) as any
   expect(escapeOpts.viaDiameter).toBe(0.52)
-
   solver.srjWithPointPairs = srj
   solver.portPointPathingSolver = {
     getOutput: () => ({
@@ -105,7 +99,6 @@ test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
       inputNodeWithPortPoints: [],
     }),
   } as any
-
   const highDensityStep = solver.pipelineDef.find(
     (step) => step.solverName === "highDensityRouteSolver",
   )
@@ -114,21 +107,17 @@ test("pipeline4 uses min_via_pad_diameter as the routing via diameter", () => {
   ) as any
   expect(highDensityParams.viaDiameter).toBe(0.52)
 })
-
 test(
   "pipeline4 emits requested via pad and hole diameters on a simple forced-via circuit",
   () => {
     const solver = new AutoroutingPipelineSolver4(structuredClone(simpleViaSrj))
     solver.solve()
-
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
-
     const output = solver.getOutputSimpleRouteJson()
     const viaSegments = (output.traces ?? []).flatMap((trace) =>
       trace.route.filter((segment) => segment.route_type === "via"),
     )
-
     expect(viaSegments.length).toBeGreaterThan(0)
     expect(
       viaSegments.every(
@@ -136,14 +125,11 @@ test(
           segment.via_diameter === 1.5 && segment.via_hole_diameter === 0.4,
       ),
     ).toBe(true)
-
     expect(convertSrjToGraphicsObject(output)).toMatchGraphicsSvg(
       import.meta.path,
     )
-
     const circuitJson = convertToCircuitJson(output, output.traces ?? [])
     const vias = circuitJson.filter((element) => element.type === "pcb_via")
-
     expect(vias.length).toBeGreaterThan(0)
     expect(
       vias.every(
@@ -151,5 +137,5 @@ test(
       ),
     ).toBe(true)
   },
-  { timeout: 120_000 },
+  { timeout: 120000 },
 )

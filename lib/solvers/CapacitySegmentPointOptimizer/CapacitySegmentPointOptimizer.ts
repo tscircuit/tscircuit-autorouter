@@ -5,7 +5,8 @@ import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegment
 import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 type NodePortSegmentId = string
 
@@ -597,30 +598,34 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
       )
     }
-    const map = new Map<string, NodeWithPortPoints>()
+    const portPointsByNodeId = new Map<string, PortPoint[]>()
     for (const segId of this.allSegmentIds) {
       for (const nodeId of this.segmentIdToNodeIds.get(segId)!) {
-        const node = this.nodeMap.get(nodeId)!
-        if (!map.has(nodeId)) {
-          map.set(nodeId, {
-            capacityMeshNodeId: nodeId,
-            portPoints: [],
-            center: node.center,
-            width: node.width,
-            height: node.height,
-          })
-        }
-        map.get(nodeId)!.portPoints.push(
+        const portPoints = portPointsByNodeId.get(nodeId) ?? []
+        portPoints.push(
           ...this.currentMutatedSegments
             .get(segId)!
             .assignedPoints!.map((ap) => ({
               ...ap.point,
               connectionName: ap.connectionName,
+              rootConnectionName: ap.rootConnectionName,
             })),
         )
+        portPointsByNodeId.set(nodeId, portPoints)
       }
     }
-    return Array.from(map.values())
+    return Array.from(portPointsByNodeId.entries()).map(
+      ([nodeId, portPoints]) => {
+        const node = this.nodeMap.get(nodeId)!
+        return {
+          capacityMeshNodeId: nodeId,
+          center: node.center,
+          width: node.width,
+          height: node.height,
+          portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
+        }
+      },
+    )
   }
 
   _step() {

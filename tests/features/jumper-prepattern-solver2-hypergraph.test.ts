@@ -1,7 +1,7 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { test, expect } from "bun:test"
 import { JumperPrepatternSolver2_HyperGraph } from "lib/solvers/JumperPrepatternSolver/JumperPrepatternSolver2_HyperGraph"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
-
 test("JumperPrepatternSolver2_HyperGraph - single_1206x4 pattern simple route", () => {
   // Create a node large enough for the ~8x8mm single_1206x4 pattern
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -9,12 +9,11 @@ test("JumperPrepatternSolver2_HyperGraph - single_1206x4 pattern simple route", 
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { connectionName: "conn1", x: 1, y: 5, z: 0 },
       { connectionName: "conn1", x: 9, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -23,14 +22,11 @@ test("JumperPrepatternSolver2_HyperGraph - single_1206x4 pattern simple route", 
       ORIENTATION: "vertical",
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(1)
   expect(solver.solvedRoutes[0].connectionName).toBe("conn1")
 })
-
 test("JumperPrepatternSolver2_HyperGraph - 2x2_1206x4 pattern simple route", () => {
   // Create a node large enough for the ~14x14mm 2x2_1206x4 pattern
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -38,12 +34,11 @@ test("JumperPrepatternSolver2_HyperGraph - 2x2_1206x4 pattern simple route", () 
     center: { x: 10, y: 10 },
     width: 20,
     height: 20,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { connectionName: "conn1", x: 2, y: 10, z: 0 },
       { connectionName: "conn1", x: 18, y: 10, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -52,30 +47,26 @@ test("JumperPrepatternSolver2_HyperGraph - 2x2_1206x4 pattern simple route", () 
       ORIENTATION: "vertical",
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(1)
   expect(solver.solvedRoutes[0].connectionName).toBe("conn1")
 })
-
 test("JumperPrepatternSolver2_HyperGraph - multiple connections", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       // Connection 1: left to right
       { connectionName: "conn1", x: 1, y: 3, z: 0 },
       { connectionName: "conn1", x: 9, y: 3, z: 0 },
       // Connection 2: top to bottom
       { connectionName: "conn2", x: 1, y: 7, z: 0 },
       { connectionName: "conn2", x: 9, y: 7, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -83,25 +74,21 @@ test("JumperPrepatternSolver2_HyperGraph - multiple connections", () => {
       ROWS: 1,
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(2)
 })
-
 test("JumperPrepatternSolver2_HyperGraph - horizontal orientation", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { connectionName: "conn1", x: 1, y: 5, z: 0 },
       { connectionName: "conn1", x: 9, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -110,25 +97,21 @@ test("JumperPrepatternSolver2_HyperGraph - horizontal orientation", () => {
       ORIENTATION: "horizontal",
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(1)
 })
-
 test("JumperPrepatternSolver2_HyperGraph - visualize() returns valid graphics", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { connectionName: "conn1", x: 1, y: 5, z: 0 },
       { connectionName: "conn1", x: 9, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -136,35 +119,28 @@ test("JumperPrepatternSolver2_HyperGraph - visualize() returns valid graphics", 
       ROWS: 1,
     },
   })
-
   solver.solve()
-
   const graphics = solver.visualize()
-
   // Should have visualization data
   expect(graphics.points).toBeDefined()
   expect(graphics.lines).toBeDefined()
   expect(graphics.rects).toBeDefined()
-
   // Should have port points visualized
   expect(graphics.points!.length).toBeGreaterThan(0)
-
   // Should have route lines visualized
   expect(graphics.lines!.length).toBeGreaterThan(0)
 })
-
 test("JumperPrepatternSolver2_HyperGraph - no connections needed for single port", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       // Only one port point - no connection to make
       { connectionName: "conn1", x: 1, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -172,37 +148,30 @@ test("JumperPrepatternSolver2_HyperGraph - no connections needed for single port
       ROWS: 1,
     },
   })
-
   solver.solve()
-
   // Should solve immediately with no routes
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(0)
 })
-
 test("JumperPrepatternSolver2_HyperGraph - default pattern is single_1206x4", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { connectionName: "conn1", x: 1, y: 5, z: 0 },
       { connectionName: "conn1", x: 9, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     // No hyperParameters - should use defaults
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(1)
 })
-
 test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get offset midpoint", () => {
   // Create two connections that would produce collinear overlapping segments
   // Outer connection (conn1): goes from x=0 to x=10 at y=5
@@ -212,16 +181,15 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       // Outer connection - spans full width
       { connectionName: "conn1", x: 0, y: 5, z: 0 },
       { connectionName: "conn1", x: 10, y: 5, z: 0 },
       // Inner connection - subset in the middle
       { connectionName: "conn2", x: 3, y: 5, z: 0 },
       { connectionName: "conn2", x: 7, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -230,12 +198,9 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
       ORIENTATION: "vertical",
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
   expect(solver.solvedRoutes.length).toBe(2)
-
   // Find the outer route (conn1) - it should have more points due to the inserted midpoint
   const conn1Route = solver.solvedRoutes.find(
     (r) => r.connectionName === "conn1",
@@ -243,10 +208,8 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
   const conn2Route = solver.solvedRoutes.find(
     (r) => r.connectionName === "conn2",
   )
-
   expect(conn1Route).toBeDefined()
   expect(conn2Route).toBeDefined()
-
   // If the routes are collinear and overlapping, the outer one should have
   // an offset midpoint added. We check that at least one point in conn1's route
   // has a y-coordinate that differs from 5 (the original line) by approximately
@@ -254,15 +217,12 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
   if (conn1Route && conn2Route) {
     // Check if any segments from conn1 are collinear with conn2's segments
     // If so, conn1 should have an offset midpoint
-
     // Get the y-values of all route points (excluding jumper pad points)
     const conn1YValues = conn1Route.route.map((p) => p.y)
-
     // Check if there's a point offset from y=5 (if segments were collinear)
     const hasOffsetPoint = conn1YValues.some(
       (y) => Math.abs(y - 5) > 0.1 && Math.abs(y - 5) < 1.0,
     )
-
     // Note: This test may not always trigger the offset because the hypergraph
     // solver might route the connections through different paths. The important
     // thing is that the code runs without error and produces valid routes.
@@ -272,25 +232,22 @@ test("JumperPrepatternSolver2_HyperGraph - collinear overlapping segments get of
     console.log("conn1 has offset point:", hasOffsetPoint)
   }
 })
-
 // Unit test for the collinear overlap detection logic directly
 test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps detects same-route overlaps", () => {
   // This test simulates a route that doubles back on itself
   // Like the cyan trace in the bug image: left-pad -> horizontal -> middle-pad -> horizontal -> right-pad
   // where the two horizontal segments are at the same Y and overlap
-
   const nodeWithPortPoints: NodeWithPortPoints = {
     capacityMeshNodeId: "node1",
     center: { x: 5, y: 5 },
     width: 12,
     height: 12,
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       // Single connection that goes across
       { connectionName: "conn1", x: -1, y: 5, z: 0 },
       { connectionName: "conn1", x: 11, y: 5, z: 0 },
-    ],
+    ]),
   }
-
   const solver = new JumperPrepatternSolver2_HyperGraph({
     nodeWithPortPoints,
     hyperParameters: {
@@ -299,11 +256,8 @@ test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps det
       ORIENTATION: "vertical",
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
-
   // Check if the route has any horizontal segments that would overlap
   const route = solver.solvedRoutes[0]
   if (route) {
@@ -314,7 +268,6 @@ test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps det
       minX: number
       maxX: number
     }> = []
-
     for (let i = 0; i < route.route.length - 1; i++) {
       const p1 = route.route[i]
       const p2 = route.route[i + 1]
@@ -328,7 +281,6 @@ test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps det
         })
       }
     }
-
     console.log("Horizontal segments found:", horizontalSegments.length)
     console.log("Total route points:", route.route.length)
     console.log(
@@ -346,7 +298,6 @@ test("JumperPrepatternSolver2_HyperGraph - _addMidpointsForCollinearOverlaps det
         )
         .join(", "),
     )
-
     // Check for overlapping horizontal segments at same Y
     let foundOverlap = false
     for (let i = 0; i < horizontalSegments.length; i++) {

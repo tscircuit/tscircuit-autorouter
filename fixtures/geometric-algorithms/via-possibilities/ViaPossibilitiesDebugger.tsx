@@ -6,6 +6,7 @@ import { Bounds } from "@tscircuit/math-utils"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { safeTransparentize } from "lib/solvers/colors"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 interface ViaPossibilitiesDebuggerProps {
   nodeWithPortPoints: NodeWithPortPoints
@@ -29,7 +30,8 @@ export const ViaPossibilitiesDebugger: React.FC<
 
   // Create port pairs map for visualization
   const portPairs = new Map<string, { start: any; end: any }>()
-  nodeWithPortPoints.portPoints.forEach((portPoint) => {
+  const portPoints = getPortPointsFromNodeWithPortPoints(nodeWithPortPoints)
+  portPoints.forEach((portPoint) => {
     if (!portPairs.has(portPoint.connectionName)) {
       portPairs.set(portPoint.connectionName, {
         start: {
@@ -97,7 +99,7 @@ export const ViaPossibilitiesDebugger: React.FC<
   })
 
   // Draw input port points
-  for (const pt of nodeWithPortPoints.portPoints) {
+  for (const pt of portPoints) {
     graphics.points.push({
       x: pt.x,
       y: pt.y,

@@ -35,9 +35,24 @@ import { HyperPortPointPathingSolver } from "../PortPointPathingSolver/HyperPort
 import { computeSectionScoreWithJumpers } from "./computeSectionScoreWithJumpers"
 import { calculateNodeProbabilityOfFailureWithJumpers } from "./calculateNodeProbabilityOfFailureWithJumpers"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import {
+  createPortPointPairsFromPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 export type HyperParameterScheduleEntry = PortPointPathingHyperParameters & {
   EXPANSION_DEGREES: number
+}
+
+const normalizeCutPortPointConnection = (pp: PortPoint): PortPoint => {
+  if (!pp.connectionName.startsWith("__cut__")) return pp
+  const withoutPrefix = pp.connectionName.slice("__cut__".length)
+  const lastUnderscoreIdx = withoutPrefix.lastIndexOf("__")
+  const originalName =
+    lastUnderscoreIdx >= 0
+      ? withoutPrefix.slice(0, lastUnderscoreIdx)
+      : withoutPrefix
+  return { ...pp, connectionName: originalName }
 }
 
 export interface MultiSectionPortPointOptimizerParams {
@@ -320,7 +335,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         center: node.center,
         width: node.width,
         height: node.height,
-        portPoints,
+        portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
         availableZ: node.availableZ,
       }
 
@@ -380,7 +395,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         center: node.center,
         width: node.width,
         height: node.height,
-        portPoints,
+        portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
         availableZ: node.availableZ,
       }
 
@@ -438,7 +453,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           center: inputNode.center,
           width: inputNode.width,
           height: inputNode.height,
-          portPoints,
+          portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
           availableZ: inputNode.availableZ,
         })
       }
@@ -463,7 +478,8 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           center: node.center,
           width: node.width,
           height: node.height,
-          portPoints: assignedPortPoints,
+          portPointsInPairs:
+            createPortPointPairsFromPortPoints(assignedPortPoints),
           availableZ: node.availableZ,
         })
       }
@@ -1081,25 +1097,19 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           .getNodesWithPortPoints()
           .map((node) => ({
             ...node,
-            portPoints: node.portPoints.map((pp) => {
-              if (pp.connectionName.startsWith("__cut__")) {
-                // Extract original connection name from __cut__<name>__<index>
-                const withoutPrefix = pp.connectionName.slice("__cut__".length)
-                const lastUnderscoreIdx = withoutPrefix.lastIndexOf("__")
-                const originalName =
-                  lastUnderscoreIdx >= 0
-                    ? withoutPrefix.slice(0, lastUnderscoreIdx)
-                    : withoutPrefix
-                return { ...pp, connectionName: originalName }
-              }
-              return pp
-            }),
+            portPointsInPairs: node.portPointsInPairs.map(
+              ([start, end]) =>
+                [
+                  normalizeCutPortPointConnection(start),
+                  normalizeCutPortPointConnection(end),
+                ] as [PortPoint, PortPoint],
+            ),
           }))
 
         // Get connection names that were re-routed by the sub-solver
         const reroutedConnNames = new Set<string>()
         for (const node of newNodesWithPortPoints) {
-          for (const pp of node.portPoints) {
+          for (const pp of getPortPointsFromNodeWithPortPoints(node)) {
             reroutedConnNames.add(pp.connectionName)
           }
         }
@@ -1110,13 +1120,16 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           this.currentSection!,
         )
         const filteredBeforeNodes = beforeNodes
-          .map((node) => ({
-            ...node,
-            portPoints: node.portPoints.filter((pp) =>
-              reroutedConnNames.has(pp.connectionName),
-            ),
-          }))
-          .filter((node) => node.portPoints.length > 0)
+          .map((node) => {
+            const portPoints = getPortPointsFromNodeWithPortPoints(node).filter(
+              (pp) => reroutedConnNames.has(pp.connectionName),
+            )
+            return {
+              ...node,
+              portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
+            }
+          })
+          .filter((node) => node.portPointsInPairs.length > 0)
 
         const filteredBeforeScore =
           this.computeScoreForNodes(filteredBeforeNodes)

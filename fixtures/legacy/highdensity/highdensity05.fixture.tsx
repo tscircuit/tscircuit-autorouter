@@ -1,12 +1,12 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { InteractiveGraphics } from "graphics-debug/react"
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-
 const { nodeWithPortPoints } = {
   nodeWithPortPoints: {
     capacityMeshNodeId: "cn601",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -4.346912087499987,
         y: 3.8111147825000047,
@@ -175,13 +175,12 @@ const { nodeWithPortPoints } = {
         z: 0,
         connectionName: "source_trace_8",
       },
-    ],
+    ]),
     center: { x: -10.50409340624999, y: 2.579678518750004 },
     width: 12.314362637500004,
     height: 12.314362637500004,
   },
 }
-
 export default () => {
   const solver = new IntraNodeRouteSolver({
     nodeWithPortPoints,
@@ -190,12 +189,9 @@ export default () => {
       SHUFFLE_SEED: 1,
     },
   })
-
   solver.solve()
-
   const graphics =
     solver.solvedRoutes.length > 0 ? solver.visualize() : { lines: [] }
-
   if (solver.failedSubSolvers.length > 0) {
     return (
       <InteractiveGraphics
@@ -206,6 +202,5 @@ export default () => {
       />
     )
   }
-
   return <InteractiveGraphics graphics={graphics} />
 }

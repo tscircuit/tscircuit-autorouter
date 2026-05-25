@@ -138,7 +138,7 @@ export class AttachProjectedRectsSolver extends BaseSolver {
           : [],
       ),
       points: nodes.flatMap((node) =>
-        node.portPoints.map((point) => ({
+        node.portPointsInPairs.flat().map((point) => ({
           x: point.x,
           y: point.y,
           color: "rgba(30, 30, 30, 0.85)",

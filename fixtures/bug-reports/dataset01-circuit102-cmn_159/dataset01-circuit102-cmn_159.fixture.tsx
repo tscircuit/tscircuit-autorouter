@@ -1,10 +1,21 @@
 import { HighDensityInteractiveNodeDebugger } from "lib/testing/HighDensityInteractiveNodeDebugger"
+import {
+  createPortPointPairsFromPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import cmn159NodeData from "./cmn_159-node-data.json" with { type: "json" }
 
+const { portPoints: inputPortPoints, ...nodeData } =
+  cmn159NodeData.nodeWithPortPoints
+const nodeWithPortPoints = {
+  ...nodeData,
+  portPointsInPairs: createPortPointPairsFromPortPoints(inputPortPoints as any),
+}
+const outputPortPoints = getPortPointsFromNodeWithPortPoints(
+  nodeWithPortPoints as any,
+)
 const outputConnectionCount = new Set(
-  cmn159NodeData.nodeWithPortPoints.portPoints.map(
-    (point: any) => point.connectionName,
-  ),
+  outputPortPoints.map((point: any) => point.connectionName),
 ).size
 
 export default () => {
@@ -14,9 +25,9 @@ export default () => {
         dataset01 circuit102 extracted failing high-density node `cmn_159`
       </div>
       <div className="mb-2 text-xs text-gray-700">
-        Output node: {cmn159NodeData.nodeWithPortPoints.portPoints.length} port
-        points across {outputConnectionCount} named connections, all constrained
-        to `z=1` with `availableZ: [1]` inside a `1.56mm x 0.46mm` node.
+        Output node: {outputPortPoints.length} port points across{" "}
+        {outputConnectionCount} named connections, all constrained to `z=1` with
+        `availableZ: [1]` inside a `1.56mm x 0.46mm` node.
       </div>
       <div className="mb-3 text-xs text-gray-700">
         Raw input node creation data still has{" "}
@@ -39,7 +50,7 @@ export default () => {
         </pre>
       </details>
       <HighDensityInteractiveNodeDebugger
-        nodeWithPortPoints={cmn159NodeData.nodeWithPortPoints}
+        nodeWithPortPoints={nodeWithPortPoints as any}
       />
     </div>
   )

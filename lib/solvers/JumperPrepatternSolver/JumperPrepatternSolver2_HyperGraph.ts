@@ -15,6 +15,7 @@ import {
 import { generate0603JumperHyperGraph } from "@tscircuit/jumper-topology-generator"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { translate } from "transformation-matrix"
 import type {
   HighDensityIntraNodeRouteWithJumpers,
@@ -31,6 +32,7 @@ import {
   JUMPER_DIMENSIONS,
   type JumperFootprint,
 } from "../../utils/jumperSizes"
+import { getPortPointsFromNodeWithPortPoints } from "../../utils/getPortPointsFromNodeWithPortPoints"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 
@@ -178,7 +180,9 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     ]
     const colorMap: Record<string, string> = {}
     const connectionNames = new Set<string>()
-    for (const pp of this.nodeWithPortPoints.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    )) {
       connectionNames.add(pp.connectionName)
     }
     let i = 0
@@ -426,33 +430,13 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         padRegions: loc.padRegions,
       })) ?? []
 
-    // Build connections from port points
-    // Group port points by connection name
-    const connectionMap = new Map<
-      string,
-      { points: PortPoint[]; rootConnectionName?: string }
-    >()
-    for (const pp of node.portPoints) {
-      const existing = connectionMap.get(pp.connectionName)
-      if (existing) {
-        existing.points.push(pp)
-      } else {
-        connectionMap.set(pp.connectionName, {
-          points: [pp],
-          rootConnectionName: pp.rootConnectionName,
-        })
-      }
-    }
-
     // Create XY connections - use port point positions directly since graph matches node bounds
     this.xyConnections = []
-    for (const [connectionName, data] of Array.from(connectionMap.entries())) {
-      if (data.points.length < 2) continue
-
+    for (const [start, end] of getPortPointPairsFromNodeWithPortPoints(node)) {
       this.xyConnections.push({
-        start: { x: data.points[0].x, y: data.points[0].y },
-        end: { x: data.points[1].x, y: data.points[1].y },
-        connectionId: connectionName,
+        start: { x: start.x, y: start.y },
+        end: { x: end.x, y: end.y },
+        connectionId: start.connectionName,
       })
     }
 
@@ -638,9 +622,9 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     ) {
       const solvedRoute = this.jumperGraphSolver.solvedRoutes[routeIdx]
       const connectionId = solvedRoute.connection.connectionId
-      const rootConnectionName = this.nodeWithPortPoints.portPoints.find(
-        (pp) => pp.connectionName === connectionId,
-      )?.rootConnectionName
+      const rootConnectionName = getPortPointsFromNodeWithPortPoints(
+        this.nodeWithPortPoints,
+      ).find((pp) => pp.connectionName === connectionId)?.rootConnectionName
       const jumpers: Jumper[] = []
       const traversals: Array<{
         regionId: string
@@ -1126,7 +1110,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     })
 
     // Draw port points
-    for (const pp of node.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(node)) {
       graphics.points!.push({
         x: pp.x,
         y: pp.y,

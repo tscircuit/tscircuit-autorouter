@@ -1,4 +1,5 @@
 import type { GraphicsObject } from "graphics-debug"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { safeTransparentize } from "../../solvers/colors"
@@ -246,30 +247,12 @@ export class SimpleHighDensitySolver extends BaseSolver {
     const maxY = node.center.y + node.height / 2
     this.currentNodeBounds = { minX, maxX, minY, maxY }
 
-    // Group port points within this node by connectionName
-    const connectionGroups = new Map<
-      string,
-      Array<{ x: number; y: number; z: number; rootConnectionName?: string }>
-    >()
-
-    for (const pt of node.portPoints) {
-      if (!connectionGroups.has(pt.connectionName)) {
-        connectionGroups.set(pt.connectionName, [])
-      }
-      connectionGroups.get(pt.connectionName)!.push({
-        x: pt.x,
-        y: pt.y,
-        z: pt.z,
-        rootConnectionName: pt.rootConnectionName,
-      })
-    }
-
-    // Create routes in progress for connections with 2+ port points
-    for (const [connectionName, points] of connectionGroups) {
-      if (points.length < 2) continue
-
-      const startPoint = points[0]
-      const endPoint = points[points.length - 1]
+    for (const [start, end] of getPortPointPairsFromNodeWithPortPoints(node)) {
+      const connectionName = start.connectionName
+      const rootConnectionName =
+        start.rootConnectionName ?? end.rootConnectionName
+      const startPoint = start
+      const endPoint = end
       const z = startPoint.z
 
       // Calculate direction vector and length
@@ -288,7 +271,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
           x: startPoint.x + unitX * MOVABLE_POINT_OFFSET,
           y: startPoint.y + unitY * MOVABLE_POINT_OFFSET,
           z,
-          rootConnectionName: startPoint.rootConnectionName,
+          rootConnectionName,
           connectionName,
         })
       }
@@ -299,7 +282,7 @@ export class SimpleHighDensitySolver extends BaseSolver {
           x: endPoint.x - unitX * MOVABLE_POINT_OFFSET,
           y: endPoint.y - unitY * MOVABLE_POINT_OFFSET,
           z,
-          rootConnectionName: startPoint.rootConnectionName,
+          rootConnectionName,
           connectionName,
         })
       }
@@ -310,14 +293,14 @@ export class SimpleHighDensitySolver extends BaseSolver {
           x: startPoint.x + dx / 2,
           y: startPoint.y + dy / 2,
           z,
-          rootConnectionName: startPoint.rootConnectionName,
+          rootConnectionName,
           connectionName,
         })
       }
 
       this.routesInProgress.push({
         connectionName,
-        rootConnectionName: startPoint.rootConnectionName,
+        rootConnectionName,
         startPoint: { x: startPoint.x, y: startPoint.y, z },
         endPoint: { x: endPoint.x, y: endPoint.y, z },
         movablePoints,
@@ -751,24 +734,15 @@ export class SimpleHighDensitySolver extends BaseSolver {
 
     // Draw unsolved nodes in gray
     for (const node of this.unsolvedNodes) {
-      // Group port points by connectionName
-      const connectionGroups = new Map<
-        string,
-        Array<{ x: number; y: number }>
-      >()
-      for (const pt of node.portPoints) {
-        if (!connectionGroups.has(pt.connectionName)) {
-          connectionGroups.set(pt.connectionName, [])
-        }
-        connectionGroups.get(pt.connectionName)!.push({ x: pt.x, y: pt.y })
-      }
-
-      // Draw gray lines for each connection
-      for (const [connectionName, points] of connectionGroups) {
-        if (points.length < 2) continue
+      for (const [start, end] of getPortPointPairsFromNodeWithPortPoints(
+        node,
+      )) {
         graphics.lines!.push({
-          points: points.map((p) => ({ x: p.x, y: p.y })),
-          label: connectionName,
+          points: [
+            { x: start.x, y: start.y },
+            { x: end.x, y: end.y },
+          ],
+          label: start.connectionName,
           strokeColor: "gray",
           strokeWidth: this.traceWidth,
         })

@@ -7,6 +7,7 @@ import {
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import type {
   InputNodeWithPortPoints,
@@ -544,7 +545,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
-      portPoints: existingPortPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(existingPortPoints),
     }
 
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
@@ -638,7 +639,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
-      portPoints: [...existingPortPoints, ...additionalPortPoints],
+      portPointsInPairs: createPortPointPairsFromPortPoints([
+        ...existingPortPoints,
+        ...additionalPortPoints,
+      ]),
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
@@ -739,7 +743,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       center: region.d.center,
       width: region.d.width,
       height: region.d.height,
-      portPoints,
+      portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
       availableZ: region.d.availableZ,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
@@ -907,7 +911,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           center: region.d.center,
           width: region.d.width,
           height: region.d.height,
-          portPoints: nodePortPoints,
+          portPointsInPairs: createPortPointPairsFromPortPoints(nodePortPoints),
           availableZ: region.d.availableZ,
         })
       }

@@ -1,11 +1,11 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { HyperHighDensityDebugger } from "lib/testing/HyperHighDensityDebugger"
-
 const hd = {
   nodeId: "cmn_16",
   capacityMeshNode: null,
   nodeWithPortPoints: {
     capacityMeshNodeId: "cmn_16",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -1.2700000000000002,
         y: 3.01,
@@ -30,7 +30,7 @@ const hd = {
         z: 0,
         connectionName: "source_net_2",
       },
-    ],
+    ]),
     center: {
       x: -1.2700000000000002,
       y: 2.54,
@@ -39,7 +39,6 @@ const hd = {
     height: 0.9399999999999995,
   },
 }
-
 export default () => {
   return <HyperHighDensityDebugger nodeWithPortPoints={hd.nodeWithPortPoints} />
 }

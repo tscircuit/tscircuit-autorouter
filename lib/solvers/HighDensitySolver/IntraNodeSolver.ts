@@ -4,6 +4,10 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -114,13 +118,31 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
+
+    this.unsolvedConnections = getPortPointPairsFromNodeWithPortPoints(
+      nodeWithPortPoints,
+    ).map(([start, end]) => ({
+      connectionName: start.connectionName,
+      rootConnectionName: start.rootConnectionName ?? end.rootConnectionName,
+      points: [
+        { x: start.x, y: start.y, z: start.z ?? 0 },
+        { x: end.x, y: end.y, z: end.z ?? 0 },
+      ],
+    }))
+
     for (const {
       connectionName,
       rootConnectionName,
       x,
       y,
       z,
-    } of nodeWithPortPoints.portPoints) {
+    } of this.unsolvedConnections.flatMap((connection) =>
+      connection.points.map((point) => ({
+        connectionName: connection.connectionName,
+        rootConnectionName: connection.rootConnectionName,
+        ...point,
+      })),
+    )) {
       if (rootConnectionName) {
         this.rootConnectionNameByConnectionName.set(
           connectionName,
@@ -139,14 +161,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
           dedupeConnectionPoints(points),
         ],
       ),
-    )
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName:
-          this.rootConnectionNameByConnectionName.get(connectionName),
-        points: dedupeConnectionPoints(points),
-      })),
     )
     this.rerouteAttemptsByConnection = new Map()
 
@@ -183,7 +197,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     //   numTransitions,
     // } = getIntraNodeCrossings(this.nodeWithPortPoints)
 
-    // if (this.nodeWithPortPoints.portPoints.length === 4) {
+    // if (this.nodeWithPortPoints.portPointsInPairs.length === 2) {
 
     // }
 
@@ -242,17 +256,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
-        (max, p) => Math.max(max, (p.z ?? 0) + 1),
-        2,
-      ),
+      layerCount: getPortPointsFromNodeWithPortPoints(
+        this.nodeWithPortPoints,
+      ).reduce((max, p) => Math.max(max, (p.z ?? 0) + 1), 2),
       availableZ:
         this.nodeWithPortPoints.availableZ &&
         this.nodeWithPortPoints.availableZ.length > 0
           ? this.nodeWithPortPoints.availableZ
           : [
               ...new Set(
-                this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
+                getPortPointsFromNodeWithPortPoints(
+                  this.nodeWithPortPoints,
+                ).map((point) => point.z ?? 0),
               ),
             ].sort((a, b) => a - b),
       hyperParameters: this.hyperParameters,
@@ -336,7 +351,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     return [
       ...new Set(
-        this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
+        getPortPointsFromNodeWithPortPoints(this.nodeWithPortPoints).map(
+          (point) => point.z ?? 0,
+        ),
       ),
     ].sort((a, b) => a - b)
   }
@@ -505,7 +522,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     // })
 
     // Visualize input nodeWithPortPoints
-    for (const pt of this.nodeWithPortPoints.portPoints) {
+    for (const pt of getPortPointsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    )) {
       graphics.points!.push({
         x: pt.x,
         y: pt.y,

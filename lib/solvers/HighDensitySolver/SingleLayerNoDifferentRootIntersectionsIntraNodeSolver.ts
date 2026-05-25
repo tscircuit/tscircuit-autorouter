@@ -9,6 +9,10 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { BaseSolver } from "../BaseSolver"
 
 type Point3 = { x: number; y: number; z: number }
@@ -55,9 +59,9 @@ const uniqueAvailableZ = (node: NodeWithPortPoints) => {
   if (node.availableZ?.length) {
     return [...new Set(node.availableZ)].sort((a, b) => a - b)
   }
-  return [...new Set(node.portPoints.map((p) => p.z ?? 0))].sort(
-    (a, b) => a - b,
-  )
+  return [
+    ...new Set(getPortPointsFromNodeWithPortPoints(node).map((p) => p.z ?? 0)),
+  ].sort((a, b) => a - b)
 }
 
 const getBounds = (node: NodeWithPortPoints) => ({
@@ -174,7 +178,7 @@ const getForeignPorts = (
   node: NodeWithPortPoints,
   currentRootConnectionName: string,
 ) =>
-  node.portPoints
+  getPortPointsFromNodeWithPortPoints(node)
     .filter(
       (point) =>
         (point.rootConnectionName ?? point.connectionName) !==
@@ -427,68 +431,33 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
   }
 
   static isApplicable(node: NodeWithPortPoints) {
+    const portPoints = getPortPointsFromNodeWithPortPoints(node)
     const availableZ = uniqueAvailableZ(node)
     if (availableZ.length !== 1) return false
-    if (node.portPoints.length > 12) return false
+    if (portPoints.length > 12) return false
 
     const bounds = getBounds(node)
-    if (node.portPoints.some((point) => getEdge(point, bounds) === null)) {
+    if (portPoints.some((point) => getEdge(point, bounds) === null)) {
       return false
     }
 
-    const pointCountByConnection = new Map<string, number>()
-    for (const portPoint of node.portPoints) {
-      pointCountByConnection.set(
-        portPoint.connectionName,
-        (pointCountByConnection.get(portPoint.connectionName) ?? 0) + 1,
-      )
-    }
-
-    return [...pointCountByConnection.values()].some((count) => count > 2)
-  }
-
-  private buildTaskGroups() {
-    const groups = new Map<string, PortPoint[]>()
-    for (const portPoint of this.nodeWithPortPoints.portPoints) {
-      const existing = groups.get(portPoint.connectionName) ?? []
-      existing.push(portPoint)
-      groups.set(portPoint.connectionName, existing)
-    }
-    return groups
+    return getPortPointPairsFromNodeWithPortPoints(node).length > 1
   }
 
   private trySolveNode() {
     const bounds = getBounds(this.nodeWithPortPoints)
-    const groups = this.buildTaskGroups()
-    const groupCandidates = Array.from(groups.entries()).map(
-      ([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName: points[0]?.rootConnectionName ?? connectionName,
-        points,
-        pairSets: getCandidatePairSetsForConnection(points, bounds),
-      }),
-    )
-
-    const pairSetSelections: Array<PairTask[]> = []
-    const buildSelections = (index: number, acc: PairTask[]) => {
-      if (index >= groupCandidates.length) {
-        pairSetSelections.push(acc.slice())
-        return
-      }
-
-      const candidate = groupCandidates[index]!
-      for (const pairSet of candidate.pairSets) {
-        const nextTasks = pairSet.map(({ a, b }) => ({
-          connectionName: candidate.connectionName,
-          rootConnectionName: candidate.rootConnectionName,
-          A: candidate.points[a]!,
-          B: candidate.points[b]!,
-        }))
-        buildSelections(index + 1, [...acc, ...nextTasks])
-      }
-    }
-
-    buildSelections(0, [])
+    const pairTasks: PairTask[] = getPortPointPairsFromNodeWithPortPoints(
+      this.nodeWithPortPoints,
+    ).map(([start, end]) => ({
+      connectionName: start.connectionName,
+      rootConnectionName:
+        start.rootConnectionName ??
+        end.rootConnectionName ??
+        start.connectionName,
+      A: start,
+      B: end,
+    }))
+    const pairSetSelections: Array<PairTask[]> = [pairTasks]
 
     for (const pairTasks of pairSetSelections) {
       const candidateOrders =
@@ -570,12 +539,14 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
         strokeWidth: route.traceThickness,
         label: `${route.connectionName}\nroot: ${route.rootConnectionName ?? route.connectionName}`,
       })),
-      points: this.nodeWithPortPoints.portPoints.map((point) => ({
-        x: point.x,
-        y: point.y,
-        color: "blue",
-        label: `${point.connectionName}\nroot: ${point.rootConnectionName ?? point.connectionName}`,
-      })),
+      points: getPortPointsFromNodeWithPortPoints(this.nodeWithPortPoints).map(
+        (point) => ({
+          x: point.x,
+          y: point.y,
+          color: "blue",
+          label: `${point.connectionName}\nroot: ${point.rootConnectionName ?? point.connectionName}`,
+        }),
+      ),
       rects: [],
       circles: [],
     }

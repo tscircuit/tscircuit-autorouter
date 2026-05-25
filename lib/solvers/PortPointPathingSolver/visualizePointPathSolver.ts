@@ -8,6 +8,7 @@ import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCro
 import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
 import type { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 type Edge = "top" | "right" | "bottom" | "left" | "interior"
 
@@ -153,7 +154,7 @@ export function visualizePointPathSolver(
         center: node.center,
         width: node.width,
         height: node.height,
-        portPoints,
+        portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
         availableZ: node.availableZ,
       }
       crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)

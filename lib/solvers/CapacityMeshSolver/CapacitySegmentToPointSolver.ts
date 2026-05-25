@@ -1,8 +1,12 @@
 import { BaseSolver } from "../BaseSolver"
 import type { NodePortSegment } from "../../types/capacity-edges-to-port-segments-types"
 import type { GraphicsObject, Line } from "graphics-debug"
-import type { NodeWithPortPoints } from "../../types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "../../types/high-density-types"
 import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 export interface SegmentWithAssignedPoints extends NodePortSegment {
   assignedPoints?: {
@@ -164,27 +168,31 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
       )
     }
-    const map = new Map<string, NodeWithPortPoints>()
+    const portPointsByNodeId = new Map<string, PortPoint[]>()
     for (const seg of this.solvedSegments) {
       const nodeId = seg.capacityMeshNodeId
-      const node = this.nodeMap[nodeId]
-      if (!map.has(nodeId)) {
-        map.set(nodeId, {
-          capacityMeshNodeId: nodeId,
-          portPoints: [],
-          center: node.center,
-          width: node.width,
-          height: node.height,
-        })
-      }
-      map.get(nodeId)!.portPoints.push(
+      const portPoints = portPointsByNodeId.get(nodeId) ?? []
+      portPoints.push(
         ...seg.assignedPoints.map((ap) => ({
           ...ap.point,
           connectionName: ap.connectionName,
+          rootConnectionName: ap.rootConnectionName,
         })),
       )
+      portPointsByNodeId.set(nodeId, portPoints)
     }
-    return Array.from(map.values())
+    return Array.from(portPointsByNodeId.entries()).map(
+      ([nodeId, portPoints]) => {
+        const node = this.nodeMap[nodeId]
+        return {
+          capacityMeshNodeId: nodeId,
+          center: node.center,
+          width: node.width,
+          height: node.height,
+          portPointsInPairs: createPortPointPairsFromPortPoints(portPoints),
+        }
+      },
+    )
   }
 
   /**

@@ -82,6 +82,16 @@ const hasPortPoints = (
   typeof value.capacityMeshNodeId === "string" &&
   Array.isArray(value.portPoints)
 
+const hasPortPointPairs = (
+  value: unknown,
+): value is {
+  capacityMeshNodeId: string
+  portPointsInPairs: unknown[]
+} =>
+  isRecord(value) &&
+  typeof value.capacityMeshNodeId === "string" &&
+  Array.isArray(value.portPointsInPairs)
+
 const isInputPortPointNode = (
   value: unknown,
 ): value is InputNodeWithPortPoints =>
@@ -95,12 +105,16 @@ const isInputPortPointNode = (
   )
 
 const isResolvedPortPointNode = (value: unknown): value is NodeWithPortPoints =>
-  hasPortPoints(value) &&
-  value.portPoints.some(
-    (portPoint) =>
-      isRecord(portPoint) &&
-      typeof portPoint.x === "number" &&
-      typeof portPoint.y === "number",
+  hasPortPointPairs(value) &&
+  value.portPointsInPairs.some(
+    (pair) =>
+      Array.isArray(pair) &&
+      pair.some(
+        (portPoint) =>
+          isRecord(portPoint) &&
+          typeof portPoint.x === "number" &&
+          typeof portPoint.y === "number",
+      ),
   )
 
 const findNodeById = <T extends NodeLike>(
@@ -144,12 +158,7 @@ const safelyCall = <T>(fn: () => T): T | null => {
   }
 }
 
-const findPortPointNodeInUnknownValue = <
-  T extends {
-    capacityMeshNodeId: string
-    portPoints: unknown[]
-  },
->(
+const findPortPointNodeInUnknownValue = <T extends NodeLike>(
   nodeId: string,
   value: unknown,
   predicate: (value: unknown) => value is T,

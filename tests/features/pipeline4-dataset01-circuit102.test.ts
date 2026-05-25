@@ -4,6 +4,7 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { SimpleRouteJson } from "lib/types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 const getCircuit102 = () =>
   (dataset01 as Record<string, unknown>).circuit102 as SimpleRouteJson
@@ -39,11 +40,12 @@ test(
       defaultSolver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const defaultPortPoints = getPortPointsFromNodeWithPortPoints(defaultNode)
 
     expect(defaultMetadata?.status).toBe("solved")
-    expect(defaultNode.portPoints.length).toBe(2)
+    expect(defaultPortPoints.length).toBe(2)
     expect(
-      new Set(defaultNode.portPoints.map((point) => point.connectionName)).size,
+      new Set(defaultPortPoints.map((point) => point.connectionName)).size,
     ).toBe(1)
 
     getGlobalInMemoryCache().clearCache()
@@ -65,23 +67,24 @@ test(
       explicit8mmSolver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const explicit8mmPortPoints =
+      getPortPointsFromNodeWithPortPoints(explicit8mmNode)
 
     expect(explicit8mmMetadata?.status).toBe("solved")
     expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
     expect(explicit8mmMetadata?.routeCount).toBe(2)
-    expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
+    expect(explicit8mmPortPoints.length).toBeGreaterThan(
+      defaultPortPoints.length,
     )
     expect(
-      new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
-        .size,
+      new Set(explicit8mmPortPoints.map((point) => point.connectionName)).size,
     ).toBe(2)
     expect(
-      explicit8mmNode.portPoints.map((point) => point.connectionName),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.connectionName))
-    expect(
-      explicit8mmNode.portPoints.map((point) => point.portPointId),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.portPointId))
+      explicit8mmPortPoints.map((point) => point.connectionName),
+    ).not.toEqual(defaultPortPoints.map((point) => point.connectionName))
+    expect(explicit8mmPortPoints.map((point) => point.portPointId)).not.toEqual(
+      defaultPortPoints.map((point) => point.portPointId),
+    )
 
     getGlobalInMemoryCache().clearCache()
 
@@ -100,21 +103,18 @@ test(
       effort2Solver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const effort2PortPoints = getPortPointsFromNodeWithPortPoints(effort2Node)
 
     expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Node.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
-    )
+    expect(effort2PortPoints.length).toBeGreaterThan(defaultPortPoints.length)
     expect(
-      new Set(effort2Node.portPoints.map((point) => point.connectionName)).size,
+      new Set(effort2PortPoints.map((point) => point.connectionName)).size,
     ).toBe(2)
     expect(
-      JSON.stringify(
-        effort2Node.portPoints.map((point) => point.connectionName),
-      ),
+      JSON.stringify(effort2PortPoints.map((point) => point.connectionName)),
     ).not.toBe(
       JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
+        explicit8mmPortPoints.map((point) => point.connectionName),
       ),
     )
     expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")

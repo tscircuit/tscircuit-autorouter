@@ -9,8 +9,13 @@ export type PolyPortPoint = PortPoint & {
   projectedPoint?: Point
 }
 
-export type PolyNodeWithPortPoints = Omit<NodeWithPortPoints, "portPoints"> & {
+export type PolyPortPointInPair = [PolyPortPoint, PolyPortPoint]
+
+export type PolyNodeWithPortPoints = Omit<
+  NodeWithPortPoints,
+  "portPointsInPairs"
+> & {
   polygon: Point[]
-  portPoints: PolyPortPoint[]
+  portPointsInPairs: PolyPortPointInPair[]
   projectedRect?: ProjectedRect
 }

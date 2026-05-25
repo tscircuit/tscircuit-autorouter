@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { BaseSolver, type PendingEffect } from "../../solvers/BaseSolver"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
@@ -100,7 +101,7 @@ const getFailedHdCacheRequestStore = () => {
 const createConnectionRootMap = (node: NodeWithPortPoints) => {
   const connectionRootMap = new Map<string, string>()
 
-  for (const portPoint of node.portPoints) {
+  for (const portPoint of getPortPointsFromNodeWithPortPoints(node)) {
     if (
       portPoint.rootConnectionName &&
       !connectionRootMap.has(portPoint.connectionName)
@@ -173,7 +174,11 @@ const getPercentile = (sortedValues: number[], percentile: number) => {
 }
 
 const getNodePairCount = (node: NodeWithPortPoints) =>
-  new Set(node.portPoints.map((point) => point.connectionName)).size
+  new Set(
+    getPortPointsFromNodeWithPortPoints(node).map(
+      (point) => point.connectionName,
+    ),
+  ).size
 
 const shouldSolveNodeViaHdCache = (node: NodeWithPortPoints) => {
   if (getNodePairCount(node) < 3) {
@@ -725,7 +730,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       ...(metadata.remoteAttempt.error
         ? [`remoteError: ${metadata.remoteAttempt.error}`]
         : []),
-      `portPoints: ${metadata.node.portPoints.length}`,
+      `portPoints: ${getPortPointsFromNodeWithPortPoints(metadata.node).length}`,
       ...(metadata.error ? [`error: ${metadata.error}`] : []),
     ].join("\n")
   }

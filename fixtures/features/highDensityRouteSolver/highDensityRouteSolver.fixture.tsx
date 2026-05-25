@@ -8,6 +8,10 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { useState } from "react"
 
 type GridPoint =
@@ -61,7 +65,7 @@ const createGridHighDensityProblem = ({
       }
     })
 
-    const portPointsInPairs = node.portPointPairs?.map(
+    const portPointsInPairs = (node.portPointPairs ?? []).map(
       ([startPortIndex, endPortIndex]) =>
         [portPoints[startPortIndex]!, portPoints[endPortIndex]!] as [
           PortPoint,
@@ -151,7 +155,8 @@ const visualizeHighDensityInput = (
       },
     )
 
-    for (const portPoint of node.portPoints) {
+    const portPoints = getPortPointsFromNodeWithPortPoints(node)
+    for (const portPoint of portPoints) {
       graphics.points!.push({
         x: portPoint.x,
         y: portPoint.y,
@@ -166,7 +171,10 @@ const visualizeHighDensityInput = (
       })
     }
 
-    for (const [startPortPoint, endPortPoint] of node.portPointsInPairs ?? []) {
+    for (const [
+      startPortPoint,
+      endPortPoint,
+    ] of getPortPointPairsFromNodeWithPortPoints(node)) {
       graphics.lines!.push({
         points: [
           { x: startPortPoint.x, y: startPortPoint.y },

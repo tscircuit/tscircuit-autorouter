@@ -1,6 +1,6 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver"
-
 test.skip("pipeline5 visualizes failed high-density nodes with a visible red marker", () => {
   const solver = new Pipeline5HdCacheHighDensitySolver({
     nodePortPoints: [
@@ -10,16 +10,15 @@ test.skip("pipeline5 visualizes failed high-density nodes with a visible red mar
         width: 1.2,
         height: 1.4,
         availableZ: [0, 1],
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           { x: 9.6, y: 19.7, z: 0, connectionName: "A" },
           { x: 10.4, y: 20.3, z: 0, connectionName: "A" },
           { x: 9.6, y: 20.3, z: 1, connectionName: "B" },
           { x: 10.4, y: 19.7, z: 1, connectionName: "B" },
-        ],
+        ]),
       },
     ],
   })
-
   solver.nodeSolveMetadataById.set("cmn_fail", {
     node: {
       capacityMeshNodeId: "cmn_fail",
@@ -27,12 +26,12 @@ test.skip("pipeline5 visualizes failed high-density nodes with a visible red mar
       width: 1.2,
       height: 1.4,
       availableZ: [0, 1],
-      portPoints: [
+      portPointsInPairs: createPortPointPairsFromPortPoints([
         { x: 9.6, y: 19.7, z: 0, connectionName: "A" },
         { x: 10.4, y: 20.3, z: 0, connectionName: "A" },
         { x: 9.6, y: 20.3, z: 1, connectionName: "B" },
         { x: 10.4, y: 19.7, z: 1, connectionName: "B" },
-      ],
+      ]),
     },
     status: "failed",
     resolution: "failed",
@@ -47,7 +46,6 @@ test.skip("pipeline5 visualizes failed high-density nodes with a visible red mar
     },
     error: "local fallback failed",
   })
-
   const visualization = solver.visualize()
   const failedRects =
     visualization.rects?.filter((rect) =>
@@ -81,7 +79,6 @@ test.skip("pipeline5 visualizes failed high-density nodes with a visible red mar
     visualization.points?.filter((point) =>
       point.label?.includes("node: cmn_fail"),
     ) ?? []
-
   expect(failedRects).toHaveLength(1)
   expect(failedRects[0]?.fill).toBe("rgba(255, 0, 0, 0.3)")
   expect(failedRects[0]?.stroke).toBe("red")

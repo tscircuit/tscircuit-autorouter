@@ -267,15 +267,15 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
       const polygon = getPolygonFromMetadata(metadata)
       if (!polygon) continue
 
-      const portPoints = (state.regionSegments[regionId] ?? []).flatMap(
+      const portPointsInPairs = (state.regionSegments[regionId] ?? []).map(
         ([routeId, fromPortId, toPortId]) =>
           [
             this.createAssignedPortPoint(routeId, fromPortId),
             this.createAssignedPortPoint(routeId, toPortId),
-          ] satisfies PortPoint[],
+          ] satisfies [PortPoint, PortPoint],
       )
 
-      if (portPoints.length === 0) continue
+      if (portPointsInPairs.length === 0) continue
 
       outputNodes.push({
         capacityMeshNodeId: serializedRegionId,
@@ -286,7 +286,7 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
         width: topology.regionWidth[regionId],
         height: topology.regionHeight[regionId],
         polygon,
-        portPoints,
+        portPointsInPairs,
         availableZ: metadata.availableZ as number[] | undefined,
       })
     }

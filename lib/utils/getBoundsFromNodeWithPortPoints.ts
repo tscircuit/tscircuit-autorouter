@@ -1,4 +1,5 @@
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "./getPortPointsFromNodeWithPortPoints"
 
 export function getBoundsFromNodeWithPortPoints(
   nodeWithPortPoints: NodeWithPortPoints,
@@ -13,7 +14,7 @@ export function getBoundsFromNodeWithPortPoints(
   // Sometimes port points may be outside the node- this happens when there's
   // a "leap" to the final target or at the end or beginning of a trace when
   // we're wrapping up
-  for (const pt of nodeWithPortPoints.portPoints) {
+  for (const pt of getPortPointsFromNodeWithPortPoints(nodeWithPortPoints)) {
     if (pt.x < bounds.minX) {
       bounds.minX = pt.x
     }

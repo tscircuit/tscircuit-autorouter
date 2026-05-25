@@ -1,4 +1,5 @@
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 export const buildColorMapFromPortPoints = (
   nodeWithPortPoints: NodeWithPortPoints,
@@ -18,7 +19,7 @@ export const buildColorMapFromPortPoints = (
 
   const colorMap: Record<string, string> = {}
   const connectionNames = new Set<string>()
-  for (const pp of nodeWithPortPoints.portPoints) {
+  for (const pp of getPortPointsFromNodeWithPortPoints(nodeWithPortPoints)) {
     connectionNames.add(pp.connectionName)
   }
 

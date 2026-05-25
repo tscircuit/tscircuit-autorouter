@@ -1,5 +1,5 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { HighDensityDebugger } from "lib/testing/HighDensityDebugger"
-
 export default () => (
   <HighDensityDebugger
     hyperParameters={{
@@ -8,7 +8,7 @@ export default () => (
     {...{
       nodeWithPortPoints: {
         capacityMeshNodeId: "cn2739",
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           {
             x: -42.40051819999998,
             y: -14.1015625,
@@ -45,7 +45,7 @@ export default () => (
             connectionName: "source_trace_40",
             z: 0,
           },
-        ],
+        ]),
         center: { x: -42.40051819999998, y: -13.45703125 },
         width: 1.2890625,
         height: 1.2890625,

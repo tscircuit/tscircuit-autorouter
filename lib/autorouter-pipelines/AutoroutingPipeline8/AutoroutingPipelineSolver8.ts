@@ -6,6 +6,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { toHighDensityRepair01NodesWithPortPoints } from "lib/utils/toHighDensityRepair01NodeWithPortPoints"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -378,8 +379,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       HighDensityForceImproveSolver,
       (cms) => [
         {
-          nodeWithPortPoints:
+          nodeWithPortPoints: toHighDensityRepair01NodesWithPortPoints(
             cms.getHighDensityNodePortPointsWithAssignableViasFirst(),
+          ),
           hdRoutes: cms.getMovableHighDensityRoutes(
             cms.highDensityRouteSolver!.routes,
           ),

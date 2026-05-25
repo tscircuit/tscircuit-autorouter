@@ -1,12 +1,12 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-
 test("HighDensitySolver tracks solver counts and difficult node pfs", () => {
   const solver = new HighDensitySolver({
     nodePortPoints: [
       {
         capacityMeshNodeId: "cn118",
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           {
             x: -10.078125,
             y: 4.6875,
@@ -19,7 +19,7 @@ test("HighDensitySolver tracks solver counts and difficult node pfs", () => {
             z: 0,
             connectionName: "conn1",
           },
-        ],
+        ]),
         center: {
           x: -9.84375,
           y: 4.21875,
@@ -35,30 +35,25 @@ test("HighDensitySolver tracks solver counts and difficult node pfs", () => {
       cn118: 0.07,
     },
   })
-
   solver.solve()
-
   expect(solver.solved).toBe(true)
-
   const solverNodeCount = solver.stats.solverNodeCount as Record<string, number>
   const difficultNodePfs = solver.stats.difficultNodePfs as Record<
     string,
     number[]
   >
-
   expect(solverNodeCount.CachedIntraNodeRouteSolver).toBeUndefined()
   expect(
     Object.values(solverNodeCount).reduce((sum, count) => sum + count, 0),
   ).toBe(1)
   expect(Object.values(difficultNodePfs).flat()).toEqual([0.07])
 })
-
 test("HighDensitySolver emits node markers only after completion", () => {
   const solver = new HighDensitySolver({
     nodePortPoints: [
       {
         capacityMeshNodeId: "cn118",
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           {
             x: -10.078125,
             y: 4.6875,
@@ -71,7 +66,7 @@ test("HighDensitySolver emits node markers only after completion", () => {
             z: 0,
             connectionName: "conn1",
           },
-        ],
+        ]),
         center: {
           x: -9.84375,
           y: 4.21875,
@@ -81,7 +76,7 @@ test("HighDensitySolver emits node markers only after completion", () => {
       },
       {
         capacityMeshNodeId: "cn119",
-        portPoints: [
+        portPointsInPairs: createPortPointPairsFromPortPoints([
           {
             x: 10.078125,
             y: 4.6875,
@@ -94,7 +89,7 @@ test("HighDensitySolver emits node markers only after completion", () => {
             z: 0,
             connectionName: "conn2",
           },
-        ],
+        ]),
         center: {
           x: 9.84375,
           y: 4.21875,
@@ -112,23 +107,20 @@ test("HighDensitySolver emits node markers only after completion", () => {
       cn119: 0.02,
     },
   })
-
   const initialViz = solver.visualize()
   expect(
     initialViz.rects?.some((rect) => rect.label?.includes("hd_node_marker")),
   ).toBe(false)
-
   let guard = 0
   while (
     !solver.solved &&
     !solver.failed &&
     solver.nodeSolveMetadataById.size === 0 &&
-    guard < 200_000
+    guard < 200000
   ) {
     solver.step()
     guard++
   }
-
   if (
     !solver.solved &&
     !solver.failed &&
@@ -141,10 +133,8 @@ test("HighDensitySolver emits node markers only after completion", () => {
       ),
     ).toBe(false)
   }
-
   solver.solve()
   expect(solver.solved).toBe(true)
-
   const finalViz = solver.visualize()
   const rectMarkers =
     finalViz.rects?.filter((rect) => rect.label?.includes("hd_node_marker")) ??
@@ -153,14 +143,12 @@ test("HighDensitySolver emits node markers only after completion", () => {
     finalViz.points?.filter((point) =>
       point.label?.includes("hd_node_marker"),
     ) ?? []
-
   expect(rectMarkers.length).toBe(0)
   expect(pointMarkers.length).toBe(2)
   expect(pointMarkers[0].color).toBe("blue")
   expect(pointMarkers[0].label).toContain("solver:")
   expect(pointMarkers[0].label).toContain("node:")
   expect(pointMarkers[0].label).toContain("status: solved")
-
   const dashedBoundaryLines =
     finalViz.lines?.filter((line) => line.layer === "hd_node_boundaries") ?? []
   expect(dashedBoundaryLines.length).toBe(8)

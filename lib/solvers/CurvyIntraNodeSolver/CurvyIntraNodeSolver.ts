@@ -4,8 +4,11 @@ import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "../../types/high-density-types"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "../../utils/getPortPointsFromNodeWithPortPoints"
 import { BaseSolver } from "../BaseSolver"
 
 export interface AdjacentObstacle {
@@ -78,31 +81,18 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       maxY: node.center.y + node.height / 2,
     }
 
-    // Group port points by connectionName to create waypoint pairs
-    const connectionGroups = new Map<string, PortPoint[]>()
-    for (const pt of node.portPoints) {
-      if (!connectionGroups.has(pt.connectionName)) {
-        connectionGroups.set(pt.connectionName, [])
-      }
-      connectionGroups.get(pt.connectionName)!.push(pt)
-    }
-
-    // Convert port point pairs to waypoint pairs
     // Use connectionName (not rootConnectionName) as networkId to keep different
     // MST connections separate, even if they share the same root connection
     const waypointPairs: CurvyTraceProblem["waypointPairs"] = []
-    for (const [connectionName, points] of connectionGroups) {
-      if (points.length < 2) continue
-
-      // Use first and last points as start/end
-      const startPoint = points[0]
-      const endPoint = points[points.length - 1]
-
+    for (const [
+      startPoint,
+      endPoint,
+    ] of getPortPointPairsFromNodeWithPortPoints(node)) {
       waypointPairs.push({
         start: { x: startPoint.x, y: startPoint.y },
         end: { x: endPoint.x, y: endPoint.y },
         // Use connectionName to keep different MST connections separate
-        networkId: connectionName,
+        networkId: startPoint.connectionName,
       })
     }
 
@@ -169,7 +159,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       string,
       { connectionName: string; rootConnectionName?: string; z: number }
     >()
-    for (const pt of node.portPoints) {
+    for (const pt of getPortPointsFromNodeWithPortPoints(node)) {
       // Use connectionName as networkId (matching waypointPairs above)
       const networkId = pt.connectionName
       if (!connectionInfo.has(networkId)) {
@@ -278,7 +268,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     }
 
     // Draw port points
-    for (const pt of node.portPoints) {
+    for (const pt of getPortPointsFromNodeWithPortPoints(node)) {
       const color = this.colorMap[pt.connectionName] ?? "gray"
       graphics.points!.push({
         x: pt.x,

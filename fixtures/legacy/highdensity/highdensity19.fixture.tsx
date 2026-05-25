@@ -1,7 +1,8 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 const { nodeWithPortPoints } = {
   nodeWithPortPoints: {
     capacityMeshNodeId: "cn22987",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -113.54166666666667,
         y: -21.25,
@@ -22,7 +23,7 @@ const { nodeWithPortPoints } = {
         y: -21.875,
         connectionName: "connectivity_net3533",
       },
-    ],
+    ]),
     center: { x: -113.4375, y: -21.5625 },
     width: 0.625,
     height: 0.625,

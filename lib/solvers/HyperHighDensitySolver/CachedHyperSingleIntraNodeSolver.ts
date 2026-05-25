@@ -7,11 +7,11 @@ import { HyperSingleIntraNodeSolver } from "./HyperSingleIntraNodeSolver"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "lib/types/high-density-types"
 import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import objectHash from "object-hash"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 // Define the structure of the cached data
 type CachedSolvedHyperSingleIntraNode =
@@ -81,35 +81,44 @@ export class CachedHyperSingleIntraNodeSolver
     // 1. Normalize NodeWithPortPoints
     const node = this.nodeWithPortPoints
     const center = node.center
-    const normalizedPortPoints = [...node.portPoints]
+    const normalizedPortPointPairs = getPortPointPairsFromNodeWithPortPoints(
+      node,
+    )
+      .map(([start, end]) =>
+        [start, end]
+          .map((pp) => ({
+            connectionName: pp.connectionName,
+            x: roundCoord(pp.x - center.x),
+            y: roundCoord(pp.y - center.y),
+            z: pp.z ?? 0,
+          }))
+          .sort((a, b) => {
+            if (a.x !== b.x) return a.x - b.x
+            if (a.y !== b.y) return a.y - b.y
+            return (a.z ?? 0) - (b.z ?? 0)
+          }),
+      )
       .sort((a, b) => {
-        if (a.connectionName !== b.connectionName)
-          return a.connectionName.localeCompare(b.connectionName)
-        if (a.x !== b.x) return a.x - b.x
-        if (a.y !== b.y) return a.y - b.y
-        return (a.z ?? 0) - (b.z ?? 0)
-      })
-      .map((pp) => {
-        return {
-          connectionName: pp.connectionName,
-          x: roundCoord(pp.x - center.x),
-          y: roundCoord(pp.y - center.y),
-          z: pp.z ?? 0,
-          // Include other relevant properties if they affect routing
-          // e.g., traceThickness, viaDiameter if they vary per portPoint
-        }
+        const aName = a[0]?.connectionName ?? ""
+        const bName = b[0]?.connectionName ?? ""
+        if (aName !== bName) return aName.localeCompare(bName)
+        if ((a[0]?.x ?? 0) !== (b[0]?.x ?? 0))
+          return (a[0]?.x ?? 0) - (b[0]?.x ?? 0)
+        if ((a[0]?.y ?? 0) !== (b[0]?.y ?? 0))
+          return (a[0]?.y ?? 0) - (b[0]?.y ?? 0)
+        return (a[0]?.z ?? 0) - (b[0]?.z ?? 0)
       })
 
     const normalizedNodeData = {
       width: roundCoord(node.width),
       height: roundCoord(node.height),
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
-      portPoints: normalizedPortPoints,
+      portPointsInPairs: normalizedPortPointPairs,
     }
 
     const normalizedRelevantConnMap: string[][] = []
 
-    for (const portPoint of normalizedPortPoints) {
+    for (const portPoint of normalizedPortPointPairs.flat()) {
       const relevantConnMap = this.connMap?.getIdsConnectedToNet(
         portPoint.connectionName,
       )

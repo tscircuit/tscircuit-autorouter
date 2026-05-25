@@ -1,13 +1,13 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { InteractiveGraphics } from "graphics-debug/react"
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { useState, useRef, useEffect } from "react"
-
 const { nodeWithPortPoints } = {
   nodeWithPortPoints: {
     capacityMeshNodeId: "cn555",
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       {
         x: -27.436342032812494,
         y: 27.208403793750012,
@@ -116,20 +116,18 @@ const { nodeWithPortPoints } = {
         z: 0,
         connectionName: "source_trace_8",
       },
-    ],
+    ]),
     center: { x: -25.897046703124992, y: 30.28699445312501 },
     width: 6.157181318750002,
     height: 6.157181318750002,
   },
 }
-
 export default () => {
   const [shuffleSeed, setShuffleSeed] = useState(10)
   const [isAnimating, setIsAnimating] = useState(false)
   const [maxSolvedRoutes, setMaxSolvedRoutes] = useState(0)
   const [bestSeed, setBestSeed] = useState(10)
   const animationRef = useRef<number | undefined>(undefined)
-
   useEffect(() => {
     if (isAnimating) {
       const animate = () => {
@@ -146,7 +144,6 @@ export default () => {
       }
     }
   }, [isAnimating])
-
   const solver = new IntraNodeRouteSolver({
     nodeWithPortPoints,
     colorMap: generateColorMapFromNodeWithPortPoints(nodeWithPortPoints),
@@ -160,26 +157,20 @@ export default () => {
       SHUFFLE_SEED: shuffleSeed,
     },
   })
-
   solver.solve()
-
   const solvedCount = solver.solvedRoutes.length
-
   useEffect(() => {
     if (solvedCount > maxSolvedRoutes) {
       setMaxSolvedRoutes(solvedCount)
       setBestSeed(shuffleSeed)
-
       // Stop animation if all connections are solved
       if (solvedCount === solver.totalConnections) {
         setIsAnimating(false)
       }
     }
   }, [solvedCount, shuffleSeed, solver.totalConnections])
-
   const graphics =
     solver.solvedRoutes.length > 0 ? solver.visualize() : { lines: [] }
-
   if (solver.failedSubSolvers.length > 0) {
     return (
       <div>
@@ -210,7 +201,6 @@ export default () => {
       </div>
     )
   }
-
   return (
     <div>
       <div className="border p-2 m-2 text-center">

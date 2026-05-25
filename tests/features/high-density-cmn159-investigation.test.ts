@@ -6,8 +6,20 @@ import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWith
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import {
+  createPortPointPairsFromPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import cmn159Data from "../../fixtures/bug-reports/dataset01-circuit102-cmn_159/cmn_159-node-data.json" with {
   type: "json",
+}
+
+const getNodeWithPortPoints = () => {
+  const { portPoints, ...node } = structuredClone(cmn159Data.nodeWithPortPoints)
+  return {
+    ...node,
+    portPointsInPairs: createPortPointPairsFromPortPoints(portPoints as any),
+  }
 }
 
 const getBounds = () => {
@@ -45,9 +57,9 @@ const getPerimeterPosition = (point: { x: number; y: number }) => {
 }
 
 test("cmn_159 is solved directly by the single-layer no-different-root-intersection fallback", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
+  const node = getNodeWithPortPoints()
 
-  const perimeterOrder = [...node.portPoints]
+  const perimeterOrder = getPortPointsFromNodeWithPortPoints(node)
     .sort((a, b) => getPerimeterPosition(a) - getPerimeterPosition(b))
     .map((point) => point.connectionName)
 
@@ -82,14 +94,14 @@ test("cmn_159 is solved directly by the single-layer no-different-root-intersect
 }, 60_000)
 
 test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
+  const node = getNodeWithPortPoints()
   const bounds = getBounds()
   const connectionGroups = new Map<
     string,
     Array<{ x: number; y: number; z: number }>
   >()
 
-  for (const portPoint of node.portPoints) {
+  for (const portPoint of getPortPointsFromNodeWithPortPoints(node)) {
     const points = connectionGroups.get(portPoint.connectionName) ?? []
     points.push({ x: portPoint.x, y: portPoint.y, z: portPoint.z })
     connectionGroups.set(portPoint.connectionName, points)
@@ -219,7 +231,7 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
 }, 60_000)
 
 test("cmn_159 still produces DRC overlap with a whole-node curvy chain construction", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
+  const node = getNodeWithPortPoints()
   const bounds = getBounds()
   const connectionGroups = new Map<
     string,
@@ -232,7 +244,7 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
     }>
   >()
 
-  for (const portPoint of node.portPoints) {
+  for (const portPoint of getPortPointsFromNodeWithPortPoints(node)) {
     const points = connectionGroups.get(portPoint.connectionName) ?? []
     points.push(portPoint)
     connectionGroups.set(portPoint.connectionName, points)
@@ -285,7 +297,7 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
     string,
     string | undefined
   >(
-    node.portPoints.map((portPoint: (typeof node.portPoints)[number]) => [
+    getPortPointsFromNodeWithPortPoints(node).map((portPoint) => [
       portPoint.connectionName,
       portPoint.rootConnectionName,
     ]),

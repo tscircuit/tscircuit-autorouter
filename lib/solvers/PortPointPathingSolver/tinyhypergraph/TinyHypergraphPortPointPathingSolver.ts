@@ -875,9 +875,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
           ] satisfies [PortPoint, PortPoint],
       )
-      const portPoints = portPointsInPairs.flat()
 
-      if (portPoints.length === 0) {
+      if (portPointsInPairs.length === 0) {
         continue
       }
 
@@ -886,7 +885,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         center: originalRegion.d.center,
         width: originalRegion.d.width,
         height: originalRegion.d.height,
-        portPoints,
         portPointsInPairs,
         availableZ: originalRegion.d.availableZ,
       })

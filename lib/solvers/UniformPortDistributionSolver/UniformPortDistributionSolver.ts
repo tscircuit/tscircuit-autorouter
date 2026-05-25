@@ -3,6 +3,10 @@ import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import {
+  getPortPointPairsFromNodeWithPortPoints,
+  getPortPointsFromNodeWithPortPoints,
+} from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -57,7 +61,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
     for (const node of input.nodeWithPortPoints) {
-      for (const portPoint of node.portPoints) {
+      for (const portPoint of getPortPointsFromNodeWithPortPoints(node)) {
         if (!portPoint.portPointId) continue
         const ownerNodeIds = determineOwnerPair({
           portPointId: portPoint.portPointId,
@@ -164,11 +168,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
     this.redistributedNodes = this.input.nodeWithPortPoints.map((node) => ({
       ...node,
-      portPoints: node.portPoints.map(updatePortPointPosition),
-      portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-        updatePortPointPosition(start),
-        updatePortPointPosition(end),
-      ]),
+      portPointsInPairs: getPortPointPairsFromNodeWithPortPoints(node).map(
+        ([start, end]) => [
+          updatePortPointPosition(start),
+          updatePortPointPosition(end),
+        ],
+      ),
     }))
   }
 

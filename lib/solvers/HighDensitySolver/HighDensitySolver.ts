@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
@@ -195,7 +196,7 @@ export class HighDensitySolver extends BaseSolver {
       `iterations: ${metadata.iterations}`,
       `routes: ${metadata.routeCount}`,
       `nodePf: ${metadata.nodePf ?? "n/a"}`,
-      `portPoints: ${metadata.node.portPoints.length}`,
+      `portPointPairs: ${getPortPointPairsFromNodeWithPortPoints(metadata.node).length}`,
       ...(metadata.error ? [`error: ${metadata.error}`] : []),
     ].join("\n")
   }

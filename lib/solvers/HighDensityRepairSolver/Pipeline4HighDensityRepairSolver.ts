@@ -10,6 +10,7 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { safeTransparentize } from "../colors"
 import { BaseSolver } from "../BaseSolver"
 
@@ -233,13 +234,15 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               center: node.center,
               width: node.width,
               height: node.height,
-              portPoints: node.portPoints.map((portPoint) => ({
-                x: portPoint.x,
-                y: portPoint.y,
-                z: portPoint.z,
-                connectionName: portPoint.connectionName,
-                portPointId: portPoint.portPointId,
-              })),
+              portPoints: getPortPointsFromNodeWithPortPoints(node).map(
+                (portPoint) => ({
+                  x: portPoint.x,
+                  y: portPoint.y,
+                  z: portPoint.z,
+                  connectionName: portPoint.connectionName,
+                  portPointId: portPoint.portPointId,
+                }),
+              ),
             },
             nodeHdRoutes: routeIndexes.map((routeIndex) =>
               toRepairRoute(params.hdRoutes[routeIndex]),

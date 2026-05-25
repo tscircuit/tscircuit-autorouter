@@ -1,6 +1,7 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import {
@@ -310,14 +311,14 @@ export class JumperHighDensitySolver extends BaseSolver {
           // Fall back to looking at port points if this node has them
           const adjacentNodeWithPorts =
             nodeWithPortPointsMap.get(adjacentNodeId)
-          if (
-            adjacentNodeWithPorts &&
-            adjacentNodeWithPorts.portPoints.length > 0
-          ) {
+          const adjacentPortPoint = adjacentNodeWithPorts
+            ? getPortPointsFromNodeWithPortPoints(adjacentNodeWithPorts)[0]
+            : undefined
+          if (adjacentPortPoint) {
             // Use the rootConnectionName from the first port point
             networkId =
-              adjacentNodeWithPorts.portPoints[0].rootConnectionName ??
-              adjacentNodeWithPorts.portPoints[0].connectionName
+              adjacentPortPoint.rootConnectionName ??
+              adjacentPortPoint.connectionName
           }
         }
       }

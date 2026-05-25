@@ -1,5 +1,6 @@
 import type { JumperPrepatternSolver } from "../JumperPrepatternSolver"
 import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import type {
   PatternResult,
   PrepatternJumper,
@@ -149,7 +150,9 @@ function generateStaggeredGrid(
   ): boolean => {
     const margin = dims.width / 2 + jps.traceWidth * 2
 
-    for (const pp of jps.nodeWithPortPoints.portPoints) {
+    for (const pp of getPortPointsFromNodeWithPortPoints(
+      jps.nodeWithPortPoints,
+    )) {
       const distToStart = Math.sqrt(
         (pp.x - start.x) ** 2 + (pp.y - start.y) ** 2,
       )

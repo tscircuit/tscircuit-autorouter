@@ -1,7 +1,7 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test } from "bun:test"
 import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
-
 test.skip("pipeline5 keeps single-layer high-density nodes local even when pair count is >= 3", () => {
   const singleLayerNode: NodeWithPortPoints = {
     capacityMeshNodeId: "cmn_single_layer",
@@ -9,16 +9,15 @@ test.skip("pipeline5 keeps single-layer high-density nodes local even when pair 
     width: 4,
     height: 3,
     availableZ: [1],
-    portPoints: [
+    portPointsInPairs: createPortPointPairsFromPortPoints([
       { x: -2, y: -1.5, z: 1, connectionName: "A" },
       { x: 2, y: -1.5, z: 1, connectionName: "A" },
       { x: -2, y: 0, z: 1, connectionName: "B" },
       { x: 2, y: 0, z: 1, connectionName: "B" },
       { x: -2, y: 1.5, z: 1, connectionName: "C" },
       { x: 2, y: 1.5, z: 1, connectionName: "C" },
-    ],
+    ]),
   }
-
   let fetchCallCount = 0
   const fetchImpl = Object.assign(
     async () => {
@@ -29,12 +28,10 @@ test.skip("pipeline5 keeps single-layer high-density nodes local even when pair 
       preconnect: () => {},
     },
   ) as typeof fetch
-
   const solver = new Pipeline5HdCacheHighDensitySolver({
     nodePortPoints: [singleLayerNode],
     fetchImpl,
   })
-
   const localSolveCalls: Array<{
     node: NodeWithPortPoints
     nodeIndex: number
@@ -46,7 +43,6 @@ test.skip("pipeline5 keeps single-layer high-density nodes local even when pair 
     localSolveCalls.push({ node, nodeIndex })
   }
   ;(solver as any).launchRemoteSolves()
-
   expect(fetchCallCount).toBe(0)
   expect(localSolveCalls).toEqual([
     {

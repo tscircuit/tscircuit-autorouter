@@ -7,14 +7,24 @@ export type PortPoint = {
   z: number
 }
 
+export type PortPointInPair = [PortPoint, PortPoint]
+
 export type NodeWithPortPoints = {
   capacityMeshNodeId: string
   center: { x: number; y: number }
   width: number
   height: number
-  portPoints: PortPoint[]
   availableZ?: number[]
-  portPointsInPairs?: [PortPoint, PortPoint][]
+  portPointsInPairs: PortPointInPair[]
+}
+
+export type HighDensityRoutePoint = {
+  x: number
+  y: number
+  z: number
+  insideJumperPad?: boolean
+  portPointId?: string
+  toNextSegmentType?: "through_obstacle"
 }
 
 /**
@@ -36,13 +46,7 @@ export type HighDensityIntraNodeRoute = {
   rootConnectionName?: string
   traceThickness: number
   viaDiameter: number
-  route: Array<{
-    x: number
-    y: number
-    z: number
-    insideJumperPad?: boolean
-    toNextSegmentType?: "through_obstacle"
-  }>
+  route: HighDensityRoutePoint[]
   vias: Array<{ x: number; y: number }>
   jumpers?: Jumper[]
 }

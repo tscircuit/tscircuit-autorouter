@@ -1,8 +1,9 @@
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "./getPortPointsFromNodeWithPortPoints"
 
 export const getMinDistBetweenEnteringPoints = (node: NodeWithPortPoints) => {
   let minDist = Infinity
-  const points = node.portPoints
+  const points = getPortPointsFromNodeWithPortPoints(node)
 
   // Compare each point with every other point
   for (let i = 0; i < points.length; i++) {

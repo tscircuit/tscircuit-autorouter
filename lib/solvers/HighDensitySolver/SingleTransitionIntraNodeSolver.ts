@@ -5,6 +5,7 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 type Point = { x: number; y: number; z?: number }
 type Route = {
@@ -91,28 +92,13 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
   }
 
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectedPorts = this.nodeWithPortPoints.portPoints!
-    const connectionGroups = new Map<string, Point[]>()
-
-    for (const connectedPort of connectedPorts) {
-      const { connectionName } = connectedPort
-      if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
-      }
-      connectionGroups.get(connectionName)!.push(connectedPort)
-    }
-
-    for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
-        routes.push({
-          A: { ...points[0] },
-          B: { ...points[1] },
-          connectionName,
-        })
-      }
-    }
-    return routes
+    return getPortPointPairsFromNodeWithPortPoints(this.nodeWithPortPoints).map(
+      ([start, end]) => ({
+        A: { ...start },
+        B: { ...end },
+        connectionName: start.connectionName,
+      }),
+    )
   }
 
   private calculateBounds() {

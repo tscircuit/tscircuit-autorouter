@@ -3,6 +3,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getPortPointsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
@@ -60,7 +61,9 @@ export const repairDisconnectedSameRootPortPoints = (
   const repairedRoutes = [...routes]
   const portPointsByConnection = new Map<string, PortPoint[]>()
 
-  for (const portPoint of nodeWithPortPoints.portPoints) {
+  for (const portPoint of getPortPointsFromNodeWithPortPoints(
+    nodeWithPortPoints,
+  )) {
     const portPoints =
       portPointsByConnection.get(portPoint.connectionName) ?? []
     portPoints.push(portPoint)

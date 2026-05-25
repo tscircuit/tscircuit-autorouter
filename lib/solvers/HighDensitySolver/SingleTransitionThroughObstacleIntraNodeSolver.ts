@@ -7,6 +7,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getPortPointPairsFromNodeWithPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 
 type Point = { x: number; y: number; z?: number; rootConnectionName?: string }
 type Route = {
@@ -141,32 +142,14 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
   }
 
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectionGroups = new Map<string, Point[]>()
-
-    for (const connectedPort of this.nodeWithPortPoints.portPoints) {
-      const { connectionName, rootConnectionName } = connectedPort
-      if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
-      }
-      connectionGroups.get(connectionName)!.push({
-        ...connectedPort,
-        rootConnectionName,
-      })
-    }
-
-    for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
-        routes.push({
-          A: { ...points[0]! },
-          B: { ...points[1]! },
-          connectionName,
-          rootConnectionName:
-            points[0]?.rootConnectionName ?? points[1]?.rootConnectionName,
-        })
-      }
-    }
-    return routes
+    return getPortPointPairsFromNodeWithPortPoints(this.nodeWithPortPoints).map(
+      ([start, end]) => ({
+        A: { ...start },
+        B: { ...end },
+        connectionName: start.connectionName,
+        rootConnectionName: start.rootConnectionName ?? end.rootConnectionName,
+      }),
+    )
   }
 
   private getContainingThroughObstacle(route: Route) {

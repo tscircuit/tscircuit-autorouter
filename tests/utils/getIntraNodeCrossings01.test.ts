@@ -1,6 +1,6 @@
+import { createPortPointPairsFromPortPoints } from "lib/utils/getPortPointsFromNodeWithPortPoints"
 import { expect, test, describe } from "bun:test"
 import { getIntraNodeCrossings } from "../../lib/utils/getIntraNodeCrossings"
-
 describe("getIntraNodeCrossings", () => {
   test("detects crossing with floating point coordinates", () => {
     const nodeWithPortPoints = {
@@ -11,7 +11,7 @@ describe("getIntraNodeCrossings", () => {
       },
       width: 6.190031799999957,
       height: 6.999942500000035,
-      portPoints: [
+      portPointsInPairs: createPortPointPairsFromPortPoints([
         {
           x: -29.389999999999997,
           y: 13.724999999999996,
@@ -40,18 +40,15 @@ describe("getIntraNodeCrossings", () => {
           connectionName: "source_net_2",
           rootConnectionName: "source_net_2",
         },
-      ],
+      ]),
       availableZ: [0],
     }
-
     // source_net_3: segment from (-29.39, 13.72) to (-23.2, 16.86)
     // source_net_2: vertical segment from (-29.39, 13.25) to (-29.39, 19.13)
     // These segments should cross because source_net_3 starts on source_net_2
     const result = getIntraNodeCrossings(nodeWithPortPoints)
-
     expect(result.numSameLayerCrossings).toBe(1)
   })
-
   test("detects overlapping horizontal segments with floating point drift", () => {
     const nodeWithPortPoints = {
       capacityMeshNodeId: "cmn_6",
@@ -61,7 +58,7 @@ describe("getIntraNodeCrossings", () => {
       },
       width: 6.260000000000003,
       height: 3.9399999999999995,
-      portPoints: [
+      portPointsInPairs: createPortPointPairsFromPortPoints([
         {
           x: -5.879999999999997,
           y: 11.030000000000001,
@@ -104,12 +101,10 @@ describe("getIntraNodeCrossings", () => {
           connectionName: "source_net_1_mst2",
           rootConnectionName: "source_net_1",
         },
-      ],
+      ]),
       availableZ: [0],
     }
-
     const result = getIntraNodeCrossings(nodeWithPortPoints)
-
     expect(result.numSameLayerCrossings).toBe(1)
   })
 })
