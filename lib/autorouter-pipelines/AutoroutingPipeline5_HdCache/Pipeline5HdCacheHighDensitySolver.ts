@@ -12,7 +12,6 @@ import type {
   NodeWithPortPoints,
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
-import { getNodePortPointPairCount } from "lib/utils/nodeWithPortPointPairs"
 
 type HdCacheSolveResponseBody = {
   ok: boolean
@@ -174,7 +173,7 @@ const getPercentile = (sortedValues: number[], percentile: number) => {
 }
 
 const getNodePairCount = (node: NodeWithPortPoints) =>
-  getNodePortPointPairCount(node)
+  new Set(node.portPoints.map((point) => point.connectionName)).size
 
 const shouldSolveNodeViaHdCache = (node: NodeWithPortPoints) => {
   if (getNodePairCount(node) < 3) {

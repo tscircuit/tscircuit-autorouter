@@ -1,9 +1,9 @@
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
-import { getNodePortPointPairs } from "lib/utils/nodeWithPortPointPairs"
 
 const uniqueAvailableZ = (node: NodeWithPortPoints) => {
   if (node.availableZ?.length) {
@@ -25,19 +25,36 @@ export const createInvalidDirectConnectionRoutes = (
   traceThickness: number,
   viaDiameter: number,
 ): HighDensityIntraNodeRoute[] => {
+  const pointsByConnection = new Map<string, PortPoint[]>()
   const [z] = uniqueAvailableZ(node)
-  return getNodePortPointPairs(node).map(
-    ({ connectionName, rootConnectionName, start, end }) => ({
-      connectionName,
-      rootConnectionName,
-      traceThickness,
-      viaDiameter,
-      route: [
-        { x: start.x, y: start.y, z: z ?? start.z ?? 0 },
-        { x: end.x, y: end.y, z: z ?? end.z ?? 0 },
-      ],
-      vias: [],
-    }),
+
+  for (const portPoint of node.portPoints) {
+    pointsByConnection.set(portPoint.connectionName, [
+      ...(pointsByConnection.get(portPoint.connectionName) ?? []),
+      portPoint,
+    ])
+  }
+
+  return Array.from(pointsByConnection.entries()).flatMap(
+    ([connectionName, points]) => {
+      if (points.length < 2) return []
+      const start = points[0]
+      const end = points[points.length - 1]
+
+      return [
+        {
+          connectionName,
+          rootConnectionName: start.rootConnectionName,
+          traceThickness,
+          viaDiameter,
+          route: [
+            { x: start.x, y: start.y, z: z ?? start.z ?? 0 },
+            { x: end.x, y: end.y, z: z ?? end.z ?? 0 },
+          ],
+          vias: [],
+        },
+      ]
+    },
   )
 }
 

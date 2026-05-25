@@ -64,10 +64,6 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       height: nodeWithPortPoints.projectedRect.height,
       availableZ: nodeWithPortPoints.availableZ,
       portPoints: this.projectedPorts.map(({ projected }) => projected),
-      portPointPairIds: nodeWithPortPoints.portPointPairIds?.map(
-        ([startPortPointId, endPortPointId]) =>
-          [startPortPointId, endPortPointId] as [string, string],
-      ),
     }
     this.highDensitySolver = new HyperSingleIntraNodeSolver({
       nodeWithPortPoints: this.projectedNode,

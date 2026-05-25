@@ -240,10 +240,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 connectionName: portPoint.connectionName,
                 portPointId: portPoint.portPointId,
               })),
-              portPointPairIds: node.portPointPairIds?.map(
-                ([startPortPointId, endPortPointId]) =>
-                  [startPortPointId, endPortPointId] as [string, string],
-              ),
             },
             nodeHdRoutes: routeIndexes.map((routeIndex) =>
               toRepairRoute(params.hdRoutes[routeIndex]),

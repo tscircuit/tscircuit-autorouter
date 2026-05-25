@@ -7,7 +7,6 @@ import {
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
-import { clonePortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import type {
   InputNodeWithPortPoints,
@@ -542,25 +541,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   private computeRegionPfFromAssignments(region: RegionHg): number {
     const existingPortPoints = this.getRegionAssignedPortPoints(region)
-    const existingPortPointPairIds = (region.assignments ?? []).flatMap(
-      (assignment) =>
-        assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
-          ? ([
-              [
-                assignment.regionPort1.d.portId,
-                assignment.regionPort2.d.portId,
-              ] as [string, string],
-            ] as [string, string][])
-          : [],
-    )
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: existingPortPoints,
-      portPointPairIds:
-        existingPortPointPairIds.length > 0
-          ? clonePortPointPairIds(existingPortPointPairIds)
-          : undefined,
     }
 
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
@@ -610,7 +594,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         assignment.connection.mutuallyConnectedNetworkId
       return [
         {
-          portPointId: region1PortPoint.portId,
           x: region1PortPoint.x,
           y: region1PortPoint.y,
           z: region1PortPoint.z,
@@ -618,7 +601,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           rootConnectionName,
         },
         {
-          portPointId: region2PortPoint.portId,
           x: region2PortPoint.x,
           y: region2PortPoint.y,
           z: region2PortPoint.z,
@@ -639,7 +621,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const existingPortPoints = this.getRegionAssignedPortPoints(region)
     const additionalPortPoints: PortPoint[] = [
       {
-        portPointId: port1.d.portId,
         x: port1.d.x,
         y: port1.d.y,
         z: port1.d.z,
@@ -647,7 +628,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         rootConnectionName,
       },
       {
-        portPointId: port2.d.portId,
         x: port2.d.x,
         y: port2.d.y,
         z: port2.d.z,
@@ -655,32 +635,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         rootConnectionName,
       },
     ]
-    const existingPortPointPairIds = (region.assignments ?? []).flatMap(
-      (assignment) =>
-        assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
-          ? ([
-              [
-                assignment.regionPort1.d.portId,
-                assignment.regionPort2.d.portId,
-              ] as [string, string],
-            ] as [string, string][])
-          : [],
-    )
-    const additionalPortPointPairIds =
-      port1.d.portId && port2.d.portId
-        ? ([[port1.d.portId, port2.d.portId]] as [string, string][])
-        : []
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: [...existingPortPoints, ...additionalPortPoints],
-      portPointPairIds:
-        existingPortPointPairIds.length + additionalPortPointPairIds.length > 0
-          ? clonePortPointPairIds([
-              ...existingPortPointPairIds,
-              ...additionalPortPointPairIds,
-            ])
-          : undefined,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
@@ -729,7 +687,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         assignment.connection.mutuallyConnectedNetworkId
       return [
         {
-          portPointId: regionPort1.d.portId,
           x: regionPort1.d.x,
           y: regionPort1.d.y,
           z: regionPort1.d.z,
@@ -737,7 +694,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           rootConnectionName,
         },
         {
-          portPointId: regionPort2.d.portId,
           x: regionPort2.d.x,
           y: regionPort2.d.y,
           z: regionPort2.d.z,
@@ -757,7 +713,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
         return [
           {
-            portPointId: lastPort.d.portId,
             x: lastPort.d.x,
             y: lastPort.d.y,
             z: lastPort.d.z,
@@ -766,7 +721,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
               newlySolvedRoute.connection.mutuallyConnectedNetworkId,
           },
           {
-            portPointId: currentPort.d.portId,
             x: currentPort.d.x,
             y: currentPort.d.y,
             z: currentPort.d.z,
@@ -775,32 +729,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
               newlySolvedRoute.connection.mutuallyConnectedNetworkId,
           },
         ] as PortPoint[]
-      },
-    )
-    const existingPortPointPairIds = existingAssignments.flatMap((assignment) =>
-      assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
-        ? ([
-            [
-              assignment.regionPort1.d.portId,
-              assignment.regionPort2.d.portId,
-            ] as [string, string],
-          ] as [string, string][])
-        : [],
-    )
-    const newlySolvedRoutePortPointPairIds = newlySolvedRoute.path.flatMap(
-      (candidate) => {
-        if (!candidate.lastPort || candidate.lastRegion !== region) {
-          return []
-        }
-
-        return candidate.lastPort.d.portId && candidate.port.d.portId
-          ? ([
-              [
-                candidate.lastPort.d.portId,
-                candidate.port.d.portId,
-              ] as [string, string],
-            ] as [string, string][])
-          : []
       },
     )
 
@@ -812,15 +740,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       width: region.d.width,
       height: region.d.height,
       portPoints,
-      portPointPairIds:
-        existingPortPointPairIds.length +
-          newlySolvedRoutePortPointPairIds.length >
-        0
-          ? clonePortPointPairIds([
-              ...existingPortPointPairIds,
-              ...newlySolvedRoutePortPointPairIds,
-            ])
-          : undefined,
       availableZ: region.d.availableZ,
     }
     const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
@@ -911,16 +830,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     for (const region of this.params.graph.regions) {
       const assignments = region.assignments ?? []
-      const edgePortPointPairIds = assignments.flatMap((assignment) =>
-        assignment.regionPort1.d.portId && assignment.regionPort2.d.portId
-          ? ([
-              [
-                assignment.regionPort1.d.portId,
-                assignment.regionPort2.d.portId,
-              ] as [string, string],
-            ] as [string, string][])
-          : [],
-      )
       const edgePortPoints = assignments.flatMap((assignment) => {
         const connectionName = assignment.connection.connectionId
         const rootConnectionName =
@@ -999,8 +908,6 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           width: region.d.width,
           height: region.d.height,
           portPoints: nodePortPoints,
-          portPointPairIds:
-            edgePortPointPairIds.length > 0 ? edgePortPointPairIds : undefined,
           availableZ: region.d.availableZ,
         })
       }

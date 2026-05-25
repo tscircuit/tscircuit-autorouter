@@ -68,6 +68,13 @@ const createGridHighDensityProblem = ({
           PortPoint,
         ],
     )
+    const portPointPairIds = node.portPointPairs?.map(
+      ([startPortIndex, endPortIndex]) =>
+        [
+          portPoints[startPortIndex]!.portPointId!,
+          portPoints[endPortIndex]!.portPointId!,
+        ] as [string, string],
+    )
 
     return {
       capacityMeshNodeId: node.id,
@@ -78,6 +85,7 @@ const createGridHighDensityProblem = ({
       width: Math.abs(right - left) * pitch,
       height: Math.abs(bottom - top) * pitch,
       portPoints,
+      portPointPairIds,
       portPointsInPairs,
       availableZ: [0, 1],
     }

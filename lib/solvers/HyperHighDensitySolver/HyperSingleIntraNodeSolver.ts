@@ -20,7 +20,6 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
-import { getNodePortPointPairs } from "lib/utils/nodeWithPortPointPairs"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -251,44 +250,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     return 1 - (solver.progress || 0)
   }
 
-  /**
-   * Detect whether this node contains multiple logical pairs that share the
-   * same `connectionName`, which requires explicit pair-aware routing.
-   *
-   * @returns `true` when grouping by `connectionName` would merge distinct
-   * logical pairs, otherwise `false`.
-   */
-  private requiresPairAwareSolver() {
-    const pairCountByConnectionName = new Map<string, number>()
-    for (const pair of getNodePortPointPairs(this.nodeWithPortPoints)) {
-      pairCountByConnectionName.set(
-        pair.connectionName,
-        (pairCountByConnectionName.get(pair.connectionName) ?? 0) + 1,
-      )
-    }
-
-    return [...pairCountByConnectionName.values()].some((count) => count > 1)
-  }
-
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
-    if (
-      this.requiresPairAwareSolver() &&
-      !hyperParameters.HIGH_DENSITY_A01 &&
-      !hyperParameters.HIGH_DENSITY_A03
-    ) {
-      const ineligibleSolver = new IntraNodeRouteSolver({
-        nodeWithPortPoints: this.nodeWithPortPoints,
-        connMap: this.connMap,
-        traceWidth: this.constructorParams.traceWidth,
-        viaDiameter: this.constructorParams.viaDiameter,
-        obstacleMargin: this.constructorParams.obstacleMargin,
-      })
-      ineligibleSolver.failed = true
-      ineligibleSolver.error =
-        "Explicit port-point pairing with repeated connection names requires a pair-aware solver"
-      return ineligibleSolver as any
-    }
-
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(

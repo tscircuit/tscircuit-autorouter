@@ -6,7 +6,6 @@ import {
   setupGlobalCaches,
 } from "lib/cache/setupGlobalCaches"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
-import { getExplicitPortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
@@ -25,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 2
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -95,52 +94,6 @@ export class CachedIntraNodeRouteSolver
     cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform
   } {
     const center = this.nodeWithPortPoints.center
-    const normalizedPortPointIds = new Map<string, string>()
-    const normalizedPortPoints = [...this.nodeWithPortPoints.portPoints]
-      .sort((a, b) => {
-        if (a.connectionName !== b.connectionName) {
-          return a.connectionName.localeCompare(b.connectionName)
-        }
-        if ((a.rootConnectionName ?? "") !== (b.rootConnectionName ?? "")) {
-          return (a.rootConnectionName ?? "").localeCompare(
-            b.rootConnectionName ?? "",
-          )
-        }
-        if (a.x !== b.x) return a.x - b.x
-        if (a.y !== b.y) return a.y - b.y
-        if ((a.z ?? 0) !== (b.z ?? 0)) return (a.z ?? 0) - (b.z ?? 0)
-        return (a.portPointId ?? "").localeCompare(b.portPointId ?? "")
-      })
-      .map((portPoint, index) => {
-        const normalizedPortPointId = portPoint.portPointId
-          ? `pp_${index}`
-          : undefined
-        if (portPoint.portPointId && normalizedPortPointId) {
-          normalizedPortPointIds.set(
-            portPoint.portPointId,
-            normalizedPortPointId,
-          )
-        }
-        return {
-          connectionName: portPoint.connectionName,
-          rootConnectionName: portPoint.rootConnectionName,
-          portPointId: normalizedPortPointId,
-          x: roundCoord(portPoint.x - center.x),
-          y: roundCoord(portPoint.y - center.y),
-          z: portPoint.z ?? 0,
-        }
-      })
-    const normalizedPortPointPairIds = getExplicitPortPointPairIds(
-      this.nodeWithPortPoints,
-    )
-      ?.map(([startPortPointId, endPortPointId]) => {
-        const normalizedStart = normalizedPortPointIds.get(startPortPointId)
-        const normalizedEnd = normalizedPortPointIds.get(endPortPointId)
-        return normalizedStart && normalizedEnd
-          ? ([normalizedStart, normalizedEnd] as [string, string])
-          : null
-      })
-      .filter((pair): pair is [string, string] => Boolean(pair))
     const normalizedConnections = this.initialUnsolvedConnections.map(
       ({ connectionName, points }) => ({
         connectionName,
@@ -182,11 +135,6 @@ export class CachedIntraNodeRouteSolver
         availableZ: this.nodeWithPortPoints.availableZ
           ? [...this.nodeWithPortPoints.availableZ].sort()
           : undefined,
-        portPoints: normalizedPortPoints,
-        portPointPairIds:
-          normalizedPortPointPairIds && normalizedPortPointPairIds.length > 0
-            ? normalizedPortPointPairIds
-            : undefined,
       },
       normalizedConnections,
       normalizedHyperParameters,

@@ -15,7 +15,6 @@ import {
   type JumperPrepatternSolverHyperParameters,
 } from "../JumperPrepatternSolver/JumperPrepatternSolver"
 import { BaseSolver } from "../BaseSolver"
-import { getNodePortPointPairs } from "lib/utils/nodeWithPortPointPairs"
 
 type JumperSolver = IntraNodeSolverWithJumpers | JumperPrepatternSolver
 
@@ -120,25 +119,6 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     return 1 - (solver.progress || 0)
   }
 
-  /**
-   * Detect whether this node contains multiple logical pairs that share the
-   * same `connectionName`, which requires solvers to honor explicit pair ids.
-   *
-   * @returns `true` when grouping by `connectionName` would merge distinct
-   * logical pairs, otherwise `false`.
-   */
-  private requiresPairAwareSolver() {
-    const pairCountByConnectionName = new Map<string, number>()
-    for (const pair of getNodePortPointPairs(this.nodeWithPortPoints)) {
-      pairCountByConnectionName.set(
-        pair.connectionName,
-        (pairCountByConnectionName.get(pair.connectionName) ?? 0) + 1,
-      )
-    }
-
-    return [...pairCountByConnectionName.values()].some((count) => count > 1)
-  }
-
   generateSolver(
     hyperParameters: Partial<HighDensityHyperParameters> & {
       USE_JUMPER_PREPATTERN?: boolean
@@ -146,10 +126,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
       PATTERN_TYPE?: "alternating_grid" | "staggered_grid"
     },
   ): JumperSolver {
-    if (
-      hyperParameters.USE_JUMPER_PREPATTERN &&
-      !this.requiresPairAwareSolver()
-    ) {
+    if (hyperParameters.USE_JUMPER_PREPATTERN) {
       const prepatternSolver = new JumperPrepatternSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         colorMap: this.constructorParams.colorMap,

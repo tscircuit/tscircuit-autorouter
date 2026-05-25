@@ -18,7 +18,6 @@ import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSh
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
-import { clonePortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -170,9 +169,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
         updatePortPointPosition(start),
         updatePortPointPosition(end),
       ]),
-      portPointPairIds: node.portPointPairIds
-        ? clonePortPointPairIds(node.portPointPairIds)
-        : undefined,
     }))
   }
 

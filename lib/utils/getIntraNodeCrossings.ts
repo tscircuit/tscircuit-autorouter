@@ -1,6 +1,5 @@
 import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { getNodePortPointPairs } from "./nodeWithPortPointPairs"
 
 // Intersection calculation is only accurate to 0.00001 (0.01mm)
 const intSpace = (a: number) => Math.round(a * 10000)
@@ -19,22 +18,24 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     connectionName: string
   }[] = []
 
-  for (const pair of getNodePortPointPairs(node)) {
+  for (const A of node.portPoints) {
+    if (pointPairs.some((p) => p.connectionName === A.connectionName)) {
+      continue
+    }
+    if (
+      transitionPairPoints.some((p) => p.connectionName === A.connectionName)
+    ) {
+      continue
+    }
     const pointPair = {
-      connectionName: pair.connectionName,
-      z: pair.start.z,
-      points: [
-        {
-          x: intSpace(pair.start.x),
-          y: intSpace(pair.start.y),
-          z: pair.start.z,
-        },
-        {
-          x: intSpace(pair.end.x),
-          y: intSpace(pair.end.y),
-          z: pair.end.z,
-        },
-      ],
+      connectionName: A.connectionName,
+      z: A.z,
+      points: [{ x: intSpace(A.x), y: intSpace(A.y), z: A.z }],
+    }
+    for (const B of node.portPoints) {
+      if (A.connectionName !== B.connectionName) continue
+      if (A.x === B.x && A.y === B.y) continue
+      pointPair.points.push({ x: intSpace(B.x), y: intSpace(B.y), z: B.z })
     }
     if (pointPair.points.some((p) => p.z !== pointPair.z)) {
       transitionPairPoints.push(pointPair)

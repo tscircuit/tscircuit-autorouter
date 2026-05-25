@@ -12,7 +12,6 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteWithJumpersSolver } from "./SingleHighDensityRouteWithJumpersSolver"
-import { getNodePortPointPairs } from "lib/utils/nodeWithPortPointPairs"
 
 /**
  * 0603 footprint dimensions in mm for visualization
@@ -98,15 +97,36 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     this.connMap = params.connMap
     this.traceWidth = params.traceWidth ?? 0.15
 
-    this.unsolvedConnections = getNodePortPointPairs(nodeWithPortPoints).map(
-      ({ connectionName, rootConnectionName, start, end }) => ({
-        connectionName,
-        rootConnectionName,
-        points: [
-          { x: start.x, y: start.y, z: 0 },
-          { x: end.x, y: end.y, z: 0 },
-        ],
-      }),
+    const unsolvedConnectionsMap: Map<
+      string,
+      {
+        rootConnectionName?: string
+        points: { x: number; y: number; z: number }[]
+      }
+    > = new Map()
+
+    // For single-layer, force all port points to z=0
+    for (const {
+      connectionName,
+      rootConnectionName,
+      x,
+      y,
+    } of nodeWithPortPoints.portPoints) {
+      const existing = unsolvedConnectionsMap.get(connectionName)
+      unsolvedConnectionsMap.set(connectionName, {
+        rootConnectionName: existing?.rootConnectionName ?? rootConnectionName,
+        points: [...(existing?.points ?? []), { x, y, z: 0 }],
+      })
+    }
+
+    this.unsolvedConnections = Array.from(
+      unsolvedConnectionsMap
+        .entries()
+        .map(([connectionName, { rootConnectionName, points }]) => ({
+          connectionName,
+          rootConnectionName,
+          points,
+        })),
     )
 
     if (this.hyperParameters.SHUFFLE_SEED) {
