@@ -13,6 +13,7 @@ import type {
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { derivePortPointPairIdsFromPortPointsInPairs } from "lib/utils/nodeWithPortPointPairs"
 import {
   DuplicateCongestedPortSolver,
   type DuplicateCongestedPortSolverReport,
@@ -888,6 +889,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         height: originalRegion.d.height,
         portPoints,
         portPointsInPairs,
+        portPointPairIds:
+          derivePortPointPairIdsFromPortPointsInPairs(portPointsInPairs),
         availableZ: originalRegion.d.availableZ,
       })
     }

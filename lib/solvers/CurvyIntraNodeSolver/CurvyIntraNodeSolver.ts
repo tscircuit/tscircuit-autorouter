@@ -4,9 +4,9 @@ import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "../../types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
+import { getNodePortPointPairs } from "lib/utils/nodeWithPortPointPairs"
 
 export interface AdjacentObstacle {
   minX: number
@@ -78,31 +78,17 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       maxY: node.center.y + node.height / 2,
     }
 
-    // Group port points by connectionName to create waypoint pairs
-    const connectionGroups = new Map<string, PortPoint[]>()
-    for (const pt of node.portPoints) {
-      if (!connectionGroups.has(pt.connectionName)) {
-        connectionGroups.set(pt.connectionName, [])
-      }
-      connectionGroups.get(pt.connectionName)!.push(pt)
-    }
-
-    // Convert port point pairs to waypoint pairs
-    // Use connectionName (not rootConnectionName) as networkId to keep different
-    // MST connections separate, even if they share the same root connection
+    const portPointPairs = getNodePortPointPairs(node)
     const waypointPairs: CurvyTraceProblem["waypointPairs"] = []
-    for (const [connectionName, points] of connectionGroups) {
-      if (points.length < 2) continue
-
-      // Use first and last points as start/end
-      const startPoint = points[0]
-      const endPoint = points[points.length - 1]
+    for (const [pairIndex, pair] of portPointPairs.entries()) {
+      const startPoint = pair.start
+      const endPoint = pair.end
 
       waypointPairs.push({
         start: { x: startPoint.x, y: startPoint.y },
         end: { x: endPoint.x, y: endPoint.y },
-        // Use connectionName to keep different MST connections separate
-        networkId: connectionName,
+        // Use a pair-specific key so repeated connection names stay distinct.
+        networkId: `${pair.connectionName}::${pairIndex}`,
       })
     }
 
@@ -163,22 +149,16 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
     const node = this.nodeWithPortPoints
 
-    // Build a map from networkId (connectionName) to connection info
-    // We use connectionName as networkId to keep different MST connections separate
     const connectionInfo = new Map<
       string,
       { connectionName: string; rootConnectionName?: string; z: number }
     >()
-    for (const pt of node.portPoints) {
-      // Use connectionName as networkId (matching waypointPairs above)
-      const networkId = pt.connectionName
-      if (!connectionInfo.has(networkId)) {
-        connectionInfo.set(networkId, {
-          connectionName: pt.connectionName,
-          rootConnectionName: pt.rootConnectionName,
-          z: pt.z,
-        })
-      }
+    for (const [pairIndex, pair] of getNodePortPointPairs(node).entries()) {
+      connectionInfo.set(`${pair.connectionName}::${pairIndex}`, {
+        connectionName: pair.connectionName,
+        rootConnectionName: pair.rootConnectionName,
+        z: pair.start.z,
+      })
     }
 
     for (const outputTrace of this.curvyTraceSolver.outputTraces) {

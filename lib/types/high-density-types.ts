@@ -15,6 +15,15 @@ export type NodeWithPortPoints = {
   portPoints: PortPoint[]
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
+  /**
+   * Explicit ordered endpoint pairs for logical route segments.
+   *
+   * Each tuple is `[startPortPointId, endPortPointId]` and references
+   * `portPoints[*].portPointId`. Solvers should prefer this over inferring
+   * segment order from the `portPoints` array and only fall back to positional
+   * pairing for backwards compatibility when ids are unavailable.
+   */
+  portPointPairIds?: [string, string][]
 }
 
 /**

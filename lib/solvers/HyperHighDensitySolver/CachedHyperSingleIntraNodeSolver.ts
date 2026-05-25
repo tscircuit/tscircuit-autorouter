@@ -12,6 +12,7 @@ import type {
 import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import objectHash from "object-hash"
+import { getExplicitPortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 
 // Define the structure of the cached data
 type CachedSolvedHyperSingleIntraNode =
@@ -81,17 +82,30 @@ export class CachedHyperSingleIntraNodeSolver
     // 1. Normalize NodeWithPortPoints
     const node = this.nodeWithPortPoints
     const center = node.center
+    const normalizedPortPointIds = new Map<string, string>()
     const normalizedPortPoints = [...node.portPoints]
       .sort((a, b) => {
         if (a.connectionName !== b.connectionName)
           return a.connectionName.localeCompare(b.connectionName)
+        if ((a.rootConnectionName ?? "") !== (b.rootConnectionName ?? "")) {
+          return (a.rootConnectionName ?? "").localeCompare(
+            b.rootConnectionName ?? "",
+          )
+        }
         if (a.x !== b.x) return a.x - b.x
         if (a.y !== b.y) return a.y - b.y
-        return (a.z ?? 0) - (b.z ?? 0)
+        if ((a.z ?? 0) !== (b.z ?? 0)) return (a.z ?? 0) - (b.z ?? 0)
+        return (a.portPointId ?? "").localeCompare(b.portPointId ?? "")
       })
-      .map((pp) => {
+      .map((pp, index) => {
+        const normalizedPortPointId = pp.portPointId ? `pp_${index}` : undefined
+        if (pp.portPointId && normalizedPortPointId) {
+          normalizedPortPointIds.set(pp.portPointId, normalizedPortPointId)
+        }
         return {
           connectionName: pp.connectionName,
+          rootConnectionName: pp.rootConnectionName,
+          portPointId: normalizedPortPointId,
           x: roundCoord(pp.x - center.x),
           y: roundCoord(pp.y - center.y),
           z: pp.z ?? 0,
@@ -100,11 +114,25 @@ export class CachedHyperSingleIntraNodeSolver
         }
       })
 
+    const normalizedPortPointPairIds = getExplicitPortPointPairIds(node)
+      ?.map(([startPortPointId, endPortPointId]) => {
+        const normalizedStart = normalizedPortPointIds.get(startPortPointId)
+        const normalizedEnd = normalizedPortPointIds.get(endPortPointId)
+        return normalizedStart && normalizedEnd
+          ? ([normalizedStart, normalizedEnd] as [string, string])
+          : null
+      })
+      .filter((pair): pair is [string, string] => Boolean(pair))
+
     const normalizedNodeData = {
       width: roundCoord(node.width),
       height: roundCoord(node.height),
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
       portPoints: normalizedPortPoints,
+      portPointPairIds:
+        normalizedPortPointPairIds && normalizedPortPointPairIds.length > 0
+          ? normalizedPortPointPairIds
+          : undefined,
     }
 
     const normalizedRelevantConnMap: string[][] = []

@@ -11,6 +11,7 @@ import {
   createInvalidSameLayerCrossingRoutes,
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
+import { clonePortPointPairIds } from "lib/utils/nodeWithPortPointPairs"
 
 type HyperSingleIntraNodeSolverParams = ConstructorParameters<
   typeof HyperSingleIntraNodeSolver
@@ -55,6 +56,9 @@ const scaleNodeWithPortPoints = (
     scalePortPoint(start, node.center, scaleFactor),
     scalePortPoint(end, node.center, scaleFactor),
   ]),
+  portPointPairIds: node.portPointPairIds
+    ? clonePortPointPairIds(node.portPointPairIds)
+    : undefined,
 })
 
 const scaleRoute = (

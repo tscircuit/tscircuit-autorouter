@@ -1,4 +1,5 @@
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getNodePortPointPairs } from "./nodeWithPortPointPairs"
 
 /**
  * Maps a boundary point to a 1D perimeter coordinate.
@@ -123,32 +124,14 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
   const ymin = node.center.y - node.height / 2
   const ymax = node.center.y + node.height / 2
 
-  // Group port points by connectionName
-  const connectionPointsMap = new Map<
-    string,
-    Array<{ x: number; y: number; z: number }>
-  >()
-
-  for (const pp of node.portPoints) {
-    const points = connectionPointsMap.get(pp.connectionName) ?? []
-    // Avoid duplicate points
-    if (!points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)) {
-      points.push({ x: pp.x, y: pp.y, z: pp.z })
-    }
-    connectionPointsMap.set(pp.connectionName, points)
-  }
-
   // Separate same-layer pairs from transition pairs
   const sameLayerPairsByZ = new Map<number, Array<[number, number]>>()
   const transitionPairs: Array<[number, number]> = []
   let numEntryExitLayerChanges = 0
 
-  for (const [connectionName, points] of connectionPointsMap) {
-    if (points.length < 2) continue
-
-    // Get the two endpoints for this connection
-    const p1 = points[0]
-    const p2 = points[1]
+  for (const pair of getNodePortPointPairs(node)) {
+    const p1 = pair.start
+    const p2 = pair.end
 
     // Map to perimeter coordinates
     const t1 = perimeterT(p1, xmin, xmax, ymin, ymax)

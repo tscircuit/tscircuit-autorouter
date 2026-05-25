@@ -274,6 +274,22 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
             this.createAssignedPortPoint(routeId, toPortId),
           ] satisfies PortPoint[],
       )
+      const portPointPairIds = (state.regionSegments[regionId] ?? []).flatMap(
+        ([_routeId, fromPortId, toPortId]) => {
+          const startPortPointId = getSerializedPortId(
+            this.polySolver.topology.portMetadata?.[fromPortId],
+            fromPortId,
+          )
+          const endPortPointId = getSerializedPortId(
+            this.polySolver.topology.portMetadata?.[toPortId],
+            toPortId,
+          )
+
+          return startPortPointId !== endPortPointId
+            ? ([[startPortPointId, endPortPointId]] as [string, string][])
+            : []
+        },
+      )
 
       if (portPoints.length === 0) continue
 
@@ -287,6 +303,8 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
         height: topology.regionHeight[regionId],
         polygon,
         portPoints,
+        portPointPairIds:
+          portPointPairIds.length > 0 ? portPointPairIds : undefined,
         availableZ: metadata.availableZ as number[] | undefined,
       })
     }
