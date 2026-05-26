@@ -182,6 +182,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
     childNode._containsObstacle =
       overlappingObstacles.length > 0 ||
       this.isNodePartiallyOutsideBounds(childNode)
+    childNode._parentObstacleIds = this.getParentObstacleIds(childNode)
 
     const target = this.getTargetIfNodeContainsTarget(childNode)
 

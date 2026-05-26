@@ -82,6 +82,13 @@ interface Rect {
   height: number
 }
 
+type AnchorableConnectionPoint = {
+  x: number
+  y: number
+  identifiers: string[]
+  layerNames: string[]
+}
+
 export function generateApproximatingRects(
   rotatedRect: RotatedRect,
   numRects = 2,
@@ -260,6 +267,75 @@ const getMaxLocalApproximationRectLength = (obstacle: Obstacle): number => {
   return ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH
 }
 
+/**
+ * Builds a stable obstacle identity when the source obstacle does not already
+ * provide one.
+ */
+const getFallbackParentObstacleId = (obstacle: Obstacle) =>
+  [
+    "derived-obstacle",
+    obstacle.componentId ?? "no-component",
+    obstacle.type,
+    obstacle.center.x.toFixed(6),
+    obstacle.center.y.toFixed(6),
+    obstacle.width.toFixed(6),
+    obstacle.height.toFixed(6),
+    (obstacle.ccwRotationDegrees ?? 0).toFixed(6),
+    [...obstacle.layers].sort().join(","),
+  ].join(":")
+
+/**
+ * Picks the approximated rectangle that should preserve the obstacle's
+ * connectivity metadata.
+ */
+const getAnchorRectIndex = ({
+  obstacle,
+  rects,
+  connectionPoints,
+}: {
+  obstacle: Obstacle
+  rects: Rect[]
+  connectionPoints: AnchorableConnectionPoint[]
+}) => {
+  const obstacleIdentifiers = new Set(obstacle.connectedTo)
+
+  const matchedRectIndex = rects.findIndex((rect) =>
+    connectionPoints.some((point) => {
+      if (
+        Math.abs(point.x - rect.center.x) > rect.width / 2 + 1e-6 ||
+        Math.abs(point.y - rect.center.y) > rect.height / 2 + 1e-6
+      ) {
+        return false
+      }
+      if (point.layerNames.length > 0) {
+        const sharesLayer = point.layerNames.some((layerName) =>
+          obstacle.layers.includes(layerName),
+        )
+        if (!sharesLayer) return false
+      }
+      return point.identifiers.some((identifier) =>
+        obstacleIdentifiers.has(identifier),
+      )
+    }),
+  )
+
+  if (matchedRectIndex !== -1) return matchedRectIndex
+
+  return obstacle.connectedTo.length > 0
+    ? rects.reduce((closestIndex, rect, index) => {
+        const closestRect = rects[closestIndex]!
+        const closestDistance =
+          (closestRect.center.x - obstacle.center.x) ** 2 +
+          (closestRect.center.y - obstacle.center.y) ** 2
+        const distance =
+          (rect.center.x - obstacle.center.x) ** 2 +
+          (rect.center.y - obstacle.center.y) ** 2
+
+        return distance < closestDistance ? index : closestIndex
+      }, 0)
+    : 0
+}
+
 const getRotatedObstacleApproximationRectCount = (
   obstacle: Obstacle,
 ): number | null => {
@@ -290,19 +366,31 @@ const getRotatedObstacleApproximationRectCount = (
 
 const convertObstacleToOldFormat = (
   obstacle: Obstacle,
-  opts: { useSparseCenterlineApproximation?: boolean } = {},
+  opts: {
+    useSparseCenterlineApproximation?: boolean
+    connectionPoints?: AnchorableConnectionPoint[]
+  } = {},
 ): Obstacle[] => {
+  const parentObstacleId =
+    obstacle.parentObstacleId ??
+    obstacle.obstacleId ??
+    getFallbackParentObstacleId(obstacle)
   const rotationDegrees = obstacle.ccwRotationDegrees
 
   if (
     typeof rotationDegrees !== "number" ||
     !Number.isFinite(rotationDegrees)
   ) {
-    return [obstacle]
+    return [{ ...obstacle, parentObstacleId }]
   }
 
   if (isAxisAlignedRotation(rotationDegrees)) {
-    return [removeAxisAlignedRotation(obstacle, rotationDegrees)]
+    return [
+      {
+        ...removeAxisAlignedRotation(obstacle, rotationDegrees),
+        parentObstacleId,
+      },
+    ]
   }
 
   const {
@@ -327,31 +415,23 @@ const convertObstacleToOldFormat = (
       : obstacle.obstacleId?.startsWith("trace_obstacle_")
         ? generateApproximatingRects(rotatedRect, rectCount)
         : generateCenterlineApproximatingRects(rotatedRect, rectCount)
-  const connectedRectIndex =
-    obstacle.connectedTo.length > 0
-      ? rects.reduce((closestIndex, rect, index) => {
-          const closestRect = rects[closestIndex]!
-          const closestDistance =
-            (closestRect.center.x - obstacle.center.x) ** 2 +
-            (closestRect.center.y - obstacle.center.y) ** 2
-          const distance =
-            (rect.center.x - obstacle.center.x) ** 2 +
-            (rect.center.y - obstacle.center.y) ** 2
-
-          return distance < closestDistance ? index : closestIndex
-        }, 0)
-      : -1
+  const anchorRectIndex = getAnchorRectIndex({
+    obstacle,
+    rects,
+    connectionPoints: opts.connectionPoints ?? [],
+  })
+  const anchorObstacleId =
+    obstacleWithoutRotation.obstacleId ?? `${parentObstacleId}:anchor`
 
   return rects.map((rect, index) => ({
     ...obstacleWithoutRotation,
+    parentObstacleId,
     obstacleId:
-      index === connectedRectIndex
-        ? obstacleWithoutRotation.obstacleId
-        : obstacleWithoutRotation.obstacleId
-          ? `${obstacleWithoutRotation.obstacleId}_approx_${index}`
-          : undefined,
+      index === anchorRectIndex
+        ? anchorObstacleId
+        : `${anchorObstacleId}_approx_${index}`,
     connectedTo:
-      index === connectedRectIndex ? obstacleWithoutRotation.connectedTo : [],
+      index === anchorRectIndex ? obstacleWithoutRotation.connectedTo : [],
     center: rect.center,
     width: rect.width,
     height: rect.height,
@@ -362,6 +442,28 @@ export const addApproximatingRectsToSrj = (
   srj: SimpleRouteJson,
 ): SimpleRouteJson => {
   const obstaclesByRect = new Map<string, Obstacle>()
+  const connectionPoints: AnchorableConnectionPoint[] = srj.connections.flatMap(
+    (connection) =>
+      connection.pointsToConnect.map((point) => ({
+        x: point.x,
+        y: point.y,
+        identifiers: [
+          connection.name,
+          connection.rootConnectionName,
+          ...("mergedConnectionNames" in connection
+            ? (connection.mergedConnectionNames ?? [])
+            : []),
+          point.pointId,
+          point.pcb_port_id,
+        ].filter((value): value is string => Boolean(value)),
+        layerNames:
+          "layer" in point
+            ? [point.layer]
+            : "layers" in point
+              ? point.layers
+              : [],
+      })),
+  )
   const connectedRotatedObstacleCount = srj.obstacles.filter(
     (obstacle) =>
       obstacle.connectedTo.length > 0 &&
@@ -374,6 +476,7 @@ export const addApproximatingRectsToSrj = (
 
   for (const obstacle of srj.obstacles) {
     const convertedObstacle = convertObstacleToOldFormat(obstacle, {
+      connectionPoints,
       useSparseCenterlineApproximation:
         useSparseCenterlineApproximation &&
         obstacle.connectedTo.length > 0 &&
@@ -394,6 +497,7 @@ export const addApproximatingRectsToSrj = (
         continue
       }
 
+      existingObstacle.parentObstacleId ??= converted.parentObstacleId
       existingObstacle.connectedTo = [
         ...new Set([...existingObstacle.connectedTo, ...converted.connectedTo]),
       ]

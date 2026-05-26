@@ -68,6 +68,8 @@ export interface SimpleRouteJson {
 
 export interface Obstacle {
   obstacleId?: string
+  /** Preserves the original physical obstacle identity across derived split rectangles. */
+  parentObstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
   type: "rect"

@@ -230,51 +230,11 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     }
     const overlappingObstacles: Obstacle[] = []
 
-    const nodeBounds = this.getNodeBounds(node)
-    const nodeLeft = nodeBounds.minX
-    const nodeRight = nodeBounds.maxX
-    const nodeTop = nodeBounds.minY
-    const nodeBottom = nodeBounds.maxY
-
     const obstacles = node._parent
       ? this.getXYOverlappingObstacles(node._parent)
       : this.srj.obstacles
     for (const obstacle of obstacles) {
-      const obsLeft = obstacle.center.x - obstacle.width / 2
-      const obsRight = obstacle.center.x + obstacle.width / 2
-      const obsTop = obstacle.center.y - obstacle.height / 2
-      const obsBottom = obstacle.center.y + obstacle.height / 2
-
-      // Check for intersection.
-      if (
-        nodeRight >= obsLeft &&
-        nodeLeft <= obsRight &&
-        nodeBottom >= obsTop &&
-        nodeTop <= obsBottom
-      ) {
-        overlappingObstacles.push(obstacle)
-        continue
-      }
-
-      // Check if the node is completely within the obstacle
-      if (
-        nodeLeft >= obsLeft &&
-        nodeRight <= obsRight &&
-        nodeTop >= obsTop &&
-        nodeBottom <= obsBottom
-      ) {
-        // Node is completely inside the obstacle
-        overlappingObstacles.push(obstacle)
-        continue
-      }
-
-      // Check if obstacle is completely within node
-      if (
-        obsLeft >= nodeLeft &&
-        obsRight <= nodeRight &&
-        obsTop >= nodeTop &&
-        obsBottom <= nodeBottom
-      ) {
+      if (doRectsOverlap(node, obstacle)) {
         overlappingObstacles.push(obstacle)
       }
     }
@@ -285,6 +245,21 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     )
 
     return overlappingObstacles
+  }
+
+  /**
+   * Returns the physical obstacle ids that overlap this node after any
+   * rotated-obstacle approximation has been flattened into derived rectangles.
+   */
+  getParentObstacleIds(node: CapacityMeshNode): string[] {
+    const overlappingObstacles = this.getXYZOverlappingObstacles(node)
+    return [
+      ...new Set(
+        overlappingObstacles
+          .map((obstacle) => obstacle.parentObstacleId ?? obstacle.obstacleId)
+          .filter((obstacleId): obstacleId is string => Boolean(obstacleId)),
+      ),
+    ]
   }
 
   getXYZOverlappingObstacles(node: CapacityMeshNode): Obstacle[] {
@@ -418,6 +393,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         _parent: parent,
       }
       childNode._containsObstacle = this.doesNodeOverlapObstacle(childNode)
+      childNode._parentObstacleIds = this.getParentObstacleIds(childNode)
 
       const target = this.getTargetIfNodeContainsTarget(childNode)
 
