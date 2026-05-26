@@ -7,6 +7,7 @@ import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import {
+  annotateMeshNodesWithParentObstacleIds,
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
   type NormalizedTopologyPlannerInput,
@@ -109,18 +110,33 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         "componentTopologyBatchSolver",
       )?.componentMeshNodes ?? []
     const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
+    const annotatedGlobalMeshNodes = annotateMeshNodesWithParentObstacleIds({
+      meshNodes: globalMeshNodes,
+      obstacles: this.inputProblem.inputSrj.obstacles,
+    })
+    const annotatedComponentMeshNodes = componentMeshNodes.map(
+      (componentNodes) =>
+        annotateMeshNodesWithParentObstacleIds({
+          meshNodes: componentNodes,
+          obstacles: this.inputProblem.inputSrj.obstacles,
+        }),
+    )
+    const mergedMeshNodes = annotateMeshNodesWithParentObstacleIds({
+      meshNodes: mergeMeshNodes({
+        globalMeshNodes: annotatedGlobalMeshNodes,
+        components: this.normalizedInput.components,
+        componentMeshNodes: annotatedComponentMeshNodes,
+        mergeStrategy: "concat",
+      }),
+      obstacles: this.inputProblem.inputSrj.obstacles,
+    })
 
     return {
       globalNoConnectionSrj: this.normalizedInput.globalNoConnectionSrj,
       componentNoConnectionSrjs,
-      globalMeshNodes,
-      componentMeshNodes,
-      mergedMeshNodes: mergeMeshNodes({
-        globalMeshNodes,
-        components: this.normalizedInput.components,
-        componentMeshNodes,
-        mergeStrategy: "concat",
-      }),
+      globalMeshNodes: annotatedGlobalMeshNodes,
+      componentMeshNodes: annotatedComponentMeshNodes,
+      mergedMeshNodes,
     }
   }
 

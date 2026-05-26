@@ -31,7 +31,6 @@ import {
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { doRectsOverlap } from "lib/utils/doRectsOverlap"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -395,27 +394,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
-        for (const node of cms.capacityNodes!) {
-          const parentObstacleIds = [
-            ...new Set(
-              cms
-                .srjWithPointPairs!.obstacles.filter((obstacle) =>
-                  doRectsOverlap(node, obstacle),
-                )
-                .map(
-                  (obstacle) =>
-                    obstacle.parentObstacleId ?? obstacle.obstacleId,
-                )
-                .filter((obstacleId): obstacleId is string =>
-                  Boolean(obstacleId),
-                ),
-            ),
-          ]
-
-          if (parentObstacleIds.length > 0) {
-            node._parentObstacleIds = parentObstacleIds
-          }
-        }
         const sharedEdgeSegments =
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??

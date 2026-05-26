@@ -5,6 +5,8 @@ import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolv
 import { QfpThermalPadTopologyGeneratorSolver } from "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
 import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
+import type { Obstacle } from "lib/types"
+import { doRectsOverlap } from "lib/utils/doRectsOverlap"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
   MultiGraphTopologyPlannerSolverParams,
@@ -152,6 +154,38 @@ export function mergeMeshNodes({
         ...componentMeshNodes.flat(),
       ]
   }
+}
+
+/**
+ * Reattaches physical obstacle ancestry to mesh nodes after rotated obstacles
+ * have been flattened into approximation rectangles.
+ */
+export function annotateMeshNodesWithParentObstacleIds({
+  meshNodes,
+  obstacles,
+}: {
+  meshNodes: CapacityMeshNode[]
+  obstacles: Obstacle[]
+}): CapacityMeshNode[] {
+  return meshNodes.map((node) => {
+    const parentObstacleIds = [
+      ...new Set(
+        obstacles
+          .filter((obstacle) => doRectsOverlap(node, obstacle))
+          .map((obstacle) => obstacle.parentObstacleId ?? obstacle.obstacleId)
+          .filter((obstacleId): obstacleId is string => Boolean(obstacleId)),
+      ),
+    ]
+
+    if (parentObstacleIds.length === 0) {
+      return node
+    }
+
+    return {
+      ...node,
+      _parentObstacleIds: parentObstacleIds,
+    }
+  })
 }
 
 /** Matches a global routing region against a detected component replacement obstacle. */
