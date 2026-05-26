@@ -41,9 +41,9 @@ test("srj11, srj12, srj13, srj15, and srj16 benchmark datasets load in sample or
   const srj15Scenarios = await loadScenarios("srj15")
   const srj16Scenarios = await loadScenarios("srj16")
 
-  expect(srj11Scenarios).toHaveLength(20)
+  expect(srj11Scenarios).toHaveLength(26)
   expect(srj11Scenarios[0][0]).toBe("sample001Circuit")
-  expect(srj11Scenarios[19][0]).toBe("sample020Circuit")
+  expect(srj11Scenarios[25][0]).toBe("sample026Circuit")
   expect(srj11Scenarios[0][1].bounds).toBeDefined()
 
   expect(srj12Scenarios).toHaveLength(10)
@@ -68,7 +68,7 @@ test("srj11, srj12, srj13, srj15, and srj16 benchmark datasets load in sample or
 
   const sample11 = await loadScenarioBySampleNumber("srj11", 11)
   expect(sample11.scenarioName).toBe("sample011Circuit")
-  expect(sample11.totalSamples).toBe(20)
+  expect(sample11.totalSamples).toBe(26)
 
   const sample13 = await loadScenarioBySampleNumber("srj13", 13)
   expect(sample13.scenarioName).toBe("example_13")
