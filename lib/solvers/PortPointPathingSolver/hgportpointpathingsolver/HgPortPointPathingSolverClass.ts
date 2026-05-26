@@ -853,10 +853,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           prevPortPointId: assignment.regionPort1.d.portId,
         }
 
-        return [
-          startPoint,
-          endPoint,
-        ] as PortPoint[]
+        return [startPoint, endPoint] as PortPoint[]
       })
 
       const centerPortPoints: PortPoint[] = []
