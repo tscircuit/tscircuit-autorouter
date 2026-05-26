@@ -100,7 +100,7 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
     (await import("@tscircuit/dataset-srj05")) as DatasetModule,
   srj11: async () =>
     loadNumberedJsonDatasetModule({
-      sampleCount: 20,
+      sampleCount: 26,
       getSpecifier: (sampleId) =>
         `dataset-srj11-45-degree/circuits/sample${sampleId}.circuit.simple-route.json`,
     }),
