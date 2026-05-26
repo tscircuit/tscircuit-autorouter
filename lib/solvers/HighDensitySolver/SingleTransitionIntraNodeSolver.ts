@@ -14,9 +14,25 @@ type Route = {
   connectionName: string
 }
 
-const clampWithFallback = (value: number, min: number, max: number) => {
-  if (min <= max) return clamp(value, min, max)
-  return value
+type NodeBounds = { minX: number; maxX: number; minY: number; maxY: number }
+
+/**
+ * Clamps a value when the range is valid.
+ *
+ * @param params - Clamp inputs.
+ * @returns Clamped value when `min <= max`; otherwise the original value.
+ * @caution Invalid ranges are treated as a no-op to preserve routing behavior
+ * for degenerate node bounds.
+ */
+const clampWithFallback = (params: {
+  value: number
+  min: number
+  max: number
+}) => {
+  if (params.min <= params.max) {
+    return clamp(params.value, params.min, params.max)
+  }
+  return params.value
 }
 
 export class SingleTransitionIntraNodeSolver extends BaseSolver {
@@ -30,7 +46,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
   traceThickness: number
   obstacleMargin: number
   solvedRoutes: HighDensityIntraNodeRoute[] = []
-  bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  bounds: NodeBounds
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
@@ -69,28 +85,33 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     const margin = this.viaDiameter / 2 + this.obstacleMargin
 
     const viaPosition = {
-      x: clampWithFallback(
-        (route.A.x + route.B.x) / 2,
-        this.bounds.minX + margin,
-        this.bounds.maxX - margin,
-      ),
-      y: clampWithFallback(
-        (route.A.y + route.B.y) / 2,
-        this.bounds.minY + margin,
-        this.bounds.maxY - margin,
-      ),
+      x: clampWithFallback({
+        value: (route.A.x + route.B.x) / 2,
+        min: this.bounds.minX + margin,
+        max: this.bounds.maxX - margin,
+      }),
+      y: clampWithFallback({
+        value: (route.A.y + route.B.y) / 2,
+        min: this.bounds.minY + margin,
+        max: this.bounds.maxY - margin,
+      }),
     }
     this.solvedRoutes.push(
-      this.createTransitionRoute(
-        route.A,
-        route.B,
-        viaPosition,
-        route.connectionName,
-      ),
+      this.createTransitionRoute({
+        start: route.A,
+        end: route.B,
+        via: viaPosition,
+        connectionName: route.connectionName,
+      }),
     )
     this.solved = true
   }
 
+  /**
+   * Groups node port points into explicit route tasks.
+   *
+   * @returns One route record per discovered port-point pair.
+   */
   private extractRoutesFromNode(): Route[] {
     const routes: Route[] = []
     const connectedPorts = this.nodeWithPortPoints.portPoints!
@@ -116,7 +137,12 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     return routes
   }
 
-  private calculateBounds() {
+  /**
+   * Computes the rectangular routing bounds of the current node.
+   *
+   * @returns Axis-aligned node bounds in board coordinates.
+   */
+  private calculateBounds(): NodeBounds {
     return {
       minX:
         this.nodeWithPortPoints.center.x - this.nodeWithPortPoints.width / 2,
@@ -129,12 +155,19 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     }
   }
 
-  private createTransitionRoute(
-    start: Pick<PortPoint, "x" | "y" | "z">,
-    end: Pick<PortPoint, "x" | "y" | "z">,
-    via: { x: number; y: number },
-    connectionName: string,
-  ): HighDensityIntraNodeRoute {
+  /**
+   * Builds the solved route for a single via transition.
+   *
+   * @param params - Route endpoints, via location, and connection metadata.
+   * @returns A solved high-density route containing a single via.
+   */
+  private createTransitionRoute(params: {
+    start: Pick<PortPoint, "x" | "y" | "z">
+    end: Pick<PortPoint, "x" | "y" | "z">
+    via: { x: number; y: number }
+    connectionName: string
+  }): HighDensityIntraNodeRoute {
+    const { start, end, via, connectionName } = params
     const route = [
       { x: start.x, y: start.y, z: start.z! },
       { x: via.x, y: via.y, z: start.z! },

@@ -8,6 +8,7 @@ import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
+import type { CapacityMeshNodeId } from "lib/types"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -926,6 +927,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       }
 
       const inputPortPoints: InputPortPoint[] = region.ports.map((port) => {
+        const portPointChain = port.d as typeof port.d & {
+          prevPortPointId?: string
+          nextPortPointId?: string
+        }
         const connectsToOffBoardNode = port.d.regions.some((region) =>
           Boolean(region.d._offBoardConnectionId),
         )
@@ -934,12 +939,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           x: port.d.x,
           y: port.d.y,
           z: port.d.z,
-          prevPortPointId: (port.d as any).prevPortPointId,
-          nextPortPointId: (port.d as any).nextPortPointId,
-          connectionNodeIds: port.d.regions.map((region) => region.regionId),
+          prevPortPointId: portPointChain.prevPortPointId,
+          nextPortPointId: portPointChain.nextPortPointId,
+          connectionNodeIds: port.d.regions.map(
+            (region) => region.regionId,
+          ) as [CapacityMeshNodeId, CapacityMeshNodeId],
           distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
           connectsToOffBoardNode,
-        } as InputPortPoint
+        }
       })
 
       inputNodeWithPortPoints.push({

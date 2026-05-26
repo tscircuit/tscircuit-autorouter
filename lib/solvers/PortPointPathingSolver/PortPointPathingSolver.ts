@@ -1364,9 +1364,17 @@ export class PortPointPathingSolver extends BaseSolver {
         const p = startPoint
           ? { x: startPoint.x, y: startPoint.y }
           : startNode.center
+        const initialHeuristicPortPoint: InputPortPoint = {
+          portPointId: `start:${startNodeId}:${z}`,
+          x: p.x,
+          y: p.y,
+          z,
+          connectionNodeIds: [startNodeId, startNodeId],
+          distToCentermostPortOnZ: 0,
+        }
 
         const h = this.computeH(
-          { ...p, distToCentermostPortOnZ: 0 } as any,
+          initialHeuristicPortPoint,
           startNodeId,
           endNodeId,
           z,
