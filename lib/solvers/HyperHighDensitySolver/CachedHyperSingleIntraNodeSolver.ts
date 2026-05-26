@@ -92,9 +92,12 @@ export class CachedHyperSingleIntraNodeSolver
       .map((pp) => {
         return {
           connectionName: pp.connectionName,
+          portPointId: pp.portPointId,
           x: roundCoord(pp.x - center.x),
           y: roundCoord(pp.y - center.y),
           z: pp.z ?? 0,
+          prevPortPointId: pp.prevPortPointId,
+          nextPortPointId: pp.nextPortPointId,
           // Include other relevant properties if they affect routing
           // e.g., traceThickness, viaDiameter if they vary per portPoint
         }

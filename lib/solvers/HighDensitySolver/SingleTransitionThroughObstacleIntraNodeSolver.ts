@@ -5,13 +5,14 @@ import type { Obstacle } from "lib/types"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
-type Point = { x: number; y: number; z?: number; rootConnectionName?: string }
 type Route = {
-  A: Point
-  B: Point
+  A: PortPoint
+  B: PortPoint
   connectionName: string
   rootConnectionName?: string
 }
@@ -20,7 +21,7 @@ type LayeredObstacle = Obstacle & { zLayers: number[] }
 const CONTAINS_POINT_TOLERANCE = 1e-6
 
 const pointInsideObstacle = (
-  point: Pick<Point, "x" | "y">,
+  point: Pick<PortPoint, "x" | "y">,
   obstacle: Obstacle,
 ) => {
   const halfWidth = obstacle.width / 2 + CONTAINS_POINT_TOLERANCE
@@ -142,27 +143,23 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
 
   private extractRoutesFromNode(): Route[] {
     const routes: Route[] = []
-    const connectionGroups = new Map<string, Point[]>()
+    const connectionGroups = new Map<string, PortPoint[]>()
 
     for (const connectedPort of this.nodeWithPortPoints.portPoints) {
-      const { connectionName, rootConnectionName } = connectedPort
+      const { connectionName } = connectedPort
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
-      connectionGroups.get(connectionName)!.push({
-        ...connectedPort,
-        rootConnectionName,
-      })
+      connectionGroups.get(connectionName)!.push(connectedPort)
     }
 
     for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
+      for (const [A, B] of getConnectionPortPointPairs(points)) {
         routes.push({
-          A: { ...points[0]! },
-          B: { ...points[1]! },
+          A: { ...A },
+          B: { ...B },
           connectionName,
-          rootConnectionName:
-            points[0]?.rootConnectionName ?? points[1]?.rootConnectionName,
+          rootConnectionName: A.rootConnectionName ?? B.rootConnectionName,
         })
       }
     }

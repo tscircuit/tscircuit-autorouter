@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PortPoint Update Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <main class="mx-auto max-w-6xl px-6 py-10">
+      <header class="mb-8 rounded-3xl border border-cyan-400/30 bg-slate-900/80 p-8 shadow-2xl shadow-cyan-950/40">
+        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
+          tscircuit-autorouter / high-density-a01
+        </p>
+        <h1 class="text-4xl font-black tracking-tight text-white">
+          PortPoint Chain Field Update Plan
+        </h1>
+        <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+          Scope for adding <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">prevPortPointId</code>
+          and <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">nextPortPointId</code>
+          to <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">PortPoint</code>, then preserving those fields across all
+          high-density solvers and pipeline-generated node port points.
+        </p>
+      </header>
+
+      <section class="mb-8 grid gap-4 md:grid-cols-3">
+        <article class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Primary Entry</p>
+          <p class="mt-2 text-lg font-semibold text-white">Pipeline 7 MultiGraph</p>
+          <p class="mt-2 text-sm text-slate-300">
+            <code>/lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph.ts</code>
+          </p>
+        </article>
+        <article class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Multi Repo</p>
+          <p class="mt-2 text-lg font-semibold text-white">@tscircuit/high-density-a01</p>
+          <p class="mt-2 text-sm text-slate-300">
+            <code>/home/ohmx/Documents/high-density-a01</code>
+          </p>
+        </article>
+        <article class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Regression Guard</p>
+          <p class="mt-2 text-lg font-semibold text-white">No extra center connection</p>
+          <p class="mt-2 text-sm text-slate-300">
+            <code>/tests/bugs/high-density-solver-extra-center-connection.test.ts</code>
+          </p>
+        </article>
+      </section>
+
+      <section class="mb-8 rounded-3xl border border-amber-400/30 bg-amber-500/10 p-6">
+        <h2 class="text-xl font-bold text-amber-200">Update Rules</h2>
+        <ul class="mt-4 space-y-2 text-sm leading-6 text-amber-50/90">
+          <li>When a solver clones or rehydrates a <code>PortPoint</code>, it must preserve <code>prevPortPointId</code> and <code>nextPortPointId</code>.</li>
+          <li>When a pipeline synthesizes new port points, it must either compute chain links intentionally or leave them undefined without dropping surrounding links.</li>
+          <li>Any subproblem builder that slices a node into a smaller node must retain chain metadata on copied port points.</li>
+          <li>The center-connection regression test must keep passing after the chain metadata is introduced.</li>
+        </ul>
+      </section>
+
+      <section class="mb-8">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-white">Solver Files To Update</h2>
+          <span class="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+            minimal-change target list
+          </span>
+        </div>
+
+        <div class="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
+          <table class="min-w-full divide-y divide-slate-800 text-left text-sm">
+            <thead class="bg-slate-950/70 text-slate-300">
+              <tr>
+                <th class="px-4 py-3 font-semibold">Repo</th>
+                <th class="px-4 py-3 font-semibold">Solver / File</th>
+                <th class="px-4 py-3 font-semibold">Why It Must Change</th>
+                <th class="px-4 py-3 font-semibold">Planned Edit</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-200">
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/types/high-density-types.ts</code></td>
+                <td class="px-4 py-4 align-top">Canonical local <code>PortPoint</code> type already has the new fields and drives downstream typing.</td>
+                <td class="px-4 py-4 align-top">Keep as source of truth and align all constructors with it.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">high-density-a01</td>
+                <td class="px-4 py-4 align-top"><code>lib/types.ts</code></td>
+                <td class="px-4 py-4 align-top">Package-exported <code>PortPoint</code> type is still missing the chain fields.</td>
+                <td class="px-4 py-4 align-top">Add <code>prevPortPointId</code> and <code>nextPortPointId</code>.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph.ts</code></td>
+                <td class="px-4 py-4 align-top">Primary pipeline entry for the high-density stage; report anchor and verification point.</td>
+                <td class="px-4 py-4 align-top">Confirm solver wiring remains type-safe after multi-repo updates.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Creates <code>HighDensitySolverA01</code> / <code>A03</code> with shared <code>nodeWithPortPoints</code>.</td>
+                <td class="px-4 py-4 align-top">Verify no narrowing drops the new fields while delegating to package solvers.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/PortPointPathingSolver/PortPointPathingSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Synthesizes assigned node port points, including artificial center points.</td>
+                <td class="px-4 py-4 align-top">Preserve chain metadata on copied points and keep synthetic points explicit.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Builds output <code>PortPoint</code> objects from tiny-hypergraph solutions.</td>
+                <td class="px-4 py-4 align-top">Emit chain fields when reconstructing assigned endpoints.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHypergraphPortPointPathingSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Poly-hypergraph pathing also reconstructs assigned <code>PortPoint</code> objects.</td>
+                <td class="px-4 py-4 align-top">Mirror the tiny-hypergraph fix for parity.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts</code></td>
+                <td class="px-4 py-4 align-top">Repairs and re-inserts section port points into node assignments.</td>
+                <td class="px-4 py-4 align-top">Retain chain fields when renaming corrected port points.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Serializes node samples for repair and currently strips extra <code>PortPoint</code> properties.</td>
+                <td class="px-4 py-4 align-top">Carry chain fields into repair samples.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">autorouter</td>
+                <td class="px-4 py-4 align-top"><code>lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/HgPortPointPathingSolverClass.ts</code></td>
+                <td class="px-4 py-4 align-top">Builds temporary node port point sets for PF estimation and hypergraph stitching.</td>
+                <td class="px-4 py-4 align-top">Avoid constructing incomplete <code>PortPoint</code> copies where chain metadata is meaningful.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">high-density-a01</td>
+                <td class="px-4 py-4 align-top"><code>lib/HighDensitySolverA08/A08_BreakoutSolver.ts</code></td>
+                <td class="px-4 py-4 align-top">Builds inner-node subproblems by remapping outer port points.</td>
+                <td class="px-4 py-4 align-top">Preserve chain fields while moving anchor coordinates.</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">high-density-a01</td>
+                <td class="px-4 py-4 align-top"><code>lib/HighDensitySolverA09/HighDensitySolverA09.ts</code></td>
+                <td class="px-4 py-4 align-top">Builds per-connection subproblems and clones port points.</td>
+                <td class="px-4 py-4 align-top">Keep chain metadata on copied connection port points.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <h2 class="text-2xl font-bold text-white">Pipeline 7 Step Notes</h2>
+        <div class="mt-4 space-y-4 text-sm leading-6 text-slate-300">
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+            <p class="font-semibold text-cyan-200">
+              <code>definePipelineStep("portPointPathingSolver", TinyHypergraphPortPointPathingSolver, ...)</code>
+            </p>
+            <p class="mt-2">
+              This step must preserve and emit <code>prevPortPointId</code> /
+              <code>nextPortPointId</code> on assigned endpoint pairs before
+              handing node port points to the high-density stage.
+            </p>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+            <p class="font-semibold text-cyan-200">
+              <code>definePipelineStep("uniformPortDistributionSolver", UniformPortDistributionSolver, ...)</code>
+            </p>
+            <p class="mt-2">
+              This step sits after port-point assignment in Pipeline 7 and must
+              keep the same chain metadata intact when redistributing existing
+              port points.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid gap-6 md:grid-cols-2">
+        <article class="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+          <h2 class="text-xl font-bold text-white">High-Density Solver Coverage</h2>
+          <ul class="mt-4 space-y-2 text-sm leading-6 text-slate-300">
+            <li><code>HighDensitySolverA01</code>, <code>A02</code>, <code>A03</code>, <code>A05</code>: consume the shared type and must compile against the new fields.</li>
+            <li><code>HighDensitySolverA08</code> and <code>A08_BreakoutSolver</code>: breakout flow creates inner-node copies and is the highest-risk place to lose metadata.</li>
+            <li><code>HighDensitySolverA09</code>: connection partitioning creates subproblem clones that must keep the chain intact.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+          <h2 class="text-xl font-bold text-white">Verification Plan</h2>
+          <ul class="mt-4 space-y-2 text-sm leading-6 text-slate-300">
+            <li>Run the targeted regression: <code>tests/bugs/high-density-solver-extra-center-connection.test.ts</code>.</li>
+            <li>Run any affected high-density solver tests in <code>/home/ohmx/Documents/high-density-a01/tests</code> if type or clone behavior changes there.</li>
+            <li>Keep the edit set minimal: type alignment plus object-construction sites that would otherwise drop the new fields.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

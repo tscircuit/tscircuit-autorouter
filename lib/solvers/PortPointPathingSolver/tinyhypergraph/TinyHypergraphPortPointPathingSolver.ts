@@ -191,6 +191,8 @@ const toSerializedPortData = (
   x: port.d.x,
   y: port.d.y,
   z: port.d.z,
+  prevPortPointId: (port.d as any).prevPortPointId,
+  nextPortPointId: (port.d as any).nextPortPointId,
   distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
   tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
   cramped: port.d.cramped,
@@ -396,6 +398,14 @@ const buildInputNodesWithPortPoints = (
           x: Number((port!.d as any)?.x ?? 0),
           y: Number((port!.d as any)?.y ?? 0),
           z: Number((port!.d as any)?.z ?? 0),
+          prevPortPointId:
+            typeof (port!.d as any)?.prevPortPointId === "string"
+              ? (port!.d as any).prevPortPointId
+              : undefined,
+          nextPortPointId:
+            typeof (port!.d as any)?.nextPortPointId === "string"
+              ? (port!.d as any).nextPortPointId
+              : undefined,
           connectionNodeIds: [port!.region1Id, port!.region2Id] as [
             CapacityMeshNodeId,
             CapacityMeshNodeId,
@@ -847,6 +857,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      prevPortPointId:
+        typeof portMetadata?.prevPortPointId === "string"
+          ? portMetadata.prevPortPointId
+          : undefined,
+      nextPortPointId:
+        typeof portMetadata?.nextPortPointId === "string"
+          ? portMetadata.nextPortPointId
+          : undefined,
     }
   }
 
@@ -869,11 +887,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (!originalRegion) continue
 
       const portPointsInPairs = regionSegments[regionId].map(
-        ([routeId, fromPortId, toPortId]) =>
-          [
-            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
-            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
-          ] satisfies [PortPoint, PortPoint],
+        ([routeId, fromPortId, toPortId]) => {
+          const startPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            fromPortId,
+          )
+          const endPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            toPortId,
+          )
+          if (startPoint.portPointId && endPoint.portPointId) {
+            startPoint.nextPortPointId = endPoint.portPointId
+            endPoint.prevPortPointId = startPoint.portPointId
+          }
+          return [startPoint, endPoint] satisfies [PortPoint, PortPoint]
+        },
       )
       const portPoints = portPointsInPairs.flat()
 

@@ -239,6 +239,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 z: portPoint.z,
                 connectionName: portPoint.connectionName,
                 portPointId: portPoint.portPointId,
+                prevPortPointId: portPoint.prevPortPointId,
+                nextPortPointId: portPoint.nextPortPointId,
               })),
             },
             nodeHdRoutes: routeIndexes.map((routeIndex) =>

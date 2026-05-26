@@ -1,12 +1,14 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 import type {
   HighDensityIntraNodeRouteWithJumpers,
   Jumper,
   NodeWithPortPoints,
+  PortPoint,
 } from "../../types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
@@ -97,37 +99,38 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     this.connMap = params.connMap
     this.traceWidth = params.traceWidth ?? 0.15
 
-    const unsolvedConnectionsMap: Map<
-      string,
-      {
-        rootConnectionName?: string
-        points: { x: number; y: number; z: number }[]
-      }
-    > = new Map()
-
-    // For single-layer, force all port points to z=0
-    for (const {
-      connectionName,
-      rootConnectionName,
-      x,
-      y,
-    } of nodeWithPortPoints.portPoints) {
-      const existing = unsolvedConnectionsMap.get(connectionName)
-      unsolvedConnectionsMap.set(connectionName, {
-        rootConnectionName: existing?.rootConnectionName ?? rootConnectionName,
-        points: [...(existing?.points ?? []), { x, y, z: 0 }],
-      })
+    const portPointsByConnection = new Map<string, PortPoint[]>()
+    for (const portPoint of nodeWithPortPoints.portPoints) {
+      const existing =
+        portPointsByConnection.get(portPoint.connectionName) ?? []
+      existing.push(portPoint)
+      portPointsByConnection.set(portPoint.connectionName, existing)
     }
 
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap
-        .entries()
-        .map(([connectionName, { rootConnectionName, points }]) => ({
+    this.unsolvedConnections = []
+
+    for (const [connectionName, portPoints] of portPointsByConnection) {
+      const pointPairs = getConnectionPortPointPairs(portPoints)
+      for (const [A, B] of pointPairs) {
+        this.unsolvedConnections.push({
           connectionName,
-          rootConnectionName,
-          points,
-        })),
-    )
+          rootConnectionName: A.rootConnectionName ?? B.rootConnectionName,
+          points: [
+            { x: A.x, y: A.y, z: 0 },
+            { x: B.x, y: B.y, z: 0 },
+          ],
+        })
+      }
+
+      if (pointPairs.length === 0 && portPoints.length === 1) {
+        const [portPoint] = portPoints
+        this.unsolvedConnections.push({
+          connectionName,
+          rootConnectionName: portPoint?.rootConnectionName,
+          points: portPoint ? [{ x: portPoint.x, y: portPoint.y, z: 0 }] : [],
+        })
+      }
+    }
 
     if (this.hyperParameters.SHUFFLE_SEED) {
       this.unsolvedConnections = cloneAndShuffleArray(

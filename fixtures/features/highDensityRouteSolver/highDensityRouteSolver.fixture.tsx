@@ -61,6 +61,14 @@ const createGridHighDensityProblem = ({
       }
     })
 
+    for (const [startPortIndex, endPortIndex] of node.portPointPairs ?? []) {
+      const startPortPoint = portPoints[startPortIndex]
+      const endPortPoint = portPoints[endPortIndex]
+      if (!startPortPoint || !endPortPoint) continue
+      startPortPoint.nextPortPointId = endPortPoint.portPointId
+      endPortPoint.prevPortPointId = startPortPoint.portPointId
+    }
+
     const portPointsInPairs = node.portPointPairs?.map(
       ([startPortIndex, endPortIndex]) =>
         [portPoints[startPortIndex]!, portPoints[endPortIndex]!] as [

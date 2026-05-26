@@ -72,6 +72,8 @@ export interface InputPortPoint {
   x: number
   y: number
   z: number
+  prevPortPointId?: string
+  nextPortPointId?: string
   /** The node IDs that this port point connects (on the shared edge) */
   connectionNodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   /** XY distance to the centermost port on this Z level (centermost port has distance 0) */
@@ -1152,6 +1154,8 @@ export class PortPointPathingSolver extends BaseSolver {
         z: pp.z,
         connectionName,
         rootConnectionName,
+        prevPortPointId: pp.prevPortPointId,
+        nextPortPointId: pp.nextPortPointId,
       }
 
       assignedPortPoints.push(portPoint)
@@ -1162,6 +1166,20 @@ export class PortPointPathingSolver extends BaseSolver {
         nodePortPoints.push(portPoint)
         this.nodeAssignedPortPoints.set(nodeId, nodePortPoints)
       }
+    }
+
+    const assignedPortPointIds = assignedPortPoints
+      .map((portPoint) => portPoint.portPointId)
+      .filter((portPointId): portPointId is string => Boolean(portPointId))
+
+    let assignedPortPointIdIndex = 0
+    for (const portPoint of assignedPortPoints) {
+      if (!portPoint.portPointId) continue
+      portPoint.prevPortPointId =
+        assignedPortPointIds[assignedPortPointIdIndex - 1]
+      portPoint.nextPortPointId =
+        assignedPortPointIds[assignedPortPointIdIndex + 1]
+      assignedPortPointIdIndex += 1
     }
 
     // Mark all nodes that are off board connected to have all their port points
