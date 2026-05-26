@@ -58,6 +58,24 @@ import sample019 from "dataset-srj11-45-degree/circuits/sample019.circuit.simple
 import sample020 from "dataset-srj11-45-degree/circuits/sample020.circuit.simple-route.json" with {
   type: "json",
 }
+import sample021 from "dataset-srj11-45-degree/circuits/sample021.circuit.simple-route.json" with {
+  type: "json",
+}
+import sample022 from "dataset-srj11-45-degree/circuits/sample022.circuit.simple-route.json" with {
+  type: "json",
+}
+import sample023 from "dataset-srj11-45-degree/circuits/sample023.circuit.simple-route.json" with {
+  type: "json",
+}
+import sample024 from "dataset-srj11-45-degree/circuits/sample024.circuit.simple-route.json" with {
+  type: "json",
+}
+import sample025 from "dataset-srj11-45-degree/circuits/sample025.circuit.simple-route.json" with {
+  type: "json",
+}
+import sample026 from "dataset-srj11-45-degree/circuits/sample026.circuit.simple-route.json" with {
+  type: "json",
+}
 import {
   DatasetBenchmarkFixture,
   type DatasetCircuit,
@@ -84,6 +102,12 @@ const circuits = [
   { id: "018", srj: sample018 },
   { id: "019", srj: sample019 },
   { id: "020", srj: sample020 },
+  { id: "021", srj: sample021 },
+  { id: "022", srj: sample022 },
+  { id: "023", srj: sample023 },
+  { id: "024", srj: sample024 },
+  { id: "025", srj: sample025 },
+  { id: "026", srj: sample026 },
 ] satisfies DatasetCircuit[]
 
 export default () => (
