@@ -38,6 +38,58 @@ type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
 
+type TinyBounds = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+type TinyRegionMetadata = {
+  bounds?: TinyBounds
+  _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
+  _isNarrowQfpPadGap?: boolean
+  _offBoardConnectionId?: string
+}
+
+type TinyPortMetadata = {
+  x?: number
+  y?: number
+  z?: number
+  prevPortPointId?: string
+  nextPortPointId?: string
+  distToCentermostPortOnZ?: number
+  cramped?: boolean
+  _tinyTerminal?: boolean
+  tinyHypergraphPortPenalty?: number
+  duplicatedFromPortId?: string
+}
+
+type LoadedTinyGraph = {
+  topology: {
+    portCount: number
+    portMetadata?: TinyPortMetadata[]
+    regionMetadata?: Array<TinyRegionMetadata & { _tinyTerminalNetId?: string }>
+  }
+  problem: {
+    routeMetadata?: RouteMetadata[]
+    routeNet: Int32Array
+    regionNetId: Int32Array
+    portPenalty?: Float64Array
+    metadataPortPenaltiesApplied?: boolean
+  }
+}
+
+const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
+  typeof metadata === "object" && metadata !== null
+    ? (metadata as TinyRegionMetadata)
+    : {}
+
+const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
+  typeof metadata === "object" && metadata !== null
+    ? (metadata as TinyPortMetadata)
+    : {}
+
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -151,7 +203,8 @@ const getSharedConnectionZ = (params: {
 const toSerializedRegionData = (
   region: HgPortPointPathingSolverParams["graph"]["regions"][number],
 ) => {
-  const bounds = (region.d as any).bounds
+  const regionMetadata = region.d as typeof region.d & TinyRegionMetadata
+  const bounds = regionMetadata.bounds
 
   return {
     capacityMeshNodeId: region.d.capacityMeshNodeId,
@@ -179,22 +232,27 @@ const toSerializedRegionData = (
       region.d._offBoardConnectedCapacityMeshNodeIds === undefined
         ? undefined
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
-    _qfpRegionType: (region.d as any)._qfpRegionType,
-    _isNarrowQfpPadGap: (region.d as any)._isNarrowQfpPadGap,
+    _qfpRegionType: regionMetadata._qfpRegionType,
+    _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
   }
 }
 
 const toSerializedPortData = (
   port: HgPortPointPathingSolverParams["graph"]["ports"][number],
-) => ({
-  portId: port.d.portId,
-  x: port.d.x,
-  y: port.d.y,
-  z: port.d.z,
-  distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
-  tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
-  cramped: port.d.cramped,
-})
+) => {
+  const portMetadata = port.d as typeof port.d & TinyPortMetadata
+  return {
+    portId: port.d.portId,
+    x: port.d.x,
+    y: port.d.y,
+    z: port.d.z,
+    prevPortPointId: portMetadata.prevPortPointId,
+    nextPortPointId: portMetadata.nextPortPointId,
+    distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
+    tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
+    cramped: port.d.cramped,
+  }
+}
 
 const buildSerializedTinyGraph = (
   params: HgPortPointPathingSolverParams,
@@ -382,28 +440,38 @@ const buildInputNodesWithPortPoints = (
       serializedRegion?.pointIds ?? region.ports.map((port) => port.d.portId)
     )
       .map((portId) => serializedPortById.get(portId))
-      .filter((port) => port && !(port.d as any)?._tinyTerminal)
+      .filter((port) => port && !asTinyPortMetadata(port.d)._tinyTerminal)
       .map((port) => {
-        const region1 = serializedRegionById.get(port!.region1Id)
-        const region2 = serializedRegionById.get(port!.region2Id)
+        const serializedPort = port!
+        const portMetadata = asTinyPortMetadata(serializedPort.d)
+        const region1 = serializedRegionById.get(serializedPort.region1Id)
+        const region2 = serializedRegionById.get(serializedPort.region2Id)
         const connectsToOffBoardNode = Boolean(
-          (region1?.d as any)?._offBoardConnectionId ??
-            (region2?.d as any)?._offBoardConnectionId,
+          asTinyRegionMetadata(region1?.d)._offBoardConnectionId ??
+            asTinyRegionMetadata(region2?.d)._offBoardConnectionId,
         )
 
         return {
-          portPointId: port!.portId,
-          x: Number((port!.d as any)?.x ?? 0),
-          y: Number((port!.d as any)?.y ?? 0),
-          z: Number((port!.d as any)?.z ?? 0),
-          connectionNodeIds: [port!.region1Id, port!.region2Id] as [
-            CapacityMeshNodeId,
-            CapacityMeshNodeId,
-          ],
+          portPointId: serializedPort.portId,
+          x: Number(portMetadata.x ?? 0),
+          y: Number(portMetadata.y ?? 0),
+          z: Number(portMetadata.z ?? 0),
+          prevPortPointId:
+            typeof portMetadata.prevPortPointId === "string"
+              ? portMetadata.prevPortPointId
+              : undefined,
+          nextPortPointId:
+            typeof portMetadata.nextPortPointId === "string"
+              ? portMetadata.nextPortPointId
+              : undefined,
+          connectionNodeIds: [
+            serializedPort.region1Id,
+            serializedPort.region2Id,
+          ] as [CapacityMeshNodeId, CapacityMeshNodeId],
           distToCentermostPortOnZ: Number(
-            (port!.d as any)?.distToCentermostPortOnZ ?? 0,
+            portMetadata.distToCentermostPortOnZ ?? 0,
           ),
-          cramped: Boolean((port!.d as any)?.cramped),
+          cramped: Boolean(portMetadata.cramped),
           connectsToOffBoardNode,
         } satisfies InputPortPoint
       })
@@ -420,20 +488,15 @@ const buildInputNodesWithPortPoints = (
       _offBoardConnectionId: region.d._offBoardConnectionId,
       _offBoardConnectedCapacityMeshNodeIds:
         region.d._offBoardConnectedCapacityMeshNodeIds,
-      _qfpRegionType: (region.d as any)._qfpRegionType,
-      _isNarrowQfpPadGap: (region.d as any)._isNarrowQfpPadGap,
+      _qfpRegionType: (region.d as typeof region.d & TinyRegionMetadata)
+        ._qfpRegionType,
+      _isNarrowQfpPadGap: (region.d as typeof region.d & TinyRegionMetadata)
+        ._isNarrowQfpPadGap,
     }
   })
 }
 
-const applyTerminalRegionNetIds = (loaded: {
-  topology: { regionMetadata?: any[] }
-  problem: {
-    routeMetadata?: any[]
-    routeNet: Int32Array
-    regionNetId: Int32Array
-  }
-}) => {
+const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
   const netIndexById = new Map<string, number>()
   for (let routeId = 0; routeId < loaded.problem.routeNet.length; routeId++) {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
@@ -462,10 +525,7 @@ const applyTerminalRegionNetIds = (loaded: {
   }
 }
 
-const applyPortMetadataPenalties = (loaded: {
-  topology: { portCount: number; portMetadata?: any[] }
-  problem: { portPenalty?: Float64Array }
-}) => {
+const applyPortMetadataPenalties = (loaded: LoadedTinyGraph) => {
   let duplicatePortPenaltyCount = 0
   let crampedPortPenaltyCount = 0
   const portPenalty = loaded.problem.portPenalty
@@ -491,13 +551,7 @@ const applyPortMetadataPenalties = (loaded: {
   return { duplicatePortPenaltyCount, crampedPortPenaltyCount }
 }
 
-const applyMetadataPortPenalties = (loaded: {
-  topology: { portCount: number; portMetadata?: any[] }
-  problem: {
-    portPenalty?: Float64Array
-    metadataPortPenaltiesApplied?: boolean
-  }
-}) => {
+const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   if (loaded.problem.metadataPortPenaltiesApplied) {
     return 0
   }
@@ -607,8 +661,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solver instanceof TinyHyperGraphSectionSolver ||
       solver instanceof TinyHyperGraphSolver
     ) {
-      applyMetadataPortPenalties(solver as any)
-      applyTerminalRegionNetIds(solver as any)
+      const loadedSolver = solver as typeof solver & LoadedTinyGraph
+      applyMetadataPortPenalties(loadedSolver)
+      applyTerminalRegionNetIds(loadedSolver)
     }
 
     this.configuredSolvers.add(solver)
@@ -847,6 +902,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      prevPortPointId:
+        typeof portMetadata?.prevPortPointId === "string"
+          ? portMetadata.prevPortPointId
+          : undefined,
+      nextPortPointId:
+        typeof portMetadata?.nextPortPointId === "string"
+          ? portMetadata.nextPortPointId
+          : undefined,
     }
   }
 
@@ -869,11 +932,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (!originalRegion) continue
 
       const portPointsInPairs = regionSegments[regionId].map(
-        ([routeId, fromPortId, toPortId]) =>
-          [
-            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
-            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
-          ] satisfies [PortPoint, PortPoint],
+        ([routeId, fromPortId, toPortId]) => {
+          const startPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            fromPortId,
+          )
+          const endPoint = this.createAssignedPortPoint(
+            solvedTinySolver,
+            routeId,
+            toPortId,
+          )
+          if (startPoint.portPointId && endPoint.portPointId) {
+            startPoint.nextPortPointId = endPoint.portPointId
+            endPoint.prevPortPointId = startPoint.portPointId
+          }
+          return [startPoint, endPoint] satisfies [PortPoint, PortPoint]
+        },
       )
       const portPoints = portPointsInPairs.flat()
 

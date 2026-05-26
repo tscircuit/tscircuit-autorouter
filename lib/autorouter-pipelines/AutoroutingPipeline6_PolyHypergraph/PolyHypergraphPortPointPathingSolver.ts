@@ -41,6 +41,32 @@ type RouteMetadata = {
   }
 }
 
+type PolyRegionMetadata = {
+  serializedRegionId?: string
+  availableZ?: number[]
+  polygon?: Array<{ x: number; y: number }>
+  _containsObstacle?: boolean
+  _containsTarget?: boolean
+}
+
+type PolyPortMetadata = {
+  serializedPortId?: string
+  portId?: string
+  prevPortPointId?: string
+  nextPortPointId?: string
+  distToCentermostPortOnZ?: number
+}
+
+const asPolyRegionMetadata = (metadata: unknown): PolyRegionMetadata =>
+  typeof metadata === "object" && metadata !== null
+    ? (metadata as PolyRegionMetadata)
+    : {}
+
+const asPolyPortMetadata = (metadata: unknown): PolyPortMetadata =>
+  typeof metadata === "object" && metadata !== null
+    ? (metadata as PolyPortMetadata)
+    : {}
+
 export type PolyHypergraphPortPointPathingSolverOptions = {
   srj: SimpleRouteJson
   effort?: number
@@ -61,28 +87,37 @@ const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.mutuallyConnectedNetworkId
 
 const getSerializedRegionId = (metadata: unknown, fallbackRegionId: number) => {
-  if (typeof metadata === "object" && metadata !== null) {
-    const serializedRegionId = (metadata as { serializedRegionId?: unknown })
-      .serializedRegionId
-    if (typeof serializedRegionId === "string") return serializedRegionId
-  }
+  const serializedRegionId = asPolyRegionMetadata(metadata).serializedRegionId
+  if (typeof serializedRegionId === "string") return serializedRegionId
   return `region-${fallbackRegionId}`
 }
 
 const getSerializedPortId = (metadata: unknown, fallbackPortId: number) => {
-  if (typeof metadata === "object" && metadata !== null) {
-    const serializedPortId = (metadata as { serializedPortId?: unknown })
-      .serializedPortId
-    if (typeof serializedPortId === "string") return serializedPortId
-    const portId = (metadata as { portId?: unknown }).portId
-    if (typeof portId === "string") return portId
+  const portMetadata = asPolyPortMetadata(metadata)
+  if (typeof portMetadata.serializedPortId === "string") {
+    return portMetadata.serializedPortId
   }
+  if (typeof portMetadata.portId === "string") return portMetadata.portId
   return `poly-port-${fallbackPortId}`
 }
 
+const getPortPointChainMetadata = (metadata: unknown) => {
+  const portMetadata = asPolyPortMetadata(metadata)
+
+  return {
+    prevPortPointId:
+      typeof portMetadata.prevPortPointId === "string"
+        ? portMetadata.prevPortPointId
+        : undefined,
+    nextPortPointId:
+      typeof portMetadata.nextPortPointId === "string"
+        ? portMetadata.nextPortPointId
+        : undefined,
+  }
+}
+
 const getPolygonFromMetadata = (metadata: unknown) => {
-  if (typeof metadata !== "object" || metadata === null) return undefined
-  const polygon = (metadata as { polygon?: unknown }).polygon
+  const polygon = asPolyRegionMetadata(metadata).polygon
   if (!Array.isArray(polygon) || polygon.length < 3) return undefined
   if (
     polygon.every(
@@ -106,7 +141,7 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
   convexRegions: ConvexRegionsComputeResult
   serializedGraph: SerializedPolyHyperGraph
   loaded: PolyHyperGraphLoadResult
-  polySolver: PolyHyperGraphSolver
+  polySolver: PolyHyperGraphSolver & BaseSolver
   inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
   nodesWithPortPoints: PolyNodeWithPortPoints[] = []
   reservedRegionCount = 0
@@ -172,8 +207,8 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
       this.loaded.topology,
       this.loaded.problem,
       solverOptions,
-    )
-    this.activeSubSolver = this.polySolver as unknown as BaseSolver
+    ) as PolyHyperGraphSolver & BaseSolver
+    this.activeSubSolver = this.polySolver
     this.MAX_ITERATIONS = solverOptions.MAX_ITERATIONS! + 1_000
     this.inputNodeWithPortPoints = this.createInputNodesWithPortPoints()
   }
@@ -183,21 +218,22 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     const inputNodes: InputNodeWithPortPoints[] = []
 
     for (let regionId = 0; regionId < topology.regionCount; regionId++) {
-      const metadata = topology.regionMetadata?.[regionId] ?? {}
+      const metadata = asPolyRegionMetadata(
+        topology.regionMetadata?.[regionId] ?? {},
+      )
       const serializedRegionId = getSerializedRegionId(metadata, regionId)
       if (serializedRegionId.startsWith("terminal-")) continue
 
       const portPoints = (topology.regionIncidentPorts[regionId] ?? []).map(
         (portId) => {
           const candidateRegionIds = topology.incidentPortRegion[portId] ?? []
+          const portMetadata = topology.portMetadata?.[portId]
           return {
-            portPointId: getSerializedPortId(
-              topology.portMetadata?.[portId],
-              portId,
-            ),
+            portPointId: getSerializedPortId(portMetadata, portId),
             x: topology.portX[portId],
             y: topology.portY[portId],
             z: topology.portZ[portId],
+            ...getPortPointChainMetadata(portMetadata),
             connectionNodeIds: candidateRegionIds.map((candidateRegionId) =>
               getSerializedRegionId(
                 topology.regionMetadata?.[candidateRegionId],
@@ -221,7 +257,7 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
         height: topology.regionHeight[regionId],
         portPoints,
         availableZ:
-          (metadata as { availableZ?: number[] }).availableZ ??
+          metadata.availableZ ??
           Array.from({ length: this.params.srj.layerCount }, (_, z) => z),
         _containsObstacle: Boolean(metadata._containsObstacle),
         _containsTarget: Boolean(metadata._containsTarget),
@@ -241,17 +277,16 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     const rootConnectionName = routeMetadata
       ? getRouteRootConnectionName(routeMetadata)
       : undefined
+    const portMetadata = this.polySolver.topology.portMetadata?.[portId]
 
     return {
-      portPointId: getSerializedPortId(
-        this.polySolver.topology.portMetadata?.[portId],
-        portId,
-      ),
+      portPointId: getSerializedPortId(portMetadata, portId),
       x: this.polySolver.topology.portX[portId],
       y: this.polySolver.topology.portY[portId],
       z: this.polySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      ...getPortPointChainMetadata(portMetadata),
     }
   }
 
@@ -260,7 +295,9 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     const outputNodes: PolyNodeWithPortPoints[] = []
 
     for (let regionId = 0; regionId < state.regionSegments.length; regionId++) {
-      const metadata = topology.regionMetadata?.[regionId] ?? {}
+      const metadata = asPolyRegionMetadata(
+        topology.regionMetadata?.[regionId] ?? {},
+      )
       const serializedRegionId = getSerializedRegionId(metadata, regionId)
       if (serializedRegionId.startsWith("terminal-")) continue
 
@@ -268,11 +305,15 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
       if (!polygon) continue
 
       const portPoints = (state.regionSegments[regionId] ?? []).flatMap(
-        ([routeId, fromPortId, toPortId]) =>
-          [
-            this.createAssignedPortPoint(routeId, fromPortId),
-            this.createAssignedPortPoint(routeId, toPortId),
-          ] satisfies PortPoint[],
+        ([routeId, fromPortId, toPortId]) => {
+          const startPoint = this.createAssignedPortPoint(routeId, fromPortId)
+          const endPoint = this.createAssignedPortPoint(routeId, toPortId)
+          if (startPoint.portPointId && endPoint.portPointId) {
+            startPoint.nextPortPointId = endPoint.portPointId
+            endPoint.prevPortPointId = startPoint.portPointId
+          }
+          return [startPoint, endPoint] satisfies PortPoint[]
+        },
       )
 
       if (portPoints.length === 0) continue
@@ -287,7 +328,7 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
         height: topology.regionHeight[regionId],
         polygon,
         portPoints,
-        availableZ: metadata.availableZ as number[] | undefined,
+        availableZ: metadata.availableZ,
       })
     }
 
@@ -336,11 +377,13 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     const crossings = getIntraNodeCrossingsUsingCircle(solvedNode)
     return calculateNodeProbabilityOfFailure(
       {
+        capacityMeshNodeId: solvedNode.capacityMeshNodeId,
         center: solvedNode.center,
         width: solvedNode.width,
         height: solvedNode.height,
+        layer: "top",
         availableZ: solvedNode.availableZ ?? [],
-      } as any,
+      },
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,

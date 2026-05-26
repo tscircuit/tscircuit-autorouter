@@ -5,6 +5,8 @@ export type PortPoint = {
   x: number
   y: number
   z: number
+  prevPortPointId?: string
+  nextPortPointId?: string
 }
 
 export type NodeWithPortPoints = {

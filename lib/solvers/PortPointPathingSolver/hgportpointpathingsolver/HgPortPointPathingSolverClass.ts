@@ -8,6 +8,7 @@ import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
+import type { CapacityMeshNodeId } from "lib/types"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -834,25 +835,26 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         const connectionName = assignment.connection.connectionId
         const rootConnectionName =
           assignment.connection.mutuallyConnectedNetworkId
+        const startPoint: PortPoint = {
+          portPointId: assignment.regionPort1.d.portId,
+          x: assignment.regionPort1.d.x,
+          y: assignment.regionPort1.d.y,
+          z: assignment.regionPort1.d.z,
+          connectionName,
+          rootConnectionName,
+          nextPortPointId: assignment.regionPort2.d.portId,
+        }
+        const endPoint: PortPoint = {
+          portPointId: assignment.regionPort2.d.portId,
+          x: assignment.regionPort2.d.x,
+          y: assignment.regionPort2.d.y,
+          z: assignment.regionPort2.d.z,
+          connectionName,
+          rootConnectionName,
+          prevPortPointId: assignment.regionPort1.d.portId,
+        }
 
-        return [
-          {
-            portPointId: assignment.regionPort1.d.portId,
-            x: assignment.regionPort1.d.x,
-            y: assignment.regionPort1.d.y,
-            z: assignment.regionPort1.d.z,
-            connectionName,
-            rootConnectionName,
-          },
-          {
-            portPointId: assignment.regionPort2.d.portId,
-            x: assignment.regionPort2.d.x,
-            y: assignment.regionPort2.d.y,
-            z: assignment.regionPort2.d.z,
-            connectionName,
-            rootConnectionName,
-          },
-        ] as PortPoint[]
+        return [startPoint, endPoint] as PortPoint[]
       })
 
       const centerPortPoints: PortPoint[] = []
@@ -888,14 +890,26 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           const [connectionName, rootConnectionName = ""] = key.split("::")
           const firstPoint = points[0]
           if (!firstPoint) continue
-          centerPortPoints.push({
+          const centerPortPoint: PortPoint = {
             portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
             x: region.d.center.x,
             y: region.d.center.y,
             z: firstPoint.z,
             connectionName,
             rootConnectionName: rootConnectionName || undefined,
-          })
+          }
+          if (points.length >= 2) {
+            const lastPoint = points[points.length - 1]!
+            if (firstPoint.portPointId) {
+              firstPoint.nextPortPointId = centerPortPoint.portPointId
+              centerPortPoint.prevPortPointId = firstPoint.portPointId
+            }
+            if (lastPoint.portPointId) {
+              lastPoint.prevPortPointId = centerPortPoint.portPointId
+              centerPortPoint.nextPortPointId = lastPoint.portPointId
+            }
+          }
+          centerPortPoints.push(centerPortPoint)
         }
       }
 
@@ -913,6 +927,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       }
 
       const inputPortPoints: InputPortPoint[] = region.ports.map((port) => {
+        const portPointChain = port.d as typeof port.d & {
+          prevPortPointId?: string
+          nextPortPointId?: string
+        }
         const connectsToOffBoardNode = port.d.regions.some((region) =>
           Boolean(region.d._offBoardConnectionId),
         )
@@ -921,10 +939,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           x: port.d.x,
           y: port.d.y,
           z: port.d.z,
-          connectionNodeIds: port.d.regions.map((region) => region.regionId),
+          prevPortPointId: portPointChain.prevPortPointId,
+          nextPortPointId: portPointChain.nextPortPointId,
+          connectionNodeIds: port.d.regions.map(
+            (region) => region.regionId,
+          ) as [CapacityMeshNodeId, CapacityMeshNodeId],
           distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
           connectsToOffBoardNode,
-        } as InputPortPoint
+        }
       })
 
       inputNodeWithPortPoints.push({

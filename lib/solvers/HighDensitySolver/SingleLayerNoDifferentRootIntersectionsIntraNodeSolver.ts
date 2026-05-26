@@ -10,6 +10,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
 type Point3 = { x: number; y: number; z: number }
 type Point2 = { x: number; y: number }
@@ -32,9 +33,6 @@ const POINT_OFFSET = 0.02
 
 const pointKey = (point: Point2) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)}`
-
-const comparePoint2 = (a: Point2, b: Point2) =>
-  pointKey(a).localeCompare(pointKey(b))
 
 const samePoint = (a: Point2, b: Point2) =>
   Math.abs(a.x - b.x) < EPS && Math.abs(a.y - b.y) < EPS
@@ -76,32 +74,6 @@ const getEdge = (
   if (Math.abs(point.y - bounds.maxY) < 1e-3) return "bottom"
   if (Math.abs(point.x - bounds.minX) < 1e-3) return "left"
   return null
-}
-
-const getPerimeterPosition = (
-  point: Point2,
-  bounds: { minX: number; maxX: number; minY: number; maxY: number },
-) => {
-  if (Math.abs(point.y - bounds.minY) < 1e-6) {
-    return point.x - bounds.minX
-  }
-  if (Math.abs(point.x - bounds.maxX) < 1e-6) {
-    return bounds.maxX - bounds.minX + (point.y - bounds.minY)
-  }
-  if (Math.abs(point.y - bounds.maxY) < 1e-6) {
-    return (
-      bounds.maxX -
-      bounds.minX +
-      bounds.maxY -
-      bounds.minY +
-      (bounds.maxX - point.x)
-    )
-  }
-  return (
-    2 * (bounds.maxX - bounds.minX) +
-    (bounds.maxY - bounds.minY) +
-    (bounds.maxY - point.y)
-  )
 }
 
 const isInsideBounds = (
@@ -182,23 +154,6 @@ const getForeignPorts = (
     )
     .map((point) => ({ x: point.x, y: point.y }))
 
-function* combinations<T>(
-  items: T[],
-  choose: number,
-  start = 0,
-  acc: T[] = [],
-): Generator<T[]> {
-  if (acc.length === choose) {
-    yield acc.slice()
-    return
-  }
-  for (let i = start; i < items.length; i++) {
-    acc.push(items[i]!)
-    yield* combinations(items, choose, i + 1, acc)
-    acc.pop()
-  }
-}
-
 function* permutations<T>(items: T[], n = items.length): Generator<T[]> {
   if (n <= 1) {
     yield items.slice()
@@ -209,84 +164,6 @@ function* permutations<T>(items: T[], n = items.length): Generator<T[]> {
     yield* permutations(items, n - 1)
     ;[items[i], items[n - 1]] = [items[n - 1]!, items[i]!]
   }
-}
-
-const isSpanningTree = (
-  edgeCount: number,
-  edges: Array<{ a: number; b: number }>,
-) => {
-  const parents = Array.from({ length: edgeCount }, (_, index) => index)
-  const find = (index: number): number =>
-    parents[index] === index ? index : (parents[index] = find(parents[index]!))
-  const unite = (a: number, b: number) => {
-    a = find(a)
-    b = find(b)
-    if (a !== b) parents[a] = b
-  }
-
-  for (const edge of edges) {
-    if (find(edge.a) === find(edge.b)) return false
-    unite(edge.a, edge.b)
-  }
-
-  return Array.from({ length: edgeCount }, (_, index) => find(index)).every(
-    (root) => root === find(0),
-  )
-}
-
-const getCandidatePairSetsForConnection = (
-  points: PortPoint[],
-  bounds: { minX: number; maxX: number; minY: number; maxY: number },
-) => {
-  if (points.length <= 1) return [[]]
-  if (points.length === 2) return [[{ a: 0, b: 1 }]]
-
-  if (points.length > 4) {
-    const sortedPoints = [...points].sort(
-      (a, b) =>
-        getPerimeterPosition(a, bounds) - getPerimeterPosition(b, bounds) ||
-        a.connectionName.localeCompare(b.connectionName) ||
-        comparePoint2(a, b),
-    )
-    return [
-      sortedPoints.slice(1).map((_, index) => ({
-        a: points.indexOf(sortedPoints[index]!),
-        b: points.indexOf(sortedPoints[index + 1]!),
-      })),
-    ]
-  }
-
-  const allEdges: Array<{ a: number; b: number; weight: number }> = []
-  for (let i = 0; i < points.length; i++) {
-    for (let j = i + 1; j < points.length; j++) {
-      allEdges.push({
-        a: i,
-        b: j,
-        weight: distance(points[i]!, points[j]!),
-      })
-    }
-  }
-
-  const spanningTrees = Array.from(
-    combinations(allEdges, points.length - 1),
-  ).filter((tree) => isSpanningTree(points.length, tree))
-
-  spanningTrees.sort(
-    (a, b) =>
-      a.reduce((sum, edge) => sum + edge.weight, 0) -
-        b.reduce((sum, edge) => sum + edge.weight, 0) ||
-      a
-        .map((edge) => `${edge.a}-${edge.b}`)
-        .join(",")
-        .localeCompare(b.map((edge) => `${edge.a}-${edge.b}`).join(",")),
-  )
-
-  return spanningTrees.map((tree) =>
-    tree.map(({ a, b }) => ({
-      a,
-      b,
-    })),
-  )
 }
 
 const findPath = ({
@@ -460,81 +337,58 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
   private trySolveNode() {
     const bounds = getBounds(this.nodeWithPortPoints)
     const groups = this.buildTaskGroups()
-    const groupCandidates = Array.from(groups.entries()).map(
-      ([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName: points[0]?.rootConnectionName ?? connectionName,
-        points,
-        pairSets: getCandidatePairSetsForConnection(points, bounds),
-      }),
+    const pairTasks: PairTask[] = Array.from(groups.entries()).flatMap(
+      ([connectionName, points]) =>
+        getConnectionPortPointPairs(points).map(([A, B]) => ({
+          connectionName,
+          rootConnectionName:
+            A.rootConnectionName ?? B.rootConnectionName ?? connectionName,
+          A,
+          B,
+        })),
     )
 
-    const pairSetSelections: Array<PairTask[]> = []
-    const buildSelections = (index: number, acc: PairTask[]) => {
-      if (index >= groupCandidates.length) {
-        pairSetSelections.push(acc.slice())
-        return
-      }
+    const candidateOrders =
+      pairTasks.length <= 6 ? permutations(pairTasks.slice()) : [pairTasks]
 
-      const candidate = groupCandidates[index]!
-      for (const pairSet of candidate.pairSets) {
-        const nextTasks = pairSet.map(({ a, b }) => ({
-          connectionName: candidate.connectionName,
-          rootConnectionName: candidate.rootConnectionName,
-          A: candidate.points[a]!,
-          B: candidate.points[b]!,
-        }))
-        buildSelections(index + 1, [...acc, ...nextTasks])
-      }
-    }
+    for (const orderedTasks of candidateOrders) {
+      const solvedRoutes: HighDensityIntraNodeRoute[] = []
+      let failed = false
 
-    buildSelections(0, [])
+      for (const task of orderedTasks) {
+        const obstacleSegments = getObstacleSegments(
+          solvedRoutes,
+          task.rootConnectionName,
+        )
+        const foreignPorts = getForeignPorts(
+          this.nodeWithPortPoints,
+          task.rootConnectionName,
+        )
+        const path = findPath({
+          A: task.A,
+          B: task.B,
+          bounds,
+          obstacleSegments,
+          foreignPorts,
+        })
 
-    for (const pairTasks of pairSetSelections) {
-      const candidateOrders =
-        pairTasks.length <= 6
-          ? permutations(pairTasks.slice())
-          : [pairTasks.slice()]
-
-      for (const orderedTasks of candidateOrders) {
-        const solvedRoutes: HighDensityIntraNodeRoute[] = []
-        let failed = false
-
-        for (const task of orderedTasks) {
-          const obstacleSegments = getObstacleSegments(
-            solvedRoutes,
-            task.rootConnectionName,
-          )
-          const foreignPorts = getForeignPorts(
-            this.nodeWithPortPoints,
-            task.rootConnectionName,
-          )
-          const path = findPath({
-            A: task.A,
-            B: task.B,
-            bounds,
-            obstacleSegments,
-            foreignPorts,
-          })
-
-          if (!path || path.length < 2) {
-            failed = true
-            break
-          }
-
-          solvedRoutes.push({
-            connectionName: task.connectionName,
-            rootConnectionName: task.rootConnectionName,
-            traceThickness: this.traceWidth,
-            viaDiameter: this.viaDiameter,
-            route: path,
-            vias: [],
-          })
+        if (!path || path.length < 2) {
+          failed = true
+          break
         }
 
-        if (!failed) {
-          return solvedRoutes
-        }
+        solvedRoutes.push({
+          connectionName: task.connectionName,
+          rootConnectionName: task.rootConnectionName,
+          traceThickness: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+          route: path,
+          vias: [],
+        })
+      }
+
+      if (!failed) {
+        return solvedRoutes
       }
     }
 

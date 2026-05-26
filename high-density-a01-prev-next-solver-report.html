@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>High Density A01 Prev/Next Solver Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <main class="mx-auto max-w-6xl px-6 py-10">
+      <header class="rounded-3xl border border-cyan-400/30 bg-slate-900/85 p-8 shadow-2xl shadow-cyan-950/40">
+        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
+          /home/ohmx/Documents/high-density-a01
+        </p>
+        <h1 class="mt-3 text-4xl font-black tracking-tight text-white">
+          Prev/Next PortPoint Solver Update Report
+        </h1>
+        <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+          Report on what must change so high-density solvers use
+          <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">prevPortPointId</code>
+          and
+          <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">nextPortPointId</code>
+          to decide which port points belong together, instead of inferring pairs
+          only from grouping or array order.
+        </p>
+      </header>
+
+      <section class="mt-8 grid gap-4 md:grid-cols-3">
+        <article class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
+            Already Using Chains
+          </p>
+          <p class="mt-2 text-3xl font-black text-white">4</p>
+          <p class="mt-2 text-sm text-slate-300">
+            `A01`, `A02`, `A03`, and `A05` already route through the shared pairing helper.
+          </p>
+        </article>
+        <article class="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
+            Needs Refactor
+          </p>
+          <p class="mt-2 text-3xl font-black text-white">1</p>
+          <p class="mt-2 text-sm text-slate-300">
+            `A09` still treats all same-name port points as one connection bucket.
+          </p>
+        </article>
+        <article class="rounded-2xl border border-sky-400/30 bg-sky-500/10 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
+            Key Shared File
+          </p>
+          <p class="mt-2 text-lg font-semibold text-white">
+            `lib/getConnectionPortPointPairs.ts`
+          </p>
+          <p class="mt-2 text-sm text-slate-300">
+            This is already chain-aware and should become the single source of truth.
+          </p>
+        </article>
+      </section>
+
+      <section class="mt-4 grid gap-4 md:grid-cols-2">
+        <article class="rounded-2xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-200">
+            Missing From First Draft
+          </p>
+          <p class="mt-2 text-lg font-semibold text-white">
+            Autorouter `HighDensitySolver`
+          </p>
+          <p class="mt-2 text-sm text-slate-300">
+            The top-level solver in `tscircuit-autorouter` also needs coverage, even though it mostly delegates.
+          </p>
+        </article>
+        <article class="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-rose-200">
+            Legacy Risk Area
+          </p>
+          <p class="mt-2 text-lg font-semibold text-white">
+            Autorouter intra-node subsolvers
+          </p>
+          <p class="mt-2 text-sm text-slate-300">
+            Several non-`a01` autorouter subsolvers still form route work units by `connectionName` grouping.
+          </p>
+        </article>
+      </section>
+
+      <section class="mt-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <h2 class="text-2xl font-bold text-white">Bottom Line</h2>
+        <div class="mt-4 space-y-3 text-sm leading-6 text-slate-300">
+          <p>
+            The repo is partway there already. The shared helper
+            <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">getConnectionPortPointPairs</code>
+            reads <code>prevPortPointId</code> and <code>nextPortPointId</code> and
+            produces explicit point pairs.
+          </p>
+          <p>
+            `A01`, `A02`, `A03`, and `A05` already call that helper when they build
+            connection segments, so those solvers are effectively chain-aware today.
+          </p>
+          <p>
+            The main solver that still needs a real behavioral update is
+            <code class="rounded bg-slate-800 px-2 py-1 text-cyan-200">HighDensitySolverA09</code>.
+            It groups every port point by <code>connectionName</code> and routes each
+            group as if it were one two-ended connection, which breaks down when a
+            single connection name contains multiple linked port-point segments.
+          </p>
+        </div>
+      </section>
+
+      <section class="mt-8">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-white">Solver Status</h2>
+          <span class="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+            current code audit
+          </span>
+        </div>
+
+        <div class="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
+          <table class="min-w-full divide-y divide-slate-800 text-left text-sm">
+            <thead class="bg-slate-950/70 text-slate-300">
+              <tr>
+                <th class="px-4 py-3 font-semibold">File</th>
+                <th class="px-4 py-3 font-semibold">Current Behavior</th>
+                <th class="px-4 py-3 font-semibold">Status</th>
+                <th class="px-4 py-3 font-semibold">Required Update</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-200">
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/getConnectionPortPointPairs.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Builds pairs from <code>prevPortPointId</code> and <code>nextPortPointId</code>, then falls back to adjacent array order for unlinked points.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Mostly correct</td>
+                <td class="px-4 py-4 align-top">
+                  Keep as the canonical pairing helper. Optionally tighten fallback behavior if chain metadata is expected to be authoritative.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA01/HighDensitySolverA01.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Uses <code>getConnectionPortPointPairs(pts)</code> when converting grouped points into connection segments.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Already chain-aware</td>
+                <td class="px-4 py-4 align-top">
+                  No routing-logic rewrite needed. Just keep feeding it preserved chain metadata.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA02/HighDensitySolverA02.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Same pairing path as `A01`, using the shared helper.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Already chain-aware</td>
+                <td class="px-4 py-4 align-top">
+                  No direct change required beyond preserving metadata at inputs.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA03/HighDensitySolverA03.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Same pairing path as `A01`, using the shared helper.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Already chain-aware</td>
+                <td class="px-4 py-4 align-top">
+                  No direct change required beyond preserving metadata at inputs.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA05/HighDensitySolverA05.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Same pairing path as `A01`, using the shared helper.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Already chain-aware</td>
+                <td class="px-4 py-4 align-top">
+                  No direct change required beyond preserving metadata at inputs.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA08/HighDensitySolverA08.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Breakout stage delegates inner routing to `A01`; subproblem copies preserve full `PortPoint` objects.
+                </td>
+                <td class="px-4 py-4 align-top text-sky-300">Indirectly covered</td>
+                <td class="px-4 py-4 align-top">
+                  No pair-selection rewrite in `A08` itself. Ensure breakout and inner-node copies continue preserving chain fields.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/HighDensitySolverA09/HighDensitySolverA09.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Groups points only by <code>connectionName</code> and accepts any group with <code>length &gt;= 2</code> as one connection candidate.
+                </td>
+                <td class="px-4 py-4 align-top text-amber-300">Needs real refactor</td>
+                <td class="px-4 py-4 align-top">
+                  Replace name-only grouping with chain-derived pair or chain-segment expansion before ordering and subproblem creation.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mt-8">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-white">Autorouter Coverage To Add</h2>
+          <span class="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-200">
+            tscircuit-autorouter
+          </span>
+        </div>
+
+        <div class="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
+          <table class="min-w-full divide-y divide-slate-800 text-left text-sm">
+            <thead class="bg-slate-950/70 text-slate-300">
+              <tr>
+                <th class="px-4 py-3 font-semibold">File</th>
+                <th class="px-4 py-3 font-semibold">Current Behavior</th>
+                <th class="px-4 py-3 font-semibold">Status</th>
+                <th class="px-4 py-3 font-semibold">Planned Update</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-200">
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HighDensitySolver/HighDensitySolver.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Mostly an orchestrator. It selects and runs intra-node solvers rather than pairing port points directly.
+                </td>
+                <td class="px-4 py-4 align-top text-sky-300">Needs report coverage, not major logic rewrite</td>
+                <td class="px-4 py-4 align-top">
+                  Document that correctness depends on the delegated intra-node solver using chain-defined pairs.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HyperHighDensitySolver/CachedHyperSingleIntraNodeSolver.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Already preserves <code>prevPortPointId</code> and <code>nextPortPointId</code> when normalizing cached node inputs.
+                </td>
+                <td class="px-4 py-4 align-top text-emerald-300">Already preserving metadata</td>
+                <td class="px-4 py-4 align-top">
+                  No pairing rewrite here. Keep passing full port-point metadata through to downstream solvers.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Builds route groups by <code>connectionName</code> and then routes those grouped endpoints.
+                </td>
+                <td class="px-4 py-4 align-top text-amber-300">Needs behavioral update</td>
+                <td class="px-4 py-4 align-top">
+                  Replace raw name-group pairing with explicit pair extraction from chain metadata.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Same pattern as `SingleTransitionIntraNodeSolver`: groups by <code>connectionName</code>.
+                </td>
+                <td class="px-4 py-4 align-top text-amber-300">Needs behavioral update</td>
+                <td class="px-4 py-4 align-top">
+                  Use chain-derived pairs before obstacle-aware routing decisions are made.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Still counts and groups port points by `connectionName` when building solver work units.
+                </td>
+                <td class="px-4 py-4 align-top text-amber-300">Needs behavioral update</td>
+                <td class="px-4 py-4 align-top">
+                  Convert group construction to pair or chain-segment construction based on `prev` and `next`.
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-4 align-top">
+                  <code>lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers.ts</code>
+                </td>
+                <td class="px-4 py-4 align-top">
+                  Builds unsolved connections from grouped port-point arrays keyed by `connectionName`.
+                </td>
+                <td class="px-4 py-4 align-top text-amber-300">Needs behavioral update</td>
+                <td class="px-4 py-4 align-top">
+                  Split grouped arrays into explicit linked pairs before jumper planning.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mt-8 grid gap-6 md:grid-cols-2">
+        <article class="rounded-3xl border border-amber-400/30 bg-amber-500/10 p-6">
+          <h2 class="text-xl font-bold text-amber-200">Why A09 Is The Problem</h2>
+          <ul class="mt-4 space-y-2 text-sm leading-6 text-amber-50/90">
+            <li>`A09` builds a `Map&lt;connectionName, ConnectionInfo&gt;` instead of building explicit linked endpoint pairs.</li>
+            <li>That means four port points with the same `connectionName` can be treated as one logical connection group, even if the chain metadata says they belong to two separate segments.</li>
+            <li>The downstream ordering and subproblem routing logic then reasons about the wrong unit of work.</li>
+            <li>If `prevPortPointId` and `nextPortPointId` are supposed to be authoritative, `A09` must stop using `length &gt;= 2` as the connection-definition rule.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-6">
+          <h2 class="text-xl font-bold text-emerald-200">What Is Already Good</h2>
+          <ul class="mt-4 space-y-2 text-sm leading-6 text-emerald-50/90">
+            <li>The shared helper already resolves pairs by `prevPortPointId` and `nextPortPointId`.</li>
+            <li>`A01`, `A02`, `A03`, and `A05` already call that helper at segment-build time.</li>
+            <li>`A08` delegates to `A01` for the inner-node solve, so it benefits automatically once chain metadata is preserved on copied points.</li>
+            <li>The repo does not need a broad rewrite; the main behavior gap is localized.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="mt-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <h2 class="text-2xl font-bold text-white">Recommended A09 Refactor</h2>
+        <ol class="mt-4 space-y-3 text-sm leading-6 text-slate-300">
+          <li>
+            Replace <code>getConnections()</code> with a builder that first groups by
+            <code>connectionName</code>, then runs
+            <code>getConnectionPortPointPairs()</code> inside each group.
+          </li>
+          <li>
+            Convert each returned pair into its own `ConnectionInfo`-like unit, rather than
+            keeping all same-name points in one bucket.
+          </li>
+          <li>
+            Preserve <code>rootConnectionName</code> on each pair unit so ordering and scoring
+            still understand sibling nets.
+          </li>
+          <li>
+            Keep `makeSubproblem()` cloning full `PortPoint` objects with spreads, since that
+            already preserves the chain fields.
+          </li>
+          <li>
+            Decide whether the fallback in <code>getConnectionPortPointPairs()</code> should remain:
+            if chain links are mandatory, missing links should become a test failure instead of a
+            silent adjacent-order fallback.
+          </li>
+        </ol>
+      </section>
+
+      <section class="mt-8 rounded-3xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-6">
+        <h2 class="text-2xl font-bold text-fuchsia-100">Recommended Autorouter Follow-Up</h2>
+        <ol class="mt-4 space-y-3 text-sm leading-6 text-fuchsia-50/90">
+          <li>
+            Leave <code>HighDensitySolver.ts</code> as the orchestrator, but document that any delegated solver must accept chain-defined pairing.
+          </li>
+          <li>
+            Introduce one shared autorouter helper equivalent to <code>getConnectionPortPointPairs</code>, or reuse the same logic locally, so all non-`a01` intra-node solvers form identical route units.
+          </li>
+          <li>
+            Update `SingleTransitionIntraNodeSolver`, `SingleTransitionThroughObstacleIntraNodeSolver`, `SingleLayerNoDifferentRootIntersectionsIntraNodeSolver`, and `IntraNodeSolverWithJumpers` to consume explicit linked pairs instead of raw `connectionName` groups.
+          </li>
+        </ol>
+      </section>
+
+      <section class="mt-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <h2 class="text-2xl font-bold text-white">Suggested Test Coverage</h2>
+        <ul class="mt-4 space-y-2 text-sm leading-6 text-slate-300">
+          <li>A01/A02/A03/A05: one `connectionName` with four points linked as two disjoint pairs should produce two independent segments.</li>
+          <li>A09: same fixture should produce two pair-based routing subproblems, not one four-point aggregate connection.</li>
+          <li>A08: breakout-generated inner-node copies should keep `prevPortPointId` and `nextPortPointId` intact before delegating to `A01`.</li>
+          <li>Autorouter legacy solvers: the same four-point fixture should create two route tasks in `SingleTransition*`, `SingleLayerNoDifferentRootIntersections*`, and jumper-based flows.</li>
+          <li>Helper behavior: missing or partial chain metadata should either fall back intentionally or fail intentionally, but the behavior should be explicit and tested.</li>
+        </ul>
+      </section>
+
+      <section class="mt-8 rounded-3xl border border-cyan-400/30 bg-cyan-500/10 p-6">
+        <h2 class="text-2xl font-bold text-cyan-100">Practical Conclusion</h2>
+        <p class="mt-4 text-sm leading-6 text-cyan-50/90">
+          If the goal is “make the high-density solvers use prev/next to know which
+          port points connect together,” the repo is not starting from zero. The
+          shared helper and four major solvers are already aligned with that model.
+          The highest-value code changes are to refactor `HighDensitySolverA09` and
+          the legacy autorouter intra-node solvers so they stop treating all same-name
+          port points as one connection and instead use chain-defined pairs as their
+          routing unit.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

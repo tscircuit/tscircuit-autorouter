@@ -5,13 +5,14 @@ import type { Obstacle } from "lib/types"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
-type Point = { x: number; y: number; z?: number; rootConnectionName?: string }
 type Route = {
-  A: Point
-  B: Point
+  A: PortPoint
+  B: PortPoint
   connectionName: string
   rootConnectionName?: string
 }
@@ -19,10 +20,17 @@ type LayeredObstacle = Obstacle & { zLayers: number[] }
 
 const CONTAINS_POINT_TOLERANCE = 1e-6
 
-const pointInsideObstacle = (
-  point: Pick<Point, "x" | "y">,
-  obstacle: Obstacle,
-) => {
+/**
+ * Checks whether a point lies inside an obstacle rectangle.
+ *
+ * @param params - Point and obstacle to test.
+ * @returns `true` when the point falls within the obstacle bounds.
+ */
+const pointInsideObstacle = (params: {
+  point: Pick<PortPoint, "x" | "y">
+  obstacle: Obstacle
+}) => {
+  const { point, obstacle } = params
   const halfWidth = obstacle.width / 2 + CONTAINS_POINT_TOLERANCE
   const halfHeight = obstacle.height / 2 + CONTAINS_POINT_TOLERANCE
 
@@ -32,15 +40,21 @@ const pointInsideObstacle = (
   )
 }
 
-const obstacleIsConnectedToRoute = (
-  obstacle: Obstacle,
-  connectionName: string,
-  connMap?: ConnectivityMap,
-) =>
-  obstacle.connectedTo.some(
+/**
+ * Determines whether an obstacle belongs to the same net as a route.
+ *
+ * @param params - Obstacle and route connectivity inputs.
+ * @returns `true` when the obstacle may be traversed by the route.
+ */
+const obstacleIsConnectedToRoute = (params: {
+  obstacle: Obstacle
+  connectionName: string
+  connMap?: ConnectivityMap
+}) =>
+  params.obstacle.connectedTo.some(
     (id) =>
-      id === connectionName ||
-      (connMap?.areIdsConnected(connectionName, id) ?? false),
+      id === params.connectionName ||
+      (params.connMap?.areIdsConnected(params.connectionName, id) ?? false),
   )
 
 export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
@@ -140,35 +154,42 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     return solver.solved
   }
 
+  /**
+   * Builds explicit route tasks from linked port-point pairs in the node.
+   *
+   * @returns Route tasks ready for obstacle validation.
+   */
   private extractRoutesFromNode(): Route[] {
     const routes: Route[] = []
-    const connectionGroups = new Map<string, Point[]>()
+    const connectionGroups = new Map<string, PortPoint[]>()
 
     for (const connectedPort of this.nodeWithPortPoints.portPoints) {
-      const { connectionName, rootConnectionName } = connectedPort
+      const { connectionName } = connectedPort
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
-      connectionGroups.get(connectionName)!.push({
-        ...connectedPort,
-        rootConnectionName,
-      })
+      connectionGroups.get(connectionName)!.push(connectedPort)
     }
 
     for (const [connectionName, points] of connectionGroups.entries()) {
-      if (points.length === 2) {
+      for (const [A, B] of getConnectionPortPointPairs(points)) {
         routes.push({
-          A: { ...points[0]! },
-          B: { ...points[1]! },
+          A: { ...A },
+          B: { ...B },
           connectionName,
-          rootConnectionName:
-            points[0]?.rootConnectionName ?? points[1]?.rootConnectionName,
+          rootConnectionName: A.rootConnectionName ?? B.rootConnectionName,
         })
       }
     }
     return routes
   }
 
+  /**
+   * Finds a same-net multilayer obstacle that contains both route endpoints.
+   *
+   * @param route - Route to validate.
+   * @returns Matching obstacle, or `null` when none exists.
+   */
   private getContainingThroughObstacle(route: Route) {
     const zA = route.A.z
     const zB = route.B.z
@@ -183,17 +204,17 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
           return false
         }
         if (
-          !obstacleIsConnectedToRoute(
+          !obstacleIsConnectedToRoute({
             obstacle,
-            route.connectionName,
-            this.connMap,
-          )
+            connectionName: route.connectionName,
+            connMap: this.connMap,
+          })
         ) {
           return false
         }
         return (
-          pointInsideObstacle(route.A, obstacle) &&
-          pointInsideObstacle(route.B, obstacle)
+          pointInsideObstacle({ point: route.A, obstacle }) &&
+          pointInsideObstacle({ point: route.B, obstacle })
         )
       }) ?? null
     )
