@@ -155,8 +155,19 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+      
+      // Seve ki condition: 2x, 4x, aur 8x multiples (0.3mm, 0.6mm, 1.2mm) ka support
+      const schedule: number[] = []
+      if (this.nominalTraceWidth >= 1.2) schedule.push(1.2)
+      if (this.nominalTraceWidth >= 0.6) schedule.push(0.6)
+      if (this.nominalTraceWidth >= 0.3) schedule.push(0.3)
+      
+      // Agar user ne koi alag nominal width di hai, toh use schedule mein sabse pehle rakhenge
+      if (!schedule.includes(this.nominalTraceWidth)) {
+        schedule.unshift(this.nominalTraceWidth)
+      }
+      
+      this.TRACE_WIDTH_SCHEDULE = schedule
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push({
@@ -525,12 +536,12 @@ export class TraceWidthSolver extends BaseSolver {
       if (route.route.length === 0) continue
 
       const isNominalWidth = route.traceThickness === this.nominalTraceWidth
-      const isMidWidth = route.traceThickness === this.TRACE_WIDTH_SCHEDULE[1]
-      const strokeColor = isNominalWidth
-        ? "green"
-        : isMidWidth
-          ? "yellow"
-          : "orange"
+        const isAlternativeWidth = this.TRACE_WIDTH_SCHEDULE.includes(route.traceThickness ?? 0) && route.traceThickness !== this.minTraceWidth
+        const strokeColor = isNominalWidth
+          ? "green"
+          : isAlternativeWidth
+            ? "yellow"
+            : "orange"
 
       for (let i = 0; i < route.route.length - 1; i++) {
         const current = route.route[i]!

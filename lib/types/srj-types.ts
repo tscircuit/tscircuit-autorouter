@@ -91,6 +91,7 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number
+  traceThickness?: number // <-- YEH HUMNE NAYA JODHA 🚀
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
