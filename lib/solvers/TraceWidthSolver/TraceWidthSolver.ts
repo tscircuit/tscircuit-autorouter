@@ -7,7 +7,7 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { capTraceWidthToTerminalPads } from "lib/utils/getTerminalPadWidthLimitForRoute"
+import { capTraceWidthToTerminalPads } from "./getTerminalPadWidthLimitForRoute"
 
 const CURSOR_STEP_DISTANCE = 0.1
 

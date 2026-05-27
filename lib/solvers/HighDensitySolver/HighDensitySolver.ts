@@ -3,7 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { capTraceWidthToTerminalPads } from "lib/utils/getTerminalPadWidthLimitForRoute"
+import { capTraceWidthToTerminalPads } from "lib/solvers/TraceWidthSolver/getTerminalPadWidthLimitForRoute"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
