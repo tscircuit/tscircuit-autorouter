@@ -19,6 +19,20 @@ const getNodeOrThrow = (
   return node!
 }
 
+const getUniquePortPointSignature = (node: NodeWithPortPoints) => {
+  const uniquePortPoints = [
+    ...new Map(
+      node.portPoints.map((point) => [point.portPointId, point] as const),
+    ).values(),
+  ]
+
+  return {
+    count: uniquePortPoints.length,
+    connectionNames: uniquePortPoints.map((point) => point.connectionName),
+    portPointIds: uniquePortPoints.map((point) => point.portPointId),
+  }
+}
+
 test(
   "pipeline4 dataset01 circuit102 tracks cmn_159 reduction shape across node-cap and effort settings",
   () => {
@@ -39,12 +53,19 @@ test(
       defaultSolver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const defaultSignature = getUniquePortPointSignature(defaultNode)
 
     expect(defaultMetadata?.status).toBe("solved")
-    expect(defaultNode.portPoints.length).toBe(2)
-    expect(
-      new Set(defaultNode.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(1)
+    expect(defaultMetadata?.solverType).toBe("HighDensitySolverA03")
+    expect(defaultMetadata?.routeCount).toBe(2)
+    expect(defaultSignature.count).toBe(4)
+    expect(new Set(defaultSignature.connectionNames).size).toBe(2)
+    expect(defaultSignature.connectionNames).toEqual([
+      "source_net_3_mst1",
+      "source_net_3_mst1",
+      "source_net_2_mst1",
+      "source_net_2_mst1",
+    ])
 
     getGlobalInMemoryCache().clearCache()
 
@@ -65,23 +86,18 @@ test(
       explicit8mmSolver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const explicit8mmSignature = getUniquePortPointSignature(explicit8mmNode)
 
     expect(explicit8mmMetadata?.status).toBe("solved")
     expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
     expect(explicit8mmMetadata?.routeCount).toBe(2)
-    expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
+    expect(explicit8mmSignature.count).toBe(4)
+    expect(explicit8mmSignature.connectionNames).toEqual(
+      defaultSignature.connectionNames,
     )
-    expect(
-      new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
-        .size,
-    ).toBe(2)
-    expect(
-      explicit8mmNode.portPoints.map((point) => point.connectionName),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.connectionName))
-    expect(
-      explicit8mmNode.portPoints.map((point) => point.portPointId),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.portPointId))
+    expect(explicit8mmSignature.portPointIds).not.toEqual(
+      defaultSignature.portPointIds,
+    )
 
     getGlobalInMemoryCache().clearCache()
 
@@ -100,24 +116,16 @@ test(
       effort2Solver.highDensityNodePortPoints,
       "cmn_159",
     )
+    const effort2Signature = getUniquePortPointSignature(effort2Node)
 
     expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Node.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
+    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA03")
+    expect(effort2Metadata?.routeCount).toBe(2)
+    expect(effort2Signature.count).toBe(4)
+    expect(effort2Signature.connectionNames).toEqual(
+      defaultSignature.connectionNames,
     )
-    expect(
-      new Set(effort2Node.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(2)
-    expect(
-      JSON.stringify(
-        effort2Node.portPoints.map((point) => point.connectionName),
-      ),
-    ).not.toBe(
-      JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
-      ),
-    )
-    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")
+    expect(effort2Signature.portPointIds).toEqual(defaultSignature.portPointIds)
   },
   { timeout: 120_000 },
 )
