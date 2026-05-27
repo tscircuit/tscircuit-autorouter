@@ -7,6 +7,7 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { capTraceWidthToTerminalPads } from "lib/utils/getTerminalPadWidthLimitForRoute"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
@@ -133,6 +134,18 @@ export class TraceWidthSolver extends BaseSolver {
     return undefined
   }
 
+  private capTraceWidthToTerminalPads(
+    route: HighDensityRoute,
+    traceWidth: number,
+  ): number {
+    return capTraceWidthToTerminalPads({
+      route,
+      traceWidth,
+      obstacles: this.obstacles,
+      connMap: this.connMap,
+    })
+  }
+
   _step() {
     // If no current trace, dequeue one
     if (!this.currentTrace) {
@@ -148,7 +161,16 @@ export class TraceWidthSolver extends BaseSolver {
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
       if (nominalTraceWidth === undefined) {
-        this.processedRoutes.push({ ...nextTrace })
+        this.processedRoutes.push({
+          ...nextTrace,
+          traceThickness:
+            nextTrace.traceThickness === undefined
+              ? nextTrace.traceThickness
+              : this.capTraceWidthToTerminalPads(
+                  nextTrace,
+                  nextTrace.traceThickness,
+                ),
+        })
         this.currentTrace = null
         return
       }
@@ -161,7 +183,10 @@ export class TraceWidthSolver extends BaseSolver {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push({
           ...this.currentTrace,
-          traceThickness: this.minTraceWidth,
+          traceThickness: this.capTraceWidthToTerminalPads(
+            this.currentTrace,
+            this.minTraceWidth,
+          ),
         })
         this.currentTrace = null
         return
@@ -444,11 +469,15 @@ export class TraceWidthSolver extends BaseSolver {
    */
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
+    const cappedTraceWidth = this.capTraceWidthToTerminalPads(
+      this.currentTrace,
+      traceWidth,
+    )
 
     const routeWithWidth: HighDensityRoute = {
       connectionName: this.currentTrace.connectionName,
       rootConnectionName: this.currentTrace.rootConnectionName,
-      traceThickness: traceWidth,
+      traceThickness: cappedTraceWidth,
       viaDiameter: this.currentTrace.viaDiameter,
       route: [...this.currentTrace.route],
       vias: [...this.currentTrace.vias],

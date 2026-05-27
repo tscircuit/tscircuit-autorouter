@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { capTraceWidthToTerminalPads } from "lib/utils/getTerminalPadWidthLimitForRoute"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
@@ -268,6 +269,20 @@ export class HighDensitySolver extends BaseSolver {
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
   }
 
+  private capSolvedRoutesToTerminalPads(
+    routes: HighDensityIntraNodeRoute[],
+  ): HighDensityIntraNodeRoute[] {
+    return routes.map((route) => ({
+      ...route,
+      traceThickness: capTraceWidthToTerminalPads({
+        route,
+        traceWidth: route.traceThickness,
+        obstacles: this.obstacles,
+        connMap: this.connMap,
+      }),
+    }))
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -277,7 +292,11 @@ export class HighDensitySolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.routes.push(...this.activeSubSolver.solvedRoutes)
+        this.routes.push(
+          ...this.capSolvedRoutesToTerminalPads(
+            this.activeSubSolver.solvedRoutes,
+          ),
+        )
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
         this.recordSolvedNodeStats(
           this.activeSubSolver,
