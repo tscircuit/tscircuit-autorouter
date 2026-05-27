@@ -62,6 +62,8 @@ export class CapacityMeshNodeSolver extends BaseSolver {
   targetTree: TargetTree
   obstacleTree: ObstacleSpatialHashIndex
   readonly obstacleZLayersByObstacle: WeakMap<Obstacle, number[]>
+  readonly obstacleRootIdByObstacle: WeakMap<Obstacle, string>
+  readonly obstacleIdByObstacle: WeakMap<Obstacle, string>
 
   constructor(
     public srj: SimpleRouteJson,
@@ -100,6 +102,8 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     this.finishedNodes = []
     this.nodeToXYOverlappingObstaclesMap = new Map()
     this.obstacleZLayersByObstacle = new WeakMap()
+    this.obstacleRootIdByObstacle = new WeakMap()
+    this.obstacleIdByObstacle = new WeakMap()
     const normalizedObstacles = createObjectsWithZLayers(
       this.srj.obstacles,
       this.layerCount,
@@ -108,6 +112,16 @@ export class CapacityMeshNodeSolver extends BaseSolver {
       this.obstacleZLayersByObstacle.set(
         obstacle,
         normalizedObstacles[index].zLayers,
+      )
+      this.obstacleIdByObstacle.set(
+        obstacle,
+        obstacle.obstacleId ?? `__obstacle_${index}`,
+      )
+      this.obstacleRootIdByObstacle.set(
+        obstacle,
+        obstacle.parentObstacleId ??
+          obstacle.obstacleId ??
+          `__obstacle_root_${index}`,
       )
     }
     this.obstacleTree = new ObstacleSpatialHashIndex(
@@ -303,6 +317,28 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     }
 
     return xyzOverlappingObstacles
+  }
+
+  protected getObstacleIdentityMetadata(obstacles: Obstacle[]) {
+    const obstacleIds = Array.from(
+      new Set(
+        obstacles.flatMap((obstacle) =>
+          this.obstacleIdByObstacle.get(obstacle)
+            ? [this.obstacleIdByObstacle.get(obstacle)!]
+            : [],
+        ),
+      ),
+    )
+    const obstacleRootIds = Array.from(
+      new Set(
+        obstacles.flatMap((obstacle) => {
+          const rootId = this.obstacleRootIdByObstacle.get(obstacle)
+          return typeof rootId === "string" ? [rootId] : []
+        }),
+      ),
+    )
+
+    return { obstacleIds, obstacleRootIds }
   }
 
   /**

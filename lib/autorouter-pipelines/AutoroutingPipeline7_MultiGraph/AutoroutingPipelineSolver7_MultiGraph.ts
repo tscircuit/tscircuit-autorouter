@@ -39,6 +39,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { annotateObstacleMetadataOnCapacityNodes } from "lib/utils/annotateObstacleMetadataOnCapacityNodes"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -303,7 +304,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const plannerOutput = cms.topologyPlanningSolver!.getOutput()
-          cms.capacityNodes = plannerOutput.mergedMeshNodes
+          cms.capacityNodes = annotateObstacleMetadataOnCapacityNodes({
+            nodes: plannerOutput.mergedMeshNodes,
+            obstacles: cms.srjWithPointPairs?.obstacles ?? cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+          })
         },
       },
     ),

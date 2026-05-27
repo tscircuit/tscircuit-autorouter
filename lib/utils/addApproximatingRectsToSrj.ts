@@ -364,12 +364,31 @@ const getRotatedObstacleApproximationRectCount = (
   )
 }
 
-const convertObstacleToOldFormat = (
-  obstacle: Obstacle,
-  obstacleIndex: number,
-  srj: SimpleRouteJson,
-  opts: { useSparseCenterlineApproximation?: boolean } = {},
-): Obstacle[] => {
+/**
+ * Converts one obstacle into the axis-aligned representation expected by older
+ * routing stages.
+ *
+ * @param params.obstacle Obstacle to normalize or approximate.
+ * @param params.obstacleIndex Source index used only when synthesizing a
+ * stable parent obstacle id for connected obstacles without one.
+ * @param params.srj Route input used to preserve connectivity on the best
+ * approximation rectangle.
+ * @param params.useSparseCenterlineApproximation When `true`, connected rotated
+ * obstacles use a coarser approximation to reduce obstacle count.
+ * @returns One obstacle when the input is already axis-aligned, otherwise the
+ * approximating rectangles that replace it.
+ * @caution Child approximation rectangles clear `connectedTo` unless they are
+ * selected as the anchor rectangle. Use `parentObstacleId` to relate siblings
+ * back to the same source obstacle.
+ */
+const convertObstacleToOldFormat = (params: {
+  obstacle: Obstacle
+  obstacleIndex: number
+  srj: SimpleRouteJson
+  useSparseCenterlineApproximation?: boolean
+}): Obstacle[] => {
+  const { obstacle, obstacleIndex, srj, useSparseCenterlineApproximation } =
+    params
   const rotationDegrees = obstacle.ccwRotationDegrees
 
   if (
@@ -395,7 +414,7 @@ const convertObstacleToOldFormat = (
     rotation: rotationDegrees,
   }
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
-  const rects = opts.useSparseCenterlineApproximation
+  const rects = useSparseCenterlineApproximation
     ? generateSparseCenterlineApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
@@ -439,6 +458,15 @@ const convertObstacleToOldFormat = (
   }))
 }
 
+/**
+ * Replaces rotated SRJ obstacles with axis-aligned approximating rectangles.
+ *
+ * @param srj SimpleRouteJson input to normalize for later routing stages.
+ * @returns A cloned SRJ object whose `obstacles` list contains only
+ * axis-aligned rectangles.
+ * @remarks When multiple approximations collapse to the same bounds, their
+ * connectivity is merged to keep the obstacle list compact.
+ */
 export const addApproximatingRectsToSrj = (
   srj: SimpleRouteJson,
 ): SimpleRouteJson => {
@@ -454,37 +482,38 @@ export const addApproximatingRectsToSrj = (
     connectedRotatedObstacleCount > MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
-    const convertedObstacle = convertObstacleToOldFormat(
+    const convertedObstacles = convertObstacleToOldFormat({
       obstacle,
       obstacleIndex,
       srj,
-      {
-        useSparseCenterlineApproximation:
-          useSparseCenterlineApproximation &&
-          obstacle.connectedTo.length > 0 &&
-          !obstacle.obstacleId?.startsWith("trace_obstacle_"),
-      },
-    )
-    for (const converted of convertedObstacle) {
+      useSparseCenterlineApproximation:
+        useSparseCenterlineApproximation &&
+        obstacle.connectedTo.length > 0 &&
+        !obstacle.obstacleId?.startsWith("trace_obstacle_"),
+    })
+    for (const convertedObstacle of convertedObstacles) {
       const key = [
-        converted.center.x.toFixed(6),
-        converted.center.y.toFixed(6),
-        converted.width.toFixed(6),
-        converted.height.toFixed(6),
-        converted.layers.join(","),
+        convertedObstacle.center.x.toFixed(6),
+        convertedObstacle.center.y.toFixed(6),
+        convertedObstacle.width.toFixed(6),
+        convertedObstacle.height.toFixed(6),
+        convertedObstacle.layers.join(","),
       ].join(":")
       const existingObstacle = obstaclesByRect.get(key)
 
       if (!existingObstacle) {
-        obstaclesByRect.set(key, converted)
+        obstaclesByRect.set(key, convertedObstacle)
         continue
       }
 
       existingObstacle.connectedTo = [
-        ...new Set([...existingObstacle.connectedTo, ...converted.connectedTo]),
+        ...new Set([
+          ...existingObstacle.connectedTo,
+          ...convertedObstacle.connectedTo,
+        ]),
       ]
       existingObstacle.parentObstacleId =
-        existingObstacle.parentObstacleId ?? converted.parentObstacleId
+        existingObstacle.parentObstacleId ?? convertedObstacle.parentObstacleId
     }
   }
 

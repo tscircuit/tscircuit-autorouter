@@ -35,6 +35,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { annotateObstacleMetadataOnCapacityNodes } from "lib/utils/annotateObstacleMetadataOnCapacityNodes"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -195,7 +196,11 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! as any }],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
+          cms.capacityNodes = annotateObstacleMetadataOnCapacityNodes({
+            nodes: cms.nodeSolver?.getOutput().meshNodes ?? [],
+            obstacles: cms.srjWithPointPairs?.obstacles ?? cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+          })
         },
       },
     ),

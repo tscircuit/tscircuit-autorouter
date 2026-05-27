@@ -178,10 +178,18 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
     }
 
     const overlappingObstacles = this.getXYZOverlappingObstacles(childNode)
+    const { obstacleIds, obstacleRootIds } =
+      this.getObstacleIdentityMetadata(overlappingObstacles)
 
     childNode._containsObstacle =
       overlappingObstacles.length > 0 ||
       this.isNodePartiallyOutsideBounds(childNode)
+    if (obstacleIds.length > 0) {
+      childNode._obstacleIds = obstacleIds
+    }
+    if (obstacleRootIds.length > 0) {
+      childNode._obstacleRootIds = obstacleRootIds
+    }
 
     const target = this.getTargetIfNodeContainsTarget(childNode)
 
