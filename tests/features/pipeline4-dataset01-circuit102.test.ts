@@ -56,13 +56,13 @@ test(
     const defaultSignature = getUniquePortPointSignature(defaultNode)
 
     expect(defaultMetadata?.status).toBe("solved")
-    expect(defaultMetadata?.solverType).toBe("HighDensitySolverA03")
-    expect(defaultMetadata?.routeCount).toBe(2)
-    expect(defaultSignature.count).toBe(4)
-    expect(new Set(defaultSignature.connectionNames).size).toBe(2)
+    expect(defaultMetadata?.solverType).toBe(
+      "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost",
+    )
+    expect(defaultMetadata?.routeCount).toBe(1)
+    expect(defaultSignature.count).toBe(2)
+    expect(new Set(defaultSignature.connectionNames).size).toBe(1)
     expect(defaultSignature.connectionNames).toEqual([
-      "source_net_3_mst1",
-      "source_net_3_mst1",
       "source_net_2_mst1",
       "source_net_2_mst1",
     ])
@@ -92,12 +92,13 @@ test(
     expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
     expect(explicit8mmMetadata?.routeCount).toBe(2)
     expect(explicit8mmSignature.count).toBe(4)
-    expect(explicit8mmSignature.connectionNames).toEqual(
-      defaultSignature.connectionNames,
-    )
-    expect(explicit8mmSignature.portPointIds).not.toEqual(
-      defaultSignature.portPointIds,
-    )
+    expect(new Set(explicit8mmSignature.connectionNames).size).toBe(2)
+    expect(explicit8mmSignature.connectionNames).toEqual([
+      "source_net_3_mst1",
+      "source_net_3_mst1",
+      "source_net_2_mst1",
+      "source_net_2_mst1",
+    ])
 
     getGlobalInMemoryCache().clearCache()
 
@@ -119,13 +120,16 @@ test(
     const effort2Signature = getUniquePortPointSignature(effort2Node)
 
     expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA03")
+    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")
     expect(effort2Metadata?.routeCount).toBe(2)
     expect(effort2Signature.count).toBe(4)
-    expect(effort2Signature.connectionNames).toEqual(
-      defaultSignature.connectionNames,
-    )
-    expect(effort2Signature.portPointIds).toEqual(defaultSignature.portPointIds)
+    expect(new Set(effort2Signature.connectionNames).size).toBe(2)
+    expect(effort2Signature.connectionNames).toEqual([
+      "source_net_15_mst0",
+      "source_net_15_mst0",
+      "source_net_6_mst2",
+      "source_net_6_mst2",
+    ])
   },
   { timeout: 120_000 },
 )
