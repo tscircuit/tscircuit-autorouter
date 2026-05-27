@@ -68,6 +68,8 @@ export interface SimpleRouteJson {
 
 export interface Obstacle {
   obstacleId?: string
+  /** Links approximated child obstacles back to their anchor obstacle. */
+  parentObstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
   type: "rect"

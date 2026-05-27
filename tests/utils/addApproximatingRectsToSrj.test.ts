@@ -120,4 +120,125 @@ test("addApproximatingRectsToSrj only keeps connectivity on one approximating re
   expect(
     converted.obstacles.filter((o) => o.obstacleId === "connected_rotated_pad"),
   ).toHaveLength(1)
+  expect(
+    converted.obstacles.filter(
+      (o) => o.parentObstacleId === "connected_rotated_pad",
+    ),
+  ).toHaveLength(converted.obstacles.length - 1)
+})
+
+test("addApproximatingRectsToSrj promotes the endpoint-containing child to the parent obstacle", () => {
+  const approximatingRects = generateApproximatingRects(
+    {
+      center: { x: 0, y: 0 },
+      width: 6,
+      height: 0.2,
+      rotation: 135,
+    },
+    8,
+  )
+  const targetRect = approximatingRects[approximatingRects.length - 1]!
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    minViaDiameter: 0.3,
+    bounds: { minX: -10, minY: -10, maxX: 10, maxY: 10 },
+    obstacles: [
+      {
+        obstacleId: "trace_obstacle_connected",
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 6,
+        height: 0.2,
+        ccwRotationDegrees: 135,
+        connectedTo: ["net_a"],
+      },
+    ],
+    connections: [
+      {
+        name: "net_a",
+        pointsToConnect: [
+          {
+            x: targetRect.center.x,
+            y: targetRect.center.y,
+            layer: "top",
+          },
+          {
+            x: -4,
+            y: -4,
+            layer: "top",
+          },
+        ],
+      },
+    ],
+  }
+
+  const converted = addApproximatingRectsToSrj(srj)
+  const parentObstacle = converted.obstacles.find(
+    (obstacle) => obstacle.obstacleId === "trace_obstacle_connected",
+  )
+
+  expect(parentObstacle).toBeDefined()
+  expect(parentObstacle?.center.x).toBeCloseTo(targetRect.center.x)
+  expect(parentObstacle?.center.y).toBeCloseTo(targetRect.center.y)
+  expect(parentObstacle?.connectedTo).toEqual(["net_a"])
+  expect(
+    converted.obstacles.some(
+      (obstacle) =>
+        obstacle.parentObstacleId === "trace_obstacle_connected" &&
+        obstacle.connectedTo.length === 0,
+    ),
+  ).toBe(true)
+})
+
+test("addApproximatingRectsToSrj synthesizes a parent obstacle id for connected rotated obstacles without ids", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    minViaDiameter: 0.3,
+    bounds: { minX: -10, minY: -10, maxX: 10, maxY: 10 },
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 3.2,
+        height: 1.25,
+        ccwRotationDegrees: 45,
+        connectedTo: ["source_trace_0", "pcb_port_0"],
+      },
+    ],
+    connections: [
+      {
+        name: "source_trace_0",
+        pointsToConnect: [
+          {
+            x: 0.25,
+            y: 0.25,
+            layer: "top",
+            pointId: "pcb_port_0",
+            pcb_port_id: "pcb_port_0",
+          },
+          {
+            x: 3,
+            y: 3,
+            layer: "top",
+          },
+        ],
+      },
+    ],
+  }
+
+  const converted = addApproximatingRectsToSrj(srj)
+  const parentObstacle = converted.obstacles.find(
+    (obstacle) => obstacle.connectedTo.length > 0,
+  )
+
+  expect(parentObstacle?.obstacleId).toBe("connected_obstacle_0")
+  expect(
+    converted.obstacles.some(
+      (obstacle) => obstacle.parentObstacleId === "connected_obstacle_0",
+    ),
+  ).toBe(true)
 })
