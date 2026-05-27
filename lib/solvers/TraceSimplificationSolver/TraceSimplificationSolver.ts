@@ -83,6 +83,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly iterations?: number
     },
   ) {
     super()
@@ -95,6 +96,10 @@ export class TraceSimplificationSolver extends BaseSolver {
     }
     this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
+    )
+    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.max(
+      0,
+      Math.floor(simplificationConfig.iterations ?? 2),
     )
     this.MAX_ITERATIONS = 100e6
   }

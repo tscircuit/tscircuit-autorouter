@@ -111,6 +111,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const MAX_DUPLICATE_CONGESTED_PORT_ROUTE_PORT_PRODUCT = 1_000_000
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -737,28 +738,37 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
     const serializedGraph = buildSerializedTinyGraph(params)
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-      serializedGraph,
-      {
-        duplicatePortProximity: 0.05,
-        routeSolveOptions: {
-          ...getTinyViaSizeOptions(params.minViaPadDiameter),
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-          GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
-          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-          STATIC_REACHABILITY_PRECHECK: false,
-        },
-      },
-    )
-    duplicateCongestedPortSolver.solve()
     let graphForTiny = serializedGraph
-    if (duplicateCongestedPortSolver.failed) {
-      this.duplicateCongestedPortError =
-        duplicateCongestedPortSolver.error ?? "unknown error"
-    } else {
-      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-      graphForTiny = duplicateCongestedPortSolver.getOutput()
+    const duplicateRoutePortProduct =
+      params.connections.length * serializedGraph.ports.length
+    if (
+      duplicateRoutePortProduct <=
+      MAX_DUPLICATE_CONGESTED_PORT_ROUTE_PORT_PRODUCT
+    ) {
+      const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+        serializedGraph,
+        {
+          duplicatePortProximity: 0.05,
+          routeSolveOptions: {
+            ...getTinyViaSizeOptions(params.minViaPadDiameter),
+            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+            GREEDY_FINAL_ROUTE_ITERS: 4,
+            MAX_ITERATIONS: Math.ceil(
+              2_000_000 * getEffortScale(params.effort),
+            ),
+            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+            STATIC_REACHABILITY_PRECHECK: true,
+          },
+        },
+      )
+      duplicateCongestedPortSolver.solve()
+      if (duplicateCongestedPortSolver.failed) {
+        this.duplicateCongestedPortError =
+          duplicateCongestedPortSolver.error ?? "unknown error"
+      } else {
+        this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+        graphForTiny = duplicateCongestedPortSolver.getOutput()
+      }
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(

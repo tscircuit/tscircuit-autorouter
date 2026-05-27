@@ -162,15 +162,14 @@ export function buildHyperGraph(params: {
       ports: [],
     })
   }
+  const regionById = new Map(
+    graph.regions.map((region) => [region.regionId, region]),
+  )
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-    const region1 = graph.regions.find(
-      (region) => region.regionId === region1Id,
-    )
-    const region2 = graph.regions.find(
-      (region) => region.regionId === region2Id,
-    )
+    const region1 = regionById.get(region1Id)
+    const region2 = regionById.get(region2Id)
 
     assertDefined(
       region1,

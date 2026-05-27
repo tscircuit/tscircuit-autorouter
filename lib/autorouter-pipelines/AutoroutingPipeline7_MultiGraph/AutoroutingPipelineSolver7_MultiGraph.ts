@@ -548,7 +548,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          iterations: 2,
+          iterations:
+            cms.highDensityStitchSolver!.mergedHdRoutes.length > 150 ? 1 : 2,
         },
       ],
     ),
