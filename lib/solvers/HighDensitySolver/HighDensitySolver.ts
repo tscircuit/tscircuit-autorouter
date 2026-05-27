@@ -3,7 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { capTraceWidthToTerminalPads } from "lib/solvers/TraceWidthSolver/getTerminalPadWidthLimitForRoute"
+import { capMinTraceWidthToTerminalPadDimension } from "lib/solvers/TraceWidthSolver/capMinTraceWidthToTerminalPadDimension"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
@@ -274,7 +274,7 @@ export class HighDensitySolver extends BaseSolver {
   ): HighDensityIntraNodeRoute[] {
     return routes.map((route) => ({
       ...route,
-      traceThickness: capTraceWidthToTerminalPads({
+      traceThickness: capMinTraceWidthToTerminalPadDimension({
         route,
         traceWidth: route.traceThickness,
         obstacles: this.obstacles,

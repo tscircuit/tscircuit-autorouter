@@ -7,7 +7,7 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { capTraceWidthToTerminalPads } from "./getTerminalPadWidthLimitForRoute"
+import { capMinTraceWidthToTerminalPadDimension } from "./capMinTraceWidthToTerminalPadDimension"
 
 const CURSOR_STEP_DISTANCE = 0.1
 
@@ -134,11 +134,11 @@ export class TraceWidthSolver extends BaseSolver {
     return undefined
   }
 
-  private capTraceWidthToTerminalPads(
+  private capMinTraceWidthToTerminalPadDimension(
     route: HighDensityRoute,
     traceWidth: number,
   ): number {
-    return capTraceWidthToTerminalPads({
+    return capMinTraceWidthToTerminalPadDimension({
       route,
       traceWidth,
       obstacles: this.obstacles,
@@ -166,7 +166,7 @@ export class TraceWidthSolver extends BaseSolver {
           traceThickness:
             nextTrace.traceThickness === undefined
               ? nextTrace.traceThickness
-              : this.capTraceWidthToTerminalPads(
+              : this.capMinTraceWidthToTerminalPadDimension(
                   nextTrace,
                   nextTrace.traceThickness,
                 ),
@@ -183,7 +183,7 @@ export class TraceWidthSolver extends BaseSolver {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push({
           ...this.currentTrace,
-          traceThickness: this.capTraceWidthToTerminalPads(
+          traceThickness: this.capMinTraceWidthToTerminalPadDimension(
             this.currentTrace,
             this.minTraceWidth,
           ),
@@ -469,7 +469,7 @@ export class TraceWidthSolver extends BaseSolver {
    */
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
-    const cappedTraceWidth = this.capTraceWidthToTerminalPads(
+    const cappedTraceWidth = this.capMinTraceWidthToTerminalPadDimension(
       this.currentTrace,
       traceWidth,
     )

@@ -68,7 +68,7 @@ export const getTerminalPadWidthLimitForRoute = ({
   return Number.isFinite(widthLimit) ? widthLimit : undefined
 }
 
-export const capTraceWidthToTerminalPads = ({
+export const capMinTraceWidthToTerminalPadDimension = ({
   route,
   traceWidth,
   obstacles,
