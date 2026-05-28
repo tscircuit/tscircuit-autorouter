@@ -76,6 +76,12 @@ const pointMatches = (
   tolerance = GEOMETRIC_TOLERANCE,
 ) => distance(a, b) <= tolerance
 
+// A pour is rasterised into many obstacle cells sharing the same layer + net;
+// key by (layer, net) so every cell of one pour groups into a single escape-via
+// target instead of one target per raster cell.
+const getPourKey = (pour: Obstacle) =>
+  `${pour.layers[0]}:${[...new Set(pour.connectedTo)].sort().join(",")}`
+
 export class EscapeViaLocationSolver extends BaseSolver {
   override getSolverName(): string {
     return "EscapeViaLocationSolver"
@@ -737,10 +743,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-      // A pour is rasterised into many obstacle cells sharing the same layer +
-      // net; key by (layer, net) so every cell of one pour groups into a single
-      // escape-via target instead of one target per raster cell.
-      const targetPourKey = `${targetLayer}:${[...new Set(copperPour.connectedTo)].sort().join(",")}`
+      const targetPourKey = getPourKey(copperPour)
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
