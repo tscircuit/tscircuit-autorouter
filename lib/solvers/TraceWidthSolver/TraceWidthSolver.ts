@@ -33,6 +33,10 @@ type TerminalPadLimit = {
   width: number
   neckDistance: number
 }
+type TaperRoutePointEntry = {
+  distanceFromStart: number
+  originalPointIndex?: number
+}
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
@@ -690,25 +694,27 @@ export class TraceWidthSolver extends BaseSolver {
       Math.max(traceWidth * 2, MIN_TERMINAL_TAPER_DISTANCE),
       totalDistance / 2,
     )
-    const insertionDistances = new Set<number>()
-
-    for (const distance of distances) {
-      insertionDistances.add(distance)
-    }
+    const routePointEntries: TaperRoutePointEntry[] = distances.map(
+      (distanceFromStart, originalPointIndex) => ({
+        distanceFromStart,
+        originalPointIndex,
+      }),
+    )
+    const insertionDistances: number[] = []
 
     if (startLimit !== undefined) {
-      insertionDistances.add(startLimit.neckDistance)
+      insertionDistances.push(startLimit.neckDistance)
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
-        insertionDistances.add(
+        insertionDistances.push(
           (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
         )
       }
     }
 
     if (endLimit !== undefined) {
-      insertionDistances.add(totalDistance - endLimit.neckDistance)
+      insertionDistances.push(totalDistance - endLimit.neckDistance)
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
-        insertionDistances.add(
+        insertionDistances.push(
           totalDistance -
             taperDistance +
             (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
@@ -716,35 +722,36 @@ export class TraceWidthSolver extends BaseSolver {
       }
     }
 
-    const sortedDistances = [...insertionDistances]
-      .map((distance) => Math.max(0, Math.min(totalDistance, distance)))
-      .sort((a, b) => a - b)
-
-    const dedupedDistances: number[] = []
-    for (const distance of sortedDistances) {
-      const previous = dedupedDistances[dedupedDistances.length - 1]
-      if (
-        previous === undefined ||
-        Math.abs(distance - previous) > COORDINATE_EPSILON
-      ) {
-        dedupedDistances.push(distance)
+    for (const rawDistance of insertionDistances) {
+      const distanceFromStart = Math.max(
+        0,
+        Math.min(totalDistance, rawDistance),
+      )
+      const hasExistingEntry = routePointEntries.some(
+        (entry) =>
+          Math.abs(entry.distanceFromStart - distanceFromStart) <=
+          COORDINATE_EPSILON,
+      )
+      if (!hasExistingEntry) {
+        routePointEntries.push({ distanceFromStart })
       }
     }
 
-    return dedupedDistances.map((distanceFromStart) => {
-      let originalPointIndex = -1
-      for (let index = 0; index < distances.length; index++) {
-        if (
-          Math.abs(distances[index]! - distanceFromStart) > COORDINATE_EPSILON
-        ) {
-          continue
-        }
-        originalPointIndex = index
-        if (distanceFromStart <= COORDINATE_EPSILON) break
+    routePointEntries.sort((a, b) => {
+      const distanceDelta = a.distanceFromStart - b.distanceFromStart
+      if (Math.abs(distanceDelta) > COORDINATE_EPSILON) {
+        return distanceDelta
       }
+      return (
+        (a.originalPointIndex ?? Infinity) - (b.originalPointIndex ?? Infinity)
+      )
+    })
+
+    return routePointEntries.map((entry) => {
+      const { distanceFromStart } = entry
       const point =
-        originalPointIndex >= 0
-          ? { ...route.route[originalPointIndex]! }
+        entry.originalPointIndex !== undefined
+          ? { ...route.route[entry.originalPointIndex]! }
           : this.interpolateRoutePointAtDistance(
               route.route,
               distances,
