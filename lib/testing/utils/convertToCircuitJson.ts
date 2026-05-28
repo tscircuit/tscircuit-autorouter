@@ -90,7 +90,7 @@ function convertHdRouteToCircuitJsonTraces(
             route_type: "wire",
             x: point.x,
             y: point.y,
-            width,
+            width: point.traceThickness ?? width,
             layer: mapZToLayerName(point.z, 2),
             ...(isFirstPoint && (point as any).pcb_port_id
               ? { start_pcb_port_id: (point as any).pcb_port_id }
@@ -163,7 +163,7 @@ function convertHdRouteToCircuitJsonTraces(
               route_type: "wire",
               x: point.x,
               y: point.y,
-              width,
+              width: point.traceThickness ?? width,
               layer: mapZToLayerName(point.z, 2),
               ...(isFirstPoint && (point as any).pcb_port_id
                 ? { start_pcb_port_id: (point as any).pcb_port_id }
@@ -194,7 +194,7 @@ function convertHdRouteToCircuitJsonTraces(
             route_type: "wire",
             x: point.x,
             y: point.y,
-            width,
+            width: point.traceThickness ?? width,
             layer: mapZToLayerName(point.z, 2),
             ...(isLastPoint && (point as any).pcb_port_id
               ? { end_pcb_port_id: (point as any).pcb_port_id }

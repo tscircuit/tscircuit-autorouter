@@ -1,4 +1,9 @@
 import { BaseSolver } from "../BaseSolver"
+import {
+  distance,
+  getUnitVectorFromPointAToB,
+  pointToBoxDistance,
+} from "@tscircuit/math-utils"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -7,8 +12,12 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 
 const CURSOR_STEP_DISTANCE = 0.1
+const MIN_TERMINAL_TAPER_DISTANCE = 0.75
+const TERMINAL_TAPER_SEGMENT_COUNT = 8
+const COORDINATE_EPSILON = 1e-9
 
 interface Point2D {
   x: number
@@ -17,6 +26,12 @@ interface Point2D {
 
 interface Point3D extends Point2D {
   z: number
+}
+
+type RoutePoint = HighDensityRoute["route"][number]
+type TerminalPadLimit = {
+  width: number
+  neckDistance: number
 }
 
 export interface TraceWidthSolverInput {
@@ -148,7 +163,10 @@ export class TraceWidthSolver extends BaseSolver {
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
       if (nominalTraceWidth === undefined) {
-        this.processedRoutes.push({ ...nextTrace })
+        const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
+        this.processedRoutes.push(
+          this.createRouteWithWidth(nextTrace, traceWidth),
+        )
         this.currentTrace = null
         return
       }
@@ -159,10 +177,9 @@ export class TraceWidthSolver extends BaseSolver {
       this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
-        this.processedRoutes.push({
-          ...this.currentTrace,
-          traceThickness: this.minTraceWidth,
-        })
+        this.processedRoutes.push(
+          this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
+        )
         this.currentTrace = null
         return
       }
@@ -439,22 +456,339 @@ export class TraceWidthSolver extends BaseSolver {
     return minClearance
   }
 
+  private isObstacleOnPointLayer(obstacle: Obstacle, point: Point3D): boolean {
+    return !obstacle.zLayers || obstacle.zLayers.includes(point.z)
+  }
+
+  private getAdjacentNonCoincidentRoutePoint(
+    route: HighDensityRoute,
+    endpointIndex: number,
+  ): RoutePoint | undefined {
+    const endpoint = route.route[endpointIndex]
+    if (!endpoint) return undefined
+
+    const step = endpointIndex === 0 ? 1 : -1
+    for (
+      let index = endpointIndex + step;
+      index >= 0 && index < route.route.length;
+      index += step
+    ) {
+      const candidate = route.route[index]!
+      if (distance(candidate, endpoint) > COORDINATE_EPSILON) {
+        return candidate
+      }
+    }
+
+    return undefined
+  }
+
+  private getObstacleWidthAlongVector(
+    obstacle: Obstacle,
+    vector: Point2D,
+  ): number {
+    const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+    const cos = Math.cos(rotationRadians)
+    const sin = Math.sin(rotationRadians)
+    const widthAxis = { x: cos, y: sin }
+    const heightAxis = { x: -sin, y: cos }
+
+    return (
+      Math.abs(vector.x * widthAxis.x + vector.y * widthAxis.y) *
+        obstacle.width +
+      Math.abs(vector.x * heightAxis.x + vector.y * heightAxis.y) *
+        obstacle.height
+    )
+  }
+
+  private getTerminalPadWidthLimit(
+    route: HighDensityRoute,
+    endpointIndex: number,
+    traceWidth: number,
+  ): TerminalPadLimit | undefined {
+    const endpoint = route.route[endpointIndex]
+    if (!endpoint) return undefined
+
+    const adjacent = this.getAdjacentNonCoincidentRoutePoint(
+      route,
+      endpointIndex,
+    )
+    if (!adjacent) return undefined
+
+    const tangent =
+      endpointIndex === 0
+        ? getUnitVectorFromPointAToB(endpoint, adjacent)
+        : getUnitVectorFromPointAToB(adjacent, endpoint)
+
+    if (distance(tangent, { x: 0, y: 0 }) <= COORDINATE_EPSILON) {
+      return undefined
+    }
+
+    const normal = { x: -tangent.y, y: tangent.x }
+    let narrowestLimit: TerminalPadLimit | undefined
+
+    for (const obstacle of this.obstacles) {
+      if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
+      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+      if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
+
+      const limit = this.getObstacleWidthAlongVector(obstacle, normal)
+      if (limit <= COORDINATE_EPSILON) continue
+
+      const neckDistance =
+        this.getObstacleWidthAlongVector(obstacle, tangent) / 2
+      if (
+        !narrowestLimit ||
+        limit < narrowestLimit.width ||
+        (Math.abs(limit - narrowestLimit.width) <= COORDINATE_EPSILON &&
+          neckDistance > narrowestLimit.neckDistance)
+      ) {
+        narrowestLimit = { width: limit, neckDistance }
+      }
+    }
+
+    if (!narrowestLimit) return undefined
+    if (narrowestLimit.width >= traceWidth - COORDINATE_EPSILON) {
+      return undefined
+    }
+
+    return narrowestLimit
+  }
+
+  private getRouteDistanceInfo(route: RoutePoint[]) {
+    const distances: number[] = [0]
+    let totalDistance = 0
+
+    for (let index = 1; index < route.length; index++) {
+      const previous = route[index - 1]!
+      const current = route[index]!
+      totalDistance += distance(current, previous)
+      distances.push(totalDistance)
+    }
+
+    return { distances, totalDistance }
+  }
+
+  private interpolateRoutePointAtDistance(
+    route: RoutePoint[],
+    distances: number[],
+    distanceFromStart: number,
+  ): RoutePoint {
+    for (let index = 1; index < route.length; index++) {
+      const segmentStartDistance = distances[index - 1]!
+      const segmentEndDistance = distances[index]!
+      const segmentLength = segmentEndDistance - segmentStartDistance
+
+      if (distanceFromStart > segmentEndDistance + COORDINATE_EPSILON) {
+        continue
+      }
+
+      const start = route[index - 1]!
+      const end = route[index]!
+      if (segmentLength <= COORDINATE_EPSILON) {
+        return { ...end }
+      }
+
+      const t = Math.max(
+        0,
+        Math.min(1, (distanceFromStart - segmentStartDistance) / segmentLength),
+      )
+
+      return {
+        x: start.x + (end.x - start.x) * t,
+        y: start.y + (end.y - start.y) * t,
+        z: start.z,
+      }
+    }
+
+    return { ...route[route.length - 1]! }
+  }
+
+  private getTaperWidthAtDistance({
+    distanceFromStart,
+    totalDistance,
+    startLimit,
+    endLimit,
+    taperDistance,
+    traceWidth,
+  }: {
+    distanceFromStart: number
+    totalDistance: number
+    startLimit?: TerminalPadLimit
+    endLimit?: TerminalPadLimit
+    taperDistance: number
+    traceWidth: number
+  }): number {
+    let width = traceWidth
+
+    if (startLimit !== undefined && distanceFromStart <= taperDistance) {
+      const neckDistance = Math.min(startLimit.neckDistance, taperDistance)
+      if (distanceFromStart <= neckDistance) {
+        width = Math.min(width, startLimit.width)
+      } else {
+        const t =
+          (distanceFromStart - neckDistance) /
+          Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
+        width = Math.min(
+          width,
+          startLimit.width + (traceWidth - startLimit.width) * t,
+        )
+      }
+    }
+
+    if (endLimit !== undefined) {
+      const distanceFromEnd = totalDistance - distanceFromStart
+      if (distanceFromEnd <= taperDistance) {
+        const neckDistance = Math.min(endLimit.neckDistance, taperDistance)
+        if (distanceFromEnd <= neckDistance) {
+          width = Math.min(width, endLimit.width)
+        } else {
+          const t =
+            (distanceFromEnd - neckDistance) /
+            Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
+          width = Math.min(
+            width,
+            endLimit.width + (traceWidth - endLimit.width) * t,
+          )
+        }
+      }
+    }
+
+    return width
+  }
+
+  private createTerminalTaperedRoute(
+    route: HighDensityRoute,
+    traceWidth: number,
+  ): RoutePoint[] {
+    if (route.route.length < 2) {
+      return route.route.map((point) => ({
+        ...point,
+        traceThickness: point.traceThickness ?? traceWidth,
+      }))
+    }
+
+    const startLimit = this.getTerminalPadWidthLimit(route, 0, traceWidth)
+    const endLimit = this.getTerminalPadWidthLimit(
+      route,
+      route.route.length - 1,
+      traceWidth,
+    )
+
+    const { distances, totalDistance } = this.getRouteDistanceInfo(route.route)
+    if (totalDistance <= COORDINATE_EPSILON) {
+      const terminalLimit = Math.min(
+        startLimit?.width ?? traceWidth,
+        endLimit?.width ?? traceWidth,
+      )
+      return route.route.map((point) => ({
+        ...point,
+        traceThickness: terminalLimit,
+      }))
+    }
+
+    const taperDistance = Math.min(
+      Math.max(traceWidth * 2, MIN_TERMINAL_TAPER_DISTANCE),
+      totalDistance / 2,
+    )
+    const insertionDistances = new Set<number>()
+
+    for (const distance of distances) {
+      insertionDistances.add(distance)
+    }
+
+    if (startLimit !== undefined) {
+      insertionDistances.add(startLimit.neckDistance)
+      for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
+        insertionDistances.add(
+          (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
+        )
+      }
+    }
+
+    if (endLimit !== undefined) {
+      insertionDistances.add(totalDistance - endLimit.neckDistance)
+      for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
+        insertionDistances.add(
+          totalDistance -
+            taperDistance +
+            (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
+        )
+      }
+    }
+
+    const sortedDistances = [...insertionDistances]
+      .map((distance) => Math.max(0, Math.min(totalDistance, distance)))
+      .sort((a, b) => a - b)
+
+    const dedupedDistances: number[] = []
+    for (const distance of sortedDistances) {
+      const previous = dedupedDistances[dedupedDistances.length - 1]
+      if (
+        previous === undefined ||
+        Math.abs(distance - previous) > COORDINATE_EPSILON
+      ) {
+        dedupedDistances.push(distance)
+      }
+    }
+
+    return dedupedDistances.map((distanceFromStart) => {
+      let originalPointIndex = -1
+      for (let index = 0; index < distances.length; index++) {
+        if (
+          Math.abs(distances[index]! - distanceFromStart) > COORDINATE_EPSILON
+        ) {
+          continue
+        }
+        originalPointIndex = index
+        if (distanceFromStart <= COORDINATE_EPSILON) break
+      }
+      const point =
+        originalPointIndex >= 0
+          ? { ...route.route[originalPointIndex]! }
+          : this.interpolateRoutePointAtDistance(
+              route.route,
+              distances,
+              distanceFromStart,
+            )
+
+      point.traceThickness = this.getTaperWidthAtDistance({
+        distanceFromStart,
+        totalDistance,
+        startLimit,
+        endLimit,
+        taperDistance,
+        traceWidth,
+      })
+
+      return point
+    })
+  }
+
+  private createRouteWithWidth(
+    route: HighDensityRoute,
+    traceWidth: number,
+  ): HighDensityRoute {
+    return {
+      connectionName: route.connectionName,
+      rootConnectionName: route.rootConnectionName,
+      traceThickness: traceWidth,
+      viaDiameter: route.viaDiameter,
+      route: this.createTerminalTaperedRoute(route, traceWidth),
+      vias: [...route.vias],
+      jumpers: route.jumpers,
+    }
+  }
+
   /**
    * Finalizes the current trace with the given width
    */
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
 
-    const routeWithWidth: HighDensityRoute = {
-      connectionName: this.currentTrace.connectionName,
-      rootConnectionName: this.currentTrace.rootConnectionName,
-      traceThickness: traceWidth,
-      viaDiameter: this.currentTrace.viaDiameter,
-      route: [...this.currentTrace.route],
-      vias: [...this.currentTrace.vias],
-      // Preserve jumpers from original route
-      jumpers: this.currentTrace.jumpers,
-    }
+    const routeWithWidth = this.createRouteWithWidth(
+      this.currentTrace,
+      traceWidth,
+    )
 
     this.processedRoutes.push(routeWithWidth)
     this.currentTrace = null
@@ -548,8 +882,10 @@ export class TraceWidthSolver extends BaseSolver {
               { x: next.x, y: next.y },
             ],
             strokeColor,
-            strokeWidth: route.traceThickness,
-            label: `${route.connectionName} (w=${route.traceThickness.toFixed(2)})`,
+            strokeWidth: current.traceThickness ?? route.traceThickness,
+            label: `${route.connectionName} (w=${(
+              current.traceThickness ?? route.traceThickness
+            ).toFixed(2)})`,
           })
         }
       }
