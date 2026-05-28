@@ -625,6 +625,18 @@ export class EscapeViaLocationSolver extends BaseSolver {
         continue
       }
 
+      // A same-net via spanning the full source→target layer pair is the kind
+      // of stitch the escape via is trying to land next to; it is not a
+      // clearance blocker for its own net.
+      if (
+        !obstacle.isCopperPour &&
+        obstacleZs.includes(sourceZ) &&
+        obstacleZs.includes(targetZ) &&
+        this.obstacleMatchesConnectionNet(obstacle, connectionNetIds)
+      ) {
+        continue
+      }
+
       const clearance = pointToBoxDistance(candidate, obstacle) - this.viaRadius
       minClearance = Math.min(minClearance, clearance)
 
