@@ -358,8 +358,15 @@ export class EscapeViaLocationSolver extends BaseSolver {
     candidate: Point2D
     sourceLayer: string
     sourceObstacle?: Obstacle
+    connectionNetIds?: Set<string>
   }): boolean {
-    const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params
+    const {
+      sourcePoint,
+      candidate,
+      sourceLayer,
+      sourceObstacle,
+      connectionNetIds,
+    } = params
     if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
       const crossesOutline = doesSegmentCrossPolygonBoundary({
         start: sourcePoint,
@@ -376,6 +383,17 @@ export class EscapeViaLocationSolver extends BaseSolver {
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
       if (!obstacle.layers.includes(sourceLayer)) continue
+
+      // A same-net via that spans this layer (e.g. an author-placed stitch via
+      // bonding a pad to its pour) is not a clearance blocker for an escape via
+      // on the same net — skip it so the escape path isn't falsely rejected.
+      if (
+        connectionNetIds &&
+        !obstacle.isCopperPour &&
+        this.obstacleMatchesConnectionNet(obstacle, connectionNetIds)
+      ) {
+        continue
+      }
 
       if (isPointInRect(candidate, obstacle)) {
         return false
@@ -728,6 +746,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
             candidate,
             sourceLayer,
             sourceObstacle,
+            connectionNetIds,
           })
         ) {
           continue
