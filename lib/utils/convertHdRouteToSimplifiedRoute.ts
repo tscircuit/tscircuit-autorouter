@@ -1,4 +1,4 @@
-import { distance } from "@tscircuit/math-utils"
+import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   type ConnectionPoint,
@@ -8,12 +8,14 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
   x: number
   y: number
   z: number
+  traceThickness?: number
   toNextSegmentType?: "through_obstacle"
 }
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
@@ -47,30 +49,10 @@ const areSameXyPoint = (
 const pointInsideObstacle = (
   point: Pick<Point, "x" | "y">,
   obstacle: Obstacle,
-) =>
-  Math.abs(point.x - obstacle.center.x) <=
-    obstacle.width / 2 + SAME_NET_OBSTACLE_TOLERANCE &&
-  Math.abs(point.y - obstacle.center.y) <=
-    obstacle.height / 2 + SAME_NET_OBSTACLE_TOLERANCE
+) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
-
-const isObstacleConnectedToRoute = (
-  obstacle: Obstacle,
-  hdRoute: HdRouteWithOptionalJumpers,
-  connMap?: ConnectivityMap,
-) =>
-  obstacle.connectedTo.some(
-    (connectedId) =>
-      connectedId === hdRoute.connectionName ||
-      connectedId === hdRoute.rootConnectionName ||
-      (connMap?.areIdsConnected(hdRoute.connectionName, connectedId) ??
-        false) ||
-      (hdRoute.rootConnectionName !== undefined &&
-        (connMap?.areIdsConnected(hdRoute.rootConnectionName, connectedId) ??
-          false)),
-  )
 
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
@@ -179,6 +161,9 @@ const attachTerminalViasToSimplifiedRoute = ({
   const appendSegments: SimplifiedPcbTraces[number]["route"] = []
   const firstLinearRouteSegment = linearRoute[0]
   const lastLinearRouteSegment = linearRoute[linearRoute.length - 1]
+  const startTraceThickness =
+    startPoint.traceThickness ?? hdRoute.traceThickness
+  const endTraceThickness = endPoint.traceThickness ?? hdRoute.traceThickness
 
   if (startTerminalViaPoint?.terminalVia) {
     prependSegments.push({
@@ -205,7 +190,7 @@ const attachTerminalViasToSimplifiedRoute = ({
         route_type: "wire",
         x: startTerminalViaPoint.x,
         y: startTerminalViaPoint.y,
-        width: hdRoute.traceThickness,
+        width: startTraceThickness,
         layer: startTerminalViaPoint.layer,
       })
     }
@@ -223,7 +208,7 @@ const attachTerminalViasToSimplifiedRoute = ({
         route_type: "wire",
         x: endTerminalViaPoint.x,
         y: endTerminalViaPoint.y,
-        width: hdRoute.traceThickness,
+        width: endTraceThickness,
         layer: endTerminalViaPoint.layer,
       })
     }
@@ -271,7 +256,7 @@ export const convertHdRouteToSimplifiedRoute = (
           route_type: "wire",
           x: layerPoint.x,
           y: layerPoint.y,
-          width: hdRoute.traceThickness,
+          width: layerPoint.traceThickness ?? hdRoute.traceThickness,
           layer: layerName,
         })
       }
@@ -287,7 +272,7 @@ export const convertHdRouteToSimplifiedRoute = (
           end: { x: point.x, y: point.y },
           from_layer: layerName,
           to_layer: nextLayerName,
-          width: hdRoute.traceThickness,
+          width: previousPoint.traceThickness ?? hdRoute.traceThickness,
         })
       } else {
         // Check if a via exists at this position
@@ -336,7 +321,7 @@ export const convertHdRouteToSimplifiedRoute = (
       route_type: "wire",
       x: layerPoint.x,
       y: layerPoint.y,
-      width: hdRoute.traceThickness,
+      width: layerPoint.traceThickness ?? hdRoute.traceThickness,
       layer: layerName,
     })
   }
