@@ -89,3 +89,27 @@ test("same-net spanning vias do not block escape-via placement", () => {
   expect(escapePoints(srjWithRing([]))).toHaveLength(1)
   expect(escapePoints(srjWithRing(sameNetRing))).toHaveLength(1)
 })
+
+test("a foreign-net via ring still blocks escape-via placement", () => {
+  // Same geometry, but the ring belongs to a different net. The skip is scoped
+  // to the connection's own net, so these vias must still block — otherwise the
+  // relaxation would be a blanket one and could place a via through foreign
+  // copper.
+  const foreignNetRing: Obstacle[] = [
+    [0.55, 0],
+    [-0.55, 0],
+    [0, 0.55],
+    [0, -0.55],
+  ].map(([dx, dy]) => ({
+    obstacleId: `foreign-via-${dx}-${dy}`,
+    type: "rect",
+    layers: ["top", "inner1"],
+    zLayers: [0, 1],
+    center: { x: dx, y: dy },
+    width: 0.3,
+    height: 0.3,
+    connectedTo: ["source_net_other"],
+  }))
+
+  expect(escapePoints(srjWithRing(foreignNetRing))).toHaveLength(0)
+})
