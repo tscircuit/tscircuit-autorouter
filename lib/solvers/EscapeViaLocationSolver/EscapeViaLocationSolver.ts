@@ -70,16 +70,6 @@ interface PointPlacementPlan {
   candidateCount: number
 }
 
-const getObstacleKey = (obstacle: Obstacle) =>
-  obstacle.obstacleId ??
-  [
-    obstacle.layers.join("."),
-    obstacle.center.x.toFixed(4),
-    obstacle.center.y.toFixed(4),
-    obstacle.width.toFixed(4),
-    obstacle.height.toFixed(4),
-  ].join(":")
-
 const pointMatches = (
   a: Point2D,
   b: Point2D,
@@ -747,7 +737,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-      const targetPourKey = getObstacleKey(copperPour)
+      // A pour is rasterised into many obstacle cells sharing the same layer +
+      // net; key by (layer, net) so every cell of one pour groups into a single
+      // escape-via target instead of one target per raster cell.
+      const targetPourKey = `${targetLayer}:${[...new Set(copperPour.connectedTo)].sort().join(",")}`
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
