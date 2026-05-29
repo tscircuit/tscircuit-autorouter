@@ -58,7 +58,7 @@
     "flatbush": "^4.4.0",
     "graphics-debug": "0.0.94",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
-    "kicad-to-circuit-json": "0.0.71",
+    "kicad-to-circuit-json": "0.0.77",
     "kleur": "^4.1.5",
     "looks-same": "9",
     "pcb-poly-hyper-graph": "https://codeload.github.com/tscircuit/pcb-poly-hyper-graph/tar.gz/80db1463c4a47506eeda15b2c14d59679de900f8",
