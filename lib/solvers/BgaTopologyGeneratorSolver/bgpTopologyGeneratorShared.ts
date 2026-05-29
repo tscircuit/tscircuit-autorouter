@@ -510,6 +510,10 @@ export function createMeshNodesForSrj({
   rowCount,
   colCount,
 }: CreateMeshNodesForSrjParams): CapacityMeshNode[] {
+  console.log(
+    "createMeshNodesForSrj",
+    { rowCount, colCount },
+  )
   if (rowCount === 0 || colCount === 0) {
     return createFallbackRingNodes({
       bounds,

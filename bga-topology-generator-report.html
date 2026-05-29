@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BgaTopologyGeneratorSolver Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink: "#17202a",
+              board: "#ecfdf5",
+              copper: "#f59e0b",
+              route: "#2563eb",
+              via: "#14b8a6",
+              gridline: "#94a3b8",
+            },
+            boxShadow: {
+              panel: "0 18px 45px rgba(15, 23, 42, 0.10)",
+            },
+            keyframes: {
+              scanX: {
+                "0%, 100%": { transform: "translateX(0)" },
+                "50%": { transform: "translateX(260px)" },
+              },
+              scanY: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(172px)" },
+              },
+              pulseNode: {
+                "0%, 100%": { opacity: "0.45" },
+                "50%": { opacity: "0.92" },
+              },
+              flow: {
+                "0%": { transform: "translateX(-16px)", opacity: "0.25" },
+                "50%": { opacity: "1" },
+                "100%": { transform: "translateX(16px)", opacity: "0.25" },
+              },
+            },
+            animation: {
+              scanX: "scanX 4.5s ease-in-out infinite",
+              scanY: "scanY 4.5s ease-in-out infinite",
+              pulseNode: "pulseNode 2.6s ease-in-out infinite",
+              flow: "flow 1.6s ease-in-out infinite",
+            },
+          },
+        },
+      }
+    </script>
+  </head>
+  <body class="bg-slate-50 text-ink">
+    <main class="mx-auto max-w-7xl px-5 py-8 md:px-8">
+      <section class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wider text-route">
+            tscircuit autorouter solver report
+          </p>
+          <h1 class="mt-3 text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
+            BgaTopologyGeneratorSolver
+          </h1>
+          <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
+            This solver converts a BGA-like component's SRJ obstacle field into
+            coarse routing regions. It does not route traces itself. It builds
+            a topology that later planners and pathing solvers can use.
+          </p>
+          <div class="mt-6 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-2xl font-semibold text-slate-950">1 pass</div>
+              <div class="mt-1 text-sm text-slate-600">Derived directly from SRJ input</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-2xl font-semibold text-slate-950">2 outputs</div>
+              <div class="mt-1 text-sm text-slate-600">Cloned obstacles and routing regions</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="text-2xl font-semibold text-slate-950">z-aware</div>
+              <div class="mt-1 text-sm text-slate-600">Regions know their allowed layers</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-panel">
+          <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-base font-semibold text-slate-950">Obstacle Grid To Routing Regions</h2>
+            <span class="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">animated</span>
+          </div>
+          <div class="relative h-[310px] overflow-hidden rounded-md border border-slate-300 bg-board">
+            <div class="absolute left-6 top-6 h-[250px] w-[360px] rounded border-2 border-emerald-700/70 bg-emerald-50"></div>
+
+            <div class="absolute left-6 top-[80px] h-px w-[360px] bg-gridline"></div>
+            <div class="absolute left-6 top-[130px] h-px w-[360px] bg-gridline"></div>
+            <div class="absolute left-6 top-[180px] h-px w-[360px] bg-gridline"></div>
+            <div class="absolute left-6 top-[230px] h-px w-[360px] bg-gridline"></div>
+            <div class="absolute left-[96px] top-6 h-[250px] w-px bg-gridline"></div>
+            <div class="absolute left-[166px] top-6 h-[250px] w-px bg-gridline"></div>
+            <div class="absolute left-[236px] top-6 h-[250px] w-px bg-gridline"></div>
+            <div class="absolute left-[306px] top-6 h-[250px] w-px bg-gridline"></div>
+
+            <div class="absolute left-[88px] top-[72px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+            <div class="absolute left-[158px] top-[72px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+            <div class="absolute left-[228px] top-[72px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+            <div class="absolute left-[88px] top-[172px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+            <div class="absolute left-[158px] top-[172px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+            <div class="absolute left-[228px] top-[172px] h-16 w-16 rounded-sm bg-copper shadow-sm ring-2 ring-amber-700/30"></div>
+
+            <div class="absolute left-[166px] top-[130px] h-[50px] w-[70px] animate-pulseNode bg-route/25"></div>
+            <div class="absolute left-[96px] top-[130px] h-[50px] w-[70px] animate-pulseNode bg-route/15 [animation-delay:.25s]"></div>
+            <div class="absolute left-[236px] top-[130px] h-[50px] w-[70px] animate-pulseNode bg-route/15 [animation-delay:.5s]"></div>
+
+            <div class="absolute left-[46px] top-[48px] h-[210px] w-0.5 animate-scanX bg-route/80"></div>
+            <div class="absolute left-[45px] top-[48px] h-0.5 w-[320px] animate-scanY bg-via/80"></div>
+
+            <div class="absolute bottom-3 left-3 rounded bg-white/90 px-3 py-2 text-xs text-slate-700 shadow-sm">
+              Pad edges become grid edges. Each rectangular cell becomes one or
+              more CapacityMeshNodes.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-10 grid gap-6 lg:grid-cols-3">
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-950">Inputs</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-700">
+            The constructor receives <code class="rounded bg-slate-100 px-1">inputSrj</code>,
+            plus optional <code class="rounded bg-slate-100 px-1">componentId</code>
+            or <code class="rounded bg-slate-100 px-1">replacementObstacleId</code>.
+            The SRJ provides board bounds, layer count, and rectangular obstacles.
+          </p>
+          <p class="mt-3 text-xs text-slate-500">
+            Source: BgaTopologyGeneratorSolver.ts lines 10-14 and srj-types.ts lines 46-82.
+          </p>
+        </article>
+
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-950">Outputs</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-700">
+            It returns exact cloned obstacles and derived routing regions. The
+            regions are <code class="rounded bg-slate-100 px-1">CapacityMeshNode</code>
+            objects with center, width, height, layer label, and
+            <code class="rounded bg-slate-100 px-1">availableZ</code>.
+          </p>
+          <p class="mt-3 text-xs text-slate-500">
+            Source: BgaTopologyGeneratorSolver.ts lines 16-20 and capacity-mesh-types.ts lines 8-33.
+          </p>
+        </article>
+
+        <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-950">Lifecycle</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-700">
+            <code class="rounded bg-slate-100 px-1">_step()</code> is idempotent:
+            if output already exists, it marks the solver solved and returns.
+            Otherwise, it computes topology once and stores stats.
+          </p>
+          <p class="mt-3 text-xs text-slate-500">
+            Source: BgaTopologyGeneratorSolver.ts lines 43-95.
+          </p>
+        </article>
+      </section>
+
+      <section class="mt-10 rounded-lg border border-slate-200 bg-white p-6 shadow-panel">
+        <h2 class="text-2xl font-semibold text-slate-950">Execution Flow</h2>
+        <div class="mt-6 grid gap-4 md:grid-cols-5">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="text-sm font-semibold text-route">1. Filter</div>
+            <p class="mt-2 text-sm text-slate-700">Keep obstacles whose bounding boxes overlap the SRJ bounds.</p>
+          </div>
+          <div class="hidden items-center justify-center md:flex">
+            <div class="h-0.5 w-12 animate-flow bg-route"></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="text-sm font-semibold text-route">2. Infer</div>
+            <p class="mt-2 text-sm text-slate-700">Cluster obstacle centers to count rows and columns.</p>
+          </div>
+          <div class="hidden items-center justify-center md:flex">
+            <div class="h-0.5 w-12 animate-flow bg-route [animation-delay:.25s]"></div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="text-sm font-semibold text-route">3. Emit</div>
+            <p class="mt-2 text-sm text-slate-700">Create mesh nodes, clone obstacles, publish stats, mark solved.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-panel">
+          <h2 class="text-2xl font-semibold text-slate-950">Normal BGA Path</h2>
+          <p class="mt-4 text-sm leading-6 text-slate-700">
+            When at least one row and one column are inferred, the shared helper
+            builds exact grid edges from the board bounds and every in-bounds
+            obstacle boundary. It then walks every cell between adjacent X and Y
+            edges.
+          </p>
+          <div class="mt-5 space-y-3 text-sm text-slate-700">
+            <div class="rounded-md bg-slate-50 p-3">
+              <strong>Obstacle cell:</strong> if a cell exactly matches an obstacle rectangle,
+              emit one node spanning all available layers.
+            </div>
+            <div class="rounded-md bg-slate-50 p-3">
+              <strong>Diagonal free-space cell:</strong> if a free cell is surrounded by
+              obstacle cells diagonally, emit one multi-layer node. This preserves useful
+              diagonal escape regions.
+            </div>
+            <div class="rounded-md bg-slate-50 p-3">
+              <strong>Regular free-space cell:</strong> emit one node per z layer, so
+              same-XY space is represented independently on each layer.
+            </div>
+          </div>
+          <p class="mt-4 text-xs text-slate-500">
+            Source: bgpTopologyGeneratorShared.ts lines 270-555.
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-panel">
+          <h2 class="text-2xl font-semibold text-slate-950">Fallback Ring Path</h2>
+          <p class="mt-4 text-sm leading-6 text-slate-700">
+            If clustering finds no rows or no columns, there is no meaningful BGA grid.
+            The helper falls back to a ring: four corner diagonal regions and four side
+            regions. The split is at 25 percent from each board edge.
+          </p>
+          <div class="mt-5 grid gap-4 sm:grid-cols-[240px_1fr] sm:items-center">
+            <div class="relative h-56 rounded-md border border-slate-300 bg-board">
+              <div class="absolute left-0 top-0 h-14 w-14 animate-pulseNode bg-route/35"></div>
+              <div class="absolute right-0 top-0 h-14 w-14 animate-pulseNode bg-route/35 [animation-delay:.15s]"></div>
+              <div class="absolute bottom-0 right-0 h-14 w-14 animate-pulseNode bg-route/35 [animation-delay:.3s]"></div>
+              <div class="absolute bottom-0 left-0 h-14 w-14 animate-pulseNode bg-route/35 [animation-delay:.45s]"></div>
+              <div class="absolute left-14 top-0 h-14 w-28 bg-via/20"></div>
+              <div class="absolute right-0 top-14 h-28 w-14 bg-via/20"></div>
+              <div class="absolute bottom-0 left-14 h-14 w-28 bg-via/20"></div>
+              <div class="absolute left-0 top-14 h-28 w-14 bg-via/20"></div>
+              <div class="absolute left-[94px] top-[94px] h-9 w-9 rounded-sm bg-copper"></div>
+            </div>
+            <div class="text-sm leading-6 text-slate-700">
+              Corner diagonal nodes usually span all layers. If a diagonal region
+              overlaps an obstacle on any candidate layer, it is split into one node
+              per layer. Side regions are always emitted one per layer.
+            </div>
+          </div>
+          <p class="mt-4 text-xs text-slate-500">
+            Source: bgpTopologyGeneratorShared.ts lines 161-268 and 513-520.
+          </p>
+        </div>
+      </section>
+
+      <section class="mt-10 rounded-lg border border-slate-200 bg-white p-6 shadow-panel">
+        <h2 class="text-2xl font-semibold text-slate-950">Important Details</h2>
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
+          <div class="rounded-md border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-950">Layer handling</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">
+              <code class="rounded bg-slate-100 px-1">getLayerRange(layerCount)</code>
+              returns numeric z layers from <code class="rounded bg-slate-100 px-1">0</code>
+              to <code class="rounded bg-slate-100 px-1">layerCount - 1</code>.
+              Obstacles can provide explicit <code class="rounded bg-slate-100 px-1">zLayers</code>;
+              otherwise their named layers are mapped to z values.
+            </p>
+          </div>
+          <div class="rounded-md border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-950">Jitter tolerance</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">
+              <code class="rounded bg-slate-100 px-1">clusterAxisValues</code>
+              sorts axis values and groups nearly equal values. Its tolerance is
+              one quarter of the smallest real gap, with a tiny lower bound.
+            </p>
+          </div>
+          <div class="rounded-md border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-950">Obstacle detection</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">
+              A region contains an obstacle only if their boxes overlap with
+              positive width and height, and if at least one candidate z layer
+              matches the obstacle's z layers.
+            </p>
+          </div>
+          <div class="rounded-md border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-950">Stats</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">
+              The solver records component identity, layer count, inferred row
+              and column counts, multi-layer node count, side node count, and
+              total mesh node count.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-10 rounded-lg border border-slate-200 bg-slate-950 p-6 text-slate-100 shadow-panel">
+        <h2 class="text-2xl font-semibold">Mental Model</h2>
+        <p class="mt-4 max-w-4xl text-sm leading-7 text-slate-300">
+          Think of the solver as a component-local topology slicer. It sees pads
+          and obstacles, draws vertical and horizontal cuts through their edges,
+          and labels every resulting rectangle with the layers on which routing
+          can reason about it. The original obstacles are preserved separately so
+          later stages still have exact geometry, while routing regions provide a
+          coarse graph-friendly space model.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
