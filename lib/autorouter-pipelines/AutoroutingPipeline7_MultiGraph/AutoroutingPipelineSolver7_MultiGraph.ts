@@ -43,7 +43,7 @@ import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BaseSolver } from "../../solvers/BaseSolver"
+import { BaseSolver as LegacyBaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
@@ -60,6 +60,11 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import {
+  BasePipelineSolver,
+  BaseSolver as SolverUtilsBaseSolver,
+  type PipelineStep as SolverUtilsPipelineStep,
+} from "@tscircuit/solver-utils"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -72,13 +77,170 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
-type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
+type PipelineInput = {
+  srj: SimpleRouteJson
+  opts: CapacityMeshSolverOptions
+}
+
+type AnySolver = LegacyBaseSolver | SolverUtilsBaseSolver
+type AnySolverConstructor = new (...args: any[]) => AnySolver
+
+type PipelineStep<T extends AnySolverConstructor> = {
   solverName: string
-  solverClass: T
+  solverClass: new (...args: ConstructorParameters<T>) => SolverUtilsBaseSolver
   getConstructorParams: (
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
+}
+
+/**
+ * Compatibility layer between our BaseSolver and SolverUtilsBaseSolver.
+ */
+class SolverUtilsCompatibilitySolver extends SolverUtilsBaseSolver {
+  readonly innerSolver: AnySolver
+
+  constructor(innerSolver: AnySolver) {
+    super()
+    this.innerSolver = innerSolver
+    this.MAX_ITERATIONS = innerSolver.MAX_ITERATIONS
+    this.syncStateFromInnerSolver()
+
+    return new Proxy(this, {
+      get: (target, prop, receiver) => {
+        if (prop in target) {
+          return Reflect.get(target, prop, receiver)
+        }
+
+        const value = Reflect.get(target.innerSolver as any, prop)
+        return typeof value === "function"
+          ? value.bind(target.innerSolver)
+          : value
+      },
+      set: (target, prop, value, receiver) => {
+        if (prop in target) {
+          return Reflect.set(target, prop, value, receiver)
+        }
+
+        Reflect.set(target.innerSolver as any, prop, value)
+        return true
+      },
+    })
+  }
+
+  private syncStateFromInnerSolver() {
+    this.MAX_ITERATIONS = this.innerSolver.MAX_ITERATIONS
+    this.solved = this.innerSolver.solved
+    this.failed = this.innerSolver.failed
+    this.iterations = this.innerSolver.iterations
+    this.progress = this.innerSolver.progress
+    this.error = this.innerSolver.error
+    this.activeSubSolver = this.innerSolver.activeSubSolver as any
+    this.failedSubSolvers = this.innerSolver.failedSubSolvers as any
+    this.timeToSolve = this.innerSolver.timeToSolve
+    this.stats = this.innerSolver.stats
+  }
+
+  override getSolverName(): string {
+    return this.innerSolver.getSolverName()
+  }
+
+  override _step() {
+    this.innerSolver.step()
+    this.syncStateFromInnerSolver()
+  }
+
+  override getConstructorParams() {
+    return this.innerSolver.getConstructorParams()
+  }
+
+  override getOutput() {
+    const getOutput = (this.innerSolver as any).getOutput
+
+    if (typeof getOutput === "function") {
+      return getOutput.call(this.innerSolver)
+    }
+
+    return null
+  }
+
+  override visualize(): GraphicsObject {
+    return this.innerSolver.visualize()
+  }
+
+  override preview(): GraphicsObject {
+    return this.innerSolver.preview()
+  }
+
+  override tryFinalAcceptance() {
+    this.innerSolver.tryFinalAcceptance()
+    this.syncStateFromInnerSolver()
+  }
+}
+
+/**
+ * BaseSolver can have multiple input args while SolverUtilsBaseSolver requires a single arg.
+ * This function wraps a BaseSolver constructor to make it compatible with SolverUtilsBaseSolver.
+ */
+function makeSolverUtilsCompatClass<T extends AnySolverConstructor>(
+  solverClass: T,
+): new (
+  ...args: ConstructorParameters<T>
+) => SolverUtilsBaseSolver {
+  return class extends SolverUtilsCompatibilitySolver {
+    constructor(...args: ConstructorParameters<T>) {
+      super(new solverClass(...args))
+    }
+  }
+}
+
+function hasVisualizationObjects(
+  viz: GraphicsObject | null | undefined,
+): viz is GraphicsObject {
+  if (!viz) return false
+
+  return (
+    (viz.points?.length ?? 0) > 0 ||
+    (viz.lines?.length ?? 0) > 0 ||
+    (viz.rects?.length ?? 0) > 0 ||
+    (viz.circles?.length ?? 0) > 0 ||
+    (viz.polygons?.length ?? 0) > 0 ||
+    (viz.infiniteLines?.length ?? 0) > 0 ||
+    (viz.arrows?.length ?? 0) > 0 ||
+    (viz.texts?.length ?? 0) > 0
+  )
+}
+
+function setVisualizationStep(
+  viz: GraphicsObject,
+  step: number,
+): GraphicsObject {
+  return {
+    ...viz,
+    points: viz.points?.map((obj) => ({ ...obj, step })),
+    lines: viz.lines?.map((obj) => ({ ...obj, step })),
+    rects: viz.rects?.map((obj) => ({ ...obj, step })),
+    circles: viz.circles?.map((obj) => ({ ...obj, step })),
+    polygons: viz.polygons?.map((obj) => ({ ...obj, step })),
+    infiniteLines: viz.infiniteLines?.map((obj) => ({ ...obj, step })),
+    arrows: viz.arrows?.map((obj) => ({ ...obj, step })),
+    texts: viz.texts?.map((obj) => ({ ...obj, step })),
+  }
+}
+
+function mergeVisualizationsPreservingSteps(
+  ...visualizations: GraphicsObject[]
+): GraphicsObject {
+  return {
+    points: visualizations.flatMap((viz) => viz.points ?? []),
+    lines: visualizations.flatMap((viz) => viz.lines ?? []),
+    rects: visualizations.flatMap((viz) => viz.rects ?? []),
+    circles: visualizations.flatMap((viz) => viz.circles ?? []),
+    polygons: visualizations.flatMap((viz) => viz.polygons ?? []),
+    infiniteLines: visualizations.flatMap((viz) => viz.infiniteLines ?? []),
+    arrows: visualizations.flatMap((viz) => viz.arrows ?? []),
+    texts: visualizations.flatMap((viz) => viz.texts ?? []),
+  }
 }
 
 /**
@@ -169,9 +331,7 @@ function mergeComponentSharedEdgeSegments({
 }
 
 function definePipelineStep<
-  T extends new (
-    ...args: any[]
-  ) => BaseSolver,
+  T extends AnySolverConstructor,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof AutoroutingPipelineSolver7_MultiGraph,
@@ -183,13 +343,13 @@ function definePipelineStep<
 ): PipelineStep<T> {
   return {
     solverName,
-    solverClass,
+    solverClass: makeSolverUtilsCompatClass(solverClass),
     getConstructorParams,
     onSolved: opts.onSolved,
   }
 }
 
-export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
+export class AutoroutingPipelineSolver7_MultiGraph extends BasePipelineSolver<PipelineInput> {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
@@ -226,7 +386,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   endTimeOfPhase: Record<string, number>
   timeSpentOnPhase: Record<string, number>
 
-  activeSubSolver?: BaseSolver | null = null
+  activeSubSolver?: SolverUtilsBaseSolver | null = null
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
@@ -238,7 +398,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  pipelineDef: SolverUtilsPipelineStep<SolverUtilsBaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
@@ -583,7 +743,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     public srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
-    super()
+    super({ srj, opts })
     this.originalSrj = srj
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
@@ -611,9 +771,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         : mutableOpts.cacheProvider === null
           ? null
           : mutableOpts.cacheProvider
-    this.startTimeOfPhase = {}
-    this.endTimeOfPhase = {}
-    this.timeSpentOnPhase = {}
+    this.startTimeOfPhase = this.startTimeOfStage
+    this.endTimeOfPhase = this.endTimeOfStage
+    this.timeSpentOnPhase = this.timeSpentOnStage
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {
@@ -630,80 +790,25 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return [this.srj, this.opts] as const
   }
 
-  currentPipelineStepIndex = 0
-  _step() {
-    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-    if (!pipelineStepDef) {
-      this.solved = true
-      return
-    }
+  get currentPipelineStepIndex() {
+    return this.currentPipelineStageIndex
+  }
 
-    if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      if (this.activeSubSolver.solved) {
-        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
-        this.timeSpentOnPhase[pipelineStepDef.solverName] =
-          this.endTimeOfPhase[pipelineStepDef.solverName] -
-          this.startTimeOfPhase[pipelineStepDef.solverName]
-        pipelineStepDef.onSolved?.(this)
-        this.activeSubSolver = null
-        this.currentPipelineStepIndex++
-      } else if (this.activeSubSolver.failed) {
-        this.error = this.activeSubSolver?.error
-        this.failed = true
-        this.activeSubSolver = null
-      }
-      return
-    }
-
-    const constructorParams = pipelineStepDef.getConstructorParams(this)
-    // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
-    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
-    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+  set currentPipelineStepIndex(value: number) {
+    this.currentPipelineStageIndex = value
   }
 
   solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
+    while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
       this.step()
     }
   }
 
   getCurrentPhase(): string {
-    return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+    return this.getCurrentStageName()
   }
 
-  visualize(): GraphicsObject {
-    if (!this.solved && this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
-    }
-    const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
-    const netToPPSolver = this.netToPointPairsSolver?.visualize()
-    const componentDetectionViz = this.componentDetectionSolver?.visualize()
-    const topologyPlanningViz = this.topologyPlanningSolver?.visualize()
-    const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
-    const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
-    const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
-    const strawSolverViz = this.strawSolver?.visualize()
-    const edgeViz = this.edgeSolver?.visualize()
-    const deadEndViz = this.deadEndSolver?.visualize()
-    const availableSegmentPointViz =
-      this.availableSegmentPointSolver?.visualize()
-    const portPointPathingViz = this.portPointPathingSolver?.visualize()
-    const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-    const uniformPortDistributionViz =
-      this.uniformPortDistributionSolver?.visualize()
-    const highDensityViz = this.highDensityRouteSolver?.visualize()
-    const highDensityForceImproveViz =
-      this.highDensityForceImproveSolver?.visualize()
-    const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
-    const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
-    const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const traceWidthViz = this.traceWidthSolver?.visualize()
-    const necessaryCrampedPortPointSolverViz =
-      this.necessaryCrampedPortPointSolver?.visualize()
-    const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
+  private getProblemVisualization(): GraphicsObject {
     const srjToVisualize = this.originalSrj
     const problemOutline = srjToVisualize.outline
     const problemLines: Line[] = []
@@ -782,47 +887,64 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       lines: problemLines,
     } as GraphicsObject
     const routeViz = getPresuppliedTraceVisualization(srjToVisualize)
-    const problemViz = combineVisualizations(problemBaseViz, routeViz)
-    const processedProblemViz =
-      this.preprocessSimpleRouteJsonSolver?.visualize()
-    const globalDrcForceImproveViz =
-      this.globalDrcForceImproveSolver?.visualize()
-    const visualizations = [
-      problemViz,
-      processedProblemViz,
-      escapeViaLocationViz,
-      netToPPSolver,
-      componentDetectionViz,
-      topologyPlanningViz,
-      nodeSubdivisionViz,
-      nodeTargetMergerViz,
-      singleLayerNodeMergerViz,
-      strawSolverViz,
-      edgeViz,
-      deadEndViz,
-      availableSegmentPointViz,
-      necessaryCrampedPortPointSolverViz,
-      portPointPathingViz,
-      multiSectionOptViz,
-      uniformPortDistributionViz,
-      highDensityViz
-        ? combineVisualizations(problemBaseViz, highDensityViz)
-        : null,
-      highDensityForceImproveViz,
-      highDensityRepairViz,
-      highDensityStitchViz,
-      traceSimplificationViz,
-      traceWidthViz,
-      globalDrcForceImproveViz,
-      this.solved
-        ? combineVisualizations(
-            problemBaseViz,
-            getPresuppliedTraceVisualization(this.originalSrj),
-            convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
-          )
-        : null,
-    ].filter(Boolean) as GraphicsObject[]
-    return combineVisualizations(...visualizations)
+    return combineVisualizations(problemBaseViz, routeViz)
+  }
+
+  override initialVisualize(): GraphicsObject | null {
+    return this.getProblemVisualization()
+  }
+
+  override finalVisualize(): GraphicsObject | null {
+    if (!this.solved) {
+      return null
+    }
+
+    return combineVisualizations(
+      this.getProblemVisualization(),
+      convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
+    )
+  }
+
+  /**
+   * Goes over each of the solver stages, gets their visualization, marks their step number, and combines them.
+   */
+  override visualize(): GraphicsObject {
+    if (!this.solved && this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+
+    const visualizations: GraphicsObject[] = []
+    const initialVisualization = this.initialVisualize()
+
+    if (hasVisualizationObjects(initialVisualization)) {
+      visualizations.push(setVisualizationStep(initialVisualization, 0))
+    }
+
+    for (const [stageIndex, stage] of this.pipelineDef.entries()) {
+      const solver = (this as any)[stage.solverName] as
+        | SolverUtilsBaseSolver
+        | undefined
+      const stageVisualization = solver?.visualize()
+
+      if (hasVisualizationObjects(stageVisualization)) {
+        visualizations.push(
+          setVisualizationStep(stageVisualization, stageIndex + 1),
+        )
+      }
+    }
+
+    const finalVisualization = this.finalVisualize()
+    if (hasVisualizationObjects(finalVisualization)) {
+      visualizations.push(
+        setVisualizationStep(finalVisualization, this.pipelineDef.length + 1),
+      )
+    }
+
+    if (visualizations.length === 0) {
+      return { points: [], rects: [], lines: [], circles: [], texts: [] }
+    }
+
+    return mergeVisualizationsPreservingSteps(...visualizations)
   }
 
   preview(): GraphicsObject {
