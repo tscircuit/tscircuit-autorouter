@@ -78,6 +78,50 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
   expect(solver.getOutput()).toEqual([hdRoute])
 })
 
+test("Pipeline4HighDensityRepairSolver assigns ambiguous routes to the endpoint matching node", () => {
+  const smallContainingNode: NodeWithPortPoints = {
+    capacityMeshNodeId: "cmn_small",
+    center: { x: 0.25, y: 0 },
+    width: 0.6,
+    height: 0.6,
+    portPoints: [
+      { connectionName: "other", x: 0, y: 0, z: 0 },
+      { connectionName: "other", x: 0.5, y: 0, z: 0 },
+    ],
+  }
+  const endpointMatchingNode: NodeWithPortPoints = {
+    capacityMeshNodeId: "cmn_endpoint_match",
+    center: { x: 0.25, y: 0 },
+    width: 1,
+    height: 1,
+    portPoints: [
+      { connectionName: "conn1", x: 0, y: 0, z: 0 },
+      { connectionName: "conn1", x: 0.5, y: 0, z: 0 },
+    ],
+  }
+  const route: HighDensityRoute = {
+    connectionName: "conn1",
+    traceThickness: 0.15,
+    viaDiameter: 0.3,
+    route: [
+      { x: 0, y: 0, z: 0 },
+      { x: 0.5, y: 0, z: 0 },
+    ],
+    vias: [],
+  }
+  const solver = new Pipeline4HighDensityRepairSolver({
+    nodeWithPortPoints: [smallContainingNode, endpointMatchingNode],
+    hdRoutes: [route],
+    obstacles: [],
+    repairMargin: 0,
+  })
+
+  expect(solver.sampleEntries).toHaveLength(1)
+  expect(solver.sampleEntries[0]?.node.capacityMeshNodeId).toBe(
+    "cmn_endpoint_match",
+  )
+})
+
 test("Pipeline4HighDensityForceImproveSolver preserves simple no-op routes", () => {
   const solver = new HighDensityForceImproveSolver({
     nodeWithPortPoints: [nodeWithPortPoints],

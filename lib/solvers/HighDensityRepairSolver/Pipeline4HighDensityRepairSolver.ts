@@ -20,6 +20,7 @@ type RepairSampleEntry = {
 }
 
 const DEFAULT_REPAIR_MARGIN = 0.2
+const PORT_POINT_MATCH_EPSILON = 1e-3
 
 const doesRectOverlap = (
   a: { minX: number; maxX: number; minY: number; maxY: number },
@@ -68,6 +69,55 @@ const isPointInsideObstacle = (
   )
 }
 
+const isSameRouteRoot = (
+  route: HighDensityRoute,
+  portPoint: NodeWithPortPoints["portPoints"][number],
+) =>
+  portPoint.connectionName === route.connectionName ||
+  portPoint.connectionName === route.rootConnectionName ||
+  portPoint.rootConnectionName === route.connectionName ||
+  (route.rootConnectionName !== undefined &&
+    portPoint.rootConnectionName === route.rootConnectionName)
+
+const isSamePoint = (
+  a: { x: number; y: number; z?: number },
+  b: { x: number; y: number; z?: number },
+) =>
+  Math.abs(a.x - b.x) <= PORT_POINT_MATCH_EPSILON &&
+  Math.abs(a.y - b.y) <= PORT_POINT_MATCH_EPSILON &&
+  (a.z ?? 0) === (b.z ?? 0)
+
+const getEndpointPortMatchCount = (
+  route: HighDensityRoute,
+  node: NodeWithPortPoints,
+) => {
+  const start = route.route[0]
+  const end = route.route[route.route.length - 1]
+  let matchCount = 0
+
+  if (
+    start &&
+    node.portPoints.some(
+      (portPoint) =>
+        isSameRouteRoot(route, portPoint) && isSamePoint(start, portPoint),
+    )
+  ) {
+    matchCount += 1
+  }
+
+  if (
+    end &&
+    node.portPoints.some(
+      (portPoint) =>
+        isSameRouteRoot(route, portPoint) && isSamePoint(end, portPoint),
+    )
+  ) {
+    matchCount += 1
+  }
+
+  return matchCount
+}
+
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
@@ -99,15 +149,33 @@ const findNodeIndexForRoute = (
   const routePoints = route.route.map(({ x, y }) => ({ x, y }))
   const viaPoints = route.vias.map(({ x, y }) => ({ x, y }))
   const points = [...routePoints, ...viaPoints]
+  let bestNodeIndex = -1
+  let bestEndpointPortMatchCount = -1
+  let bestNodeArea = Number.POSITIVE_INFINITY
 
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]
-    if (points.every((point) => isPointInsideNode(point, node, margin))) {
-      return i
+    if (
+      !node ||
+      !points.every((point) => isPointInsideNode(point, node, margin))
+    ) {
+      continue
+    }
+
+    const endpointPortMatchCount = getEndpointPortMatchCount(route, node)
+    const nodeArea = node.width * node.height
+    if (
+      endpointPortMatchCount > bestEndpointPortMatchCount ||
+      (endpointPortMatchCount === bestEndpointPortMatchCount &&
+        nodeArea < bestNodeArea)
+    ) {
+      bestEndpointPortMatchCount = endpointPortMatchCount
+      bestNodeArea = nodeArea
+      bestNodeIndex = i
     }
   }
 
-  return -1
+  return bestNodeIndex
 }
 
 const toRepairRoute = (route: HighDensityRoute): RepairHdRoute => ({
