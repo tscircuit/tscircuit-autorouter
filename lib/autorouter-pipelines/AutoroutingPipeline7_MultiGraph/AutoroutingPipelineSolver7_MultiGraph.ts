@@ -168,6 +168,22 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
+const MAX_BGA_MEMBER_OBSTACLES_FOR_LOCAL_TOPOLOGY = 64
+
+function getTopologyComponentDetectionOutput(
+  componentDetectionOutput: ComponentDetectionSolverOutput,
+): ComponentDetectionSolverOutput {
+  return {
+    ...componentDetectionOutput,
+    components: componentDetectionOutput.components.filter(
+      (component) =>
+        component.componentKind !== "bga" ||
+        component.memberObstacles.length <=
+          MAX_BGA_MEMBER_OBSTACLES_FOR_LOCAL_TOPOLOGY,
+    ),
+  }
+}
+
 function definePipelineStep<
   T extends new (
     ...args: any[]
@@ -295,7 +311,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           inputSrj: cms.srjWithPointPairs!,
-          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
+          componentDetectionOutput: getTopologyComponentDetectionOutput(
+            cms.componentDetectionSolver!.getOutput(),
+          ),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
@@ -499,7 +517,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
+          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -516,6 +534,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          maxSampleEntries: 80,
         },
       ],
     ),

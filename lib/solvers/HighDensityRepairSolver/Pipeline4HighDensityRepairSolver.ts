@@ -191,6 +191,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     colorMap?: Record<string, string>
+    maxSampleEntries?: number
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
@@ -221,7 +222,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
-    this.sampleEntries = Array.from(routeIndexesByNode.entries()).map(
+    const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
         return {
@@ -253,10 +254,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
+    this.sampleEntries =
+      params.maxSampleEntries !== undefined &&
+      sampleEntries.length > params.maxSampleEntries
+        ? []
+        : sampleEntries
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
+      skippedSampleCount:
+        sampleEntries.length > this.sampleEntries.length
+          ? sampleEntries.length
+          : 0,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
