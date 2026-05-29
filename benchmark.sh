@@ -32,7 +32,13 @@ default_concurrency() {
   getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4
 }
 
-CONCURRENCY="${BENCHMARK_CONCURRENCY:-$(default_concurrency)}"
+CONCURRENCY_WAS_SET=false
+if [ -n "${BENCHMARK_CONCURRENCY:-}" ]; then
+  CONCURRENCY="$BENCHMARK_CONCURRENCY"
+  CONCURRENCY_WAS_SET=true
+else
+  CONCURRENCY="$(default_concurrency)"
+fi
 
 get_solvers() {
   INCLUDE_ASSIGNABLE="$INCLUDE_ASSIGNABLE" bun --eval '
@@ -155,6 +161,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --concurrency)
       CONCURRENCY="${2:-}"
+      CONCURRENCY_WAS_SET=true
       if [ "$CONCURRENCY" = "auto" ]; then
         CONCURRENCY="$(default_concurrency)"
       fi
@@ -190,6 +197,16 @@ done
 
 if [ -n "$PIPELINE_ID" ]; then
   SOLVER_NAME="$(resolve_pipeline_solver_name "$PIPELINE_ID")"
+fi
+
+if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipelineSolver7_MultiGraph" ]; then
+  case "$DATASET" in
+    18|srj18|dataset18|dataset-srj18)
+      if [ "$CONCURRENCY" -gt 4 ]; then
+        CONCURRENCY=4
+      fi
+      ;;
+  esac
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
