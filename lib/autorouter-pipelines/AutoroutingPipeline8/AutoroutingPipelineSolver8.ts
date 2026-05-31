@@ -131,6 +131,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
+  traceWidth!: number
   effort: number
   maxNodeDimension: number
   maxNodeRatio: number
@@ -239,7 +240,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.traceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
         },
@@ -366,7 +367,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.traceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -534,6 +535,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
+    this.traceWidth = this.srj.traceThickness ?? this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }

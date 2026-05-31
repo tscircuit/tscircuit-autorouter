@@ -102,6 +102,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
+  traceWidth!: number
   effort: number
   maxNodeDimension: number
   maxNodeRatio: number
@@ -197,7 +198,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           nodesWithPortPoints: cms.highDensityNodePortPoints ?? [],
           equivalentAreaExpansionFactor: cms.equivalentAreaExpansionFactor,
           minProjectedRectDimension: cms.minProjectedRectDimension,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.traceWidth,
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
@@ -226,7 +227,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
+          traceWidth: cms.traceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           effort: cms.effort,
         },
@@ -343,6 +344,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
+    this.traceWidth = this.srj.traceThickness ?? this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }

@@ -122,6 +122,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
   traceSimplificationSolver?: TraceSimplificationSolver
   viaDiameter: number
   minTraceWidth: number
+  traceWidth: number
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -321,7 +322,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
         colorMap: cms.colorMap,
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
+        traceWidth: cms.traceWidth,
       },
     ]),
     definePipelineStep(
@@ -364,6 +365,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
+    this.traceWidth = srj.traceThickness ?? srj.minTraceWidth
     const mutableOpts = this.opts
 
     // If capacityDepth is not provided, calculate it automatically
