@@ -1,10 +1,16 @@
-import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
+import {
+  type Bounds,
+  doBoundsOverlap,
+  getBoundFromCenteredRect,
+  getBoundingBox,
+} from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import type { GraphicsObject } from "graphics-debug"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
-import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
 import { QfpThermalPadTopologyGeneratorSolver } from "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
+import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
 import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
-import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
   MultiGraphTopologyPlannerSolverParams,
@@ -154,6 +160,82 @@ export function mergeMeshNodes({
   }
 }
 
+/**
+ * Removes global RectDiff mesh nodes that are fully covered by component-local
+ * replacement areas.
+ *
+ * @param params.meshNodes - Global RectDiff capacity nodes before component
+ *   mesh substitution.
+ * @param params.components - Detected topology components whose replacement
+ *   obstacles define the component-local routing areas.
+ * @returns A filtered mesh node array. Nodes that merely overlap a component
+ *   area are preserved; only nodes whose entire rectangle is contained in a
+ *   replacement obstacle are removed.
+ *
+ * @note This is intentionally applied before `mergeMeshNodes` so downstream
+ * solvers do not see duplicate global and component-local routing regions.
+ * @caution Replacement obstacles are expected to be axis-aligned rectangles.
+ */
+export function filterMeshNodesInsideComponentAreas({
+  meshNodes,
+  components,
+}: {
+  meshNodes: CapacityMeshNode[]
+  components: SerializedTopologyComponentInput[]
+}): CapacityMeshNode[] {
+  if (components.length === 0) return meshNodes
+
+  return meshNodes.filter(
+    (meshNode) =>
+      !components.some((component) =>
+        isMeshNodeFullyInsideObstacle({
+          meshNode,
+          obstacle: component.replacementObstacle,
+        }),
+      ),
+  )
+}
+
+type GraphicsRect = NonNullable<GraphicsObject["rects"]>[number]
+
+/**
+ * Removes RectDiff node rectangles from a graphics-debug visualization when
+ * those rectangles are fully contained inside component replacement areas.
+ *
+ * @param params.rects - Visualization rectangles, typically from the nested
+ *   RectDiff stage inside topology planning.
+ * @param params.components - Detected topology components whose replacement
+ *   obstacles define regions that are redrawn by component-local topology.
+ * @returns The original `rects` reference when there is nothing to filter;
+ *   otherwise a filtered array without covered RectDiff node rectangles.
+ *
+ * @note Only labels beginning with `"node "` are treated as RectDiff node
+ *   rectangles. Component obstacle overlays and merged topology rectangles are
+ *   left untouched.
+ * @caution This is a visualization-only filter. Keep the mesh-node filter above
+ *   in sync when changing containment semantics.
+ */
+export function filterRectDiffNodeRectsInsideComponentAreas({
+  rects,
+  components,
+}: {
+  rects: GraphicsRect[] | undefined
+  components: SerializedTopologyComponentInput[]
+}): GraphicsRect[] | undefined {
+  if (!rects || components.length === 0) return rects
+
+  return rects.filter(
+    (rect) =>
+      !isRectDiffNodeRect(rect) ||
+      !components.some((component) =>
+        isRectFullyInsideObstacle({
+          rect,
+          obstacle: component.replacementObstacle,
+        }),
+      ),
+  )
+}
+
 /** Matches a global routing region against a detected component replacement obstacle. */
 function isReplacementRegionNode({
   node,
@@ -193,6 +275,125 @@ function isReplacementRegionNode({
     node.center.y <= replacementMaxY + epsilon
 
   return nodeCenterInsideReplacement || isExactReplacementNode
+}
+
+/**
+ * Detects whether a graphics rectangle came from RectDiff's node renderer.
+ *
+ * @param rect - A graphics-debug rectangle from a combined visualization.
+ * @returns `true` when the rectangle label follows RectDiff's `"node ..."`
+ *   label convention; otherwise `false`.
+ *
+ * @note This label check prevents the visualization filter from removing
+ * component pads, obstacle overlays, or merged topology rectangles.
+ */
+function isRectDiffNodeRect(rect: GraphicsRect) {
+  return typeof rect.label === "string" && rect.label.startsWith("node ")
+}
+
+/**
+ * Checks whether a capacity mesh node is fully contained by a component
+ * replacement obstacle.
+ *
+ * @param params.meshNode - Capacity mesh node represented as a centered
+ *   rectangle.
+ * @param params.obstacle - Component replacement obstacle used as the containing
+ *   rectangle.
+ * @returns `true` when the node rectangle is fully inside the obstacle bounds;
+ *   otherwise `false`.
+ */
+function isMeshNodeFullyInsideObstacle({
+  meshNode,
+  obstacle,
+}: {
+  meshNode: CapacityMeshNode
+  obstacle: Obstacle
+}) {
+  return isRectFullyInsideObstacle({
+    rect: {
+      center: meshNode.center,
+      width: meshNode.width,
+      height: meshNode.height,
+    },
+    obstacle,
+  })
+}
+
+/**
+ * Checks whether a centered rectangle is fully contained by a replacement
+ * obstacle.
+ *
+ * @param params.rect - Candidate rectangle with `center`, `width`, and
+ *   `height`; incomplete rectangles return `false`.
+ * @param params.obstacle - Axis-aligned obstacle that may contain `rect`.
+ * @returns `true` when the rectangle's computed bounds are fully inside the
+ *   obstacle's computed bounds; otherwise `false`.
+ *
+ * @note Uses `getBoundFromCenteredRect` from `@tscircuit/math-utils` to avoid
+ * hand-rolled centered-rectangle bound construction.
+ */
+function isRectFullyInsideObstacle({
+  rect,
+  obstacle,
+}: {
+  rect: {
+    center?: { x: number; y: number }
+    width?: number
+    height?: number
+  }
+  obstacle: Obstacle
+}) {
+  if (!rect.center || rect.width === undefined || rect.height === undefined) {
+    return false
+  }
+
+  const epsilon = 1e-9
+  const rectBounds = getBoundFromCenteredRect({
+    center: rect.center,
+    width: rect.width,
+    height: rect.height,
+  })
+  const obstacleBounds = getBoundFromCenteredRect({
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+  })
+
+  return areBoundsInsideBounds({
+    bounds: rectBounds,
+    outerBounds: obstacleBounds,
+    epsilon,
+  })
+}
+
+/**
+ * Checks whether one axis-aligned bounds rectangle is fully contained by
+ * another bounds rectangle.
+ *
+ * @param params.bounds - Inner bounds expected to be contained.
+ * @param params.outerBounds - Outer bounds that may contain `bounds`.
+ * @param params.epsilon - Numeric tolerance applied to each edge comparison.
+ * @returns `true` when every edge of `bounds` is inside `outerBounds`, allowing
+ *   the supplied epsilon; otherwise `false`.
+ *
+ * @note `@tscircuit/math-utils` currently provides overlap/intersection
+ * helpers, while full bounds containment still needs explicit edge comparison.
+ */
+function areBoundsInsideBounds({
+  bounds,
+  outerBounds,
+  epsilon,
+}: {
+  bounds: Bounds
+  outerBounds: Bounds
+  epsilon: number
+}) {
+  return (
+    bounds.minX >= outerBounds.minX - epsilon &&
+    bounds.maxX <= outerBounds.maxX + epsilon &&
+    bounds.minY >= outerBounds.minY - epsilon &&
+    bounds.maxY <= outerBounds.maxY + epsilon
+  )
 }
 
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */

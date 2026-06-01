@@ -1,3 +1,4 @@
+import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
@@ -12,6 +13,28 @@ import type {
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
+/**
+ * Checks whether an original obstacle intersects a detected component
+ * replacement obstacle.
+ *
+ * @param params.obstacle - Candidate global obstacle that may need to be
+ *   removed from the global no-connection SRJ.
+ * @param params.replacementObstacle - Component-region obstacle that replaces
+ *   the component's member pads in the global topology solve.
+ * @returns `true` when the obstacle bounds overlap the replacement obstacle
+ *   bounds; otherwise `false`.
+ *
+ * @note This uses bounding boxes so the global SRJ does not retain pass-through
+ * obstacles underneath component-local routing regions.
+ */
+const doObstaclesOverlap = ({
+  obstacle,
+  replacementObstacle,
+}: {
+  obstacle: Obstacle
+  replacementObstacle: Obstacle
+}) =>
+  doBoundsOverlap(getBoundingBox(obstacle), getBoundingBox(replacementObstacle))
 const MIN_BGA_AXIS_COUNT = 3
 const MIN_BGA_TWO_AXIS_COUNT = 2
 const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
@@ -564,14 +587,22 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
   }
 
   private finalizeOutput() {
+    const replacementObstacles = this.detectedComponents.map(
+      ({ replacementObstacle }) => replacementObstacle,
+    )
+    const globalObstacles = this.passThroughObstacles.filter(
+      (obstacle) =>
+        !replacementObstacles.some((replacementObstacle) =>
+          doObstaclesOverlap({ obstacle, replacementObstacle }),
+        ),
+    )
+
     this.output = {
       global: {
         ...this.inputSrj,
         obstacles: [
-          ...cloneObstacles(this.passThroughObstacles),
-          ...this.detectedComponents.map(({ replacementObstacle }) => ({
-            ...replacementObstacle,
-          })),
+          ...cloneObstacles(globalObstacles),
+          ...cloneObstacles(replacementObstacles),
         ],
       },
       components: this.detectedComponents.map((component) => ({
