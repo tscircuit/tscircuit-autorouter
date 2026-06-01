@@ -227,6 +227,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return {
       connectionName,
       rootConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
       A: { x: points[0].x, y: points[0].y, z: points[0].z },
@@ -294,6 +295,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.solvedRoutes.push({
       connectionName: unsolvedConnection.connectionName,
       rootConnectionName: unsolvedConnection.rootConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       traceThickness: this.traceWidth,
       viaDiameter: this.viaDiameter,
       route,

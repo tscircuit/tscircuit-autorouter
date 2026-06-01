@@ -1,17 +1,17 @@
-import { CachableSolver, CacheProvider } from "lib/cache/types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   getGlobalInMemoryCache,
   setupGlobalCaches,
 } from "lib/cache/setupGlobalCaches"
-import { HyperSingleIntraNodeSolver } from "./HyperSingleIntraNodeSolver"
+import { CachableSolver, CacheProvider } from "lib/cache/types"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import objectHash from "object-hash"
+import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
+import { HyperSingleIntraNodeSolver } from "./HyperSingleIntraNodeSolver"
 
 // Define the structure of the cached data
 type CachedSolvedHyperSingleIntraNode =
@@ -27,6 +27,8 @@ type CacheToHyperSingleIntraNodeTransform = Record<string, never> // Or define s
 const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
+
+const HYPER_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 2
 
 export class CachedHyperSingleIntraNodeSolver
   extends HyperSingleIntraNodeSolver
@@ -127,6 +129,7 @@ export class CachedHyperSingleIntraNodeSolver
     // 3. Create Key Data and Hash
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
+      cacheSchemaVersion: HYPER_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
       // TODO connMap
     }

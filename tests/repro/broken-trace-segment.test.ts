@@ -10,6 +10,20 @@ test("broken trace segment", () => {
 
   solver.solve()
 
+  const hdRoutes = solver.highDensityRouteSolver?.routes ?? []
+  expect(hdRoutes.length).toBeGreaterThan(0)
+  expect(hdRoutes.every((route) => route.regionId)).toBe(true)
+  expect(
+    solver.highDensityForceImproveSolver
+      ?.getOutput()
+      .every((route) => route.regionId),
+  ).toBe(true)
+  expect(
+    solver.highDensityRepairSolver
+      ?.getOutput()
+      .every((route) => route.regionId),
+  ).toBe(true)
+
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

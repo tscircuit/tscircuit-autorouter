@@ -1358,6 +1358,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
       solvedRoutes.push({
         connectionName: polyLine.connectionName,
+        regionId: this.nodeWithPortPoints.capacityMeshNodeId,
         traceThickness: this.traceWidth,
         viaDiameter: this.viaDiameter,
         route: routePoints,

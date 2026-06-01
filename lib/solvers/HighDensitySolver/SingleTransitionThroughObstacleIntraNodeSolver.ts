@@ -125,6 +125,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
       ...this.routes.map((route) => ({
         connectionName: route.connectionName,
         rootConnectionName: route.rootConnectionName,
+        regionId: this.nodeWithPortPoints.capacityMeshNodeId,
         route: [
           {
             x: route.A.x,

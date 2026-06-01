@@ -386,6 +386,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     const routeASolution: HighDensityIntraNodeRoute = {
       connectionName: routeA.connectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route: optimalPath.points.map((p) => ({
         x: p.x,
         y: p.y,
@@ -398,6 +399,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     jPair.line2.points.reverse()
     const routeBSolution: HighDensityIntraNodeRoute = {
       connectionName: routeB.connectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route: [
         ...jPair.line1.points.map((p) => ({
           x: p.x,
@@ -606,6 +608,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Routes don't cross, create simple direct connections
     const routeASolution: HighDensityIntraNodeRoute = {
       connectionName: routeA.connectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route: [
         {
           x: routeA.startPort.x,
@@ -625,6 +628,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     const routeBSolution: HighDensityIntraNodeRoute = {
       connectionName: routeB.connectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route: [
         {
           x: routeB.startPort.x,

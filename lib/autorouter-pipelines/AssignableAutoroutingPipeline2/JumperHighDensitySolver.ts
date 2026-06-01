@@ -46,6 +46,7 @@ function convertJumperRouteToStandard(
   return {
     connectionName: route.connectionName,
     rootConnectionName: route.rootConnectionName,
+    regionId: route.regionId,
     traceThickness: route.traceThickness,
     viaDiameter: 0, // No vias in jumper routes
     route: route.route,
