@@ -119,7 +119,6 @@ const findNodeIndexForRoute = (
 
 const toRepairRoute = (route: HighDensityRoute): RepairHdRoute => ({
   capacityMeshNodeId: route.regionId,
-  regionId: route.regionId,
   connectionName: route.connectionName,
   rootConnectionName: route.rootConnectionName,
   route: route.route.map((point) => ({
@@ -143,7 +142,7 @@ const fromRepairRoute = (
   connectionName: route.connectionName ?? fallbackRoute.connectionName,
   rootConnectionName:
     route.rootConnectionName ?? fallbackRoute.rootConnectionName,
-  regionId: route.regionId ?? fallbackRoute.regionId,
+  regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
   traceThickness: route.traceThickness ?? fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
   route:
