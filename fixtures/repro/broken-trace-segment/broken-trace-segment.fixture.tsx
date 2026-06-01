@@ -178,7 +178,7 @@ const getFixtureConnections = (
       portPoints.find(
         (portPoint) =>
           portPoint.connectionName === connectionName &&
-          portPoint.portPointId.includes("tiny-terminal:start-port"),
+          portPoint.portPointId!.includes("tiny-terminal:start-port"),
       ) ??
       portPoints.find(
         (portPoint) =>
@@ -189,7 +189,7 @@ const getFixtureConnections = (
       portPoints.find(
         (portPoint) =>
           portPoint.connectionName === connectionName &&
-          portPoint.portPointId.includes("tiny-terminal:end-port"),
+          portPoint.portPointId!.includes("tiny-terminal:end-port"),
       ) ??
       portPoints.find(
         (portPoint) =>
