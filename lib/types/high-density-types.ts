@@ -48,6 +48,7 @@ export type HighDensityIntraNodeRoute = {
   }>
   vias: Array<{ x: number; y: number }>
   jumpers?: Jumper[]
+  regionId?: string
 }
 
 export type HighDensityRoute = HighDensityIntraNodeRoute
@@ -83,6 +84,7 @@ export type Jumper = {
 export type HighDensityIntraNodeRouteWithJumpers = {
   connectionName: string
   rootConnectionName?: string
+  regionId?: string
   traceThickness: number
   route: Array<{ x: number; y: number; z: number }>
   jumpers: Jumper[]

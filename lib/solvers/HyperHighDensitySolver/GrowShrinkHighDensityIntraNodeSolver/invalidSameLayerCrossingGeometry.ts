@@ -45,6 +45,7 @@ export const createInvalidDirectConnectionRoutes = (
         {
           connectionName,
           rootConnectionName: start.rootConnectionName,
+          regionId: node.capacityMeshNodeId,
           traceThickness,
           viaDiameter,
           route: [

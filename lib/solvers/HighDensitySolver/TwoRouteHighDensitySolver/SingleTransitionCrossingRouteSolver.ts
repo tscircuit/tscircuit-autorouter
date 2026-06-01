@@ -291,6 +291,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
 
     return {
       connectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
@@ -374,6 +375,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     // We need to navigate around the via
     return {
       connectionName: flatRouteConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       route: [
         { x: flatStart.x, y: flatStart.y, z: flatStart.z ?? 0 },
         { x: p0_5.x, y: p0_5.y, z: flatStart.z ?? 0 },

@@ -9,8 +9,8 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
+import { BaseSolver } from "../BaseSolver"
 
 type Point3 = { x: number; y: number; z: number }
 type Point2 = { x: number; y: number }
@@ -380,6 +380,7 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
         solvedRoutes.push({
           connectionName: task.connectionName,
           rootConnectionName: task.rootConnectionName,
+          regionId: this.nodeWithPortPoints.capacityMeshNodeId,
           traceThickness: this.traceWidth,
           viaDiameter: this.viaDiameter,
           route: path,
