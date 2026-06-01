@@ -78,7 +78,10 @@ const pointMatches = (
 
 // A pour is rasterised into many obstacle cells sharing the same layer + net;
 // key by (layer, net) so every cell of one pour groups into a single escape-via
-// target instead of one target per raster cell.
+// target instead of one target per raster cell. This assumes one contiguous
+// pour per (layer, net): two physically-disjoint same-net regions on one layer
+// are intentionally not split — supported boards pour one contiguous region per
+// (layer, net).
 const getPourKey = (pour: Obstacle) =>
   `${pour.layers[0]}:${[...new Set(pour.connectedTo)].sort().join(",")}`
 
@@ -135,6 +138,20 @@ export class EscapeViaLocationSolver extends BaseSolver {
     connectionNetIds: Set<string>,
   ): boolean {
     return obstacle.connectedTo.some((id) => connectionNetIds.has(id))
+  }
+
+  // A non-pour obstacle on the escape via's own net (an author-placed stitch
+  // via, or any same-net pad). It can never cause a clearance violation for the
+  // via's own net, so both clearance checks exempt it. The two checks ask this
+  // in different geometric contexts (see each call site), but share this core.
+  private isSameNetObstacle(
+    obstacle: Obstacle,
+    connectionNetIds: Set<string>,
+  ): boolean {
+    return (
+      !obstacle.isCopperPour &&
+      this.obstacleMatchesConnectionNet(obstacle, connectionNetIds)
+    )
   }
 
   private getObstacleZs(obstacle: Obstacle): number[] {
@@ -380,13 +397,13 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (obstacle === sourceObstacle) continue
       if (!obstacle.layers.includes(sourceLayer)) continue
 
-      // A same-net via that spans this layer (e.g. an author-placed stitch via
+      // A same-net obstacle on this layer (e.g. an author-placed stitch via
       // bonding a pad to its pour) is not a clearance blocker for an escape via
       // on the same net — skip it so the escape path isn't falsely rejected.
+      // The enclosing loop has already restricted to obstacles on sourceLayer.
       if (
         connectionNetIds &&
-        !obstacle.isCopperPour &&
-        this.obstacleMatchesConnectionNet(obstacle, connectionNetIds)
+        this.isSameNetObstacle(obstacle, connectionNetIds)
       ) {
         continue
       }
@@ -621,14 +638,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
         continue
       }
 
-      // A same-net via spanning the full source→target layer pair is the kind
-      // of stitch the escape via is trying to land next to; it is not a
-      // clearance blocker for its own net.
+      // Same exemption as hasClearEscapePath, but this clearance is measured
+      // across the via's full source→target span, so we only exempt a same-net
+      // obstacle that itself spans that whole pair (e.g. the author stitch via
+      // the escape is landing next to) — not a same-net pad on a single layer.
       if (
-        !obstacle.isCopperPour &&
+        this.isSameNetObstacle(obstacle, connectionNetIds) &&
         obstacleZs.includes(sourceZ) &&
-        obstacleZs.includes(targetZ) &&
-        this.obstacleMatchesConnectionNet(obstacle, connectionNetIds)
+        obstacleZs.includes(targetZ)
       ) {
         continue
       }
