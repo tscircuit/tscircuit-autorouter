@@ -1,8 +1,41 @@
-import { GenericSolverDebugger } from "@tscircuit/solver-utils/react"
 import * as datasetSrj16 from "@tsci/tscircuit.dataset-srj16-bga-breakouts"
-import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import type { SimpleRouteJson } from "lib/types"
 import { useEffect, useState } from "react"
+
+/**
+ * Runs pipeline7 only through topology planning so the fixture can inspect BGA
+ * topology in the same context as the multigraph autorouter.
+ *
+ * @note The overridden `visualize` method temporarily renders the unsolved view
+ * after the shortened pipeline completes, preserving the stage-by-stage
+ * topology visualization in GenericSolverDebugger.
+ */
+class BgaFixturePipeline extends AutoroutingPipelineSolver7_MultiGraph {
+  constructor(srj: SimpleRouteJson) {
+    super(srj)
+
+    const topologyPlanningStepIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "topologyPlanningSolver",
+    )
+
+    this.pipelineDef = this.pipelineDef.slice(0, topologyPlanningStepIndex + 1)
+  }
+
+  override visualize() {
+    if (!this.solved) {
+      return super.visualize()
+    }
+
+    this.solved = false
+    try {
+      return super.visualize()
+    } finally {
+      this.solved = true
+    }
+  }
+}
 
 type DatasetCircuit = {
   id: string
@@ -124,10 +157,11 @@ const CircuitSelector = ({
 }
 
 const SolverView = ({ circuit }: { circuit: DatasetCircuit }) => {
-  const solver = new BgaTopologyGeneratorSolver({ inputSrj: circuit.srj })
-
   return (
-    <GenericSolverDebugger key={`bga-topology-${circuit.id}`} solver={solver} />
+    <GenericSolverDebugger
+      key={`bga-topology-${circuit.id}`}
+      createSolver={() => new BgaFixturePipeline(circuit.srj)}
+    />
   )
 }
 
