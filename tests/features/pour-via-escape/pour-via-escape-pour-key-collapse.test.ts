@@ -2,11 +2,13 @@ import { expect, test } from "bun:test"
 import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import type { SimpleRouteJson } from "../../../lib/types"
 
-// One logical inner1 pour rasterised into two cells, with two pads — one over
-// each cell. Each pad's escape via lands in a different cell. Keyed per raster
-// cell (the old getObstacleKey) the two vias got different pour targets and were
-// never grouped, so the MST routed a redundant pad-to-pad trace. Keyed by
-// (layer, net) they share one target and group through externallyConnectedPointIds.
+// One logical inner1 pour rasterised into two ADJACENT cells (touching at x=0),
+// with two pads — one over each cell. Each pad's escape via lands in a different
+// cell. Keyed per raster cell (the old getObstacleKey) the two vias got different
+// pour targets and were never grouped, so the MST routed a redundant pad-to-pad
+// trace. Keyed by (layer, net) they share one target and group through
+// externallyConnectedPointIds. The cells are contiguous on purpose — that is the
+// topology (layer, net) keying assumes (see getPourKey).
 function twoCellPourSrj(): SimpleRouteJson {
   return {
     layerCount: 4,
@@ -37,7 +39,7 @@ function twoCellPourSrj(): SimpleRouteJson {
         obstacleId: "pour-cell-left",
         type: "rect",
         layers: ["inner1"],
-        center: { x: -5, y: 0 },
+        center: { x: -4, y: 0 },
         width: 8,
         height: 8,
         connectedTo: ["source_net_0"],
@@ -47,7 +49,7 @@ function twoCellPourSrj(): SimpleRouteJson {
         obstacleId: "pour-cell-right",
         type: "rect",
         layers: ["inner1"],
-        center: { x: 5, y: 0 },
+        center: { x: 4, y: 0 },
         width: 8,
         height: 8,
         connectedTo: ["source_net_0"],
