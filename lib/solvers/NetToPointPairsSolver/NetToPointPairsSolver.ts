@@ -1,13 +1,17 @@
+import { GraphicsObject } from "graphics-debug"
 import {
   ConnectionPoint,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
+import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import {
+  getSourceTraceIdsForConnection,
+  normalizeConnectionSourceTraceIds,
+} from "lib/utils/getSourceTraceIdsForConnection"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
-import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
-import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
@@ -129,7 +133,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         return
       }
       this.newConnections.push({
-        ...connection,
+        ...normalizeConnectionSourceTraceIds({ connection }),
         rootConnectionName: connection.rootConnectionName ?? connection.name,
       })
       return
@@ -142,9 +146,12 @@ export class NetToPointPairsSolver extends BaseSolver {
     let mstIdx = 0
     for (const edge of edges) {
       if (areExternallyConnected(pointIdToGroup, edge.from, edge.to)) continue
+      const source_trace_ids = getSourceTraceIdsForConnection({ connection })
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
+        source_trace_ids:
+          source_trace_ids.length > 0 ? source_trace_ids : undefined,
         rootConnectionName: connection.rootConnectionName ?? connection.name,
         mergedConnectionNames: connection.mergedConnectionNames,
         netConnectionName: connection.netConnectionName,

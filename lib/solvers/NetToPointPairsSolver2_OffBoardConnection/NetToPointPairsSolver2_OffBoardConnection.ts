@@ -1,13 +1,17 @@
 import {
+  ConnectionPoint,
   SimpleRouteConnection,
   SimpleRouteJson,
-  ConnectionPoint,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
 import {
+  getSourceTraceIdsForConnection,
+  normalizeConnectionSourceTraceIds,
+} from "lib/utils/getSourceTraceIdsForConnection"
+import {
+  NetToPointPairsSolver,
   areExternallyConnected,
   getExternalConnectionState,
-  NetToPointPairsSolver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 
@@ -103,8 +107,8 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     for (const currentSourceCandidate of sourcePointEquivalenceGroup) {
       for (const currentTargetCandidate of targetPointEquivalenceGroup) {
         const distance = Math.sqrt(
-          Math.pow(currentSourceCandidate.x - currentTargetCandidate.x, 2) +
-            Math.pow(currentSourceCandidate.y - currentTargetCandidate.y, 2),
+          (currentSourceCandidate.x - currentTargetCandidate.x) ** 2 +
+            (currentSourceCandidate.y - currentTargetCandidate.y) ** 2,
         )
         if (distance < minimumDistance) {
           minimumDistance = distance
@@ -143,7 +147,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.pointsToConnect[1],
         )
       this.newConnections.push({
-        ...currentConnection,
+        ...normalizeConnectionSourceTraceIds({ connection: currentConnection }),
         pointsToConnect: optimizedConnection.pointsToConnect,
         rootConnectionName:
           currentConnection.rootConnectionName ?? currentConnection.name,
@@ -166,10 +170,15 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         mstEdge.from,
         mstEdge.to,
       )
+      const source_trace_ids = getSourceTraceIdsForConnection({
+        connection: currentConnection,
+      })
 
       this.newConnections.push({
         pointsToConnect: optimizedMstEdge.pointsToConnect,
         name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
+        source_trace_ids:
+          source_trace_ids.length > 0 ? source_trace_ids : undefined,
         rootConnectionName:
           currentConnection.rootConnectionName ?? currentConnection.name,
         mergedConnectionNames: currentConnection.mergedConnectionNames,

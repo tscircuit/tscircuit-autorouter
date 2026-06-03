@@ -60,6 +60,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import { getSourceTraceIdFromMergedRouteGeometry } from "./getSourceTraceIdFromMergedRouteGeometry"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -913,9 +914,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const source_trace_id = getSourceTraceIdFromMergedRouteGeometry({
+          connection,
+          hdRoute,
+          originalConnections: this.originalSrj.connections,
+          layerCount: this.srj.layerCount,
+        })
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
+          source_trace_id,
           connection_name:
             netConnectionName ??
             connection.rootConnectionName ??

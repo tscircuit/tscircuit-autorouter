@@ -1,12 +1,16 @@
 import {
-  SimpleRouteConnection,
   ConnectionPoint,
+  ConnectionTempId,
   PointId,
   PointKey,
-  ConnectionTempId,
+  SimpleRouteConnection,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
+import {
+  getSourceTraceIdsForConnection,
+  normalizeConnectionSourceTraceIds,
+} from "lib/utils/getSourceTraceIdsForConnection"
 
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
@@ -79,7 +83,11 @@ export function mergeConnections(
   // Construct the new merged connections
   for (const simpleRouteConnectionGroup of connectionTempIdGroups.values()) {
     if (simpleRouteConnectionGroup.length === 1) {
-      mergedSimpleRouteConnections.push(simpleRouteConnectionGroup[0])
+      mergedSimpleRouteConnections.push(
+        normalizeConnectionSourceTraceIds({
+          connection: simpleRouteConnectionGroup[0]!,
+        }),
+      )
       continue // No merging needed for groups of one
     }
 
@@ -89,6 +97,7 @@ export function mergeConnections(
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
+    const source_trace_ids: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
@@ -123,6 +132,12 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.netConnectionName)
       }
 
+      for (const source_trace_id of getSourceTraceIdsForConnection({
+        connection: simpleRouteConnection,
+      })) {
+        source_trace_ids.add(source_trace_id)
+      }
+
       // Take the nominalTraceWidth from the first connection for now
       // A more robust solution might average or pick the max/min based on context
       if (
@@ -152,6 +167,8 @@ export function mergeConnections(
         mergedRootConnectionNames.size === 1
           ? Array.from(mergedRootConnectionNames)[0]
           : undefined,
+      source_trace_ids:
+        source_trace_ids.size > 0 ? Array.from(source_trace_ids) : undefined,
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
 

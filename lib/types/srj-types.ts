@@ -86,6 +86,7 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  source_trace_ids?: TraceId[]
   rootConnectionName?: string
   mergedConnectionNames?: string[]
   isOffBoard?: boolean
@@ -100,6 +101,7 @@ export interface SimpleRouteConnection {
 export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
+  source_trace_id?: TraceId
   connection_name: string
   route: Array<
     | {
