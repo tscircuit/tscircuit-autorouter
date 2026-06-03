@@ -1,11 +1,11 @@
 import objectHash from "object-hash"
 
-import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 import {
   getGlobalInMemoryCache,
   setupGlobalCaches,
 } from "lib/cache/setupGlobalCaches"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
+import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 2
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 3
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver

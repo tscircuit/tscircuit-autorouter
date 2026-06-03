@@ -3,7 +3,7 @@ import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { ComponentDetectionSolverOutput } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { getStringColor, safeTransparentize } from "lib/solvers/colors"
+import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import {
@@ -11,6 +11,8 @@ import {
   type ComponentTopologyBatchSolverOutput,
   type NormalizedTopologyPlannerInput,
   createComponentSrj,
+  filterMeshNodesInsideComponentAreas,
+  filterRectDiffNodeRectsInsideComponentAreas,
   mergeMeshNodes,
   normalizeInput,
 } from "./topologyPlanningShared"
@@ -100,10 +102,14 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
    * regions used by downstream stages.
    */
   override getOutput(): MultiGraphTopologyPlannerSolverOutput {
-    const globalMeshNodes =
+    const rawGlobalMeshNodes =
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
       )?.meshNodes ?? []
+    const globalMeshNodes = filterMeshNodesInsideComponentAreas({
+      meshNodes: rawGlobalMeshNodes,
+      components: this.normalizedInput.components,
+    })
     const componentMeshNodes =
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
@@ -130,16 +136,13 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       (componentSrj, componentIndex) => {
         const component =
           this.normalizedInput.components[componentIndex] ?? null
-        const componentColor = component
-          ? getStringColor(component.componentId)
-          : "rgba(120, 120, 120, 0.8)"
 
         return componentSrj.obstacles.map((obstacle) => ({
           center: obstacle.center,
           width: obstacle.width,
           height: obstacle.height,
-          fill: safeTransparentize("red", 0.75),
-          stroke: safeTransparentize("red", 0.2),
+          fill: "rgba(120, 120, 120, 0.06)",
+          stroke: "rgba(120, 120, 120, 0.35)",
           label:
             obstacle.obstacleId ?? component?.componentId ?? "component-pad",
           layer: obstacle.layers.join(","),
@@ -157,18 +160,15 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
               candidate.componentId &&
               node.capacityMeshNodeId.includes(candidate.componentId),
           )
-          const componentColor = component
-            ? getStringColor(component.componentId)
-            : "rgba(0, 200, 200, 0.8)"
           const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
           return {
             ...rect,
             fill: node._containsObstacle
               ? safeTransparentize("red", 0.82)
-              : safeTransparentize(componentColor, 0.88),
+              : "rgba(0, 120, 255, 0.12)",
             stroke: node._containsObstacle
               ? safeTransparentize("red", 0.3)
-              : safeTransparentize(componentColor, 0.25),
+              : "rgba(0, 120, 255, 0.55)",
             label: component
               ? `${component.componentKind?.toUpperCase() ?? "BGA"} ${node.capacityMeshNodeId}`
               : node.capacityMeshNodeId,
@@ -180,6 +180,18 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       circles: [],
       texts: [],
     }
+  }
+
+  override visualize(): GraphicsObject {
+    return this.filterGlobalRectDiffNodesFromVisualization({
+      visualization: super.visualize(),
+    })
+  }
+
+  override preview(): GraphicsObject {
+    return this.filterGlobalRectDiffNodesFromVisualization({
+      visualization: super.preview(),
+    })
   }
 
   /** Rebuilds each component-local SRJ from its original member obstacles. */
@@ -196,6 +208,33 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
   private getGlobalTopologySolverInput() {
     return {
       simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
+    }
+  }
+
+  /**
+   * Removes raw RectDiff node rects that are superseded by component-local
+   * topology regions.
+   *
+   * @param params.visualization - Graphics output produced by the base
+   *   pipeline visualizer, including nested stage visualizations.
+   * @returns A visualization with RectDiff node rectangles inside component
+   *   areas removed. Non-RectDiff rectangles and all lines, points, circles,
+   *   and text entries are returned unchanged.
+   *
+   * @note This keeps intermediate RectDiff visualization consistent with the
+   * merged topology output, which already removes those nodes from solver data.
+   */
+  private filterGlobalRectDiffNodesFromVisualization({
+    visualization,
+  }: {
+    visualization: GraphicsObject
+  }): GraphicsObject {
+    return {
+      ...visualization,
+      rects: filterRectDiffNodeRectsInsideComponentAreas({
+        rects: visualization.rects,
+        components: this.normalizedInput.components,
+      }),
     }
   }
 }

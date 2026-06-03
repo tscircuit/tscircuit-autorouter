@@ -17,6 +17,7 @@ import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 export type FutureConnection = {
   connectionName: string
   rootConnectionName?: string
+  regionId?: string
   points: { x: number; y: number; z: number }[]
 }
 
@@ -68,6 +69,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   connectionName: string
   rootConnectionName?: string
+  regionId?: string
   solvedPath: HighDensityIntraNodeRoute | null = null
 
   futureConnections: FutureConnection[]
@@ -92,6 +94,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   constructor(opts: {
     connectionName: string
     rootConnectionName?: string
+    regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
@@ -122,6 +125,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
     this.connectionName = opts.connectionName
     this.rootConnectionName = opts.rootConnectionName
+    this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
     this.A = opts.A
     this.B = opts.B
@@ -239,6 +243,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
+      regionId: this.regionId,
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
@@ -562,6 +567,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
+      regionId: this.regionId,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
       route: path

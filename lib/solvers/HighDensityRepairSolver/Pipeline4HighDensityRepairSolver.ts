@@ -1,17 +1,17 @@
-import { HighDensityRepairSolver } from "high-density-repair02"
 import type { GraphicsObject } from "graphics-debug"
+import { HighDensityRepairSolver } from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
-import type { Obstacle } from "lib/types/srj-types"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { safeTransparentize } from "../colors"
+import type { Obstacle } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { safeTransparentize } from "../colors"
 
 type RepairSampleEntry = {
   node: NodeWithPortPoints
@@ -96,6 +96,13 @@ const findNodeIndexForRoute = (
   nodes: NodeWithPortPoints[],
   margin: number,
 ): number => {
+  if (route.regionId) {
+    const regionNodeIndex = nodes.findIndex(
+      (node) => node.capacityMeshNodeId === route.regionId,
+    )
+    if (regionNodeIndex !== -1) return regionNodeIndex
+  }
+
   const routePoints = route.route.map(({ x, y }) => ({ x, y }))
   const viaPoints = route.vias.map(({ x, y }) => ({ x, y }))
   const points = [...routePoints, ...viaPoints]
@@ -111,7 +118,7 @@ const findNodeIndexForRoute = (
 }
 
 const toRepairRoute = (route: HighDensityRoute): RepairHdRoute => ({
-  capacityMeshNodeId: undefined,
+  capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
   rootConnectionName: route.rootConnectionName,
   route: route.route.map((point) => ({
@@ -135,6 +142,7 @@ const fromRepairRoute = (
   connectionName: route.connectionName ?? fallbackRoute.connectionName,
   rootConnectionName:
     route.rootConnectionName ?? fallbackRoute.rootConnectionName,
+  regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
   traceThickness: route.traceThickness ?? fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
   route:

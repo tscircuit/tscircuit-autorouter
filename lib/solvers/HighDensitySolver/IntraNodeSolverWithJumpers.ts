@@ -1,8 +1,8 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 import type {
   HighDensityIntraNodeRouteWithJumpers,
@@ -216,6 +216,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     this.activeSubSolver = new SingleHighDensityRouteWithJumpersSolver({
       connectionName,
       rootConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
       A: { x: points[0].x, y: points[0].y, z: 0 },
