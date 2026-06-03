@@ -236,6 +236,365 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
   )
 }
 
+export function mergeNestedComponentMeshNodes({
+  components,
+  componentMeshNodes,
+  componentSrjs,
+}: {
+  components: SerializedTopologyComponentInput[]
+  componentMeshNodes: CapacityMeshNode[][]
+  componentSrjs?: SimpleRouteJson[]
+}): CapacityMeshNode[][] {
+  return componentMeshNodes.map((nodes, componentIndex) => {
+    const parentComponent = components[componentIndex]
+    if (!parentComponent) return nodes
+
+    const childComponents = components.filter(
+      (component, candidateIndex) =>
+        candidateIndex !== componentIndex &&
+        isObstacleInsideObstacle({
+          inner: component.replacementObstacle,
+          outer: parentComponent.replacementObstacle,
+        }),
+    )
+
+    const nestedComponentNodes =
+      childComponents.length === 0
+        ? nodes
+        : nodes.flatMap((node) =>
+            childComponents.reduce(
+              (splitNodes, childComponent) =>
+                splitNodes.flatMap((splitNode) =>
+                  splitNodeAroundNestedComponent({
+                    node: splitNode,
+                    childComponent,
+                  }),
+                ),
+              [node],
+            ),
+          )
+
+    const extraObstacles = getExtraComponentLocalObstacles({
+      component: parentComponent,
+      components,
+      componentSrj: componentSrjs?.[componentIndex],
+    })
+
+    if (extraObstacles.length === 0) return nestedComponentNodes
+
+    return nestedComponentNodes.flatMap((node) =>
+      extraObstacles.reduce(
+        (splitNodes, obstacle, obstacleIndex) =>
+          splitNodes.flatMap((splitNode) =>
+            splitNodeAroundExtraObstacle({
+              node: splitNode,
+              componentId: parentComponent.componentId,
+              obstacle,
+              obstacleIndex,
+            }),
+          ),
+        [node],
+      ),
+    )
+  })
+}
+
+function getExtraComponentLocalObstacles({
+  component,
+  components,
+  componentSrj,
+}: {
+  component: SerializedTopologyComponentInput
+  components: SerializedTopologyComponentInput[]
+  componentSrj: SimpleRouteJson | undefined
+}) {
+  if (!componentSrj) return []
+
+  const memberObstacleIds = new Set(component.memberObstacleIds)
+  const childComponents = components.filter(
+    (candidate) =>
+      candidate.componentId !== component.componentId &&
+      isObstacleInsideObstacle({
+        inner: candidate.replacementObstacle,
+        outer: component.replacementObstacle,
+      }),
+  )
+
+  return componentSrj.obstacles.filter((obstacle) => {
+    if (obstacle.componentId === component.componentId) return false
+    if (obstacle.obstacleId && memberObstacleIds.has(obstacle.obstacleId)) {
+      return false
+    }
+    if (
+      childComponents.some((childComponent) =>
+        isObstacleInsideObstacle({
+          inner: obstacle,
+          outer: childComponent.replacementObstacle,
+        }),
+      )
+    ) {
+      return false
+    }
+
+    return isObstacleInsideObstacle({
+      inner: obstacle,
+      outer: component.replacementObstacle,
+    })
+  })
+}
+
+function splitNodeAroundNestedComponent({
+  node,
+  childComponent,
+}: {
+  node: CapacityMeshNode
+  childComponent: SerializedTopologyComponentInput
+}) {
+  if (node._containsObstacle) return [node]
+
+  const nodeBounds = getNodeBounds(node)
+  const childBounds = getObstacleBounds(childComponent.replacementObstacle)
+
+  if (!isBoundsInsideBounds({ inner: childBounds, outer: nodeBounds })) {
+    return [node]
+  }
+
+  const splitBounds = [
+    {
+      key: "top",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: nodeBounds.maxX,
+        minY: nodeBounds.minY,
+        maxY: childBounds.minY,
+      },
+    },
+    {
+      key: "right",
+      bounds: {
+        minX: childBounds.maxX,
+        maxX: nodeBounds.maxX,
+        minY: childBounds.minY,
+        maxY: childBounds.maxY,
+      },
+    },
+    {
+      key: "bottom",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: nodeBounds.maxX,
+        minY: childBounds.maxY,
+        maxY: nodeBounds.maxY,
+      },
+    },
+    {
+      key: "left",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: childBounds.minX,
+        minY: childBounds.minY,
+        maxY: childBounds.maxY,
+      },
+    },
+  ]
+
+  const splitNodes = splitBounds
+    .filter(({ bounds }) => isValidNodeBounds(bounds))
+    .map(({ key, bounds }) =>
+      createNodeFromBounds({
+        node,
+        bounds,
+        capacityMeshNodeId: `${node.capacityMeshNodeId}:around:${childComponent.componentId}:${key}`,
+      }),
+    )
+
+  return splitNodes.length > 0 ? splitNodes : [node]
+}
+
+function splitNodeAroundExtraObstacle({
+  node,
+  componentId,
+  obstacle,
+  obstacleIndex,
+}: {
+  node: CapacityMeshNode
+  componentId: string
+  obstacle: SerializedTopologyComponentInput["replacementObstacle"]
+  obstacleIndex: number
+}) {
+  if (node._containsObstacle) return [node]
+
+  const nodeBounds = getNodeBounds(node)
+  const obstacleBounds = getObstacleBounds(obstacle)
+  const intersectionBounds = getBoundsIntersection({
+    a: nodeBounds,
+    b: obstacleBounds,
+  })
+
+  if (!intersectionBounds) return [node]
+
+  const obstacleKey = obstacle.obstacleId ?? `extra-${obstacleIndex}`
+  const splitBounds = [
+    {
+      key: "top",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: nodeBounds.maxX,
+        minY: nodeBounds.minY,
+        maxY: intersectionBounds.minY,
+      },
+    },
+    {
+      key: "right",
+      bounds: {
+        minX: intersectionBounds.maxX,
+        maxX: nodeBounds.maxX,
+        minY: intersectionBounds.minY,
+        maxY: intersectionBounds.maxY,
+      },
+    },
+    {
+      key: "bottom",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: nodeBounds.maxX,
+        minY: intersectionBounds.maxY,
+        maxY: nodeBounds.maxY,
+      },
+    },
+    {
+      key: "left",
+      bounds: {
+        minX: nodeBounds.minX,
+        maxX: intersectionBounds.minX,
+        minY: intersectionBounds.minY,
+        maxY: intersectionBounds.maxY,
+      },
+    },
+  ]
+
+  return [
+    createNodeFromBounds({
+      node,
+      bounds: intersectionBounds,
+      capacityMeshNodeId: `${node.capacityMeshNodeId}:obstacle:${componentId}:${obstacleKey}`,
+      containsObstacle: true,
+    }),
+    ...splitBounds
+      .filter(({ bounds }) => isValidNodeBounds(bounds))
+      .map(({ key, bounds }) =>
+        createNodeFromBounds({
+          node,
+          bounds,
+          capacityMeshNodeId: `${node.capacityMeshNodeId}:around-obstacle:${componentId}:${obstacleKey}:${key}`,
+        }),
+      ),
+  ]
+}
+
+function getBoundsIntersection({
+  a,
+  b,
+}: {
+  a: ReturnType<typeof getNodeBounds>
+  b: ReturnType<typeof getNodeBounds>
+}) {
+  const intersection = {
+    minX: Math.max(a.minX, b.minX),
+    maxX: Math.min(a.maxX, b.maxX),
+    minY: Math.max(a.minY, b.minY),
+    maxY: Math.min(a.maxY, b.maxY),
+  }
+
+  return isValidNodeBounds(intersection) ? intersection : null
+}
+
+function getNodeBounds(node: CapacityMeshNode) {
+  return {
+    minX: node.center.x - node.width / 2,
+    maxX: node.center.x + node.width / 2,
+    minY: node.center.y - node.height / 2,
+    maxY: node.center.y + node.height / 2,
+  }
+}
+
+function getObstacleBounds(
+  obstacle: SerializedTopologyComponentInput["replacementObstacle"],
+) {
+  return {
+    minX: obstacle.center.x - obstacle.width / 2,
+    maxX: obstacle.center.x + obstacle.width / 2,
+    minY: obstacle.center.y - obstacle.height / 2,
+    maxY: obstacle.center.y + obstacle.height / 2,
+  }
+}
+
+function isObstacleInsideObstacle({
+  inner,
+  outer,
+}: {
+  inner: SerializedTopologyComponentInput["replacementObstacle"]
+  outer: SerializedTopologyComponentInput["replacementObstacle"]
+}) {
+  return isBoundsInsideBounds({
+    inner: getObstacleBounds(inner),
+    outer: getObstacleBounds(outer),
+  })
+}
+
+function isBoundsInsideBounds({
+  inner,
+  outer,
+}: {
+  inner: ReturnType<typeof getNodeBounds>
+  outer: ReturnType<typeof getNodeBounds>
+}) {
+  const epsilon = 1e-9
+
+  return (
+    inner.minX >= outer.minX - epsilon &&
+    inner.maxX <= outer.maxX + epsilon &&
+    inner.minY >= outer.minY - epsilon &&
+    inner.maxY <= outer.maxY + epsilon &&
+    (inner.minX > outer.minX + epsilon ||
+      inner.maxX < outer.maxX - epsilon ||
+      inner.minY > outer.minY + epsilon ||
+      inner.maxY < outer.maxY - epsilon)
+  )
+}
+
+function isValidNodeBounds(bounds: ReturnType<typeof getNodeBounds>) {
+  const epsilon = 1e-9
+
+  return (
+    bounds.maxX - bounds.minX > epsilon && bounds.maxY - bounds.minY > epsilon
+  )
+}
+
+function createNodeFromBounds({
+  node,
+  bounds,
+  capacityMeshNodeId,
+  containsObstacle = node._containsObstacle,
+}: {
+  node: CapacityMeshNode
+  bounds: ReturnType<typeof getNodeBounds>
+  capacityMeshNodeId: string
+  containsObstacle?: boolean
+}): CapacityMeshNode {
+  return {
+    ...node,
+    capacityMeshNodeId,
+    center: {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    },
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
+    _containsObstacle: containsObstacle,
+  }
+}
+
 /** Matches a global routing region against a detected component replacement obstacle. */
 function isReplacementRegionNode({
   node,

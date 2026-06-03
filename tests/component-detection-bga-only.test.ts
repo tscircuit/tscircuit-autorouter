@@ -14,6 +14,9 @@ import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-
 import bugReport63 from "../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with {
   type: "json",
 }
+import srj18Sample001 from "dataset-srj18/samples/sample001.json" with {
+  type: "json",
+}
 
 const createPad = ({
   componentId,
@@ -690,4 +693,88 @@ test("topology planning creates QFP thermal-pad inner and outer regions", () => 
         node.availableZ.length > 1,
     ),
   ).toBe(true)
+})
+
+test("srj18 sample001 component 36 merges narrow QFN outer pad gaps", () => {
+  const inputSrj = srj18Sample001 as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const component36 = componentDetectionSolver
+    .getOutput()
+    .components.find(
+      (component) => component.componentId === "pcb_component_36",
+    )
+
+  expect(component36?.componentKind).toBe("qfp_thermalpad")
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const componentIndex = componentDetectionSolver
+    .getOutput()
+    .components.findIndex(
+      (component) => component.componentId === "pcb_component_36",
+    )
+  const outerComponentIndex = componentDetectionSolver
+    .getOutput()
+    .components.findIndex(
+      (component) => component.componentId === "pcb_component_47",
+    )
+  const componentNodes =
+    topologyPlanningSolver.getOutput().componentMeshNodes[componentIndex] ?? []
+  const outerComponentNodes =
+    topologyPlanningSolver.getOutput().componentMeshNodes[
+      outerComponentIndex
+    ] ?? []
+  const mergedNodes = topologyPlanningSolver.getOutput().mergedMeshNodes
+  const outerNarrowGapNodes = componentNodes.filter(
+    (node) =>
+      node._qfpRegionType === "pad-gap" &&
+      node._isNarrowQfpPadGap &&
+      /:(top|right|bottom|left)-gap-/.test(node.capacityMeshNodeId),
+  )
+  const mergedPadNode = componentNodes.find(
+    (node) =>
+      node.capacityMeshNodeId.startsWith(
+        "qfp_thermalpad:pcb_component_36:pad:",
+      ) && Math.min(node.width, node.height) > 0.25,
+  )
+  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(
+    mergedNodes,
+  )
+  edgeSolver.solve()
+  const availableSegmentPointSolver = new AvailableSegmentPointSolver({
+    nodes: mergedNodes,
+    edges: edgeSolver.edges,
+    traceWidth: inputSrj.minTraceWidth,
+    obstacleMargin: inputSrj.defaultObstacleMargin,
+    shouldReturnCrampedPortPoints: true,
+  })
+  availableSegmentPointSolver.solve()
+  const component36To47Segments = availableSegmentPointSolver
+    .getOutput()
+    .filter(
+      (segment) =>
+        segment.nodeIds.some((nodeId) => nodeId.includes("pcb_component_36")) &&
+        segment.nodeIds.some((nodeId) => nodeId.includes("pcb_component_47")),
+    )
+  const extraObstacleNodes = outerComponentNodes.filter(
+    (node) =>
+      node._containsObstacle &&
+      node.capacityMeshNodeId.includes(":obstacle:pcb_component_47:"),
+  )
+
+  expect(outerNarrowGapNodes).toHaveLength(0)
+  expect(mergedPadNode).toBeDefined()
+  expect(
+    outerComponentNodes.some((node) =>
+      node.capacityMeshNodeId.includes(":around:pcb_component_36:"),
+    ),
+  ).toBe(true)
+  expect(component36To47Segments.length).toBeGreaterThan(0)
+  expect(extraObstacleNodes.length).toBeGreaterThan(0)
 })

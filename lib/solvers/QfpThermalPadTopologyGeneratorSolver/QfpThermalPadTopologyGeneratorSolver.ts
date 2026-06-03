@@ -190,13 +190,80 @@ function createMeshNodesForRegion({
   }))
 }
 
-function getPadRegions(obstacles: Obstacle[]) {
-  return obstacles.map((obstacle, index) => ({
-    key: `pad:${obstacle.obstacleId ?? index}`,
-    bounds: getBoundingBox(obstacle),
-    regionType: "pad" as const,
-    containsObstacle: true,
-  }))
+function getPadRegionsWithMergedNarrowOuterGaps({
+  sideGroups,
+  bounds,
+  innerBounds,
+  narrowThreshold,
+}: {
+  sideGroups: Record<QfpSide, Obstacle[]>
+  bounds: Bounds
+  innerBounds: Bounds
+  narrowThreshold: number
+}) {
+  const regions: QfpThermalPadRoutingRegion[] = []
+
+  for (const side of ["top", "right", "bottom", "left"] as const) {
+    const sideObstacles = sideGroups[side]
+
+    for (let index = 0; index < sideObstacles.length; index++) {
+      const obstacle = sideObstacles[index]!
+      const padBounds = getBoundingBox(obstacle)
+      const nextObstacle = sideObstacles[index + 1]
+
+      if (nextObstacle) {
+        const nextBounds = getBoundingBox(nextObstacle)
+        let gapBounds: Bounds
+
+        if (side === "top") {
+          gapBounds = {
+            minX: padBounds.maxX,
+            maxX: nextBounds.minX,
+            minY: bounds.minY,
+            maxY: innerBounds.minY,
+          }
+        } else if (side === "right") {
+          gapBounds = {
+            minX: innerBounds.maxX,
+            maxX: bounds.maxX,
+            minY: padBounds.maxY,
+            maxY: nextBounds.minY,
+          }
+        } else if (side === "bottom") {
+          gapBounds = {
+            minX: padBounds.maxX,
+            maxX: nextBounds.minX,
+            minY: innerBounds.maxY,
+            maxY: bounds.maxY,
+          }
+        } else {
+          gapBounds = {
+            minX: bounds.minX,
+            maxX: innerBounds.minX,
+            minY: padBounds.maxY,
+            maxY: nextBounds.minY,
+          }
+        }
+
+        if (isNarrowPadGap(gapBounds, narrowThreshold)) {
+          if (side === "top" || side === "bottom") {
+            padBounds.maxX = nextBounds.minX
+          } else {
+            padBounds.maxY = nextBounds.minY
+          }
+        }
+      }
+
+      regions.push({
+        key: `pad:${obstacle.obstacleId ?? `${side}-${index}`}`,
+        bounds: padBounds,
+        regionType: "pad",
+        containsObstacle: true,
+      })
+    }
+  }
+
+  return regions
 }
 
 function getThermalPadRegions(obstacles: Obstacle[]) {
@@ -266,12 +333,13 @@ function createOuterGapRegionsForSide({
       }
     }
 
-    regions.push({
-      key: `${side}-gap-${index}`,
-      bounds: gapBounds,
-      regionType: "pad-gap",
-      isNarrowPadGap: isNarrowPadGap(gapBounds, narrowThreshold),
-    })
+    if (!isNarrowPadGap(gapBounds, narrowThreshold)) {
+      regions.push({
+        key: `${side}-gap-${index}`,
+        bounds: gapBounds,
+        regionType: "pad-gap",
+      })
+    }
   }
 
   return regions
@@ -773,7 +841,12 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     const narrowPadGapThreshold =
       this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
     const regions: QfpThermalPadRoutingRegion[] = [
-      ...getPadRegions(padRingObstacles),
+      ...getPadRegionsWithMergedNarrowOuterGaps({
+        sideGroups,
+        bounds,
+        innerBounds,
+        narrowThreshold: narrowPadGapThreshold,
+      }),
       ...getThermalPadRegions(thermalPadObstacles),
       ...createOuterGapRegionsForSide({
         side: "top",

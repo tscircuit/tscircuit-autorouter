@@ -14,6 +14,7 @@ import {
   filterMeshNodesInsideComponentAreas,
   filterRectDiffNodeRectsInsideComponentAreas,
   mergeMeshNodes,
+  mergeNestedComponentMeshNodes,
   normalizeInput,
 } from "./topologyPlanningShared"
 
@@ -110,11 +111,16 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       meshNodes: rawGlobalMeshNodes,
       components: this.normalizedInput.components,
     })
-    const componentMeshNodes =
+    const rawComponentMeshNodes =
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
       )?.componentMeshNodes ?? []
     const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
+    const componentMeshNodes = mergeNestedComponentMeshNodes({
+      components: this.normalizedInput.components,
+      componentMeshNodes: rawComponentMeshNodes,
+      componentSrjs: componentNoConnectionSrjs,
+    })
 
     return {
       globalNoConnectionSrj: this.normalizedInput.globalNoConnectionSrj,
