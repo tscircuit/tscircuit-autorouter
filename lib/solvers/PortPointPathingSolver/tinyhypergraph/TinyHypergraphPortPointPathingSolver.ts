@@ -50,6 +50,11 @@ type TinyRegionMetadata = {
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
+  _containsObstacle?: boolean
+  _containsTarget?: boolean
+  _targetConnectionName?: string
+  netId?: number
+  NetId?: number
 }
 
 type TinyPortMetadata = {
@@ -228,6 +233,7 @@ const toSerializedRegionData = (
       : {}),
     _containsObstacle: region.d._containsObstacle,
     _containsTarget: region.d._containsTarget,
+    _targetConnectionName: region.d._targetConnectionName,
     _offBoardConnectionId: region.d._offBoardConnectionId,
     _offBoardConnectedCapacityMeshNodeIds:
       region.d._offBoardConnectedCapacityMeshNodeIds === undefined
@@ -288,6 +294,9 @@ const buildSerializedTinyGraph = (
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
   const netIndexById = new Map<string, number>()
+  const serializedRegionById = new Map(
+    regions.map((region) => [region.regionId, region]),
+  )
   const getNetIndex = (routeMetadata: RouteMetadata) => {
     const netId =
       routeMetadata.mutuallyConnectedNetworkId ?? routeMetadata.connectionId
@@ -297,6 +306,14 @@ const buildSerializedTinyGraph = (
       netIndexById.set(netId, netIndex)
     }
     return netIndex
+  }
+  const reserveTargetRegionForNet = (regionId: string, netId: number) => {
+    const region = serializedRegionById.get(regionId)
+    if (!region?.d?._containsTarget) {
+      return
+    }
+    const regionData = region.d as TinyRegionMetadata
+    regionData.netId ??= netId
   }
 
   for (const connection of params.connections) {
@@ -325,6 +342,8 @@ const buildSerializedTinyGraph = (
       regionAvailableZ: connection.endRegion.d.availableZ,
       layerCount: params.layerCount,
     })
+    reserveTargetRegionForNet(connection.startRegion.regionId, routeNetIndex)
+    reserveTargetRegionForNet(connection.endRegion.regionId, routeNetIndex)
 
     const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
     const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
@@ -414,6 +433,18 @@ const buildSerializedTinyGraph = (
       },
       path: [{ portId: startTerminalPortId }, { portId: endTerminalPortId }],
     } as SerializedTinySolvedRoute)
+  }
+
+  for (const region of regions) {
+    const regionData = region.d as TinyRegionMetadata
+    if (
+      regionData._containsTarget === true &&
+      regionData._containsObstacle === true &&
+      regionData.netId === undefined &&
+      regionData.NetId === undefined
+    ) {
+      regionData._containsObstacle = false
+    }
   }
 
   return {
