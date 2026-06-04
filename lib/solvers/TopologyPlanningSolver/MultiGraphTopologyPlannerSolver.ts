@@ -13,8 +13,8 @@ import {
   createComponentSrj,
   filterMeshNodesInsideComponentAreas,
   filterRectDiffNodeRectsInsideComponentAreas,
-  mergeMeshNodes,
   mergeNestedComponentMeshNodes,
+  mergeMeshNodes,
   normalizeInput,
 } from "./topologyPlanningShared"
 
@@ -132,6 +132,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         components: this.normalizedInput.components,
         componentMeshNodes,
         mergeStrategy: "concat",
+        layerCount: this.normalizedInput.globalNoConnectionSrj.layerCount,
       }),
     }
   }

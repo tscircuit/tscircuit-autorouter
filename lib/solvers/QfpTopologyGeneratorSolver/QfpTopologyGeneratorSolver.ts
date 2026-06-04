@@ -4,6 +4,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 const MIN_REGION_SIDE = 1e-6
 
@@ -21,6 +22,7 @@ type QfpRoutingRegion = {
   regionType: "center" | "pad" | "pad-gap" | "corner"
   isNarrowPadGap?: boolean
   containsObstacle?: boolean
+  availableZ?: number[]
 }
 
 export interface QfpTopologyGeneratorSolverParams {
@@ -152,12 +154,25 @@ function createMeshNodesForRegion({
   }))
 }
 
-function getPadRegions(obstacles: Obstacle[]) {
+function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+  return obstacle.zLayers && obstacle.zLayers.length > 0
+    ? [...new Set(obstacle.zLayers)].sort((a, b) => a - b)
+    : [
+        ...new Set(
+          obstacle.layers.map((layerName) =>
+            mapLayerNameToZ(layerName, layerCount),
+          ),
+        ),
+      ].sort((a, b) => a - b)
+}
+
+function getPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     containsObstacle: true,
+    availableZ: getObstacleAvailableZ(obstacle, layerCount),
   }))
 }
 
@@ -476,7 +491,7 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
     const regions: QfpRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(padRingObstacles),
+      ...getPadRegions(padRingObstacles, layerCount),
       ...createGapRegionsForSide({
         side: "top",
         sideObstacles: sideGroups.top,
@@ -511,7 +526,7 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       createMeshNodesForRegion({
         nodeId: `qfp:${nodeScopeId}:${region.key}`,
         bounds: region.bounds,
-        availableZ,
+        availableZ: region.availableZ ?? availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
         isNarrowPadGap: region.isNarrowPadGap,

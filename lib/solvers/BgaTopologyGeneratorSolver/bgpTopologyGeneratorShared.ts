@@ -425,7 +425,7 @@ function createCellMeshNodes({
       createMeshNode({
         nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:obstacle`,
         region,
-        availableZ: [...availableZ],
+        availableZ: getObstacleAvailableZ(exactObstacle, layerCount),
         obstacles: [exactObstacle],
         layerCount,
       }),

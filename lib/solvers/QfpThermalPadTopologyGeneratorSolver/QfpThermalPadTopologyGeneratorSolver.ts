@@ -4,6 +4,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 const MIN_REGION_SIDE = 1e-6
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
@@ -20,6 +21,7 @@ type QfpThermalPadRoutingRegion = {
   key: string
   bounds: Bounds
   regionType: "pad" | "pad-gap" | "corner"
+  availableZ?: number[]
   isNarrowPadGap?: boolean
   containsObstacle?: boolean
 }
@@ -77,6 +79,20 @@ function splitQfpThermalPadObstacles(obstacles: Obstacle[]) {
   )
 
   return { padRingObstacles, thermalPadObstacles }
+}
+
+function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+  if (obstacle.zLayers && obstacle.zLayers.length > 0) {
+    return [...new Set(obstacle.zLayers)].sort((a, b) => a - b)
+  }
+
+  return [
+    ...new Set(
+      obstacle.layers.map((layerName) =>
+        mapLayerNameToZ(layerName, layerCount),
+      ),
+    ),
+  ].sort((a, b) => a - b)
 }
 
 function combineObstacleBounds(obstacles: Obstacle[]): Bounds | null {
@@ -142,6 +158,7 @@ function createMeshNodesForRegion({
   nodeId,
   bounds,
   availableZ,
+  fullAvailableZ = availableZ,
   multiLayerThreshold,
   regionType,
   isNarrowPadGap = false,
@@ -150,6 +167,7 @@ function createMeshNodesForRegion({
   nodeId: string
   bounds: Bounds
   availableZ: number[]
+  fullAvailableZ?: number[]
   multiLayerThreshold: number
   regionType: QfpThermalPadRoutingRegion["regionType"]
   isNarrowPadGap?: boolean
@@ -160,34 +178,76 @@ function createMeshNodesForRegion({
   const region = createRectRegion(bounds)
   const isLargeEnoughForMultiZ =
     Math.min(region.width, region.height) > multiLayerThreshold
+  const obstacleNodes: CapacityMeshNode[] = []
 
   if (isLargeEnoughForMultiZ) {
-    return [
-      {
-        capacityMeshNodeId: nodeId,
+    obstacleNodes.push({
+      capacityMeshNodeId: nodeId,
+      center: region.center,
+      width: region.width,
+      height: region.height,
+      layer: `z${availableZ.join(",")}`,
+      availableZ: [...availableZ],
+      _qfpRegionType: regionType,
+      _isNarrowQfpPadGap: isNarrowPadGap,
+      _containsObstacle: containsObstacle,
+    })
+  } else {
+    obstacleNodes.push(
+      ...availableZ.map((z) => ({
+        capacityMeshNodeId: `${nodeId}:z${z}`,
         center: region.center,
         width: region.width,
         height: region.height,
-        layer: `z${availableZ.join(",")}`,
-        availableZ: [...availableZ],
+        layer: `z${z}`,
+        availableZ: [z],
         _qfpRegionType: regionType,
         _isNarrowQfpPadGap: isNarrowPadGap,
         _containsObstacle: containsObstacle,
+      })),
+    )
+  }
+
+  if (!containsObstacle) return obstacleNodes
+
+  const freeZ = fullAvailableZ
+    .filter((z) => !availableZ.includes(z))
+    .sort((a, b) => a - b)
+
+  if (freeZ.length === 0) return obstacleNodes
+
+  const freeNodeBase = `${nodeId}:free`
+  if (isLargeEnoughForMultiZ) {
+    return [
+      ...obstacleNodes,
+      {
+        capacityMeshNodeId: freeNodeBase,
+        center: region.center,
+        width: region.width,
+        height: region.height,
+        layer: `z${freeZ.join(",")}`,
+        availableZ: freeZ,
+        _qfpRegionType: regionType,
+        _isNarrowQfpPadGap: isNarrowPadGap,
+        _containsObstacle: false,
       },
     ]
   }
 
-  return availableZ.map((z) => ({
-    capacityMeshNodeId: `${nodeId}:z${z}`,
-    center: region.center,
-    width: region.width,
-    height: region.height,
-    layer: `z${z}`,
-    availableZ: [z],
-    _qfpRegionType: regionType,
-    _isNarrowQfpPadGap: isNarrowPadGap,
-    _containsObstacle: containsObstacle,
-  }))
+  return [
+    ...obstacleNodes,
+    ...freeZ.map((z) => ({
+      capacityMeshNodeId: `${freeNodeBase}:z${z}`,
+      center: region.center,
+      width: region.width,
+      height: region.height,
+      layer: `z${z}`,
+      availableZ: [z],
+      _qfpRegionType: regionType,
+      _isNarrowQfpPadGap: isNarrowPadGap,
+      _containsObstacle: false,
+    })),
+  ]
 }
 
 function getPadRegionsWithMergedNarrowOuterGaps({
@@ -195,11 +255,13 @@ function getPadRegionsWithMergedNarrowOuterGaps({
   bounds,
   innerBounds,
   narrowThreshold,
+  layerCount,
 }: {
   sideGroups: Record<QfpSide, Obstacle[]>
   bounds: Bounds
   innerBounds: Bounds
   narrowThreshold: number
+  layerCount: number
 }) {
   const regions: QfpThermalPadRoutingRegion[] = []
 
@@ -258,6 +320,7 @@ function getPadRegionsWithMergedNarrowOuterGaps({
         key: `pad:${obstacle.obstacleId ?? `${side}-${index}`}`,
         bounds: padBounds,
         regionType: "pad",
+        availableZ: getObstacleAvailableZ(obstacle, layerCount),
         containsObstacle: true,
       })
     }
@@ -266,11 +329,12 @@ function getPadRegionsWithMergedNarrowOuterGaps({
   return regions
 }
 
-function getThermalPadRegions(obstacles: Obstacle[]) {
+function getThermalPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `thermal-pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
+    availableZ: getObstacleAvailableZ(obstacle, layerCount),
     containsObstacle: true,
   }))
 }
@@ -846,8 +910,9 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
         bounds,
         innerBounds,
         narrowThreshold: narrowPadGapThreshold,
+        layerCount,
       }),
-      ...getThermalPadRegions(thermalPadObstacles),
+      ...getThermalPadRegions(thermalPadObstacles, layerCount),
       ...createOuterGapRegionsForSide({
         side: "top",
         sideObstacles: sideGroups.top,
@@ -911,7 +976,8 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
       createMeshNodesForRegion({
         nodeId: `qfp_thermalpad:${nodeScopeId}:${region.key}`,
         bounds: region.bounds,
-        availableZ,
+        availableZ: region.availableZ ?? availableZ,
+        fullAvailableZ: availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
         isNarrowPadGap: region.isNarrowPadGap,
