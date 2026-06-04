@@ -117,8 +117,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
     })
   }
 
-  private getOverlappingViaComponents(): Via[][] {
-    const components: Via[][] = []
+  private getOffendingViaGroupsBatch(): Array<{ keep: Via; remove: Via[] }> {
+    const groups: Array<{ keep: Via; remove: Via[] }> = []
+    const touchedViaKeys = new Set<string>()
+    const candidateGroups: Array<{ keep: Via; remove: Via[] }> = []
 
     for (const viasInNet of this.viasByNet.values()) {
       if (viasInNet.length < 2) continue
@@ -129,33 +131,24 @@ export class SameNetViaMergerSolver extends BaseSolver {
       )
       const cellSize = maxDiameter
       const buckets = new Map<string, number[]>()
-      const parents = viasInNet.map((_, index) => index)
-      const componentHasOverlap = new Set<number>()
 
-      const findRoot = (index: number): number => {
-        let root = index
-        while (parents[root] !== root) {
-          root = parents[root]
-        }
-        while (parents[index] !== index) {
-          const next = parents[index]
-          parents[index] = root
-          index = next
-        }
-        return root
-      }
-
-      const union = (a: number, b: number) => {
-        const rootA = findRoot(a)
-        const rootB = findRoot(b)
-        if (rootA === rootB) return
-        parents[rootB] = rootA
-      }
-
+      // Build direct-overlap stars instead of connected components so a via is
+      // only moved to another via it physically overlaps.
       for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
         const via = viasInNet[viaIndex]
         const cellX = Math.floor(via.x / cellSize)
         const cellY = Math.floor(via.y / cellSize)
+        const bucketKey = `${cellX}:${cellY}`
+        const bucket = buckets.get(bucketKey)
+        if (bucket) bucket.push(viaIndex)
+        else buckets.set(bucketKey, [viaIndex])
+      }
+
+      for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
+        const keep = viasInNet[viaIndex]
+        const cellX = Math.floor(keep.x / cellSize)
+        const cellY = Math.floor(keep.y / cellSize)
+        const remove: Via[] = []
 
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
@@ -163,53 +156,55 @@ export class SameNetViaMergerSolver extends BaseSolver {
             if (!bucket) continue
 
             for (const candidateIndex of bucket) {
+              if (candidateIndex === viaIndex) continue
+
               const candidate = viasInNet[candidateIndex]
-              const pairDx = via.x - candidate.x
-              const pairDy = via.y - candidate.y
+
+              const pairDx = keep.x - candidate.x
+              const pairDy = keep.y - candidate.y
               const squaredDistance = pairDx * pairDx + pairDy * pairDy
-              const maxDistance = via.diameter / 2 + candidate.diameter / 2
+              const maxDistance = keep.diameter / 2 + candidate.diameter / 2
               const maxSquaredDistance = maxDistance * maxDistance
 
               if (squaredDistance <= maxSquaredDistance && squaredDistance) {
-                union(candidateIndex, viaIndex)
-                componentHasOverlap.add(candidateIndex)
-                componentHasOverlap.add(viaIndex)
+                remove.push(candidate)
               }
             }
           }
         }
 
-        const bucketKey = `${cellX}:${cellY}`
-        const bucket = buckets.get(bucketKey)
-        if (bucket) bucket.push(viaIndex)
-        else buckets.set(bucketKey, [viaIndex])
-      }
-
-      const componentIndicesByRoot = new Map<number, number[]>()
-      for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
-        if (!componentHasOverlap.has(viaIndex)) continue
-        const root = findRoot(viaIndex)
-        const component = componentIndicesByRoot.get(root)
-        if (component) component.push(viaIndex)
-        else componentIndicesByRoot.set(root, [viaIndex])
-      }
-
-      for (const componentIndices of componentIndicesByRoot.values()) {
-        if (componentIndices.length < 2) continue
-        components.push(componentIndices.map((index) => viasInNet[index]))
+        if (remove.length > 0) candidateGroups.push({ keep, remove })
       }
     }
 
-    return components
-  }
+    candidateGroups.sort((a, b) => {
+      if (b.remove.length !== a.remove.length) {
+        return b.remove.length - a.remove.length
+      }
+      if (b.keep.layers.length !== a.keep.layers.length) {
+        return b.keep.layers.length - a.keep.layers.length
+      }
 
-  private getCanonicalVia(component: Via[]) {
-    return component.reduce((best, via) => {
-      if (via.layers.length > best.layers.length) return via
-      if (via.layers.length < best.layers.length) return best
-
-      return via.routeIndex < best.routeIndex ? via : best
+      return a.keep.routeIndex - b.keep.routeIndex
     })
+
+    for (const candidateGroup of candidateGroups) {
+      const keepKey = this.getViaKey(candidateGroup.keep)
+      if (touchedViaKeys.has(keepKey)) continue
+
+      const remove = candidateGroup.remove.filter(
+        (viaToRemove) => !touchedViaKeys.has(this.getViaKey(viaToRemove)),
+      )
+      if (remove.length === 0) continue
+
+      groups.push({ keep: candidateGroup.keep, remove })
+      touchedViaKeys.add(keepKey)
+      for (const viaToRemove of remove) {
+        touchedViaKeys.add(this.getViaKey(viaToRemove))
+      }
+    }
+
+    return groups
   }
 
   private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true) {
@@ -249,25 +244,22 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   _step() {
-    const components = this.getOverlappingViaComponents()
+    const groups = this.getOffendingViaGroupsBatch()
 
-    if (components.length === 0) {
+    if (groups.length === 0) {
       this.solved = true
       return
     }
 
     let mergedViaCount = 0
-    for (const component of components) {
-      const canonicalVia = this.getCanonicalVia(component)
-      const canonicalKey = this.getViaKey(canonicalVia)
-      for (const via of component) {
-        if (this.getViaKey(via) === canonicalKey) continue
-        this.moveViaTo(via, canonicalVia, false)
+    for (const group of groups) {
+      for (const viaToRemove of group.remove) {
+        this.moveViaTo(viaToRemove, group.keep, false)
         mergedViaCount++
       }
     }
     this.rebuildVias()
-    this.stats.mergedViaComponents = components.length
+    this.stats.mergedViaGroups = groups.length
     this.stats.mergedViaCount = mergedViaCount
   }
 

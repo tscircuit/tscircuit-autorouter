@@ -14,12 +14,12 @@ const makeViaRoute = (connectionName: string, x: number): HighDensityRoute => ({
   vias: [{ x, y: 0 }],
 })
 
-test("SameNetViaMergerSolver canonicalizes overlapping via components", () => {
+test("SameNetViaMergerSolver keeps chain consolidation centered on direct overlaps", () => {
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: [
       makeViaRoute("route-a", 0),
-      makeViaRoute("route-b", 0.1),
-      makeViaRoute("route-c", 0.2),
+      makeViaRoute("route-b", 0.25),
+      makeViaRoute("route-c", 0.5),
     ],
     obstacles: [],
     colorMap: {},
@@ -35,8 +35,8 @@ test("SameNetViaMergerSolver canonicalizes overlapping via components", () => {
   const routes = solver.getMergedViaHdRoutes()
   expect(routes).not.toBeNull()
   expect(routes!.flatMap((route) => route.vias)).toEqual([
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
+    { x: 0.25, y: 0 },
+    { x: 0.25, y: 0 },
+    { x: 0.25, y: 0 },
   ])
 })
