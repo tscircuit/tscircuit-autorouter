@@ -101,36 +101,115 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
   }
 
-  private findNextOffendingPair(): [Via, Via] | null {
-    for (let i = 0; i < this.vias.length - 1; i++) {
-      const firstVia = this.vias[i]
-      const viasInNet = this.viasByNet.get(firstVia.net)
-      if (!viasInNet) continue
-
-      const firstIndexInNet = viasInNet.indexOf(firstVia)
-      const startJ = firstIndexInNet >= 0 ? firstIndexInNet + 1 : 0
-
-      for (let j = startJ; j < viasInNet.length; j++) {
-        const secondVia = viasInNet[j]
-        const dx = firstVia.x - secondVia.x
-        const dy = firstVia.y - secondVia.y
-        const squaredDistance = dx * dx + dy * dy
-        const maxDistance = firstVia.diameter / 2 + secondVia.diameter / 2
-        const maxSquaredDistance = maxDistance * maxDistance
-
-        if (squaredDistance <= maxSquaredDistance && squaredDistance !== 0) {
-          return [firstVia, secondVia]
-        }
-      }
-    }
-    return null
+  private getViaKey(via: Via) {
+    return [via.routeIndex, via.x, via.y, via.layers.join(","), via.net].join(
+      ":",
+    )
   }
 
-  private handleOffendingPair(v1: Via, v2: Via) {
-    const viaToRemove = v1.layers.length < v2.layers.length ? v1 : v2
-    const viaKeep = viaToRemove === v1 ? v2 : v1
+  private dedupeRouteVias(route: HighDensityRoute) {
+    const seenViaLocations = new Set<string>()
+    route.vias = route.vias.filter((via) => {
+      const key = `${via.x}:${via.y}`
+      if (seenViaLocations.has(key)) return false
+      seenViaLocations.add(key)
+      return true
+    })
+  }
 
+  private getOffendingViaGroupsBatch(): Array<{ keep: Via; remove: Via[] }> {
+    const groups: Array<{ keep: Via; remove: Via[] }> = []
+    const touchedViaKeys = new Set<string>()
+    const candidateGroups: Array<{ keep: Via; remove: Via[] }> = []
+
+    for (const viasInNet of this.viasByNet.values()) {
+      if (viasInNet.length < 2) continue
+
+      const maxDiameter = Math.max(
+        1e-6,
+        ...viasInNet.map((via) => via.diameter),
+      )
+      const cellSize = maxDiameter
+      const buckets = new Map<string, number[]>()
+
+      // Build direct-overlap stars instead of connected components so a via is
+      // only moved to another via it physically overlaps.
+      for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
+        const via = viasInNet[viaIndex]
+        const cellX = Math.floor(via.x / cellSize)
+        const cellY = Math.floor(via.y / cellSize)
+        const bucketKey = `${cellX}:${cellY}`
+        const bucket = buckets.get(bucketKey)
+        if (bucket) bucket.push(viaIndex)
+        else buckets.set(bucketKey, [viaIndex])
+      }
+
+      for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
+        const keep = viasInNet[viaIndex]
+        const cellX = Math.floor(keep.x / cellSize)
+        const cellY = Math.floor(keep.y / cellSize)
+        const remove: Via[] = []
+
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const bucket = buckets.get(`${cellX + dx}:${cellY + dy}`)
+            if (!bucket) continue
+
+            for (const candidateIndex of bucket) {
+              if (candidateIndex === viaIndex) continue
+
+              const candidate = viasInNet[candidateIndex]
+
+              const pairDx = keep.x - candidate.x
+              const pairDy = keep.y - candidate.y
+              const squaredDistance = pairDx * pairDx + pairDy * pairDy
+              const maxDistance = keep.diameter / 2 + candidate.diameter / 2
+              const maxSquaredDistance = maxDistance * maxDistance
+
+              if (squaredDistance <= maxSquaredDistance && squaredDistance) {
+                remove.push(candidate)
+              }
+            }
+          }
+        }
+
+        if (remove.length > 0) candidateGroups.push({ keep, remove })
+      }
+    }
+
+    candidateGroups.sort((a, b) => {
+      if (b.remove.length !== a.remove.length) {
+        return b.remove.length - a.remove.length
+      }
+      if (b.keep.layers.length !== a.keep.layers.length) {
+        return b.keep.layers.length - a.keep.layers.length
+      }
+
+      return a.keep.routeIndex - b.keep.routeIndex
+    })
+
+    for (const candidateGroup of candidateGroups) {
+      const keepKey = this.getViaKey(candidateGroup.keep)
+      if (touchedViaKeys.has(keepKey)) continue
+
+      const remove = candidateGroup.remove.filter(
+        (viaToRemove) => !touchedViaKeys.has(this.getViaKey(viaToRemove)),
+      )
+      if (remove.length === 0) continue
+
+      groups.push({ keep: candidateGroup.keep, remove })
+      touchedViaKeys.add(keepKey)
+      for (const viaToRemove of remove) {
+        touchedViaKeys.add(this.getViaKey(viaToRemove))
+      }
+    }
+
+    return groups
+  }
+
+  private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true) {
     const route = this.mergedViaHdRoutes[viaToRemove.routeIndex].route
+    const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
 
     for (let i = 0; i < viaToRemove.layers.length; i++) {
       for (let j = route.length - 1; j >= 1; j--) {
@@ -141,31 +220,47 @@ export class SameNetViaMergerSolver extends BaseSolver {
           route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: curr.z })
           route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
 
-          const r = this.mergedViaHdRoutes[viaToRemove.routeIndex]
-          r.vias = r.vias.map((vx) =>
+          routeToUpdate.vias = routeToUpdate.vias.map((vx) =>
             vx.x === viaToRemove.x && vx.y === viaToRemove.y
               ? { x: viaKeep.x, y: viaKeep.y }
               : vx,
           )
+          this.dedupeRouteVias(routeToUpdate)
 
-          this.rebuildVias()
+          if (rebuildVias) this.rebuildVias()
           return
         }
       }
     }
 
-    this.rebuildVias()
+    routeToUpdate.vias = routeToUpdate.vias.map((vx) =>
+      vx.x === viaToRemove.x && vx.y === viaToRemove.y
+        ? { x: viaKeep.x, y: viaKeep.y }
+        : vx,
+    )
+    this.dedupeRouteVias(routeToUpdate)
+
+    if (rebuildVias) this.rebuildVias()
   }
 
   _step() {
-    const pair = this.findNextOffendingPair()
+    const groups = this.getOffendingViaGroupsBatch()
 
-    if (!pair) {
+    if (groups.length === 0) {
       this.solved = true
       return
     }
 
-    this.handleOffendingPair(pair[0], pair[1])
+    let mergedViaCount = 0
+    for (const group of groups) {
+      for (const viaToRemove of group.remove) {
+        this.moveViaTo(viaToRemove, group.keep, false)
+        mergedViaCount++
+      }
+    }
+    this.rebuildVias()
+    this.stats.mergedViaGroups = groups.length
+    this.stats.mergedViaCount = mergedViaCount
   }
 
   getMergedViaHdRoutes(): HighDensityRoute[] | null {
