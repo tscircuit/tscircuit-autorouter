@@ -4,12 +4,12 @@ import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type {
   ComponentDetectionSolverOutput,
   ComponentDetectionSolverParams,
   DetectedComponent,
 } from "./ComponentDetectionSolver"
+import { detectComponentKind, type ComponentKind } from "./detectors"
 
 const cloneObstacle = (obstacle: Obstacle): Obstacle => ({ ...obstacle })
 const cloneObstacles = (obstacles: Obstacle[]) => obstacles.map(cloneObstacle)
@@ -35,6 +35,7 @@ const doObstaclesOverlap = ({
   replacementObstacle: Obstacle
 }) =>
   doBoundsOverlap(getBoundingBox(obstacle), getBoundingBox(replacementObstacle))
+
 const MIN_BGA_AXIS_COUNT = 3
 const MIN_BGA_TWO_AXIS_COUNT = 2
 const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
@@ -666,10 +667,10 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
     const detectedEntries = Object.entries(grouped).filter(
       ([componentId, memberObstacles]) => {
-        const componentKind = detectComponentKind(
+        const componentKind = detectComponentKind({
           memberObstacles,
-          this.inputSrj,
-        )
+          inputSrj: this.inputSrj,
+        })
         if (!componentKind) return false
 
         componentKinds[componentId] = componentKind

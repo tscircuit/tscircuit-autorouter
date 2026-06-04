@@ -3,6 +3,7 @@ import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { ComponentKind } from "./detectors"
 import { RectBoundsComponentDetectionStage } from "./RectBoundsComponentDetectionStage"
 
 export interface ComponentDetectionSolverParams {
@@ -11,7 +12,7 @@ export interface ComponentDetectionSolverParams {
 
 export interface DetectedComponent {
   componentId: string
-  componentKind: "bga" | "qfp" | "qfp_thermalpad" | "soic"
+  componentKind: ComponentKind
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
   replacementObstacle: Obstacle
