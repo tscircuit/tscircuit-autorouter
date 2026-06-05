@@ -45,6 +45,8 @@ export interface TraceWidthSolverInput {
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
   minTraceWidth: number
+  /** Board-level nominal trace width fallback (from SimpleRouteJson.nominalTraceWidth) */
+  boardNominalTraceWidth?: number
   obstacleMargin?: number
   layerCount: number
 }
@@ -120,13 +122,22 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
-        continue
+      if (connection.nominalTraceWidth !== undefined) {
+        this.connectionNominalTraceWidthMap.set(
+          connection.name,
+          connection.nominalTraceWidth,
+        )
+      } else if (connection.traceWidthMultiplier !== undefined) {
+        this.connectionNominalTraceWidthMap.set(
+          connection.name,
+          input.minTraceWidth * connection.traceWidthMultiplier,
+        )
+      } else if (input.boardNominalTraceWidth !== undefined) {
+        this.connectionNominalTraceWidthMap.set(
+          connection.name,
+          input.boardNominalTraceWidth,
+        )
       }
-      this.connectionNominalTraceWidthMap.set(
-        connection.name,
-        connection.nominalTraceWidth,
-      )
     }
 
     if (this.obstacles.length > 0) {

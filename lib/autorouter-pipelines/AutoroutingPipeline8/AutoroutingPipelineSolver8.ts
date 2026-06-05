@@ -473,6 +473,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
+        boardNominalTraceWidth: cms.srj.nominalTraceWidth,
         connection: cms.srj.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         layerCount: cms.srj.layerCount,
