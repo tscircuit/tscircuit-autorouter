@@ -17,6 +17,13 @@ declare module "dataset-srj18" {
   export const dataset: any
 }
 
+declare module "@tsci/tscircuit.dataset-srj19-bga-passive-overlays" {
+  export const samples: Array<{
+    sampleName: string
+    srj: any
+  }>
+}
+
 declare module "zdwiel-dataset" {
   const dataset: any
   export = dataset

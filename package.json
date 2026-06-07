@@ -26,6 +26,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#56db70039aeb28a76540fe951b5a96be60f9e949",
     "@tsci/tscircuit.dataset-srj16-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj16-bga-breakouts.git#e8b2e70e1f50a0dba3ad977e140766f53b9b75fb",
+    "@tsci/tscircuit.dataset-srj19-bga-passive-overlays": "git+https://github.com/tscircuit/dataset-srj19.git#5104d03ed72a9090d76ea1f42ae9f4bc439f7534",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#f9c0a8fe11e9bc05064bdafdf61f33eb38fa2b8e",
     "@tscircuit/checks": "^0.0.126",
