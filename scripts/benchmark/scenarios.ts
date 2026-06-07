@@ -12,6 +12,7 @@ export const DATASET_NAMES = [
   "srj16",
   "srj18",
   "srj19",
+  "srj20",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -19,7 +20,7 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20"
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -69,6 +70,12 @@ const datasetAliases: Record<string, DatasetName> = {
   "dataset-srj19": "srj19",
   "dataset-srj19-bga-passive-overlays": "srj19",
   "@tsci/tscircuit.dataset-srj19-bga-passive-overlays": "srj19",
+  "20": "srj20",
+  dataset20: "srj20",
+  srj20: "srj20",
+  "dataset-srj20": "srj20",
+  "dataset-srj20-partial-bga-breakouts": "srj20",
+  "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts": "srj20",
   zdwiel: "zdwiel",
 }
 
@@ -173,6 +180,12 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
       getSpecifier: (sampleId) =>
         `@tsci/tscircuit.dataset-srj19-bga-passive-overlays/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
     }),
+  srj20: async () =>
+    loadNumberedJsonDatasetModule({
+      sampleCount: 200,
+      getSpecifier: (sampleId) =>
+        `@tsci/tscircuit.dataset-srj20-partial-bga-breakouts/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
+    }),
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -187,6 +200,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj16: /^sample\d{3}Circuit$/,
   srj18: /^sample\d{3}$/,
   srj19: /^sample\d{3}Circuit$/,
+  srj20: /^sample\d{3}Circuit$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
