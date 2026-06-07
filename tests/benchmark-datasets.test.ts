@@ -25,6 +25,9 @@ test("benchmark dataset aliases resolve to canonical dataset names", () => {
   expect(parseDatasetName("19")).toBe("srj19")
   expect(parseDatasetName("dataset19")).toBe("srj19")
   expect(parseDatasetName("dataset-srj19-bga-passive-overlays")).toBe("srj19")
+  expect(parseDatasetName("20")).toBe("srj20")
+  expect(parseDatasetName("dataset20")).toBe("srj20")
+  expect(parseDatasetName("dataset-srj20-partial-bga-breakouts")).toBe("srj20")
 })
 
 test("main branch benchmark dataset config resolves to canonical dataset names", () => {
@@ -37,13 +40,14 @@ test("main branch benchmark dataset config resolves to canonical dataset names",
   }
 })
 
-test("srj11, srj12, srj13, srj15, srj16, and srj19 benchmark datasets load in sample order", async () => {
+test("srj11, srj12, srj13, srj15, srj16, srj19, and srj20 benchmark datasets load in sample order", async () => {
   const srj11Scenarios = await loadScenarios("srj11")
   const srj12Scenarios = await loadScenarios("srj12")
   const srj13Scenarios = await loadScenarios("srj13")
   const srj15Scenarios = await loadScenarios("srj15")
   const srj16Scenarios = await loadScenarios("srj16")
   const srj19Scenarios = await loadScenarios("srj19")
+  const srj20Scenarios = await loadScenarios("srj20")
 
   expect(srj11Scenarios).toHaveLength(26)
   expect(srj11Scenarios[0][0]).toBe("sample001Circuit")
@@ -75,6 +79,11 @@ test("srj11, srj12, srj13, srj15, srj16, and srj19 benchmark datasets load in sa
   expect(srj19Scenarios[199][0]).toBe("sample200Circuit")
   expect(srj19Scenarios[0][1].connections.length).toBeGreaterThan(0)
 
+  expect(srj20Scenarios).toHaveLength(200)
+  expect(srj20Scenarios[0][0]).toBe("sample001Circuit")
+  expect(srj20Scenarios[199][0]).toBe("sample200Circuit")
+  expect(srj20Scenarios[0][1].connections.length).toBeGreaterThan(0)
+
   const sample11 = await loadScenarioBySampleNumber("srj11", 11)
   expect(sample11.scenarioName).toBe("sample011Circuit")
   expect(sample11.totalSamples).toBe(26)
@@ -90,4 +99,8 @@ test("srj11, srj12, srj13, srj15, srj16, and srj19 benchmark datasets load in sa
   const sample19 = await loadScenarioBySampleNumber("srj19", 19)
   expect(sample19.scenarioName).toBe("sample019Circuit")
   expect(sample19.totalSamples).toBe(200)
+
+  const sample20 = await loadScenarioBySampleNumber("srj20", 20)
+  expect(sample20.scenarioName).toBe("sample020Circuit")
+  expect(sample20.totalSamples).toBe(200)
 })
