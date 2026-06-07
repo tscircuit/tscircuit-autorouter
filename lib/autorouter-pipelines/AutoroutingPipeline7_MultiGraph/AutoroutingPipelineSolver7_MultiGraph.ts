@@ -4,10 +4,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
-import {
-  ComponentDetectionSolver,
-  type ComponentDetectionSolverOutput,
-} from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -168,22 +165,6 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
-const MAX_BGA_MEMBER_OBSTACLES_FOR_LOCAL_TOPOLOGY = 64
-
-function getTopologyComponentDetectionOutput(
-  componentDetectionOutput: ComponentDetectionSolverOutput,
-): ComponentDetectionSolverOutput {
-  return {
-    ...componentDetectionOutput,
-    components: componentDetectionOutput.components.filter(
-      (component) =>
-        component.componentKind !== "bga" ||
-        component.memberObstacles.length <=
-          MAX_BGA_MEMBER_OBSTACLES_FOR_LOCAL_TOPOLOGY,
-    ),
-  }
-}
-
 function definePipelineStep<
   T extends new (
     ...args: any[]
@@ -311,9 +292,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           inputSrj: cms.srjWithPointPairs!,
-          componentDetectionOutput: getTopologyComponentDetectionOutput(
-            cms.componentDetectionSolver!.getOutput(),
-          ),
+          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
