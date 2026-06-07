@@ -48,7 +48,14 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     }
 
     const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
-    const topologyAxisObstacles = obstacles.filter((obstacle) =>
+    const topologyObstacles = this.inputProblem.componentId
+      ? obstacles.filter(
+          (obstacle) => obstacle.componentId === this.inputProblem.componentId,
+        )
+      : obstacles
+    const componentObstacles =
+      topologyObstacles.length > 0 ? topologyObstacles : obstacles
+    const topologyAxisObstacles = componentObstacles.filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), bounds),
     )
     const availableZ = getLayerRange(layerCount)
@@ -64,7 +71,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     ).length
     const meshNodes = createMeshNodesForSrj({
       bounds,
-      obstacles,
+      obstacles: componentObstacles,
       availableZ,
       layerCount,
       nodeScopeId,
@@ -75,7 +82,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       (node) => node.availableZ.length > 1,
     ).length
 
-    const clonedObstacles = obstacles.map((obstacle) =>
+    const clonedObstacles = componentObstacles.map((obstacle) =>
       structuredClone(obstacle),
     )
     this.output = {

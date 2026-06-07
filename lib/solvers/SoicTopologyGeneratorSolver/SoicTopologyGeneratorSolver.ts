@@ -7,6 +7,7 @@ import {
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 const MIN_REGION_SIDE = 1e-6
 
@@ -25,6 +26,7 @@ type SoicRoutingRegion = {
   bounds: Bounds
   regionType: "center" | "pad" | "pad-gap"
   containsObstacle?: boolean
+  availableZ?: number[]
 }
 
 export interface SoicTopologyGeneratorSolverParams {
@@ -106,6 +108,18 @@ function createMeshNodesForRegion({
     _soicRegionType: regionType,
     _containsObstacle: containsObstacle,
   }))
+}
+
+function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+  return obstacle.zLayers && obstacle.zLayers.length > 0
+    ? [...new Set(obstacle.zLayers)].sort((a, b) => a - b)
+    : [
+        ...new Set(
+          obstacle.layers.map((layerName) =>
+            mapLayerNameToZ(layerName, layerCount),
+          ),
+        ),
+      ].sort((a, b) => a - b)
 }
 
 function getNearestClusterIndex(value: number, clusters: number[]) {
@@ -213,12 +227,13 @@ function getInnerSoicBounds({
   }
 }
 
-function getPadRegions(obstacles: Obstacle[]) {
+function getPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     containsObstacle: true,
+    availableZ: getObstacleAvailableZ(obstacle, layerCount),
   }))
 }
 
@@ -336,7 +351,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(soicObstacles),
+      ...getPadRegions(soicObstacles, layerCount),
       ...activeSides.flatMap((side) =>
         createGapRegionsForSide({
           side,
@@ -350,7 +365,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       createMeshNodesForRegion({
         nodeId: `soic:${nodeScopeId}:${region.key}`,
         bounds: region.bounds,
-        availableZ,
+        availableZ: region.availableZ ?? availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
         containsObstacle: region.containsObstacle,

@@ -4,7 +4,8 @@ import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSo
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { mergeOverlappingMeshNodeRegions } from "lib/solvers/TopologyPlanningSolver/topologyPlanningShared"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
   type: "json",
 }
@@ -12,6 +13,12 @@ import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-
   type: "json",
 }
 import bugReport63 from "../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with {
+  type: "json",
+}
+import srj18Sample001 from "dataset-srj18/samples/sample001.json" with {
+  type: "json",
+}
+import srj18Sample008 from "dataset-srj18/samples/sample008.json" with {
   type: "json",
 }
 
@@ -46,6 +53,44 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   obstacles,
   connections: [],
   bounds: { minX: -2, maxX: 4, minY: -2, maxY: 4 },
+})
+
+test("overlapping topology regions are split with intersected z layers", () => {
+  const topRegion: CapacityMeshNode = {
+    capacityMeshNodeId: "top-region",
+    center: { x: 0, y: 0 },
+    width: 4,
+    height: 4,
+    layer: "z1,2,3",
+    availableZ: [1, 2, 3],
+  }
+  const bottomRegion: CapacityMeshNode = {
+    capacityMeshNodeId: "bottom-region",
+    center: { x: 2, y: 2 },
+    width: 4,
+    height: 4,
+    layer: "z0,1,2",
+    availableZ: [0, 1, 2],
+  }
+  const mergedRegions = mergeOverlappingMeshNodeRegions([
+    topRegion,
+    bottomRegion,
+  ])
+  const overlapRegion = mergedRegions.find(
+    (region) =>
+      Math.abs(region.center.x - 1) < 1e-9 &&
+      Math.abs(region.center.y - 1) < 1e-9 &&
+      Math.abs(region.width - 2) < 1e-9 &&
+      Math.abs(region.height - 2) < 1e-9,
+  )
+
+  expect(overlapRegion?.availableZ).toEqual([1, 2])
+  expect(
+    mergedRegions.some((region) => region.availableZ.join(",") === "1,2,3"),
+  ).toBe(true)
+  expect(
+    mergedRegions.some((region) => region.availableZ.join(",") === "0,1,2"),
+  ).toBe(true)
 })
 
 const createGridPads = ({
@@ -690,4 +735,165 @@ test("topology planning creates QFP thermal-pad inner and outer regions", () => 
         node.availableZ.length > 1,
     ),
   ).toBe(true)
+})
+
+test("srj18 sample001 component 36 merges narrow QFN outer pad gaps", () => {
+  const inputSrj = srj18Sample001 as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const component36 = componentDetectionSolver
+    .getOutput()
+    .components.find(
+      (component) => component.componentId === "pcb_component_36",
+    )
+
+  expect(component36?.componentKind).toBe("qfp_thermalpad")
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const componentIndex = componentDetectionSolver
+    .getOutput()
+    .components.findIndex(
+      (component) => component.componentId === "pcb_component_36",
+    )
+  const componentNodes =
+    topologyPlanningSolver.getOutput().componentMeshNodes[componentIndex] ?? []
+  const mergedNodes = topologyPlanningSolver.getOutput().mergedMeshNodes
+  const outerNarrowGapNodes = componentNodes.filter(
+    (node) =>
+      node._qfpRegionType === "pad-gap" &&
+      node._isNarrowQfpPadGap &&
+      /:(top|right|bottom|left)-gap-/.test(node.capacityMeshNodeId),
+  )
+  const mergedPadNode = componentNodes.find(
+    (node) =>
+      node.capacityMeshNodeId.startsWith(
+        "qfp_thermalpad:pcb_component_36:pad:",
+      ) && Math.min(node.width, node.height) > 0.25,
+  )
+  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(
+    mergedNodes,
+  )
+  edgeSolver.solve()
+  const availableSegmentPointSolver = new AvailableSegmentPointSolver({
+    nodes: mergedNodes,
+    edges: edgeSolver.edges,
+    traceWidth: inputSrj.minTraceWidth,
+    obstacleMargin: inputSrj.defaultObstacleMargin,
+    shouldReturnCrampedPortPoints: true,
+  })
+  availableSegmentPointSolver.solve()
+  const component36To47Segments = availableSegmentPointSolver
+    .getOutput()
+    .filter(
+      (segment) =>
+        segment.nodeIds.some((nodeId) => nodeId.includes("pcb_component_36")) &&
+        segment.nodeIds.some((nodeId) => nodeId.includes("pcb_component_47")),
+    )
+  const component36To47OverlayNodes = mergedNodes.filter(
+    (node) =>
+      node.capacityMeshNodeId.includes("overlay:") &&
+      node.capacityMeshNodeId.includes("pcb_component_36") &&
+      node.capacityMeshNodeId.includes("pcb_component_47"),
+  )
+
+  expect(outerNarrowGapNodes).toHaveLength(0)
+  expect(mergedPadNode).toBeDefined()
+  expect(component36To47OverlayNodes.length).toBeGreaterThan(0)
+  expect(
+    component36To47OverlayNodes.some(
+      (node) =>
+        node.availableZ.length === 2 &&
+        node.availableZ.includes(0) &&
+        node.availableZ.includes(1),
+    ),
+  ).toBe(true)
+  expect(component36To47Segments.length).toBeGreaterThan(0)
+})
+
+test("srj18 sample008 keeps QFP thermal-pad regions after topology merge", () => {
+  const inputSrj = srj18Sample008 as SimpleRouteJson
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const componentIndex = componentDetectionSolver
+    .getOutput()
+    .components.findIndex(
+      (component) => component.componentId === "pcb_component_51",
+    )
+  const component51 =
+    componentDetectionSolver.getOutput().components[componentIndex]
+
+  expect(component51?.componentKind).toBe("qfp_thermalpad")
+
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj,
+    componentDetectionOutput: componentDetectionSolver.getOutput(),
+  })
+  topologyPlanningSolver.solve()
+
+  const componentQfpNodes =
+    topologyPlanningSolver
+      .getOutput()
+      .componentMeshNodes[componentIndex]?.filter((node) =>
+        node.capacityMeshNodeId.includes("qfp_thermalpad:pcb_component_51"),
+      ) ?? []
+  const mergedQfpNodes = topologyPlanningSolver
+    .getOutput()
+    .mergedMeshNodes.filter((node) =>
+      node.capacityMeshNodeId.includes("qfp_thermalpad:pcb_component_51"),
+    )
+  const mergedNodes = topologyPlanningSolver.getOutput().mergedMeshNodes
+  const sourceNet50StartNodes = mergedNodes.filter((node) => {
+    const minX = node.center.x - node.width / 2
+    const maxX = node.center.x + node.width / 2
+    const minY = node.center.y - node.height / 2
+    const maxY = node.center.y + node.height / 2
+
+    return (
+      -4.2295 >= minX - 1e-9 &&
+      -4.2295 <= maxX + 1e-9 &&
+      4.171001 >= minY - 1e-9 &&
+      4.171001 <= maxY + 1e-9
+    )
+  })
+
+  expect(componentQfpNodes.length).toBeGreaterThan(0)
+  expect(mergedQfpNodes.length).toBe(componentQfpNodes.length)
+  expect(new Set(mergedQfpNodes.map((node) => node._qfpRegionType))).toEqual(
+    new Set(["pad", "pad-gap", "corner"]),
+  )
+  expect(
+    sourceNet50StartNodes.some(
+      (node) =>
+        node._containsObstacle &&
+        node.availableZ.length === 1 &&
+        node.availableZ[0] === 0,
+    ),
+  ).toBe(true)
+  expect(
+    mergedNodes.some(
+      (node) => node.capacityMeshNodeId === "soic:pcb_component_22:pad:7:z3",
+    ),
+  ).toBe(false)
+  expect(
+    mergedNodes.some(
+      (node) =>
+        node.capacityMeshNodeId.includes("bgp:pcb_component_38") &&
+        node._containsObstacle &&
+        node.availableZ.length === 1 &&
+        node.availableZ[0] === 3,
+    ),
+  ).toBe(true)
+  expect(
+    mergedNodes.some(
+      (node) =>
+        node.capacityMeshNodeId.includes("overlay:") && node._containsObstacle,
+    ),
+  ).toBe(false)
 })
