@@ -322,8 +322,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       orientation,
       sideGroups,
     })
-    const nodeScopeId =
-      componentId ?? this.inputProblem.replacementObstacleId ?? "component"
+    const nodeScopeId = componentId
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
@@ -362,8 +361,8 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       routingRegions,
     }
     this.stats = {
-      componentId: componentId ?? null,
-      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
+      componentId,
+      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       orientation,
       viaDiameter,

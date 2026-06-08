@@ -22,10 +22,10 @@ export type TopologyMeshMergeStrategy = "concat"
 
 export interface SerializedTopologyComponentInput {
   componentId: string
-  componentKind?: ComponentKind
+  componentKind: ComponentKind
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
-  replacementObstacle: Obstacle
+  replacementObstacle: Obstacle & { obstacleId: string }
 }
 
 export interface MultiGraphTopologyPlannerSolverParams {
@@ -156,10 +156,8 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       rects: [
         ...componentObstacleRects,
         ...output.mergedMeshNodes.map((node) => {
-          const component = this.normalizedInput.components.find(
-            (candidate) =>
-              candidate.componentId &&
-              node.capacityMeshNodeId.includes(candidate.componentId),
+          const component = this.normalizedInput.components.find((candidate) =>
+            node.capacityMeshNodeId.includes(candidate.componentId),
           )
           const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
           return {
@@ -171,7 +169,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
               ? safeTransparentize("red", 0.3)
               : "rgba(0, 120, 255, 0.55)",
             label: component
-              ? `${component.componentKind?.toUpperCase() ?? "BGA"} ${node.capacityMeshNodeId}`
+              ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
               : node.capacityMeshNodeId,
           }
         }),

@@ -64,8 +64,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
             doBoundsOverlap(getBoundingBox(obstacle), bounds),
           )
     const availableZ = getLayerRange(layerCount)
-    const nodeScopeId =
-      componentId ?? this.inputProblem.replacementObstacleId ?? "component"
+    const nodeScopeId = componentId
     const rowCount = clusterAxisValues(
       topologyAxisObstacles.map((obstacle) => obstacle.center.y),
     ).length
@@ -93,8 +92,8 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       routingRegions: meshNodes,
     }
     this.stats = {
-      componentId: componentId ?? null,
-      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
+      componentId,
+      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       inferredRowCount: rowCount,
       inferredColumnCount: colCount,

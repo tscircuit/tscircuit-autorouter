@@ -7,8 +7,8 @@ import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 export interface TopologyGeneratorSolverParams {
   inputSrj: SimpleRouteJson
   detectedComponent: DetectedComponent
-  componentId?: string
-  replacementObstacleId?: string
+  componentId: string
+  replacementObstacleId: string
   viaDiameter?: number
   obstacleMargin?: number
 }

@@ -36,8 +36,8 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
-  componentKinds: Array<ComponentKind | undefined>
-  replacementObstacleIds: Array<string | undefined>
+  componentKinds: ComponentKind[]
+  replacementObstacleIds: string[]
   viaDiameter?: number
   obstacleMargin?: number
 }
@@ -447,7 +447,7 @@ function areBoundsInsideBounds({
 
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver?: TopologyGeneratorSolver | null = null
+  activeSubSolver: TopologyGeneratorSolver | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
 
@@ -488,10 +488,11 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       return
     }
 
-    const componentKind =
-      this.inputProblem.componentKinds[this.currentIndex] ?? "bga"
+    const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
     const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
     const componentId = this.inputProblem.componentIds[this.currentIndex]!
+    const replacementObstacleId =
+      this.inputProblem.replacementObstacleIds[this.currentIndex]!
     const solverInput = {
       inputSrj: componentSrj,
       detectedComponent: {
@@ -503,8 +504,7 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
         },
       },
       componentId,
-      replacementObstacleId:
-        this.inputProblem.replacementObstacleIds[this.currentIndex],
+      replacementObstacleId,
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
     }

@@ -25,7 +25,7 @@ export function createReplacementObstacleForComponent({
 }: {
   detectedComponent: DetectedComponent
   inputSrj: SimpleRouteJson
-}): Obstacle {
+}): Obstacle & { obstacleId: string } {
   const memberObstacles = inputSrj.obstacles.filter(
     (obstacle) => obstacle.componentId === detectedComponent.componentId,
   )
@@ -112,7 +112,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
   private output: ComponentTopologyGeneratorSolverOutput = []
   private componentMeshNodes: CapacityMeshNode[][] = []
   private currentComponentIndex = 0
-  private activeTopologyGenerator?: TopologyGeneratorSolver | null = null
+  private activeTopologyGenerator: TopologyGeneratorSolver | null = null
 
   constructor(
     public readonly inputProblem: ComponentTopologyGeneratorSolverParams,
@@ -160,6 +160,8 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
       {
         inputSrj: this.inputProblem.inputSrj,
         detectedComponent,
+        componentId: detectedComponent.componentId,
+        replacementObstacleId: `${detectedComponent.componentId}_component_bounds`,
       },
     )
   }
