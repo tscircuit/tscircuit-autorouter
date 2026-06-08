@@ -11,9 +11,15 @@
  *
  * This stub is NOT cleaned up by the downstream path_simplification stage — it
  * survives into the final routed output (verified separately via
- * TraceSimplificationSolver). It is same-net copper, so it is not a net-to-net
- * short, but it is spurious/dangling copper (stub → antenna/reflection,
- * manufacturing) and means the output geometry does not match the intended route.
+ * TraceSimplificationSolver).
+ *
+ * This is a correctness/cleanliness issue, NOT an electrical/DRC hazard. The stub
+ * runs between the two via centers, and vias only merge when their pads overlap,
+ * so the stub sits inside the merged via-pad footprint (it only pokes out ~0.04-
+ * 0.06mm in a razor-thin band where vias are barely touching — within fab
+ * tolerance). It is same-net copper, so there is no net-to-net clearance effect.
+ * The defects are: (1) the route geometry no longer matches the intended route,
+ * and (2) route.vias disagrees with the actual copper in route.route.
  *
  * Per "no failing tests on merge", this test asserts the CURRENT (buggy) behavior:
  * the merge ADDS same-layer copper that did not exist in the input. A merge that
