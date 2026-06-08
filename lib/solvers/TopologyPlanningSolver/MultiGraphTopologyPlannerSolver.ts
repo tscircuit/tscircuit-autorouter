@@ -36,7 +36,7 @@ export interface MultiGraphTopologyPlannerSolverParams {
   viaDiameter?: number
   obstacleMargin?: number
   brokenSrj?: {
-    global: SimpleRouteJson
+    componentsAsObstaclesSrj: SimpleRouteJson
     components: SerializedTopologyComponentInput[]
   }
 }

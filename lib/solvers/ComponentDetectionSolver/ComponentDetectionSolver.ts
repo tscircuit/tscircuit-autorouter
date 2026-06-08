@@ -19,7 +19,11 @@ export interface DetectedComponent {
 }
 
 export interface ComponentDetectionSolverOutput {
-  global: SimpleRouteJson
+  /**
+   * Simple Route JSON where components are replaced with obstacles
+   * and component connection points are omitted.
+   */
+  componentsAsObstaclesSrj: SimpleRouteJson
   components: DetectedComponent[]
 }
 
