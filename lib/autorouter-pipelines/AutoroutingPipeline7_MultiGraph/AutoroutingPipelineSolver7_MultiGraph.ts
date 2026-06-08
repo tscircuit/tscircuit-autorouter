@@ -1,3 +1,4 @@
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -197,6 +198,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   /** TODO: Remove after tests migrate to topologyGeneratorForCompoents. */
   topologyPlanningSolver?: LegacyTopologyPlanningSolverReference
+  globalRectDiffSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -307,6 +309,28 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
           )
+        },
+      },
+    ),
+    definePipelineStep(
+      "globalRectDiffSolver",
+      RectDiffPipeline,
+      (cms) => [
+        {
+          simpleRouteJson:
+            cms.topologyGeneratorForCompoents!.getComponentReplacedByObstacleSrj(
+              cms.srjWithPointPairs!,
+            ) as any,
+        },
+      ],
+      {
+        onSolved: (cms) => {
+          const globalMeshNodes =
+            cms.globalRectDiffSolver?.getOutput().meshNodes ?? []
+          const componentMeshNodes =
+            cms.topologyGeneratorForCompoents?.getOutput() ?? []
+
+          cms.capacityNodes = [...globalMeshNodes, ...componentMeshNodes]
         },
       },
     ),
@@ -687,6 +711,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const componentDetectionViz = this.componentDetectionSolver?.visualize()
     const topologyGeneratorForCompoentsViz =
       this.topologyGeneratorForCompoents?.visualize()
+    const globalRectDiffViz = this.globalRectDiffSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
@@ -799,6 +824,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       topologyGeneratorForCompoentsViz,
       escapeViaLocationViz,
       netToPPSolver,
+      globalRectDiffViz,
       nodeSubdivisionViz,
       nodeTargetMergerViz,
       singleLayerNodeMergerViz,
