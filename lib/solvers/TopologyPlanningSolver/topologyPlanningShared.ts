@@ -13,12 +13,15 @@ import {
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
+import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
+import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
+import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
   TopologyMeshMergeStrategy,
 } from "./MultiGraphTopologyPlannerSolver"
-import "./registerBuiltInTopologyGenerators"
 
 export interface NormalizedTopologyPlannerInput {
   globalNoConnectionSrj: SimpleRouteJson
