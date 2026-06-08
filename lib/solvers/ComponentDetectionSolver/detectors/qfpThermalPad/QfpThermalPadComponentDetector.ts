@@ -1,5 +1,5 @@
-import type { ComponentDetector, ComponentDetectorParams } from "../types"
 import { isQfpThermalPadLikeComponent } from "../qfp/qfpShared"
+import type { ComponentDetector, ComponentDetectorParams } from "../types"
 
 export class QfpThermalPadComponentDetector implements ComponentDetector {
   static readonly componentKind = "qfp_thermalpad"

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
@@ -630,6 +630,52 @@ test("bugreport63 QFP thermal-pad footprints are detected as qfp_thermalpad", ()
     ["pcb_component_0", "qfp_thermalpad", 13],
     ["pcb_component_1", "qfp_thermalpad", 33],
   ])
+})
+
+test("QFP detection has no perimeter pad count cap", () => {
+  const inputSrj = createSrj(
+    createQfpPads({ componentId: "U_QFP48", padsPerSide: 12 }),
+  )
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  expect(
+    componentDetectionSolver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+        component.memberObstacles.length,
+      ]),
+  ).toEqual([["U_QFP48", "qfp", 48]])
+})
+
+test("QFP thermal-pad detection has no central pad count cap", () => {
+  const componentId = "U_QFP_THERMAL_MULTI"
+  const perimeterPads = createQfpPads({ componentId, padsPerSide: 4 })
+  const thermalPads = Array.from({ length: 6 }, (_, index) =>
+    createPad({
+      componentId,
+      obstacleId: `${componentId}.EP${index + 1}`,
+      x: 1 + (index % 3) * 0.45,
+      y: 1 + Math.floor(index / 3) * 0.45,
+      width: 0.35,
+      height: 0.35,
+    }),
+  )
+  const inputSrj = createSrj([...perimeterPads, ...thermalPads])
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  expect(
+    componentDetectionSolver
+      .getOutput()
+      .components.map((component) => [
+        component.componentId,
+        component.componentKind,
+        component.memberObstacles.length,
+      ]),
+  ).toEqual([[componentId, "qfp_thermalpad", 22]])
 })
 
 test("topology planning creates QFP thermal-pad inner and outer regions", () => {

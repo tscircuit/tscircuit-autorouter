@@ -2,8 +2,6 @@ import type { Obstacle } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 
 const MIN_QFP_PADS_PER_SIDE = 3
-const MAX_QFP_PAD_COUNT = 32
-const MAX_QFP_THERMAL_PAD_COUNT = 4
 const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
 
@@ -83,7 +81,6 @@ function areCentralThermalPadObstacles({
   thermalPadObstacles: Obstacle[]
 }) {
   if (thermalPadObstacles.length === 0) return true
-  if (thermalPadObstacles.length > MAX_QFP_THERMAL_PAD_COUNT) return false
 
   const perimeterBounds = getBoundsForObstacles(perimeterPadObstacles)
   const width = perimeterBounds.maxX - perimeterBounds.minX
@@ -113,7 +110,6 @@ function areCentralThermalPadObstacles({
 
 function hasQfpPerimeterPadRing(perimeterPadObstacles: Obstacle[]) {
   if (perimeterPadObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
-  if (perimeterPadObstacles.length > MAX_QFP_PAD_COUNT) return false
 
   const { counts, maxNearestSideRatio } = getNearestSideCounts(
     perimeterPadObstacles,
