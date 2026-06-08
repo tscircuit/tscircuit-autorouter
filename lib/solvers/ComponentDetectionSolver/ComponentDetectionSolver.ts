@@ -13,19 +13,12 @@ export interface ComponentDetectionSolverParams {
 export interface DetectedComponent {
   componentId: string
   componentKind: ComponentKind
-  memberObstacleIds: string[]
-  memberObstacles: Obstacle[]
-  replacementObstacle: Obstacle
+  bounds: {
+    __type: "rect"
+  } & SimpleRouteJson["bounds"]
 }
 
-export interface ComponentDetectionSolverOutput {
-  /**
-   * Simple Route JSON where components are replaced with obstacles
-   * and component connection points are omitted.
-   */
-  componentsAsObstaclesSrj: SimpleRouteJson
-  components: DetectedComponent[]
-}
+export type ComponentDetectionSolverOutput = DetectedComponent[]
 
 const formatObstacleLabel = (obstacle: Obstacle) => {
   if (obstacle.componentId && obstacle.obstacleId) {
