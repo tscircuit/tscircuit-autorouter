@@ -116,8 +116,8 @@ export function normalizeInput(
 ): NormalizedTopologyPlannerInput {
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
-    input.componentDetectionOutput?.componentsAsObstaclesNoConnectionSrj ??
-    input.brokenSrj?.componentsAsObstaclesNoConnectionSrj
+    input.componentDetectionOutput?.componentsAsObstaclesSrj ??
+    input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
     input.componentDetectionOutput?.components ??
@@ -126,7 +126,7 @@ export function normalizeInput(
 
   if (!globalNoConnectionSrj) {
     throw new Error(
-      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or componentDetectionOutput.componentsAsObstaclesNoConnectionSrj",
+      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or componentDetectionOutput.componentsAsObstaclesSrj",
     )
   }
 

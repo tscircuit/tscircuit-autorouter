@@ -276,8 +276,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "escapeViaLocationSolver",
       EscapeViaLocationSolver,
       (cms) => [
-        cms.componentDetectionSolver!.getOutput()
-          .componentsAsObstaclesNoConnectionSrj,
+        cms.componentDetectionSolver!.getOutput().componentsAsObstaclesSrj,
         {
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
