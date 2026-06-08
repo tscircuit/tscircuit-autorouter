@@ -12,14 +12,14 @@ import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGe
 import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
 import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 
-export interface TopologyGeneratorForCompoentsParams {
+export interface ComponentTopologyGeneratorSolverParams {
   detectedComponents: DetectedComponent[]
   inputSrj: SimpleRouteJson
 }
 
-export type TopologyGeneratorForCompoentsOutput = CapacityMeshNode[]
+export type ComponentTopologyGeneratorSolverOutput = CapacityMeshNode[]
 
-function createReplacementObstacleForComponent({
+export function createReplacementObstacleForComponent({
   detectedComponent,
   inputSrj,
 }: {
@@ -56,6 +56,35 @@ function createReplacementObstacleForComponent({
   }
 }
 
+export function createComponentObstacleSrj({
+  detectedComponents,
+  inputSrj,
+}: {
+  detectedComponents: DetectedComponent[]
+  inputSrj: SimpleRouteJson
+}): SimpleRouteJson {
+  const detectedComponentIds = new Set(
+    detectedComponents.map((component) => component.componentId),
+  )
+
+  return {
+    ...structuredClone(inputSrj),
+    obstacles: [
+      ...inputSrj.obstacles.filter(
+        (obstacle) =>
+          !obstacle.componentId ||
+          !detectedComponentIds.has(obstacle.componentId),
+      ),
+      ...detectedComponents.map((detectedComponent) =>
+        createReplacementObstacleForComponent({
+          detectedComponent,
+          inputSrj,
+        }),
+      ),
+    ],
+  }
+}
+
 function isPointInsideComponentBounds(
   point: { x: number; y: number },
   detectedComponent: DetectedComponent,
@@ -79,14 +108,14 @@ function isObstacleInsideAnyComponentBounds(
   )
 }
 
-export class TopologyGeneratorForCompoents extends BaseSolver {
-  private output: TopologyGeneratorForCompoentsOutput = []
+export class ComponentTopologyGeneratorSolver extends BaseSolver {
+  private output: ComponentTopologyGeneratorSolverOutput = []
   private componentMeshNodes: CapacityMeshNode[][] = []
   private currentComponentIndex = 0
   private activeTopologyGenerator?: TopologyGeneratorSolver | null = null
 
   constructor(
-    public readonly inputProblem: TopologyGeneratorForCompoentsParams,
+    public readonly inputProblem: ComponentTopologyGeneratorSolverParams,
   ) {
     super()
   }
@@ -146,31 +175,13 @@ export class TopologyGeneratorForCompoents extends BaseSolver {
     }
   }
 
-  getComponentReplacedByObstacleSrj(
+  createComponentObstacleSrj(
     inputSrj: SimpleRouteJson = this.inputProblem.inputSrj,
   ): SimpleRouteJson {
-    const detectedComponentIds = new Set(
-      this.inputProblem.detectedComponents.map(
-        (component) => component.componentId,
-      ),
-    )
-
-    return {
-      ...structuredClone(inputSrj),
-      obstacles: [
-        ...inputSrj.obstacles.filter(
-          (obstacle) =>
-            !obstacle.componentId ||
-            !detectedComponentIds.has(obstacle.componentId),
-        ),
-        ...this.inputProblem.detectedComponents.map((detectedComponent) =>
-          createReplacementObstacleForComponent({
-            detectedComponent,
-            inputSrj,
-          }),
-        ),
-      ],
-    }
+    return createComponentObstacleSrj({
+      detectedComponents: this.inputProblem.detectedComponents,
+      inputSrj,
+    })
   }
 
   override visualize(): GraphicsObject {
@@ -242,9 +253,9 @@ export class TopologyGeneratorForCompoents extends BaseSolver {
     }
   }
 
-  getOutput(): TopologyGeneratorForCompoentsOutput {
+  getOutput(): ComponentTopologyGeneratorSolverOutput {
     if (!this.solved) {
-      throw new Error("TopologyGeneratorForCompoents has not solved yet")
+      throw new Error("ComponentTopologyGeneratorSolver has not solved yet")
     }
 
     return this.output

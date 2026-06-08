@@ -8,6 +8,11 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import {
+  createComponentObstacleSrj,
+  createReplacementObstacleForComponent,
+} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import {
   TopologyGenerator,
   type TopologyGeneratorSolver,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
@@ -114,19 +119,29 @@ export function createComponentSrj({
 export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
+  const detectedComponents = input.componentDetectionOutput ?? []
+  const serializedDetectedComponents = serializeDetectedComponents({
+    detectedComponents,
+    inputSrj: input.inputSrj,
+  })
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
-    input.componentDetectionOutput?.componentsAsObstaclesSrj ??
+    (detectedComponents.length > 0
+      ? createComponentObstacleSrj({
+          detectedComponents,
+          inputSrj: input.inputSrj,
+        })
+      : undefined) ??
     input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
-    input.componentDetectionOutput?.components ??
+    serializedDetectedComponents ??
     input.brokenSrj?.components ??
     []
 
   if (!globalNoConnectionSrj) {
     throw new Error(
-      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or componentDetectionOutput.componentsAsObstaclesSrj",
+      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or detected components",
     )
   }
 
@@ -134,6 +149,35 @@ export function normalizeInput(
     globalNoConnectionSrj,
     components,
   }
+}
+
+function serializeDetectedComponents({
+  detectedComponents,
+  inputSrj,
+}: {
+  detectedComponents: DetectedComponent[]
+  inputSrj: SimpleRouteJson
+}): SerializedTopologyComponentInput[] {
+  return detectedComponents.map((detectedComponent) => {
+    const memberObstacles = inputSrj.obstacles.filter(
+      (obstacle) => obstacle.componentId === detectedComponent.componentId,
+    )
+
+    return {
+      componentId: detectedComponent.componentId,
+      componentKind: detectedComponent.componentKind,
+      memberObstacleIds: memberObstacles.map(
+        (obstacle, index) =>
+          obstacle.obstacleId ??
+          `${detectedComponent.componentId}:member:${index}`,
+      ),
+      memberObstacles,
+      replacementObstacle: createReplacementObstacleForComponent({
+        detectedComponent,
+        inputSrj,
+      }),
+    }
+  })
 }
 
 /**

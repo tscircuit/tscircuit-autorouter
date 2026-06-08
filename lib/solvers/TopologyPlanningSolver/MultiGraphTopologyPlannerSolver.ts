@@ -2,7 +2,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { ComponentDetectionSolverOutput } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
@@ -32,7 +32,7 @@ export interface MultiGraphTopologyPlannerSolverParams {
   inputSrj: SimpleRouteJson
   globalNoConnectionSrj?: SimpleRouteJson
   components?: SerializedTopologyComponentInput[]
-  componentDetectionOutput?: ComponentDetectionSolverOutput
+  componentDetectionOutput?: DetectedComponent[]
   viaDiameter?: number
   obstacleMargin?: number
   brokenSrj?: {
