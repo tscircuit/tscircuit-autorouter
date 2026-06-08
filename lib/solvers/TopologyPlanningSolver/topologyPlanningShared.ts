@@ -101,12 +101,28 @@ export function createComponentSrj({
     .filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), componentBounds),
     )
+    .filter(
+      (obstacle) =>
+        obstacle.obstacleId !== component.replacementObstacle.obstacleId,
+    )
     .map((obstacle) => ({ ...obstacle }))
+  const componentObstaclesByKey = new Map<string, Obstacle>()
+
+  for (const obstacle of [
+    ...component.memberObstacles,
+    ...componentObstacles,
+  ]) {
+    componentObstaclesByKey.set(
+      obstacle.obstacleId ??
+        `${obstacle.componentId ?? "obstacle"}:${obstacle.center.x}:${obstacle.center.y}:${obstacle.width}:${obstacle.height}`,
+      { ...obstacle },
+    )
+  }
 
   return {
     ...structuredClone(inputSrj),
     bounds: componentBounds,
-    obstacles: componentObstacles,
+    obstacles: Array.from(componentObstaclesByKey.values()),
   }
 }
 

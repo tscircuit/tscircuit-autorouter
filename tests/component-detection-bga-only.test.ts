@@ -370,6 +370,30 @@ test("topology planning creates BGA component mesh nodes for two-row components"
   ).toBe(true)
 })
 
+test("topology planning builds component topology from member pads when input SRJ has replacement obstacles", () => {
+  const inputSrj = createSrj(
+    createGridPads({ componentId: "U_2X4", rows: 2, columns: 4 }),
+  )
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+  const componentDetectionOutput = componentDetectionSolver.getOutput()
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj: componentDetectionOutput.componentsAsObstaclesSrj,
+    componentDetectionOutput,
+  })
+  topologyPlanningSolver.solve()
+
+  const componentMeshNodes =
+    topologyPlanningSolver.getOutput().componentMeshNodes[0] ?? []
+
+  expect(componentMeshNodes.length).toBeGreaterThan(1)
+  expect(
+    componentMeshNodes.every((node) =>
+      node.capacityMeshNodeId.includes("U_2X4"),
+    ),
+  ).toBe(true)
+})
+
 test("topology planning creates QFP central, gap, and corner mesh nodes", () => {
   const inputSrj = {
     ...createSrj(createQfpPads({ componentId: "U_QFP" })),
