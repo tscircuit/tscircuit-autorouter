@@ -452,21 +452,18 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
+    const { layerCount, obstacles } = this.inputProblem.inputSrj
+    const { bounds, componentId } = this.inputProblem.detectedComponent
     const availableZ = getLayerRange(layerCount)
-    const topologyObstacles = this.inputProblem.componentId
-      ? obstacles.filter(
-          (obstacle) => obstacle.componentId === this.inputProblem.componentId,
-        )
-      : obstacles
+    const topologyObstacles = obstacles.filter(
+      (obstacle) => obstacle.componentId === componentId,
+    )
     const padRingObstacles =
       topologyObstacles.length > 0 ? topologyObstacles : obstacles
     const sideGroups = groupObstaclesBySide(padRingObstacles, bounds)
     const centralBounds = getInnerQfpBounds({ bounds, sideGroups })
     const nodeScopeId =
-      this.inputProblem.componentId ??
-      this.inputProblem.replacementObstacleId ??
-      "component"
+      componentId ?? this.inputProblem.replacementObstacleId ?? "component"
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
@@ -523,11 +520,11 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
     )
 
     this.output = {
-      obstacles: obstacles.map((obstacle) => structuredClone(obstacle)),
+      obstacles: padRingObstacles.map((obstacle) => structuredClone(obstacle)),
       routingRegions,
     }
     this.stats = {
-      componentId: this.inputProblem.componentId ?? null,
+      componentId: componentId ?? null,
       replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
       layerCount,
       viaDiameter,

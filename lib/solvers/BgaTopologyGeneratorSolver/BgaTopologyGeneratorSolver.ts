@@ -1,5 +1,5 @@
-import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
+import { BaseSolver } from "@tscircuit/solver-utils"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
@@ -52,15 +52,20 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
-    const topologyAxisObstacles = obstacles.filter((obstacle) =>
-      doBoundsOverlap(getBoundingBox(obstacle), bounds),
+    const { layerCount, obstacles } = this.inputProblem.inputSrj
+    const { bounds, componentId } = this.inputProblem.detectedComponent
+    const componentObstacles = obstacles.filter(
+      (obstacle) => obstacle.componentId === componentId,
     )
+    const topologyAxisObstacles =
+      componentObstacles.length > 0
+        ? componentObstacles
+        : obstacles.filter((obstacle) =>
+            doBoundsOverlap(getBoundingBox(obstacle), bounds),
+          )
     const availableZ = getLayerRange(layerCount)
     const nodeScopeId =
-      this.inputProblem.componentId ??
-      this.inputProblem.replacementObstacleId ??
-      "component"
+      componentId ?? this.inputProblem.replacementObstacleId ?? "component"
     const rowCount = clusterAxisValues(
       topologyAxisObstacles.map((obstacle) => obstacle.center.y),
     ).length
@@ -80,7 +85,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       (node) => node.availableZ.length > 1,
     ).length
 
-    const clonedObstacles = obstacles.map((obstacle) =>
+    const clonedObstacles = topologyAxisObstacles.map((obstacle) =>
       structuredClone(obstacle),
     )
     this.output = {
@@ -88,7 +93,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       routingRegions: meshNodes,
     }
     this.stats = {
-      componentId: this.inputProblem.componentId ?? null,
+      componentId: componentId ?? null,
       replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
       layerCount,
       inferredRowCount: rowCount,

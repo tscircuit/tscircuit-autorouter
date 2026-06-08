@@ -446,9 +446,19 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
 
     const componentKind =
       this.inputProblem.componentKinds[this.currentIndex] ?? "bga"
+    const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
+    const componentId = this.inputProblem.componentIds[this.currentIndex]!
     const solverInput = {
-      inputSrj: this.inputProblem.componentSrjs[this.currentIndex]!,
-      componentId: this.inputProblem.componentIds[this.currentIndex],
+      inputSrj: componentSrj,
+      detectedComponent: {
+        componentId,
+        componentKind,
+        bounds: {
+          __type: "rect" as const,
+          ...componentSrj.bounds,
+        },
+      },
+      componentId,
       replacementObstacleId:
         this.inputProblem.replacementObstacleIds[this.currentIndex],
       viaDiameter: this.inputProblem.viaDiameter,

@@ -1,10 +1,12 @@
 import type { BaseSolver } from "@tscircuit/solver-utils"
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 
 /** Shared input passed into each component-specific topology generator. */
 export interface TopologyGeneratorSolverParams {
   inputSrj: SimpleRouteJson
+  detectedComponent: DetectedComponent
   componentId?: string
   replacementObstacleId?: string
   viaDiameter?: number
@@ -26,6 +28,7 @@ export interface TopologyGeneratorClass {
   new (params: TopologyGeneratorSolverParams): TopologyGeneratorSolver
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: Registry API used by topology generator classes.
 export class TopologyGenerator {
   private static readonly generators = new Map<
     ComponentKind,
@@ -40,7 +43,10 @@ export class TopologyGenerator {
    * @note Later registrations replace earlier ones for the same component kind.
    */
   static register(generatorClass: TopologyGeneratorClass) {
-    this.generators.set(generatorClass.componentKind, generatorClass)
+    TopologyGenerator.generators.set(
+      generatorClass.componentKind,
+      generatorClass,
+    )
   }
 
   /**
@@ -55,7 +61,7 @@ export class TopologyGenerator {
     componentKind: ComponentKind,
     params: TopologyGeneratorSolverParams,
   ): TopologyGeneratorSolver {
-    const generatorClass = this.generators.get(componentKind)
+    const generatorClass = TopologyGenerator.generators.get(componentKind)
 
     if (!generatorClass) {
       throw new Error(
