@@ -12,6 +12,7 @@ import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/Necessar
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { TopologyGeneratorForCompoents } from "lib/solvers/TopologyGeneratorForCompoents/TopologyGeneratorForCompoents"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
@@ -230,6 +231,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   componentDetectionSolver?: ComponentDetectionSolver
+  topologyGeneratorForCompoents?: TopologyGeneratorForCompoents
   viaDiameter!: number
   viaHoleDiameter!: number
   minTraceWidth!: number
@@ -271,6 +273,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "componentDetectionSolver",
       ComponentDetectionSolver,
       (cms) => [{ inputSrj: cms.srj }],
+    ),
+    definePipelineStep(
+      "topologyGeneratorForCompoents",
+      TopologyGeneratorForCompoents,
+      (cms) => [
+        {
+          detectedComponents: cms.componentDetectionSolver!.getOutput(),
+          inputSrj: cms.srj,
+        },
+      ],
     ),
     definePipelineStep(
       "escapeViaLocationSolver",
