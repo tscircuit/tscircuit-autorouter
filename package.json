@@ -56,7 +56,7 @@
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
-    "dataset-srj18": "git+https://github.com/tscircuit/dataset-srj18.git#28d47419660b55f36c8cf503dfa24381fd159b03",
+    "dataset-srj18": "git+https://github.com/tscircuit/dataset-srj18.git#2891c926c72cede8b60984018f926c3c92c39720",
     "flatbush": "^4.4.0",
     "graphics-debug": "0.0.94",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
