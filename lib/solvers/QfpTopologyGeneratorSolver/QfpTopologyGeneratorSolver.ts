@@ -2,7 +2,12 @@ import { getBoundingBox } from "@tscircuit/math-utils"
 import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import {
+  TopologyGenerator,
+  type TopologyGeneratorSolverOutput,
+  type TopologyGeneratorSolverParams,
+} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -23,15 +28,11 @@ type QfpRoutingRegion = {
   containsObstacle?: boolean
 }
 
-export interface QfpTopologyGeneratorSolverParams {
-  inputSrj: SimpleRouteJson
-  componentId?: string
-  replacementObstacleId?: string
-  viaDiameter?: number
-  obstacleMargin?: number
-}
+export interface QfpTopologyGeneratorSolverParams
+  extends TopologyGeneratorSolverParams {}
 
-export interface QfpTopologyGeneratorSolverOutput {
+export interface QfpTopologyGeneratorSolverOutput
+  extends TopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from the QFP pad ring. These are not obstacle rectangles. */
@@ -433,6 +434,8 @@ function getCornerRegions({
  * and corner regions between the package pads.
  */
 export class QfpTopologyGeneratorSolver extends BaseSolver {
+  static readonly componentKind = "qfp"
+
   private output: QfpTopologyGeneratorSolverOutput | null = null
 
   constructor(public readonly inputProblem: QfpTopologyGeneratorSolverParams) {
@@ -554,3 +557,5 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
+
+TopologyGenerator.register(QfpTopologyGeneratorSolver)

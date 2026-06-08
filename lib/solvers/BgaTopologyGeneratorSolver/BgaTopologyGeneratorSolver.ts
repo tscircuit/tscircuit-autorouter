@@ -1,19 +1,22 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import {
+  TopologyGenerator,
+  type TopologyGeneratorSolverOutput,
+  type TopologyGeneratorSolverParams,
+} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import type { CapacityMeshNode, Obstacle } from "lib/types"
 import {
   clusterAxisValues,
   createMeshNodesForSrj,
   getLayerRange,
 } from "./bgpTopologyGeneratorShared"
 
-export interface BgaTopologyGeneratorSolverParams {
-  inputSrj: SimpleRouteJson
-  componentId?: string
-  replacementObstacleId?: string
-}
+export interface BgaTopologyGeneratorSolverParams
+  extends TopologyGeneratorSolverParams {}
 
-export interface BgaTopologyGeneratorSolverOutput {
+export interface BgaTopologyGeneratorSolverOutput
+  extends TopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from obstacle layout. These are not obstacle rectangles. */
@@ -30,6 +33,8 @@ export interface BgaTopologyGeneratorSolverOutput {
  *   as one multi-layer region.
  */
 export class BgaTopologyGeneratorSolver extends BaseSolver {
+  static readonly componentKind = "bga"
+
   private output: BgaTopologyGeneratorSolverOutput | null = null
 
   constructor(public readonly inputProblem: BgaTopologyGeneratorSolverParams) {
@@ -103,3 +108,5 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
+
+TopologyGenerator.register(BgaTopologyGeneratorSolver)

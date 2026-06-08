@@ -249,7 +249,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     )
 
     this.output = {
-      global: {
+      componentsAsObstaclesSrj: {
         ...this.inputSrj,
         obstacles: [
           ...cloneObstacles(globalObstacles),

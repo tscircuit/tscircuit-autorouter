@@ -200,15 +200,17 @@ test("component detection only creates regions for BGA-like components", () => {
     "U_BGA",
   ])
   expect(
-    output.global.obstacles.some((obstacle) => obstacle.obstacleId === "R1.1"),
+    output.componentsAsObstaclesSrj.obstacles.some(
+      (obstacle) => obstacle.obstacleId === "R1.1",
+    ),
   ).toBe(true)
   expect(
-    output.global.obstacles.some(
+    output.componentsAsObstaclesSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "component-region:R1",
     ),
   ).toBe(false)
   expect(
-    output.global.obstacles.some(
+    output.componentsAsObstaclesSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "component-region:U_BGA",
     ),
   ).toBe(true)

@@ -5,7 +5,12 @@ import {
   clusterAxisValues,
   getLayerRange,
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import {
+  TopologyGenerator,
+  type TopologyGeneratorSolverOutput,
+  type TopologyGeneratorSolverParams,
+} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -27,15 +32,11 @@ type SoicRoutingRegion = {
   containsObstacle?: boolean
 }
 
-export interface SoicTopologyGeneratorSolverParams {
-  inputSrj: SimpleRouteJson
-  componentId?: string
-  replacementObstacleId?: string
-  viaDiameter?: number
-  obstacleMargin?: number
-}
+export interface SoicTopologyGeneratorSolverParams
+  extends TopologyGeneratorSolverParams {}
 
-export interface SoicTopologyGeneratorSolverOutput {
+export interface SoicTopologyGeneratorSolverOutput
+  extends TopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from the SOIC pad rows/columns. These are not obstacle rectangles. */
@@ -285,6 +286,8 @@ function createGapRegionsForSide({
  * regions between adjacent pads on the two populated sides.
  */
 export class SoicTopologyGeneratorSolver extends BaseSolver {
+  static readonly componentKind = "soic"
+
   private output: SoicTopologyGeneratorSolverOutput | null = null
 
   constructor(public readonly inputProblem: SoicTopologyGeneratorSolverParams) {
@@ -387,3 +390,5 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
+
+TopologyGenerator.register(SoicTopologyGeneratorSolver)

@@ -249,10 +249,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "componentDetectionSolver",
+      ComponentDetectionSolver,
+      (cms) => [{ inputSrj: cms.srj }],
+    ),
+    definePipelineStep(
       "escapeViaLocationSolver",
       EscapeViaLocationSolver,
       (cms) => [
-        cms.srj,
+        cms.componentDetectionSolver!.getOutput().componentsAsObstaclesSrj,
         {
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
@@ -280,11 +285,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           )
         },
       },
-    ),
-    definePipelineStep(
-      "componentDetectionSolver",
-      ComponentDetectionSolver,
-      (cms) => [{ inputSrj: cms.srjWithPointPairs! as any }],
     ),
     definePipelineStep(
       "topologyPlanningSolver",
@@ -788,9 +788,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const visualizations = [
       problemViz,
       processedProblemViz,
+      componentDetectionViz,
       escapeViaLocationViz,
       netToPPSolver,
-      componentDetectionViz,
       topologyPlanningViz,
       nodeSubdivisionViz,
       nodeTargetMergerViz,
@@ -847,14 +847,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
+    if (this.escapeViaLocationSolver) {
+      return this.escapeViaLocationSolver.visualize()
+    }
     if (this.topologyPlanningSolver) {
       return this.topologyPlanningSolver.visualize()
     }
     if (this.componentDetectionSolver) {
       return this.componentDetectionSolver.visualize()
-    }
-    if (this.escapeViaLocationSolver) {
-      return this.escapeViaLocationSolver.visualize()
     }
     if (this.preprocessSimpleRouteJsonSolver) {
       return this.preprocessSimpleRouteJsonSolver.visualize()
