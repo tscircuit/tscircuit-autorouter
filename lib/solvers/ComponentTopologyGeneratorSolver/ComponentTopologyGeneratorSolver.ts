@@ -155,15 +155,12 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
 
     const detectedComponent =
       this.inputProblem.detectedComponents[this.currentComponentIndex]!
-    this.activeTopologyGenerator = TopologyGenerator.create(
-      detectedComponent.componentKind,
-      {
-        inputSrj: this.inputProblem.inputSrj,
-        detectedComponent,
-        componentId: detectedComponent.componentId,
-        replacementObstacleId: `${detectedComponent.componentId}_component_bounds`,
-      },
-    )
+    this.activeTopologyGenerator = TopologyGenerator.create({
+      inputSrj: this.inputProblem.inputSrj,
+      detectedComponent,
+      componentId: detectedComponent.componentId,
+      replacementObstacleId: `${detectedComponent.componentId}_component_bounds`,
+    })
   }
 
   private finalizeComponentTopology() {
