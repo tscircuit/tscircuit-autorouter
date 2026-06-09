@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { createComponentObstacleSrj } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -47,6 +48,13 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   connections: [],
   bounds: { minX: -2, maxX: 4, minY: -2, maxY: 4 },
 })
+
+const countComponentObstacles = (
+  inputSrj: SimpleRouteJson,
+  componentId: string,
+) =>
+  inputSrj.obstacles.filter((obstacle) => obstacle.componentId === componentId)
+    .length
 
 const createGridPads = ({
   componentId,
@@ -195,23 +203,28 @@ test("component detection only creates regions for BGA-like components", () => {
 
   solver.solve()
 
-  const output = solver.getOutput()
-  expect(output.components.map((component) => component.componentId)).toEqual([
+  const detectedComponents = solver.getOutput()
+  const componentObstacleSrj = createComponentObstacleSrj({
+    detectedComponents,
+    inputSrj: createSrj([...passivePads, ...bgaPads]),
+  })
+
+  expect(detectedComponents.map((component) => component.componentId)).toEqual([
     "U_BGA",
   ])
   expect(
-    output.componentsAsObstaclesSrj.obstacles.some(
+    componentObstacleSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "R1.1",
     ),
   ).toBe(true)
   expect(
-    output.componentsAsObstaclesSrj.obstacles.some(
-      (obstacle) => obstacle.obstacleId === "component-region:R1",
+    componentObstacleSrj.obstacles.some(
+      (obstacle) => obstacle.obstacleId === "R1.2_component_bounds",
     ),
   ).toBe(false)
   expect(
-    output.componentsAsObstaclesSrj.obstacles.some(
-      (obstacle) => obstacle.obstacleId === "component-region:U_BGA",
+    componentObstacleSrj.obstacles.some(
+      (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
     ),
   ).toBe(true)
 })
@@ -228,9 +241,11 @@ test("component detection accepts two-row and two-column BGA-like components", (
 
   solver.solve()
 
-  expect(
-    solver.getOutput().components.map((component) => component.componentId),
-  ).toEqual(["U_2X4", "U_2X5", "U_4X2"])
+  expect(solver.getOutput().map((component) => component.componentId)).toEqual([
+    "U_2X4",
+    "U_2X5",
+    "U_4X2",
+  ])
 })
 
 test("component detection marks large-gap two-row and two-column grids as SOIC", () => {
@@ -261,10 +276,7 @@ test("component detection marks large-gap two-row and two-column grids as SOIC",
   expect(
     solver
       .getOutput()
-      .components.map((component) => [
-        component.componentId,
-        component.componentKind,
-      ]),
+      .map((component) => [component.componentId, component.componentKind]),
   ).toEqual([
     ["U_SOIC_COLUMNS", "soic"],
     ["U_SOIC_ROWS", "soic"],
@@ -288,12 +300,10 @@ test("component detection clearly labels QFP-like components", () => {
 
   solver.solve()
 
-  const output = solver.getOutput()
   expect(
-    output.components.map((component) => [
-      component.componentId,
-      component.componentKind,
-    ]),
+    solver
+      .getOutput()
+      .map((component) => [component.componentId, component.componentKind]),
   ).toEqual([
     ["U_BGA", "bga"],
     ["U_QFP", "qfp"],
@@ -323,9 +333,9 @@ test("component detection rejects grids with pad dimensions outside one percent"
 
   solver.solve()
 
-  expect(
-    solver.getOutput().components.map((component) => component.componentId),
-  ).toEqual(["U_BGA"])
+  expect(solver.getOutput().map((component) => component.componentId)).toEqual([
+    "U_BGA",
+  ])
 })
 
 test("component detection does not require at least eight pads", () => {
@@ -342,9 +352,9 @@ test("component detection does not require at least eight pads", () => {
 
   solver.solve()
 
-  expect(
-    solver.getOutput().components.map((component) => component.componentId),
-  ).toEqual(["U_SPARSE_2X4"])
+  expect(solver.getOutput().map((component) => component.componentId)).toEqual([
+    "U_SPARSE_2X4",
+  ])
 })
 
 test("topology planning creates BGA component mesh nodes for two-row components", () => {
@@ -546,9 +556,7 @@ test("topology planning creates SOIC central and pad-gap mesh nodes", () => {
     node.capacityMeshNodeId.includes("-gap-"),
   )
 
-  expect(
-    componentDetectionSolver.getOutput().components[0]?.componentKind,
-  ).toBe("soic")
+  expect(componentDetectionSolver.getOutput()[0]?.componentKind).toBe("soic")
   expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
   expect(sideGapNodes.length).toBeGreaterThan(0)
   expect(
@@ -564,10 +572,7 @@ test("bugreport61 SOIC8 footprints use SOIC topology planning", () => {
   expect(
     componentDetectionSolver
       .getOutput()
-      .components.map((component) => [
-        component.componentId,
-        component.componentKind,
-      ]),
+      .map((component) => [component.componentId, component.componentKind]),
   ).toEqual([
     ["pcb_component_0", "soic"],
     ["pcb_component_1", "soic"],
@@ -604,10 +609,10 @@ test("bugreport62 QFP footprints are clearly detected", () => {
   expect(
     componentDetectionSolver
       .getOutput()
-      .components.map((component) => [
+      .map((component) => [
         component.componentId,
         component.componentKind,
-        component.memberObstacles.length,
+        countComponentObstacles(inputSrj, component.componentId),
       ]),
   ).toEqual([
     ["pcb_component_0", "qfp", 12],
@@ -623,10 +628,10 @@ test("bugreport63 QFP thermal-pad footprints are detected as qfp_thermalpad", ()
   expect(
     componentDetectionSolver
       .getOutput()
-      .components.map((component) => [
+      .map((component) => [
         component.componentId,
         component.componentKind,
-        component.memberObstacles.length,
+        countComponentObstacles(inputSrj, component.componentId),
       ]),
   ).toEqual([
     ["pcb_component_0", "qfp_thermalpad", 13],

@@ -8,6 +8,11 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import {
+  createComponentObstacleSrj,
+  createReplacementObstacleForComponent,
+} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import {
   TopologyGenerator,
   type TopologyGeneratorSolver,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
@@ -31,8 +36,8 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
-  componentKinds: Array<ComponentKind | undefined>
-  replacementObstacleIds: Array<string | undefined>
+  componentKinds: ComponentKind[]
+  replacementObstacleIds: string[]
   viaDiameter?: number
   obstacleMargin?: number
 }
@@ -114,19 +119,29 @@ export function createComponentSrj({
 export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
+  const detectedComponents = input.componentDetectionOutput ?? []
+  const serializedDetectedComponents = serializeDetectedComponents({
+    detectedComponents,
+    inputSrj: input.inputSrj,
+  })
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
-    input.componentDetectionOutput?.componentsAsObstaclesSrj ??
+    (detectedComponents.length > 0
+      ? createComponentObstacleSrj({
+          detectedComponents,
+          inputSrj: input.inputSrj,
+        })
+      : undefined) ??
     input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
-    input.componentDetectionOutput?.components ??
+    serializedDetectedComponents ??
     input.brokenSrj?.components ??
     []
 
   if (!globalNoConnectionSrj) {
     throw new Error(
-      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or componentDetectionOutput.componentsAsObstaclesSrj",
+      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or detected components",
     )
   }
 
@@ -134,6 +149,35 @@ export function normalizeInput(
     globalNoConnectionSrj,
     components,
   }
+}
+
+function serializeDetectedComponents({
+  detectedComponents,
+  inputSrj,
+}: {
+  detectedComponents: DetectedComponent[]
+  inputSrj: SimpleRouteJson
+}): SerializedTopologyComponentInput[] {
+  return detectedComponents.map((detectedComponent) => {
+    const memberObstacles = inputSrj.obstacles.filter(
+      (obstacle) => obstacle.componentId === detectedComponent.componentId,
+    )
+
+    return {
+      componentId: detectedComponent.componentId,
+      componentKind: detectedComponent.componentKind,
+      memberObstacleIds: memberObstacles.map(
+        (obstacle, index) =>
+          obstacle.obstacleId ??
+          `${detectedComponent.componentId}:member:${index}`,
+      ),
+      memberObstacles,
+      replacementObstacle: createReplacementObstacleForComponent({
+        detectedComponent,
+        inputSrj,
+      }),
+    }
+  })
 }
 
 /**
@@ -403,7 +447,7 @@ function areBoundsInsideBounds({
 
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver?: TopologyGeneratorSolver | null = null
+  activeSubSolver: TopologyGeneratorSolver | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
 
@@ -444,13 +488,23 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       return
     }
 
-    const componentKind =
-      this.inputProblem.componentKinds[this.currentIndex] ?? "bga"
+    const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
+    const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
+    const componentId = this.inputProblem.componentIds[this.currentIndex]!
+    const replacementObstacleId =
+      this.inputProblem.replacementObstacleIds[this.currentIndex]!
     const solverInput = {
-      inputSrj: this.inputProblem.componentSrjs[this.currentIndex]!,
-      componentId: this.inputProblem.componentIds[this.currentIndex],
-      replacementObstacleId:
-        this.inputProblem.replacementObstacleIds[this.currentIndex],
+      inputSrj: componentSrj,
+      detectedComponent: {
+        componentId,
+        componentKind,
+        bounds: {
+          __type: "rect" as const,
+          ...componentSrj.bounds,
+        },
+      },
+      componentId,
+      replacementObstacleId,
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
     }
