@@ -86,7 +86,7 @@
     "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#db73a5f"
   },
   "dependencies": {
-    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#7837fb0",
+    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3dbc62d425c0459e6fc2fef7a656b448e9a0",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0"
   }
