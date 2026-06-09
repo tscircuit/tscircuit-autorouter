@@ -153,7 +153,7 @@ export class HighDensitySolver extends BaseSolver {
       return this.getSolvedNodeSolverType(solver.winningSolver)
     }
     if (solver instanceof HyperSingleIntraNodeSolver && solver.winningSolver) {
-      return this.getConcreteSolverTypeName(solver.winningSolver)
+      return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
     }
     return this.getConcreteSolverTypeName(solver)
   }
@@ -200,7 +200,7 @@ export class HighDensitySolver extends BaseSolver {
     ].join("\n")
   }
 
-  private getConcreteSolverTypeName(solver: unknown): string {
+  private getConcreteSolverTypeName(solver: BaseSolver): string {
     if (solver instanceof CachedIntraNodeRouteSolver) {
       const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
       return solver.cacheHit ? `${concreteName} [cached]` : concreteName
@@ -210,27 +210,7 @@ export class HighDensitySolver extends BaseSolver {
       return this.getIntraNodeStrategyName(solver.hyperParameters)
     }
 
-    if (
-      solver &&
-      typeof solver === "object" &&
-      "getSolverName" in solver &&
-      typeof solver.getSolverName === "function"
-    ) {
-      return solver.getSolverName()
-    }
-
-    const solverConstructor = (
-      solver as {
-        constructor?: {
-          name?: string
-        }
-      } | null
-    )?.constructor
-    if (typeof solverConstructor?.name === "string") {
-      return solverConstructor.name
-    }
-
-    return "unknown"
+    return solver.getSolverName()
   }
 
   private getIntraNodeStrategyName(
