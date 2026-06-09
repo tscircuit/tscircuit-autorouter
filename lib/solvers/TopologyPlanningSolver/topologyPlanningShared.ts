@@ -508,7 +508,7 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
     }
-    this.activeSubSolver = TopologyGenerator.create(componentKind, solverInput)
+    this.activeSubSolver = TopologyGenerator.create(solverInput)
   }
 
   getOutput(): ComponentTopologyBatchSolverOutput {

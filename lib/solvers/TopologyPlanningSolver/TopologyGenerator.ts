@@ -52,15 +52,14 @@ export class TopologyGenerator {
   /**
    * Creates the topology generator that matches the detected component kind.
    *
-   * @param componentKind - Concrete detected component kind to instantiate.
    * @param params - Shared solver input forwarded into the generator constructor.
-   * @returns A topology generator solver instance for `componentKind`.
+   * @returns A topology generator solver instance for the detected component kind.
    * @caution Built-in registrations must run before calling this factory.
    */
   static create(
-    componentKind: ComponentKind,
     params: TopologyGeneratorSolverParams,
   ): TopologyGeneratorSolver {
+    const componentKind = params.detectedComponent.componentKind
     const generatorClass = TopologyGenerator.generators.get(componentKind)
 
     if (!generatorClass) {
