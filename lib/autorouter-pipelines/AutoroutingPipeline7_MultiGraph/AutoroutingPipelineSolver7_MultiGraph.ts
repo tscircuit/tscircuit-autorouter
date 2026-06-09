@@ -190,7 +190,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
   componentTopologyGeneratorSolver?: ComponentTopologyGeneratorSolver
-  globalRectDiffSolver?: RectDiffPipeline
+  globalTopologyGeneratorSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -302,7 +302,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "globalRectDiffSolver",
+      "globalTopologyGeneratorSolver",
       RectDiffPipeline,
       (cms) => [
         {
@@ -315,7 +315,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const globalMeshNodes =
-            cms.globalRectDiffSolver?.getOutput().meshNodes ?? []
+            cms.globalTopologyGeneratorSolver?.getOutput().meshNodes ?? []
           const componentMeshNodes =
             cms.componentTopologyGeneratorSolver?.getOutput() ?? []
 
@@ -700,7 +700,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const componentDetectionViz = this.componentDetectionSolver?.visualize()
     const componentTopologyGeneratorViz =
       this.componentTopologyGeneratorSolver?.visualize()
-    const globalRectDiffViz = this.globalRectDiffSolver?.visualize()
+    const globalTopologyGeneratorViz =
+      this.globalTopologyGeneratorSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
@@ -813,7 +814,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       componentTopologyGeneratorViz,
       escapeViaLocationViz,
       netToPPSolver,
-      globalRectDiffViz,
+      globalTopologyGeneratorViz,
       nodeSubdivisionViz,
       nodeTargetMergerViz,
       singleLayerNodeMergerViz,
