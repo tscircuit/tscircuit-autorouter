@@ -2,12 +2,7 @@ import { getBoundingBox } from "@tscircuit/math-utils"
 import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
-import {
-  TopologyGenerator,
-  type TopologyGeneratorSolverOutput,
-  type TopologyGeneratorSolverParams,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -29,11 +24,15 @@ type QfpThermalPadRoutingRegion = {
   containsObstacle?: boolean
 }
 
-export interface QfpThermalPadTopologyGeneratorSolverParams
-  extends TopologyGeneratorSolverParams {}
+export interface QfpThermalPadTopologyGeneratorSolverParams {
+  inputSrj: SimpleRouteJson
+  componentId?: string
+  replacementObstacleId?: string
+  viaDiameter?: number
+  obstacleMargin?: number
+}
 
-export interface QfpThermalPadTopologyGeneratorSolverOutput
-  extends TopologyGeneratorSolverOutput {
+export interface QfpThermalPadTopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from the QFP pad ring and central thermal pad. */
@@ -720,8 +719,6 @@ function getInnerCornerRegions({
  * outer corners, and three rectangular regions around each thermal-pad corner.
  */
 export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
-  static readonly componentKind = "qfp_thermalpad"
-
   private output: QfpThermalPadTopologyGeneratorSolverOutput | null = null
 
   constructor(
@@ -740,12 +737,13 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
+    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
     const availableZ = getLayerRange(layerCount)
-    const topologyObstacles = obstacles.filter(
-      (obstacle) => obstacle.componentId === componentId,
-    )
+    const topologyObstacles = this.inputProblem.componentId
+      ? obstacles.filter(
+          (obstacle) => obstacle.componentId === this.inputProblem.componentId,
+        )
+      : obstacles
     const componentObstacles =
       topologyObstacles.length > 0 ? topologyObstacles : obstacles
     const { padRingObstacles, thermalPadObstacles } =
@@ -760,7 +758,10 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const nodeScopeId = componentId
+    const nodeScopeId =
+      this.inputProblem.componentId ??
+      this.inputProblem.replacementObstacleId ??
+      "component"
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
@@ -846,14 +847,12 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     )
 
     this.output = {
-      obstacles: componentObstacles.map((obstacle) =>
-        structuredClone(obstacle),
-      ),
+      obstacles: obstacles.map((obstacle) => structuredClone(obstacle)),
       routingRegions,
     }
     this.stats = {
-      componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
+      componentId: this.inputProblem.componentId ?? null,
+      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
       layerCount,
       viaDiameter,
       obstacleMargin,
@@ -887,5 +886,3 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
-
-TopologyGenerator.register(QfpThermalPadTopologyGeneratorSolver)

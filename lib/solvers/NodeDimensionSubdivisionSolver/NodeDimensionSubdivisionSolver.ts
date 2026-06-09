@@ -65,10 +65,6 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     const hasMinAreaLimit =
       Number.isFinite(this.minNodeArea) && this.minNodeArea > 0
 
-    if (!Number.isFinite(node.width) || !Number.isFinite(node.height)) {
-      return true
-    }
-
     return hasMinAreaLimit && node.width * node.height < this.minNodeArea
   }
 
@@ -113,18 +109,11 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     const inputCount = this.nodes.length
     let subdividedNodeCount = 0
     let removedSmallNodeCount = 0
-    let removedInvalidNodeCount = 0
 
     for (const node of this.nodes) {
-      const hasInvalidDimensions =
-        !Number.isFinite(node.width) || !Number.isFinite(node.height)
       const subdividedNodes = this.subdivideNode(node)
       if (subdividedNodes.length === 0) {
-        if (hasInvalidDimensions) {
-          removedInvalidNodeCount++
-        } else {
-          removedSmallNodeCount++
-        }
+        removedSmallNodeCount++
         continue
       }
 
@@ -139,7 +128,6 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       outputNodeCount: this.outputNodes.length,
       subdividedNodeCount,
       removedSmallNodeCount,
-      removedInvalidNodeCount,
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
       minNodeArea: this.minNodeArea,

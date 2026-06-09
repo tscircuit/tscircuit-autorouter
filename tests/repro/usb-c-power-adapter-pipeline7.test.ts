@@ -10,29 +10,29 @@ test("usb-c power adapter pipeline7 creates only supported component regions", (
   const solver = new AutoroutingPipelineSolver7_MultiGraph(srj, {
     cacheProvider: null,
   })
-  const componentTopologyStepIndex = solver.pipelineDef.findIndex(
-    (step) => step.solverName === "componentTopologyGeneratorSolver",
+  const topologyPlanningStepIndex = solver.pipelineDef.findIndex(
+    (step) => step.solverName === "topologyPlanningSolver",
   )
 
   while (
     !solver.solved &&
     !solver.failed &&
-    solver.currentPipelineStepIndex <= componentTopologyStepIndex
+    solver.currentPipelineStepIndex <= topologyPlanningStepIndex
   ) {
     solver.step()
   }
 
   expect(solver.failed).toBe(false)
-  const detectedComponents = solver.componentDetectionSolver!.getOutput()
-  const componentMeshNodes =
-    solver.componentTopologyGeneratorSolver!.getOutput()
+  const componentDetectionOutput = solver.componentDetectionSolver!.getOutput()
+  const topologyOutput = solver.topologyPlanningSolver!.getOutput()
 
   expect(
-    detectedComponents.map((component) => [
+    componentDetectionOutput.components.map((component) => [
       component.componentId,
       component.componentKind,
+      component.memberObstacles.length,
     ]),
-  ).toEqual([["pcb_component_40", "qfp_thermalpad"]])
-  expect(componentMeshNodes.length).toBeGreaterThan(0)
-  expect(componentMeshNodes.length).toBeLessThan(2_000)
+  ).toEqual([["pcb_component_40", "qfp_thermalpad", 25]])
+  expect(topologyOutput.componentMeshNodes.flat().length).toBeGreaterThan(0)
+  expect(topologyOutput.mergedMeshNodes.length).toBeLessThan(2_000)
 })

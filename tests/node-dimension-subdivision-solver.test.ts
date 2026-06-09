@@ -78,29 +78,3 @@ test("NodeDimensionSubdivisionSolver allows overriding minNodeArea for tiny node
   expect(solver.outputNodes.every((node) => getNodeRatio(node) <= 2)).toBe(true)
   expect(solver.stats.minNodeArea).toBe(0.001)
 })
-
-test("NodeDimensionSubdivisionSolver removes nodes with infinite dimensions", () => {
-  const solver = new NodeDimensionSubdivisionSolver(
-    [createNode({ height: Number.POSITIVE_INFINITY })],
-    16,
-    6,
-  )
-
-  solver.solve()
-
-  expect(solver.outputNodes).toHaveLength(0)
-  expect(solver.stats.removedInvalidNodeCount).toBe(1)
-})
-
-test("NodeDimensionSubdivisionSolver removes nodes with NaN dimensions", () => {
-  const solver = new NodeDimensionSubdivisionSolver(
-    [createNode({ width: Number.NaN })],
-    16,
-    6,
-  )
-
-  solver.solve()
-
-  expect(solver.outputNodes).toHaveLength(0)
-  expect(solver.stats.removedInvalidNodeCount).toBe(1)
-})

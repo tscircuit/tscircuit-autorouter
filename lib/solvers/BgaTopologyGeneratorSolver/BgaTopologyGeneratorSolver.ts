@@ -1,22 +1,19 @@
-import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
-import {
-  TopologyGenerator,
-  type TopologyGeneratorSolverOutput,
-  type TopologyGeneratorSolverParams,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import {
   clusterAxisValues,
   createMeshNodesForSrj,
   getLayerRange,
 } from "./bgpTopologyGeneratorShared"
 
-export interface BgaTopologyGeneratorSolverParams
-  extends TopologyGeneratorSolverParams {}
+export interface BgaTopologyGeneratorSolverParams {
+  inputSrj: SimpleRouteJson
+  componentId?: string
+  replacementObstacleId?: string
+}
 
-export interface BgaTopologyGeneratorSolverOutput
-  extends TopologyGeneratorSolverOutput {
+export interface BgaTopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from obstacle layout. These are not obstacle rectangles. */
@@ -33,8 +30,6 @@ export interface BgaTopologyGeneratorSolverOutput
  *   as one multi-layer region.
  */
 export class BgaTopologyGeneratorSolver extends BaseSolver {
-  static readonly componentKind = "bga"
-
   private output: BgaTopologyGeneratorSolverOutput | null = null
 
   constructor(public readonly inputProblem: BgaTopologyGeneratorSolverParams) {
@@ -52,19 +47,15 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
-    const componentObstacles = obstacles.filter(
-      (obstacle) => obstacle.componentId === componentId,
+    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
+    const topologyAxisObstacles = obstacles.filter((obstacle) =>
+      doBoundsOverlap(getBoundingBox(obstacle), bounds),
     )
-    const topologyAxisObstacles =
-      componentObstacles.length > 0
-        ? componentObstacles
-        : obstacles.filter((obstacle) =>
-            doBoundsOverlap(getBoundingBox(obstacle), bounds),
-          )
     const availableZ = getLayerRange(layerCount)
-    const nodeScopeId = componentId
+    const nodeScopeId =
+      this.inputProblem.componentId ??
+      this.inputProblem.replacementObstacleId ??
+      "component"
     const rowCount = clusterAxisValues(
       topologyAxisObstacles.map((obstacle) => obstacle.center.y),
     ).length
@@ -84,7 +75,7 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       (node) => node.availableZ.length > 1,
     ).length
 
-    const clonedObstacles = topologyAxisObstacles.map((obstacle) =>
+    const clonedObstacles = obstacles.map((obstacle) =>
       structuredClone(obstacle),
     )
     this.output = {
@@ -92,8 +83,8 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       routingRegions: meshNodes,
     }
     this.stats = {
-      componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
+      componentId: this.inputProblem.componentId ?? null,
+      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
       layerCount,
       inferredRowCount: rowCount,
       inferredColumnCount: colCount,
@@ -112,5 +103,3 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
-
-TopologyGenerator.register(BgaTopologyGeneratorSolver)
