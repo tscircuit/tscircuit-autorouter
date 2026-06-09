@@ -6,22 +6,12 @@ import {
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
-import {
-  createComponentObstacleSrj,
-  createReplacementObstacleForComponent,
-} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
-import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import {
-  TopologyGenerator,
-  type TopologyGeneratorSolver,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import { QfpThermalPadTopologyGeneratorSolver } from "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
+import { QfpTopologyGeneratorSolver } from "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
+import { SoicTopologyGeneratorSolver } from "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
-import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
-import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
-import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
-import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
@@ -36,8 +26,8 @@ export interface NormalizedTopologyPlannerInput {
 export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
-  componentKinds: ComponentKind[]
-  replacementObstacleIds: string[]
+  componentKinds: Array<"bga" | "qfp" | "qfp_thermalpad" | "soic" | undefined>
+  replacementObstacleIds: Array<string | undefined>
   viaDiameter?: number
   obstacleMargin?: number
 }
@@ -119,29 +109,19 @@ export function createComponentSrj({
 export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
-  const detectedComponents = input.componentDetectionOutput ?? []
-  const serializedDetectedComponents = serializeDetectedComponents({
-    detectedComponents,
-    inputSrj: input.inputSrj,
-  })
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
-    (detectedComponents.length > 0
-      ? createComponentObstacleSrj({
-          detectedComponents,
-          inputSrj: input.inputSrj,
-        })
-      : undefined) ??
-    input.brokenSrj?.componentsAsObstaclesSrj
+    input.componentDetectionOutput?.global ??
+    input.brokenSrj?.global
   const components =
     input.components ??
-    serializedDetectedComponents ??
+    input.componentDetectionOutput?.components ??
     input.brokenSrj?.components ??
     []
 
   if (!globalNoConnectionSrj) {
     throw new Error(
-      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or detected components",
+      "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or componentDetectionOutput.global",
     )
   }
 
@@ -149,35 +129,6 @@ export function normalizeInput(
     globalNoConnectionSrj,
     components,
   }
-}
-
-function serializeDetectedComponents({
-  detectedComponents,
-  inputSrj,
-}: {
-  detectedComponents: DetectedComponent[]
-  inputSrj: SimpleRouteJson
-}): SerializedTopologyComponentInput[] {
-  return detectedComponents.map((detectedComponent) => {
-    const memberObstacles = inputSrj.obstacles.filter(
-      (obstacle) => obstacle.componentId === detectedComponent.componentId,
-    )
-
-    return {
-      componentId: detectedComponent.componentId,
-      componentKind: detectedComponent.componentKind,
-      memberObstacleIds: memberObstacles.map(
-        (obstacle, index) =>
-          obstacle.obstacleId ??
-          `${detectedComponent.componentId}:member:${index}`,
-      ),
-      memberObstacles,
-      replacementObstacle: createReplacementObstacleForComponent({
-        detectedComponent,
-        inputSrj,
-      }),
-    }
-  })
 }
 
 /**
@@ -447,7 +398,12 @@ function areBoundsInsideBounds({
 
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver: TopologyGeneratorSolver | null = null
+  activeSubSolver?:
+    | BgaTopologyGeneratorSolver
+    | QfpTopologyGeneratorSolver
+    | QfpThermalPadTopologyGeneratorSolver
+    | SoicTopologyGeneratorSolver
+    | null = null
   currentIndex = 0
   componentMeshNodes: CapacityMeshNode[][] = []
 
@@ -488,27 +444,43 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       return
     }
 
-    const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
-    const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
-    const componentId = this.inputProblem.componentIds[this.currentIndex]!
-    const replacementObstacleId =
-      this.inputProblem.replacementObstacleIds[this.currentIndex]!
+    const componentKind =
+      this.inputProblem.componentKinds[this.currentIndex] ?? "bga"
     const solverInput = {
-      inputSrj: componentSrj,
-      detectedComponent: {
-        componentId,
-        componentKind,
-        bounds: {
-          __type: "rect" as const,
-          ...componentSrj.bounds,
-        },
-      },
-      componentId,
-      replacementObstacleId,
-      viaDiameter: this.inputProblem.viaDiameter,
-      obstacleMargin: this.inputProblem.obstacleMargin,
+      inputSrj: this.inputProblem.componentSrjs[this.currentIndex]!,
+      componentId: this.inputProblem.componentIds[this.currentIndex],
+      replacementObstacleId:
+        this.inputProblem.replacementObstacleIds[this.currentIndex],
     }
-    this.activeSubSolver = TopologyGenerator.create(solverInput)
+
+    if (componentKind === "qfp") {
+      this.activeSubSolver = new QfpTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    if (componentKind === "qfp_thermalpad") {
+      this.activeSubSolver = new QfpThermalPadTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    if (componentKind === "soic") {
+      this.activeSubSolver = new SoicTopologyGeneratorSolver({
+        ...solverInput,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      })
+      return
+    }
+
+    this.activeSubSolver = new BgaTopologyGeneratorSolver(solverInput)
   }
 
   getOutput(): ComponentTopologyBatchSolverOutput {

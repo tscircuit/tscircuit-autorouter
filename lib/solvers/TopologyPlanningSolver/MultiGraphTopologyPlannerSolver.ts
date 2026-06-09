@@ -2,8 +2,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
+import type { ComponentDetectionSolverOutput } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
@@ -22,21 +21,21 @@ export type TopologyMeshMergeStrategy = "concat"
 
 export interface SerializedTopologyComponentInput {
   componentId: string
-  componentKind: ComponentKind
+  componentKind?: "bga" | "qfp" | "qfp_thermalpad" | "soic"
   memberObstacleIds: string[]
   memberObstacles: Obstacle[]
-  replacementObstacle: Obstacle & { obstacleId: string }
+  replacementObstacle: Obstacle
 }
 
 export interface MultiGraphTopologyPlannerSolverParams {
   inputSrj: SimpleRouteJson
   globalNoConnectionSrj?: SimpleRouteJson
   components?: SerializedTopologyComponentInput[]
-  componentDetectionOutput?: DetectedComponent[]
+  componentDetectionOutput?: ComponentDetectionSolverOutput
   viaDiameter?: number
   obstacleMargin?: number
   brokenSrj?: {
-    componentsAsObstaclesSrj: SimpleRouteJson
+    global: SimpleRouteJson
     components: SerializedTopologyComponentInput[]
   }
 }
@@ -156,8 +155,10 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       rects: [
         ...componentObstacleRects,
         ...output.mergedMeshNodes.map((node) => {
-          const component = this.normalizedInput.components.find((candidate) =>
-            node.capacityMeshNodeId.includes(candidate.componentId),
+          const component = this.normalizedInput.components.find(
+            (candidate) =>
+              candidate.componentId &&
+              node.capacityMeshNodeId.includes(candidate.componentId),
           )
           const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
           return {
@@ -169,7 +170,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
               ? safeTransparentize("red", 0.3)
               : "rgba(0, 120, 255, 0.55)",
             label: component
-              ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
+              ? `${component.componentKind?.toUpperCase() ?? "BGA"} ${node.capacityMeshNodeId}`
               : node.capacityMeshNodeId,
           }
         }),

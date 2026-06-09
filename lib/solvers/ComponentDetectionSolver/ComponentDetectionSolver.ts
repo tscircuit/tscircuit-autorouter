@@ -13,12 +13,15 @@ export interface ComponentDetectionSolverParams {
 export interface DetectedComponent {
   componentId: string
   componentKind: ComponentKind
-  bounds: {
-    __type: "rect"
-  } & SimpleRouteJson["bounds"]
+  memberObstacleIds: string[]
+  memberObstacles: Obstacle[]
+  replacementObstacle: Obstacle
 }
 
-export type ComponentDetectionSolverOutput = DetectedComponent[]
+export interface ComponentDetectionSolverOutput {
+  global: SimpleRouteJson
+  components: DetectedComponent[]
+}
 
 const formatObstacleLabel = (obstacle: Obstacle) => {
   if (obstacle.componentId && obstacle.obstacleId) {

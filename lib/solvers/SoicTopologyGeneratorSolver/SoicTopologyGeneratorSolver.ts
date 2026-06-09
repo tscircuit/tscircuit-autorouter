@@ -5,12 +5,7 @@ import {
   clusterAxisValues,
   getLayerRange,
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
-import {
-  TopologyGenerator,
-  type TopologyGeneratorSolverOutput,
-  type TopologyGeneratorSolverParams,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -32,11 +27,15 @@ type SoicRoutingRegion = {
   containsObstacle?: boolean
 }
 
-export interface SoicTopologyGeneratorSolverParams
-  extends TopologyGeneratorSolverParams {}
+export interface SoicTopologyGeneratorSolverParams {
+  inputSrj: SimpleRouteJson
+  componentId?: string
+  replacementObstacleId?: string
+  viaDiameter?: number
+  obstacleMargin?: number
+}
 
-export interface SoicTopologyGeneratorSolverOutput
-  extends TopologyGeneratorSolverOutput {
+export interface SoicTopologyGeneratorSolverOutput {
   /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
   obstacles: Obstacle[]
   /** Routing regions derived from the SOIC pad rows/columns. These are not obstacle rectangles. */
@@ -286,8 +285,6 @@ function createGapRegionsForSide({
  * regions between adjacent pads on the two populated sides.
  */
 export class SoicTopologyGeneratorSolver extends BaseSolver {
-  static readonly componentKind = "soic"
-
   private output: SoicTopologyGeneratorSolverOutput | null = null
 
   constructor(public readonly inputProblem: SoicTopologyGeneratorSolverParams) {
@@ -304,12 +301,13 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       return
     }
 
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
+    const { bounds, layerCount, obstacles } = this.inputProblem.inputSrj
     const availableZ = getLayerRange(layerCount)
-    const topologyObstacles = obstacles.filter(
-      (obstacle) => obstacle.componentId === componentId,
-    )
+    const topologyObstacles = this.inputProblem.componentId
+      ? obstacles.filter(
+          (obstacle) => obstacle.componentId === this.inputProblem.componentId,
+        )
+      : obstacles
     const soicObstacles =
       topologyObstacles.length > 0 ? topologyObstacles : obstacles
     const orientation = getSoicOrientation(soicObstacles)
@@ -322,7 +320,10 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       orientation,
       sideGroups,
     })
-    const nodeScopeId = componentId
+    const nodeScopeId =
+      this.inputProblem.componentId ??
+      this.inputProblem.replacementObstacleId ??
+      "component"
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
@@ -357,12 +358,12 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
     )
 
     this.output = {
-      obstacles: soicObstacles.map((obstacle) => structuredClone(obstacle)),
+      obstacles: obstacles.map((obstacle) => structuredClone(obstacle)),
       routingRegions,
     }
     this.stats = {
-      componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
+      componentId: this.inputProblem.componentId ?? null,
+      replacementObstacleId: this.inputProblem.replacementObstacleId ?? null,
       layerCount,
       orientation,
       viaDiameter,
@@ -386,5 +387,3 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
     return this.output
   }
 }
-
-TopologyGenerator.register(SoicTopologyGeneratorSolver)
