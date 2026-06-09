@@ -206,6 +206,10 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
+  override getSolverName(): string {
+    return "AutoroutingPipelineSolver7_MultiGraph"
+  }
+
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
