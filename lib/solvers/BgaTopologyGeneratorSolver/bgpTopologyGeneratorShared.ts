@@ -55,7 +55,7 @@ function clusterBoundaryValues(values: number[]) {
 }
 
 /** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
-function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+export function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
   return obstacle.zLayers && obstacle.zLayers.length > 0
     ? obstacle.zLayers
     : obstacle.layers.map((layerName) => mapLayerNameToZ(layerName, layerCount))
@@ -161,9 +161,8 @@ function createMeshNode({
 /**
  * Fallback topology used when obstacle clustering does not produce a grid.
  *
- * Diagonal regions normally span all available layers, but if they overlap an
- * obstacle they are split into one region per layer so obstacle-occupied space
- * does not remain a combined multi-layer node.
+ * Free-space regions default to multi-layer. Obstacle-overlapping regions are
+ * split per layer so blocked space does not remain a combined multi-layer node.
  */
 function createFallbackRingNodes({
   bounds,
@@ -253,16 +252,14 @@ function createFallbackRingNodes({
         }),
       )
     }),
-    ...sideBounds.flatMap(({ key, bounds }) =>
-      availableZ.map((z) =>
-        createMeshNode({
-          nodeId: `bgp:${nodeScopeId}:side:${key}:z${z}`,
-          region: createRectRegion(bounds),
-          availableZ: [z],
-          obstacles,
-          layerCount,
-        }),
-      ),
+    ...sideBounds.map(({ key, bounds }) =>
+      createMeshNode({
+        nodeId: `bgp:${nodeScopeId}:side:${key}`,
+        region: createRectRegion(bounds),
+        availableZ: [...availableZ],
+        obstacles,
+        layerCount,
+      }),
     ),
   ]
 }
@@ -339,7 +336,7 @@ function getExactObstacleForRegion({
   )
 }
 
-function isFreeSpaceCellSurroundedByDiagonalObstacles({
+function isObstacleCell({
   row,
   col,
   xEdges,
@@ -353,34 +350,73 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
   obstacles: Obstacle[]
 }) {
   if (
-    row <= 0 ||
-    col <= 0 ||
-    row >= yEdges.length - 2 ||
-    col >= xEdges.length - 2
+    row < 0 ||
+    col < 0 ||
+    row >= yEdges.length - 1 ||
+    col >= xEdges.length - 1
   ) {
     return false
   }
 
-  const diagonalCells = [
-    { row: row - 1, col: col - 1 },
-    { row: row - 1, col: col + 1 },
-    { row: row + 1, col: col - 1 },
-    { row: row + 1, col: col + 1 },
-  ]
-
-  return diagonalCells.every(({ row: diagonalRow, col: diagonalCol }) =>
-    Boolean(
-      getExactObstacleForRegion({
-        region: createCellRegion({
-          row: diagonalRow,
-          col: diagonalCol,
-          xEdges,
-          yEdges,
-        }),
-        obstacles,
+  return Boolean(
+    getExactObstacleForRegion({
+      region: createCellRegion({
+        row,
+        col,
+        xEdges,
+        yEdges,
       }),
-    ),
+      obstacles,
+    }),
   )
+}
+
+function isFreeSpaceCellBetweenObstacleNodes({
+  row,
+  col,
+  xEdges,
+  yEdges,
+  obstacles,
+}: {
+  row: number
+  col: number
+  xEdges: number[]
+  yEdges: number[]
+  obstacles: Obstacle[]
+}) {
+  const hasObstacleLeftAndRight =
+    isObstacleCell({
+      row,
+      col: col - 1,
+      xEdges,
+      yEdges,
+      obstacles,
+    }) &&
+    isObstacleCell({
+      row,
+      col: col + 1,
+      xEdges,
+      yEdges,
+      obstacles,
+    })
+
+  const hasObstacleTopAndBottom =
+    isObstacleCell({
+      row: row - 1,
+      col,
+      xEdges,
+      yEdges,
+      obstacles,
+    }) &&
+    isObstacleCell({
+      row: row + 1,
+      col,
+      xEdges,
+      yEdges,
+      obstacles,
+    })
+
+  return hasObstacleLeftAndRight || hasObstacleTopAndBottom
 }
 
 /**
@@ -425,7 +461,7 @@ function createCellMeshNodes({
       createMeshNode({
         nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:obstacle`,
         region,
-        availableZ: [...availableZ],
+        availableZ: getObstacleAvailableZ(exactObstacle, layerCount),
         obstacles: [exactObstacle],
         layerCount,
       }),
@@ -433,7 +469,7 @@ function createCellMeshNodes({
   }
 
   if (
-    isFreeSpaceCellSurroundedByDiagonalObstacles({
+    isFreeSpaceCellBetweenObstacleNodes({
       row,
       col,
       xEdges,
@@ -441,26 +477,26 @@ function createCellMeshNodes({
       obstacles,
     })
   ) {
-    return [
+    return availableZ.map((z) =>
       createMeshNode({
-        nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:free-multilayer`,
+        nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:z${z}`,
         region,
-        availableZ: [...availableZ],
+        availableZ: [z],
         obstacles,
         layerCount,
       }),
-    ]
+    )
   }
 
-  return availableZ.map((z) =>
+  return [
     createMeshNode({
-      nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:z${z}`,
+      nodeId: `bgp:${nodeScopeId}:r${row}:c${col}:free-multilayer`,
       region,
-      availableZ: [z],
+      availableZ: [...availableZ],
       obstacles,
       layerCount,
     }),
-  )
+  ]
 }
 
 /** Clusters nearly-equal axis values so pad-center jitter does not create extra rows/columns. */

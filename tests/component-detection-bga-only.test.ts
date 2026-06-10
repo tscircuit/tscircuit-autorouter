@@ -2,10 +2,12 @@ import { expect, test } from "bun:test"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { createComponentObstacleSrj } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { areNodesBordering } from "lib/utils/areNodesBordering"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
   type: "json",
 }
@@ -48,6 +50,66 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   connections: [],
   bounds: { minX: -2, maxX: 4, minY: -2, maxY: 4 },
 })
+
+const doNodeBoundsOverlap = (
+  node: {
+    center: { x: number; y: number }
+    width: number
+    height: number
+  },
+  other: {
+    center: { x: number; y: number }
+    width: number
+    height: number
+  },
+) => {
+  const nodeBounds = {
+    minX: node.center.x - node.width / 2,
+    maxX: node.center.x + node.width / 2,
+    minY: node.center.y - node.height / 2,
+    maxY: node.center.y + node.height / 2,
+  }
+  const otherBounds = {
+    minX: other.center.x - other.width / 2,
+    maxX: other.center.x + other.width / 2,
+    minY: other.center.y - other.height / 2,
+    maxY: other.center.y + other.height / 2,
+  }
+
+  const overlapWidth =
+    Math.min(nodeBounds.maxX, otherBounds.maxX) -
+    Math.max(nodeBounds.minX, otherBounds.minX)
+  const overlapHeight =
+    Math.min(nodeBounds.maxY, otherBounds.maxY) -
+    Math.max(nodeBounds.minY, otherBounds.minY)
+
+  return overlapWidth > 1e-6 && overlapHeight > 1e-6
+}
+
+const countSameLayerOverlaps = (
+  nodes: Array<{
+    center: { x: number; y: number }
+    width: number
+    height: number
+    availableZ: number[]
+  }>,
+) => {
+  let overlapCount = 0
+
+  for (let indexA = 0; indexA < nodes.length; indexA++) {
+    for (let indexB = indexA + 1; indexB < nodes.length; indexB++) {
+      const nodeA = nodes[indexA]!
+      const nodeB = nodes[indexB]!
+
+      if (nodeA.availableZ.join(",") !== nodeB.availableZ.join(",")) continue
+      if (!doNodeBoundsOverlap(nodeA, nodeB)) continue
+
+      overlapCount += 1
+    }
+  }
+
+  return overlapCount
+}
 
 const countComponentObstacles = (
   inputSrj: SimpleRouteJson,
@@ -378,6 +440,236 @@ test("topology planning creates BGA component mesh nodes for two-row components"
       node.capacityMeshNodeId.includes("U_2X4"),
     ),
   ).toBe(true)
+})
+
+test("BGA topology generator uses a fixed two-layer pattern and keeps pad obstacles on their real layer", () => {
+  const inputSrj = {
+    ...createSrj(createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 })),
+    layerCount: 4,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const solver = new BgaTopologyGeneratorSolver({
+    inputSrj,
+    detectedComponent: componentDetectionSolver.getOutput()[0]!,
+  })
+  solver.solve()
+
+  const output = solver.getOutput()
+  const obstacleNodes = output.routingRegions.filter(
+    (node) => node._containsObstacle,
+  )
+  const freeNodes = output.routingRegions.filter(
+    (node) => !node._containsObstacle,
+  )
+
+  expect(solver.stats.layerCount).toBe(2)
+  expect(
+    output.routingRegions.every((node) =>
+      node.availableZ.every((z) => z === 0 || z === 1),
+    ),
+  ).toBe(true)
+  expect(
+    obstacleNodes.every(
+      (node) => node.availableZ.length === 1 && node.availableZ[0] === 0,
+    ),
+  ).toBe(true)
+  expect(freeNodes.some((node) => node.availableZ.length > 1)).toBe(true)
+  expect(
+    freeNodes.some(
+      (node) => node.availableZ.length === 1 && node.availableZ[0] === 1,
+    ),
+  ).toBe(true)
+})
+
+test("BGA topology generator replaces ignored lower-layer mesh coverage with per-obstacle nodes", () => {
+  const inputSrj = {
+    ...createSrj([
+      ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
+      {
+        obstacleId: "B1",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 0.95, y: 1 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        obstacleId: "B2",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 1.55, y: 1 },
+        width: 0.3,
+        height: 0.4,
+        connectedTo: [],
+      },
+    ]),
+    layerCount: 4,
+  }
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+  componentDetectionSolver.solve()
+
+  const solver = new BgaTopologyGeneratorSolver({
+    inputSrj,
+    detectedComponent: componentDetectionSolver.getOutput()[0]!,
+  })
+  solver.solve()
+
+  const output = solver.getOutput()
+  const replacementObstacleNodes = output.routingRegions.filter((node) =>
+    node.capacityMeshNodeId.includes("replacement-obstacle") &&
+    !node.capacityMeshNodeId.includes(":expansion:"),
+  )
+  const expansionNodes = output.routingRegions.filter((node) =>
+    node.capacityMeshNodeId.includes(":expansion:"),
+  )
+
+  expect(solver.stats.replacementObstacleNodeCount).toBe(2)
+  expect(replacementObstacleNodes).toHaveLength(2)
+  expect(expansionNodes.length).toBeGreaterThan(0)
+  expect(expansionNodes.every((node) => node.availableZ.length === 1)).toBe(true)
+  expect(expansionNodes.every((node) => node.availableZ[0] === 1)).toBe(true)
+  expect(
+    replacementObstacleNodes.every((node) => node.availableZ[0] === 1),
+  ).toBe(true)
+  expect(replacementObstacleNodes.every((node) => node._containsObstacle)).toBe(
+    true,
+  )
+  expect(
+    output.routingRegions
+      .filter(
+        (node) =>
+          !node._containsObstacle &&
+          !node.capacityMeshNodeId.includes(":expansion:"),
+      )
+      .every(
+        (node) =>
+          !node.availableZ.includes(1) ||
+          replacementObstacleNodes.every(
+            (obstacleNode) => !doNodeBoundsOverlap(node, obstacleNode),
+          ),
+      ),
+  ).toBe(true)
+  expect(
+    replacementObstacleNodes.every((replacementObstacleNode) =>
+      output.routingRegions.some(
+        (node) =>
+          !node._containsObstacle &&
+          node.availableZ.length === 1 &&
+          node.availableZ[0] === 0 &&
+          doNodeBoundsOverlap(node, replacementObstacleNode),
+      ),
+    ),
+  ).toBe(true)
+  expect(
+    replacementObstacleNodes.some((replacementObstacleNode) =>
+      expansionNodes.some((node) =>
+        areNodesBordering(node as any, replacementObstacleNode as any),
+      ),
+    ),
+  ).toBe(true)
+  expect(countSameLayerOverlaps(output.routingRegions)).toBe(0)
+})
+
+test("BGA topology generator does not emit same-layer overlaps for lower-layer obstacle expansions", () => {
+  const cases = [
+    [
+      {
+        obstacleId: "B1",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 0.95, y: 1 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        obstacleId: "B2",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 1.55, y: 1 },
+        width: 0.3,
+        height: 0.4,
+        connectedTo: [],
+      },
+    ],
+    [
+      {
+        obstacleId: "B1",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 1, y: 1 },
+        width: 0.45,
+        height: 0.45,
+        connectedTo: [],
+      },
+      {
+        obstacleId: "B2",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 2, y: 1 },
+        width: 0.45,
+        height: 0.45,
+        connectedTo: [],
+      },
+    ],
+    [
+      {
+        obstacleId: "B1",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 1, y: 0.5 },
+        width: 0.45,
+        height: 0.35,
+        connectedTo: [],
+      },
+      {
+        obstacleId: "B2",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 2, y: 0.5 },
+        width: 0.45,
+        height: 0.35,
+        connectedTo: [],
+      },
+      {
+        obstacleId: "B3",
+        type: "rect" as const,
+        layers: ["bottom"],
+        center: { x: 3, y: 0.5 },
+        width: 0.45,
+        height: 0.35,
+        connectedTo: [],
+      },
+    ],
+  ]
+
+  for (const [index, bottomObstacles] of cases.entries()) {
+    const inputSrj = {
+      ...createSrj([
+        ...createGridPads({
+          componentId: "U_BGA",
+          rows: index === 2 ? 2 : 3,
+          columns: index === 1 ? 4 : index === 2 ? 5 : 3,
+        }),
+        ...bottomObstacles,
+      ]),
+      layerCount: 4,
+      bounds: { minX: -2, maxX: 6, minY: -2, maxY: 6 },
+    }
+    const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
+    componentDetectionSolver.solve()
+
+    const solver = new BgaTopologyGeneratorSolver({
+      inputSrj,
+      detectedComponent: componentDetectionSolver.getOutput()[0]!,
+    })
+    solver.solve()
+
+    expect(countSameLayerOverlaps(solver.getOutput().routingRegions)).toBe(0)
+  }
 })
 
 test("topology planning creates QFP central, gap, and corner mesh nodes", () => {

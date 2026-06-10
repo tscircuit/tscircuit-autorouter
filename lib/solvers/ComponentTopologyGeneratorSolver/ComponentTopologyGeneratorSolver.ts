@@ -85,29 +85,6 @@ export function createComponentObstacleSrj({
   }
 }
 
-function isPointInsideComponentBounds(
-  point: { x: number; y: number },
-  detectedComponent: DetectedComponent,
-) {
-  const { bounds } = detectedComponent
-
-  return (
-    point.x >= bounds.minX &&
-    point.x <= bounds.maxX &&
-    point.y >= bounds.minY &&
-    point.y <= bounds.maxY
-  )
-}
-
-function isObstacleInsideAnyComponentBounds(
-  obstacle: Obstacle,
-  detectedComponents: DetectedComponent[],
-) {
-  return detectedComponents.some((detectedComponent) =>
-    isPointInsideComponentBounds(obstacle.center, detectedComponent),
-  )
-}
-
 export class ComponentTopologyGeneratorSolver extends BaseSolver {
   private output: ComponentTopologyGeneratorSolverOutput = []
   private componentMeshNodes: CapacityMeshNode[][] = []
@@ -181,14 +158,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
     })
   }
 
-  override visualize(): GraphicsObject {
-    if (this.activeTopologyGenerator && !this.activeTopologyGenerator.solved) {
-      return this.activeTopologyGenerator.visualize()
-    }
-
-    const outputNodes = this.solved
-      ? this.output
-      : this.componentMeshNodes.flat()
+  private getBackgroundVisualization(): GraphicsObject {
     const { bounds, outline, obstacles } = this.inputProblem.inputSrj
     const boardOutlinePoints = outline?.length
       ? [...outline, outline[0]!]
@@ -199,37 +169,79 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
           { x: bounds.minX, y: bounds.maxY },
           { x: bounds.minX, y: bounds.minY },
         ]
-    const nonComponentObstacles = obstacles.filter(
-      (obstacle) =>
-        !isObstacleInsideAnyComponentBounds(
-          obstacle,
-          this.inputProblem.detectedComponents,
-        ),
-    )
+
+    return {
+      title: "Component topology background",
+      rects: obstacles.map((obstacle) => ({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        fill: "rgba(120, 120, 120, 0.12)",
+        stroke: "rgba(90, 90, 90, 0.45)",
+        layer: obstacle.layers.join(","),
+        label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+      })),
+      lines: [
+        {
+          points: boardOutlinePoints,
+          strokeColor: "rgba(40, 40, 40, 0.8)",
+        },
+      ],
+      points: [],
+      circles: [],
+    }
+  }
+
+  override visualize(): GraphicsObject {
+    if (this.activeTopologyGenerator && !this.activeTopologyGenerator.solved) {
+      const background = this.getBackgroundVisualization()
+      const activeVisualization = this.activeTopologyGenerator.visualize()
+
+      return {
+        title: activeVisualization.title ?? background.title,
+        rects: [
+          ...(background.rects ?? []),
+          ...(activeVisualization.rects ?? []),
+        ],
+        lines: [
+          ...(background.lines ?? []),
+          ...(activeVisualization.lines ?? []),
+        ],
+        points: [
+          ...(background.points ?? []),
+          ...(activeVisualization.points ?? []),
+        ],
+        circles: [
+          ...(background.circles ?? []),
+          ...(activeVisualization.circles ?? []),
+        ],
+      }
+    }
+
+    const outputNodes = this.solved
+      ? this.output
+      : this.componentMeshNodes.flat()
+    const background = this.getBackgroundVisualization()
 
     return {
       title: `Component Topology Generator: ${outputNodes.length} mesh nodes`,
       rects: [
-        ...nonComponentObstacles.map((obstacle) => ({
-          center: obstacle.center,
-          width: obstacle.width,
-          height: obstacle.height,
-          fill: "rgba(120, 120, 120, 0.12)",
-          stroke: "rgba(90, 90, 90, 0.45)",
-          layer: obstacle.layers.join(","),
-          label: obstacle.obstacleId ?? obstacle.componentId ?? "non-component",
-        })),
+        ...(background.rects ?? []),
         ...outputNodes.map((node) => ({
           ...createRectFromCapacityNode(node, {
             rectMargin: 0.01,
             zOffset: 0.02,
           }),
           stroke: node._containsObstacle
-            ? "rgba(210, 50, 20, 0.75)"
-            : "rgba(20, 110, 210, 0.75)",
+            ? "rgba(255, 0, 0, 1)"
+            : node.availableZ.length > 1
+              ? "rgba(0, 90, 220, 0.9)"
+              : "rgba(80, 170, 255, 0.9)",
           fill: node._containsObstacle
-            ? "rgba(255, 80, 40, 0.18)"
-            : "rgba(20, 130, 255, 0.16)",
+            ? "rgba(255, 0, 0, 0.22)"
+            : node.availableZ.length > 1
+              ? "rgba(0, 90, 220, 0.22)"
+              : "rgba(80, 170, 255, 0.22)",
           label: [
             node.capacityMeshNodeId,
             `availableZ: ${node.availableZ.join(",")}`,
@@ -239,12 +251,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
             .join("\n"),
         })),
       ],
-      lines: [
-        {
-          points: boardOutlinePoints,
-          strokeColor: "rgba(40, 40, 40, 0.8)",
-        },
-      ],
+      lines: [...(background.lines ?? [])],
       points: [],
       circles: [],
     }
