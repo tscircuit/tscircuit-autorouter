@@ -1,23 +1,25 @@
 import { expect, test } from "bun:test"
-import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import type { CapacityMeshNode } from "lib/types"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import type { CapacityMeshNode, ConnectionPoint } from "lib/types"
+import { getConnectionPointLayers } from "lib/types/srj-types"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
+const BOUNDS_EPSILON = 1e-9
+const OVERLAP_EPSILON = 1e-6
+
+const getNodeBounds = (node: CapacityMeshNode) => ({
+  minX: node.center.x - node.width / 2,
+  maxX: node.center.x + node.width / 2,
+  minY: node.center.y - node.height / 2,
+  maxY: node.center.y + node.height / 2,
+})
+
 const doNodeBoundsOverlap = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) => {
-  const nodeABounds = {
-    minX: nodeA.center.x - nodeA.width / 2,
-    maxX: nodeA.center.x + nodeA.width / 2,
-    minY: nodeA.center.y - nodeA.height / 2,
-    maxY: nodeA.center.y + nodeA.height / 2,
-  }
-  const nodeBBounds = {
-    minX: nodeB.center.x - nodeB.width / 2,
-    maxX: nodeB.center.x + nodeB.width / 2,
-    minY: nodeB.center.y - nodeB.height / 2,
-    maxY: nodeB.center.y + nodeB.height / 2,
-  }
+  const nodeABounds = getNodeBounds(nodeA)
+  const nodeBBounds = getNodeBounds(nodeB)
 
   const overlapWidth =
     Math.min(nodeABounds.maxX, nodeBBounds.maxX) -
@@ -26,7 +28,7 @@ const doNodeBoundsOverlap = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) =
     Math.min(nodeABounds.maxY, nodeBBounds.maxY) -
     Math.max(nodeABounds.minY, nodeBBounds.minY)
 
-  return overlapWidth > 1e-6 && overlapHeight > 1e-6
+  return overlapWidth > OVERLAP_EPSILON && overlapHeight > OVERLAP_EPSILON
 }
 
 const shareLayer = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) =>
@@ -36,26 +38,15 @@ const doNodesTouchAtCorner = (
   nodeA: CapacityMeshNode,
   nodeB: CapacityMeshNode,
 ) => {
-  const nodeABounds = {
-    minX: nodeA.center.x - nodeA.width / 2,
-    maxX: nodeA.center.x + nodeA.width / 2,
-    minY: nodeA.center.y - nodeA.height / 2,
-    maxY: nodeA.center.y + nodeA.height / 2,
-  }
-  const nodeBBounds = {
-    minX: nodeB.center.x - nodeB.width / 2,
-    maxX: nodeB.center.x + nodeB.width / 2,
-    minY: nodeB.center.y - nodeB.height / 2,
-    maxY: nodeB.center.y + nodeB.height / 2,
-  }
-  const epsilon = 1e-9
+  const nodeABounds = getNodeBounds(nodeA)
+  const nodeBBounds = getNodeBounds(nodeB)
 
   const touchesHorizontally =
-    Math.abs(nodeABounds.maxX - nodeBBounds.minX) <= epsilon ||
-    Math.abs(nodeABounds.minX - nodeBBounds.maxX) <= epsilon
+    Math.abs(nodeABounds.maxX - nodeBBounds.minX) <= BOUNDS_EPSILON ||
+    Math.abs(nodeABounds.minX - nodeBBounds.maxX) <= BOUNDS_EPSILON
   const touchesVertically =
-    Math.abs(nodeABounds.maxY - nodeBBounds.minY) <= epsilon ||
-    Math.abs(nodeABounds.minY - nodeBBounds.maxY) <= epsilon
+    Math.abs(nodeABounds.maxY - nodeBBounds.minY) <= BOUNDS_EPSILON ||
+    Math.abs(nodeABounds.minY - nodeBBounds.maxY) <= BOUNDS_EPSILON
 
   return touchesHorizontally && touchesVertically
 }
@@ -66,11 +57,9 @@ const areNodesConnected = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) =>
     areNodesBordering(nodeA, nodeB) ||
     doNodesTouchAtCorner(nodeA, nodeB))
 
-const getConnectedNodeCount = (nodes: CapacityMeshNode[]) => {
-  if (nodes.length === 0) return 0
-
-  const visited = new Set<number>([0])
-  const queue = [0]
+const getConnectedNodeIndexes = (nodes: CapacityMeshNode[], startIndex: number) => {
+  const visited = new Set<number>([startIndex])
+  const queue = [startIndex]
 
   while (queue.length > 0) {
     const currentIndex = queue.shift()!
@@ -87,53 +76,110 @@ const getConnectedNodeCount = (nodes: CapacityMeshNode[]) => {
     }
   }
 
-  return visited.size
+  return visited
 }
 
-test("srj18 sample013 component topology regions are valid and BFS-connected", async () => {
+const getPointNodeIndexes = ({
+  nodes,
+  point,
+  layerCount,
+}: {
+  nodes: CapacityMeshNode[]
+  point: ConnectionPoint
+  layerCount: number
+}) => {
+  const pointAvailableZ = getConnectionPointLayers(point).map((layer) =>
+    mapLayerNameToZ(layer, layerCount),
+  )
+
+  return nodes.flatMap((node, index) => {
+    if (!node.availableZ.some((z) => pointAvailableZ.includes(z))) return []
+
+    const bounds = getNodeBounds(node)
+    const containsPoint =
+      point.x >= bounds.minX - BOUNDS_EPSILON &&
+      point.x <= bounds.maxX + BOUNDS_EPSILON &&
+      point.y >= bounds.minY - BOUNDS_EPSILON &&
+      point.y <= bounds.maxY + BOUNDS_EPSILON
+
+    return containsPoint ? [index] : []
+  })
+}
+
+const getMergedTopology = async () => {
   const sample = await loadScenarioBySampleNumber("srj18", 13)
   const componentDetectionSolver = new ComponentDetectionSolver({
     inputSrj: sample.scenario,
   })
-
   componentDetectionSolver.solve()
 
   const detectedComponents = componentDetectionSolver.getOutput()
   expect(detectedComponents.length).toBeGreaterThan(0)
 
-  for (const detectedComponent of detectedComponents) {
-    expect(detectedComponent.componentKind).toBe("bga")
+  const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj: sample.scenario,
+    componentDetectionOutput: detectedComponents,
+  })
+  topologyPlanningSolver.solve()
 
-    const topologyGenerator = new BgaTopologyGeneratorSolver({
-      inputSrj: sample.scenario,
-      detectedComponent,
-    })
+  const output = topologyPlanningSolver.getOutput()
+  expect(output.mergedMeshNodes.length).toBeGreaterThan(0)
 
-    topologyGenerator.solve()
+  return {
+    sample,
+    output,
+  }
+}
 
-    const routingRegions = topologyGenerator.getOutput().routingRegions
-    expect(routingRegions.length).toBeGreaterThan(0)
+test("srj18 sample013 merged topology does not contain same-layer overlapping nodes", async () => {
+  const { output } = await getMergedTopology()
+  const mergedMeshNodes = output.mergedMeshNodes
 
-    for (const region of routingRegions) {
-      expect(region.width).toBeGreaterThan(1e-6)
-      expect(region.height).toBeGreaterThan(1e-6)
-      expect(region.availableZ.length).toBeGreaterThan(0)
+  for (let indexA = 0; indexA < mergedMeshNodes.length; indexA++) {
+    const nodeA = mergedMeshNodes[indexA]!
 
-      const dedupedAvailableZ = Array.from(new Set(region.availableZ)).sort(
-        (a, b) => a - b,
-      )
+    expect(nodeA.width).toBeGreaterThan(OVERLAP_EPSILON)
+    expect(nodeA.height).toBeGreaterThan(OVERLAP_EPSILON)
+    expect(nodeA.availableZ.length).toBeGreaterThan(0)
 
-      expect(region.availableZ.slice().sort((a, b) => a - b)).toEqual(
-        dedupedAvailableZ,
-      )
+    for (let indexB = indexA + 1; indexB < mergedMeshNodes.length; indexB++) {
+      const nodeB = mergedMeshNodes[indexB]!
+      if (!shareLayer(nodeA, nodeB)) continue
+      if (nodeA._containsObstacle && nodeB._containsObstacle) continue
 
-      for (const z of region.availableZ) {
-        expect(Number.isInteger(z)).toBe(true)
-        expect(z).toBeGreaterThanOrEqual(0)
-        expect(z).toBeLessThan(sample.scenario.layerCount)
-      }
+      expect(doNodeBoundsOverlap(nodeA, nodeB)).toBe(false)
     }
+  }
+})
 
-    expect(getConnectedNodeCount(routingRegions)).toBe(routingRegions.length)
+test("srj18 sample013 merged topology reaches every pointsToConnect target in one BFS run", async () => {
+  const { sample, output } = await getMergedTopology()
+  const mergedMeshNodes = output.mergedMeshNodes
+
+  const pointNodeIndexes = sample.scenario.connections.flatMap((connection) =>
+    connection.pointsToConnect.map((point) => ({
+      connectionName: connection.name,
+      point,
+      nodeIndexes: getPointNodeIndexes({
+        nodes: mergedMeshNodes,
+        point,
+        layerCount: sample.scenario.layerCount,
+      }),
+    })),
+  )
+
+  for (const pointNodeIndex of pointNodeIndexes) {
+    expect(pointNodeIndex.nodeIndexes.length).toBeGreaterThan(0)
+  }
+
+  const bfsStartIndex = pointNodeIndexes[0]!.nodeIndexes[0]!
+  const reachableNodeIndexes = getConnectedNodeIndexes(mergedMeshNodes, bfsStartIndex)
+
+  for (const pointNodeIndex of pointNodeIndexes) {
+    const isReachable = pointNodeIndex.nodeIndexes.some((nodeIndex) =>
+      reachableNodeIndexes.has(nodeIndex),
+    )
+
+    expect(isReachable).toBe(true)
   }
 })
