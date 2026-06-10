@@ -5,6 +5,7 @@ import {
   TopologyGenerator,
   type TopologyGeneratorSolver,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import { remapComponentMeshNodesToBoard } from "lib/solvers/TopologyPlanningSolver/remapComponentMeshNodesToBoard"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
@@ -126,8 +127,15 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
 
       if (!this.activeTopologyGenerator.solved) return
 
+      const detectedComponent =
+        this.inputProblem.detectedComponents[this.currentComponentIndex]!
       this.componentMeshNodes.push(
-        this.activeTopologyGenerator.getOutput().routingRegions,
+        remapComponentMeshNodesToBoard({
+          componentKind: detectedComponent.componentKind,
+          componentMeshNodes: this.activeTopologyGenerator.getOutput()
+            .routingRegions,
+          boardLayerCount: this.inputProblem.inputSrj.layerCount,
+        }),
       )
       this.currentComponentIndex += 1
       this.activeTopologyGenerator = null

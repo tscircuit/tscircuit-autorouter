@@ -22,6 +22,7 @@ import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
 import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
 import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
+import { remapComponentMeshNodesToBoard } from "./remapComponentMeshNodesToBoard"
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
@@ -444,49 +445,6 @@ function areBoundsInsideBounds({
   )
 }
 
-function remapBgaNodeAvailableZToBoard({
-  node,
-  boardLayerCount,
-}: {
-  node: CapacityMeshNode
-  boardLayerCount: number
-}) {
-  if (boardLayerCount <= 2) return [...node.availableZ]
-
-  if (node.availableZ.length > 1) {
-    return Array.from({ length: boardLayerCount }, (_, z) => z)
-  }
-
-  return node.availableZ.map((z) => (z <= 0 ? 0 : boardLayerCount - 1))
-}
-
-function remapComponentMeshNodesToBoard({
-  componentKind,
-  componentSrj,
-  componentMeshNodes,
-  boardLayerCount,
-}: {
-  componentKind: ComponentKind
-  componentSrj: SimpleRouteJson
-  componentMeshNodes: CapacityMeshNode[]
-  boardLayerCount: number
-}) {
-  if (componentKind !== "bga") return componentMeshNodes
-
-  return componentMeshNodes.map((node) => {
-    const availableZ = remapBgaNodeAvailableZToBoard({
-      node,
-      boardLayerCount,
-    })
-
-    return {
-      ...node,
-      availableZ,
-      layer: `z${availableZ.join(",")}`,
-    }
-  })
-}
-
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
   activeSubSolver: TopologyGeneratorSolver | null = null
@@ -522,7 +480,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       this.componentMeshNodes.push(
         remapComponentMeshNodesToBoard({
           componentKind,
-          componentSrj,
           componentMeshNodes: this.activeSubSolver.getOutput().routingRegions,
           boardLayerCount: componentSrj.layerCount,
         }),
