@@ -524,7 +524,6 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
     }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       viaDiameter,
       obstacleMargin,

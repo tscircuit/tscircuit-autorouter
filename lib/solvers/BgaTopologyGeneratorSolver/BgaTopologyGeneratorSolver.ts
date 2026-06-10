@@ -93,7 +93,6 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
     }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       inferredRowCount: rowCount,
       inferredColumnCount: colCount,

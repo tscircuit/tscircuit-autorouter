@@ -853,7 +853,6 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       viaDiameter,
       obstacleMargin,

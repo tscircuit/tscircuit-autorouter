@@ -79,9 +79,6 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
           componentKinds: instance.normalizedInput.components.map(
             (component) => component.componentKind,
           ),
-          replacementObstacleIds: instance.normalizedInput.components.map(
-            (component) => component.replacementObstacle.obstacleId,
-          ),
           viaDiameter: instance.inputProblem.viaDiameter,
           obstacleMargin: instance.inputProblem.obstacleMargin,
         },

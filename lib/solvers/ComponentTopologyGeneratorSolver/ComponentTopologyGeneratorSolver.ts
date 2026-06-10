@@ -158,8 +158,6 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
     this.activeTopologyGenerator = TopologyGenerator.create({
       inputSrj: this.inputProblem.inputSrj,
       detectedComponent,
-      componentId: detectedComponent.componentId,
-      replacementObstacleId: `${detectedComponent.componentId}_component_bounds`,
     })
   }
 

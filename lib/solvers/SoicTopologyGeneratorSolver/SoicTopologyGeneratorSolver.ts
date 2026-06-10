@@ -362,7 +362,6 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
     }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       orientation,
       viaDiameter,
