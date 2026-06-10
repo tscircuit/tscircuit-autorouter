@@ -6,6 +6,7 @@ import {
   type TopologyGeneratorSolver,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
@@ -32,8 +33,16 @@ export function createReplacementObstacleForComponent({
   const layers = Array.from(
     new Set(memberObstacles.flatMap((obstacle) => obstacle.layers)),
   )
-  const zLayers = Array.from(
+  const memberZLayers = Array.from(
     new Set(memberObstacles.flatMap((obstacle) => obstacle.zLayers ?? [])),
+  )
+  const allZLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
+  const zLayers =
+    memberZLayers.length > 0
+      ? memberZLayers
+      : allZLayers
+  const replacementLayers = zLayers.map((z) =>
+    mapZToLayerName(z, inputSrj.layerCount),
   )
   const connectedTo = Array.from(
     new Set(memberObstacles.flatMap((obstacle) => obstacle.connectedTo)),
@@ -44,8 +53,11 @@ export function createReplacementObstacleForComponent({
     obstacleId: `${detectedComponent.componentId}_component_bounds`,
     componentId: detectedComponent.componentId,
     type: "rect",
-    layers: layers.length > 0 ? layers : ["top", "bottom"],
-    ...(zLayers.length > 0 ? { zLayers } : {}),
+    // The global topology mesh must vacate the entire component footprint on
+    // every board layer because component-local topology nodes are merged back
+    // in later by pipeline 7.
+    layers: replacementLayers.length > 0 ? replacementLayers : layers,
+    zLayers,
     center: {
       x: (bounds.minX + bounds.maxX) / 2,
       y: (bounds.minY + bounds.maxY) / 2,

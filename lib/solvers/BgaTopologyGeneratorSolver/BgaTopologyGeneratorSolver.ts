@@ -172,6 +172,171 @@ function getAxisOverlap(
   return Math.min(rangeA.max, rangeB.max) - Math.max(rangeA.min, rangeB.min)
 }
 
+function doNodeRectsOverlap(
+  nodeA: CapacityMeshNode,
+  nodeB: CapacityMeshNode,
+) {
+  const boundsA = getNodeBounds(nodeA)
+  const boundsB = getNodeBounds(nodeB)
+  const overlapWidth =
+    Math.min(boundsA.maxX, boundsB.maxX) - Math.max(boundsA.minX, boundsB.minX)
+  const overlapHeight =
+    Math.min(boundsA.maxY, boundsB.maxY) - Math.max(boundsA.minY, boundsB.minY)
+
+  return overlapWidth > 1e-6 && overlapHeight > 1e-6
+}
+
+function areSameNumberSets(valuesA: number[], valuesB: number[]) {
+  return (
+    valuesA.length === valuesB.length &&
+    valuesA.every((value, index) => value === valuesB[index])
+  )
+}
+
+function getLocalObstacleAvailableZ(obstacle: Obstacle) {
+  const rawZLayers =
+    obstacle.zLayers && obstacle.zLayers.length > 0
+      ? obstacle.zLayers
+      : obstacle.layers.map((layerName) => (layerName === "top" ? 0 : 1))
+
+  return Array.from(
+    new Set(rawZLayers.map((z) => (z <= 0 ? 0 : 1)).filter((z) => z >= 0)),
+  ).sort((a, b) => a - b)
+}
+
+function mergeOverlappingObstacles(obstacles: Obstacle[]) {
+  let mergeCandidates = obstacles.map((obstacle) => structuredClone(obstacle))
+  let didMerge = true
+
+  while (didMerge) {
+    didMerge = false
+
+    for (let indexA = 0; indexA < mergeCandidates.length; indexA++) {
+      for (let indexB = indexA + 1; indexB < mergeCandidates.length; indexB++) {
+        const obstacleA = mergeCandidates[indexA]!
+        const obstacleB = mergeCandidates[indexB]!
+        const obstacleAZ = getLocalObstacleAvailableZ(obstacleA)
+        const obstacleBZ = getLocalObstacleAvailableZ(obstacleB)
+
+        if (!areSameNumberSets(obstacleAZ, obstacleBZ)) continue
+        if (!doBoundsOverlap(getBoundingBox(obstacleA), getBoundingBox(obstacleB))) {
+          continue
+        }
+
+        const mergedBounds = getBoundingBox({
+          center: obstacleA.center,
+          width: obstacleA.width,
+          height: obstacleA.height,
+        })
+        const obstacleBBounds = getBoundingBox(obstacleB)
+        mergedBounds.minX = Math.min(mergedBounds.minX, obstacleBBounds.minX)
+        mergedBounds.maxX = Math.max(mergedBounds.maxX, obstacleBBounds.maxX)
+        mergedBounds.minY = Math.min(mergedBounds.minY, obstacleBBounds.minY)
+        mergedBounds.maxY = Math.max(mergedBounds.maxY, obstacleBBounds.maxY)
+
+        const mergedObstacle: Obstacle = {
+          ...obstacleA,
+          center: {
+            x: (mergedBounds.minX + mergedBounds.maxX) / 2,
+            y: (mergedBounds.minY + mergedBounds.maxY) / 2,
+          },
+          width: mergedBounds.maxX - mergedBounds.minX,
+          height: mergedBounds.maxY - mergedBounds.minY,
+          layers: obstacleAZ.map((z) => (z === 0 ? "top" : "bottom")),
+          zLayers: obstacleAZ,
+        }
+
+        mergeCandidates = mergeCandidates.filter(
+          (_, index) => index !== indexA && index !== indexB,
+        )
+        mergeCandidates.push(mergedObstacle)
+        didMerge = true
+        break
+      }
+
+      if (didMerge) break
+    }
+  }
+
+  return mergeCandidates
+}
+
+function mergeNodesGreedily({
+  nodes,
+  getCandidate,
+}: {
+  nodes: CapacityMeshNode[]
+  getCandidate: (
+    nodeA: CapacityMeshNode,
+    nodeB: CapacityMeshNode,
+  ) => CapacityMeshNode | null
+}) {
+  let mergeCandidates = nodes.map((node) => ({
+    ...node,
+    center: { ...node.center },
+    availableZ: [...node.availableZ],
+  }))
+  let mergedNodeCount = 0
+  let didMerge = true
+
+  while (didMerge) {
+    didMerge = false
+    let bestPair:
+      | {
+          indexA: number
+          indexB: number
+          mergedNode: CapacityMeshNode
+          aspectRatioScore: number
+        }
+      | null = null
+
+    for (let indexA = 0; indexA < mergeCandidates.length; indexA++) {
+      for (let indexB = indexA + 1; indexB < mergeCandidates.length; indexB++) {
+        const mergedNode = getCandidate(
+          mergeCandidates[indexA]!,
+          mergeCandidates[indexB]!,
+        )
+
+        if (!mergedNode) continue
+
+        const aspectRatioScore = getAspectRatioScore(
+          mergedNode.width,
+          mergedNode.height,
+        )
+
+        if (
+          !bestPair ||
+          aspectRatioScore < bestPair.aspectRatioScore - 1e-6 ||
+          (Math.abs(aspectRatioScore - bestPair.aspectRatioScore) < 1e-6 &&
+            mergedNode.width * mergedNode.height >
+              bestPair.mergedNode.width * bestPair.mergedNode.height)
+        ) {
+          bestPair = {
+            indexA,
+            indexB,
+            mergedNode,
+            aspectRatioScore,
+          }
+        }
+      }
+    }
+
+    if (!bestPair) continue
+
+    mergeCandidates = mergeCandidates.filter(
+      (_, index) => index !== bestPair.indexA && index !== bestPair.indexB,
+    )
+    mergeCandidates.push(bestPair.mergedNode)
+    mergedNodeCount += 1
+    didMerge = true
+  }
+
+  return {
+    nodes: mergeCandidates,
+    mergedNodeCount,
+  }
+}
+
 type EdgeDirection = "left" | "right" | "top" | "bottom"
 type EdgeSegment = {
   obstacleNodeId: string
@@ -201,51 +366,15 @@ function getEdgeMidpoint(
 
 function createExpansionNode({
   obstacleNode,
-  targetNode,
-  direction,
+  bounds,
 }: {
   obstacleNode: CapacityMeshNode
-  targetNode: CapacityMeshNode
-  direction: EdgeDirection
+  bounds: Bounds
 }): CapacityMeshNode | null {
-  const obstacleBounds = getNodeBounds(obstacleNode)
-  const targetBounds = getNodeBounds(targetNode)
-  let bounds: Bounds | null = null
-
-  if (direction === "left") {
-    bounds = {
-      minX: targetBounds.maxX,
-      maxX: obstacleBounds.minX,
-      minY: Math.max(obstacleBounds.minY, targetBounds.minY),
-      maxY: Math.min(obstacleBounds.maxY, targetBounds.maxY),
-    }
-  } else if (direction === "right") {
-    bounds = {
-      minX: obstacleBounds.maxX,
-      maxX: targetBounds.minX,
-      minY: Math.max(obstacleBounds.minY, targetBounds.minY),
-      maxY: Math.min(obstacleBounds.maxY, targetBounds.maxY),
-    }
-  } else if (direction === "top") {
-    bounds = {
-      minX: Math.max(obstacleBounds.minX, targetBounds.minX),
-      maxX: Math.min(obstacleBounds.maxX, targetBounds.maxX),
-      minY: obstacleBounds.maxY,
-      maxY: targetBounds.minY,
-    }
-  } else {
-    bounds = {
-      minX: Math.max(obstacleBounds.minX, targetBounds.minX),
-      maxX: Math.min(obstacleBounds.maxX, targetBounds.maxX),
-      minY: targetBounds.maxY,
-      maxY: obstacleBounds.minY,
-    }
-  }
-
-  if (!bounds || !isValidBounds(bounds)) return null
+  if (!isValidBounds(bounds)) return null
 
   return createNodeFromBounds({
-    nodeId: `${obstacleNode.capacityMeshNodeId}:expansion:${direction}:${targetNode.capacityMeshNodeId}`,
+    nodeId: `${obstacleNode.capacityMeshNodeId}:expansion`,
     bounds,
     availableZ: [...obstacleNode.availableZ],
     containsObstacle: false,
@@ -260,11 +389,13 @@ function hasClearExpansionCorridor({
   sourceObstacleNode,
   candidateExpansionNode,
   obstacleNodes,
+  routingNodes,
   expansionNodes,
 }: {
   sourceObstacleNode: CapacityMeshNode
   candidateExpansionNode: CapacityMeshNode
   obstacleNodes: CapacityMeshNode[]
+  routingNodes: CapacityMeshNode[]
   expansionNodes: CapacityMeshNode[]
 }) {
   const candidateBounds = getNodeBounds(candidateExpansionNode)
@@ -287,6 +418,20 @@ function hasClearExpansionCorridor({
 
   if (overlapsOtherObstacle) return false
 
+  const overlapsOtherFreeNode = routingNodes.some((freeNode) => {
+    const freeNodeBounds = getNodeBounds(freeNode)
+    const overlapWidth =
+      Math.min(candidateBounds.maxX, freeNodeBounds.maxX) -
+      Math.max(candidateBounds.minX, freeNodeBounds.minX)
+    const overlapHeight =
+      Math.min(candidateBounds.maxY, freeNodeBounds.maxY) -
+      Math.max(candidateBounds.minY, freeNodeBounds.minY)
+
+    return overlapWidth > 1e-6 && overlapHeight > 1e-6
+  })
+
+  if (overlapsOtherFreeNode) return false
+
   const overlapsExistingExpansion = expansionNodes.some((expansionNode) => {
     const expansionBounds = getNodeBounds(expansionNode)
     const overlapWidth =
@@ -300,6 +445,180 @@ function hasClearExpansionCorridor({
   })
 
   return !overlapsExistingExpansion
+}
+
+function mergeIntervals(
+  intervals: Array<{ min: number; max: number }>,
+): Array<{ min: number; max: number }> {
+  if (intervals.length === 0) return []
+
+  const sortedIntervals = [...intervals].sort((a, b) => a.min - b.min)
+  const mergedIntervals: Array<{ min: number; max: number }> = [
+    { ...sortedIntervals[0]! },
+  ]
+
+  for (let index = 1; index < sortedIntervals.length; index++) {
+    const currentInterval = sortedIntervals[index]!
+    const lastInterval = mergedIntervals[mergedIntervals.length - 1]!
+
+    if (currentInterval.min <= lastInterval.max + 1e-6) {
+      lastInterval.max = Math.max(lastInterval.max, currentInterval.max)
+    } else {
+      mergedIntervals.push({ ...currentInterval })
+    }
+  }
+
+  return mergedIntervals
+}
+
+function createEdgeFillExpansionNodes({
+  obstacleNode,
+  routingNodes,
+  direction,
+}: {
+  obstacleNode: CapacityMeshNode
+  routingNodes: CapacityMeshNode[]
+  direction: EdgeDirection
+}): CapacityMeshNode[] {
+  const obstacleBounds = getNodeBounds(obstacleNode)
+  const candidates = routingNodes
+    .map((node) => {
+      const nodeBounds = getNodeBounds(node)
+
+      if (direction === "left") {
+        const overlap = getAxisOverlap(
+          { min: nodeBounds.minY, max: nodeBounds.maxY },
+          { min: obstacleBounds.minY, max: obstacleBounds.maxY },
+        )
+        const distance = obstacleBounds.minX - nodeBounds.maxX
+        return overlap > 1e-6 && distance > 1e-6
+          ? {
+              distance,
+              interval: {
+                min: Math.max(obstacleBounds.minY, nodeBounds.minY),
+                max: Math.min(obstacleBounds.maxY, nodeBounds.maxY),
+              },
+              farEdge: nodeBounds.maxX,
+            }
+          : null
+      }
+
+      if (direction === "right") {
+        const overlap = getAxisOverlap(
+          { min: nodeBounds.minY, max: nodeBounds.maxY },
+          { min: obstacleBounds.minY, max: obstacleBounds.maxY },
+        )
+        const distance = nodeBounds.minX - obstacleBounds.maxX
+        return overlap > 1e-6 && distance > 1e-6
+          ? {
+              distance,
+              interval: {
+                min: Math.max(obstacleBounds.minY, nodeBounds.minY),
+                max: Math.min(obstacleBounds.maxY, nodeBounds.maxY),
+              },
+              farEdge: nodeBounds.minX,
+            }
+          : null
+      }
+
+      if (direction === "top") {
+        const overlap = getAxisOverlap(
+          { min: nodeBounds.minX, max: nodeBounds.maxX },
+          { min: obstacleBounds.minX, max: obstacleBounds.maxX },
+        )
+        const distance = nodeBounds.minY - obstacleBounds.maxY
+        return overlap > 1e-6 && distance > 1e-6
+          ? {
+              distance,
+              interval: {
+                min: Math.max(obstacleBounds.minX, nodeBounds.minX),
+                max: Math.min(obstacleBounds.maxX, nodeBounds.maxX),
+              },
+              farEdge: nodeBounds.minY,
+            }
+          : null
+      }
+
+      const overlap = getAxisOverlap(
+        { min: nodeBounds.minX, max: nodeBounds.maxX },
+        { min: obstacleBounds.minX, max: obstacleBounds.maxX },
+      )
+      const distance = obstacleBounds.minY - nodeBounds.maxY
+      return overlap > 1e-6 && distance > 1e-6
+        ? {
+            distance,
+            interval: {
+              min: Math.max(obstacleBounds.minX, nodeBounds.minX),
+              max: Math.min(obstacleBounds.maxX, nodeBounds.maxX),
+            },
+            farEdge: nodeBounds.maxY,
+          }
+        : null
+    })
+    .filter(
+      (
+        candidate,
+      ): candidate is {
+        distance: number
+        interval: { min: number; max: number }
+        farEdge: number
+      } => Boolean(candidate),
+    )
+
+  if (candidates.length === 0) return []
+
+  const minDistance = Math.min(...candidates.map((candidate) => candidate.distance))
+  const frontCandidates = candidates.filter(
+    (candidate) => Math.abs(candidate.distance - minDistance) <= 1e-6,
+  )
+  const mergedIntervals = mergeIntervals(
+    frontCandidates.map((candidate) => candidate.interval),
+  )
+
+  return mergedIntervals
+    .map((interval, index) => {
+      const bounds =
+        direction === "left"
+          ? {
+              minX: obstacleBounds.minX - minDistance,
+              maxX: obstacleBounds.minX,
+              minY: interval.min,
+              maxY: interval.max,
+            }
+          : direction === "right"
+            ? {
+                minX: obstacleBounds.maxX,
+                maxX: obstacleBounds.maxX + minDistance,
+                minY: interval.min,
+                maxY: interval.max,
+              }
+            : direction === "top"
+              ? {
+                  minX: interval.min,
+                  maxX: interval.max,
+                  minY: obstacleBounds.maxY,
+                  maxY: obstacleBounds.maxY + minDistance,
+                }
+              : {
+                  minX: interval.min,
+                  maxX: interval.max,
+                  minY: obstacleBounds.minY - minDistance,
+                  maxY: obstacleBounds.minY,
+                }
+
+      const expansionNode = createExpansionNode({
+        obstacleNode,
+        bounds,
+      })
+
+      if (!expansionNode) return null
+
+      return {
+        ...expansionNode,
+        capacityMeshNodeId: `${obstacleNode.capacityMeshNodeId}:expansion:${direction}:${index}`,
+      }
+    })
+    .filter((node): node is CapacityMeshNode => Boolean(node))
 }
 
 function createNodeFromBounds({
@@ -484,7 +803,10 @@ class BgaObstacleMergeSolver extends BaseSolver {
 
       if (node && !node._containsObstacle) {
         const blockedZForNode = getObstacleAvailableZ(
-          nextAction.obstacle,
+          {
+            ...nextAction.obstacle,
+            zLayers: getLocalObstacleAvailableZ(nextAction.obstacle),
+          },
           BgaTopologyGeneratorSolver.layerCount,
         ).filter((z) => z > 0 && node.availableZ.includes(z))
 
@@ -511,10 +833,9 @@ class BgaObstacleMergeSolver extends BaseSolver {
             nextAction.obstacle.obstacleId ?? nextAction.obstacleIndex
           }`,
           bounds: getBoundingBox(nextAction.obstacle),
-          availableZ: getObstacleAvailableZ(
-            nextAction.obstacle,
-            BgaTopologyGeneratorSolver.layerCount,
-          ).filter((z) => z > 0),
+          availableZ: getLocalObstacleAvailableZ(nextAction.obstacle).filter(
+            (z) => z > 0,
+          ),
           containsObstacle: true,
         }),
       )
@@ -547,11 +868,10 @@ class BgaObstacleMergeSolver extends BaseSolver {
       center: { ...node.center },
       availableZ: [...node.availableZ],
     }))
-    this.lowerLayerObstacles = this.params.ignoredObstacles.filter((obstacle) =>
-      getObstacleAvailableZ(
-        obstacle,
-        BgaTopologyGeneratorSolver.layerCount,
-      ).some((z) => z > 0),
+    this.lowerLayerObstacles = mergeOverlappingObstacles(
+      this.params.ignoredObstacles.filter((obstacle) =>
+        getLocalObstacleAvailableZ(obstacle).some((z) => z > 0),
+      ),
     )
 
     for (const [obstacleIndex, obstacle] of this.lowerLayerObstacles.entries()) {
@@ -680,7 +1000,6 @@ class BgaExpansionSolver extends BaseSolver {
   private output: BgaExpansionSolverOutput | null = null
   private initialized = false
   private workingRoutingRegions: CapacityMeshNode[] = []
-  private baseFreeNodes: CapacityMeshNode[] = []
   private obstacleNodes: CapacityMeshNode[] = []
   private expansionNodes: CapacityMeshNode[] = []
   private actionQueue: Array<{
@@ -689,7 +1008,6 @@ class BgaExpansionSolver extends BaseSolver {
   }> = []
   private pendingExpansionInsertions: Array<{
     obstacleNodeId: string
-    targetNodeId: string
     direction: EdgeDirection
     expansionNode: CapacityMeshNode
   }> = []
@@ -702,7 +1020,6 @@ class BgaExpansionSolver extends BaseSolver {
     | {
         type: "insert-expansion"
         obstacleNodeId: string
-        targetNodeId: string
         direction: EdgeDirection
         expansionNode: CapacityMeshNode
       }
@@ -729,9 +1046,6 @@ class BgaExpansionSolver extends BaseSolver {
         center: { ...node.center },
         availableZ: [...node.availableZ],
       }))
-      this.baseFreeNodes = this.workingRoutingRegions.filter(
-        (node) => !node._containsObstacle && node.availableZ.length === 1,
-      )
       this.obstacleNodes = this.workingRoutingRegions.filter(
         (node) =>
           node._containsObstacle &&
@@ -822,13 +1136,13 @@ class BgaExpansionSolver extends BaseSolver {
     if (!obstacleNode) return
 
     const z = obstacleNode.availableZ[0]
-    const sameLayerFreeNodes = this.baseFreeNodes.filter(
-      (node) => node.availableZ[0] === z,
+    const sameLayerRoutingNodes = this.workingRoutingRegions.filter(
+      (node) => !node._containsObstacle && node.availableZ.includes(z),
     )
     const obstacleBounds = getNodeBounds(obstacleNode)
     const direction = nextEdge.direction
 
-    const alreadyTouching = sameLayerFreeNodes.some((node) => {
+    const alreadyTouching = sameLayerRoutingNodes.some((node) => {
       const nodeBounds = getNodeBounds(node)
       if (direction === "left") {
         return (
@@ -879,66 +1193,24 @@ class BgaExpansionSolver extends BaseSolver {
       return
     }
 
-    const candidates = sameLayerFreeNodes
-      .map((node) => {
-        const nodeBounds = getNodeBounds(node)
-        if (direction === "left") {
-          const overlap = getAxisOverlap(
-            { min: nodeBounds.minY, max: nodeBounds.maxY },
-            { min: obstacleBounds.minY, max: obstacleBounds.maxY },
-          )
-          const distance = obstacleBounds.minX - nodeBounds.maxX
-          return overlap > 1e-6 && distance > 1e-6 ? { node, distance } : null
-        }
-        if (direction === "right") {
-          const overlap = getAxisOverlap(
-            { min: nodeBounds.minY, max: nodeBounds.maxY },
-            { min: obstacleBounds.minY, max: obstacleBounds.maxY },
-          )
-          const distance = nodeBounds.minX - obstacleBounds.maxX
-          return overlap > 1e-6 && distance > 1e-6 ? { node, distance } : null
-        }
-        if (direction === "top") {
-          const overlap = getAxisOverlap(
-            { min: nodeBounds.minX, max: nodeBounds.maxX },
-            { min: obstacleBounds.minX, max: obstacleBounds.maxX },
-          )
-          const distance = nodeBounds.minY - obstacleBounds.maxY
-          return overlap > 1e-6 && distance > 1e-6 ? { node, distance } : null
-        }
+    const expansionNodes = createEdgeFillExpansionNodes({
+      obstacleNode,
+      routingNodes: sameLayerRoutingNodes,
+      direction,
+    })
 
-        const overlap = getAxisOverlap(
-          { min: nodeBounds.minX, max: nodeBounds.maxX },
-          { min: obstacleBounds.minX, max: obstacleBounds.maxX },
-        )
-        const distance = obstacleBounds.minY - nodeBounds.maxY
-        return overlap > 1e-6 && distance > 1e-6 ? { node, distance } : null
-      })
-      .filter(
-        (candidate): candidate is { node: CapacityMeshNode; distance: number } =>
-          Boolean(candidate),
-      )
-      .sort((candidateA, candidateB) => candidateA.distance - candidateB.distance)
-
-    const closestCandidate = candidates[0]?.node
-    if (closestCandidate) {
-      const expansionNode = createExpansionNode({
-        obstacleNode,
-        targetNode: closestCandidate,
-        direction,
-      })
+    for (const expansionNode of expansionNodes) {
       if (
-        expansionNode &&
         hasClearExpansionCorridor({
           sourceObstacleNode: obstacleNode,
           candidateExpansionNode: expansionNode,
           obstacleNodes: this.obstacleNodes,
+          routingNodes: sameLayerRoutingNodes,
           expansionNodes: this.expansionNodes,
         })
       ) {
         this.pendingExpansionInsertions.push({
           obstacleNodeId: obstacleNode.capacityMeshNodeId,
-          targetNodeId: closestCandidate.capacityMeshNodeId,
           direction,
           expansionNode,
         })
@@ -952,7 +1224,7 @@ class BgaExpansionSolver extends BaseSolver {
       activeActionType: "inspect-edge",
       activeObstacleId: obstacleNode.capacityMeshNodeId,
       activeDirection: direction,
-      activeTargetNodeId: closestCandidate?.capacityMeshNodeId ?? null,
+      activeTargetNodeId: null,
     }
   }
 
@@ -1105,71 +1377,15 @@ class BgaSharedNodeMergeSolver extends BaseSolver {
     const passthroughNodes = this.params.routingRegions.filter(
       (node) => node._containsObstacle || node.availableZ.length <= 1,
     )
-    let mergeCandidates = this.params.routingRegions
-      .filter((node) => !node._containsObstacle && node.availableZ.length > 1)
-      .map((node) => ({
-        ...node,
-        center: { ...node.center },
-        availableZ: [...node.availableZ],
-      }))
-    let mergedSharedNodeCount = 0
-    let didMerge = true
-
-    while (didMerge) {
-      didMerge = false
-      let bestPair:
-        | {
-            indexA: number
-            indexB: number
-            mergedNode: CapacityMeshNode
-            aspectRatioScore: number
-          }
-        | null = null
-
-      for (let indexA = 0; indexA < mergeCandidates.length; indexA++) {
-        for (let indexB = indexA + 1; indexB < mergeCandidates.length; indexB++) {
-          const mergedNode = getMergeCandidate(
-            mergeCandidates[indexA]!,
-            mergeCandidates[indexB]!,
-          )
-
-          if (!mergedNode) continue
-
-          const aspectRatioScore = getAspectRatioScore(
-            mergedNode.width,
-            mergedNode.height,
-          )
-
-          if (
-            !bestPair ||
-            aspectRatioScore < bestPair.aspectRatioScore - 1e-6 ||
-            (Math.abs(aspectRatioScore - bestPair.aspectRatioScore) < 1e-6 &&
-              mergedNode.width * mergedNode.height >
-                bestPair.mergedNode.width * bestPair.mergedNode.height)
-          ) {
-            bestPair = {
-              indexA,
-              indexB,
-              mergedNode,
-              aspectRatioScore,
-            }
-          }
-        }
-      }
-
-      if (!bestPair) continue
-
-      mergeCandidates = mergeCandidates.filter(
-        (_, index) => index !== bestPair.indexA && index !== bestPair.indexB,
-      )
-      mergeCandidates.push(bestPair.mergedNode)
-      mergedSharedNodeCount += 1
-      didMerge = true
-    }
-
+    const mergedSharedNodes = mergeNodesGreedily({
+      nodes: this.params.routingRegions.filter(
+        (node) => !node._containsObstacle && node.availableZ.length > 1,
+      ),
+      getCandidate: getMergeCandidate,
+    })
     this.output = {
-      routingRegions: [...passthroughNodes, ...mergeCandidates],
-      mergedSharedNodeCount,
+      routingRegions: [...passthroughNodes, ...mergedSharedNodes.nodes],
+      mergedSharedNodeCount: mergedSharedNodes.mergedNodeCount,
     }
     this.stats = this.output
     this.solved = true

@@ -1,4 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -6,7 +7,10 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { ComponentTopologyGeneratorSolver } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
+import {
+  ComponentTopologyGeneratorSolver,
+  createReplacementObstacleForComponent,
+} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -164,6 +168,66 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
+function isMeshNodeFullyInsideObstacle({
+  node,
+  obstacle,
+}: {
+  node: CapacityMeshNode
+  obstacle: { center: { x: number; y: number }; width: number; height: number }
+}) {
+  const nodeBounds = getBoundFromCenteredRect({
+    center: node.center,
+    width: node.width,
+    height: node.height,
+  })
+  const obstacleBounds = getBoundFromCenteredRect({
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+  })
+  const epsilon = 1e-9
+
+  return (
+    nodeBounds.minX >= obstacleBounds.minX - epsilon &&
+    nodeBounds.maxX <= obstacleBounds.maxX + epsilon &&
+    nodeBounds.minY >= obstacleBounds.minY - epsilon &&
+    nodeBounds.maxY <= obstacleBounds.maxY + epsilon
+  )
+}
+
+function filterGlobalMeshNodesInsideComponentAreas({
+  globalMeshNodes,
+  detectedComponents,
+  inputSrj,
+}: {
+  globalMeshNodes: CapacityMeshNode[]
+  detectedComponents: NonNullable<
+    AutoroutingPipelineSolver7_MultiGraph["componentDetectionSolver"]
+  > extends { getOutput(): infer T }
+    ? T
+    : never
+  inputSrj: SimpleRouteJson
+}) {
+  if (detectedComponents.length === 0) return globalMeshNodes
+
+  const replacementObstacles = detectedComponents.map((detectedComponent) =>
+    createReplacementObstacleForComponent({
+      detectedComponent,
+      inputSrj,
+    }),
+  )
+
+  return globalMeshNodes.filter(
+    (node) =>
+      !replacementObstacles.some((replacementObstacle) =>
+        isMeshNodeFullyInsideObstacle({
+          node,
+          obstacle: replacementObstacle,
+        }),
+      ),
+  )
+}
+
 function definePipelineStep<
   T extends new (
     ...args: any[]
@@ -318,8 +382,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const globalMeshNodes =
+          const rawGlobalMeshNodes =
             cms.globalTopologyGeneratorSolver?.getOutput().meshNodes ?? []
+          const globalMeshNodes = filterGlobalMeshNodesInsideComponentAreas({
+            globalMeshNodes: rawGlobalMeshNodes,
+            detectedComponents: cms.componentDetectionSolver!.getOutput(),
+            inputSrj: cms.srjWithPointPairs ?? cms.srj,
+          })
           const componentMeshNodes =
             cms.componentTopologyGeneratorSolver?.getOutput() ?? []
 
