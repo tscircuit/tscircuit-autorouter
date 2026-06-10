@@ -37,8 +37,6 @@ export interface SoicTopologyGeneratorSolverParams
 
 export interface SoicTopologyGeneratorSolverOutput
   extends TopologyGeneratorSolverOutput {
-  /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
-  obstacles: Obstacle[]
   /** Routing regions derived from the SOIC pad rows/columns. These are not obstacle rectangles. */
   routingRegions: CapacityMeshNode[]
 }
@@ -356,13 +354,9 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       }),
     )
 
-    this.output = {
-      obstacles: soicObstacles.map((obstacle) => structuredClone(obstacle)),
-      routingRegions,
-    }
+    this.output = { routingRegions }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       orientation,
       viaDiameter,

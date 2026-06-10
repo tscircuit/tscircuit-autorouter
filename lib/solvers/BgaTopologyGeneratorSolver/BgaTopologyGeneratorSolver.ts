@@ -17,8 +17,6 @@ export interface BgaTopologyGeneratorSolverParams
 
 export interface BgaTopologyGeneratorSolverOutput
   extends TopologyGeneratorSolverOutput {
-  /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
-  obstacles: Obstacle[]
   /** Routing regions derived from obstacle layout. These are not obstacle rectangles. */
   routingRegions: CapacityMeshNode[]
 }
@@ -27,7 +25,6 @@ export interface BgaTopologyGeneratorSolverOutput
  * Builds a coarse topology for BGA-style routing from an SRJ obstacle field.
  *
  * Important:
- * - `obstacles` in the output preserve the original SRJ geometry exactly.
  * - `routingRegions` are derived routing cells and may be larger than pads.
  * - obstacle-overlapping regions are split per layer instead of being emitted
  *   as one multi-layer region.
@@ -84,16 +81,11 @@ export class BgaTopologyGeneratorSolver extends BaseSolver {
       (node) => node.availableZ.length > 1,
     ).length
 
-    const clonedObstacles = topologyAxisObstacles.map((obstacle) =>
-      structuredClone(obstacle),
-    )
     this.output = {
-      obstacles: clonedObstacles,
       routingRegions: meshNodes,
     }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       inferredRowCount: rowCount,
       inferredColumnCount: colCount,

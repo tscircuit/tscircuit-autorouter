@@ -37,7 +37,6 @@ export interface ComponentTopologyBatchSolverParams {
   componentSrjs: SimpleRouteJson[]
   componentIds: string[]
   componentKinds: ComponentKind[]
-  replacementObstacleIds: string[]
   viaDiameter?: number
   obstacleMargin?: number
 }
@@ -491,8 +490,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
     const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
     const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
     const componentId = this.inputProblem.componentIds[this.currentIndex]!
-    const replacementObstacleId =
-      this.inputProblem.replacementObstacleIds[this.currentIndex]!
     const solverInput = {
       inputSrj: componentSrj,
       detectedComponent: {
@@ -503,8 +500,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
           ...componentSrj.bounds,
         },
       },
-      componentId,
-      replacementObstacleId,
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
     }

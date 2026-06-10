@@ -33,8 +33,6 @@ export interface QfpTopologyGeneratorSolverParams
 
 export interface QfpTopologyGeneratorSolverOutput
   extends TopologyGeneratorSolverOutput {
-  /** Exact obstacle rectangles cloned from the input SRJ. This is the geometry source of truth. */
-  obstacles: Obstacle[]
   /** Routing regions derived from the QFP pad ring. These are not obstacle rectangles. */
   routingRegions: CapacityMeshNode[]
 }
@@ -518,13 +516,9 @@ export class QfpTopologyGeneratorSolver extends BaseSolver {
       }),
     )
 
-    this.output = {
-      obstacles: padRingObstacles.map((obstacle) => structuredClone(obstacle)),
-      routingRegions,
-    }
+    this.output = { routingRegions }
     this.stats = {
       componentId,
-      replacementObstacleId: this.inputProblem.replacementObstacleId,
       layerCount,
       viaDiameter,
       obstacleMargin,
