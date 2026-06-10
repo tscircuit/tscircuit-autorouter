@@ -13,7 +13,6 @@ export interface TopologyGeneratorSolverParams {
 
 /** Shared output collected from each component-specific topology generator. */
 export interface TopologyGeneratorSolverOutput {
-  obstacles: Obstacle[]
   routingRegions: CapacityMeshNode[]
 }
 
