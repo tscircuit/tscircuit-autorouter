@@ -1,0 +1,405 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 5,
+      "keys": [
+        "nodes",
+        "edges",
+        "traceWidth",
+        "colorMap",
+        "shouldReturnCrampedPortPoints"
+      ],
+      "sample": {
+        "nodes": {
+          "type": "array",
+          "length": 1476,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "layer",
+                "availableZ",
+                "_containsObstacle",
+                "_containsTarget"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "layer": "top",
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "edges": {
+          "type": "array",
+          "length": 4433,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce0",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce1",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce2",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce3",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce4",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce5",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce6",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "capacityMeshEdgeId",
+                "nodeIds"
+              ],
+              "sample": {
+                "capacityMeshEdgeId": "ce7",
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "traceWidth": 0.1,
+        "colorMap": {
+          "type": "Object",
+          "keyCount": 163,
+          "keys": [
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3",
+            "source_trace_153__source_net_29",
+            "source_trace_152__source_net_30"
+          ],
+          "sample": {
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "hsl(0, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1": "hsl(2.085889570552147, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2": "hsl(4.171779141104294, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3": "hsl(6.257668711656442, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0": "hsl(8.343558282208589, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1": "hsl(10.429447852760736, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2": "hsl(12.515337423312884, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3": "hsl(14.60122699386503, 100%, 50%)",
+            "source_trace_153__source_net_29": "hsl(16.687116564417177, 100%, 50%)",
+            "source_trace_152__source_net_30": "hsl(18.773006134969325, 100%, 50%)"
+          }
+        },
+        "shouldReturnCrampedPortPoints": true
+      }
+    }
+  ]
+}

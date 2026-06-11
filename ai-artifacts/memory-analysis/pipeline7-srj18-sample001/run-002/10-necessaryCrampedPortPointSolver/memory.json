@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 728752128,
+    "heapTotal": 128257024,
+    "heapUsed": 67463805,
+    "external": 11315789,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 729276416,
+    "heapTotal": 71666688,
+    "heapUsed": 67463805,
+    "external": 11263345,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 721518592,
+    "heapTotal": 71633920,
+    "heapUsed": 67463805,
+    "external": 11273910,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 722305024,
+    "heapTotal": 71633920,
+    "heapUsed": 67463805,
+    "external": 11255658,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": -6971392,
+    "heapTotal": -32768,
+    "heapUsed": 0,
+    "external": -7687,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 417,
+  "solverName": "multiTargetNecessaryCrampedPortPointSolver",
+  "elapsedMs": 60.30315200000041
+}

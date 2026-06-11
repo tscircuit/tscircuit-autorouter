@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 788332544,
+    "heapTotal": 139048960,
+    "heapUsed": 617865707,
+    "external": 533374408,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 788594688,
+    "heapTotal": 112228352,
+    "heapUsed": 620342209,
+    "external": 532986125,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 1188118528,
+    "heapTotal": 112195584,
+    "heapUsed": 620342209,
+    "external": 532869802,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1189036032,
+    "heapTotal": 112179200,
+    "heapUsed": 620342209,
+    "external": 532685543,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 400441344,
+    "heapTotal": -49152,
+    "heapUsed": 0,
+    "external": -300582,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 0,
+  "solverName": "UniformPortDistributionSolver",
+  "elapsedMs": 15.109051999999792
+}

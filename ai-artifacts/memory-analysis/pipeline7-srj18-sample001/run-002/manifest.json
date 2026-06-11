@@ -1,0 +1,179 @@
+{
+  "runLabel": "run-002",
+  "solved": true,
+  "failed": false,
+  "error": null,
+  "captures": [
+    {
+      "stageName": "preprocessSimpleRouteJsonSolver",
+      "stageNumber": 1,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/01-preprocessSimpleRouteJsonSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/01-preprocessSimpleRouteJsonSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/01-preprocessSimpleRouteJsonSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/01-preprocessSimpleRouteJsonSolver/01-preprocessSimpleRouteJsonSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/01-preprocessSimpleRouteJsonSolver/handoff.md"
+    },
+    {
+      "stageName": "componentDetectionSolver",
+      "stageNumber": 2,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/02-componentDetectionSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/02-componentDetectionSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/02-componentDetectionSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/02-componentDetectionSolver/02-componentDetectionSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/02-componentDetectionSolver/handoff.md"
+    },
+    {
+      "stageName": "componentTopologyGeneratorSolver",
+      "stageNumber": 3,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/03-componentTopologyGeneratorSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/03-componentTopologyGeneratorSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/03-componentTopologyGeneratorSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/03-componentTopologyGeneratorSolver/03-componentTopologyGeneratorSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/03-componentTopologyGeneratorSolver/handoff.md"
+    },
+    {
+      "stageName": "escapeViaLocationSolver",
+      "stageNumber": 4,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/04-escapeViaLocationSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/04-escapeViaLocationSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/04-escapeViaLocationSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/04-escapeViaLocationSolver/04-escapeViaLocationSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/04-escapeViaLocationSolver/handoff.md"
+    },
+    {
+      "stageName": "netToPointPairsSolver",
+      "stageNumber": 5,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/05-netToPointPairsSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/05-netToPointPairsSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/05-netToPointPairsSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/05-netToPointPairsSolver/05-netToPointPairsSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/05-netToPointPairsSolver/handoff.md"
+    },
+    {
+      "stageName": "globalTopologyGeneratorSolver",
+      "stageNumber": 6,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/06-globalTopologyGeneratorSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/06-globalTopologyGeneratorSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/06-globalTopologyGeneratorSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/06-globalTopologyGeneratorSolver/06-globalTopologyGeneratorSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/06-globalTopologyGeneratorSolver/handoff.md"
+    },
+    {
+      "stageName": "nodeDimensionSubdivisionSolver",
+      "stageNumber": 7,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/07-nodeDimensionSubdivisionSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/07-nodeDimensionSubdivisionSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/07-nodeDimensionSubdivisionSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/07-nodeDimensionSubdivisionSolver/07-nodeDimensionSubdivisionSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/07-nodeDimensionSubdivisionSolver/handoff.md"
+    },
+    {
+      "stageName": "edgeSolver",
+      "stageNumber": 8,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/08-edgeSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/08-edgeSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/08-edgeSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/08-edgeSolver/08-edgeSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/08-edgeSolver/handoff.md"
+    },
+    {
+      "stageName": "availableSegmentPointSolver",
+      "stageNumber": 9,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/09-availableSegmentPointSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/09-availableSegmentPointSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/09-availableSegmentPointSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/09-availableSegmentPointSolver/09-availableSegmentPointSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/09-availableSegmentPointSolver/handoff.md"
+    },
+    {
+      "stageName": "necessaryCrampedPortPointSolver",
+      "stageNumber": 10,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/10-necessaryCrampedPortPointSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/10-necessaryCrampedPortPointSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/10-necessaryCrampedPortPointSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/10-necessaryCrampedPortPointSolver/10-necessaryCrampedPortPointSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/10-necessaryCrampedPortPointSolver/handoff.md"
+    },
+    {
+      "stageName": "portPointPathingSolver",
+      "stageNumber": 11,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/11-portPointPathingSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/11-portPointPathingSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/11-portPointPathingSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/11-portPointPathingSolver/11-portPointPathingSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/11-portPointPathingSolver/handoff.md"
+    },
+    {
+      "stageName": "uniformPortDistributionSolver",
+      "stageNumber": 12,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/12-uniformPortDistributionSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/12-uniformPortDistributionSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/12-uniformPortDistributionSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/12-uniformPortDistributionSolver/12-uniformPortDistributionSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/12-uniformPortDistributionSolver/handoff.md"
+    },
+    {
+      "stageName": "highDensityRouteSolver",
+      "stageNumber": 13,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/13-highDensityRouteSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/13-highDensityRouteSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/13-highDensityRouteSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/13-highDensityRouteSolver/13-highDensityRouteSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/13-highDensityRouteSolver/handoff.md"
+    },
+    {
+      "stageName": "highDensityForceImproveSolver",
+      "stageNumber": 14,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/14-highDensityForceImproveSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/14-highDensityForceImproveSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/14-highDensityForceImproveSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/14-highDensityForceImproveSolver/14-highDensityForceImproveSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/14-highDensityForceImproveSolver/handoff.md"
+    },
+    {
+      "stageName": "highDensityRepairSolver",
+      "stageNumber": 15,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/15-highDensityRepairSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/15-highDensityRepairSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/15-highDensityRepairSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/15-highDensityRepairSolver/15-highDensityRepairSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/15-highDensityRepairSolver/handoff.md"
+    },
+    {
+      "stageName": "highDensityStitchSolver",
+      "stageNumber": 16,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/16-highDensityStitchSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/16-highDensityStitchSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/16-highDensityStitchSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/16-highDensityStitchSolver/16-highDensityStitchSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/16-highDensityStitchSolver/handoff.md"
+    },
+    {
+      "stageName": "traceSimplificationSolver",
+      "stageNumber": 17,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/17-traceSimplificationSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/17-traceSimplificationSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/17-traceSimplificationSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/17-traceSimplificationSolver/17-traceSimplificationSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/17-traceSimplificationSolver/handoff.md"
+    },
+    {
+      "stageName": "traceWidthSolver",
+      "stageNumber": 18,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/18-traceWidthSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/18-traceWidthSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/18-traceWidthSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/18-traceWidthSolver/18-traceWidthSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/18-traceWidthSolver/handoff.md"
+    },
+    {
+      "stageName": "globalDrcForceImproveSolver",
+      "stageNumber": 19,
+      "inputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/19-globalDrcForceImproveSolver/input-summary.json",
+      "outputSummaryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/19-globalDrcForceImproveSolver/output-summary.json",
+      "memoryPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/19-globalDrcForceImproveSolver/memory.json",
+      "heapSnapshotPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/19-globalDrcForceImproveSolver/19-globalDrcForceImproveSolver.heapsnapshot",
+      "handoffPath": "/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-002/19-globalDrcForceImproveSolver/handoff.md"
+    }
+  ]
+}

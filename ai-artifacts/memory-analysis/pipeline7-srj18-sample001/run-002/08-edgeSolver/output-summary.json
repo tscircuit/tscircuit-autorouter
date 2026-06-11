@@ -1,0 +1,158 @@
+{
+  "type": "array",
+  "length": 4433,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce0",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_9"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce1",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_41"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce2",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_63"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce3",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_36"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce4",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_261"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce5",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_0__sub_1_0"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce6",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_284"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 2,
+      "keys": [
+        "capacityMeshEdgeId",
+        "nodeIds"
+      ],
+      "sample": {
+        "capacityMeshEdgeId": "ce7",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_286"
+          ]
+        }
+      }
+    }
+  ]
+}

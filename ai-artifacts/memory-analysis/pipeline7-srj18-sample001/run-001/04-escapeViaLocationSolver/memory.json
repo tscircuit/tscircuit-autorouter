@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 648429568,
+    "heapTotal": 42856448,
+    "heapUsed": 43775996,
+    "external": 8089420,
+    "arrayBuffers": 0
+  },
+  "afterGcMemory": {
+    "rss": 643149824,
+    "heapTotal": 42577920,
+    "heapUsed": 43775996,
+    "external": 8321727,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotMemory": {
+    "rss": 533082112,
+    "heapTotal": 42594304,
+    "heapUsed": 43775996,
+    "external": 8318750,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 533868544,
+    "heapTotal": 42594304,
+    "heapUsed": 43775996,
+    "external": 8251599,
+    "arrayBuffers": 0
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": -109281280,
+    "heapTotal": 16384,
+    "heapUsed": 0,
+    "external": -70128,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1,
+  "solverName": "EscapeViaLocationSolver",
+  "elapsedMs": 8.373063000000002
+}

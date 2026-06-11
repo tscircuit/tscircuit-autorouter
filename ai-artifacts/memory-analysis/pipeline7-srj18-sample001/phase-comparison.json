@@ -1,0 +1,344 @@
+[
+  {
+    "stage": "01-preprocessSimpleRouteJsonSolver",
+    "solver": "PreprocessSimpleRouteJsonSolver",
+    "retainedMiB": [
+      43.93,
+      43.92
+    ],
+    "retainedSpreadMiB": 0.01,
+    "elapsedMs": [
+      2.6,
+      2.5
+    ],
+    "elapsedSpreadMs": 0.1,
+    "deltaFromPrevMiB": [
+      null,
+      null
+    ]
+  },
+  {
+    "stage": "02-componentDetectionSolver",
+    "solver": "ComponentDetectionSolver",
+    "retainedMiB": [
+      43.88,
+      43.88
+    ],
+    "retainedSpreadMiB": 0,
+    "elapsedMs": [
+      2.1,
+      3.2
+    ],
+    "elapsedSpreadMs": 1.1,
+    "deltaFromPrevMiB": [
+      -0.05,
+      -0.04
+    ]
+  },
+  {
+    "stage": "03-componentTopologyGeneratorSolver",
+    "solver": "ComponentTopologyGeneratorSolver",
+    "retainedMiB": [
+      44.07,
+      44.07
+    ],
+    "retainedSpreadMiB": 0,
+    "elapsedMs": [
+      1,
+      1
+    ],
+    "elapsedSpreadMs": 0,
+    "deltaFromPrevMiB": [
+      0.19,
+      0.19
+    ]
+  },
+  {
+    "stage": "04-escapeViaLocationSolver",
+    "solver": "EscapeViaLocationSolver",
+    "retainedMiB": [
+      41.75,
+      41.75
+    ],
+    "retainedSpreadMiB": 0,
+    "elapsedMs": [
+      8.4,
+      6.3
+    ],
+    "elapsedSpreadMs": 2.1,
+    "deltaFromPrevMiB": [
+      -2.32,
+      -2.32
+    ]
+  },
+  {
+    "stage": "05-netToPointPairsSolver",
+    "solver": "NetToPointPairsSolver2_OffBoardConnection",
+    "retainedMiB": [
+      43.04,
+      43.11
+    ],
+    "retainedSpreadMiB": 0.07,
+    "elapsedMs": [
+      6.7,
+      6.8
+    ],
+    "elapsedSpreadMs": 0.1,
+    "deltaFromPrevMiB": [
+      1.29,
+      1.36
+    ]
+  },
+  {
+    "stage": "06-globalTopologyGeneratorSolver",
+    "solver": "RectDiffPipeline",
+    "retainedMiB": [
+      47.78,
+      47.76
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      257.1,
+      273.4
+    ],
+    "elapsedSpreadMs": 16.3,
+    "deltaFromPrevMiB": [
+      4.74,
+      4.65
+    ]
+  },
+  {
+    "stage": "07-nodeDimensionSubdivisionSolver",
+    "solver": "NodeDimensionSubdivisionSolver",
+    "retainedMiB": [
+      46.9,
+      46.88
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      0.9,
+      1.6
+    ],
+    "elapsedSpreadMs": 0.7,
+    "deltaFromPrevMiB": [
+      -0.88,
+      -0.88
+    ]
+  },
+  {
+    "stage": "08-edgeSolver",
+    "solver": "CapacityMeshEdgeSolver2_NodeTreeOptimization",
+    "retainedMiB": [
+      55.02,
+      55
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      39.2,
+      42.7
+    ],
+    "elapsedSpreadMs": 3.5,
+    "deltaFromPrevMiB": [
+      8.11,
+      8.11
+    ]
+  },
+  {
+    "stage": "09-availableSegmentPointSolver",
+    "solver": "AvailableSegmentPointSolver",
+    "retainedMiB": [
+      62.17,
+      62.18
+    ],
+    "retainedSpreadMiB": 0.01,
+    "elapsedMs": [
+      19.9,
+      16
+    ],
+    "elapsedSpreadMs": 3.9,
+    "deltaFromPrevMiB": [
+      7.16,
+      7.18
+    ]
+  },
+  {
+    "stage": "10-necessaryCrampedPortPointSolver",
+    "solver": "multiTargetNecessaryCrampedPortPointSolver",
+    "retainedMiB": [
+      64.33,
+      64.34
+    ],
+    "retainedSpreadMiB": 0.01,
+    "elapsedMs": [
+      57.2,
+      60.3
+    ],
+    "elapsedSpreadMs": 3.1,
+    "deltaFromPrevMiB": [
+      2.16,
+      2.16
+    ]
+  },
+  {
+    "stage": "11-portPointPathingSolver",
+    "solver": "TinyHypergraphPortPointPathingSolver",
+    "retainedMiB": [
+      624.76,
+      624.19
+    ],
+    "retainedSpreadMiB": 0.57,
+    "elapsedMs": [
+      9651.2,
+      9831.2
+    ],
+    "elapsedSpreadMs": 180,
+    "deltaFromPrevMiB": [
+      560.43,
+      559.85
+    ]
+  },
+  {
+    "stage": "12-uniformPortDistributionSolver",
+    "solver": "UniformPortDistributionSolver",
+    "retainedMiB": [
+      591.31,
+      591.6
+    ],
+    "retainedSpreadMiB": 0.29,
+    "elapsedMs": [
+      15.7,
+      15.1
+    ],
+    "elapsedSpreadMs": 0.6,
+    "deltaFromPrevMiB": [
+      -33.45,
+      -32.58
+    ]
+  },
+  {
+    "stage": "13-highDensityRouteSolver",
+    "solver": "HighDensitySolver",
+    "retainedMiB": [
+      637.55,
+      637.52
+    ],
+    "retainedSpreadMiB": 0.03,
+    "elapsedMs": [
+      17242.2,
+      17263.7
+    ],
+    "elapsedSpreadMs": 21.5,
+    "deltaFromPrevMiB": [
+      46.24,
+      45.92
+    ]
+  },
+  {
+    "stage": "14-highDensityForceImproveSolver",
+    "solver": "HighDensityForceImproveSolver",
+    "retainedMiB": [
+      655.22,
+      655.19
+    ],
+    "retainedSpreadMiB": 0.03,
+    "elapsedMs": [
+      2202.1,
+      2175.3
+    ],
+    "elapsedSpreadMs": 26.8,
+    "deltaFromPrevMiB": [
+      17.67,
+      17.66
+    ]
+  },
+  {
+    "stage": "15-highDensityRepairSolver",
+    "solver": "Pipeline4HighDensityRepairSolver",
+    "retainedMiB": [
+      600.43,
+      600.39
+    ],
+    "retainedSpreadMiB": 0.04,
+    "elapsedMs": [
+      0.2,
+      0.2
+    ],
+    "elapsedSpreadMs": 0,
+    "deltaFromPrevMiB": [
+      -54.79,
+      -54.79
+    ]
+  },
+  {
+    "stage": "16-highDensityStitchSolver",
+    "solver": "MultipleHighDensityRouteStitchSolver3",
+    "retainedMiB": [
+      601.8,
+      601.78
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      62.4,
+      57.2
+    ],
+    "elapsedSpreadMs": 5.2,
+    "deltaFromPrevMiB": [
+      1.37,
+      1.39
+    ]
+  },
+  {
+    "stage": "17-traceSimplificationSolver",
+    "solver": "TraceSimplificationSolver",
+    "retainedMiB": [
+      604.79,
+      604.77
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      2332.4,
+      2181.4
+    ],
+    "elapsedSpreadMs": 151,
+    "deltaFromPrevMiB": [
+      2.99,
+      2.99
+    ]
+  },
+  {
+    "stage": "18-traceWidthSolver",
+    "solver": "TraceWidthSolver",
+    "retainedMiB": [
+      604.06,
+      604.04
+    ],
+    "retainedSpreadMiB": 0.02,
+    "elapsedMs": [
+      119.9,
+      123.3
+    ],
+    "elapsedSpreadMs": 3.4,
+    "deltaFromPrevMiB": [
+      -0.73,
+      -0.74
+    ]
+  },
+  {
+    "stage": "19-globalDrcForceImproveSolver",
+    "solver": "GlobalDrcForceImproveSolver",
+    "retainedMiB": [
+      609.48,
+      609.91
+    ],
+    "retainedSpreadMiB": 0.43,
+    "elapsedMs": [
+      1146.4,
+      1206.4
+    ],
+    "elapsedSpreadMs": 60,
+    "deltaFromPrevMiB": [
+      5.42,
+      5.87
+    ]
+  }
+]

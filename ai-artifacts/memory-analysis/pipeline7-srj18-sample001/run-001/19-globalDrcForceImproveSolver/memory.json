@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 1329184768,
+    "heapTotal": 758468608,
+    "heapUsed": 639086791,
+    "external": 540430887,
+    "arrayBuffers": 191610
+  },
+  "afterGcMemory": {
+    "rss": 1200021504,
+    "heapTotal": 232753152,
+    "heapUsed": 639086791,
+    "external": 540006664,
+    "arrayBuffers": 191610
+  },
+  "afterSnapshotMemory": {
+    "rss": 1449160704,
+    "heapTotal": 232753152,
+    "heapUsed": 639086791,
+    "external": 540039089,
+    "arrayBuffers": 191610
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1450340352,
+    "heapTotal": 232753152,
+    "heapUsed": 639086791,
+    "external": 539378652,
+    "arrayBuffers": 191610
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 250318848,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -628012,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 16,
+  "solverName": "GlobalDrcForceImproveSolver",
+  "elapsedMs": 1146.436744999999
+}

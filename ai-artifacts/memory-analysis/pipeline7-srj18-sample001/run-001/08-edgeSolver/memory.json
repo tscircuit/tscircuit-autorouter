@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 669159424,
+    "heapTotal": 73416704,
+    "heapUsed": 49389273,
+    "external": 10775038,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 669683712,
+    "heapTotal": 62259200,
+    "heapUsed": 57688678,
+    "external": 11224769,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 737374208,
+    "heapTotal": 62259200,
+    "heapUsed": 57688678,
+    "external": 11222036,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 737767424,
+    "heapTotal": 62259200,
+    "heapUsed": 57688678,
+    "external": 10844295,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 68083712,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -380474,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1477,
+  "solverName": "CapacityMeshEdgeSolver2_NodeTreeOptimization",
+  "elapsedMs": 39.175694000001386
+}

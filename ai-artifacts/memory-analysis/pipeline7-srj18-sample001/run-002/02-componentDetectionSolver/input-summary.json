@@ -1,0 +1,49 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 1,
+      "keys": [
+        "inputSrj"
+      ],
+      "sample": {
+        "inputSrj": {
+          "type": "SimpleRouteJson",
+          "id": "sample001",
+          "layerCount": 2,
+          "connectionCount": 224,
+          "obstacleCount": 305,
+          "traceCount": 0,
+          "bounds": {
+            "type": "Object",
+            "keyCount": 4,
+            "keys": [
+              "minX",
+              "maxX",
+              "minY",
+              "maxY"
+            ],
+            "sample": {
+              "minX": -35.29,
+              "maxX": 35.29,
+              "minY": -27.67,
+              "maxY": 27.67
+            }
+          },
+          "connectionNames": [
+            "source_trace_0",
+            "source_trace_1",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_4",
+            "source_trace_5",
+            "source_trace_6",
+            "source_trace_7"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 665759744,
+    "heapTotal": 87149568,
+    "heapUsed": 47763174,
+    "external": 10785337,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 623472640,
+    "heapTotal": 58017792,
+    "heapUsed": 50081702,
+    "external": 10641689,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 694067200,
+    "heapTotal": 58017792,
+    "heapUsed": 50081702,
+    "external": 10646328,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 694460416,
+    "heapTotal": 58017792,
+    "heapUsed": 50081702,
+    "external": 10632788,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 70987776,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -8901,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 8419,
+  "solverName": "RectDiffPipeline",
+  "elapsedMs": 273.3793430000005
+}

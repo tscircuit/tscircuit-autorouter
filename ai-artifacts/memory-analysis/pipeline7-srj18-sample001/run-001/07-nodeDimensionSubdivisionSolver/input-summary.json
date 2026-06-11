@@ -1,0 +1,335 @@
+{
+  "type": "array",
+  "length": 4,
+  "items": [
+    {
+      "type": "array",
+      "length": 1070,
+      "items": [
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_0",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -1.2700000000000014,
+                "y": 9.706000000000001
+              }
+            },
+            "width": 16.625999999999998,
+            "height": 27.148,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_1",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 15.971499999999999,
+                "y": 14.417499999999999
+              }
+            },
+            "width": 17.857,
+            "height": 17.724999999999998,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_2",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -17.3,
+                "y": 7.231999999999999
+              }
+            },
+            "width": 5.58,
+            "height": 7.954,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_3",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -14.599,
+                "y": 17.344499999999996
+              }
+            },
+            "width": 8.232,
+            "height": 10.370999999999999,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_4",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 1.745,
+                "y": -9.779
+              }
+            },
+            "width": 9.01,
+            "height": 10.022,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_5",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 20.2725,
+                "y": -19.987499999999997
+              }
+            },
+            "width": 19.755,
+            "height": 6.585000000000001,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_6",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -26.1175,
+                "y": 0.9900000000000002
+              }
+            },
+            "width": 4.605,
+            "height": 11.24,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "type": "Object",
+          "keyCount": 8,
+          "keys": [
+            "capacityMeshNodeId",
+            "center",
+            "width",
+            "height",
+            "layer",
+            "availableZ",
+            "_containsObstacle",
+            "_containsTarget"
+          ],
+          "sample": {
+            "capacityMeshNodeId": "cmn_7",
+            "center": {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -17.432499999999997,
+                "y": -10.1755
+              }
+            },
+            "width": 3.6050000000000004,
+            "height": 10.815,
+            "layer": "top",
+            "availableZ": {
+              "type": "array",
+              "length": 2,
+              "items": [
+                0,
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    16,
+    6,
+    0.010000000000000002
+  ]
+}

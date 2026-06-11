@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 184401920,
+    "heapTotal": 45654016,
+    "heapUsed": 46064086,
+    "external": 10031910,
+    "arrayBuffers": 0
+  },
+  "afterGcMemory": {
+    "rss": 184840192,
+    "heapTotal": 42426368,
+    "heapUsed": 46064086,
+    "external": 9955865,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotMemory": {
+    "rss": 645361664,
+    "heapTotal": 42346496,
+    "heapUsed": 46064086,
+    "external": 10016616,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 645754880,
+    "heapTotal": 42346496,
+    "heapUsed": 46064086,
+    "external": 10014487,
+    "arrayBuffers": 0
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 460914688,
+    "heapTotal": -79872,
+    "heapUsed": 0,
+    "external": 58622,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1,
+  "solverName": "PreprocessSimpleRouteJsonSolver",
+  "elapsedMs": 2.555597000000006
+}

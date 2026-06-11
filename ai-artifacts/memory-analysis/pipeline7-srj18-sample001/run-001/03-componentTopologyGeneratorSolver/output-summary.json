@@ -1,0 +1,335 @@
+{
+  "type": "array",
+  "length": 29,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:center",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -13.335,
+            "y": 7.62
+          }
+        },
+        "width": 2.3499999999999996,
+        "height": 2.5999999999999996,
+        "layer": "z0,1",
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "_soicRegionType": "center",
+        "_containsObstacle": false
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:0:z0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -14.31,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z0",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            0
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:0:z1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -14.31,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z1",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            1
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:1:z0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -13.66,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z0",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            0
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:1:z1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -13.66,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z1",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            1
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:2:z0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -13.01,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z0",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            0
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:2:z1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -13.01,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z1",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            1
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 8,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "layer",
+        "availableZ",
+        "_soicRegionType",
+        "_containsObstacle"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "soic:pcb_component_29:pad:3:z0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -12.36,
+            "y": 5.5075
+          }
+        },
+        "width": 0.3999999999999986,
+        "height": 1.625,
+        "layer": "z0",
+        "availableZ": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            0
+          ]
+        },
+        "_soicRegionType": "pad",
+        "_containsObstacle": true
+      }
+    }
+  ]
+}

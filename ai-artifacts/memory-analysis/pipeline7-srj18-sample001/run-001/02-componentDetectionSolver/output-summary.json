@@ -1,0 +1,37 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 3,
+      "keys": [
+        "componentId",
+        "componentKind",
+        "bounds"
+      ],
+      "sample": {
+        "componentId": "pcb_component_29",
+        "componentKind": "soic",
+        "bounds": {
+          "type": "Object",
+          "keyCount": 5,
+          "keys": [
+            "__type",
+            "minX",
+            "maxX",
+            "minY",
+            "maxY"
+          ],
+          "sample": {
+            "__type": "rect",
+            "minX": -14.51,
+            "maxX": -12.16,
+            "minY": 4.695,
+            "maxY": 10.545
+          }
+        }
+      }
+    }
+  ]
+}

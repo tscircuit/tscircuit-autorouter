@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 1325514752,
+    "heapTotal": 224965632,
+    "heapUsed": 629558341,
+    "external": 536916757,
+    "arrayBuffers": 180338
+  },
+  "afterGcMemory": {
+    "rss": 1325907968,
+    "heapTotal": 224850944,
+    "heapUsed": 629558341,
+    "external": 536918824,
+    "arrayBuffers": 180338
+  },
+  "afterSnapshotMemory": {
+    "rss": 1344557056,
+    "heapTotal": 224850944,
+    "heapUsed": 629558341,
+    "external": 536917517,
+    "arrayBuffers": 180338
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1345212416,
+    "heapTotal": 224850944,
+    "heapUsed": 629558341,
+    "external": 536912590,
+    "arrayBuffers": 180338
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 19304448,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -6234,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1,
+  "solverName": "Pipeline4HighDensityRepairSolver",
+  "elapsedMs": 0.16054599999915808
+}

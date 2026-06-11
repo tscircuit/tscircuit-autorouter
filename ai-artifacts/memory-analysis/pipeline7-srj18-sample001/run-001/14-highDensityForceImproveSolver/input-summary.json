@@ -1,0 +1,557 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 5,
+      "keys": [
+        "nodeWithPortPoints",
+        "hdRoutes",
+        "colorMap",
+        "totalStepsPerNode",
+        "nodeAssignmentMargin"
+      ],
+      "sample": {
+        "nodeWithPortPoints": {
+          "type": "array",
+          "length": 540,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "hdRoutes": {
+          "type": "array",
+          "length": 1213,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_119__source_trace_120__source_trace_121__source_trace_122__source_trace_123__source_trace_124__source_trace_125__source_trace_126__source_trace_127__source_trace_128__source_trace_129__source_trace_130__source_trace_131__source_trace_132__source_trace_133__source_trace_134__source_trace_135__source_trace_136__source_trace_137__source_trace_138__source_trace_139__source_trace_140__source_net_11_mst15",
+                "rootConnectionName": "source_trace_119__source_trace_120__source_trace_121__source_trace_122__source_trace_123__source_trace_124__source_trace_125__source_trace_126__source_trace_127__source_trace_128__source_trace_129__source_trace_130__source_trace_131__source_trace_132__source_trace_133__source_trace_134__source_trace_135__source_trace_136__source_trace_137__source_trace_138__source_trace_139__source_trace_140__source_net_11",
+                "regionId": "soic:pcb_component_29:center",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst4",
+                "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+                "regionId": "new-cmn_559-280",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst9",
+                "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+                "regionId": "new-cmn_558-279",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst9",
+                "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+                "regionId": "new-cmn_557-278",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_37__source_trace_38__source_trace_39__source_trace_40__source_trace_41__source_trace_42__source_trace_43__source_trace_44__source_net_39_mst3",
+                "rootConnectionName": "source_trace_37__source_trace_38__source_trace_39__source_trace_40__source_trace_41__source_trace_42__source_trace_43__source_trace_44__source_net_39",
+                "regionId": "new-cmn_364-268",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_144__source_trace_145__source_net_16_mst1",
+                "rootConnectionName": "source_trace_144__source_trace_145__source_net_16",
+                "regionId": "new-cmn_351-266",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "route",
+                "traceThickness",
+                "viaDiameter",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_107__source_trace_108__source_trace_109__source_trace_110__source_trace_111__source_net_13_mst4",
+                "rootConnectionName": "source_trace_107__source_trace_108__source_trace_109__source_trace_110__source_trace_111__source_net_13",
+                "regionId": "new-cmn_317-262",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "regionId",
+                "traceThickness",
+                "viaDiameter",
+                "route",
+                "vias"
+              ],
+              "sample": {
+                "connectionName": "source_trace_25__source_trace_26__source_trace_27__source_trace_28__source_net_7_mst3",
+                "rootConnectionName": "source_trace_25__source_trace_26__source_trace_27__source_trace_28__source_net_7",
+                "regionId": "new-cmn_211-255",
+                "traceThickness": 0.1,
+                "viaDiameter": 0.3,
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "colorMap": {
+          "type": "Object",
+          "keyCount": 163,
+          "keys": [
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3",
+            "source_trace_153__source_net_29",
+            "source_trace_152__source_net_30"
+          ],
+          "sample": {
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "hsl(0, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1": "hsl(2.085889570552147, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2": "hsl(4.171779141104294, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3": "hsl(6.257668711656442, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0": "hsl(8.343558282208589, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1": "hsl(10.429447852760736, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2": "hsl(12.515337423312884, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3": "hsl(14.60122699386503, 100%, 50%)",
+            "source_trace_153__source_net_29": "hsl(16.687116564417177, 100%, 50%)",
+            "source_trace_152__source_net_30": "hsl(18.773006134969325, 100%, 50%)"
+          }
+        },
+        "totalStepsPerNode": 20,
+        "nodeAssignmentMargin": 0.2
+      }
+    }
+  ]
+}

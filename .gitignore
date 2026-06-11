@@ -193,5 +193,7 @@ benchmark-result.json
 profile-solvers.json
 result-*
 tmp
+!ai-artifacts/
+!ai-artifacts/**
 
 *.received.svg

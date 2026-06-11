@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 1348947968,
+    "heapTotal": 234005504,
+    "heapUsed": 632084764,
+    "external": 538394003,
+    "arrayBuffers": 191610
+  },
+  "afterGcMemory": {
+    "rss": 1349603328,
+    "heapTotal": 230941696,
+    "heapUsed": 633407790,
+    "external": 538285831,
+    "arrayBuffers": 191610
+  },
+  "afterSnapshotMemory": {
+    "rss": 1544056832,
+    "heapTotal": 230941696,
+    "heapUsed": 633407790,
+    "external": 538398480,
+    "arrayBuffers": 191610
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1544187904,
+    "heapTotal": 230941696,
+    "heapUsed": 633407790,
+    "external": 538527497,
+    "arrayBuffers": 191610
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 194584576,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": 241666,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 164,
+  "solverName": "TraceWidthSolver",
+  "elapsedMs": 119.89435299999604
+}

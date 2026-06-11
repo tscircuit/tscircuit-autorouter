@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 635027456,
+    "heapTotal": 42659840,
+    "heapUsed": 46014494,
+    "external": 10022542,
+    "arrayBuffers": 0
+  },
+  "afterGcMemory": {
+    "rss": 635027456,
+    "heapTotal": 42610688,
+    "heapUsed": 46014494,
+    "external": 10154473,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotMemory": {
+    "rss": 598523904,
+    "heapTotal": 42610688,
+    "heapUsed": 46014494,
+    "external": 10154223,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 598917120,
+    "heapTotal": 42610688,
+    "heapUsed": 46014494,
+    "external": 10155291,
+    "arrayBuffers": 0
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": -36110336,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": 818,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 6,
+  "solverName": "ComponentDetectionSolver",
+  "elapsedMs": 3.1816650000000664
+}

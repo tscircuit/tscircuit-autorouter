@@ -80,6 +80,20 @@ type LoadedTinyGraph = {
   }
 }
 
+export type TinyHypergraphMemoryCheckpoint = {
+  label: string
+  stats?: Record<string, number | string | boolean | null | undefined>
+}
+
+type TinyHypergraphMemoryInstrumentation = (
+  checkpoint: TinyHypergraphMemoryCheckpoint,
+) => void
+
+type InstrumentedHgPortPointPathingSolverParams =
+  HgPortPointPathingSolverParams & {
+    __memoryInstrumentation?: TinyHypergraphMemoryInstrumentation
+  }
+
 const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
   typeof metadata === "object" && metadata !== null
     ? (metadata as TinyRegionMetadata)
@@ -734,15 +748,38 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
+  private readonly memoryInstrumentation?: TinyHypergraphMemoryInstrumentation
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    this.memoryInstrumentation = (
+      params as InstrumentedHgPortPointPathingSolverParams
+    ).__memoryInstrumentation
+    this.recordMemoryCheckpoint("constructor:start", {
+      regionCount: params.graph.regions.length,
+      portCount: params.graph.ports.length,
+      connectionCount: params.connections.length,
+      layerCount: params.layerCount,
+      effort: params.effort,
+    })
     const serializedGraph = buildSerializedTinyGraph(params)
+    this.recordMemoryCheckpoint("constructor:after-buildSerializedTinyGraph", {
+      serializedRegionCount: serializedGraph.regions.length,
+      serializedPortCount: serializedGraph.ports.length,
+      serializedConnectionCount: serializedGraph.connections.length,
+      serializedSolvedRouteCount: serializedGraph.solvedRoutes?.length ?? 0,
+    })
     const shouldRunDuplicateCongestedPortPrepass =
       params.connections.length <=
       MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
+      this.recordMemoryCheckpoint(
+        "constructor:before-duplicateCongestedPortPrepass",
+        {
+          connectionCount: params.connections.length,
+        },
+      )
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
         serializedGraph,
         {
@@ -767,8 +804,25 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
       }
+      this.recordMemoryCheckpoint(
+        "constructor:after-duplicateCongestedPortPrepass",
+        {
+          duplicatedPortSourceCount:
+            this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
+          duplicatedPortCount:
+            this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
+              (sum, duplicatedPort) =>
+                sum + duplicatedPort.duplicatePortIds.length,
+              0,
+            ) ?? 0,
+          duplicatePrepassFailed: duplicateCongestedPortSolver.failed,
+        },
+      )
     } else {
       this.duplicateCongestedPortError = `Skipped for ${params.connections.length} connections`
+      this.recordMemoryCheckpoint("constructor:skip-duplicateCongestedPortPrepass", {
+        connectionCount: params.connections.length,
+      })
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -783,8 +837,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.effort,
       params.minViaPadDiameter,
     )
+    this.recordMemoryCheckpoint("constructor:after-createTinyPipelineInput", {
+      solvedRouteCount:
+        tinyPipelineInput.serializedHyperGraph.solvedRoutes?.length ?? 0,
+      maxIterations: getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput),
+    })
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput)
+    this.recordMemoryCheckpoint("constructor:after-createTinyPipelineSolver")
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput)
 
@@ -796,6 +856,19 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params,
       graphForTiny,
     )
+    this.recordMemoryCheckpoint("constructor:after-buildInputNodesWithPortPoints", {
+      inputNodeCount: this.inputNodeWithPortPoints.length,
+      inputPortPointCount: this.inputNodeWithPortPoints.reduce(
+        (sum, node) => sum + node.portPoints.length,
+        0,
+      ),
+    })
+    this.recordMemoryCheckpoint("constructor:end", {
+      duplicatedPortCount: this.duplicatedPortCount,
+      duplicateCongestedPortFallbackToOriginal: Boolean(
+        this.duplicateCongestedPortError,
+      ),
+    })
   }
 
   getSolverName(): string {
@@ -852,6 +925,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   preview(): GraphicsObject {
     return this.visualize()
+  }
+
+  private recordMemoryCheckpoint(
+    label: string,
+    stats?: Record<string, number | string | boolean | null | undefined>,
+  ) {
+    this.memoryInstrumentation?.({
+      label,
+      stats,
+    })
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {

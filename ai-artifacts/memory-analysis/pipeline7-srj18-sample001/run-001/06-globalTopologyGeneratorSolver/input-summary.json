@@ -1,0 +1,49 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 1,
+      "keys": [
+        "simpleRouteJson"
+      ],
+      "sample": {
+        "simpleRouteJson": {
+          "type": "SimpleRouteJson",
+          "id": "sample001",
+          "layerCount": 2,
+          "connectionCount": 163,
+          "obstacleCount": 298,
+          "traceCount": 0,
+          "bounds": {
+            "type": "Object",
+            "keyCount": 4,
+            "keys": [
+              "minX",
+              "maxX",
+              "minY",
+              "maxY"
+            ],
+            "sample": {
+              "minX": -35.29,
+              "maxX": 35.29,
+              "minY": -27.67,
+              "maxY": 27.67
+            }
+          },
+          "connectionNames": [
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3"
+          ]
+        }
+      }
+    }
+  ]
+}

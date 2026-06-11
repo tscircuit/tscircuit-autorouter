@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 558174208,
+    "heapTotal": 47234048,
+    "heapUsed": 45204416,
+    "external": 8586624,
+    "arrayBuffers": 0
+  },
+  "afterGcMemory": {
+    "rss": 558174208,
+    "heapTotal": 43432960,
+    "heapUsed": 45204416,
+    "external": 8532055,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotMemory": {
+    "rss": 599142400,
+    "heapTotal": 43105280,
+    "heapUsed": 45204416,
+    "external": 8539966,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 599535616,
+    "heapTotal": 43105280,
+    "heapUsed": 45204416,
+    "external": 8497354,
+    "arrayBuffers": 0
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 41361408,
+    "heapTotal": -327680,
+    "heapUsed": 0,
+    "external": -34701,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 63,
+  "solverName": "NetToPointPairsSolver2_OffBoardConnection",
+  "elapsedMs": 6.754789000000528
+}

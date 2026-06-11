@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 1011073024,
+    "heapTotal": 271398912,
+    "heapUsed": 629553142,
+    "external": 537379223,
+    "arrayBuffers": 180338
+  },
+  "afterGcMemory": {
+    "rss": 928731136,
+    "heapTotal": 225359872,
+    "heapUsed": 631014855,
+    "external": 537349308,
+    "arrayBuffers": 180338
+  },
+  "afterSnapshotMemory": {
+    "rss": 1423998976,
+    "heapTotal": 225343488,
+    "heapUsed": 631014855,
+    "external": 537465768,
+    "arrayBuffers": 180338
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1424654336,
+    "heapTotal": 225343488,
+    "heapUsed": 631014855,
+    "external": 537366720,
+    "arrayBuffers": 180338
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 495923200,
+    "heapTotal": -16384,
+    "heapUsed": 0,
+    "external": 17412,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1389,
+  "solverName": "MultipleHighDensityRouteStitchSolver3",
+  "elapsedMs": 57.19632499999716
+}

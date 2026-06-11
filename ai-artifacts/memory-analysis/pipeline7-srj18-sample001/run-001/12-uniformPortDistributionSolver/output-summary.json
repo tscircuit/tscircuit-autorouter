@@ -1,0 +1,2574 @@
+{
+  "type": "array",
+  "length": 540,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_0__sub_0_0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -5.426500000000001,
+            "y": 2.9190000000000014
+          }
+        },
+        "width": 8.312999999999999,
+        "height": 13.574,
+        "portPoints": {
+          "type": "array",
+          "length": 18,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce5_pp12_z0::0",
+                "x": -3.348250000000001,
+                "y": 9.706000000000003,
+                "z": 0,
+                "connectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42_mst2",
+                "rootConnectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42",
+                "nextPortPointId": "ce7_pp1_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce7_pp1_z1::1",
+                "x": -2.4305,
+                "y": -3.8679999999999994,
+                "z": 1,
+                "connectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42_mst2",
+                "rootConnectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42",
+                "prevPortPointId": "ce5_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce0_pp0_z1::1",
+                "x": -9.583000000000002,
+                "y": -1.6564999999999994,
+                "z": 1,
+                "connectionName": "source_trace_117__source_trace_118__source_net_32_mst1",
+                "rootConnectionName": "source_trace_117__source_trace_118__source_net_32",
+                "nextPortPointId": "ce6_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce6_pp0_z1::1",
+                "x": -3.23925,
+                "y": -3.8679999999999994,
+                "z": 1,
+                "connectionName": "source_trace_117__source_trace_118__source_net_32_mst1",
+                "rootConnectionName": "source_trace_117__source_trace_118__source_net_32",
+                "prevPortPointId": "ce0_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce2_pp0_z1::1",
+                "x": -9.583000000000002,
+                "y": 6.995500000000002,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "nextPortPointId": "ce5_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce5_pp12_z1::1",
+                "x": -5.426500000000001,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "prevPortPointId": "ce2_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce0_pp0_z0::0",
+                "x": -9.583000000000002,
+                "y": -2.7622499999999994,
+                "z": 0,
+                "connectionName": "source_trace_85__source_trace_86__source_net_14_mst1",
+                "rootConnectionName": "source_trace_85__source_trace_86__source_net_14",
+                "nextPortPointId": "ce9_pp0_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce9_pp0_z0::0",
+                "x": -1.2700000000000014,
+                "y": 2.919000000000002,
+                "z": 0,
+                "connectionName": "source_trace_85__source_trace_86__source_net_14_mst1",
+                "rootConnectionName": "source_trace_85__source_trace_86__source_net_14",
+                "prevPortPointId": "ce0_pp0_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 9,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_0__sub_0_1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 2.886499999999998,
+            "y": 2.9190000000000014
+          }
+        },
+        "width": 8.312999999999999,
+        "height": 13.574,
+        "portPoints": {
+          "type": "array",
+          "length": 14,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce14_pp5_z1::1",
+                "x": 5.2261875,
+                "y": -3.867999999999999,
+                "z": 1,
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "nextPortPointId": "ce12_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce12_pp12_z1::1",
+                "x": 4.964749999999998,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "prevPortPointId": "ce14_pp5_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce14_pp3_z0::0",
+                "x": 4.970234375,
+                "y": -3.867999999999999,
+                "z": 0,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "nextPortPointId": "ce12_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce12_pp11_z1::1",
+                "x": 0.8082499999999984,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "prevPortPointId": "ce14_pp3_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce16_pp0_z0::0",
+                "x": 7.042999999999998,
+                "y": -3.6194999999999995,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "nextPortPointId": "ce19_pp8_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce19_pp8_z0::0",
+                "x": 7.042999999999998,
+                "y": 7.630500000000001,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "prevPortPointId": "ce16_pp0_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce9_pp0_z0::0",
+                "x": -1.2700000000000014,
+                "y": 2.919000000000002,
+                "z": 0,
+                "connectionName": "source_trace_85__source_trace_86__source_net_14_mst1",
+                "rootConnectionName": "source_trace_85__source_trace_86__source_net_14",
+                "nextPortPointId": "ce16_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce16_pp0_z1::1",
+                "x": 7.042999999999998,
+                "y": -3.6194999999999995,
+                "z": 1,
+                "connectionName": "source_trace_85__source_trace_86__source_net_14_mst1",
+                "rootConnectionName": "source_trace_85__source_trace_86__source_net_14",
+                "prevPortPointId": "ce9_pp0_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 7,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_0__sub_1_0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -5.426500000000001,
+            "y": 16.493000000000002
+          }
+        },
+        "width": 8.312999999999999,
+        "height": 13.574,
+        "portPoints": {
+          "type": "array",
+          "length": 12,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce22_pp0_z0::0",
+                "x": -9.5735,
+                "y": 23.279999999999998,
+                "z": 0,
+                "connectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42_mst2",
+                "rootConnectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42",
+                "nextPortPointId": "ce5_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce5_pp12_z0::0",
+                "x": -3.348250000000001,
+                "y": 9.706000000000003,
+                "z": 0,
+                "connectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42_mst2",
+                "rootConnectionName": "source_trace_141__source_trace_142__source_trace_143__source_net_42",
+                "prevPortPointId": "ce22_pp0_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce5_pp12_z1::1",
+                "x": -5.426500000000001,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "nextPortPointId": "ce34_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce34_pp0_z1::1",
+                "x": -1.2700000000000014,
+                "y": 16.493000000000002,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "prevPortPointId": "ce5_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce27_pp1_z0::0",
+                "x": -9.144,
+                "y": 23.28,
+                "z": 0,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst2",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "nextPortPointId": "ce34_pp17_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce34_pp17_z0::0",
+                "x": -1.2700000000000014,
+                "y": 21.01766666666667,
+                "z": 0,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst2",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "prevPortPointId": "ce27_pp1_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce25_pp8_z0::0",
+                "x": -9.583,
+                "y": 20.0279375,
+                "z": 0,
+                "connectionName": "source_trace_55__source_trace_56__source_trace_57__source_net_43_mst1",
+                "rootConnectionName": "source_trace_55__source_trace_56__source_trace_57__source_net_43",
+                "nextPortPointId": "ce30_pp2_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce30_pp2_z0::0",
+                "x": -5.4665,
+                "y": 23.279999999999998,
+                "z": 0,
+                "connectionName": "source_trace_55__source_trace_56__source_trace_57__source_net_43_mst1",
+                "rootConnectionName": "source_trace_55__source_trace_56__source_trace_57__source_net_43",
+                "prevPortPointId": "ce25_pp8_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 6,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_0__sub_1_1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 2.886499999999998,
+            "y": 16.493000000000002
+          }
+        },
+        "width": 8.312999999999999,
+        "height": 13.574,
+        "portPoints": {
+          "type": "array",
+          "length": 18,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce34_pp0_z1::1",
+                "x": -1.2700000000000014,
+                "y": 16.493000000000002,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "nextPortPointId": "ce43_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce43_pp0_z1::1",
+                "x": 7.042999999999998,
+                "y": 12.06175,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "prevPortPointId": "ce34_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce12_pp12_z1::1",
+                "x": 4.964749999999998,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "nextPortPointId": "ce42_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce42_pp0_z1::1",
+                "x": 6.779499999999999,
+                "y": 23.279999999999998,
+                "z": 1,
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "prevPortPointId": "ce12_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce12_pp11_z1::1",
+                "x": 0.8082499999999984,
+                "y": 9.706000000000003,
+                "z": 1,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "nextPortPointId": "ce44_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce44_pp12_z1::1",
+                "x": 7.042999999999998,
+                "y": 18.84875,
+                "z": 1,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "prevPortPointId": "ce12_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce34_pp17_z0::0",
+                "x": -1.2700000000000014,
+                "y": 21.01766666666667,
+                "z": 0,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst2",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "nextPortPointId": "ce44_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce44_pp12_z0::0",
+                "x": 7.042999999999998,
+                "y": 21.064375,
+                "z": 0,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst2",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "prevPortPointId": "ce34_pp17_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 9,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_1__sub_0_0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 11.507249999999999,
+            "y": 9.986249999999998
+          }
+        },
+        "width": 8.9285,
+        "height": 8.862499999999999,
+        "portPoints": {
+          "type": "array",
+          "length": 16,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce43_pp0_z1::1",
+                "x": 7.042999999999998,
+                "y": 12.06175,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "nextPortPointId": "ce53_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce53_pp0_z1::1",
+                "x": 15.971499999999999,
+                "y": 7.770624999999999,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "prevPortPointId": "ce43_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce52_pp1_z1::1",
+                "x": 15.777375,
+                "y": 5.555,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "nextPortPointId": "ce53_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce53_pp12_z1::1",
+                "x": 15.971499999999999,
+                "y": 12.201875,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "prevPortPointId": "ce52_pp1_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce19_pp8_z0::0",
+                "x": 7.042999999999998,
+                "y": 7.630500000000001,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "nextPortPointId": "ce46_pp11_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce46_pp11_z0::0",
+                "x": 9.275125,
+                "y": 14.417499999999999,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "prevPortPointId": "ce19_pp8_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce45_pp8_z0::0",
+                "x": 8.468499999999999,
+                "y": 5.555,
+                "z": 0,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "nextPortPointId": "ce46_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce46_pp11_z1::1",
+                "x": 9.275125,
+                "y": 14.417499999999999,
+                "z": 1,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "prevPortPointId": "ce45_pp8_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 8,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_1__sub_0_1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 20.43575,
+            "y": 9.986249999999998
+          }
+        },
+        "width": 8.9285,
+        "height": 8.862499999999999,
+        "portPoints": {
+          "type": "array",
+          "length": 6,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce53_pp0_z1::1",
+                "x": 15.971499999999999,
+                "y": 7.770624999999999,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "nextPortPointId": "ce56_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce56_pp0_z1::1",
+                "x": 18.097499999999997,
+                "y": 5.555,
+                "z": 1,
+                "connectionName": "source_trace_112__source_trace_113__source_net_35_mst1",
+                "rootConnectionName": "source_trace_112__source_trace_113__source_net_35",
+                "prevPortPointId": "ce53_pp0_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce53_pp12_z1::1",
+                "x": 15.971499999999999,
+                "y": 12.201875,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "nextPortPointId": "ce55_pp8_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce55_pp8_z1::1",
+                "x": 20.43575,
+                "y": 14.417499999999999,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "prevPortPointId": "ce53_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce53_pp12_z0::0",
+                "x": 15.971499999999999,
+                "y": 9.986249999999998,
+                "z": 0,
+                "connectionName": "source_trace_74__source_trace_75__source_net_26_mst1",
+                "rootConnectionName": "source_trace_74__source_trace_75__source_net_26",
+                "nextPortPointId": "ce55_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce55_pp12_z0::0",
+                "x": 20.43575,
+                "y": 14.417499999999999,
+                "z": 0,
+                "connectionName": "source_trace_74__source_trace_75__source_net_26_mst1",
+                "rootConnectionName": "source_trace_74__source_trace_75__source_net_26",
+                "prevPortPointId": "ce53_pp12_z0::0"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 3,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_1__sub_1_0",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 11.507249999999999,
+            "y": 18.84875
+          }
+        },
+        "width": 8.9285,
+        "height": 8.862499999999999,
+        "portPoints": {
+          "type": "array",
+          "length": 14,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce44_pp12_z1::1",
+                "x": 7.042999999999998,
+                "y": 18.84875,
+                "z": 1,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "nextPortPointId": "ce71_pp2_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce71_pp2_z1::1",
+                "x": 13.8375,
+                "y": 23.279999999999994,
+                "z": 1,
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "prevPortPointId": "ce44_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce46_pp11_z0::0",
+                "x": 9.275125,
+                "y": 14.417499999999999,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "nextPortPointId": "ce73_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp12_z0::0",
+                "x": 15.971499999999999,
+                "y": 18.84875,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "prevPortPointId": "ce46_pp11_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce46_pp11_z1::1",
+                "x": 9.275125,
+                "y": 14.417499999999999,
+                "z": 1,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "nextPortPointId": "ce73_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp11_z1::1",
+                "x": 15.971499999999999,
+                "y": 16.633125,
+                "z": 1,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "prevPortPointId": "ce46_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce46_pp12_z1::1",
+                "x": 13.739374999999999,
+                "y": 14.417499999999999,
+                "z": 1,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst1",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "nextPortPointId": "ce73_pp12_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp12_z1::1",
+                "x": 15.971499999999999,
+                "y": 21.064375,
+                "z": 1,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst1",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "prevPortPointId": "ce46_pp12_z1::1"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 7,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "capacityMeshNodeId",
+        "center",
+        "width",
+        "height",
+        "portPoints",
+        "portPointsInPairs",
+        "availableZ"
+      ],
+      "sample": {
+        "capacityMeshNodeId": "cmn_1__sub_1_1",
+        "center": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": 20.43575,
+            "y": 18.84875
+          }
+        },
+        "width": 8.9285,
+        "height": 8.862499999999999,
+        "portPoints": {
+          "type": "array",
+          "length": 12,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce55_pp8_z1::1",
+                "x": 20.43575,
+                "y": 14.417499999999999,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "nextPortPointId": "ce79_pp2_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce79_pp2_z1::1",
+                "x": 21.457499999999996,
+                "y": 23.279999999999994,
+                "z": 1,
+                "connectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23_mst1",
+                "rootConnectionName": "source_trace_101__source_trace_102__source_trace_103__source_net_23",
+                "prevPortPointId": "ce55_pp8_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp12_z0::0",
+                "x": 15.971499999999999,
+                "y": 18.84875,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "nextPortPointId": "ce77_pp3_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce77_pp3_z0::0",
+                "x": 19.182499999999997,
+                "y": 23.279999999999994,
+                "z": 0,
+                "connectionName": "source_trace_87__source_trace_88__source_net_22_mst1",
+                "rootConnectionName": "source_trace_87__source_trace_88__source_net_22",
+                "prevPortPointId": "ce73_pp12_z0::0"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp11_z1::1",
+                "x": 15.971499999999999,
+                "y": 16.633125,
+                "z": 1,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "nextPortPointId": "ce84_pp7_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce84_pp7_z1::1",
+                "x": 24.9,
+                "y": 21.354093749999997,
+                "z": 1,
+                "connectionName": "source_trace_83__source_trace_84__source_net_25_mst1",
+                "rootConnectionName": "source_trace_83__source_trace_84__source_net_25",
+                "prevPortPointId": "ce73_pp11_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce73_pp12_z1::1",
+                "x": 15.971499999999999,
+                "y": 21.064375,
+                "z": 1,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst1",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "nextPortPointId": "ce81_pp2_z1::1"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 8,
+              "keys": [
+                "portPointId",
+                "x",
+                "y",
+                "z",
+                "connectionName",
+                "rootConnectionName",
+                "prevPortPointId",
+                "nextPortPointId"
+              ],
+              "sample": {
+                "portPointId": "ce81_pp2_z1::1",
+                "x": 24.089999999999996,
+                "y": 23.279999999999994,
+                "z": 1,
+                "connectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24_mst1",
+                "rootConnectionName": "source_trace_80__source_trace_81__source_trace_82__source_net_24",
+                "prevPortPointId": "ce73_pp12_z1::1"
+              }
+            }
+          ]
+        },
+        "portPointsInPairs": {
+          "type": "array",
+          "length": 6,
+          "items": [
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "length": 2,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          ]
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}
