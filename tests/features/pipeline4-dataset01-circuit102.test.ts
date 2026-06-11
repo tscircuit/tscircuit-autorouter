@@ -67,7 +67,9 @@ test(
     )
 
     expect(explicit8mmMetadata?.status).toBe("solved")
-    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
+    const explicit8mmSolverType = explicit8mmMetadata?.solverType
+    expect(explicit8mmSolverType).toBeDefined()
+    expect(explicit8mmSolverType).toBe("HighDensitySolverA01")
     expect(explicit8mmMetadata?.routeCount).toBe(2)
     expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
       defaultNode.portPoints.length,
@@ -76,6 +78,14 @@ test(
       new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
         .size,
     ).toBe(2)
+    expect(
+      explicit8mmNode.portPoints.map((point) => point.connectionName),
+    ).toEqual([
+      "source_net_2_mst1",
+      "source_net_2_mst1",
+      "source_net_3_mst1",
+      "source_net_3_mst1",
+    ])
     expect(
       explicit8mmNode.portPoints.map((point) => point.connectionName),
     ).not.toEqual(defaultNode.portPoints.map((point) => point.connectionName))
