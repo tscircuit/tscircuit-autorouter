@@ -61,3 +61,32 @@
 - References:
 - [deep-portpoint latest-findings.md](/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny/latest-findings.md:1)
 - [deep-portpoint rollup.json](/home/ohmx/Documents/tscircuit-autorouter/ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny/rollup.json:1)
+
+## 2026-06-11T12:15:00.000Z tiny-hypergraph memory reduction pass
+- Patched the real linked checkout at `/home/ohmx/Documents/tiny-hypergraph` and resynced this repo with `bun install`, so all verification still ran through the repo-local dependency path.
+- In [DuplicateCongestedPortSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/DuplicateCongestedPortSolver.ts:1), replaced full-graph deep cloning with copy-on-write for `regions` and `ports`; only touched region `pointIds` arrays and duplicate-port payloads are cloned deeply now, and `connections` are no longer recursively cloned.
+- In [TinyHyperGraphSectionPipelineSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts:321), added an early skip for `optimizeSection` when the computed section mask is empty and cached section-stage params so the skip path does not recompute stage setup.
+- Added stable constructor-path regression coverage in [tinyhypergraph-portpoint-constructor-memory-regression.test.ts](/home/ohmx/Documents/tscircuit-autorouter/tests/repro/tinyhypergraph-portpoint-constructor-memory-regression.test.ts:1).
+- Verification passed:
+- `bun test ./tests/repro/tinyhypergraph-portpoint-memory-profile.test.ts`
+- `bun test ./tests/repro/tinyhypergraph-portpoint-constructor-memory-regression.test.ts`
+- Latest isolated artifact: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix3`.
+- Result on that run: constructor retained heap at `after-duplicateCongestedPortPrepass` dropped to about `778.5 MiB` after GC, or about `+706.7 MiB` from the prior checkpoint.
+- Result on that run: `optimizeSection` is now explicitly skipped with `sectionOptimizationReason="empty-section-mask"` and `stageStats.optimizeSection.timeSpent=0`, but retained heap after solve is still about `370.6 MiB`.
+- Net: the fixes removed unnecessary cloning and dead section work, but they did not eliminate the dominant constructor spike; the remaining large allocation still sits inside the duplicate-port prepass path before `solveGraph`.
+
+## 2026-06-11T15:45:00.000Z tiny-hypergraph duplicate-prepass collapse
+- Kept the repo-local tiny-hypergraph path and delegated three side reviews; findings are summarized in [handoff.md](/home/ohmx/Documents/tscircuit-autorouter/handoff.md:1).
+- In [DuplicateCongestedPortSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/DuplicateCongestedPortSolver.ts:1), kept the copy-on-write duplicate-port rewrite and enabled `USE_LAZY_ROUTE_HEURISTIC` plus `USE_SPARSE_CANDIDATE_STORAGE` only for the prepass's per-route `TinyHyperGraphSolver` runs.
+- In [TinyHypergraphPortPointPathingSolver.ts](/home/ohmx/Documents/tscircuit-autorouter/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts:1), deferred `inputNodeWithPortPoints` materialization until `getOutput()` so the constructor no longer holds that second full port-point view alive.
+- Verification passed:
+- `bun test ./tests/repro/tinyhypergraph-portpoint-memory-profile.test.ts`
+- `bun test ./tests/repro/tinyhypergraph-portpoint-constructor-memory-regression.test.ts`
+- `bun scripts/analyze-portpoint-tiny-memory.ts --runs 1 --output-root ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix8`
+- Latest isolated artifact: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix8`
+- Result on that run: constructor retained heap at `after-duplicateCongestedPortPrepass` is about `88.3 MiB` after GC, or about `+16.7 MiB` from the prior checkpoint.
+- Comparison to the prior constructor baseline in `deep-portpoint-tiny-postfix3`: about `+706.7 MiB -> +16.7 MiB`, a reduction of roughly `690 MiB`.
+- Result on that run: final retained heap after solve is still about `365.0 MiB`, so the dominant retained allocation has moved from the constructor/prepass into `solveGraph`.
+- Additional review signal:
+- Raw extracted input is only about `3.8 MiB`, which reinforces that the old spike was solver-state amplification rather than payload size.
+- Remaining likely next target is metadata/object duplication in `loadSerializedHyperGraph()` and the main `solveGraph` working state, not the duplicate-port constructor prepass.

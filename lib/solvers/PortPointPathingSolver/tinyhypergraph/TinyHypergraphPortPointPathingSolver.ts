@@ -742,7 +742,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
-  private inputNodeWithPortPoints: InputNodeWithPortPoints[]
+  private inputNodeWithPortPoints?: InputNodeWithPortPoints[]
+  private readonly graphForInputNodes: SerializedHyperGraph
   private originalRegionById: Map<
     CapacityMeshNodeId,
     HgPortPointPathingSolverParams["graph"]["regions"][number]
@@ -852,23 +853,36 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.graph.regions.map((region) => [region.regionId, region]),
     )
     this.originalRegionIds = new Set(this.originalRegionById.keys())
-    this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
-      params,
-      graphForTiny,
+    this.graphForInputNodes = graphForTiny
+    this.recordMemoryCheckpoint(
+      "constructor:after-buildInputNodesWithPortPoints",
+      { deferred: true },
     )
-    this.recordMemoryCheckpoint("constructor:after-buildInputNodesWithPortPoints", {
-      inputNodeCount: this.inputNodeWithPortPoints.length,
-      inputPortPointCount: this.inputNodeWithPortPoints.reduce(
-        (sum, node) => sum + node.portPoints.length,
-        0,
-      ),
-    })
     this.recordMemoryCheckpoint("constructor:end", {
       duplicatedPortCount: this.duplicatedPortCount,
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),
+      inputNodeMaterializationDeferred: true,
     })
+  }
+
+  private getInputNodesWithPortPoints(): InputNodeWithPortPoints[] {
+    if (!this.inputNodeWithPortPoints) {
+      this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
+        this.params,
+        this.graphForInputNodes,
+      )
+      this.recordMemoryCheckpoint("getOutput:after-buildInputNodesWithPortPoints", {
+        inputNodeCount: this.inputNodeWithPortPoints.length,
+        inputPortPointCount: this.inputNodeWithPortPoints.reduce(
+          (sum, node) => sum + node.portPoints.length,
+          0,
+        ),
+      })
+    }
+
+    return this.inputNodeWithPortPoints
   }
 
   getSolverName(): string {
@@ -1062,7 +1076,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     return {
       nodesWithPortPoints,
-      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      inputNodeWithPortPoints: this.getInputNodesWithPortPoints(),
     }
   }
 
