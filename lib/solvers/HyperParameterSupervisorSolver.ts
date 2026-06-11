@@ -14,6 +14,10 @@ export type HyperParameterDef = {
   possibleValues: Array<any>
 }
 
+type ReleasableSolver = {
+  release?: () => void
+}
+
 /**
  * The HyperParameterSupervisorSolver is a solver that solves a problem by
  * running competing solvers with different hyperparameters.
@@ -33,6 +37,10 @@ export class HyperParameterSupervisorSolver<
 
   supervisedSolvers?: Array<SupervisedSolver<T>>
   winningSolver?: T
+
+  private releaseSolver(solver: T | undefined) {
+    ;(solver as (T & ReleasableSolver) | undefined)?.release?.()
+  }
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
     throw new Error("Not implemented")
@@ -168,12 +176,36 @@ export class HyperParameterSupervisorSolver<
       this.solved = true
       this.winningSolver = supervisedSolver.solver
       this.onSolve?.(supervisedSolver)
+      // Drop losing candidate solvers now that a winner is chosen
+      this.release()
+    } else if (supervisedSolver.solver.failed) {
+      // Free the failed candidate's heavy internals (error/iterations kept)
+      this.releaseSolver(supervisedSolver.solver)
     }
   }
 
   onSolve(solver: SupervisedSolver<T>) {}
 
+  /**
+   * Drop references to candidate solvers so they can be garbage collected.
+   * Keeps `winningSolver` (if any) and preserves `error`, `stats`,
+   * `iterations` and `progress`. Only call once this solver will no longer
+   * be stepped (any error message has already been computed by then).
+   */
+  release() {
+    for (const supervisedSolver of this.supervisedSolvers ?? []) {
+      if (supervisedSolver.solver !== this.winningSolver) {
+        this.releaseSolver(supervisedSolver.solver)
+      }
+    }
+    this.supervisedSolvers = undefined
+    this.activeSubSolver = null
+  }
+
   visualize(): GraphicsObject {
+    if (this.winningSolver) {
+      return this.winningSolver.visualize()
+    }
     const bestSupervisedSolver = this.getSupervisedSolverWithBestFitness()
     let graphics: GraphicsObject = {
       lines: [],

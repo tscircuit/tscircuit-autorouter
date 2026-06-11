@@ -239,6 +239,13 @@ export class CachedIntraNodeRouteSolver
       console.error("Error saving solution to cache:", error)
     }
   }
+
+  release() {
+    super.release()
+    this.initialUnsolvedConnections = []
+    this.cacheProvider = null
+    this.hasAttemptedToUseCache = true
+  }
 }
 
 export type { CachedSolvedIntraNodeRouteSolver }

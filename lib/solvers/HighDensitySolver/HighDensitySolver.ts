@@ -24,6 +24,10 @@ type HighDensityIntraNodeSolver =
   | HyperSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
 
+type ReleasableHighDensityIntraNodeSolver = HighDensityIntraNodeSolver & {
+  release?: () => void
+}
+
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -38,6 +42,10 @@ const connectionLabel = (
   ]
     .filter(Boolean)
     .join("\n")
+
+const releaseSolver = (solver: ReleasableHighDensityIntraNodeSolver | null) => {
+  solver?.release?.()
+}
 
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
@@ -288,6 +296,9 @@ export class HighDensitySolver extends BaseSolver {
       } else if (this.activeSubSolver.failed) {
         this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
         this.recordResizeStats(this.activeSubSolver)
+        // Drop the failed solver's candidate sub-solvers; keeps
+        // nodeWithPortPoints/error/iterations needed for error messages
+        releaseSolver(this.activeSubSolver)
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }

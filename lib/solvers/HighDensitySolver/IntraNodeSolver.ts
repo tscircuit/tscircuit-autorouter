@@ -16,6 +16,9 @@ import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 type ConnectionPoint = { x: number; y: number; z: number }
+type ReleasableSingleHighDensityRouteSolver = SingleHighDensityRouteSolver & {
+  release?: () => void
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -47,6 +50,12 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
   }
 
   return deduped
+}
+
+const releaseSingleRouteSolver = (
+  solver: ReleasableSingleHighDensityRouteSolver | null,
+) => {
+  solver?.release?.()
 }
 
 export class IntraNodeRouteSolver extends BaseSolver {
@@ -484,6 +493,19 @@ export class IntraNodeRouteSolver extends BaseSolver {
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
         this.getSingleRouteSolverOpts(unsolvedConnection),
       )
+  }
+
+  release() {
+    releaseSingleRouteSolver(this.activeSubSolver)
+    for (const failedSubSolver of this.failedSubSolvers) {
+      releaseSingleRouteSolver(failedSubSolver)
+    }
+    this.activeSubSolver = null
+    this.failedSubSolvers = []
+    this.unsolvedConnections = []
+    this.originalConnectionPointsByName = new Map()
+    this.rootConnectionNameByConnectionName = new Map()
+    this.rerouteAttemptsByConnection = new Map()
   }
 
   visualize(): GraphicsObject {

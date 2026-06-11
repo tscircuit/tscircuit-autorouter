@@ -25,6 +25,10 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     fallbackToInvalidGeometryOnFailure?: boolean
   }
 
+type ReleasableHyperSingleIntraNodeSolver = HyperSingleIntraNodeSolver & {
+  release?: () => void
+}
+
 const scalePoint = <T extends { x: number; y: number }>(
   point: T,
   center: { x: number; y: number },
@@ -95,6 +99,12 @@ const connectionLabel = (
   ]
     .filter(Boolean)
     .join("\n")
+
+const releaseHyperSingleSolver = (
+  solver: ReleasableHyperSingleIntraNodeSolver | null,
+) => {
+  solver?.release?.()
+}
 
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -196,6 +206,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
     this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error
+    // Drop the failed attempt's candidate solvers (error/iterations kept)
+    releaseHyperSingleSolver(this.activeSubSolver)
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
@@ -225,6 +237,18 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
     this.growthAttempts++
     this.scaleFactor *= 2
+  }
+
+  /**
+   * Drop candidate solvers held by failed growth attempts so they can be
+   * garbage collected. Keeps the `failedSolvers` entries themselves (their
+   * `error` is preserved) and `winningSolver`.
+   */
+  release() {
+    for (const failedSolver of this.failedSolvers) {
+      releaseHyperSingleSolver(failedSolver)
+    }
+    this.activeSubSolver = null
   }
 
   visualize(): GraphicsObject {
