@@ -1,0 +1,723 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 12,
+      "keys": [
+        "nodePortPoints",
+        "nodePfById",
+        "colorMap",
+        "connMap",
+        "viaDiameter",
+        "traceWidth",
+        "obstacleMargin",
+        "obstacles",
+        "layerCount",
+        "useGrowShrinkHighDensityIntraNodeSolver"
+      ],
+      "sample": {
+        "nodePortPoints": {
+          "type": "array",
+          "length": 541,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_0__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.312999999999999,
+                "height": 13.574,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_0_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_0",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "capacityMeshNodeId",
+                "center",
+                "width",
+                "height",
+                "portPoints",
+                "portPointsInPairs",
+                "availableZ"
+              ],
+              "sample": {
+                "capacityMeshNodeId": "cmn_1__sub_1_1",
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 8.9285,
+                "height": 8.862499999999999,
+                "portPoints": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "portPointsInPairs": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "nodePfById": {
+          "type": "Map",
+          "size": 1476,
+          "entries": [
+            [
+              "cmn_0__sub_0_0",
+              0.14799193699937482
+            ],
+            [
+              "cmn_0__sub_0_1",
+              0.02050858117727235
+            ],
+            [
+              "cmn_0__sub_1_0",
+              0.09474093566931871
+            ],
+            [
+              "cmn_0__sub_1_1",
+              0.24818186020787877
+            ],
+            [
+              "cmn_1__sub_0_0",
+              0.08317868714417381
+            ],
+            [
+              "cmn_1__sub_0_1",
+              0
+            ],
+            [
+              "cmn_1__sub_1_0",
+              0.07751550462806289
+            ],
+            [
+              "cmn_1__sub_1_1",
+              0.06542550899806245
+            ]
+          ]
+        },
+        "colorMap": {
+          "type": "Object",
+          "keyCount": 163,
+          "keys": [
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3",
+            "source_trace_153__source_net_29",
+            "source_trace_152__source_net_30"
+          ],
+          "sample": {
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "hsl(0, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1": "hsl(2.085889570552147, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2": "hsl(4.171779141104294, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3": "hsl(6.257668711656442, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0": "hsl(8.343558282208589, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1": "hsl(10.429447852760736, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2": "hsl(12.515337423312884, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3": "hsl(14.60122699386503, 100%, 50%)",
+            "source_trace_153__source_net_29": "hsl(16.687116564417177, 100%, 50%)",
+            "source_trace_152__source_net_30": "hsl(18.773006134969325, 100%, 50%)"
+          }
+        },
+        "connMap": {
+          "type": "ConnectivityMap",
+          "keyCount": 2,
+          "keys": [
+            "netMap",
+            "idToNetMap"
+          ],
+          "sample": {
+            "netMap": {
+              "type": "Object",
+              "keyCount": 140,
+              "keys": [
+                "connectivity_net0",
+                "connectivity_net1",
+                "connectivity_net2",
+                "connectivity_net3",
+                "connectivity_net4",
+                "connectivity_net5",
+                "connectivity_net6",
+                "connectivity_net7",
+                "connectivity_net8",
+                "connectivity_net9"
+              ],
+              "sample": {
+                "connectivity_net0": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net1": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net2": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net3": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net4": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net5": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net6": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net7": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net8": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net9": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            "idToNetMap": {
+              "type": "Object",
+              "keyCount": 1708,
+              "keys": [
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "source_trace_158",
+                "source_trace_159",
+                "source_trace_160",
+                "source_trace_161",
+                "source_net_17",
+                "1320,508:0",
+                "pcb_port_93",
+                "1381,301:0"
+              ],
+              "sample": {
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "connectivity_net0",
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17": "connectivity_net0",
+                "source_trace_158": "connectivity_net0",
+                "source_trace_159": "connectivity_net0",
+                "source_trace_160": "connectivity_net0",
+                "source_trace_161": "connectivity_net0",
+                "source_net_17": "connectivity_net0",
+                "1320,508:0": "connectivity_net0",
+                "pcb_port_93": "connectivity_net0",
+                "1381,301:0": "connectivity_net0"
+              }
+            }
+          }
+        },
+        "viaDiameter": 0.3,
+        "traceWidth": 0.1,
+        "obstacleMargin": 0.15,
+        "obstacles": {
+          "type": "array",
+          "length": 305,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_0",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.95,
+                "height": 0.8,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_0",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.95,
+                "height": 0.8,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_1",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.975,
+                "height": 1.4,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_1",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.975,
+                "height": 1.4,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.6,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.6,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.3,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.3,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "layerCount": 2,
+        "useGrowShrinkHighDensityIntraNodeSolver": true
+      }
+    }
+  ]
+}

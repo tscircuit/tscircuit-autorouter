@@ -197,3 +197,4 @@ tmp
 !ai-artifacts/**
 
 *.received.svg
+*.heapsnapshot

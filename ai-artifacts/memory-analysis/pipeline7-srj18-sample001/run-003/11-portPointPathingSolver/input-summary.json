@@ -1,0 +1,372 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "graph",
+        "connections",
+        "layerCount",
+        "effort",
+        "minViaPadDiameter",
+        "flags",
+        "weights"
+      ],
+      "sample": {
+        "graph": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "ports",
+            "regions"
+          ],
+          "sample": {
+            "ports": {
+              "type": "array",
+              "length": 14135,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            },
+            "regions": {
+              "type": "array",
+              "length": 1476,
+              "items": [
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                },
+                {
+                  "type": "Object",
+                  "truncated": true
+                }
+              ]
+            }
+          }
+        },
+        "connections": {
+          "type": "array",
+          "length": 163,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+                "mutuallyConnectedNetworkId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+                "mutuallyConnectedNetworkId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+                "mutuallyConnectedNetworkId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+                "mutuallyConnectedNetworkId": "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+                "mutuallyConnectedNetworkId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+                "mutuallyConnectedNetworkId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+                "mutuallyConnectedNetworkId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "connectionId",
+                "mutuallyConnectedNetworkId",
+                "startRegion",
+                "endRegion",
+                "simpleRouteConnection"
+              ],
+              "sample": {
+                "connectionId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3",
+                "mutuallyConnectedNetworkId": "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18",
+                "startRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "endRegion": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "simpleRouteConnection": {
+                  "type": "Object",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "layerCount": 2,
+        "effort": 1,
+        "minViaPadDiameter": 0.3,
+        "flags": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "FORCE_CENTER_FIRST",
+            "RIPPING_ENABLED"
+          ],
+          "sample": {
+            "FORCE_CENTER_FIRST": true,
+            "RIPPING_ENABLED": true
+          }
+        },
+        "weights": {
+          "type": "Object",
+          "keyCount": 18,
+          "keys": [
+            "SHUFFLE_SEED",
+            "MEMORY_PF_FACTOR",
+            "CENTER_OFFSET_DIST_PENALTY_FACTOR",
+            "CENTER_OFFSET_FOCUS_SHIFT",
+            "NODE_PF_FACTOR",
+            "LAYER_CHANGE_COST",
+            "RIPPING_PF_COST",
+            "NODE_PF_MAX_PENALTY",
+            "BASE_CANDIDATE_COST",
+            "MAX_ITERATIONS_PER_PATH"
+          ],
+          "sample": {
+            "SHUFFLE_SEED": 0,
+            "MEMORY_PF_FACTOR": 4,
+            "CENTER_OFFSET_DIST_PENALTY_FACTOR": 0,
+            "CENTER_OFFSET_FOCUS_SHIFT": 0,
+            "NODE_PF_FACTOR": 0,
+            "LAYER_CHANGE_COST": 0,
+            "RIPPING_PF_COST": 0,
+            "NODE_PF_MAX_PENALTY": 100,
+            "BASE_CANDIDATE_COST": 0.6,
+            "MAX_ITERATIONS_PER_PATH": 0
+          }
+        }
+      }
+    }
+  ]
+}

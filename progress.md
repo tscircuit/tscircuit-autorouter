@@ -90,3 +90,50 @@
 - Additional review signal:
 - Raw extracted input is only about `3.8 MiB`, which reinforces that the old spike was solver-state amplification rather than payload size.
 - Remaining likely next target is metadata/object duplication in `loadSerializedHyperGraph()` and the main `solveGraph` working state, not the duplicate-port constructor prepass.
+
+## 2026-06-11T12:06:05+05:30 tiny-hypergraph solvegraph metadata-view pass
+- Created an isolated git worktree at `/tmp/tiny-hypergraph-mem-next` on branch `codex/tiny-mem-next`, used that worktree for patch iteration, then synced the winning patch back into `/home/ohmx/Documents/tiny-hypergraph` and the repo-local `node_modules/tiny-hypergraph` copy used by this autorouter workspace.
+- In [loadSerializedHyperGraph.ts](/home/ohmx/Documents/tiny-hypergraph/lib/compat/loadSerializedHyperGraph.ts:1), replaced eager shallow cloning of `region.d` / `port.d` metadata with lightweight metadata views backed by `Object.create(...)`; these still expose all original fields for visualization and routing but avoid allocating a second full metadata shell per region/port up front.
+- In [convertToSerializedHyperGraph.ts](/home/ohmx/Documents/tiny-hypergraph/lib/compat/convertToSerializedHyperGraph.ts:1), switched metadata copying from object spread to explicit enumerable-key copying so prototype-backed metadata still round-trips with all inherited custom fields preserved.
+- In [TinyHyperGraphSectionPipelineSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts:1) and [index.ts](/home/ohmx/Documents/tiny-hypergraph/lib/section-solver/index.ts:1), replaced replay scoring that built a whole `TinyHyperGraphSectionSolver` just to read `baselineSolver` max-region-cost with direct `createSolvedSolverFromSolution(...)` replay scoring.
+- Added regression coverage in [layer-label.test.ts](/home/ohmx/Documents/tiny-hypergraph/tests/compat/layer-label.test.ts:1) to ensure serialized output still preserves custom region/port metadata fields under the prototype-backed metadata path.
+- Verification passed:
+- `bun test tests/compat/layer-label.test.ts tests/solver/get-output-roundtrip.test.ts tests/solver/section-solver.test.ts` in `/home/ohmx/Documents/tiny-hypergraph`
+- `bun test ./tests/repro/tinyhypergraph-portpoint-memory-profile.test.ts ./tests/repro/tinyhypergraph-portpoint-constructor-memory-regression.test.ts`
+- `bun scripts/analyze-portpoint-tiny-memory.ts --runs 1 --output-root ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix9`
+- Latest isolated artifact: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix9`
+- Result on that run: constructor retained heap at `after-duplicateCongestedPortPrepass` improved slightly from about `88.3 MiB` to about `83.3 MiB` after GC, or from about `+16.7 MiB` to about `+12.2 MiB` versus the prior checkpoint.
+- Result on that run: `solveGraph` retained heap increased slightly from about `306.2 MiB` to about `309.2 MiB`, and final retained heap after solve stayed effectively flat at about `365.0 MiB -> 364.1 MiB`.
+- Net: this pass reduced metadata churn and candidate replay overhead, but it did not materially change the dominant retained `solveGraph` plateau; the next meaningful target is stage/solver state retention rather than more loader micro-optimizations.
+
+## 2026-06-11T12:53:00+05:30 tiny-hypergraph compact hop-slot storage (the big win)
+- Found the root cause of the retained `solveGraph` plateau via three parallel explore agents: `TinyHyperGraphSolver` allocated dense A* best-cost arrays sized `portCount * regionCount` (`candidateBestCostByHopId` Float64Array ~199 MiB + `candidateBestCostGenerationByHopId` Uint32Array ~99 MiB for 14461 ports x 1802 regions), but a hop's `nextRegionId` is always one of the port's <=2 incident regions, so only ~29k of the 26M slots were reachable.
+- In [core.ts](/home/ohmx/Documents/tiny-hypergraph/lib/core.ts:1), re-keyed `getHopId` to `portId * hopSlotStride + incidentRegionSlot` (stride = max incident regions per port, typically 2), shrinking both arrays from ~312 MiB to ~0.4 MiB per solver instance; non-incident hops (defensive case) encode as negative ids routed to a tiny `hopOverflowBestCost` Map cleared on every `resetCandidateBestCosts()`.
+- An adversarial review agent attempted to refute the encoding on 6 axes (call-site incidence, collisions, generation semantics, sparse path, stride edge cases, prepass change) and confirmed it HOLDS on all; the per-route bus-solver goal candidates can theoretically be non-incident, which the overflow map handles exactly.
+- In [DuplicateCongestedPortSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/DuplicateCongestedPortSolver.ts:317), dropped `USE_SPARSE_CANDIDATE_STORAGE: true` for prepass per-route solvers since the compact dense arrays are now strictly better than Maps; prepass constructor delta improved from ~+16.7 to ~+10-12 MiB.
+- Added `releaseTransientSearchState()` to [core.ts](/home/ohmx/Documents/tiny-hypergraph/lib/core.ts:683) (drops `_problemSetup` incl. the eager ~18.9 MiB `portHCostToEndOfRoute`, the hop overflow map, `bestSolvedStateSnapshot`, and clears the candidate queue; everything is lazily rebuilt on demand) and wired it into pipeline `onSolved` hooks for both stages in [TinyHyperGraphSectionPipelineSolver.ts](/home/ohmx/Documents/tiny-hypergraph/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts:393), plus a section-solver-level release in [section-solver/index.ts](/home/ohmx/Documents/tiny-hypergraph/lib/section-solver/index.ts:1070) that drops the section search solver and its snapshots once an optimized solver exists.
+- Cleared `cachedSectionStageParams` on the empty-section-mask skip path so the topology/problem/solution view loaded just for the mask check is not retained.
+- Tried `USE_LAZY_ROUTE_HEURISTIC: true` as pipeline default (postfix12/13): saved ~20 MiB retained but cost ~2s runtime inside the 9.6s `solveGraph` A* search, so it was reverted in favor of eager-heuristic + post-solve release (no runtime cost).
+- Verification passed:
+- `bun run typecheck` and `bun test` (91/91) in `/home/ohmx/Documents/tiny-hypergraph`
+- `bun test ./tests/repro/tinyhypergraph-portpoint-memory-profile.test.ts ./tests/repro/tinyhypergraph-portpoint-constructor-memory-regression.test.ts`
+- `bun scripts/analyze-portpoint-tiny-memory.ts --runs 3 --output-root ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/deep-portpoint-tiny-postfix16`
+- Results (postfix16, 3 runs, vs postfix9 baseline):
+- Final retained heap after getOutput: ~364.1 MiB -> ~113.1-114.8 MiB (-69%).
+- `solveGraph`-era retained delta: ~+226 MiB -> ~+25-32 MiB.
+- Final RSS: ~740 MiB -> ~397-400 MiB (-46%).
+- Runtime: ~11.2s -> ~10.5-10.6s (slightly faster; smaller arrays improve locality).
+- New attribution diagnostic [debug-portpoint-retention.ts](/home/ohmx/Documents/tscircuit-autorouter/scripts/debug-portpoint-retention.ts:1) shows true settled-GC retained heap is ~76.6 MiB; the harness's single synchronous `Bun.gc(true)` under-collects by ~35 MiB, which also explains run-to-run noise like the 85-92 MiB readings in postfix12. Remaining retained state is legitimately needed: solveGraph topology/problem ~12.6 MiB (read by `getOutput()`), serialized output ~3 MiB, wrapper input nodes/params ~10 MiB.
+- Known pre-existing failure unchanged: `tests/features/tinyhypergraph-port-bridge-repro.test.ts` (snapshot, already failing before this pass per handoff residual risks).
+## 2026-06-11T07:56:44.366Z pipeline7 srj18 sample001 run-start
+- Target: `srj18` sample `001` (sample001).
+- Planned runs: 1.
+- Existing runs before start: 2.
+- Output root: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001`.
+
+## 2026-06-11T07:58:13.565Z pipeline7 srj18 sample001 latest-finding
+- Completed 1 run(s). Latest run: `run-003`.
+- Latest status: solved=true failed=false error=none.
+- Latest artifacts: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003`.
+- Rollup: `./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/rollup.json`.
+

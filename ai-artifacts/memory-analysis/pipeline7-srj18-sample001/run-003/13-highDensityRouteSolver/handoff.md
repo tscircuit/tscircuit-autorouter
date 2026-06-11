@@ -1,0 +1,15 @@
+# Handoff: stage 13 `highDensityRouteSolver`
+
+Latest findings:
+- Solver: `HighDensitySolver` with 25690 iterations.
+- Elapsed time: 15858.7ms.
+- Heap used after GC: 131.58 MiB.
+- Heap used after snapshot GC: 131.58 MiB.
+
+References:
+- Input summary: ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003/13-highDensityRouteSolver/input-summary.json
+- Output summary: ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003/13-highDensityRouteSolver/output-summary.json
+- Memory metrics: ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003/13-highDensityRouteSolver/memory.json
+- Heap snapshot: ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003/13-highDensityRouteSolver/13-highDensityRouteSolver.heapsnapshot
+- Prior handoff: ./ai-artifacts/memory-analysis/pipeline7-srj18-sample001/run-003/12-uniformPortDistributionSolver/handoff.md
+

@@ -1,0 +1,545 @@
+{
+  "sampleName": "sample001",
+  "run": {
+    "runLabel": "run-002",
+    "durationMs": 10221.510064999999,
+    "solved": true,
+    "failed": false,
+    "error": null,
+    "currentStage": "none",
+    "checkpoints": [
+      {
+        "label": "run:start",
+        "elapsedMs": 11.416193999999905,
+        "memoryBeforeGc": {
+          "rss": 352448512,
+          "heapTotal": 140928000,
+          "heapUsed": 74554595,
+          "external": 14043939,
+          "arrayBuffers": 169066
+        },
+        "memoryAfterGc": {
+          "rss": 353103872,
+          "heapTotal": 49504256,
+          "heapUsed": 74554595,
+          "external": 13502573,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 353103872,
+          "heapTotal": 49504256,
+          "heapUsed": 74554595,
+          "external": 13502573,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "pid": 46203,
+          "cpuCount": 12
+        }
+      },
+      {
+        "label": "solver:constructor:start",
+        "elapsedMs": 53.885377999999946,
+        "memoryBeforeGc": {
+          "rss": 349556736,
+          "heapTotal": 52404224,
+          "heapUsed": 74554595,
+          "external": 13502573,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 349556736,
+          "heapTotal": 52404224,
+          "heapUsed": 74554595,
+          "external": 14011338,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": -3547136,
+          "heapTotal": 2899968,
+          "heapUsed": 0,
+          "external": 508765,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "regionCount": 1476,
+          "portCount": 14135,
+          "connectionCount": 163,
+          "layerCount": 2,
+          "effort": 1
+        }
+      },
+      {
+        "label": "solver:constructor:after-buildSerializedTinyGraph",
+        "elapsedMs": 68.09435099999996,
+        "memoryBeforeGc": {
+          "rss": 349818880,
+          "heapTotal": 54796288,
+          "heapUsed": 74554595,
+          "external": 14011338,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 349818880,
+          "heapTotal": 54697984,
+          "heapUsed": 74554595,
+          "external": 14087762,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 262144,
+          "heapTotal": 2293760,
+          "heapUsed": 0,
+          "external": 76424,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "serializedRegionCount": 1802,
+          "serializedPortCount": 14461,
+          "serializedConnectionCount": 163,
+          "serializedSolvedRouteCount": 163
+        }
+      },
+      {
+        "label": "solver:constructor:before-duplicateCongestedPortPrepass",
+        "elapsedMs": 76.72733899999992,
+        "memoryBeforeGc": {
+          "rss": 349818880,
+          "heapTotal": 54697984,
+          "heapUsed": 74554595,
+          "external": 14087762,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 349818880,
+          "heapTotal": 54697984,
+          "heapUsed": 74554595,
+          "external": 14087774,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 0,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": 12,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "connectionCount": 163
+        }
+      },
+      {
+        "label": "solver:constructor:after-duplicateCongestedPortPrepass",
+        "elapsedMs": 565.449057,
+        "memoryBeforeGc": {
+          "rss": 404365312,
+          "heapTotal": 173076480,
+          "heapUsed": 87060748,
+          "external": 18834572,
+          "arrayBuffers": 411612
+        },
+        "memoryAfterGc": {
+          "rss": 404627456,
+          "heapTotal": 57216000,
+          "heapUsed": 87060748,
+          "external": 14968325,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 54808576,
+          "heapTotal": 2518016,
+          "heapUsed": 12506153,
+          "external": 880551,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "duplicatedPortSourceCount": 115,
+          "duplicatedPortCount": 201,
+          "duplicatePrepassFailed": false
+        }
+      },
+      {
+        "label": "solver:constructor:after-createTinyPipelineInput",
+        "elapsedMs": 574.4593579999998,
+        "memoryBeforeGc": {
+          "rss": 404758528,
+          "heapTotal": 57216000,
+          "heapUsed": 87060748,
+          "external": 14968325,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405020672,
+          "heapTotal": 57216000,
+          "heapUsed": 87060748,
+          "external": 14973527,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 393216,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": 5202,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "solvedRouteCount": 163,
+          "maxIterations": 4000000
+        }
+      },
+      {
+        "label": "solver:constructor:after-createTinyPipelineSolver",
+        "elapsedMs": 584.584705,
+        "memoryBeforeGc": {
+          "rss": 405020672,
+          "heapTotal": 57232384,
+          "heapUsed": 87060748,
+          "external": 14973527,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405020672,
+          "heapTotal": 57232384,
+          "heapUsed": 87060748,
+          "external": 14976667,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 0,
+          "heapTotal": 16384,
+          "heapUsed": 0,
+          "external": 3140,
+          "arrayBuffers": 0
+        }
+      },
+      {
+        "label": "solver:constructor:after-buildInputNodesWithPortPoints",
+        "elapsedMs": 594.5576169999999,
+        "memoryBeforeGc": {
+          "rss": 405151744,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976667,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405151744,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976863,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 131072,
+          "heapTotal": 16384,
+          "heapUsed": 0,
+          "external": 196,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "deferred": true
+        }
+      },
+      {
+        "label": "solver:constructor:end",
+        "elapsedMs": 603.0438959999999,
+        "memoryBeforeGc": {
+          "rss": 405151744,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976863,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405282816,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976863,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 131072,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": 0,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "duplicatedPortCount": 201,
+          "duplicateCongestedPortFallbackToOriginal": false,
+          "inputNodeMaterializationDeferred": true
+        }
+      },
+      {
+        "label": "solver:constructed",
+        "elapsedMs": 611.739847,
+        "memoryBeforeGc": {
+          "rss": 405282816,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976863,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405282816,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976867,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 0,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": 4,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "maxIterations": 4000000
+        }
+      },
+      {
+        "label": "solver:stage:unstarted",
+        "elapsedMs": 620.61185,
+        "memoryBeforeGc": {
+          "rss": 405282816,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976867,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 405413888,
+          "heapTotal": 57248768,
+          "heapUsed": 87060748,
+          "external": 14976867,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 131072,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": 0,
+          "arrayBuffers": 0
+        }
+      },
+      {
+        "label": "solver:stage:solveGraph",
+        "elapsedMs": 692.263762,
+        "memoryBeforeGc": {
+          "rss": 408358912,
+          "heapTotal": 75226112,
+          "heapUsed": 87060748,
+          "external": 14976867,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 408489984,
+          "heapTotal": 64934912,
+          "heapUsed": 87060748,
+          "external": 15984635,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 3076096,
+          "heapTotal": 7686144,
+          "heapUsed": 0,
+          "external": 1007768,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "iterations": 1
+        }
+      },
+      {
+        "label": "solver:stage:optimizeSection",
+        "elapsedMs": 10103.293882,
+        "memoryBeforeGc": {
+          "rss": 408993792,
+          "heapTotal": 220094464,
+          "heapUsed": 118736592,
+          "external": 30007584,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 409387008,
+          "heapTotal": 74045440,
+          "heapUsed": 118736592,
+          "external": 13969173,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 897024,
+          "heapTotal": 9110528,
+          "heapUsed": 31675844,
+          "external": -2015462,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "iterations": 2000001
+        }
+      },
+      {
+        "label": "solver:stage:none",
+        "elapsedMs": 10167.293146,
+        "memoryBeforeGc": {
+          "rss": 422494208,
+          "heapTotal": 91248640,
+          "heapUsed": 118736592,
+          "external": 13969173,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 419450880,
+          "heapTotal": 80808960,
+          "heapUsed": 118736592,
+          "external": 14543207,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 10063872,
+          "heapTotal": 6763520,
+          "heapUsed": 0,
+          "external": 574034,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "iterations": 2000002
+        }
+      },
+      {
+        "label": "solver:after-solve",
+        "elapsedMs": 10180.720927999999,
+        "memoryBeforeGc": {
+          "rss": 419450880,
+          "heapTotal": 80809984,
+          "heapUsed": 118736592,
+          "external": 14543207,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 419713024,
+          "heapTotal": 80760832,
+          "heapUsed": 118736592,
+          "external": 14550809,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 262144,
+          "heapTotal": -48128,
+          "heapUsed": 0,
+          "external": 7602,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "solved": true,
+          "failed": false,
+          "iterations": 2000003
+        }
+      },
+      {
+        "label": "solver:getOutput:after-buildInputNodesWithPortPoints",
+        "elapsedMs": 10207.722645,
+        "memoryBeforeGc": {
+          "rss": 420106240,
+          "heapTotal": 86282240,
+          "heapUsed": 118736592,
+          "external": 14550809,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 420106240,
+          "heapTotal": 85659648,
+          "heapUsed": 118736592,
+          "external": 14632591,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 393216,
+          "heapTotal": 4898816,
+          "heapUsed": 0,
+          "external": 81782,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "inputNodeCount": 1476,
+          "inputPortPointCount": 28672
+        }
+      },
+      {
+        "label": "solver:after-getOutput",
+        "elapsedMs": 10221.113244,
+        "memoryBeforeGc": {
+          "rss": 420106240,
+          "heapTotal": 85659648,
+          "heapUsed": 118736592,
+          "external": 14632591,
+          "arrayBuffers": 0
+        },
+        "memoryAfterGc": {
+          "rss": 420106240,
+          "heapTotal": 85659648,
+          "heapUsed": 118736592,
+          "external": 14628244,
+          "arrayBuffers": 0
+        },
+        "deltaFromPreviousAfterGc": {
+          "rss": 0,
+          "heapTotal": 0,
+          "heapUsed": 0,
+          "external": -4347,
+          "arrayBuffers": 0
+        },
+        "stats": {
+          "nodeCount": 541,
+          "inputNodeCount": 1476
+        }
+      }
+    ],
+    "stats": {
+      "duplicateCongestedPortSourceCount": 115,
+      "duplicateCongestedPortCount": 201,
+      "duplicateCongestedPortFallbackToOriginal": false,
+      "duplicateCongestedPortPenalty": 150,
+      "duplicateCongestedPortPenaltyCount": 201,
+      "metadataPortPenaltyCount": 824,
+      "crampedPortPenalty": 150,
+      "crampedPortPenaltyCount": 836,
+      "sectionMaskPortCount": 0,
+      "activeRouteCount": 0,
+      "optimized": false,
+      "sectionOptimizationSkipped": true,
+      "sectionOptimizationReason": "empty-section-mask",
+      "currentRipThreshold": 0.575,
+      "hotRegionCount": 5,
+      "maxRegionCost": 1.2149269875608433,
+      "totalRegionCost": 11.672043231793776,
+      "bestMaxRegionCost": 1.2149269875608433,
+      "bestTotalRegionCost": 11.672043231793776,
+      "ripCount": 8,
+      "maxRegionCostBeforeRip": 40.37708674304419,
+      "reripRegionCount": 5,
+      "neverSuccessfullyRoutedRouteCount": 0,
+      "acceptedBestSolutionOnTimeout": true,
+      "currentStage": "none",
+      "stageStats": {
+        "solveGraph": {
+          "timeSpent": 9379.073088000001,
+          "iterations": 0,
+          "completed": true
+        },
+        "optimizeSection": {
+          "timeSpent": 0,
+          "iterations": 0,
+          "completed": true
+        }
+      }
+    },
+    "outputSummary": {
+      "nodeCount": 541,
+      "inputNodeCount": 1476,
+      "routedPortPointCount": 2404,
+      "inputPortPointCount": 28672
+    }
+  }
+}

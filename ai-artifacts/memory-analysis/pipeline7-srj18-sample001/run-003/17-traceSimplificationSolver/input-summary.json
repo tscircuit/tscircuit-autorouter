@@ -1,0 +1,760 @@
+{
+  "type": "array",
+  "length": 1,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 9,
+      "keys": [
+        "hdRoutes",
+        "obstacles",
+        "connMap",
+        "colorMap",
+        "outline",
+        "defaultViaDiameter",
+        "layerCount",
+        "minTraceToPadEdgeClearance",
+        "iterations"
+      ],
+      "sample": {
+        "hdRoutes": {
+          "type": "array",
+          "length": 163,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_99__source_trace_100__source_net_55_mst1",
+                "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_99__source_trace_100__source_net_55_mst0",
+                "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_97__source_trace_98__source_net_54_mst1",
+                "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_97__source_trace_98__source_net_54_mst0",
+                "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_95__source_trace_96__source_net_48_mst0",
+                "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "connectionName",
+                "rootConnectionName",
+                "route",
+                "vias",
+                "jumpers",
+                "viaDiameter",
+                "traceThickness"
+              ],
+              "sample": {
+                "connectionName": "source_trace_93__source_trace_94__source_net_20_mst0",
+                "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+                "route": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "vias": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "jumpers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "viaDiameter": 0.3,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "obstacles": {
+          "type": "array",
+          "length": 305,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_0",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.95,
+                "height": 0.8,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_0",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.95,
+                "height": 0.8,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_1",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.975,
+                "height": 1.4,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_1",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 0.975,
+                "height": 1.4,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.6,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.6,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.3,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 7,
+              "keys": [
+                "componentId",
+                "type",
+                "layers",
+                "center",
+                "width",
+                "height",
+                "connectedTo"
+              ],
+              "sample": {
+                "componentId": "pcb_component_2",
+                "type": "rect",
+                "layers": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "center": {
+                  "type": "Object",
+                  "truncated": true
+                },
+                "width": 1.15,
+                "height": 0.3,
+                "connectedTo": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            }
+          ]
+        },
+        "connMap": {
+          "type": "ConnectivityMap",
+          "keyCount": 2,
+          "keys": [
+            "netMap",
+            "idToNetMap"
+          ],
+          "sample": {
+            "netMap": {
+              "type": "Object",
+              "keyCount": 140,
+              "keys": [
+                "connectivity_net0",
+                "connectivity_net1",
+                "connectivity_net2",
+                "connectivity_net3",
+                "connectivity_net4",
+                "connectivity_net5",
+                "connectivity_net6",
+                "connectivity_net7",
+                "connectivity_net8",
+                "connectivity_net9"
+              ],
+              "sample": {
+                "connectivity_net0": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net1": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net2": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net3": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net4": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net5": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net6": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net7": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net8": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "connectivity_net9": {
+                  "type": "Array",
+                  "truncated": true
+                }
+              }
+            },
+            "idToNetMap": {
+              "type": "Object",
+              "keyCount": 1708,
+              "keys": [
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17",
+                "source_trace_158",
+                "source_trace_159",
+                "source_trace_160",
+                "source_trace_161",
+                "source_net_17",
+                "1320,508:0",
+                "pcb_port_93",
+                "1381,301:0"
+              ],
+              "sample": {
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "connectivity_net0",
+                "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17": "connectivity_net0",
+                "source_trace_158": "connectivity_net0",
+                "source_trace_159": "connectivity_net0",
+                "source_trace_160": "connectivity_net0",
+                "source_trace_161": "connectivity_net0",
+                "source_net_17": "connectivity_net0",
+                "1320,508:0": "connectivity_net0",
+                "pcb_port_93": "connectivity_net0",
+                "1381,301:0": "connectivity_net0"
+              }
+            }
+          }
+        },
+        "colorMap": {
+          "type": "Object",
+          "keyCount": 163,
+          "keys": [
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3",
+            "source_trace_153__source_net_29",
+            "source_trace_152__source_net_30"
+          ],
+          "sample": {
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst0": "hsl(0, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst1": "hsl(2.085889570552147, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst2": "hsl(4.171779141104294, 100%, 50%)",
+            "source_trace_158__source_trace_159__source_trace_160__source_trace_161__source_net_17_mst3": "hsl(6.257668711656442, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst0": "hsl(8.343558282208589, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst1": "hsl(10.429447852760736, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst2": "hsl(12.515337423312884, 100%, 50%)",
+            "source_trace_154__source_trace_155__source_trace_156__source_trace_157__source_net_18_mst3": "hsl(14.60122699386503, 100%, 50%)",
+            "source_trace_153__source_net_29": "hsl(16.687116564417177, 100%, 50%)",
+            "source_trace_152__source_net_30": "hsl(18.773006134969325, 100%, 50%)"
+          }
+        },
+        "outline": {
+          "type": "array",
+          "length": 58,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.29,
+                "y": -25.67
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.29,
+                "y": 25.67
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.285185,
+                "y": 25.768017
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.270785,
+                "y": 25.86509
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.246941,
+                "y": 25.960285
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.21388,
+                "y": 26.052684
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.171921,
+                "y": 26.141397
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": -34.12147,
+                "y": 26.22557
+              }
+            }
+          ]
+        },
+        "defaultViaDiameter": 0.3,
+        "layerCount": 2,
+        "iterations": 2
+      }
+    }
+  ]
+}

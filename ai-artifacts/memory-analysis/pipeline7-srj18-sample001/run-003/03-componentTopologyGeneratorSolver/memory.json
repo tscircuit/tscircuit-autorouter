@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 602918912,
+    "heapTotal": 42168320,
+    "heapUsed": 46223744,
+    "external": 10164016,
+    "arrayBuffers": 0
+  },
+  "afterGcMemory": {
+    "rss": 602918912,
+    "heapTotal": 42151936,
+    "heapUsed": 46223744,
+    "external": 10246020,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotMemory": {
+    "rss": 667095040,
+    "heapTotal": 42151936,
+    "heapUsed": 46223744,
+    "external": 10245517,
+    "arrayBuffers": 0
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 668012544,
+    "heapTotal": 42037248,
+    "heapUsed": 46223744,
+    "external": 8099014,
+    "arrayBuffers": 0
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 65093632,
+    "heapTotal": -114688,
+    "heapUsed": 0,
+    "external": -2147006,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 3,
+  "solverName": "ComponentTopologyGeneratorSolver",
+  "elapsedMs": 1.1510920000000624
+}

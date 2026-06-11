@@ -1,0 +1,2222 @@
+{
+  "type": "array",
+  "length": 4433,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce0",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_9"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.582999999999998,
+            "y": -3.8679999999999986
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.582999999999998,
+            "y": 0.5550000000000002
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 18,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp0_z0",
+                "x": -9.582999999999998,
+                "y": -3.6804999999999986,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.023999999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp0_z1",
+                "x": -9.582999999999998,
+                "y": -3.6804999999999986,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.023999999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp1_z0",
+                "x": -9.582999999999998,
+                "y": -3.1744999999999988,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.5179999999999993,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp1_z1",
+                "x": -9.582999999999998,
+                "y": -3.1744999999999988,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.5179999999999993,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp2_z0",
+                "x": -9.582999999999998,
+                "y": -2.668499999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.0119999999999996,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp2_z1",
+                "x": -9.582999999999998,
+                "y": -2.668499999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.0119999999999996,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp3_z0",
+                "x": -9.582999999999998,
+                "y": -2.162499999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.5059999999999998,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce0_pp3_z1",
+                "x": -9.582999999999998,
+                "y": -2.162499999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce0",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.5059999999999998,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce1",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_41"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": 0.5549999999999997
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": 3.335
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 14,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp0_z0",
+                "x": -9.583,
+                "y": 0.7424999999999997,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.2025000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp0_z1",
+                "x": -9.583,
+                "y": 0.7424999999999997,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.2025000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp1_z0",
+                "x": -9.583,
+                "y": 1.143333333333333,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.8016666666666667,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp1_z1",
+                "x": -9.583,
+                "y": 1.143333333333333,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.8016666666666667,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp2_z0",
+                "x": -9.583,
+                "y": 1.5441666666666665,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.4008333333333334,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp2_z1",
+                "x": -9.583,
+                "y": 1.5441666666666665,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.4008333333333334,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp3_z0",
+                "x": -9.583,
+                "y": 1.9449999999999998,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce1_pp3_z1",
+                "x": -9.583,
+                "y": 1.9449999999999998,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce1",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce2",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_63"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583000000000002,
+            "y": 4.285
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583000000000002,
+            "y": 9.706000000000001
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 20,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp0_z0",
+                "x": -9.583000000000002,
+                "y": 4.4725,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.8033333333333337,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp0_z1",
+                "x": -9.583000000000002,
+                "y": 4.4725,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.8033333333333337,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp1_z0",
+                "x": -9.583000000000002,
+                "y": 5.033166666666667,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.2426666666666666,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp1_z1",
+                "x": -9.583000000000002,
+                "y": 5.033166666666667,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.2426666666666666,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp2_z0",
+                "x": -9.583000000000002,
+                "y": 5.593833333333333,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.6820000000000004,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp2_z1",
+                "x": -9.583000000000002,
+                "y": 5.593833333333333,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.6820000000000004,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp3_z0",
+                "x": -9.583000000000002,
+                "y": 6.1545000000000005,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.1213333333333333,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce2_pp3_z1",
+                "x": -9.583000000000002,
+                "y": 6.1545000000000005,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce2",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.1213333333333333,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce3",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_36"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": -3.8679999999999994
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -3.3990000000000005,
+            "y": -3.8679999999999994
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 22,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp0_z0",
+                "x": -9.3955,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.9044999999999996,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp0_z1",
+                "x": -9.3955,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.9044999999999996,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp1_z0",
+                "x": -8.8146,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.3236,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp1_z1",
+                "x": -8.8146,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.3236,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp2_z0",
+                "x": -8.2337,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.7427000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp2_z1",
+                "x": -8.2337,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.7427000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp3_z0",
+                "x": -7.6528,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.1617999999999995,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce3_pp3_z1",
+                "x": -7.6528,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce3",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.1617999999999995,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce4",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_261"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": 3.335
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": 4.285
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 6,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp0_z0",
+                "x": -9.583,
+                "y": 3.5225,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2875000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp0_z1",
+                "x": -9.583,
+                "y": 3.5225,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2875000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp1_z0",
+                "x": -9.583,
+                "y": 3.81,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp1_z1",
+                "x": -9.583,
+                "y": 3.81,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp2_z0",
+                "x": -9.583,
+                "y": 4.0975,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2875000000000001,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce4_pp2_z1",
+                "x": -9.583,
+                "y": 4.0975,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce4",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2875000000000001,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce5",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_0__sub_1_0"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -9.583,
+            "y": 9.706000000000003
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -1.2700000000000014,
+            "y": 9.706000000000003
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 26,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp0_z0",
+                "x": -9.3955,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 3.9689999999999994,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp0_z1",
+                "x": -9.3955,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 3.9689999999999994,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp1_z0",
+                "x": -8.734,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 3.307499999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp1_z1",
+                "x": -8.734,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 3.307499999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp2_z0",
+                "x": -8.0725,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.645999999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp2_z1",
+                "x": -8.0725,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 2.645999999999999,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp3_z0",
+                "x": -7.4110000000000005,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.9844999999999997,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce5_pp3_z1",
+                "x": -7.4110000000000005,
+                "y": 9.706000000000003,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce5",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 1.9844999999999997,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce6",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_284"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -3.399,
+            "y": -3.8679999999999994
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -2.76,
+            "y": -3.8679999999999994
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 4,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce6_pp0_z0",
+                "x": -3.2115,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce6",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce6_pp0_z1",
+                "x": -3.2115,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce6",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce6_pp1_z0",
+                "x": -2.9475,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce6",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.26400000000000023,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce6_pp1_z1",
+                "x": -2.9475,
+                "y": -3.8679999999999994,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce6",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.26400000000000023,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 6,
+      "keys": [
+        "edgeId",
+        "nodeIds",
+        "start",
+        "end",
+        "availableZ",
+        "portPoints"
+      ],
+      "sample": {
+        "edgeId": "ce7",
+        "nodeIds": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            "cmn_0__sub_0_0",
+            "cmn_286"
+          ]
+        },
+        "start": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -2.76,
+            "y": -3.867999999999999
+          }
+        },
+        "end": {
+          "type": "Object",
+          "keyCount": 2,
+          "keys": [
+            "x",
+            "y"
+          ],
+          "sample": {
+            "x": -2.101,
+            "y": -3.867999999999999
+          }
+        },
+        "availableZ": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            0,
+            1
+          ]
+        },
+        "portPoints": {
+          "type": "array",
+          "length": 4,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce7_pp0_z0",
+                "x": -2.5725,
+                "y": -3.867999999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce7",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce7_pp0_z1",
+                "x": -2.5725,
+                "y": -3.867999999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce7",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce7_pp1_z0",
+                "x": -2.2885,
+                "y": -3.867999999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce7",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2839999999999998,
+                "cramped": false
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 9,
+              "keys": [
+                "segmentPortPointId",
+                "x",
+                "y",
+                "availableZ",
+                "nodeIds",
+                "edgeId",
+                "connectionName",
+                "distToCentermostPortOnZ",
+                "cramped"
+              ],
+              "sample": {
+                "segmentPortPointId": "ce7_pp1_z1",
+                "x": -2.2885,
+                "y": -3.867999999999999,
+                "availableZ": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "nodeIds": {
+                  "type": "Array",
+                  "truncated": true
+                },
+                "edgeId": "ce7",
+                "connectionName": null,
+                "distToCentermostPortOnZ": 0.2839999999999998,
+                "cramped": false
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

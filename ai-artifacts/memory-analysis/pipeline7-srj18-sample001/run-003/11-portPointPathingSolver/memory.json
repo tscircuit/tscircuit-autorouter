@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 606842880,
+    "heapTotal": 338604032,
+    "heapUsed": 196183512,
+    "external": 1830197,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 598102016,
+    "heapTotal": 97475584,
+    "heapUsed": 196183512,
+    "external": 13065900,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 987283456,
+    "heapTotal": 101227520,
+    "heapUsed": 196183512,
+    "external": 13263717,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 987938816,
+    "heapTotal": 101194752,
+    "heapUsed": 196183512,
+    "external": 13091204,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 389836800,
+    "heapTotal": 3719168,
+    "heapUsed": 0,
+    "external": 25304,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 2000003,
+  "solverName": "TinyHypergraphPortPointPathingSolver",
+  "elapsedMs": 10502.321811000002
+}

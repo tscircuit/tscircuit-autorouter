@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 604856320,
+    "heapTotal": 327541760,
+    "heapUsed": 137969466,
+    "external": 19381850,
+    "arrayBuffers": 410480
+  },
+  "afterGcMemory": {
+    "rss": 605753344,
+    "heapTotal": 147863552,
+    "heapUsed": 137969466,
+    "external": 15819667,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 1154699264,
+    "heapTotal": 147863552,
+    "heapUsed": 137969466,
+    "external": 15836874,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 1155747840,
+    "heapTotal": 147863552,
+    "heapUsed": 137969466,
+    "external": 15787095,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 549994496,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -32572,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 25690,
+  "solverName": "HighDensitySolver",
+  "elapsedMs": 15858.678841
+}

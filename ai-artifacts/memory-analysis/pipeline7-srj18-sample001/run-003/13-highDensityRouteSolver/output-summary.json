@@ -1,0 +1,562 @@
+{
+  "type": "array",
+  "length": 1223,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_119__source_trace_120__source_trace_121__source_trace_122__source_trace_123__source_trace_124__source_trace_125__source_trace_126__source_trace_127__source_trace_128__source_trace_129__source_trace_130__source_trace_131__source_trace_132__source_trace_133__source_trace_134__source_trace_135__source_trace_136__source_trace_137__source_trace_138__source_trace_139__source_trace_140__source_net_11_mst15",
+        "rootConnectionName": "source_trace_119__source_trace_120__source_trace_121__source_trace_122__source_trace_123__source_trace_124__source_trace_125__source_trace_126__source_trace_127__source_trace_128__source_trace_129__source_trace_130__source_trace_131__source_trace_132__source_trace_133__source_trace_134__source_trace_135__source_trace_136__source_trace_137__source_trace_138__source_trace_139__source_trace_140__source_net_11",
+        "regionId": "soic:pcb_component_29:center",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -14.51,
+                "y": 7.62,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -12.16,
+                "y": 7.62,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst4",
+        "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+        "regionId": "new-cmn_559-280",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 13.7,
+                "y": -7.585000000000001,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 13.7,
+                "y": -7.16,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst9",
+        "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+        "regionId": "new-cmn_558-279",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.075,
+                "y": -7.3725000000000005,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.325,
+                "y": -7.3725000000000005,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1_mst9",
+        "rootConnectionName": "source_trace_0__source_trace_1__source_trace_2__source_trace_3__source_trace_4__source_trace_5__source_trace_6__source_trace_7__source_trace_8__source_trace_9__source_trace_10__source_trace_11__source_net_1",
+        "regionId": "new-cmn_557-278",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.575,
+                "y": -7.3725000000000005,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.825,
+                "y": -7.3725000000000005,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_37__source_trace_38__source_trace_39__source_trace_40__source_trace_41__source_trace_42__source_trace_43__source_trace_44__source_net_39_mst3",
+        "rootConnectionName": "source_trace_37__source_trace_38__source_trace_39__source_trace_40__source_trace_41__source_trace_42__source_trace_43__source_trace_44__source_net_39",
+        "regionId": "new-cmn_364-268",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 23.49185,
+                "y": 1.225,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 23.49185,
+                "y": 0.7749999999999999,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_144__source_trace_145__source_net_16_mst1",
+        "rootConnectionName": "source_trace_144__source_trace_145__source_net_16",
+        "regionId": "new-cmn_351-266",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 22.299999999999997,
+                "y": -10.484399999999997,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 22.299999999999997,
+                "y": -10.635000000000002,
+                "z": 1
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "route",
+        "traceThickness",
+        "viaDiameter",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_107__source_trace_108__source_trace_109__source_trace_110__source_trace_111__source_net_13_mst4",
+        "rootConnectionName": "source_trace_107__source_trace_108__source_trace_109__source_trace_110__source_trace_111__source_net_13",
+        "regionId": "new-cmn_317-262",
+        "route": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.605,
+                "y": 0.10499999999999998,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 14.605,
+                "y": 1.505,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "regionId",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias"
+      ],
+      "sample": {
+        "connectionName": "source_trace_25__source_trace_26__source_trace_27__source_trace_28__source_net_7_mst2",
+        "rootConnectionName": "source_trace_25__source_trace_26__source_trace_27__source_trace_28__source_net_7",
+        "regionId": "new-cmn_211-255",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 8,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.2025,
+                "y": 13.495000000000001,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.200000000000003,
+                "y": 13.5,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.250000000000004,
+                "y": 13.45,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.300000000000004,
+                "y": 13.399999999999999,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.350000000000005,
+                "y": 13.349999999999998,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.400000000000006,
+                "y": 13.299999999999997,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.400000000000006,
+                "y": 13.249999999999996,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": -22.415,
+                "y": 13.2,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    }
+  ]
+}

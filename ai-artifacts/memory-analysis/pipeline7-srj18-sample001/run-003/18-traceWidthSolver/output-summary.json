@@ -1,0 +1,1045 @@
+{
+  "type": "array",
+  "length": 163,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_99__source_trace_100__source_net_55_mst1",
+        "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 3,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 16.51,
+                "y": -24.13,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 10.3,
+                "y": -17.919999999999998,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 10.3,
+                "y": -15.86,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_99__source_trace_100__source_net_55_mst0",
+        "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 5,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 10.3,
+                "y": -15.86,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 10.3,
+                "y": -14.985024773119104,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 11.19188578552374,
+                "y": -14.093138987595365,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 11.19188578552374,
+                "y": -13.60511421447626,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 11.2,
+                "y": -13.597,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_97__source_trace_98__source_net_54_mst1",
+        "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 15,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 18.4,
+                "y": -6.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 21.76630600314407,
+                "y": -2.793693996855929,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 25.362185899987598,
+                "y": -2.793693996855929,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 25.459502088503204,
+                "y": -2.793693996855929,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 26.801262456860144,
+                "y": -1.4519336284989885,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 26.801262456860144,
+                "y": -1.4517375431398545,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 26.83,
+                "y": -1.423,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 26.83,
+                "y": -1.423,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 26.83,
+                "y": -1.423
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 27,
+                "y": 1.707
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_97__source_trace_98__source_net_54_mst0",
+        "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 3,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 18.4,
+                "y": -6.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 17.638,
+                "y": -6.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 16.138,
+                "y": -7.66,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+        "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 14,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -10.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.372029311510442,
+                "y": -10.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.109034925412022,
+                "y": -9.89700561390158,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.08700561390158,
+                "y": -9.89700561390158,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.067,
+                "y": -9.877,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.067,
+                "y": -9.877,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.349382163433601,
+                "y": -9.5946178365664,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 5.349382163433601,
+                "y": -5.007192377085148,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 5.067,
+                "y": -9.877
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_95__source_trace_96__source_net_48_mst0",
+        "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 3,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -10.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 9.263,
+                "y": -10.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 9.263,
+                "y": -10.16,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+        "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 39,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "toNextSegmentType",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.97,
+                "y": 24.13,
+                "z": 0,
+                "toNextSegmentType": "through_obstacle",
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.97,
+                "y": 23.723590241168555,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.89528399976915,
+                "y": 23.648874240937705,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.89528399976915,
+                "y": 23.337283999769152,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 5,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "toNextSegmentType",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.838,
+                "y": 23.28,
+                "z": 0,
+                "toNextSegmentType": "through_obstacle",
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 13.838,
+                "y": 23.28,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 12.754781053224187,
+                "y": 23.28,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 11.444520659711033,
+                "y": 21.969739606486847,
+                "z": 1,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 5,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 6.366,
+                "y": 17.165
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 0.238,
+                "y": 14.174
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 1.802,
+                "y": 3.832
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 2.908,
+                "y": -5.715
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 2.9,
+                "y": -8.345
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "traceThickness",
+        "viaDiameter",
+        "route",
+        "vias",
+        "jumpers"
+      ],
+      "sample": {
+        "connectionName": "source_trace_93__source_trace_94__source_net_20_mst0",
+        "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "route": {
+          "type": "array",
+          "length": 3,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -9.36,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 7.300000000000001,
+                "y": -9.66,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "traceThickness"
+              ],
+              "sample": {
+                "x": 9.263,
+                "y": -9.66,
+                "z": 0,
+                "traceThickness": 0.1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        }
+      }
+    }
+  ]
+}

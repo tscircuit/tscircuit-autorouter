@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 711704576,
+    "heapTotal": 57720832,
+    "heapUsed": 49161621,
+    "external": 10630117,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 711704576,
+    "heapTotal": 57655296,
+    "heapUsed": 49161621,
+    "external": 10703362,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 662167552,
+    "heapTotal": 57655296,
+    "heapUsed": 49161621,
+    "external": 10712959,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 662953984,
+    "heapTotal": 57655296,
+    "heapUsed": 49161621,
+    "external": 10706184,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": -48750592,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": 2822,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1,
+  "solverName": "NodeDimensionSubdivisionSolver",
+  "elapsedMs": 0.9681910000017524
+}

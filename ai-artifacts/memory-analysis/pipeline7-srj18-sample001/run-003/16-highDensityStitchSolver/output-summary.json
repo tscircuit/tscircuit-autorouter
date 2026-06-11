@@ -1,0 +1,1283 @@
+{
+  "type": "array",
+  "length": 163,
+  "items": [
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_99__source_trace_100__source_net_55_mst1",
+        "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+        "route": {
+          "type": "array",
+          "length": 38,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.51,
+                "y": -24.13,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.378,
+                "y": -23.28,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.338,
+                "y": -23.122,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.221,
+                "y": -22.911,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.121,
+                "y": -22.717,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 15.964,
+                "y": -22.515,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 15.783,
+                "y": -22.31,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 15.592,
+                "y": -22.106,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_99__source_trace_100__source_net_55_mst0",
+        "rootConnectionName": "source_trace_99__source_trace_100__source_net_55",
+        "route": {
+          "type": "array",
+          "length": 22,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.3,
+                "y": -15.86,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.325,
+                "y": -15.11,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.331,
+                "y": -15.017,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.375,
+                "y": -14.974,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.414,
+                "y": -14.915,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.47,
+                "y": -14.87,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.514,
+                "y": -14.807,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 10.573,
+                "y": -14.761,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_97__source_trace_98__source_net_54_mst1",
+        "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+        "route": {
+          "type": "array",
+          "length": 68,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.4,
+                "y": -6.16,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.408,
+                "y": -6.15,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.455,
+                "y": -6.124,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.502,
+                "y": -6.112,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.551,
+                "y": -6.104,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.599,
+                "y": -6.097,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.649,
+                "y": -6.088,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.7,
+                "y": -6.066,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 2,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 26.83,
+                "y": -1.423
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 27,
+                "y": 1.707
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_97__source_trace_98__source_net_54_mst0",
+        "rootConnectionName": "source_trace_97__source_trace_98__source_net_54",
+        "route": {
+          "type": "array",
+          "length": 15,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.4,
+                "y": -6.16,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.4,
+                "y": -5.885,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 18.374,
+                "y": -5.829,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 17.981,
+                "y": -5.602,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 17.604,
+                "y": -5.532,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 17.252,
+                "y": -5.526,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.975,
+                "y": -5.547,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 16.575,
+                "y": -5.547,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_95__source_trace_96__source_net_48_mst1",
+        "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+        "route": {
+          "type": "array",
+          "length": 146,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -10.16,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.99,
+                "y": -10.161,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.956,
+                "y": -10.162,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.927,
+                "y": -10.162,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.9,
+                "y": -10.162,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.875,
+                "y": -10.162,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.85,
+                "y": -10.162,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 6.825,
+                "y": -10.162,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 1,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 5.067,
+                "y": -9.877
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_95__source_trace_96__source_net_48_mst0",
+        "rootConnectionName": "source_trace_95__source_trace_96__source_net_48",
+        "route": {
+          "type": "array",
+          "length": 26,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -10.16,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.75,
+                "y": -10.16,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.821,
+                "y": -10.157,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.855,
+                "y": -10.154,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.889,
+                "y": -10.152,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.93,
+                "y": -10.151,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.976,
+                "y": -10.151,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 8.025,
+                "y": -10.15,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_93__source_trace_94__source_net_20_mst1",
+        "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+        "route": {
+          "type": "array",
+          "length": 176,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 4,
+              "keys": [
+                "x",
+                "y",
+                "z",
+                "toNextSegmentType"
+              ],
+              "sample": {
+                "x": 13.97,
+                "y": 24.13,
+                "z": 0,
+                "toNextSegmentType": "through_obstacle"
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 13.838,
+                "y": 23.28,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 13.809,
+                "y": 23.214,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 13.383,
+                "y": 22.879,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 12.973,
+                "y": 22.602,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 12.584,
+                "y": 22.496,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 12.194,
+                "y": 22.441,
+                "z": 1
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 11.8,
+                "y": 22.404,
+                "z": 1
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 5,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 0.238,
+                "y": 14.174
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 6.366,
+                "y": 17.165
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 1.802,
+                "y": 3.832
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 2.908,
+                "y": -5.715
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 2,
+              "keys": [
+                "x",
+                "y"
+              ],
+              "sample": {
+                "x": 2.9,
+                "y": -8.345
+              }
+            }
+          ]
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    },
+    {
+      "type": "Object",
+      "keyCount": 7,
+      "keys": [
+        "connectionName",
+        "rootConnectionName",
+        "route",
+        "vias",
+        "jumpers",
+        "viaDiameter",
+        "traceThickness"
+      ],
+      "sample": {
+        "connectionName": "source_trace_93__source_trace_94__source_net_20_mst0",
+        "rootConnectionName": "source_trace_93__source_trace_94__source_net_20",
+        "route": {
+          "type": "array",
+          "length": 56,
+          "items": [
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7,
+                "y": -9.36,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.004,
+                "y": -9.361,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.026,
+                "y": -9.362,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.05,
+                "y": -9.362,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.075,
+                "y": -9.362,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.1,
+                "y": -9.362,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.125,
+                "y": -9.362,
+                "z": 0
+              }
+            },
+            {
+              "type": "Object",
+              "keyCount": 3,
+              "keys": [
+                "x",
+                "y",
+                "z"
+              ],
+              "sample": {
+                "x": 7.15,
+                "y": -9.362,
+                "z": 0
+              }
+            }
+          ]
+        },
+        "vias": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "jumpers": {
+          "type": "array",
+          "length": 0,
+          "items": []
+        },
+        "viaDiameter": 0.3,
+        "traceThickness": 0.1
+      }
+    }
+  ]
+}

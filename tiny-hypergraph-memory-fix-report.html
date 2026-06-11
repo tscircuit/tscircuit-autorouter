@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tiny Hypergraph Memory Fix Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 28%),
+          radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 24%),
+          linear-gradient(180deg, #08111b 0%, #0f172a 42%, #111827 100%);
+      }
+      .glass {
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(14px);
+      }
+      .grid-bg {
+        background-image:
+          linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+      .metric-bar {
+        transform-origin: left center;
+        animation: grow 1s ease forwards;
+      }
+      .fade-up {
+        opacity: 0;
+        transform: translateY(14px);
+        animation: fadeUp 0.7s ease forwards;
+      }
+      .fade-up-delay-1 {
+        animation-delay: 0.08s;
+      }
+      .fade-up-delay-2 {
+        animation-delay: 0.16s;
+      }
+      .fade-up-delay-3 {
+        animation-delay: 0.24s;
+      }
+      .fade-up-delay-4 {
+        animation-delay: 0.32s;
+      }
+      .pulse-dot {
+        animation: pulseDot 1.8s ease-in-out infinite;
+      }
+      @keyframes grow {
+        from {
+          transform: scaleX(0);
+        }
+        to {
+          transform: scaleX(1);
+        }
+      }
+      @keyframes fadeUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulseDot {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 0.85;
+        }
+        50% {
+          transform: scale(1.28);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-100">
+    <main class="mx-auto max-w-7xl px-6 py-10 lg:px-10">
+      <header class="glass grid-bg fade-up overflow-hidden rounded-[2rem] border border-amber-300/20 p-8 shadow-2xl shadow-black/30 lg:p-10">
+        <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-3xl">
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-amber-300">
+              tscircuit-autorouter • tiny-hypergraph memory investigation
+            </p>
+            <h1 class="mt-4 text-4xl font-black tracking-tight text-white lg:text-6xl">
+              The Fix Was Not “Optimize More”
+            </h1>
+            <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300 lg:text-lg">
+              The big memory win came from changing the shape of one solver data structure.
+              Tiny Hypergraph was allocating A* best-cost arrays as if every port could hop to
+              every region. In practice, each port can usually hop to only one or two incident
+              regions.
+            </p>
+          </div>
+          <div class="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5 lg:w-[22rem]">
+            <p class="text-sm uppercase tracking-[0.28em] text-emerald-200">Bottom Line</p>
+            <div class="mt-4 space-y-3">
+              <div>
+                <p class="text-4xl font-black text-white">-69%</p>
+                <p class="text-sm text-emerald-100/80">Final retained heap after `getOutput()`</p>
+              </div>
+              <div>
+                <p class="text-4xl font-black text-white">-46%</p>
+                <p class="text-sm text-emerald-100/80">Final RSS</p>
+              </div>
+              <div>
+                <p class="text-lg font-semibold text-emerald-100">Slightly faster too</p>
+                <p class="text-sm text-emerald-100/80">~11.2s → ~10.5–10.6s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <article class="glass fade-up fade-up-delay-1 rounded-3xl border border-slate-700/70 p-6">
+          <p class="text-sm uppercase tracking-[0.22em] text-slate-400">Original Spike</p>
+          <p class="mt-3 text-4xl font-black text-rose-300">+706.7 MiB</p>
+          <p class="mt-2 text-sm leading-6 text-slate-300">
+            Constructor jump at `after-duplicateCongestedPortPrepass` before the bigger solver fix.
+          </p>
+        </article>
+        <article class="glass fade-up fade-up-delay-2 rounded-3xl border border-slate-700/70 p-6">
+          <p class="text-sm uppercase tracking-[0.22em] text-slate-400">Constructor After Prepass Fix</p>
+          <p class="mt-3 text-4xl font-black text-amber-300">+12.2 MiB</p>
+          <p class="mt-2 text-sm leading-6 text-slate-300">
+            Copy-on-write, lazy wrapper materialization, and lighter prepass state collapsed the constructor spike.
+          </p>
+        </article>
+        <article class="glass fade-up fade-up-delay-3 rounded-3xl border border-slate-700/70 p-6">
+          <p class="text-sm uppercase tracking-[0.22em] text-slate-400">SolveGraph Plateau Before</p>
+          <p class="mt-3 text-4xl font-black text-orange-300">~364.1 MiB</p>
+          <p class="mt-2 text-sm leading-6 text-slate-300">
+            After constructor fixes, retained memory was still dominated by `solveGraph`.
+          </p>
+        </article>
+        <article class="glass fade-up fade-up-delay-4 rounded-3xl border border-slate-700/70 p-6">
+          <p class="text-sm uppercase tracking-[0.22em] text-slate-400">SolveGraph After Big Fix</p>
+          <p class="mt-3 text-4xl font-black text-emerald-300">~113–115 MiB</p>
+          <p class="mt-2 text-sm leading-6 text-slate-300">
+            Compact hop-slot indexing plus post-solve state release removed the plateau.
+          </p>
+        </article>
+      </section>
+
+      <section class="mt-10 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <div class="flex items-center gap-3">
+            <span class="pulse-dot h-3 w-3 rounded-full bg-rose-300"></span>
+            <h2 class="text-2xl font-bold text-white">What Was Actually Wrong</h2>
+          </div>
+          <p class="mt-5 max-w-3xl text-base leading-7 text-slate-300">
+            The core bug was not “too many objects in general.” It was one very specific
+            mismatch between the solver’s memory model and the graph’s topology.
+          </p>
+          <div class="mt-6 rounded-3xl border border-rose-300/20 bg-rose-400/10 p-5">
+            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-rose-200">
+              Old assumption
+            </p>
+            <p class="mt-3 text-lg leading-8 text-white">
+              “For a hop, index best-cost storage by `portCount * regionCount`.”
+            </p>
+          </div>
+          <div class="mt-5 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5">
+            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-200">
+              Real topology fact
+            </p>
+            <p class="mt-3 text-lg leading-8 text-white">
+              “A port’s `nextRegionId` is almost always one of that port’s incident regions,
+              usually at most 2.”
+            </p>
+          </div>
+          <div class="mt-6 grid gap-4 md:grid-cols-3">
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/50 p-4">
+              <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Ports</p>
+              <p class="mt-2 text-3xl font-black text-white">14,461</p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/50 p-4">
+              <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Regions</p>
+              <p class="mt-2 text-3xl font-black text-white">1,802</p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/50 p-4">
+              <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Reachable Hop Slots</p>
+              <p class="mt-2 text-3xl font-black text-white">~29k</p>
+            </div>
+          </div>
+          <p class="mt-6 text-sm leading-7 text-slate-300">
+            That means the old dense arrays reserved space for about 26 million port/region
+            combinations even though only about 29 thousand were reachable. Almost all of the
+            memory was dead space.
+          </p>
+        </article>
+
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">The Big Data Structure Change</h2>
+          <div class="mt-6 space-y-5">
+            <div class="rounded-3xl border border-slate-700 bg-slate-950/60 p-5">
+              <p class="text-sm uppercase tracking-[0.24em] text-slate-400">Before</p>
+              <pre class="mt-3 overflow-x-auto text-sm leading-7 text-rose-200"><code>hopId = portId * regionCount + nextRegionId</code></pre>
+              <p class="mt-3 text-sm leading-6 text-slate-300">
+                Fast indexing, but it assumes every `nextRegionId` is relevant for every port.
+              </p>
+            </div>
+            <div class="rounded-3xl border border-slate-700 bg-slate-950/60 p-5">
+              <p class="text-sm uppercase tracking-[0.24em] text-slate-400">After</p>
+              <pre class="mt-3 overflow-x-auto text-sm leading-7 text-emerald-200"><code>hopId = portId * hopSlotStride + incidentRegionSlot</code></pre>
+              <p class="mt-3 text-sm leading-6 text-slate-300">
+                `incidentRegionSlot` is the slot inside `incidentPortRegion[portId]`. The stride
+                is the max incident-region count, typically 2.
+              </p>
+            </div>
+            <div class="rounded-3xl border border-amber-300/20 bg-amber-400/10 p-5">
+              <p class="text-sm uppercase tracking-[0.24em] text-amber-200">Defensive Edge Case</p>
+              <p class="mt-3 text-sm leading-6 text-slate-200">
+                If a hop targets a non-incident region, it gets a negative id and falls back to a
+                tiny overflow `Map`. That preserves correctness without paying dense-array cost for
+                rare cases.
+              </p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 grid gap-8 lg:grid-cols-2">
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">Memory Shape Before vs After</h2>
+          <div class="mt-8 space-y-6">
+            <div>
+              <div class="mb-2 flex items-center justify-between text-sm text-slate-300">
+                <span>Old best-cost arrays per solver</span>
+                <span>~312 MiB</span>
+              </div>
+              <div class="h-5 overflow-hidden rounded-full bg-slate-800">
+                <div class="metric-bar h-full rounded-full bg-gradient-to-r from-rose-400 to-orange-300" style="width: 100%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="mb-2 flex items-center justify-between text-sm text-slate-300">
+                <span>New compact arrays per solver</span>
+                <span>~0.4 MiB</span>
+              </div>
+              <div class="h-5 overflow-hidden rounded-full bg-slate-800">
+                <div class="metric-bar h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-300" style="width: 0.13%"></div>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-slate-700 bg-slate-950/55 p-5">
+              <p class="text-sm leading-7 text-slate-300">
+                The dense arrays were:
+              </p>
+              <p class="mt-3 font-mono text-sm leading-7 text-slate-100">
+                `candidateBestCostByHopId` = `Float64Array` ≈ 199 MiB
+                <br />
+                `candidateBestCostGenerationByHopId` = `Uint32Array` ≈ 99 MiB
+              </p>
+              <p class="mt-4 text-sm leading-7 text-slate-300">
+                Together they dominated the retained `solveGraph` plateau.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">Why Earlier Fixes Helped But Did Not Finish It</h2>
+          <div class="mt-6 space-y-4">
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-5">
+              <p class="font-semibold text-amber-200">1. Duplicate-port prepass copy-on-write</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                This removed huge constructor-time deep cloning. Good fix, but it only moved the
+                bottleneck from constructor to `solveGraph`.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-5">
+              <p class="font-semibold text-amber-200">2. Lazy `inputNodeWithPortPoints`</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                This stopped the wrapper from holding a second full port-point view during
+                construction. Useful, but still not the dominant plateau.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-5">
+              <p class="font-semibold text-amber-200">3. Metadata views with `Object.create(...)`</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                This reduced churn and preserved behavior, but it was only a micro-optimization
+                once the main structural issue moved into search-state storage.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-5">
+              <p class="font-semibold text-amber-200">4. Skip empty `optimizeSection`</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                This removed dead work and some retention, but the huge A* table was still alive.
+              </p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 rounded-[2rem] border border-slate-700/70 bg-slate-950/45 p-7">
+        <h2 class="text-2xl font-bold text-white">Timeline Of Understanding</h2>
+        <div class="mt-7 grid gap-4 lg:grid-cols-5">
+          <div class="rounded-3xl border border-slate-700 bg-slate-900/70 p-5">
+            <p class="text-xs uppercase tracking-[0.28em] text-slate-400">Step 1</p>
+            <p class="mt-3 font-semibold text-white">Instrument the wrapper</p>
+            <p class="mt-2 text-sm leading-6 text-slate-300">
+              Added constructor checkpoints to locate whether the spike was in constructor,
+              `solveGraph`, or `getOutput()`.
+            </p>
+          </div>
+          <div class="rounded-3xl border border-slate-700 bg-slate-900/70 p-5">
+            <p class="text-xs uppercase tracking-[0.28em] text-slate-400">Step 2</p>
+            <p class="mt-3 font-semibold text-white">Collapse prepass spike</p>
+            <p class="mt-2 text-sm leading-6 text-slate-300">
+              Replaced deep-clone behavior and stopped the wrapper from materializing extra views
+              too early.
+            </p>
+          </div>
+          <div class="rounded-3xl border border-slate-700 bg-slate-900/70 p-5">
+            <p class="text-xs uppercase tracking-[0.28em] text-slate-400">Step 3</p>
+            <p class="mt-3 font-semibold text-white">Notice plateau moved</p>
+            <p class="mt-2 text-sm leading-6 text-slate-300">
+              Constructor became cheap, but retained heap still sat around `solveGraph`.
+            </p>
+          </div>
+          <div class="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5">
+            <p class="text-xs uppercase tracking-[0.28em] text-emerald-200">Step 4</p>
+            <p class="mt-3 font-semibold text-white">Find unreachable dense state</p>
+            <p class="mt-2 text-sm leading-6 text-slate-100/90">
+              The hop table was sized by all port/region pairs, even though most pairs were
+              impossible by topology.
+            </p>
+          </div>
+          <div class="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5">
+            <p class="text-xs uppercase tracking-[0.28em] text-emerald-200">Step 5</p>
+            <p class="mt-3 font-semibold text-white">Shrink and release</p>
+            <p class="mt-2 text-sm leading-6 text-slate-100/90">
+              Compact hop slots plus `releaseTransientSearchState()` removed the retained
+              plateau without slowing the solver.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">The Other Important Part: Release State</h2>
+          <p class="mt-5 text-sm leading-7 text-slate-300">
+            The compact indexing fixed the biggest allocation. The rest of the improvement came
+            from dropping transient search state as soon as a stage no longer needed it.
+          </p>
+          <div class="mt-6 space-y-4">
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-semibold text-white">`releaseTransientSearchState()` in `core.ts`</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                Clears `_problemSetup`, the overflow map, `bestSolvedStateSnapshot`, and the
+                candidate queue. These can be rebuilt lazily if needed.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-semibold text-white">Pipeline `onSolved` hooks</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                `solveGraph` releases its transient state after finishing. `optimizeSection` does
+                the same and clears cached stage params.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-semibold text-white">Section solver release</p>
+              <p class="mt-2 text-sm leading-6 text-slate-300">
+                Once an optimized solver exists, the section-level search solver and snapshots are
+                dropped instead of being retained for no reason.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">The Fix In Plain English</h2>
+          <div class="mt-6 space-y-5 text-sm leading-7 text-slate-300">
+            <p>
+              Think of the old solver as renting a giant parking lot with one parking spot for
+              every possible port/region pair, even though each car was only allowed to park in
+              one or two specific spots.
+            </p>
+            <p>
+              The new solver keeps only the spots that are actually reachable for that port. That
+              cuts the best-cost table from hundreds of MiB to well under a MiB.
+            </p>
+            <p>
+              Then, after a search stage is done, the solver throws away temporary notebooks:
+              candidate queues, snapshots, heuristic caches, and other scratch state that were
+              only needed during search.
+            </p>
+            <p class="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-slate-100">
+              So the final answer is: the fix works because it changed the solver from storing
+              costs for impossible hops to storing costs only for incident-region hops, and then it
+              stopped retaining temporary search state after solve.
+            </p>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 grid gap-8 lg:grid-cols-2">
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">Key Numbers To Remember</h2>
+          <div class="mt-6 overflow-hidden rounded-3xl border border-slate-700">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm">
+              <thead class="bg-slate-950/80 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3 font-semibold">Metric</th>
+                  <th class="px-4 py-3 font-semibold">Before</th>
+                  <th class="px-4 py-3 font-semibold">After</th>
+                  <th class="px-4 py-3 font-semibold">Meaning</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                  <td class="px-4 py-3">Constructor prepass delta</td>
+                  <td class="px-4 py-3 text-rose-200">+706.7 MiB</td>
+                  <td class="px-4 py-3 text-emerald-200">+10–12 MiB</td>
+                  <td class="px-4 py-3">Deep-clone path mostly removed</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">Final retained heap</td>
+                  <td class="px-4 py-3 text-rose-200">~364.1 MiB</td>
+                  <td class="px-4 py-3 text-emerald-200">~113.1–114.8 MiB</td>
+                  <td class="px-4 py-3">Main user-visible memory win</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">Final RSS</td>
+                  <td class="px-4 py-3 text-rose-200">~740 MiB</td>
+                  <td class="px-4 py-3 text-emerald-200">~397–400 MiB</td>
+                  <td class="px-4 py-3">Whole-process memory also dropped</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">Runtime</td>
+                  <td class="px-4 py-3 text-orange-200">~11.2s</td>
+                  <td class="px-4 py-3 text-emerald-200">~10.5–10.6s</td>
+                  <td class="px-4 py-3">No tradeoff, slight gain</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">True settled retained heap</td>
+                  <td class="px-4 py-3 text-slate-300">Not captured by single GC</td>
+                  <td class="px-4 py-3 text-emerald-200">~76.6 MiB</td>
+                  <td class="px-4 py-3">Harness under-collected by ~35 MiB</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="glass rounded-[2rem] border border-slate-700/70 p-7">
+          <h2 class="text-2xl font-bold text-white">Files That Matter</h2>
+          <div class="mt-6 space-y-4 text-sm leading-7 text-slate-300">
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-mono text-emerald-200">node_modules/tiny-hypergraph/lib/core.ts</p>
+              <p>Main fix: compact hop-slot storage and transient search-state release.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-mono text-emerald-200">node_modules/tiny-hypergraph/lib/DuplicateCongestedPortSolver.ts</p>
+              <p>Constructor-path fixes: copy-on-write and prepass solve option tuning.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-mono text-emerald-200">node_modules/tiny-hypergraph/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts</p>
+              <p>Pipeline release hooks and empty-section-mask cleanup.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-950/55 p-4">
+              <p class="font-mono text-emerald-200">lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts</p>
+              <p>Wrapper instrumentation and lazy `inputNodeWithPortPoints` materialization.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 rounded-[2rem] border border-amber-300/20 bg-amber-400/10 p-7">
+        <h2 class="text-2xl font-bold text-white">If You Need To Explain It To Someone Else</h2>
+        <p class="mt-5 max-w-5xl text-base leading-8 text-slate-100">
+          “We first fixed a constructor-time cloning bug, but the real retained-memory problem was
+          in `TinyHyperGraphSolver`: it used dense A* tables sized by all `port × region`
+          combinations even though each port only connects to a tiny set of incident regions.
+          Re-indexing hops by incident-region slot shrank that state from about 312 MiB to about
+          0.4 MiB per solver instance, and releasing transient search state after each stage
+          dropped final retained heap from about 364 MiB to about 114 MiB.”
+        </p>
+      </section>
+
+      <footer class="mt-10 pb-4 text-sm text-slate-400">
+        Based on `progress.md`, `handoff.md`, and the patched tiny-hypergraph code paths in this workspace.
+      </footer>
+    </main>
+  </body>
+</html>

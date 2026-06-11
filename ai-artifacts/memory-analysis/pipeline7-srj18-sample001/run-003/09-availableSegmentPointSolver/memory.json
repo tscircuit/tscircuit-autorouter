@@ -1,0 +1,40 @@
+{
+  "beforeGcMemory": {
+    "rss": 687927296,
+    "heapTotal": 67240960,
+    "heapUsed": 57082066,
+    "external": 11071513,
+    "arrayBuffers": 169066
+  },
+  "afterGcMemory": {
+    "rss": 688320512,
+    "heapTotal": 65192960,
+    "heapUsed": 65181748,
+    "external": 11173663,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotMemory": {
+    "rss": 710103040,
+    "heapTotal": 65192960,
+    "heapUsed": 65181748,
+    "external": 11141911,
+    "arrayBuffers": 169066
+  },
+  "afterSnapshotGcMemory": {
+    "rss": 711020544,
+    "heapTotal": 65192960,
+    "heapUsed": 65181748,
+    "external": 11074814,
+    "arrayBuffers": 169066
+  },
+  "deltaFromAfterGcToAfterSnapshotGc": {
+    "rss": 22700032,
+    "heapTotal": 0,
+    "heapUsed": 0,
+    "external": -98849,
+    "arrayBuffers": 0
+  },
+  "solverIterations": 1,
+  "solverName": "AvailableSegmentPointSolver",
+  "elapsedMs": 22.185255000000325
+}
