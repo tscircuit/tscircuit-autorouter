@@ -345,8 +345,6 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "Timed Out",
     "P50 Time",
     "P95 Time",
-    "Avg Via",
-    "Avg Via/Len",
     "Avg Via/Area",
   ]
 
@@ -357,8 +355,6 @@ const formatTable = (rows: SolverRunSummary[]) => {
     row.timedOutLabel,
     formatTime(row.p50TimeMs),
     formatTime(row.p95TimeMs),
-    formatAverage(row.avgVia),
-    formatDensity(row.avgViaPerUnitLength),
     formatDensity(row.avgViaPerUnitArea),
   ])
 
@@ -938,15 +934,6 @@ const summarizeSolverResults = (
   const timedOut = results.filter((result) => result.didTimeout)
   const succeeded = results.filter((result) => result.didSolve)
   const elapsedForSucceeded = succeeded.map((result) => result.elapsedTimeMs)
-  const viaCounts = succeeded
-    .map((result) => result.viaCount)
-    .filter((viaCount): viaCount is number => typeof viaCount === "number")
-  const viaPerUnitLengths = succeeded
-    .map((result) => result.viaPerUnitLength)
-    .filter(
-      (viaPerUnitLength): viaPerUnitLength is number =>
-        typeof viaPerUnitLength === "number",
-    )
   const viaPerUnitAreas = succeeded
     .map((result) => result.viaPerUnitArea)
     .filter(
@@ -956,18 +943,6 @@ const summarizeSolverResults = (
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
-  const avgVia =
-    viaCounts.length === 0
-      ? null
-      : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
-        viaCounts.length
-  const avgViaPerUnitLength =
-    viaPerUnitLengths.length === 0
-      ? null
-      : viaPerUnitLengths.reduce(
-          (sum, viaPerUnitLength) => sum + viaPerUnitLength,
-          0,
-        ) / viaPerUnitLengths.length
   const avgViaPerUnitArea =
     viaPerUnitAreas.length === 0
       ? null
@@ -991,8 +966,6 @@ const summarizeSolverResults = (
     timedOutLabel: `${timedOut.length}/${results.length}`,
     p50TimeMs: getPercentileMs(elapsedForSucceeded, 0.5),
     p95TimeMs: getPercentileMs(elapsedForSucceeded, 0.95),
-    avgVia,
-    avgViaPerUnitLength,
     avgViaPerUnitArea,
   } satisfies SolverRunSummary
 }

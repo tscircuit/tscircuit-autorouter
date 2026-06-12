@@ -54,46 +54,6 @@ const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
     0,
   )
 
-const getTraceRouteLength = (trace: SimplifiedPcbTrace) => {
-  let totalLength = 0
-  let previousWirePoint: Extract<
-    SimplifiedPcbTrace["route"][number],
-    { route_type: "wire" }
-  > | null = null
-
-  for (const segment of trace.route) {
-    if (segment.route_type === "wire") {
-      if (previousWirePoint && previousWirePoint.layer === segment.layer) {
-        totalLength += Math.hypot(
-          segment.x - previousWirePoint.x,
-          segment.y - previousWirePoint.y,
-        )
-      }
-      previousWirePoint = segment
-      continue
-    }
-
-    if (segment.route_type === "jumper") {
-      totalLength += Math.hypot(
-        segment.end.x - segment.start.x,
-        segment.end.y - segment.start.y,
-      )
-    } else if (segment.route_type === "through_obstacle") {
-      totalLength += Math.hypot(
-        segment.end.x - segment.start.x,
-        segment.end.y - segment.start.y,
-      )
-    }
-
-    previousWirePoint = null
-  }
-
-  return totalLength
-}
-
-const getTotalTraceRouteLength = (traces: SimplifiedPcbTrace[]) =>
-  traces.reduce((total, trace) => total + getTraceRouteLength(trace), 0)
-
 const getBoardArea = (scenario: SimpleRouteJson) => {
   const width = Math.abs(scenario.bounds.maxX - scenario.bounds.minX)
   const height = Math.abs(scenario.bounds.maxY - scenario.bounds.minY)
@@ -407,10 +367,8 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
-    const viaCount = countTraceVias(traces)
-    const routedLength = getTotalTraceRouteLength(traces)
-    const viaPerUnitLength = routedLength > 0 ? viaCount / routedLength : null
     const boardArea = getBoardArea(task.scenario)
+    const viaCount = countTraceVias(traces)
     const viaPerUnitArea = boardArea > 0 ? viaCount / boardArea : null
     const circuitJson = convertToCircuitJson(
       solver.srjWithPointPairs ?? task.scenario,
@@ -432,10 +390,8 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed,
-      viaCount,
-      routedLength,
-      viaPerUnitLength,
       boardArea,
+      viaCount,
       viaPerUnitArea,
       ...drcSummary,
     }
