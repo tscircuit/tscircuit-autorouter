@@ -94,6 +94,12 @@ const getTraceRouteLength = (trace: SimplifiedPcbTrace) => {
 const getTotalTraceRouteLength = (traces: SimplifiedPcbTrace[]) =>
   traces.reduce((total, trace) => total + getTraceRouteLength(trace), 0)
 
+const getBoardArea = (scenario: SimpleRouteJson) => {
+  const width = Math.abs(scenario.bounds.maxX - scenario.bounds.minX)
+  const height = Math.abs(scenario.bounds.maxY - scenario.bounds.minY)
+  return width * height
+}
+
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
 ): SolverOptions | undefined => {
@@ -404,6 +410,8 @@ export const runTask = async (
     const viaCount = countTraceVias(traces)
     const routedLength = getTotalTraceRouteLength(traces)
     const viaPerUnitLength = routedLength > 0 ? viaCount / routedLength : null
+    const boardArea = getBoardArea(task.scenario)
+    const viaPerUnitArea = boardArea > 0 ? viaCount / boardArea : null
     const circuitJson = convertToCircuitJson(
       solver.srjWithPointPairs ?? task.scenario,
       traces,
@@ -427,6 +435,8 @@ export const runTask = async (
       viaCount,
       routedLength,
       viaPerUnitLength,
+      boardArea,
+      viaPerUnitArea,
       ...drcSummary,
     }
   } catch (error) {

@@ -36,6 +36,8 @@ export type WorkerResult = {
   viaCount?: number
   routedLength?: number
   viaPerUnitLength?: number | null
+  boardArea?: number
+  viaPerUnitArea?: number | null
   drcErrorCount?: number
   drcErrorTypes?: Record<string, number>
   drcErrorMessages?: Array<{
@@ -76,6 +78,7 @@ export type SolverRunSummary = {
   p95TimeMs: number | null
   avgVia: number | null
   avgViaPerUnitLength: number | null
+  avgViaPerUnitArea: number | null
 }
 
 export type BenchmarkReport = {

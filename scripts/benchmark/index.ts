@@ -347,6 +347,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P95 Time",
     "Avg Via",
     "Avg Via/Len",
+    "Avg Via/Area",
   ]
 
   const body = rows.map((row) => [
@@ -358,6 +359,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p95TimeMs),
     formatAverage(row.avgVia),
     formatDensity(row.avgViaPerUnitLength),
+    formatDensity(row.avgViaPerUnitArea),
   ])
 
   const widths = headers.map((header, columnIndex) => {
@@ -945,6 +947,12 @@ const summarizeSolverResults = (
       (viaPerUnitLength): viaPerUnitLength is number =>
         typeof viaPerUnitLength === "number",
     )
+  const viaPerUnitAreas = succeeded
+    .map((result) => result.viaPerUnitArea)
+    .filter(
+      (viaPerUnitArea): viaPerUnitArea is number =>
+        typeof viaPerUnitArea === "number",
+    )
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
@@ -960,6 +968,13 @@ const summarizeSolverResults = (
           (sum, viaPerUnitLength) => sum + viaPerUnitLength,
           0,
         ) / viaPerUnitLengths.length
+  const avgViaPerUnitArea =
+    viaPerUnitAreas.length === 0
+      ? null
+      : viaPerUnitAreas.reduce(
+          (sum, viaPerUnitArea) => sum + viaPerUnitArea,
+          0,
+        ) / viaPerUnitAreas.length
 
   return {
     solverName,
@@ -978,6 +993,7 @@ const summarizeSolverResults = (
     p95TimeMs: getPercentileMs(elapsedForSucceeded, 0.95),
     avgVia,
     avgViaPerUnitLength,
+    avgViaPerUnitArea,
   } satisfies SolverRunSummary
 }
 
