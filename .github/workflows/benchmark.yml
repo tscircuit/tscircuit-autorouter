@@ -521,15 +521,26 @@ jobs:
               if (!Array.isArray(report?.summary) || report.summary.length === 0) {
                 return []
               }
+              const includeAvgViaPerUnitArea = report.summary.some(
+                (row) => typeof row?.avgViaPerUnitArea === 'number',
+              )
+              const summaryHeader = includeAvgViaPerUnitArea
+                ? '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via/Area |'
+                : '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |'
+              const summaryDivider = includeAvgViaPerUnitArea
+                ? '| --- | --- | --- | --- | --- | --- | --- |'
+                : '| --- | --- | --- | --- | --- | --- |'
               return [
                 `Dataset: ${report.datasetName}`,
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | --- | --- | --- | --- | --- |',
+                summaryHeader,
+                summaryDivider,
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  includeAvgViaPerUnitArea
+                    ? `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${typeof row.avgViaPerUnitArea === 'number' ? row.avgViaPerUnitArea.toFixed(4) : 'n/a'} |`
+                    : `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
                 ),
               ]
             }
@@ -992,15 +1003,26 @@ jobs:
               if (!Array.isArray(report?.summary) || report.summary.length === 0) {
                 return []
               }
+              const includeAvgViaPerUnitArea = report.summary.some(
+                (row) => typeof row?.avgViaPerUnitArea === 'number',
+              )
+              const summaryHeader = includeAvgViaPerUnitArea
+                ? '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via/Area |'
+                : '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |'
+              const summaryDivider = includeAvgViaPerUnitArea
+                ? '| --- | --- | --- | --- | --- | --- | --- |'
+                : '| --- | --- | --- | --- | --- | --- |'
               return [
                 `Dataset: ${report.datasetName}`,
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | --- | --- | --- | --- | --- |',
+                summaryHeader,
+                summaryDivider,
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  includeAvgViaPerUnitArea
+                    ? `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${typeof row.avgViaPerUnitArea === 'number' ? row.avgViaPerUnitArea.toFixed(4) : 'n/a'} |`
+                    : `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
                 ),
               ]
             }
