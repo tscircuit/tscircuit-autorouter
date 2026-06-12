@@ -46,6 +46,14 @@ type RunTaskOptions = {
 
 const DEFAULT_PROGRESS_INTERVAL_MS = 1000
 
+const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
+  traces.reduce(
+    (total, trace) =>
+      total +
+      trace.route.filter((segment) => segment.route_type === "via").length,
+    0,
+  )
+
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
 ): SolverOptions | undefined => {
@@ -353,6 +361,7 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    const viaCount = countTraceVias(traces)
     const circuitJson = convertToCircuitJson(
       solver.srjWithPointPairs ?? task.scenario,
       traces,
@@ -373,6 +382,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed,
+      viaCount,
       ...drcSummary,
     }
   } catch (error) {

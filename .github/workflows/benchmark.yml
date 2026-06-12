@@ -471,6 +471,12 @@ jobs:
               }
               return timeMs < 1000 ? `${Math.round(timeMs)}ms` : `${(timeMs / 1000).toFixed(1)}s`
             }
+            const formatAverage = (value) => {
+              if (typeof value !== 'number' || !Number.isFinite(value)) {
+                return 'n/a'
+              }
+              return value.toFixed(2)
+            }
             const getStatus = (test) => {
               if (test.didTimeout) return '❌'
               if (test.didSolve) return '✅'
@@ -526,10 +532,10 @@ jobs:
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | --- | --- | --- | --- | --- |',
+                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
+                '| --- | --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${formatAverage(row.avgVia)} |`,
                 ),
               ]
             }
@@ -543,10 +549,10 @@ jobs:
                 return []
               }
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatAverage(row.avgVia))} |`,
                 ),
               ]
             }
@@ -942,6 +948,12 @@ jobs:
               }
               return timeMs < 1000 ? `${Math.round(timeMs)}ms` : `${(timeMs / 1000).toFixed(1)}s`
             }
+            const formatAverage = (value) => {
+              if (typeof value !== 'number' || !Number.isFinite(value)) {
+                return 'n/a'
+              }
+              return value.toFixed(2)
+            }
             const getStatus = (test) => {
               if (test.didTimeout) return '❌'
               if (test.didSolve) return '✅'
@@ -997,10 +1009,10 @@ jobs:
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | --- | --- | --- | --- | --- |',
+                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
+                '| --- | --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${formatAverage(row.avgVia)} |`,
                 ),
               ]
             }
@@ -1014,10 +1026,10 @@ jobs:
                 return []
               }
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatAverage(row.avgVia))} |`,
                 ),
               ]
             }
