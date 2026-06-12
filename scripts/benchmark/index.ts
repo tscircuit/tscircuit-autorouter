@@ -66,6 +66,13 @@ const formatTime = (timeMs: number | null) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
+const formatAverage = (value: number | null) => {
+  if (value === null) {
+    return "n/a"
+  }
+  return value.toFixed(2)
+}
+
 const formatDurationLabel = (timeMs: number) => {
   if (timeMs < 1000) {
     return `${timeMs}ms`
@@ -331,6 +338,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "Timed Out",
     "P50 Time",
     "P95 Time",
+    "Avg Via",
   ]
 
   const body = rows.map((row) => [
@@ -340,6 +348,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     row.timedOutLabel,
     formatTime(row.p50TimeMs),
     formatTime(row.p95TimeMs),
+    formatAverage(row.avgVia),
   ])
 
   const widths = headers.map((header, columnIndex) => {
@@ -918,9 +927,17 @@ const summarizeSolverResults = (
   const timedOut = results.filter((result) => result.didTimeout)
   const succeeded = results.filter((result) => result.didSolve)
   const elapsedForSucceeded = succeeded.map((result) => result.elapsedTimeMs)
+  const viaCounts = succeeded
+    .map((result) => result.viaCount)
+    .filter((viaCount): viaCount is number => typeof viaCount === "number")
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
+  const avgVia =
+    viaCounts.length === 0
+      ? null
+      : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
+        viaCounts.length
 
   return {
     solverName,
@@ -937,6 +954,7 @@ const summarizeSolverResults = (
     timedOutLabel: `${timedOut.length}/${results.length}`,
     p50TimeMs: getPercentileMs(elapsedForSucceeded, 0.5),
     p95TimeMs: getPercentileMs(elapsedForSucceeded, 0.95),
+    avgVia,
   } satisfies SolverRunSummary
 }
 
