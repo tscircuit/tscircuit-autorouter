@@ -728,7 +728,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
-  private inputNodeWithPortPoints: InputNodeWithPortPoints[]
+  private inputNodeWithPortPoints?: InputNodeWithPortPoints[]
+  private readonly graphForInputNodes: SerializedHyperGraph
   private originalRegionById: Map<
     CapacityMeshNodeId,
     HgPortPointPathingSolverParams["graph"]["regions"][number]
@@ -792,10 +793,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.graph.regions.map((region) => [region.regionId, region]),
     )
     this.originalRegionIds = new Set(this.originalRegionById.keys())
-    this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
-      params,
-      graphForTiny,
-    )
+    this.graphForInputNodes = graphForTiny
+  }
+
+  private getInputNodesWithPortPoints(): InputNodeWithPortPoints[] {
+    if (!this.inputNodeWithPortPoints) {
+      this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
+        this.params,
+        this.graphForInputNodes,
+      )
+    }
+
+    return this.inputNodeWithPortPoints
   }
 
   getSolverName(): string {
@@ -979,7 +988,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     return {
       nodesWithPortPoints,
-      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      inputNodeWithPortPoints: this.getInputNodesWithPortPoints(),
     }
   }
 
