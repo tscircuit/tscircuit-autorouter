@@ -33,6 +33,9 @@ export type WorkerResult = {
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
+  viaCount?: number
+  routedLength?: number
+  viaPerUnitLength?: number | null
   drcErrorCount?: number
   drcErrorTypes?: Record<string, number>
   drcErrorMessages?: Array<{
@@ -71,6 +74,8 @@ export type SolverRunSummary = {
   timedOutLabel: string
   p50TimeMs: number | null
   p95TimeMs: number | null
+  avgVia: number | null
+  avgViaPerUnitLength: number | null
 }
 
 export type BenchmarkReport = {
