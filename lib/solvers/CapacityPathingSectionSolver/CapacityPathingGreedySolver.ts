@@ -22,7 +22,11 @@ export class CapacityPathingGreedySolver extends CapacityPathingSolver5 {
     const totalCapacity = this.getTotalCapacity(node)
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-    const remainingCapacity = totalCapacity - usedCapacity - 1
+    const currentConnection = this.connectionsWithNodes[this.currentConnectionIndex]
+    const minTraceWidth = this.simpleRouteJson.minTraceWidth || 0.15
+    const nominalTraceWidth = currentConnection?.connection?.nominalTraceWidth ?? minTraceWidth
+    const capacityRequirement = Math.max(1, nominalTraceWidth / minTraceWidth)
+    const remainingCapacity = totalCapacity - usedCapacity - capacityRequirement
     if (remainingCapacity > 0) {
       return 0
     }

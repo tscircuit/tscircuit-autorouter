@@ -177,8 +177,24 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+      const schedule: number[] = [this.nominalTraceWidth]
+      let currentWidth = this.nominalTraceWidth
+      while (currentWidth > this.minTraceWidth + 1e-5) {
+        const nextWidth = currentWidth / 2
+        if (nextWidth >= this.minTraceWidth - 1e-5) {
+          const roundedNextWidth = Math.round(nextWidth * 1000) / 1000
+          if (!schedule.includes(roundedNextWidth)) {
+            schedule.push(roundedNextWidth)
+          }
+          currentWidth = nextWidth
+        } else {
+          break
+        }
+      }
+      if (!schedule.includes(this.minTraceWidth)) {
+        schedule.push(this.minTraceWidth)
+      }
+      this.TRACE_WIDTH_SCHEDULE = schedule
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(

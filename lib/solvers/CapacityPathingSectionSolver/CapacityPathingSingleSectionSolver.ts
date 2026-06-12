@@ -158,10 +158,10 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 
     const MIN_PENALTY = 0.05
 
-    const totalCapacity = this.getTotalCapacity(node)
-    const usedCapacity =
-      this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-    const remainingCapacity = totalCapacity - usedCapacity - 1
+    const currentTerminal = this.sectionConnectionTerminals[this.currentConnectionIndex]
+    const nominalTraceWidth = currentTerminal?.nominalTraceWidth
+    const capacityRequirement = nominalTraceWidth ? Math.max(1, nominalTraceWidth / 0.15) : 1
+    const remainingCapacity = totalCapacity - usedCapacity - capacityRequirement
 
     if (remainingCapacity > 0) {
       return 0
@@ -275,7 +275,9 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   }
 
   // Adapted from CapacityPathingSolver - uses section's capacity map
-  reduceCapacityAlongPath(path: CapacityMeshNode[]) {
+  reduceCapacityAlongPath(path: CapacityMeshNode[], nominalTraceWidth?: number) {
+    const activeNominalTraceWidth = nominalTraceWidth ?? this.sectionConnectionTerminals[this.currentConnectionIndex]?.nominalTraceWidth
+    const capacityConsumption = activeNominalTraceWidth ? Math.max(1, activeNominalTraceWidth / 0.15) : 1
     for (const pathNode of path) {
       // Only reduce capacity and update score for nodes within our section
       if (this.usedNodeCapacityMap.has(pathNode.capacityMeshNodeId)) {
@@ -303,7 +305,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
         this.currentSectionScore -= oldNodeScoreContribution
 
         // Increment the used capacity for the node
-        const newUsedCapacity = oldUsedCapacity + 1
+        const newUsedCapacity = oldUsedCapacity + capacityConsumption
         this.usedNodeCapacityMap.set(nodeId, newUsedCapacity)
 
         // Add the score contribution of the node with its new capacity
@@ -522,6 +524,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
       startNodeId: CapacityMeshNodeId
       endNodeId: CapacityMeshNodeId
       path?: CapacityMeshNode[]
+      nominalTraceWidth?: number
     },
     endNode: CapacityMeshNode, // Pass endNode if needed for checks like isConnectedToEndGoal
   ) {
@@ -533,7 +536,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     // }
 
     currentTerminal.path = path // Store the found path
-    this.reduceCapacityAlongPath(path) // Update capacity usage
+    this.reduceCapacityAlongPath(path, currentTerminal.nominalTraceWidth) // Update capacity usage
 
     // Move to the next connection
     this.currentConnectionIndex++

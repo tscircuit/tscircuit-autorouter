@@ -195,3 +195,6 @@ result-*
 tmp
 
 *.received.svg
+
+.npm-cache/
+.home/

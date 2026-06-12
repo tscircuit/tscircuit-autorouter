@@ -98,6 +98,7 @@ export const computeSectionNodesTerminalsAndEdges = (opts: {
         connectionName: conn.connection.name,
         startNodeId,
         endNodeId,
+        nominalTraceWidth: conn.connection.nominalTraceWidth,
       })
     }
   }
