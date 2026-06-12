@@ -532,10 +532,10 @@ jobs:
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Best Via |',
-                '| --- | --- | --- | --- | --- | --- | ---: |',
+                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${formatViaCount(row.bestVia)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
                 ),
               ]
             }
@@ -549,10 +549,10 @@ jobs:
                 return []
               }
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Best Via |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- | ---: |',
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatViaCount(row.bestVia))} |`,
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
@@ -584,7 +584,7 @@ jobs:
                 mainTest.didSolve
               ) {
                 if (test.viaCount < mainTest.viaCount) {
-                  return `🏆 -${mainTest.viaCount - test.viaCount} via`
+                  return `-${mainTest.viaCount - test.viaCount} via`
                 }
                 if (test.viaCount > mainTest.viaCount) {
                   return `+${test.viaCount - mainTest.viaCount} via`
@@ -610,7 +610,7 @@ jobs:
                     : null
               const record = mainBestVia === null ? test.bestViaCount : Math.min(test.bestViaCount, mainBestVia)
               if (record === test.bestViaCount && (mainBestVia === null || test.bestViaCount < mainBestVia)) {
-                return `${record} 🏆`
+                return String(record)
               }
               return String(record)
             }
@@ -1042,10 +1042,10 @@ jobs:
                 `Scenarios: ${report.scenarioCount}`,
                 `Effort: ${report.effortLabel}`,
                 '',
-                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Best Via |',
-                '| --- | --- | --- | --- | --- | --- | ---: |',
+                '| Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | --- | --- | --- | --- | --- |',
                 ...report.summary.map((row) =>
-                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} | ${formatViaCount(row.bestVia)} |`,
+                  `| ${formatSolverDisplayName(row.solverName, report.effortLabel)} | ${row.completedRateLabel} | ${row.relaxedDrcRateLabel} | ${row.timedOutLabel} | ${formatTime(row.p50TimeMs)} | ${formatTime(row.p95TimeMs)} |`,
                 ),
               ]
             }
@@ -1059,10 +1059,10 @@ jobs:
                 return []
               }
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Best Via |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- | ---: |',
+                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
+                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatViaCount(row.bestVia))} |`,
+                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
@@ -1094,7 +1094,7 @@ jobs:
                 mainTest.didSolve
               ) {
                 if (test.viaCount < mainTest.viaCount) {
-                  return `🏆 -${mainTest.viaCount - test.viaCount} via`
+                  return `-${mainTest.viaCount - test.viaCount} via`
                 }
                 if (test.viaCount > mainTest.viaCount) {
                   return `+${test.viaCount - mainTest.viaCount} via`
@@ -1120,7 +1120,7 @@ jobs:
                     : null
               const record = mainBestVia === null ? test.bestViaCount : Math.min(test.bestViaCount, mainBestVia)
               if (record === test.bestViaCount && (mainBestVia === null || test.bestViaCount < mainBestVia)) {
-                return `${record} 🏆`
+                return String(record)
               }
               return String(record)
             }

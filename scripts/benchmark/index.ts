@@ -338,7 +338,6 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "Timed Out",
     "P50 Time",
     "P95 Time",
-    "Best Via",
   ]
 
   const body = rows.map((row) => [
@@ -348,7 +347,6 @@ const formatTable = (rows: SolverRunSummary[]) => {
     row.timedOutLabel,
     formatTime(row.p50TimeMs),
     formatTime(row.p95TimeMs),
-    formatViaCount(row.bestVia),
   ])
 
   const widths = headers.map((header, columnIndex) => {
