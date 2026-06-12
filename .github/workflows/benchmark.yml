@@ -553,11 +553,22 @@ jobs:
               if (rows.length === 0) {
                 return []
               }
+              const includeAvgViaPerUnitArea = rows.some(
+                ({ row }) => typeof row?.avgViaPerUnitArea === 'number',
+              )
+              const summaryHeader = includeAvgViaPerUnitArea
+                ? '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via/Area |'
+                : '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |'
+              const summaryDivider = includeAvgViaPerUnitArea
+                ? '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |'
+                : '| --- | ---: | --- | --- | --- | --- | --- | --- |'
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                summaryHeader,
+                summaryDivider,
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
+                  includeAvgViaPerUnitArea
+                    ? `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${typeof row.avgViaPerUnitArea === 'number' ? row.avgViaPerUnitArea.toFixed(4) : 'n/a'} |`
+                    : `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
@@ -1035,11 +1046,22 @@ jobs:
               if (rows.length === 0) {
                 return []
               }
+              const includeAvgViaPerUnitArea = rows.some(
+                ({ row }) => typeof row?.avgViaPerUnitArea === 'number',
+              )
+              const summaryHeader = includeAvgViaPerUnitArea
+                ? '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via/Area |'
+                : '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |'
+              const summaryDivider = includeAvgViaPerUnitArea
+                ? '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |'
+                : '| --- | ---: | --- | --- | --- | --- | --- | --- |'
               return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- |',
+                summaryHeader,
+                summaryDivider,
                 ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
+                  includeAvgViaPerUnitArea
+                    ? `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${typeof row.avgViaPerUnitArea === 'number' ? row.avgViaPerUnitArea.toFixed(4) : 'n/a'} |`
+                    : `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} |`,
                 ),
               ]
             }
