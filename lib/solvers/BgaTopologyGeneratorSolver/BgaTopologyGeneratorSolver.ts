@@ -190,15 +190,9 @@ function areSameNumberSets(valuesA: number[], valuesB: number[]) {
   )
 }
 
+/** Resolves an obstacle's blocked z values in the solver's local 2-layer z-space. */
 function getLocalObstacleAvailableZ(obstacle: Obstacle) {
-  const rawZLayers =
-    obstacle.zLayers && obstacle.zLayers.length > 0
-      ? obstacle.zLayers
-      : obstacle.layers.map((layerName) => (layerName === "top" ? 0 : 1))
-
-  return Array.from(
-    new Set(rawZLayers.map((z) => (z <= 0 ? 0 : 1)).filter((z) => z >= 0)),
-  ).sort((a, b) => a - b)
+  return getObstacleAvailableZ(obstacle, BgaTopologyGeneratorSolver.layerCount)
 }
 
 function mergeOverlappingObstacles(obstacles: Obstacle[]) {
@@ -804,12 +798,8 @@ class BgaObstacleMergeSolver extends BaseSolver {
         nodeIndex >= 0 ? this.workingRoutingRegions[nodeIndex]! : null
 
       if (node && !node._containsObstacle) {
-        const blockedZForNode = getObstacleAvailableZ(
-          {
-            ...nextAction.obstacle,
-            zLayers: getLocalObstacleAvailableZ(nextAction.obstacle),
-          },
-          BgaTopologyGeneratorSolver.layerCount,
+        const blockedZForNode = getLocalObstacleAvailableZ(
+          nextAction.obstacle,
         ).filter((z) => z > 0 && node.availableZ.includes(z))
 
         if (blockedZForNode.length > 0) {

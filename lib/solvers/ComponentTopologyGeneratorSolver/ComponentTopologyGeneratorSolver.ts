@@ -31,14 +31,12 @@ export function createReplacementObstacleForComponent({
   const memberObstacles = inputSrj.obstacles.filter(
     (obstacle) => obstacle.componentId === detectedComponent.componentId,
   )
-  const layers = Array.from(
-    new Set(memberObstacles.flatMap((obstacle) => obstacle.layers)),
-  )
-  const memberZLayers = Array.from(
-    new Set(memberObstacles.flatMap((obstacle) => obstacle.zLayers ?? [])),
-  )
-  const allZLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
-  const zLayers = memberZLayers.length > 0 ? memberZLayers : allZLayers
+  // The global topology mesh must vacate the entire component footprint on
+  // every board layer: component-local topology nodes are merged back in later
+  // by pipeline 7, and global mesh nodes inside the footprint are filtered out
+  // geometrically without z awareness — any layer the replacement obstacle did
+  // not block would become an unroutable hole.
+  const zLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
   const replacementLayers = zLayers.map((z) =>
     mapZToLayerName(z, inputSrj.layerCount),
   )
@@ -51,10 +49,7 @@ export function createReplacementObstacleForComponent({
     obstacleId: `${detectedComponent.componentId}_component_bounds`,
     componentId: detectedComponent.componentId,
     type: "rect",
-    // The global topology mesh must vacate the entire component footprint on
-    // every board layer because component-local topology nodes are merged back
-    // in later by pipeline 7.
-    layers: replacementLayers.length > 0 ? replacementLayers : layers,
+    layers: replacementLayers,
     zLayers,
     center: {
       x: (bounds.minX + bounds.maxX) / 2,

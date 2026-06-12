@@ -54,11 +54,38 @@ function clusterBoundaryValues(values: number[]) {
   return clusterAxisValues(values)
 }
 
-/** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
-export function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
-  return obstacle.zLayers && obstacle.zLayers.length > 0
-    ? obstacle.zLayers
-    : obstacle.layers.map((layerName) => mapLayerNameToZ(layerName, layerCount))
+/**
+ * Resolves the obstacle's blocked z values from explicit `zLayers` or named
+ * layers, normalized into this solver's z-space: deduplicated, sorted
+ * ascending and clamped into `[0, layerCount - 1]`.
+ *
+ * Obstacles arrive in board z-space while the BGA generator works in a local
+ * z-space (z0 = mounting layer, last z = far escape layer), so z values past
+ * the local range are clamped onto the last local layer rather than dropped —
+ * e.g. a through-hole pad on a board with more layers than `layerCount` still
+ * blocks every local layer. An obstacle that resolves to no finite z is
+ * treated as blocking every layer.
+ */
+export function getObstacleAvailableZ(
+  obstacle: Obstacle,
+  layerCount: number,
+): number[] {
+  const maxZ = Math.max(0, layerCount - 1)
+  const rawZ =
+    obstacle.zLayers && obstacle.zLayers.length > 0
+      ? obstacle.zLayers
+      : obstacle.layers.map((layerName) =>
+          mapLayerNameToZ(layerName, layerCount),
+        )
+  const normalizedZ = Array.from(
+    new Set(
+      rawZ
+        .filter((z) => Number.isFinite(z))
+        .map((z) => Math.min(Math.max(z, 0), maxZ)),
+    ),
+  ).sort((a, b) => a - b)
+
+  return normalizedZ.length > 0 ? normalizedZ : getLayerRange(layerCount)
 }
 
 /**
