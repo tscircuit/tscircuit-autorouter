@@ -158,6 +158,9 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 
     const MIN_PENALTY = 0.05
 
+    const totalCapacity = this.getTotalCapacity(node)
+    const usedCapacity =
+      this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
     const currentTerminal = this.sectionConnectionTerminals[this.currentConnectionIndex]
     const nominalTraceWidth = currentTerminal?.nominalTraceWidth
     const capacityRequirement = nominalTraceWidth ? Math.max(1, nominalTraceWidth / 0.15) : 1
