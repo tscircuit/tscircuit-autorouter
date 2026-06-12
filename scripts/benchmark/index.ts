@@ -66,11 +66,11 @@ const formatTime = (timeMs: number | null) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
-const formatAverage = (value: number | null) => {
+const formatViaCount = (value: number | null) => {
   if (value === null) {
     return "n/a"
   }
-  return value.toFixed(2)
+  return String(value)
 }
 
 const formatDurationLabel = (timeMs: number) => {
@@ -338,7 +338,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "Timed Out",
     "P50 Time",
     "P95 Time",
-    "Avg Via",
+    "Best Via",
   ]
 
   const body = rows.map((row) => [
@@ -348,7 +348,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     row.timedOutLabel,
     formatTime(row.p50TimeMs),
     formatTime(row.p95TimeMs),
-    formatAverage(row.avgVia),
+    formatViaCount(row.bestVia),
   ])
 
   const widths = headers.map((header, columnIndex) => {
@@ -933,11 +933,7 @@ const summarizeSolverResults = (
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
-  const avgVia =
-    viaCounts.length === 0
-      ? null
-      : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
-        viaCounts.length
+  const bestVia = viaCounts.length === 0 ? null : Math.min(...viaCounts)
 
   return {
     solverName,
@@ -954,8 +950,28 @@ const summarizeSolverResults = (
     timedOutLabel: `${timedOut.length}/${results.length}`,
     p50TimeMs: getPercentileMs(elapsedForSucceeded, 0.5),
     p95TimeMs: getPercentileMs(elapsedForSucceeded, 0.95),
-    avgVia,
+    bestVia,
   } satisfies SolverRunSummary
+}
+
+const annotateBestViaCounts = (results: WorkerResult[]): WorkerResult[] => {
+  const bestViaByScenario = new Map<string, number>()
+
+  for (const result of results) {
+    if (!result.didSolve || typeof result.viaCount !== "number") {
+      continue
+    }
+
+    const currentBest = bestViaByScenario.get(result.scenarioName)
+    if (currentBest === undefined || result.viaCount < currentBest) {
+      bestViaByScenario.set(result.scenarioName, result.viaCount)
+    }
+  }
+
+  return results.map((result) => ({
+    ...result,
+    bestViaCount: bestViaByScenario.get(result.scenarioName),
+  }))
 }
 
 const main = async () => {
@@ -1030,7 +1046,9 @@ const main = async () => {
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
   )
 
-  const results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs)
+  const results = annotateBestViaCounts(
+    await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs),
+  )
   const rows = solvers.map((solver) =>
     summarizeSolverResults(
       solver,
