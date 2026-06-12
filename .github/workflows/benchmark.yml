@@ -596,7 +596,7 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
-            const getBestViaRecord = (test, mainIndex) => {
+            const formatBestViaRecord = (test, mainIndex) => {
               if (typeof test?.bestViaCount !== 'number' || !Number.isFinite(test.bestViaCount)) {
                 return 'n/a'
               }
@@ -609,9 +609,6 @@ jobs:
                     ? mainTest.viaCount
                     : null
               const record = mainBestVia === null ? test.bestViaCount : Math.min(test.bestViaCount, mainBestVia)
-              if (record === test.bestViaCount && (mainBestVia === null || test.bestViaCount < mainBestVia)) {
-                return String(record)
-              }
               return String(record)
             }
             const isUnchangedPassingTest = (test, mainIndex) => {
@@ -654,8 +651,8 @@ jobs:
                 ...header,
                 ...tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${getBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${getBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${formatBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${formatBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }
@@ -1106,7 +1103,7 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
-            const getBestViaRecord = (test, mainIndex) => {
+            const formatBestViaRecord = (test, mainIndex) => {
               if (typeof test?.bestViaCount !== 'number' || !Number.isFinite(test.bestViaCount)) {
                 return 'n/a'
               }
@@ -1119,9 +1116,6 @@ jobs:
                     ? mainTest.viaCount
                     : null
               const record = mainBestVia === null ? test.bestViaCount : Math.min(test.bestViaCount, mainBestVia)
-              if (record === test.bestViaCount && (mainBestVia === null || test.bestViaCount < mainBestVia)) {
-                return String(record)
-              }
               return String(record)
             }
             const isUnchangedPassingTest = (test, mainIndex) => {
@@ -1164,8 +1158,8 @@ jobs:
                 ...header,
                 ...tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${getBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${getBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${formatBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${formatViaCount(test.viaCount)} | ${formatBestViaRecord(test, mainIndex)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }
