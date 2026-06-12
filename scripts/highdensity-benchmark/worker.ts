@@ -15,6 +15,7 @@ type WorkerResponse =
       type: "result"
       taskId: number
       value: number
+      avgViaPerUnitLength: number | null
       solved: boolean
       solveDurationMs: number
     }
@@ -31,6 +32,43 @@ const unwrapProblem = (problem: unknown) => {
   }
 
   return problem
+}
+
+const getRouteLength = (route: Array<{ x: number; y: number }>) => {
+  let totalLength = 0
+
+  for (let index = 1; index < route.length; index += 1) {
+    const previousPoint = route[index - 1]
+    const currentPoint = route[index]
+    if (!previousPoint || !currentPoint) continue
+
+    totalLength += Math.hypot(
+      currentPoint.x - previousPoint.x,
+      currentPoint.y - previousPoint.y,
+    )
+  }
+
+  return totalLength
+}
+
+const getAverageViaPerUnitLength = (solver: HighDensitySolver) => {
+  if (!solver.solved || solver.routes.length === 0) {
+    return null
+  }
+
+  let totalViaCount = 0
+  let totalRouteLength = 0
+
+  for (const route of solver.routes) {
+    totalViaCount += route.vias.length
+    totalRouteLength += getRouteLength(route.route)
+  }
+
+  if (totalRouteLength <= 0) {
+    return null
+  }
+
+  return totalViaCount / totalRouteLength
 }
 
 const computeProblemScore = (problem: unknown) => {
@@ -64,6 +102,7 @@ const computeProblemScore = (problem: unknown) => {
   const actualFailure = solver.solved ? 0 : 1
   return {
     value: (predictedPf - actualFailure) ** 2,
+    avgViaPerUnitLength: getAverageViaPerUnitLength(solver),
     solved: solver.solved,
     solveDurationMs,
   }
@@ -84,6 +123,7 @@ workerParentPort.on("message", (message: WorkerRequest) => {
       type: "result",
       taskId: message.taskId,
       value: result.value,
+      avgViaPerUnitLength: result.avgViaPerUnitLength,
       solved: result.solved,
       solveDurationMs: result.solveDurationMs,
     } satisfies WorkerResponse)

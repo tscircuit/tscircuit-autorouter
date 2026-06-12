@@ -16,6 +16,7 @@ export type WorkerResponse =
       type: "result"
       taskId: number
       value: number
+      avgViaPerUnitLength: number | null
       solved: boolean
       solveDurationMs: number
     }
@@ -27,6 +28,7 @@ export type WorkerResponse =
 
 export type TaskResult = {
   value: number
+  avgViaPerUnitLength: number | null
   solved: boolean
   solveDurationMs: number
 }
@@ -39,6 +41,7 @@ export type RunBenchmarkOptions = {
 
 export type RunBenchmarkResult = {
   results: number[]
+  avgViaPerUnitLength: number | null
   timedOutProblemIds: string[]
   totalDurationMs: number
   passCount: number

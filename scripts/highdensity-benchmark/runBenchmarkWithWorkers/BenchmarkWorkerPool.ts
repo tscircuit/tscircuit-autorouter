@@ -12,6 +12,8 @@ export class BenchmarkWorkerPool {
   private readonly timeoutMs: number
   private readonly results: number[] = []
   private readonly timedOutProblemIds: string[] = []
+  private avgViaPerUnitLengthSum = 0
+  private avgViaPerUnitLengthCount = 0
   private passCount = 0
   private completedProblems = 0
   private nextTaskIndex = 0
@@ -44,6 +46,7 @@ export class BenchmarkWorkerPool {
     if (this.tasks.length === 0) {
       return {
         results: [],
+        avgViaPerUnitLength: null,
         timedOutProblemIds: [],
         totalDurationMs: 0,
         passCount: 0,
@@ -64,6 +67,10 @@ export class BenchmarkWorkerPool {
 
     return {
       results: this.results,
+      avgViaPerUnitLength:
+        this.avgViaPerUnitLengthCount === 0
+          ? null
+          : this.avgViaPerUnitLengthSum / this.avgViaPerUnitLengthCount,
       timedOutProblemIds: this.timedOutProblemIds,
       totalDurationMs: Date.now() - startedAt,
       passCount: this.passCount,
@@ -89,6 +96,10 @@ export class BenchmarkWorkerPool {
       this.completedProblems += 1
       if (result.solved) {
         this.passCount += 1
+      }
+      if (result.avgViaPerUnitLength !== null) {
+        this.avgViaPerUnitLengthSum += result.avgViaPerUnitLength
+        this.avgViaPerUnitLengthCount += 1
       }
       this.results.push(result.value)
       this.logProgress()

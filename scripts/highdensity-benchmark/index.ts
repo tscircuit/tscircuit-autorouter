@@ -9,10 +9,12 @@ import { NodeWithPortPoints } from "lib/types/high-density-types.ts"
 
 type CliOptions = {
   concurrency: number
+  scenarioLimit: number | null
   timeoutSeconds: number
 }
 
 const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`
+const formatMetric = (value: number) => value.toFixed(6)
 
 const usage = () =>
   [
@@ -20,6 +22,7 @@ const usage = () =>
     "",
     "Options:",
     "  --concurrency        Number of worker threads to use for fresh solver runs",
+    "  --scenario-limit     Run only the first N benchmark problems",
     "  --timeout-seconds    Kill and fail any single solve that exceeds this limit",
     "  -h, --help           Show this help",
   ].join("\n")
@@ -31,6 +34,9 @@ const parseCliArgs = (): CliOptions => {
     strict: true,
     options: {
       concurrency: {
+        type: "string",
+      },
+      "scenario-limit": {
         type: "string",
       },
       "timeout-seconds": {
@@ -57,9 +63,19 @@ const parseCliArgs = (): CliOptions => {
     values["timeout-seconds"] === undefined
       ? 1000
       : Number.parseInt(values["timeout-seconds"], 10)
+  const scenarioLimit =
+    values["scenario-limit"] === undefined
+      ? null
+      : Number.parseInt(values["scenario-limit"], 10)
 
   if (!Number.isInteger(requestedConcurrency) || requestedConcurrency < 0) {
     throw new TypeError("--concurrency must be a non-negative integer")
+  }
+  if (
+    scenarioLimit !== null &&
+    (!Number.isInteger(scenarioLimit) || scenarioLimit <= 0)
+  ) {
+    throw new TypeError("--scenario-limit must be a positive integer")
   }
   if (!Number.isInteger(timeoutSeconds) || timeoutSeconds <= 0) {
     throw new TypeError("--timeout-seconds must be a positive integer")
@@ -72,13 +88,21 @@ const parseCliArgs = (): CliOptions => {
 
   return {
     concurrency,
+    scenarioLimit,
     timeoutSeconds,
   }
 }
 
-const main = async ({ concurrency, timeoutSeconds }: CliOptions) => {
+const main = async ({
+  concurrency,
+  scenarioLimit,
+  timeoutSeconds,
+}: CliOptions) => {
   const { hgProblems } = await import("high-density-dataset-z04")
-  const problems = hgProblems as unknown as NodeWithPortPoints[]
+  const problems = (hgProblems as unknown as NodeWithPortPoints[]).slice(
+    0,
+    scenarioLimit ?? undefined,
+  )
 
   const completedScores = await runBenchmarkWithWorkers({
     problems,
@@ -102,6 +126,9 @@ const main = async ({ concurrency, timeoutSeconds }: CliOptions) => {
       completedScores.timedOutProblemIds.length,
     )
     console.log("Mean Squared Error: skipped because no problems completed")
+    console.log(
+      "avgViaPerUnitLength: skipped because no solved routes completed",
+    )
     return
   }
 
@@ -117,6 +144,12 @@ const main = async ({ concurrency, timeoutSeconds }: CliOptions) => {
   )
   console.log("Timed out problems:", completedScores.timedOutProblemIds.length)
   console.log("Mean Squared Error:", mse)
+  console.log(
+    "avgViaPerUnitLength:",
+    completedScores.avgViaPerUnitLength === null
+      ? "skipped because no solved routes completed"
+      : formatMetric(completedScores.avgViaPerUnitLength),
+  )
 }
 
 try {

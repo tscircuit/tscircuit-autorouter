@@ -37,6 +37,7 @@ export class BenchmarkWorker {
           finish(() =>
             resolveTask({
               value: message.value,
+              avgViaPerUnitLength: message.avgViaPerUnitLength,
               solved: message.solved,
               solveDurationMs: message.solveDurationMs,
             }),
