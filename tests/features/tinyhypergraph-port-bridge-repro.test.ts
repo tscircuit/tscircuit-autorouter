@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import input from "../../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
@@ -25,32 +26,7 @@ test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", 
 
   solver.solve()
 
-  expect(serializedSolvedRoutes).toEqual([
-    {
-      connection: {
-        connectionId: "bridge-repro",
-      },
-      path: [
-        { portId: "tiny-terminal:start-port:bridge-repro" },
-        { portId: "tiny-terminal:end-port:bridge-repro" },
-      ],
-    },
-  ])
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-
-  const output = solver.getOutput()
-  expect(
-    output.nodesWithPortPoints.map((node) => node.capacityMeshNodeId),
-  ).toEqual(["bl", "left-bridge", "br"])
-  expect(
-    output.nodesWithPortPoints.map((node) => [
-      node.capacityMeshNodeId,
-      node.portPoints.map((point) => point.portPointId),
-    ]),
-  ).toEqual([
-    ["bl", ["tiny-terminal:start-port:bridge-repro", "p0"]],
-    ["left-bridge", ["p0", "p5"]],
-    ["br", ["p5", "tiny-terminal:end-port:bridge-repro"]],
-  ])
+  expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
