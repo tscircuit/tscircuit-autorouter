@@ -518,9 +518,10 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
   solver.solve()
 
   const output = solver.getOutput()
-  const replacementObstacleNodes = output.routingRegions.filter((node) =>
-    node.capacityMeshNodeId.includes("replacement-obstacle") &&
-    !node.capacityMeshNodeId.includes(":expansion:"),
+  const replacementObstacleNodes = output.routingRegions.filter(
+    (node) =>
+      node.capacityMeshNodeId.includes("replacement-obstacle") &&
+      !node.capacityMeshNodeId.includes(":expansion:"),
   )
   const expansionNodes = output.routingRegions.filter((node) =>
     node.capacityMeshNodeId.includes(":expansion:"),
@@ -529,7 +530,9 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
   expect(solver.stats.replacementObstacleNodeCount).toBe(2)
   expect(replacementObstacleNodes).toHaveLength(2)
   expect(expansionNodes.length).toBeGreaterThan(0)
-  expect(expansionNodes.every((node) => node.availableZ.length === 1)).toBe(true)
+  expect(expansionNodes.every((node) => node.availableZ.length === 1)).toBe(
+    true,
+  )
   expect(expansionNodes.every((node) => node.availableZ[0] === 1)).toBe(true)
   expect(
     replacementObstacleNodes.every((node) => node.availableZ[0] === 1),

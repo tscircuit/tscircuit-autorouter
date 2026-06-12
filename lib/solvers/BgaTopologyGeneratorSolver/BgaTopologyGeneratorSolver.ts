@@ -172,10 +172,7 @@ function getAxisOverlap(
   return Math.min(rangeA.max, rangeB.max) - Math.max(rangeA.min, rangeB.min)
 }
 
-function doNodeRectsOverlap(
-  nodeA: CapacityMeshNode,
-  nodeB: CapacityMeshNode,
-) {
+function doNodeRectsOverlap(nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) {
   const boundsA = getNodeBounds(nodeA)
   const boundsB = getNodeBounds(nodeB)
   const overlapWidth =
@@ -219,7 +216,9 @@ function mergeOverlappingObstacles(obstacles: Obstacle[]) {
         const obstacleBZ = getLocalObstacleAvailableZ(obstacleB)
 
         if (!areSameNumberSets(obstacleAZ, obstacleBZ)) continue
-        if (!doBoundsOverlap(getBoundingBox(obstacleA), getBoundingBox(obstacleB))) {
+        if (
+          !doBoundsOverlap(getBoundingBox(obstacleA), getBoundingBox(obstacleB))
+        ) {
           continue
         }
 
@@ -281,14 +280,12 @@ function mergeNodesGreedily({
 
   while (didMerge) {
     didMerge = false
-    let bestPair:
-      | {
-          indexA: number
-          indexB: number
-          mergedNode: CapacityMeshNode
-          aspectRatioScore: number
-        }
-      | null = null
+    let bestPair: {
+      indexA: number
+      indexB: number
+      mergedNode: CapacityMeshNode
+      aspectRatioScore: number
+    } | null = null
 
     for (let indexA = 0; indexA < mergeCandidates.length; indexA++) {
       for (let indexB = indexA + 1; indexB < mergeCandidates.length; indexB++) {
@@ -401,7 +398,9 @@ function hasClearExpansionCorridor({
   const candidateBounds = getNodeBounds(candidateExpansionNode)
 
   const overlapsOtherObstacle = obstacleNodes.some((obstacleNode) => {
-    if (obstacleNode.capacityMeshNodeId === sourceObstacleNode.capacityMeshNodeId) {
+    if (
+      obstacleNode.capacityMeshNodeId === sourceObstacleNode.capacityMeshNodeId
+    ) {
       return false
     }
 
@@ -567,7 +566,9 @@ function createEdgeFillExpansionNodes({
 
   if (candidates.length === 0) return []
 
-  const minDistance = Math.min(...candidates.map((candidate) => candidate.distance))
+  const minDistance = Math.min(
+    ...candidates.map((candidate) => candidate.distance),
+  )
   const frontCandidates = candidates.filter(
     (candidate) => Math.abs(candidate.distance - minDistance) <= 1e-6,
   )
@@ -799,7 +800,8 @@ class BgaObstacleMergeSolver extends BaseSolver {
       const nodeIndex = this.workingRoutingRegions.findIndex(
         (node) => node.capacityMeshNodeId === nextAction.nodeId,
       )
-      const node = nodeIndex >= 0 ? this.workingRoutingRegions[nodeIndex]! : null
+      const node =
+        nodeIndex >= 0 ? this.workingRoutingRegions[nodeIndex]! : null
 
       if (node && !node._containsObstacle) {
         const blockedZForNode = getObstacleAvailableZ(
@@ -874,7 +876,10 @@ class BgaObstacleMergeSolver extends BaseSolver {
       ),
     )
 
-    for (const [obstacleIndex, obstacle] of this.lowerLayerObstacles.entries()) {
+    for (const [
+      obstacleIndex,
+      obstacle,
+    ] of this.lowerLayerObstacles.entries()) {
       this.actionQueue.push({
         type: "inspect-obstacle",
         obstacle,
@@ -904,9 +909,9 @@ class BgaObstacleMergeSolver extends BaseSolver {
     const currentNodeId =
       this.activeAction?.type === "trim-node" ? this.activeAction.nodeId : null
     const currentNode = currentNodeId
-      ? this.workingRoutingRegions.find(
+      ? (this.workingRoutingRegions.find(
           (node) => node.capacityMeshNodeId === currentNodeId,
-        ) ?? null
+        ) ?? null)
       : null
     const boardBounds = this.params.inputSrj.bounds
     const boardOutlinePoints = this.params.inputSrj.outline?.length
@@ -919,8 +924,7 @@ class BgaObstacleMergeSolver extends BaseSolver {
           { x: boardBounds.minX, y: boardBounds.minY },
         ]
     const backgroundObstacles = this.params.inputSrj.obstacles.filter(
-      (obstacle) =>
-        obstacle.obstacleId !== currentObstacle?.obstacleId,
+      (obstacle) => obstacle.obstacleId !== currentObstacle?.obstacleId,
     )
 
     return {
@@ -1084,7 +1088,9 @@ class BgaExpansionSolver extends BaseSolver {
           right: 3,
         } satisfies Record<EdgeDirection, number>
 
-        return directionOrder[actionA.direction] - directionOrder[actionB.direction]
+        return (
+          directionOrder[actionA.direction] - directionOrder[actionB.direction]
+        )
       })
     }
 
@@ -1247,22 +1253,26 @@ class BgaExpansionSolver extends BaseSolver {
           { x: boardBounds.minX, y: boardBounds.maxY },
           { x: boardBounds.minX, y: boardBounds.minY },
         ]
-    const backgroundObstacles = this.params.inputSrj.obstacles.map((obstacle) => ({
-      center: obstacle.center,
-      width: obstacle.width,
-      height: obstacle.height,
-      stroke: "rgba(140, 140, 140, 0.55)",
-      fill: "rgba(140, 140, 140, 0.14)",
-      layer: obstacle.layers.join(","),
-      label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
-    }))
+    const backgroundObstacles = this.params.inputSrj.obstacles.map(
+      (obstacle) => ({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        stroke: "rgba(140, 140, 140, 0.55)",
+        fill: "rgba(140, 140, 140, 0.14)",
+        layer: obstacle.layers.join(","),
+        label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+      }),
+    )
     const activeObstacleNodeId =
       this.activeAction?.type === "inspect-edge" ||
       this.activeAction?.type === "insert-expansion"
         ? this.activeAction.obstacleNodeId
         : null
     const queuedEdgeKeys = new Set(
-      this.actionQueue.map((action) => `${action.obstacleNodeId}:${action.direction}`),
+      this.actionQueue.map(
+        (action) => `${action.obstacleNodeId}:${action.direction}`,
+      ),
     )
     const activeEdgeKey =
       this.activeAction?.type === "inspect-edge" ||
@@ -1274,7 +1284,8 @@ class BgaExpansionSolver extends BaseSolver {
       return (["left", "right", "top", "bottom"] as const)
         .map((direction) => {
           const edgeKey = `${node.capacityMeshNodeId}:${direction}`
-          if (!queuedEdgeKeys.has(edgeKey) && activeEdgeKey !== edgeKey) return null
+          if (!queuedEdgeKeys.has(edgeKey) && activeEdgeKey !== edgeKey)
+            return null
 
           if (direction === "left") {
             return {
@@ -1507,12 +1518,12 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
     const mergedOutput = this.getStageOutput<BgaObstacleMergeSolverOutput>(
       "bgaObstacleMergeSolver",
     )
-    const expansionOutput = this.getStageOutput<BgaExpansionSolverOutput>(
-      "bgaExpansionSolver",
-    )
-    const sharedMergeOutput = this.getStageOutput<BgaSharedNodeMergeSolverOutput>(
-      "bgaSharedNodeMergeSolver",
-    )
+    const expansionOutput =
+      this.getStageOutput<BgaExpansionSolverOutput>("bgaExpansionSolver")
+    const sharedMergeOutput =
+      this.getStageOutput<BgaSharedNodeMergeSolverOutput>(
+        "bgaSharedNodeMergeSolver",
+      )
 
     if (
       !initialPatternOutput ||
@@ -1556,7 +1567,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
         ]
     const backgroundObstacles = obstacles.filter(
       (obstacle) =>
-        obstacle.componentId !== this.inputProblem.detectedComponent.componentId,
+        obstacle.componentId !==
+        this.inputProblem.detectedComponent.componentId,
     )
 
     return {

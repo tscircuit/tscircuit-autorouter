@@ -38,10 +38,7 @@ export function createReplacementObstacleForComponent({
     new Set(memberObstacles.flatMap((obstacle) => obstacle.zLayers ?? [])),
   )
   const allZLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
-  const zLayers =
-    memberZLayers.length > 0
-      ? memberZLayers
-      : allZLayers
+  const zLayers = memberZLayers.length > 0 ? memberZLayers : allZLayers
   const replacementLayers = zLayers.map((z) =>
     mapZToLayerName(z, inputSrj.layerCount),
   )
@@ -132,8 +129,8 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
       this.componentMeshNodes.push(
         remapComponentMeshNodesToBoard({
           componentKind: detectedComponent.componentKind,
-          componentMeshNodes: this.activeTopologyGenerator.getOutput()
-            .routingRegions,
+          componentMeshNodes:
+            this.activeTopologyGenerator.getOutput().routingRegions,
           boardLayerCount: this.inputProblem.inputSrj.layerCount,
         }),
       )

@@ -17,7 +17,10 @@ const getNodeBounds = (node: CapacityMeshNode) => ({
   maxY: node.center.y + node.height / 2,
 })
 
-const doNodeBoundsOverlap = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) => {
+const doNodeBoundsOverlap = (
+  nodeA: CapacityMeshNode,
+  nodeB: CapacityMeshNode,
+) => {
   const nodeABounds = getNodeBounds(nodeA)
   const nodeBBounds = getNodeBounds(nodeB)
 
@@ -57,7 +60,10 @@ const areNodesConnected = (nodeA: CapacityMeshNode, nodeB: CapacityMeshNode) =>
     areNodesBordering(nodeA, nodeB) ||
     doNodesTouchAtCorner(nodeA, nodeB))
 
-const getConnectedNodeIndexes = (nodes: CapacityMeshNode[], startIndex: number) => {
+const getConnectedNodeIndexes = (
+  nodes: CapacityMeshNode[],
+  startIndex: number,
+) => {
   const visited = new Set<number>([startIndex])
   const queue = [startIndex]
 
@@ -65,7 +71,11 @@ const getConnectedNodeIndexes = (nodes: CapacityMeshNode[], startIndex: number) 
     const currentIndex = queue.shift()!
     const currentNode = nodes[currentIndex]!
 
-    for (let candidateIndex = 0; candidateIndex < nodes.length; candidateIndex++) {
+    for (
+      let candidateIndex = 0;
+      candidateIndex < nodes.length;
+      candidateIndex++
+    ) {
       if (visited.has(candidateIndex)) continue
 
       const candidateNode = nodes[candidateIndex]!
@@ -173,7 +183,10 @@ test("srj18 sample013 merged topology reaches every pointsToConnect target in on
   }
 
   const bfsStartIndex = pointNodeIndexes[0]!.nodeIndexes[0]!
-  const reachableNodeIndexes = getConnectedNodeIndexes(mergedMeshNodes, bfsStartIndex)
+  const reachableNodeIndexes = getConnectedNodeIndexes(
+    mergedMeshNodes,
+    bfsStartIndex,
+  )
 
   for (const pointNodeIndex of pointNodeIndexes) {
     const isReachable = pointNodeIndex.nodeIndexes.some((nodeIndex) =>
