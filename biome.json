@@ -8,7 +8,14 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "**/*.json"]
+    "ignore": [
+      "cosmos-export",
+      "dist",
+      "**/*.json",
+      "node_modules",
+      ".home",
+      ".npm-cache"
+    ]
   },
   "javascript": {
     "formatter": {

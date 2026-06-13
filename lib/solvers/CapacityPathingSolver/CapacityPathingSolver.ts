@@ -241,11 +241,16 @@ export class CapacityPathingSolver extends BaseSolver {
     }
 
     const minTraceWidth = this.simpleRouteJson.minTraceWidth || 0.15
-    const currentConnection = this.connectionsWithNodes[this.currentConnectionIndex]
-    const nominalTraceWidth = currentConnection?.connection?.nominalTraceWidth ?? minTraceWidth
+    const currentConnection =
+      this.connectionsWithNodes[this.currentConnectionIndex]
+    const nominalTraceWidth =
+      currentConnection?.connection?.nominalTraceWidth ?? minTraceWidth
     const capacityRequirement = Math.max(1, nominalTraceWidth / minTraceWidth)
 
-    return usedCapacity + additionalCapacityRequirement + capacityRequirement - 1 < totalCapacity
+    return (
+      usedCapacity + additionalCapacityRequirement + capacityRequirement - 1 <
+      totalCapacity
+    )
   }
 
   canTravelThroughObstacle(node: CapacityMeshNode, connectionName: string) {
@@ -260,14 +265,19 @@ export class CapacityPathingSolver extends BaseSolver {
     )
   }
 
-  reduceCapacityAlongPath(nextConnection: { connection: SimpleRouteConnection; path?: CapacityMeshNode[] }) {
+  reduceCapacityAlongPath(nextConnection: {
+    connection: SimpleRouteConnection
+    path?: CapacityMeshNode[]
+  }) {
     const minTraceWidth = this.simpleRouteJson.minTraceWidth || 0.15
-    const nominalTraceWidth = nextConnection.connection?.nominalTraceWidth ?? minTraceWidth
+    const nominalTraceWidth =
+      nextConnection.connection?.nominalTraceWidth ?? minTraceWidth
     const capacityConsumption = Math.max(1, nominalTraceWidth / minTraceWidth)
     for (const node of nextConnection.path ?? []) {
       this.usedNodeCapacityMap.set(
         node.capacityMeshNodeId,
-        (this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0) + capacityConsumption,
+        (this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0) +
+          capacityConsumption,
       )
     }
   }

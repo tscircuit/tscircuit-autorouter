@@ -27,7 +27,7 @@ test("Trace width multiples - wide gap uses nominalTraceWidth 0.6mm", async () =
   const output = solver.getOutputSimpleRouteJson()
   const trace = output.traces?.[0]
   expect(trace).toBeDefined()
-  
+
   const wire = trace?.route.find((r) => r.route_type === "wire")
   expect(wire).toBeDefined()
   if (wire && wire.route_type === "wire") {
@@ -79,7 +79,7 @@ test("Trace width multiples - narrow gap steps down to 0.3mm", async () => {
   const output = solver.getOutputSimpleRouteJson()
   const trace = output.traces?.[0]
   expect(trace).toBeDefined()
-  
+
   const wires = trace?.route.filter((r) => r.route_type === "wire")
   expect(wires?.length).toBeGreaterThan(0)
   for (const wire of wires ?? []) {

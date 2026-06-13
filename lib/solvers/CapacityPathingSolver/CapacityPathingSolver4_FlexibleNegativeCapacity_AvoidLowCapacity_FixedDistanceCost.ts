@@ -33,10 +33,13 @@ export class CapacityPathingSolver4_FlexibleNegativeCapacity extends CapacityPat
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
     const minTraceWidth = this.simpleRouteJson.minTraceWidth || 0.15
-    const currentConnection = this.connectionsWithNodes[this.currentConnectionIndex]
-    const nominalTraceWidth = currentConnection?.connection?.nominalTraceWidth ?? minTraceWidth
+    const currentConnection =
+      this.connectionsWithNodes[this.currentConnectionIndex]
+    const nominalTraceWidth =
+      currentConnection?.connection?.nominalTraceWidth ?? minTraceWidth
     const capacityRequirement = Math.max(1, nominalTraceWidth / minTraceWidth)
-    const remainingCapacity = totalCapacity - usedCapacity - capacityRequirement + 1
+    const remainingCapacity =
+      totalCapacity - usedCapacity - capacityRequirement + 1
 
     const dist = this.activeCandidateStraightLineDistance!
 
