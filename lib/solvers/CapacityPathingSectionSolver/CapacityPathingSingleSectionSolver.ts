@@ -35,12 +35,10 @@ export interface CapacityPathingSingleSectionPathingSolverParams {
   sectionNodes: CapacityMeshNode[]
   sectionEdges: CapacityMeshEdge[]
   sectionConnectionTerminals: Array<{
-    // Corrected this part
     connectionName: string
     startNodeId: CapacityMeshNodeId
     endNodeId: CapacityMeshNodeId
-    // Store the original full path for context if needed later
-    // originalPath?: CapacityMeshNode[];
+    nominalTraceWidth?: number
   }>
   colorMap?: Record<string, string> // Make colorMap optional in params
   centerNodeId: string
@@ -62,6 +60,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     startNodeId: CapacityMeshNodeId
     endNodeId: CapacityMeshNodeId
     path?: CapacityMeshNode[] // To store the result for this connection
+    nominalTraceWidth?: number
   }>
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode> // Map of nodes *within the section*
   nodeEdgeMap: Map<CapacityMeshNodeId, CapacityMeshEdge[]> // Edges *within the section*
@@ -161,9 +160,12 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     const totalCapacity = this.getTotalCapacity(node)
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-    const currentTerminal = this.sectionConnectionTerminals[this.currentConnectionIndex]
+    const currentTerminal =
+      this.sectionConnectionTerminals[this.currentConnectionIndex]
     const nominalTraceWidth = currentTerminal?.nominalTraceWidth
-    const capacityRequirement = nominalTraceWidth ? Math.max(1, nominalTraceWidth / 0.15) : 1
+    const capacityRequirement = nominalTraceWidth
+      ? Math.max(1, nominalTraceWidth / 0.15)
+      : 1
     const remainingCapacity = totalCapacity - usedCapacity - capacityRequirement
 
     if (remainingCapacity > 0) {
@@ -278,9 +280,17 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   }
 
   // Adapted from CapacityPathingSolver - uses section's capacity map
-  reduceCapacityAlongPath(path: CapacityMeshNode[], nominalTraceWidth?: number) {
-    const activeNominalTraceWidth = nominalTraceWidth ?? this.sectionConnectionTerminals[this.currentConnectionIndex]?.nominalTraceWidth
-    const capacityConsumption = activeNominalTraceWidth ? Math.max(1, activeNominalTraceWidth / 0.15) : 1
+  reduceCapacityAlongPath(
+    path: CapacityMeshNode[],
+    nominalTraceWidth?: number,
+  ) {
+    const activeNominalTraceWidth =
+      nominalTraceWidth ??
+      this.sectionConnectionTerminals[this.currentConnectionIndex]
+        ?.nominalTraceWidth
+    const capacityConsumption = activeNominalTraceWidth
+      ? Math.max(1, activeNominalTraceWidth / 0.15)
+      : 1
     for (const pathNode of path) {
       // Only reduce capacity and update score for nodes within our section
       if (this.usedNodeCapacityMap.has(pathNode.capacityMeshNodeId)) {
