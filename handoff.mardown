@@ -1,0 +1,35 @@
+# BGA Full-Stack Handoff
+
+## Status
+
+Completed for the requested behavior change.
+
+## Latest Understanding
+
+The current BGA generator is not merely reporting the wrong layer count. Its internal model assumes:
+
+- component-local free mesh starts as `[0, 1]`
+- all ignored obstacles below the mounting layer are handled as `z > 0`
+- merged ignored obstacles are labeled as only `top` or `bottom`
+
+That means the current implementation cannot represent full-stack BGA escape capacity on boards with more than two layers.
+
+## Delivered
+
+- Removed the static two-layer constant from `BgaTopologyGeneratorSolver`.
+- Passed real `inputSrj.layerCount` through BGA initial-pattern and ignored-obstacle merge stages.
+- Preserved exact obstacle `availableZ` sets during merge/trim/replacement.
+- Preserved BGA layer subsets during component-node remapping back into board topology.
+- Prevented lower-layer expansion nodes from overlapping multilayer replacement obstacles.
+- Replaced the old two-layer BGA test contract with full-stack assertions and added remap coverage.
+
+## Verification
+
+- `bun test tests/component-detection-bga-only.test.ts`
+- `bun test tests/repro/srj18-sample013-component-topology-connectivity.test.ts`
+
+## Follow-On Watchpoints
+
+- Any solver outside this path that treats `availableZ[0]` as the layer of a multilayer region should be treated as suspect in future regressions.
+- The immediate benchmark focus is now the SRJ18 BGA-only subset:
+  `2,6,7,8,9,10,13,14` with `--sample-timeout 600s`.

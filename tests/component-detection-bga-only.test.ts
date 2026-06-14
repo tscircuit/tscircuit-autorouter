@@ -6,6 +6,7 @@ import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolv
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import { remapComponentMeshNodesToBoard } from "lib/solvers/TopologyPlanningSolver/remapComponentMeshNodesToBoard"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
@@ -442,7 +443,7 @@ test("topology planning creates BGA component mesh nodes for two-row components"
   ).toBe(true)
 })
 
-test("BGA topology generator uses a fixed two-layer pattern and keeps pad obstacles on their real layer", () => {
+test("BGA topology generator spans the full board stack for multilayer free-space nodes", () => {
   const inputSrj = {
     ...createSrj(createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 })),
     layerCount: 4,
@@ -464,10 +465,10 @@ test("BGA topology generator uses a fixed two-layer pattern and keeps pad obstac
     (node) => !node._containsObstacle,
   )
 
-  expect(solver.stats.layerCount).toBe(2)
+  expect(solver.stats.layerCount).toBe(4)
   expect(
     output.routingRegions.every((node) =>
-      node.availableZ.every((z) => z === 0 || z === 1),
+      node.availableZ.every((z) => z >= 0 && z < inputSrj.layerCount),
     ),
   ).toBe(true)
   expect(
@@ -475,15 +476,73 @@ test("BGA topology generator uses a fixed two-layer pattern and keeps pad obstac
       (node) => node.availableZ.length === 1 && node.availableZ[0] === 0,
     ),
   ).toBe(true)
-  expect(freeNodes.some((node) => node.availableZ.length > 1)).toBe(true)
   expect(
     freeNodes.some(
-      (node) => node.availableZ.length === 1 && node.availableZ[0] === 1,
+      (node) =>
+        node.availableZ.length === inputSrj.layerCount &&
+        node.availableZ[0] === 0 &&
+        node.availableZ.at(-1) === inputSrj.layerCount - 1,
+      ),
+  ).toBe(true)
+  expect(
+    freeNodes
+      .filter((node) => node.availableZ.length > 1)
+      .every(
+        (node) =>
+          node.availableZ.length === inputSrj.layerCount &&
+          node.availableZ[0] === 0 &&
+          node.availableZ.at(-1) === inputSrj.layerCount - 1,
+      ),
+  ).toBe(true)
+  expect(
+    freeNodes.some(
+      (node) =>
+        node.availableZ.length === 1 &&
+        node.availableZ[0] === inputSrj.layerCount - 1,
     ),
   ).toBe(true)
 })
 
-test("BGA topology generator replaces ignored lower-layer mesh coverage with per-obstacle nodes", () => {
+test("BGA component node remapping preserves real layer subsets", () => {
+  const remappedNodes = remapComponentMeshNodesToBoard({
+    componentKind: "bga",
+    boardLayerCount: 4,
+    componentMeshNodes: [
+      {
+        capacityMeshNodeId: "full-stack",
+        center: { x: 0, y: 0 },
+        width: 1,
+        height: 1,
+        layer: "z0,1,2,3",
+        availableZ: [0, 1, 2, 3],
+      },
+      {
+        capacityMeshNodeId: "inner-tail",
+        center: { x: 1, y: 0 },
+        width: 1,
+        height: 1,
+        layer: "z1,2,3",
+        availableZ: [1, 2, 3],
+      },
+      {
+        capacityMeshNodeId: "inner-only",
+        center: { x: 2, y: 0 },
+        width: 1,
+        height: 1,
+        layer: "z2",
+        availableZ: [2],
+      },
+    ],
+  })
+
+  expect(remappedNodes.map((node) => node.availableZ)).toEqual([
+    [0, 1, 2, 3],
+    [1, 2, 3],
+    [2],
+  ])
+})
+
+test("BGA topology generator replaces ignored multilayer mesh coverage on exact blocked layers", () => {
   const inputSrj = {
     ...createSrj([
       ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
@@ -499,7 +558,7 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
       {
         obstacleId: "B2",
         type: "rect" as const,
-        layers: ["bottom"],
+        layers: ["inner2"],
         center: { x: 1.55, y: 1 },
         width: 0.3,
         height: 0.4,
@@ -533,10 +592,16 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
   expect(expansionNodes.every((node) => node.availableZ.length === 1)).toBe(
     true,
   )
-  expect(expansionNodes.every((node) => node.availableZ[0] === 1)).toBe(true)
   expect(
-    replacementObstacleNodes.every((node) => node.availableZ[0] === 1),
-  ).toBe(true)
+    replacementObstacleNodes.find((node) =>
+      node.capacityMeshNodeId.includes("replacement-obstacle:B1"),
+    )?.availableZ,
+  ).toEqual([3])
+  expect(
+    replacementObstacleNodes.find((node) =>
+      node.capacityMeshNodeId.includes("replacement-obstacle:B2"),
+    )?.availableZ,
+  ).toEqual([2])
   expect(replacementObstacleNodes.every((node) => node._containsObstacle)).toBe(
     true,
   )
@@ -549,7 +614,11 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
       )
       .every(
         (node) =>
-          !node.availableZ.includes(1) ||
+          !replacementObstacleNodes.some(
+            (obstacleNode) =>
+              doNodeBoundsOverlap(node, obstacleNode) &&
+              obstacleNode.availableZ.some((z) => node.availableZ.includes(z)),
+          ) ||
           replacementObstacleNodes.every(
             (obstacleNode) => !doNodeBoundsOverlap(node, obstacleNode),
           ),
@@ -560,11 +629,22 @@ test("BGA topology generator replaces ignored lower-layer mesh coverage with per
       output.routingRegions.some(
         (node) =>
           !node._containsObstacle &&
-          node.availableZ.length === 1 &&
-          node.availableZ[0] === 0 &&
-          doNodeBoundsOverlap(node, replacementObstacleNode),
+          doNodeBoundsOverlap(node, replacementObstacleNode) &&
+          replacementObstacleNode.availableZ.every(
+            (blockedZ) => !node.availableZ.includes(blockedZ),
+          ),
       ),
     ),
+  ).toBe(true)
+  expect(
+    output.routingRegions
+      .filter((node) => !node._containsObstacle && node.availableZ.length > 1)
+      .every(
+        (node) =>
+          node.availableZ.length === inputSrj.layerCount &&
+          node.availableZ[0] === 0 &&
+          node.availableZ.at(-1) === inputSrj.layerCount - 1,
+      ),
   ).toBe(true)
   expect(
     replacementObstacleNodes.some((replacementObstacleNode) =>

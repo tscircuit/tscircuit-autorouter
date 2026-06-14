@@ -15,6 +15,7 @@ import {
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   clusterAxisValues,
   createMeshNodesForSrj,
@@ -35,6 +36,7 @@ interface BgaInitialPatternSolverParams {
   bounds: Bounds
   componentId: string
   componentObstacles: Obstacle[]
+  layerCount: number
 }
 
 interface BgaInitialPatternSolverOutput {
@@ -51,6 +53,7 @@ interface BgaObstacleMergeSolverParams {
   routingRegions: CapacityMeshNode[]
   ignoredObstacles: Obstacle[]
   inputSrj: SimpleRouteJson
+  layerCount: number
 }
 
 type BgaObstacleMergeSolverOutput = {
@@ -190,12 +193,25 @@ function areSameNumberSets(valuesA: number[], valuesB: number[]) {
   )
 }
 
-/** Resolves an obstacle's blocked z values in the solver's local 2-layer z-space. */
-function getLocalObstacleAvailableZ(obstacle: Obstacle) {
-  return getObstacleAvailableZ(obstacle, BgaTopologyGeneratorSolver.layerCount)
+function isFullLayerRange(values: number[], layerCount: number) {
+  return areSameNumberSets(values, getLayerRange(layerCount))
 }
 
-function mergeOverlappingObstacles(obstacles: Obstacle[]) {
+function expandNodeToSingleLayerNodes(node: CapacityMeshNode) {
+  return node.availableZ.map((z) => ({
+    ...node,
+    capacityMeshNodeId: `${node.capacityMeshNodeId}:z${z}`,
+    availableZ: [z],
+    layer: `z${z}`,
+  }))
+}
+
+/** Resolves an obstacle's blocked z values in the solver's local BGA z-space. */
+function getLocalObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+  return getObstacleAvailableZ(obstacle, layerCount)
+}
+
+function mergeOverlappingObstacles(obstacles: Obstacle[], layerCount: number) {
   let mergeCandidates = obstacles.map((obstacle) => structuredClone(obstacle))
   let didMerge = true
 
@@ -206,8 +222,8 @@ function mergeOverlappingObstacles(obstacles: Obstacle[]) {
       for (let indexB = indexA + 1; indexB < mergeCandidates.length; indexB++) {
         const obstacleA = mergeCandidates[indexA]!
         const obstacleB = mergeCandidates[indexB]!
-        const obstacleAZ = getLocalObstacleAvailableZ(obstacleA)
-        const obstacleBZ = getLocalObstacleAvailableZ(obstacleB)
+        const obstacleAZ = getLocalObstacleAvailableZ(obstacleA, layerCount)
+        const obstacleBZ = getLocalObstacleAvailableZ(obstacleB, layerCount)
 
         if (!areSameNumberSets(obstacleAZ, obstacleBZ)) continue
         if (
@@ -235,7 +251,7 @@ function mergeOverlappingObstacles(obstacles: Obstacle[]) {
           },
           width: mergedBounds.maxX - mergedBounds.minX,
           height: mergedBounds.maxY - mergedBounds.minY,
-          layers: obstacleAZ.map((z) => (z === 0 ? "top" : "bottom")),
+          layers: obstacleAZ.map((z) => mapZToLayerName(z, layerCount)),
           zLayers: obstacleAZ,
         }
 
@@ -658,7 +674,7 @@ class BgaInitialPatternSolver extends BaseSolver {
       return
     }
 
-    const availableZ = getLayerRange(BgaTopologyGeneratorSolver.layerCount)
+    const availableZ = getLayerRange(this.params.layerCount)
     const rowCount = clusterAxisValues(
       this.params.componentObstacles.map((obstacle) => obstacle.center.y),
     ).length
@@ -669,7 +685,7 @@ class BgaInitialPatternSolver extends BaseSolver {
       bounds: this.params.bounds,
       obstacles: this.params.componentObstacles,
       availableZ,
-      layerCount: BgaTopologyGeneratorSolver.layerCount,
+      layerCount: this.params.layerCount,
       nodeScopeId: this.params.componentId,
       rowCount,
       colCount,
@@ -710,7 +726,7 @@ class BgaObstacleMergeSolver extends BaseSolver {
   private output: BgaObstacleMergeSolverOutput | null = null
   private initialized = false
   private workingRoutingRegions: CapacityMeshNode[] = []
-  private lowerLayerObstacles: Obstacle[] = []
+  private ignoredObstaclesToMerge: Obstacle[] = []
   private replacementObstacleNodeCount = 0
   private actionQueue: Array<
     | {
@@ -791,16 +807,20 @@ class BgaObstacleMergeSolver extends BaseSolver {
     this.activeAction = nextAction
 
     if (nextAction.type === "trim-node") {
-      const nodeIndex = this.workingRoutingRegions.findIndex(
-        (node) => node.capacityMeshNodeId === nextAction.nodeId,
+      const matchingNodeIndexes = this.workingRoutingRegions.flatMap(
+        (node, index) =>
+          node.capacityMeshNodeId === nextAction.nodeId ||
+          node.capacityMeshNodeId.startsWith(`${nextAction.nodeId}:z`)
+            ? [index]
+            : [],
       )
-      const node =
-        nodeIndex >= 0 ? this.workingRoutingRegions[nodeIndex]! : null
-
-      if (node && !node._containsObstacle) {
+      for (const nodeIndex of [...matchingNodeIndexes].sort((a, b) => b - a)) {
+        const node = this.workingRoutingRegions[nodeIndex]!
+        if (node._containsObstacle) continue
         const blockedZForNode = getLocalObstacleAvailableZ(
           nextAction.obstacle,
-        ).filter((z) => z > 0 && node.availableZ.includes(z))
+          this.params.layerCount,
+        ).filter((z) => node.availableZ.includes(z))
 
         if (blockedZForNode.length > 0) {
           const remainingZ = node.availableZ.filter(
@@ -809,6 +829,20 @@ class BgaObstacleMergeSolver extends BaseSolver {
 
           if (remainingZ.length === 0) {
             this.workingRoutingRegions.splice(nodeIndex, 1)
+          } else if (
+            remainingZ.length > 1 &&
+            !isFullLayerRange(remainingZ, this.params.layerCount)
+          ) {
+            const remainingNode = {
+              ...node,
+              availableZ: remainingZ,
+              layer: `z${remainingZ.join(",")}`,
+            }
+            this.workingRoutingRegions.splice(
+              nodeIndex,
+              1,
+              ...expandNodeToSingleLayerNodes(remainingNode),
+            )
           } else {
             this.workingRoutingRegions[nodeIndex] = {
               ...node,
@@ -825,8 +859,9 @@ class BgaObstacleMergeSolver extends BaseSolver {
             nextAction.obstacle.obstacleId ?? nextAction.obstacleIndex
           }`,
           bounds: getBoundingBox(nextAction.obstacle),
-          availableZ: getLocalObstacleAvailableZ(nextAction.obstacle).filter(
-            (z) => z > 0,
+          availableZ: getLocalObstacleAvailableZ(
+            nextAction.obstacle,
+            this.params.layerCount,
           ),
           containsObstacle: true,
         }),
@@ -835,7 +870,7 @@ class BgaObstacleMergeSolver extends BaseSolver {
     }
 
     this.stats = {
-      queuedObstacleCount: this.lowerLayerObstacles.length,
+      queuedObstacleCount: this.ignoredObstaclesToMerge.length,
       replacementObstacleNodeCount: this.replacementObstacleNodeCount,
       ignoredObstacleCount: this.params.ignoredObstacles.length,
       remainingActionCount: this.actionQueue.length,
@@ -860,16 +895,15 @@ class BgaObstacleMergeSolver extends BaseSolver {
       center: { ...node.center },
       availableZ: [...node.availableZ],
     }))
-    this.lowerLayerObstacles = mergeOverlappingObstacles(
-      this.params.ignoredObstacles.filter((obstacle) =>
-        getLocalObstacleAvailableZ(obstacle).some((z) => z > 0),
-      ),
+    this.ignoredObstaclesToMerge = mergeOverlappingObstacles(
+      this.params.ignoredObstacles,
+      this.params.layerCount,
     )
 
     for (const [
       obstacleIndex,
       obstacle,
-    ] of this.lowerLayerObstacles.entries()) {
+    ] of this.ignoredObstaclesToMerge.entries()) {
       this.actionQueue.push({
         type: "inspect-obstacle",
         obstacle,
@@ -972,7 +1006,7 @@ class BgaObstacleMergeSolver extends BaseSolver {
                 fill: "rgba(255, 230, 0, 0.12)",
                 layer: `z${getObstacleAvailableZ(
                   currentObstacle,
-                  BgaTopologyGeneratorSolver.layerCount,
+                  this.params.layerCount,
                 ).join(",")}`,
                 label: `active obstacle: ${currentObstacle.obstacleId ?? "unknown"}`,
               },
@@ -995,6 +1029,7 @@ class BgaExpansionSolver extends BaseSolver {
   private initialized = false
   private workingRoutingRegions: CapacityMeshNode[] = []
   private obstacleNodes: CapacityMeshNode[] = []
+  private expandableObstacleNodes: CapacityMeshNode[] = []
   private expansionNodes: CapacityMeshNode[] = []
   private actionQueue: Array<{
     obstacleNodeId: string
@@ -1041,13 +1076,13 @@ class BgaExpansionSolver extends BaseSolver {
         availableZ: [...node.availableZ],
       }))
       this.obstacleNodes = this.workingRoutingRegions.filter(
-        (node) =>
-          node._containsObstacle &&
-          node.availableZ.length === 1 &&
-          isReplacementObstacleNode(node),
+        (node) => node._containsObstacle && isReplacementObstacleNode(node),
+      )
+      this.expandableObstacleNodes = this.obstacleNodes.filter(
+        (node) => node.availableZ.length === 1,
       )
 
-      for (const obstacleNode of this.obstacleNodes) {
+      for (const obstacleNode of this.expandableObstacleNodes) {
         for (const direction of ["left", "right", "top", "bottom"] as const) {
           this.actionQueue.push({
             obstacleNodeId: obstacleNode.capacityMeshNodeId,
@@ -1126,7 +1161,7 @@ class BgaExpansionSolver extends BaseSolver {
     }
 
     const obstacleNode =
-      this.obstacleNodes.find(
+      this.expandableObstacleNodes.find(
         (node) => node.capacityMeshNodeId === nextEdge.obstacleNodeId,
       ) ?? null
     if (!obstacleNode) return
@@ -1411,7 +1446,6 @@ class BgaSharedNodeMergeSolver extends BaseSolver {
  */
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
-  static readonly layerCount = 2
 
   bgaInitialPatternSolver?: BgaInitialPatternSolver
   bgaObstacleMergeSolver?: BgaObstacleMergeSolver
@@ -1427,6 +1461,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
           bounds: instance.inputProblem.detectedComponent.bounds,
           componentId: instance.inputProblem.detectedComponent.componentId,
           componentObstacles: instance.getComponentObstacles(),
+          layerCount: instance.getLayerCount(),
         },
       ],
     ),
@@ -1443,6 +1478,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
             )?.routingRegions ?? [],
           ignoredObstacles: instance.getIgnoredObstacles(),
           inputSrj: instance.inputProblem.inputSrj,
+          layerCount: instance.getLayerCount(),
         },
       ],
     ),
@@ -1480,6 +1516,10 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
 
   override getConstructorParams() {
     return [this.inputProblem] as const
+  }
+
+  private getLayerCount() {
+    return Math.max(1, this.inputProblem.inputSrj.layerCount)
   }
 
   private getComponentObstacles() {
@@ -1526,7 +1566,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<BgaTopologyGe
 
     this.stats = {
       componentId: this.inputProblem.detectedComponent.componentId,
-      layerCount: BgaTopologyGeneratorSolver.layerCount,
+      layerCount: this.getLayerCount(),
       inferredRowCount: initialPatternOutput.inferredRowCount,
       inferredColumnCount: initialPatternOutput.inferredColumnCount,
       diagonalNodeCount: initialPatternOutput.diagonalNodeCount,

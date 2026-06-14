@@ -1,0 +1,54 @@
+# BGA Full-Stack Topology Progress
+
+## Context
+
+- Date: 2026-06-14T07:19:08+05:30
+- Main branch: `0hmx/better-bga`
+- Main HEAD: `a6bbb2eb`
+- Task worktree: `.claude/worktrees/bga-full-stack`
+- Task branch: `codex/bga-full-stack`
+- Sub-agent: `Pauli` (`019ec3d0-8682-70e0-9c28-77a8a4167843`)
+
+## Goal
+
+Remove the BGA topology generator's hard-coded two-layer model and make BGA multilayer mesh nodes span the full board stack from top through bottom.
+
+## Findings
+
+- `lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver.ts` hard-codes `static readonly layerCount = 2`.
+- The obstacle merge stage trims only `z > 0`, which collapses every non-top layer into one semantic bucket.
+- Replacement obstacle nodes are inserted only for `z > 0`, so top-layer ignored obstacles are effectively invisible to the BGA-local topology.
+- `mergeOverlappingObstacles` remaps merged obstacle layers to only `top` / `bottom`.
+- Current tests explicitly encode the broken contract with a fixed two-layer expectation.
+
+## Baseline
+
+- `bun test tests/component-detection-bga-only.test.ts -t "BGA topology generator"`
+- Result before edits: 3 passing tests, 0 failing tests
+
+## Completed
+
+1. Replaced static BGA layer count usage with the input SRJ layer count.
+2. Made ignored-obstacle trimming and replacement respect exact blocked z sets, including top/internal/bottom occupancy.
+3. Updated merged ignored-obstacle metadata so arbitrary stack-layer occupancy is preserved.
+4. Flattened BGA component-node remapping so real `availableZ` subsets survive topology-planning merge.
+5. Fixed BGA expansion collision handling so single-layer expansion nodes cannot grow into multilayer replacement obstacles.
+6. Rewrote the BGA tests around full-stack behavior and exact-layer replacement semantics.
+
+## Verification
+
+- `bun test tests/component-detection-bga-only.test.ts`
+- `bun test tests/repro/srj18-sample013-component-topology-connectivity.test.ts`
+- Result after edits: passing
+
+## Residual Risk
+
+- Some downstream code outside the BGA topology path still uses `availableZ[0]` as a representative layer for multilayer nodes. The verified repros pass, but this remains the main area to watch in future routing cases.
+
+## Benchmark Narrowing
+
+- SRJ18 samples with detected BGA components only: `2,6,7,8,9,10,13,14`
+- Active Blacksmith subset benchmark:
+  `./benchmark.sh --pipeline 7 --dataset 18 --sample-numbers 2,6,7,8,9,10,13,14 --sample-timeout 600s`
+- Reason: reduce Blacksmith cost while keeping the benchmark aligned to the
+  BGA topology regression under investigation.

@@ -3,18 +3,10 @@ import type { CapacityMeshNode } from "lib/types"
 
 function remapBgaNodeAvailableZToBoard({
   node,
-  boardLayerCount,
 }: {
   node: CapacityMeshNode
-  boardLayerCount: number
 }) {
-  if (boardLayerCount <= 2) return [...node.availableZ]
-
-  if (node.availableZ.length > 1) {
-    return Array.from({ length: boardLayerCount }, (_, z) => z)
-  }
-
-  return node.availableZ.map((z) => (z <= 0 ? 0 : boardLayerCount - 1))
+  return [...node.availableZ]
 }
 
 export function remapComponentMeshNodesToBoard({
@@ -31,7 +23,6 @@ export function remapComponentMeshNodesToBoard({
   return componentMeshNodes.map((node) => {
     const availableZ = remapBgaNodeAvailableZToBoard({
       node,
-      boardLayerCount,
     })
 
     return {
