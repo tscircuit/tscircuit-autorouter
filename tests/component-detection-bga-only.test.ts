@@ -482,7 +482,7 @@ test("BGA topology generator spans the full board stack for multilayer free-spac
         node.availableZ.length === inputSrj.layerCount &&
         node.availableZ[0] === 0 &&
         node.availableZ.at(-1) === inputSrj.layerCount - 1,
-      ),
+    ),
   ).toBe(true)
   expect(
     freeNodes
