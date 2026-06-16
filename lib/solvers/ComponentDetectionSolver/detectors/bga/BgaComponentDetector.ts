@@ -2,10 +2,10 @@ import type { Obstacle } from "lib/types"
 import type { ComponentDetector, ComponentDetectorParams } from "../types"
 
 const MIN_BGA_AXIS_COUNT = 3
-const MIN_BGA_TWO_AXIS_COUNT = 2
-const MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS = 4
 const MIN_BGA_GRID_OCCUPANCY = 0.5
 const MAX_BGA_PAD_SIZE_VARIANCE = 0.01
+const MAX_BGA_PAD_ASPECT_RATIO = 1.5
+const MIN_INTERIOR_PAD_COUNT = 1
 const AXIS_CLUSTER_EPSILON = 1e-3
 
 export function clusterAxisValues(values: number[]) {
@@ -45,8 +45,43 @@ function hasUniformPadDimensions(memberObstacles: Obstacle[]) {
   )
 }
 
+function hasBgaLikePadAspectRatio(memberObstacles: Obstacle[]): boolean {
+  return memberObstacles.every((obstacle) => {
+    const minDim = Math.min(obstacle.width, obstacle.height)
+    const maxDim = Math.max(obstacle.width, obstacle.height)
+    if (minDim <= 0) return false
+    return maxDim / minDim <= MAX_BGA_PAD_ASPECT_RATIO
+  })
+}
+
+function hasInteriorPads(
+  memberObstacles: Obstacle[],
+  rowAxisValues: number[],
+  columnAxisValues: number[],
+) {
+  if (rowAxisValues.length < MIN_BGA_AXIS_COUNT) return false
+  if (columnAxisValues.length < MIN_BGA_AXIS_COUNT) return false
+
+  const interiorRows = new Set(rowAxisValues.slice(1, -1))
+  const interiorColumns = new Set(columnAxisValues.slice(1, -1))
+
+  let interiorPadCount = 0
+
+  for (const obstacle of memberObstacles) {
+    if (
+      interiorRows.has(obstacle.center.y) &&
+      interiorColumns.has(obstacle.center.x)
+    ) {
+      interiorPadCount += 1
+    }
+  }
+
+  return interiorPadCount >= MIN_INTERIOR_PAD_COUNT
+}
+
 export function isBgaLikeComponent(memberObstacles: Obstacle[]) {
   if (!hasUniformPadDimensions(memberObstacles)) return false
+  if (!hasBgaLikePadAspectRatio(memberObstacles)) return false
 
   const rowAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.y),
@@ -56,20 +91,22 @@ export function isBgaLikeComponent(memberObstacles: Obstacle[]) {
   )
   const rowCount = rowAxisValues.length
   const columnCount = columnAxisValues.length
+
+  if (rowCount < MIN_BGA_AXIS_COUNT || columnCount < MIN_BGA_AXIS_COUNT) {
+    return false
+  }
+
   const gridCellCount = rowCount * columnCount
   const gridOccupancy =
     gridCellCount > 0 ? memberObstacles.length / gridCellCount : 0
-  const hasStandardBgaAxisCounts =
-    rowCount >= MIN_BGA_AXIS_COUNT && columnCount >= MIN_BGA_AXIS_COUNT
-  const hasTwoAxisBgaAxisCounts =
-    (rowCount === MIN_BGA_TWO_AXIS_COUNT &&
-      columnCount >= MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS) ||
-    (columnCount === MIN_BGA_TWO_AXIS_COUNT &&
-      rowCount >= MIN_BGA_LONG_AXIS_COUNT_FOR_TWO_AXIS)
-  const hasSupportedAxisCounts =
-    hasStandardBgaAxisCounts || hasTwoAxisBgaAxisCounts
 
-  return hasSupportedAxisCounts && gridOccupancy >= MIN_BGA_GRID_OCCUPANCY
+  if (gridOccupancy < MIN_BGA_GRID_OCCUPANCY) return false
+
+  if (!hasInteriorPads(memberObstacles, rowAxisValues, columnAxisValues)) {
+    return false
+  }
+
+  return true
 }
 
 export class BgaComponentDetector implements ComponentDetector {
