@@ -75,6 +75,8 @@ class InitialTopology extends BaseSolver {
     // Vertical Placement
     for(let row = 0; row < numRows; row++) {
       for(let col = 0; col < numCols - 1; col++) {
+        const distance = Math.abs(sortedXs[col] - sortedXs[col + 1])
+        if(distance >= pitchX * 2) continue
         const centerX = (sortedXs[col] + sortedXs[col + 1]) / 2
         const centerY = sortedYs[row]
         const width = freeSpceInPitchX
@@ -85,7 +87,7 @@ class InitialTopology extends BaseSolver {
           width,
           height,
           availableZ: freeLayers,
-          capacityMeshNodeId: `cmn${componentId}_${row}_${col}`,
+          capacityMeshNodeId: `cmn_v_${componentId}_${row}_${col}`,
           layer: ""
         })
       }
@@ -93,6 +95,8 @@ class InitialTopology extends BaseSolver {
 
     for(let row = 0; row < numRows - 1; row++) {
       for(let col = 0; col < numCols; col++) {
+        const distance = Math.abs(sortedYs[row] - sortedYs[row + 1])
+        if(distance >= pitchY * 2) continue
         const centerX = sortedXs[col]
         const centerY = (sortedYs[row] + sortedYs[row + 1]) / 2
         const width = obstaclesPartOfComponent[0].width
@@ -103,7 +107,7 @@ class InitialTopology extends BaseSolver {
           width,
           height,
           availableZ: freeLayers,
-          capacityMeshNodeId: `cmn_${componentId}_${col}_${row}`,
+          capacityMeshNodeId: `cmn_h_${componentId}_${row}_${col}`,
           layer: ""
         })
       }
