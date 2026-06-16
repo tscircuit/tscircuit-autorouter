@@ -1,107 +1,152 @@
-import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
+import { doBoundsOverlap, getBoundingBox, getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import { BaseSolver, BasePipelineSolver, definePipelineStep, PipelineStep } from "@tscircuit/solver-utils"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
-import {
-  clusterAxisValues,
-  createMeshNodesForSrj,
-  getLayerRange,
-} from "./bgpTopologyGeneratorShared"
+import { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { getRerouteSimpleRouteJson } from "lib/utils/getRerouteSimpleRouteJson"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getBenchmarkSolverOptions } from "scripts/benchmark/benchmark-run-task"
 
-export interface BgaTopologyGeneratorSolverParams
-  extends TopologyGeneratorSolverParams {}
 
-export interface BgaTopologyGeneratorSolverOutput
-  extends TopologyGeneratorSolverOutput {
-  /** Routing regions derived from obstacle layout. These are not obstacle rectangles. */
-  routingRegions: CapacityMeshNode[]
+class InitialTopology extends BaseSolver {
+  obstaclesPartOfComponent: Obstacle[] = []
+  freeMeshNodes: CapacityMeshNode[] = []
+
+  constructor(public readonly inputProblem: {
+    srj: SimpleRouteJson,
+    compoentBounds: SimpleRouteJson["bounds"],
+    componentId: string
+  }) {
+    super()
+  }
+
+
+  getConstructorParams() {
+    return [this.inputProblem] as const
+  }
+
+  step() {
+    const {srj, compoentBounds, componentId} = this.inputProblem
+
+    const obstaclesPartOfComponent = srj.obstacles.filter(obstacle => {
+      return doBoundsOverlap(getBoundFromCenteredRect(obstacle), compoentBounds) && obstacle.componentId === componentId
+    })
+
+    const getAllCopperPours = srj.obstacles.filter(obstacle => {
+      return obstacle.isCopperPour === true
+    })
+
+    const getCopperPourInsideOurComponentBounds = getAllCopperPours.filter(obstacle => {
+      return doBoundsOverlap(getBoundFromCenteredRect(obstacle), compoentBounds)
+    })
+
+    const blockedLayers = getCopperPourInsideOurComponentBounds.map(obstacle => obstacle.layers.map(mapLayerNameToZ)).flat()
+
+    const freeLayers = Array.from({length: srj.layerCount}, (_, i) => i).filter(
+      (layer) => !blockedLayers.includes(layer)
+    )
+
+    const sortedYs = [...new Set(obstaclesPartOfComponent.map(obstacle => obstacle.center.y).sort((a,b) => a - b))]
+    const sortedXs = [...new Set(obstaclesPartOfComponent.map(obstacle => obstacle.center.x).sort((a,b) => a - b))]
+
+    let minXDiff = sortedXs[1] - sortedXs[0]
+    let minYDiff = sortedYs[1] - sortedYs[0]
+
+    for(let i = 1; i < sortedXs.length - 1; i++) {
+      minXDiff = Math.min(minXDiff, sortedXs[i] - sortedXs[i  -1])
+    }
+
+    for(let i = 1; i < sortedYs.length - 1; i++) {
+      minYDiff = Math.min(minYDiff, sortedYs[i] - sortedYs[i - 1])
+    }
+
+    const pitchX = minXDiff
+    const pitchY = minYDiff
+
+    const numRows = sortedYs.length
+    const numCols = sortedXs.length
+
+    const freeSpceInPitchX = pitchX - obstaclesPartOfComponent[0].width
+    const freeSpceInPitchY = pitchY - obstaclesPartOfComponent[0].height
+
+    // Vertical Placement
+    for(let row = 0; row < numRows; row++) {
+      for(let col = 0; col < numCols - 1; col++) {
+        const centerX = (sortedXs[col] + sortedXs[col + 1]) / 2
+        const centerY = sortedYs[row]
+        const width = freeSpceInPitchX
+        const height = obstaclesPartOfComponent[0].height
+
+        this.freeMeshNodes.push({
+          center: { x: centerX, y: centerY },
+          width,
+          height,
+          availableZ: freeLayers,
+          capacityMeshNodeId: `cmn${componentId}_${row}_${col}`,
+          layer: ""
+        })
+      }
+    }
+
+    for(let row = 0; row < numRows - 1; row++) {
+      for(let col = 0; col < numCols; col++) {
+        const centerX = sortedXs[col]
+        const centerY = (sortedYs[row] + sortedYs[row + 1]) / 2
+        const width = obstaclesPartOfComponent[0].width
+        const height = freeSpceInPitchY
+
+        this.freeMeshNodes.push({
+          center: { x: centerX, y: centerY },
+          width,
+          height,
+          availableZ: freeLayers,
+          capacityMeshNodeId: `cmn_${componentId}_${col}_${row}`,
+          layer: ""
+        })
+      }
+    }
+
+    this.solved = true
+  }
+
+  getOutput(): TopologyGeneratorSolverOutput {
+    return {
+      routingRegions: this.freeMeshNodes
+    }
+  }
 }
 
-/**
- * Builds a coarse topology for BGA-style routing from an SRJ obstacle field.
- *
- * Important:
- * - `routingRegions` are derived routing cells and may be larger than pads.
- * - obstacle-overlapping regions are split per layer instead of being emitted
- *   as one multi-layer region.
- */
-export class BgaTopologyGeneratorSolver extends BaseSolver {
+export class BgaTopologyGeneratorSolver extends BasePipelineSolver<any> {
   static readonly componentKind = "bga"
+  initialTopologySolver!: InitialTopology
 
-  private output: BgaTopologyGeneratorSolverOutput | null = null
+  pipelineDef: PipelineStep<BaseSolver>[] = [
+    definePipelineStep(
+      "initialTopologySolver",
+      InitialTopology,
+      (solver: BgaTopologyGeneratorSolver) => [
+        {
+          srj: solver.inputProblem.inputSrj,
+          compoentBounds: solver.inputProblem.detectedComponent.bounds,
+          componentId: solver.inputProblem.detectedComponent.componentId
+        }
+      ]
+    )
+  ]
 
-  constructor(public readonly inputProblem: BgaTopologyGeneratorSolverParams) {
-    super()
+  constructor(public readonly inputProblem: TopologyGeneratorSolverParams) {
+    super(inputProblem)
   }
 
   override getConstructorParams() {
     return [this.inputProblem] as const
   }
 
-  /** Solves in one pass because the topology is derived directly from the input SRJ. */
-  override _step() {
-    if (this.output) {
-      this.solved = true
-      return
-    }
-
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
-    const componentObstacles = obstacles.filter(
-      (obstacle) => obstacle.componentId === componentId,
-    )
-    const topologyAxisObstacles =
-      componentObstacles.length > 0
-        ? componentObstacles
-        : obstacles.filter((obstacle) =>
-            doBoundsOverlap(getBoundingBox(obstacle), bounds),
-          )
-    const availableZ = getLayerRange(layerCount)
-    const nodeScopeId = componentId
-    const rowCount = clusterAxisValues(
-      topologyAxisObstacles.map((obstacle) => obstacle.center.y),
-    ).length
-    const colCount = clusterAxisValues(
-      topologyAxisObstacles.map((obstacle) => obstacle.center.x),
-    ).length
-    const meshNodes = createMeshNodesForSrj({
-      bounds,
-      obstacles,
-      availableZ,
-      layerCount,
-      nodeScopeId,
-      rowCount,
-      colCount,
-    })
-    const diagonalNodeCount = meshNodes.filter(
-      (node) => node.availableZ.length > 1,
-    ).length
-
-    this.output = {
-      routingRegions: meshNodes,
-    }
-    this.stats = {
-      componentId,
-      layerCount,
-      inferredRowCount: rowCount,
-      inferredColumnCount: colCount,
-      diagonalNodeCount,
-      sideNodeCount: meshNodes.length - diagonalNodeCount,
-      totalMeshNodeCount: meshNodes.length,
-    }
-    this.solved = true
-  }
-
-  getOutput(): BgaTopologyGeneratorSolverOutput {
-    if (!this.output) {
-      throw new Error("BgaTopologyGeneratorSolver has not solved yet")
-    }
-
-    return this.output
+  getOutput(): TopologyGeneratorSolverOutput {
+    return this.initialTopologySolver.getOutput()
   }
 }
 
