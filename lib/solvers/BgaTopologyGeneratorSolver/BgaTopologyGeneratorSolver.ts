@@ -101,7 +101,6 @@ class InitialTopology extends BaseSolver {
     const freeSpceInPitchX = pitchX - obstaclesPartOfComponent[0].width
     const freeSpceInPitchY = pitchY - obstaclesPartOfComponent[0].height
 
-    // Vertical Placement
     for (let row = 0; row < numRows; row++) {
       for (let col = 0; col < numCols - 1; col++) {
         const distance = Math.abs(sortedXs[col] - sortedXs[col + 1])
@@ -110,14 +109,16 @@ class InitialTopology extends BaseSolver {
         const centerY = sortedYs[row]
         const width = freeSpceInPitchX
         const height = obstaclesPartOfComponent[0].height
-
-        this.freeMeshNodes.push({
-          center: { x: centerX, y: centerY },
-          width,
-          height,
-          availableZ: freeLayers,
-          capacityMeshNodeId: `cmn_v_${componentId}_${row}_${col}`,
-          layer: "",
+        // Add an check to see if we have any obstalce in any of our side
+        freeLayers.forEach(e => {
+          this.freeMeshNodes.push({
+            center: { x: centerX, y: centerY },
+            width,
+            height,
+            availableZ: [e],
+            capacityMeshNodeId: `cmn_v_${componentId}_${row}_${col}_${e}`,
+            layer: "",
+          })
         })
       }
     }
@@ -131,13 +132,15 @@ class InitialTopology extends BaseSolver {
         const width = obstaclesPartOfComponent[0].width
         const height = freeSpceInPitchY
 
-        this.freeMeshNodes.push({
-          center: { x: centerX, y: centerY },
-          width,
-          height,
-          availableZ: freeLayers,
-          capacityMeshNodeId: `cmn_h_${componentId}_${row}_${col}`,
-          layer: "",
+        freeLayers.forEach(e => {
+          this.freeMeshNodes.push({
+            center: { x: centerX, y: centerY },
+            width,
+            height,
+            availableZ: [e],
+            capacityMeshNodeId: `cmn_h_${componentId}_${row}_${col}_${e}`,
+            layer: "",
+          })
         })
       }
     }
@@ -151,6 +154,7 @@ class InitialTopology extends BaseSolver {
     }
   }
 }
+
 
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<any> {
   static readonly componentKind = "bga"
