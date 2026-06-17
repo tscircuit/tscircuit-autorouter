@@ -1,11 +1,16 @@
 import {
+  BasePipelineSolver,
+  BaseSolver,
+  definePipelineStep,
+  PipelineStep,
+} from "@tscircuit/solver-utils"
+import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
-import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
-import { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
 import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
+import { MergeMeshNodes } from "lib/solvers/BgaTopologyGeneratorSolver/MergeMeshNodes"
 import { RemoveMeshNodeOverlppingWithUnmarkedObstacle } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
 import {
   TopologyGenerator,
@@ -20,6 +25,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
   initialTopologySolver!: InitialBgaTopologySolver
   removeMeshNodeOverlppingWithUnmarkedObstacle!: RemoveMeshNodeOverlppingWithUnmarkedObstacle
   gapfillDueToNodeRemoval!: GapFill
+  mergeMeshNodes!: MergeMeshNodes
   markedComponentObstacles: Obstacle[] = []
   unmarkedComponentObstacles: Obstacle[] = []
 
@@ -69,6 +75,18 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
         },
       ],
     ),
+    definePipelineStep(
+      "mergeMeshNodes",
+      MergeMeshNodes,
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
+        {
+          meshNodes:
+            bgaTopologyGeneratorSolver.gapfillDueToNodeRemoval.getOutput(),
+          layerCount:
+            bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
+        },
+      ],
+    ),
   ]
 
   constructor(public readonly inputProblem: TopologyGeneratorSolverParams) {
@@ -106,6 +124,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
 
   override getOutput(): TopologyGeneratorSolverOutput {
     const routingRegions: CapacityMeshNode[] =
+      this.mergeMeshNodes?.getOutput() ??
       this.gapfillDueToNodeRemoval?.getOutput() ??
       this.removeMeshNodeOverlppingWithUnmarkedObstacle?.getOutput() ??
       []
