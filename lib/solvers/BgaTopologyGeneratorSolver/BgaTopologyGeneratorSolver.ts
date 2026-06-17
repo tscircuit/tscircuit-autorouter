@@ -59,6 +59,10 @@ class RemoveMeshNodeOverlapping extends BaseSolver {
     const nextMeshNodes: CapacityMeshNode[] = []
 
     for (const node of this.meshNodes) {
+      if (node._containsObstacle) {
+        nextMeshNodes.push(node)
+        continue
+      }
       const availableZ = obstacle.layers.map((e) =>
         mapLayerNameToZ(e, this.inputProblem.layerCount),
       )

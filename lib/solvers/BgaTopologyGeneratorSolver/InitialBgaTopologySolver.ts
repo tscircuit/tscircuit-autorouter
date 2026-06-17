@@ -111,7 +111,7 @@ function createObstacleMeshNode(
   )
 
   return {
-    capacityMeshNodeId: `obstacle-${obstacle.obstacleId}`,
+    capacityMeshNodeId: `obstacle-${obstacle.obstacleId}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
     _containsObstacle: true,
     center: obstacle.center,
     width: obstacle.width,
@@ -136,12 +136,21 @@ export class InitialBgaTopologySolver extends BaseSolver {
   override _step(): void {
     const { srj, componentBounds, componentId } = this.inputProblem
 
-    const componentObstacles: Obstacle[] = srj.obstacles.filter((obstacle) => {
+    const markedComponentObstacles: Obstacle[] = srj.obstacles.filter((obstacle) => {
       return (
         doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds) &&
         obstacle.componentId === componentId
       )
     })
+
+    const unmarkedComponentObstacles: Obstacle[] = srj.obstacles.filter(obstacle => {
+      return (
+        doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds) &&
+        obstacle.componentId !== componentId
+      )
+    })
+
+    console.log(markedComponentObstacles, unmarkedComponentObstacles)
 
     const copperPoursInBounds: Obstacle[] = srj.obstacles
       .filter((obstacle) => obstacle.isCopperPour === true)
@@ -160,14 +169,14 @@ export class InitialBgaTopologySolver extends BaseSolver {
       (_, layerIndex) => layerIndex,
     ).filter((layer) => !blockedLayers.includes(layer))
 
-    this.componentObstacles = componentObstacles
+    this.componentObstacles = markedComponentObstacles
 
-    if (componentObstacles.length === 0 || freeLayers.length === 0) {
+    if (markedComponentObstacles.length === 0 || freeLayers.length === 0) {
       this.solved = true
       return
     }
 
-    const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(componentObstacles)
+    const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(markedComponentObstacles)
 
     if (!bgaGrid) {
       this.solved = true
@@ -199,12 +208,22 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
         }),
       ),
-      ...componentObstacles.flatMap((obstacle) => [
+      ...markedComponentObstacles.flatMap((obstacle) => [
         ...createFreeObstacleMeshNodes({
           obstacle,
           freeLayers,
           layerCount: srj.layerCount,
         }),
+        createObstacleMeshNode(obstacle, srj.layerCount),
+      ]),
+      ...unmarkedComponentObstacles.flatMap((obstacle) => [
+        // skip for unmarked becase we already have free layers available
+        // this will cause overlaps srj18 013 is an good exmpale
+        // ...createFreeObstacleMeshNodes({
+        //   obstacle,
+        //   freeLayers,
+        //   layerCount: srj.layerCount,
+        // }),
         createObstacleMeshNode(obstacle, srj.layerCount),
       ]),
     ]
