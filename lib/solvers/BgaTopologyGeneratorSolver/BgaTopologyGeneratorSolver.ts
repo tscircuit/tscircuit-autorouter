@@ -90,7 +90,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
 
   override getOutput(): TopologyGeneratorSolverOutput {
     const routingRegions: CapacityMeshNode[] =
-      this.mergeObstacleMeshNodes?.getOutput() ?? []
+      this.removeMeshNodeOverlppingWithUnmarkedObstacle?.getOutput() ?? []
 
     return {
       routingRegions,
