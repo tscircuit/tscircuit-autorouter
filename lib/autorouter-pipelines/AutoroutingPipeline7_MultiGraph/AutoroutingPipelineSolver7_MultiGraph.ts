@@ -165,7 +165,6 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
-
 function isGlobalMeshNodeInsideDetectedComponent(
   node: CapacityMeshNode,
   detectedComponents: DetectedComponent[],

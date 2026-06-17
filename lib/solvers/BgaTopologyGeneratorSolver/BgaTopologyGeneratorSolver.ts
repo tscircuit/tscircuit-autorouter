@@ -1,9 +1,7 @@
-import {
-  doBoundsOverlap,
-  getBoundFromCenteredRect,
-} from "@tscircuit/math-utils"
+import { doBoundsOverlap, getBoundFromCenteredRect } from "@tscircuit/math-utils"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
+import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
 import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
 import { RemoveMeshNodeOverlppingWithUnmarkedObstacle } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
 import {
@@ -13,23 +11,9 @@ import {
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 
-class GapFill extends BaseSolver {
-  constructor(public readonly inputProblem: { meshNodes: CapacityMeshNode[] }) {
-    super()
-  }
-
-  step(): void {
-    this.solved = true
-  }
-
-  getOutput(): CapacityMeshNode[] {
-    return this.inputProblem.meshNodes
-  }
-}
-
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
-  // TODO: if we fail we quit so the solver not existing later is not an issue
+
   initialTopologySolver!: InitialBgaTopologySolver
   removeMeshNodeOverlppingWithUnmarkedObstacle!: RemoveMeshNodeOverlppingWithUnmarkedObstacle
   gapfillDueToNodeRemoval!: GapFill
@@ -40,35 +24,43 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     definePipelineStep(
       "initialTopologySolver",
       InitialBgaTopologySolver,
-      (solverInstance: BgaTopologyGeneratorSolver) => [
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
         {
-          srj: solverInstance.inputProblem.inputSrj,
-          componentBounds: solverInstance.inputProblem.detectedComponent.bounds,
+          srj: bgaTopologyGeneratorSolver.inputProblem.inputSrj,
+          componentBounds:
+            bgaTopologyGeneratorSolver.inputProblem.detectedComponent.bounds,
           componentId:
-            solverInstance.inputProblem.detectedComponent.componentId,
-          markedComponentObstacles: solverInstance.markedComponentObstacles,
-          unmarkedComponentObstacles: solverInstance.unmarkedComponentObstacles,
+            bgaTopologyGeneratorSolver.inputProblem.detectedComponent.componentId,
+          markedComponentObstacles:
+            bgaTopologyGeneratorSolver.markedComponentObstacles,
+          unmarkedComponentObstacles:
+            bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
         },
       ],
     ),
     definePipelineStep(
       "removeMeshNodeOverlppingWithUnmarkedObstacle",
       RemoveMeshNodeOverlppingWithUnmarkedObstacle,
-      (solverInstance: BgaTopologyGeneratorSolver) => [
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
         {
-          meshNodes: solverInstance.initialTopologySolver.getOutput(),
-          obstacles: solverInstance.unmarkedComponentObstacles,
-          layerCount: solverInstance.inputProblem.inputSrj.layerCount,
+          meshNodes: bgaTopologyGeneratorSolver.initialTopologySolver.getOutput(),
+          obstacles: bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
+          layerCount:
+            bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
         },
       ],
     ),
     definePipelineStep(
       "gapfillDueToNodeRemoval",
       GapFill,
-      (solverInstance: BgaTopologyGeneratorSolver) => [
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
         {
           meshNodes:
-            solverInstance.removeMeshNodeOverlppingWithUnmarkedObstacle.getOutput(),
+            bgaTopologyGeneratorSolver.removeMeshNodeOverlppingWithUnmarkedObstacle.getOutput(),
+          unmarkedComponentObstacles:
+            bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
+          layerCount:
+            bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
         },
       ],
     ),
@@ -85,9 +77,9 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     const unmarkedComponentObstacles: Obstacle[] = []
 
     for (const obstacle of this.inputProblem.inputSrj.obstacles) {
-      if (
-        !doBoundsOverlap(componentBounds, getBoundFromCenteredRect(obstacle))
-      ) {
+      const obstacleBounds = getBoundFromCenteredRect(obstacle)
+
+      if (!doBoundsOverlap(componentBounds, obstacleBounds)) {
         continue
       }
 
@@ -109,7 +101,9 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
 
   override getOutput(): TopologyGeneratorSolverOutput {
     const routingRegions: CapacityMeshNode[] =
-      this.removeMeshNodeOverlppingWithUnmarkedObstacle?.getOutput() ?? []
+      this.gapfillDueToNodeRemoval?.getOutput() ??
+      this.removeMeshNodeOverlppingWithUnmarkedObstacle?.getOutput() ??
+      []
 
     return {
       routingRegions,
