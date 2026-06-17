@@ -11,12 +11,19 @@ import {
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode } from "lib/types"
+import type { CapacityMeshNode, Obstacle } from "lib/types"
+
+type BgaComponentObstacles = {
+  markedComponentObstacles: Obstacle[]
+  unmarkedComponentObstacles: Obstacle[]
+}
 
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
   initialTopologySolver?: InitialBgaTopologySolver
   mergeObstacleMeshNodes?: RemoveMeshNodeOverlappingSolver
+  markedComponentObstacles: Obstacle[] = []
+  unmarkedComponentObstacles: Obstacle[] = []
 
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
@@ -28,6 +35,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           componentBounds: solverInstance.inputProblem.detectedComponent.bounds,
           componentId:
             solverInstance.inputProblem.detectedComponent.componentId,
+          markedComponentObstacles: solverInstance.markedComponentObstacles,
+          unmarkedComponentObstacles: solverInstance.unmarkedComponentObstacles,
         },
       ],
     ),
@@ -39,15 +48,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           meshNodes:
             solverInstance.initialTopologySolver?.getOutput().routingRegions ??
             [],
-          obstacles: solverInstance.inputProblem.inputSrj.obstacles.filter(
-            (obstacle) =>
-              doBoundsOverlap(
-                solverInstance.inputProblem.detectedComponent.bounds,
-                getBoundFromCenteredRect(obstacle),
-              ) &&
-              obstacle.componentId !==
-                solverInstance.inputProblem.detectedComponent.componentId,
-          ),
+          obstacles: solverInstance.unmarkedComponentObstacles,
           layerCount: solverInstance.inputProblem.inputSrj.layerCount,
         },
       ],
@@ -56,6 +57,31 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
 
   constructor(public readonly inputProblem: TopologyGeneratorSolverParams) {
     super(inputProblem)
+  }
+
+  override _setup(): void {
+    const componentBounds = this.inputProblem.detectedComponent.bounds
+    const componentId = this.inputProblem.detectedComponent.componentId
+    const markedComponentObstacles: Obstacle[] = []
+    const unmarkedComponentObstacles: Obstacle[] = []
+
+    for (const obstacle of this.inputProblem.inputSrj.obstacles) {
+      if (
+        !doBoundsOverlap(componentBounds, getBoundFromCenteredRect(obstacle))
+      ) {
+        continue
+      }
+
+      if (obstacle.componentId === componentId) {
+        markedComponentObstacles.push(obstacle)
+        continue
+      }
+
+      unmarkedComponentObstacles.push(obstacle)
+    }
+
+    this.markedComponentObstacles = markedComponentObstacles
+    this.unmarkedComponentObstacles = unmarkedComponentObstacles
   }
 
   override getConstructorParams(): readonly [TopologyGeneratorSolverParams] {

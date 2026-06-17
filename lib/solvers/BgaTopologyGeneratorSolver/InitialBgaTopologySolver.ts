@@ -13,6 +13,8 @@ export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
   componentBounds: SimpleRouteJson["bounds"]
   componentId: string
+  markedComponentObstacles: Obstacle[]
+  unmarkedComponentObstacles: Obstacle[]
 }
 
 function createMeshNodesFromBgaGap(input: {
@@ -134,31 +136,13 @@ export class InitialBgaTopologySolver extends BaseSolver {
   }
 
   override _step(): void {
-    const { srj, componentBounds, componentId } = this.inputProblem
-
-    const markedComponentObstacles: Obstacle[] = srj.obstacles.filter(
-      (obstacle) => {
-        return (
-          doBoundsOverlap(
-            getBoundFromCenteredRect(obstacle),
-            componentBounds,
-          ) && obstacle.componentId === componentId
-        )
-      },
-    )
-
-    const unmarkedComponentObstacles: Obstacle[] = srj.obstacles.filter(
-      (obstacle) => {
-        return (
-          doBoundsOverlap(
-            getBoundFromCenteredRect(obstacle),
-            componentBounds,
-          ) && obstacle.componentId !== componentId
-        )
-      },
-    )
-
-    console.log(markedComponentObstacles, unmarkedComponentObstacles)
+    const {
+      srj,
+      componentBounds,
+      componentId,
+      markedComponentObstacles,
+      unmarkedComponentObstacles,
+    } = this.inputProblem
 
     const copperPoursInBounds: Obstacle[] = srj.obstacles
       .filter((obstacle) => obstacle.isCopperPour === true)
