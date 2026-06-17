@@ -6,6 +6,7 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "jsx": "react-jsx",
+    "allowJs": true,
 
     "baseUrl": ".",
     "paths": {
@@ -36,17 +37,5 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": [
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "scripts/**/*.ts",
-    "scripts/**/*.tsx",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "types/**/*.d.ts",
-    "json-modules.d.ts",
-    "main.tsx",
-    "vite.config.ts"
-  ],
-  "exclude": ["dist", "fixtures", "examples/legacy/assets/**/*.json"]
+  "exclude": ["dist", "examples/legacy/assets/**/*.json"]
 }
