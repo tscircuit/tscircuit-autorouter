@@ -3,7 +3,9 @@ import {
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 export type RemoveMeshNodeOverlappingSolverInput = {
@@ -107,5 +109,61 @@ export class RemoveMeshNodeOverlppingWithUnmarkedObstacle extends BaseSolver {
 
   getOutput(): CapacityMeshNode[] {
     return this.meshNodes
+  }
+
+  override visualize(): GraphicsObject {
+    const currentObstacle: Obstacle | null =
+      this.obstacleQueueIndex < this.obstacleQueue.length
+        ? this.obstacleQueue[this.obstacleQueueIndex] ?? null
+        : null
+    const processedObstacles: Obstacle[] = this.obstacleQueue.slice(
+      0,
+      this.obstacleQueueIndex,
+    )
+    const pendingObstacles: Obstacle[] = currentObstacle
+      ? this.obstacleQueue.slice(this.obstacleQueueIndex + 1)
+      : []
+
+    return {
+      rects: [
+        ...processedObstacles.map((obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(160,160,160,0.10)",
+          stroke: "rgba(160,160,160,0.35)",
+          label: `processed ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...(currentObstacle
+          ? [
+              {
+                center: currentObstacle.center,
+                width: currentObstacle.width,
+                height: currentObstacle.height,
+                fill: "rgba(255,140,0,0.22)",
+                stroke: "rgba(255,140,0,0.75)",
+                label: `active ${currentObstacle.obstacleId ?? "obstacle"}`,
+              },
+            ]
+          : []),
+        ...pendingObstacles.map((obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,0,0,0.05)",
+          stroke: "rgba(255,0,0,0.22)",
+          label: `pending ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...this.meshNodes.map((node) => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: node._containsObstacle
+            ? "rgba(255,0,0,0.18)"
+            : "rgba(0,120,255,0.12)",
+          stroke: node._containsObstacle
+            ? "rgba(255,0,0,0.45)"
+            : "rgba(0,120,255,0.45)",
+        })),
+      ],
+    }
   }
 }

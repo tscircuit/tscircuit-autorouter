@@ -1,13 +1,9 @@
 import {
-  BasePipelineSolver,
-  BaseSolver,
-  definePipelineStep,
-  PipelineStep,
-} from "@tscircuit/solver-utils"
-import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
+import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
+import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
 import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
 import { MergeMeshNodes } from "lib/solvers/BgaTopologyGeneratorSolver/MergeMeshNodes"
@@ -17,7 +13,9 @@ import {
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
+import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
@@ -131,6 +129,64 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
 
     return {
       routingRegions,
+    }
+  }
+
+  override initialVisualize(): GraphicsObject | null {
+    return {
+      rects: [
+        {
+          center: {
+            x:
+              (this.inputProblem.detectedComponent.bounds.minX +
+                this.inputProblem.detectedComponent.bounds.maxX) /
+              2,
+            y:
+              (this.inputProblem.detectedComponent.bounds.minY +
+                this.inputProblem.detectedComponent.bounds.maxY) /
+              2,
+          },
+          width:
+            this.inputProblem.detectedComponent.bounds.maxX -
+            this.inputProblem.detectedComponent.bounds.minX,
+          height:
+            this.inputProblem.detectedComponent.bounds.maxY -
+            this.inputProblem.detectedComponent.bounds.minY,
+          fill: "rgba(0,0,0,0)",
+          stroke: "rgba(30,30,30,0.65)",
+          label: `bga ${this.inputProblem.detectedComponent.componentId}`,
+        },
+        ...this.markedComponentObstacles.map((obstacle: Obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,0,0,0.18)",
+          stroke: "rgba(255,0,0,0.52)",
+          label: `pad ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...this.unmarkedComponentObstacles.map((obstacle: Obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,140,0,0.14)",
+          stroke: "rgba(255,140,0,0.42)",
+          label: `foreign ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+      ],
+    }
+  }
+
+  override finalVisualize(): GraphicsObject | null {
+    return {
+      rects: this.getOutput().routingRegions.map((node: CapacityMeshNode) => ({
+        ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+        fill: node._containsObstacle
+          ? "rgba(255,0,0,0.16)"
+          : "rgba(0,120,255,0.12)",
+        stroke: node._containsObstacle
+          ? "rgba(255,0,0,0.36)"
+          : "rgba(0,120,255,0.42)",
+      })),
     }
   }
 }

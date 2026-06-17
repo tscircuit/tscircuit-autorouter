@@ -4,6 +4,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import type {
   DetectEdgesNotConnectedToMeshInput,
   EdgeSegmentWithObstacle,
@@ -16,6 +17,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
   private meshIndex!: Flatbush
   private queueEdges: EdgeSegmentWithObstacle[] = []
   private disconnectedEdges: EdgeSegmentWithObstacle[] = []
+  private currentEdge: EdgeSegmentWithObstacle | null = null
 
   constructor(
     public readonly inputProblem: DetectEdgesNotConnectedToMeshInput,
@@ -76,6 +78,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
     }
 
     this.queueEdges = queueEdges
+    this.currentEdge = null
   }
 
   override _step(): void {
@@ -83,9 +86,12 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       this.queueEdges.shift()
 
     if (!currentEdge) {
+      this.currentEdge = null
       this.solved = true
       return
     }
+
+    this.currentEdge = currentEdge
 
     const edgeIsVertical: boolean =
       Math.abs(currentEdge.start.x - currentEdge.end.x) <= EDGE_EPSILON
@@ -190,12 +196,50 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
+    const pendingEdges: EdgeSegmentWithObstacle[] = this.queueEdges
+    const disconnectedEdges: EdgeSegmentWithObstacle[] = this.disconnectedEdges
+
     return {
-      lines: this.disconnectedEdges.map((edge) => ({
-        points: [edge.start, edge.end],
-        stroke: "red",
-        strokeWidth: 0.03,
-      })),
+      rects: [
+        ...this.inputProblem.meshNodes.map((meshNode: CapacityMeshNode) => ({
+          ...createRectFromCapacityNode(meshNode, { rectMargin: 0.01 }),
+          fill: meshNode._containsObstacle
+            ? "rgba(120,120,120,0.18)"
+            : "rgba(120,120,120,0.08)",
+          stroke: meshNode._containsObstacle
+            ? "rgba(120,120,120,0.42)"
+            : "rgba(120,120,120,0.24)",
+        })),
+        ...this.inputProblem.unmarkedComponentObstacles.map((obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(160,160,160,0.10)",
+          stroke: "rgba(160,160,160,0.40)",
+          label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+        })),
+      ],
+      lines: [
+        ...pendingEdges.map((edge: EdgeSegmentWithObstacle) => ({
+          points: [edge.start, edge.end],
+          stroke: "rgba(160,160,160,0.55)",
+          strokeWidth: 0.02,
+        })),
+        ...disconnectedEdges.map((edge: EdgeSegmentWithObstacle) => ({
+          points: [edge.start, edge.end],
+          stroke: "rgba(255,0,0,0.95)",
+          strokeWidth: 0.04,
+        })),
+        ...(this.currentEdge
+          ? [
+              {
+                points: [this.currentEdge.start, this.currentEdge.end],
+                stroke: "rgba(255,140,0,0.98)",
+                strokeWidth: 0.05,
+              },
+            ]
+          : []),
+      ],
     }
   }
 }

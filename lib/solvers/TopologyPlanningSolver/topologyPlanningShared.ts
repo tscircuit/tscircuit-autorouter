@@ -17,6 +17,7 @@ import {
   type TopologyGeneratorSolver,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
@@ -509,6 +510,67 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
   getOutput(): ComponentTopologyBatchSolverOutput {
     return {
       componentMeshNodes: this.componentMeshNodes,
+    }
+  }
+
+  override visualize(): GraphicsObject {
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+
+    const activeComponentSrj: SimpleRouteJson | null =
+      this.inputProblem.componentSrjs[this.currentIndex] ?? null
+    const completedMeshNodes: CapacityMeshNode[] =
+      this.componentMeshNodes.flatMap(
+        (componentMeshNodes: CapacityMeshNode[]): CapacityMeshNode[] =>
+          componentMeshNodes,
+      )
+
+    return {
+      rects: [
+        ...(activeComponentSrj
+          ? [
+              {
+                center: {
+                  x:
+                    (activeComponentSrj.bounds.minX +
+                      activeComponentSrj.bounds.maxX) /
+                    2,
+                  y:
+                    (activeComponentSrj.bounds.minY +
+                      activeComponentSrj.bounds.maxY) /
+                    2,
+                },
+                width:
+                  activeComponentSrj.bounds.maxX -
+                  activeComponentSrj.bounds.minX,
+                height:
+                  activeComponentSrj.bounds.maxY -
+                  activeComponentSrj.bounds.minY,
+                fill: "rgba(0,0,0,0)",
+                stroke: "rgba(255,140,0,0.72)",
+                label: `active component ${this.inputProblem.componentIds[this.currentIndex] ?? this.currentIndex}`,
+              },
+              ...activeComponentSrj.obstacles.map((obstacle: Obstacle) => ({
+                center: obstacle.center,
+                width: obstacle.width,
+                height: obstacle.height,
+                fill: "rgba(255,140,0,0.10)",
+                stroke: "rgba(255,140,0,0.30)",
+                label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+              })),
+            ]
+          : []),
+        ...completedMeshNodes.map((node: CapacityMeshNode) => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: node._containsObstacle
+            ? "rgba(255,0,0,0.14)"
+            : "rgba(0,120,255,0.12)",
+          stroke: node._containsObstacle
+            ? "rgba(255,0,0,0.34)"
+            : "rgba(0,120,255,0.38)",
+        })),
+      ],
     }
   }
 }

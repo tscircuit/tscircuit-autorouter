@@ -2,7 +2,9 @@ import type { Bounds } from "@tscircuit/math-utils"
 import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import Flatbush from "flatbush"
+import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type {
   EdgeSegmentWithObstacle,
@@ -388,5 +390,32 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
 
   override getOutput(): CapacityMeshNode[] {
     return this.expandedNodes
+  }
+
+  override visualize(): GraphicsObject {
+    return {
+      rects: [
+        ...this.inputProblem.meshNodes.map((node) => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: node._containsObstacle
+            ? "rgba(255,0,0,0.16)"
+            : "rgba(0,120,255,0.08)",
+          stroke: node._containsObstacle
+            ? "rgba(255,0,0,0.35)"
+            : "rgba(0,120,255,0.28)",
+        })),
+        ...this.expandedNodes.map((node) => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: "rgba(0,200,120,0.24)",
+          stroke: "rgba(0,200,120,0.68)",
+          label: `expanded ${node.capacityMeshNodeId}`,
+        })),
+      ],
+      lines: this.inputProblem.edgesWithObstacle.map((edgeWithObstacle) => ({
+        points: [edgeWithObstacle.start, edgeWithObstacle.end],
+        stroke: "rgba(255,140,0,0.95)",
+        strokeWidth: 0.03,
+      })),
+    }
   }
 }

@@ -3,8 +3,10 @@ import {
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import type { GraphicsObject } from "graphics-debug"
 import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
@@ -312,5 +314,62 @@ export class InitialBgaTopologySolver extends BaseSolver {
 
   getOutput(): CapacityMeshNode[] {
     return this.meshNodes
+  }
+
+  override visualize(): GraphicsObject {
+    return {
+      rects: [
+        {
+          center: {
+            x:
+              (this.inputProblem.componentBounds.minX +
+                this.inputProblem.componentBounds.maxX) /
+              2,
+            y:
+              (this.inputProblem.componentBounds.minY +
+                this.inputProblem.componentBounds.maxY) /
+              2,
+          },
+          width:
+            this.inputProblem.componentBounds.maxX -
+            this.inputProblem.componentBounds.minX,
+          height:
+            this.inputProblem.componentBounds.maxY -
+            this.inputProblem.componentBounds.minY,
+          fill: "rgba(0,0,0,0)",
+          stroke: "rgba(30,30,30,0.65)",
+          label: `component ${this.inputProblem.componentId}`,
+        },
+        ...this.inputProblem.markedComponentObstacles.map((obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,0,0,0.18)",
+          stroke: "rgba(255,0,0,0.52)",
+          label: `pad ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...this.inputProblem.unmarkedComponentObstacles.map((obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,140,0,0.14)",
+          stroke: "rgba(255,140,0,0.42)",
+          label: `foreign ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...this.meshNodes.map((node) => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: node._containsObstacle
+            ? "rgba(255,0,0,0.14)"
+            : node.capacityMeshNodeId.includes("missing")
+              ? "rgba(0,200,120,0.18)"
+              : "rgba(0,120,255,0.12)",
+          stroke: node._containsObstacle
+            ? "rgba(255,0,0,0.36)"
+            : node.capacityMeshNodeId.includes("missing")
+              ? "rgba(0,200,120,0.52)"
+              : "rgba(0,120,255,0.38)",
+        })),
+      ],
+    }
   }
 }
