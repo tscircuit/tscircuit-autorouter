@@ -136,19 +136,27 @@ export class InitialBgaTopologySolver extends BaseSolver {
   override _step(): void {
     const { srj, componentBounds, componentId } = this.inputProblem
 
-    const markedComponentObstacles: Obstacle[] = srj.obstacles.filter((obstacle) => {
-      return (
-        doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds) &&
-        obstacle.componentId === componentId
-      )
-    })
+    const markedComponentObstacles: Obstacle[] = srj.obstacles.filter(
+      (obstacle) => {
+        return (
+          doBoundsOverlap(
+            getBoundFromCenteredRect(obstacle),
+            componentBounds,
+          ) && obstacle.componentId === componentId
+        )
+      },
+    )
 
-    const unmarkedComponentObstacles: Obstacle[] = srj.obstacles.filter(obstacle => {
-      return (
-        doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds) &&
-        obstacle.componentId !== componentId
-      )
-    })
+    const unmarkedComponentObstacles: Obstacle[] = srj.obstacles.filter(
+      (obstacle) => {
+        return (
+          doBoundsOverlap(
+            getBoundFromCenteredRect(obstacle),
+            componentBounds,
+          ) && obstacle.componentId !== componentId
+        )
+      },
+    )
 
     console.log(markedComponentObstacles, unmarkedComponentObstacles)
 
@@ -176,7 +184,9 @@ export class InitialBgaTopologySolver extends BaseSolver {
       return
     }
 
-    const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(markedComponentObstacles)
+    const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(
+      markedComponentObstacles,
+    )
 
     if (!bgaGrid) {
       this.solved = true
