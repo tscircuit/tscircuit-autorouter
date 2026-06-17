@@ -18,14 +18,15 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
   private meshBounds!: Bounds
   private expandedNodes: CapacityMeshNode[] = []
 
-  constructor(
-    public readonly inputProblem: ExpandUnconnectedEdgesToMeshInput,
-  ) {
+  constructor(public readonly inputProblem: ExpandUnconnectedEdgesToMeshInput) {
     super()
   }
 
   override _setup(): void {
-    const meshNodeCount: number = Math.max(this.inputProblem.meshNodes.length, 1)
+    const meshNodeCount: number = Math.max(
+      this.inputProblem.meshNodes.length,
+      1,
+    )
     this.meshIndex = new Flatbush(meshNodeCount)
 
     let minX: number = Number.POSITIVE_INFINITY
@@ -67,7 +68,9 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
     meshNode: CapacityMeshNode,
   ): number {
     if (
-      !candidateNode.availableZ.some((z: number) => meshNode.availableZ.includes(z))
+      !candidateNode.availableZ.some((z: number) =>
+        meshNode.availableZ.includes(z),
+      )
     ) {
       return 0
     }
@@ -81,10 +84,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       Math.min(candidateNodeBounds.maxY, meshNodeBounds.maxY) -
       Math.max(candidateNodeBounds.minY, meshNodeBounds.minY)
 
-    if (
-      overlapWidth <= OVERLAP_EPSILON ||
-      overlapHeight <= OVERLAP_EPSILON
-    ) {
+    if (overlapWidth <= OVERLAP_EPSILON || overlapHeight <= OVERLAP_EPSILON) {
       return 0
     }
 
@@ -114,10 +114,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       Math.min(candidateNodeBounds.maxY, obstacleBounds.maxY) -
       Math.max(candidateNodeBounds.minY, obstacleBounds.minY)
 
-    if (
-      overlapWidth <= OVERLAP_EPSILON ||
-      overlapHeight <= OVERLAP_EPSILON
-    ) {
+    if (overlapWidth <= OVERLAP_EPSILON || overlapHeight <= OVERLAP_EPSILON) {
       return 0
     }
 
@@ -129,7 +126,8 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
     expandedNodes: CapacityMeshNode[],
   ): CapacityMeshNode | null {
     const edgeIsVertical: boolean =
-      Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <= EDGE_EPSILON
+      Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <=
+      EDGE_EPSILON
     const obstacleAvailableZ: number[] = this.getObstacleAvailableZ(
       edgeWithObstacle.obstacle,
     )
@@ -206,7 +204,8 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
         continue
       }
 
-      const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode)
+      const candidateNodeBounds: Bounds =
+        getBoundFromCenteredRect(candidateNode)
       const edgeSpanOverlapAmount: number = edgeIsVertical
         ? Math.min(
             Math.max(edgeWithObstacle.start.y, edgeWithObstacle.end.y),
@@ -255,7 +254,8 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       edgeWithObstacle.obstacle,
     )
     const edgeIsVertical: boolean =
-      Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <= EDGE_EPSILON
+      Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <=
+      EDGE_EPSILON
 
     if (edgeIsVertical) {
       const minY: number = Math.max(
@@ -359,7 +359,10 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
   override _step(): void {
     const expandedNodes: CapacityMeshNode[] = []
 
-    for (const [edgeIndex, edgeWithObstacle] of this.inputProblem.edgesWithObstacle.entries()) {
+    for (const [
+      edgeIndex,
+      edgeWithObstacle,
+    ] of this.inputProblem.edgesWithObstacle.entries()) {
       const targetNode: CapacityMeshNode | null = this.getClosestMeshNode(
         edgeWithObstacle,
         expandedNodes,

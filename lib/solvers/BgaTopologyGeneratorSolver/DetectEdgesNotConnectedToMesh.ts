@@ -24,7 +24,10 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
   }
 
   override _setup(): void {
-    const meshNodeCount: number = Math.max(this.inputProblem.meshNodes.length, 1)
+    const meshNodeCount: number = Math.max(
+      this.inputProblem.meshNodes.length,
+      1,
+    )
     this.meshIndex = new Flatbush(meshNodeCount)
 
     for (const meshNode of this.inputProblem.meshNodes) {
@@ -110,7 +113,8 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
     let isConnected: boolean = false
 
     for (const candidateNodeId of candidateNodeIds) {
-      const meshNode: CapacityMeshNode = this.inputProblem.meshNodes[candidateNodeId]!
+      const meshNode: CapacityMeshNode =
+        this.inputProblem.meshNodes[candidateNodeId]!
       const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode)
 
       if (edgeIsVertical) {

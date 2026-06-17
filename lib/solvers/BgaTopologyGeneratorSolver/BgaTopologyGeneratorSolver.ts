@@ -1,4 +1,7 @@
-import { doBoundsOverlap, getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import {
+  doBoundsOverlap,
+  getBoundFromCenteredRect,
+} from "@tscircuit/math-utils"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
@@ -30,7 +33,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           componentBounds:
             bgaTopologyGeneratorSolver.inputProblem.detectedComponent.bounds,
           componentId:
-            bgaTopologyGeneratorSolver.inputProblem.detectedComponent.componentId,
+            bgaTopologyGeneratorSolver.inputProblem.detectedComponent
+              .componentId,
           markedComponentObstacles:
             bgaTopologyGeneratorSolver.markedComponentObstacles,
           unmarkedComponentObstacles:
@@ -43,7 +47,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       RemoveMeshNodeOverlppingWithUnmarkedObstacle,
       (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
         {
-          meshNodes: bgaTopologyGeneratorSolver.initialTopologySolver.getOutput(),
+          meshNodes:
+            bgaTopologyGeneratorSolver.initialTopologySolver.getOutput(),
           obstacles: bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
           layerCount:
             bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
