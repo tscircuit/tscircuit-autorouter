@@ -225,9 +225,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
     this.solved = true
   }
 
-  getOutput(): TopologyGeneratorSolverOutput {
-    return {
-      routingRegions: this.meshNodes,
-    }
+  getOutput(): CapacityMeshNode[] {
+    return  this.meshNodes
   }
 }
