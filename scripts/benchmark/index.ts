@@ -54,6 +54,7 @@ type WorkerExecutionResult = {
   restartWorker: boolean
 }
 
+const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
@@ -609,8 +610,9 @@ const getTaskTimeoutMs = (task: BenchmarkTask, sampleTimeoutMs?: number) => {
     return sampleTimeoutMs
   }
 
-  const baseTimeoutMs = getTaskTimeoutPerEffortMs()
-  return baseTimeoutMs + baseTimeoutMs * getTaskEffort(task)
+  const baseTimeoutMs = DEFAULT_TASK_TIMEOUT_BASE_MS
+  const effortTimeoutMs = getTaskTimeoutPerEffortMs()
+  return baseTimeoutMs + effortTimeoutMs * getTaskEffort(task)
 }
 
 const formatEffortLabel = (efforts: number[]) => {
