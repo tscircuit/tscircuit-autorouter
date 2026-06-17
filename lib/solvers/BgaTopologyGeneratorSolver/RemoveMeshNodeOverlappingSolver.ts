@@ -114,7 +114,7 @@ export class RemoveMeshNodeOverlppingWithUnmarkedObstacle extends BaseSolver {
   override visualize(): GraphicsObject {
     const currentObstacle: Obstacle | null =
       this.obstacleQueueIndex < this.obstacleQueue.length
-        ? this.obstacleQueue[this.obstacleQueueIndex] ?? null
+        ? (this.obstacleQueue[this.obstacleQueueIndex] ?? null)
         : null
     const processedObstacles: Obstacle[] = this.obstacleQueue.slice(
       0,

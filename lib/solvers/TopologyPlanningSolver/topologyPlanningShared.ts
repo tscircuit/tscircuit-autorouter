@@ -557,7 +557,8 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
                 height: obstacle.height,
                 fill: "rgba(255,140,0,0.10)",
                 stroke: "rgba(255,140,0,0.30)",
-                label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+                label:
+                  obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
               })),
             ]
           : []),

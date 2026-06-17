@@ -231,10 +231,7 @@ function buildMergedNodesForGroup(
 
       if (rowWidthCellCount === 0) break
 
-      runningWidthCellCount = Math.min(
-        runningWidthCellCount,
-        rowWidthCellCount,
-      )
+      runningWidthCellCount = Math.min(runningWidthCellCount, rowWidthCellCount)
 
       for (
         let widthCellCount: number = runningWidthCellCount;
@@ -275,7 +272,8 @@ function buildMergedNodesForGroup(
         colOffset += 1
       ) {
         const cellKey: string = `${rootCell.col + colOffset},${rootCell.row + rowOffset}`
-        const sourceNode: CapacityMeshNode | undefined = nodeByCellKey.get(cellKey)
+        const sourceNode: CapacityMeshNode | undefined =
+          nodeByCellKey.get(cellKey)
         if (!sourceNode) continue
 
         visitedCellKeys.add(cellKey)
@@ -436,7 +434,8 @@ export class MergeMeshNodes extends BaseSolver {
   }
 
   override _step(): void {
-    const nextGroup: MergeCandidateGroup | undefined = this.pendingGroups.shift()
+    const nextGroup: MergeCandidateGroup | undefined =
+      this.pendingGroups.shift()
 
     if (!nextGroup) {
       this.currentGroupKey = null
@@ -450,7 +449,8 @@ export class MergeMeshNodes extends BaseSolver {
     this.currentGroupKey = nextGroup.groupKey
     this.currentRootNodeId = rootNode ? rootNode.capacityMeshNodeId : null
 
-    const groupBuildResult: GroupBuildResult = buildMergedNodesForGroup(nextGroup)
+    const groupBuildResult: GroupBuildResult =
+      buildMergedNodesForGroup(nextGroup)
 
     this.mergedNodes.push(...groupBuildResult.outputNodes)
     this.processedGroupCount += 1
@@ -476,7 +476,9 @@ export class MergeMeshNodes extends BaseSolver {
 
   private updateStats(lastAction: string): void {
     const mergedGroupKeys: Set<string> = new Set(
-      this.debugMergeEvents.map((event: MergeStepEvent): string => event.groupKey),
+      this.debugMergeEvents.map(
+        (event: MergeStepEvent): string => event.groupKey,
+      ),
     )
 
     const stats: MergeMeshNodesStats = {
@@ -488,10 +490,12 @@ export class MergeMeshNodes extends BaseSolver {
       passthroughNodeCount: this.passthroughNodes.length,
       gapFillNodeCount: this.passthroughNodes.filter(isGapFillNode).length,
       preservedObstacleNodeCount: this.debugFilteredNodes.filter(
-        (event: FilteredNodeEvent): boolean => event.type === "preserved-obstacle",
+        (event: FilteredNodeEvent): boolean =>
+          event.type === "preserved-obstacle",
       ).length,
       preservedOverlapNodeCount: this.debugFilteredNodes.filter(
-        (event: FilteredNodeEvent): boolean => event.type === "preserved-overlap",
+        (event: FilteredNodeEvent): boolean =>
+          event.type === "preserved-overlap",
       ).length,
       mergeCount: this.debugMergeEvents.length,
       mergedGroupCount: mergedGroupKeys.size,
@@ -514,44 +518,53 @@ export class MergeMeshNodes extends BaseSolver {
   override visualize(): GraphicsObject {
     const outputNodes: CapacityMeshNode[] = this.getOutput()
     const activeNode: CapacityMeshNode | null = this.currentRootNodeId
-      ? outputNodes.find(
+      ? (outputNodes.find(
           (node: CapacityMeshNode): boolean =>
             node.capacityMeshNodeId === this.currentRootNodeId,
-        ) ?? null
+        ) ?? null)
       : null
     const lastMergedNode: CapacityMeshNode | null = this.lastMergedNodeId
-      ? outputNodes.find(
+      ? (outputNodes.find(
           (node: CapacityMeshNode): boolean =>
             node.capacityMeshNodeId === this.lastMergedNodeId,
-        ) ?? null
+        ) ?? null)
       : null
 
     return {
       rects: [
-        ...this.debugFilteredNodes.map((event: FilteredNodeEvent): DebugRect =>
-          createDebugRect(
-            event.node,
-            event.type === "preserved-obstacle"
-              ? "rgba(255,64,64,0.35)"
-              : "rgba(255,160,64,0.35)",
-            event.reason,
-          ),
+        ...this.debugFilteredNodes.map(
+          (event: FilteredNodeEvent): DebugRect =>
+            createDebugRect(
+              event.node,
+              event.type === "preserved-obstacle"
+                ? "rgba(255,64,64,0.35)"
+                : "rgba(255,160,64,0.35)",
+              event.reason,
+            ),
         ),
-        ...this.passthroughNodes.map((node: CapacityMeshNode): DebugRect =>
-          createDebugRect(
-            node,
-            node._containsObstacle
-              ? "rgba(255,0,0,0.35)"
-              : isGapFillNode(node)
-                ? "rgba(0,120,255,0.18)"
-                : "rgba(160,160,160,0.12)",
-          ),
+        ...this.passthroughNodes.map(
+          (node: CapacityMeshNode): DebugRect =>
+            createDebugRect(
+              node,
+              node._containsObstacle
+                ? "rgba(255,0,0,0.35)"
+                : isGapFillNode(node)
+                  ? "rgba(0,120,255,0.18)"
+                  : "rgba(160,160,160,0.12)",
+            ),
         ),
-        ...this.mergedNodes.map((node: CapacityMeshNode): DebugRect =>
-          createDebugRect(node, "rgba(120,120,120,0.14)"),
+        ...this.mergedNodes.map(
+          (node: CapacityMeshNode): DebugRect =>
+            createDebugRect(node, "rgba(120,120,120,0.14)"),
         ),
         ...(activeNode
-          ? [createDebugRect(activeNode, "rgba(255,215,0,0.35)", "active-group")]
+          ? [
+              createDebugRect(
+                activeNode,
+                "rgba(255,215,0,0.35)",
+                "active-group",
+              ),
+            ]
           : []),
         ...(lastMergedNode
           ? [createDebugRect(lastMergedNode, "rgba(0,200,120,0.28)", "merged")]
