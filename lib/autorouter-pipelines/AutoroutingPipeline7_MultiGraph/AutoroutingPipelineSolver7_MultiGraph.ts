@@ -165,19 +165,6 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
-function isPointInsideDetectedComponent(
-  point: { x: number; y: number },
-  detectedComponent: DetectedComponent,
-) {
-  const { bounds } = detectedComponent
-
-  return (
-    point.x >= bounds.minX &&
-    point.x <= bounds.maxX &&
-    point.y >= bounds.minY &&
-    point.y <= bounds.maxY
-  )
-}
 
 function isGlobalMeshNodeInsideDetectedComponent(
   node: CapacityMeshNode,
