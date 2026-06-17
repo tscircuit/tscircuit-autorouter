@@ -185,20 +185,27 @@ const createPerfectlyBorderedQfpPads = ({
 }
 
 test("component detection only creates regions for BGA-like components", () => {
+  const inputSrj = {
+    ...createSrj([
+      createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
+      createPad({ componentId: "R1", obstacleId: "R1.2", x: 0, y: 0 }),
+      ...Array.from({ length: 9 }, (_, index) =>
+        createPad({
+          componentId: "U_BGA",
+          obstacleId: `U_BGA.${index + 1}`,
+          x: index % 3,
+          y: Math.floor(index / 3),
+        }),
+      ),
+    ]),
+    layerCount: 4,
+  }
   const passivePads = [
     createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
     createPad({ componentId: "R1", obstacleId: "R1.2", x: 0, y: 0 }),
   ]
-  const bgaPads = Array.from({ length: 9 }, (_, index) =>
-    createPad({
-      componentId: "U_BGA",
-      obstacleId: `U_BGA.${index + 1}`,
-      x: index % 3,
-      y: Math.floor(index / 3),
-    }),
-  )
   const solver = new ComponentDetectionSolver({
-    inputSrj: createSrj([...passivePads, ...bgaPads]),
+    inputSrj,
   })
 
   solver.solve()
@@ -206,8 +213,11 @@ test("component detection only creates regions for BGA-like components", () => {
   const detectedComponents = solver.getOutput()
   const componentObstacleSrj = createComponentObstacleSrj({
     detectedComponents,
-    inputSrj: createSrj([...passivePads, ...bgaPads]),
+    inputSrj,
   })
+  const replacementObstacle = componentObstacleSrj.obstacles.find(
+    (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
+  )
 
   expect(detectedComponents.map((component) => component.componentId)).toEqual([
     "U_BGA",
@@ -227,24 +237,36 @@ test("component detection only creates regions for BGA-like components", () => {
       (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
     ),
   ).toBe(true)
+  expect(replacementObstacle?.layers).toEqual([
+    "top",
+    "inner1",
+    "inner2",
+    "bottom",
+  ])
+  expect(replacementObstacle?.zLayers).toEqual([0, 1, 2, 3])
 })
 
-test("component detection accepts two-row and two-column BGA-like components", () => {
+test("component detection accepts larger BGA-like components", () => {
   const solver = new ComponentDetectionSolver({
     inputSrj: createSrj([
-      ...createGridPads({ componentId: "U_2X4", rows: 2, columns: 4 }),
-      ...createGridPads({ componentId: "U_4X2", rows: 4, columns: 2 }),
-      ...createGridPads({ componentId: "U_2X5", rows: 2, columns: 5 }),
-      ...createGridPads({ componentId: "U_2X3", rows: 2, columns: 3 }),
+      ...createGridPads({ componentId: "U_3X4", rows: 3, columns: 4 }),
+      ...createGridPads({ componentId: "U_4X3", rows: 4, columns: 3 }),
+      ...createGridPads({ componentId: "U_3X3", rows: 3, columns: 3 }),
+      ...createGridPads({
+        componentId: "U_SPARSE_3X3",
+        rows: 3,
+        columns: 3,
+        includedIndexes: [0, 1, 2, 3],
+      }),
     ]),
   })
 
   solver.solve()
 
   expect(solver.getOutput().map((component) => component.componentId)).toEqual([
-    "U_2X4",
-    "U_2X5",
-    "U_4X2",
+    "U_3X3",
+    "U_3X4",
+    "U_4X3",
   ])
 })
 
@@ -264,7 +286,7 @@ test("component detection marks large-gap two-row and two-column grids as SOIC",
           columns: 2,
           xStep: 2,
         }),
-        ...createGridPads({ componentId: "U_TIGHT_2X4", rows: 2, columns: 4 }),
+        ...createGridPads({ componentId: "U_TIGHT_3X3", rows: 3, columns: 3 }),
       ]),
       minViaPadDiameter: 0.3,
       defaultObstacleMargin: 0.15,
@@ -280,7 +302,7 @@ test("component detection marks large-gap two-row and two-column grids as SOIC",
   ).toEqual([
     ["U_SOIC_COLUMNS", "soic"],
     ["U_SOIC_ROWS", "soic"],
-    ["U_TIGHT_2X4", "bga"],
+    ["U_TIGHT_3X3", "bga"],
   ])
   expect(
     solver
@@ -338,14 +360,14 @@ test("component detection rejects grids with pad dimensions outside one percent"
   ])
 })
 
-test("component detection does not require at least eight pads", () => {
+test("component detection does not require a fully populated large grid", () => {
   const solver = new ComponentDetectionSolver({
     inputSrj: createSrj([
       ...createGridPads({
-        componentId: "U_SPARSE_2X4",
-        rows: 2,
-        columns: 4,
-        includedIndexes: [0, 1, 2, 7],
+        componentId: "U_SPARSE_3X3",
+        rows: 3,
+        columns: 3,
+        includedIndexes: [0, 1, 2, 4, 8],
       }),
     ]),
   })
@@ -353,13 +375,13 @@ test("component detection does not require at least eight pads", () => {
   solver.solve()
 
   expect(solver.getOutput().map((component) => component.componentId)).toEqual([
-    "U_SPARSE_2X4",
+    "U_SPARSE_3X3",
   ])
 })
 
-test("topology planning creates BGA component mesh nodes for two-row components", () => {
+test("topology planning creates BGA component mesh nodes for larger components", () => {
   const inputSrj = createSrj(
-    createGridPads({ componentId: "U_2X4", rows: 2, columns: 4 }),
+    createGridPads({ componentId: "U_3X4", rows: 3, columns: 4 }),
   )
   const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
   componentDetectionSolver.solve()
@@ -375,7 +397,7 @@ test("topology planning creates BGA component mesh nodes for two-row components"
   expect(output.componentMeshNodes[0]!.length).toBeGreaterThan(0)
   expect(
     output.componentMeshNodes[0]!.every((node) =>
-      node.capacityMeshNodeId.includes("U_2X4"),
+      node.capacityMeshNodeId.includes("U_3X4"),
     ),
   ).toBe(true)
 })

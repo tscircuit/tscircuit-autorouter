@@ -44,18 +44,21 @@ function getTopologyAxisObstacles({
 }: {
   bounds: Bounds
   obstacles: Obstacle[]
-}) {
+}): Obstacle[] {
   return obstacles.filter((obstacle) =>
     doBoundsOverlap(getBoundingBox(obstacle), bounds),
   )
 }
 
-function clusterBoundaryValues(values: number[]) {
+function clusterBoundaryValues(values: number[]): number[] {
   return clusterAxisValues(values)
 }
 
 /** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
-function getObstacleAvailableZ(obstacle: Obstacle, layerCount: number) {
+function getObstacleAvailableZ(
+  obstacle: Obstacle,
+  layerCount: number,
+): number[] {
   return obstacle.zLayers && obstacle.zLayers.length > 0
     ? obstacle.zLayers
     : obstacle.layers.map((layerName) => mapLayerNameToZ(layerName, layerCount))
@@ -75,7 +78,7 @@ function regionContainsObstacle({
   obstacle: Obstacle
   availableZ: number[]
   layerCount: number
-}) {
+}): boolean {
   const regionBounds = getBoundFromCenteredRect(region)
   const obstacleBounds = getBoundingBox(obstacle)
 
@@ -109,7 +112,7 @@ function regionContainsAnyObstacle({
   obstacles: Obstacle[]
   availableZ: number[]
   layerCount: number
-}) {
+}): boolean {
   return obstacles.some((obstacle) =>
     regionContainsObstacle({
       region,
@@ -177,7 +180,7 @@ function createFallbackRingNodes({
   availableZ: number[]
   layerCount: number
   nodeScopeId: string
-}) {
+}): CapacityMeshNode[] {
   const x1 = bounds.minX + (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO
   const x2 = bounds.maxX - (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO
   const y1 = bounds.minY + (bounds.maxY - bounds.minY) * CORNER_SPLIT_RATIO
@@ -277,7 +280,7 @@ function createGridAxisEdges({
   end: number
   obstacles: Obstacle[]
   axis: "x" | "y"
-}) {
+}): number[] {
   const rawEdges = [start, end]
 
   for (const obstacle of obstacles) {
@@ -323,7 +326,7 @@ function getExactObstacleForRegion({
 }: {
   region: RectRegion
   obstacles: Obstacle[]
-}) {
+}): Obstacle | null {
   const regionBounds = getBoundFromCenteredRect(region)
 
   return (
@@ -351,7 +354,7 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
   xEdges: number[]
   yEdges: number[]
   obstacles: Obstacle[]
-}) {
+}): boolean {
   if (
     row <= 0 ||
     col <= 0 ||
@@ -464,7 +467,7 @@ function createCellMeshNodes({
 }
 
 /** Clusters nearly-equal axis values so pad-center jitter does not create extra rows/columns. */
-export function clusterAxisValues(values: number[]) {
+export function clusterAxisValues(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
   const gaps: number[] = []
 
@@ -491,7 +494,7 @@ export function clusterAxisValues(values: number[]) {
 }
 
 /** Returns `[0..layerCount-1]` for the solver's z-axis iteration. */
-export function getLayerRange(layerCount: number) {
+export function getLayerRange(layerCount: number): number[] {
   return Array.from({ length: Math.max(0, layerCount) }, (_, z) => z)
 }
 

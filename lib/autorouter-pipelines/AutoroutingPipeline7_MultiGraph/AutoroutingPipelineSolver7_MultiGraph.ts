@@ -45,6 +45,7 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import type { DetectedComponent } from "../../solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
@@ -162,6 +163,19 @@ function mergeComponentSharedEdgeSegments({
 
     return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
   })
+}
+
+function isGlobalMeshNodeInsideDetectedComponent(
+  node: CapacityMeshNode,
+  detectedComponents: DetectedComponent[],
+) {
+  return detectedComponents.some(
+    (detectedComponent) =>
+      node.center.x - node.width / 2 >= detectedComponent.bounds.minX &&
+      node.center.x + node.width / 2 <= detectedComponent.bounds.maxX &&
+      node.center.y - node.height / 2 >= detectedComponent.bounds.minY &&
+      node.center.y + node.height / 2 <= detectedComponent.bounds.maxY,
+  )
 }
 
 function definePipelineStep<
@@ -318,8 +332,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const globalMeshNodes =
+          const detectedComponents = cms.componentDetectionSolver?.getOutput()
+          const globalMeshNodes = (
             cms.globalTopologyGeneratorSolver?.getOutput().meshNodes ?? []
+          ).filter(
+            (node) =>
+              !detectedComponents ||
+              !isGlobalMeshNodeInsideDetectedComponent(
+                node,
+                detectedComponents,
+              ),
+          )
           const componentMeshNodes =
             cms.componentTopologyGeneratorSolver?.getOutput() ?? []
 

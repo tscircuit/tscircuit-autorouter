@@ -1,10 +1,31 @@
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
-import {
-  clusterAxisValues,
-  isBgaLikeComponent,
-} from "../bga/BgaComponentDetector"
+import { clusterAxisValues } from "../bga/BgaComponentDetector"
 import type { ComponentDetector, ComponentDetectorParams } from "../types"
+
+const MIN_SOIC_SHORT_AXIS_COUNT = 2
+const MIN_SOIC_LONG_AXIS_COUNT = 4
+const MAX_SOIC_PAD_SIZE_VARIANCE = 0.01
+
+function hasUniformDimensionWithinTolerance(values: number[]) {
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+
+  if (minValue <= 0) return false
+
+  return maxValue / minValue <= 1 + MAX_SOIC_PAD_SIZE_VARIANCE
+}
+
+function hasUniformPadDimensions(memberObstacles: Obstacle[]) {
+  return (
+    hasUniformDimensionWithinTolerance(
+      memberObstacles.map((obstacle) => obstacle.width),
+    ) &&
+    hasUniformDimensionWithinTolerance(
+      memberObstacles.map((obstacle) => obstacle.height),
+    )
+  )
+}
 
 function getNearestClusterIndex(value: number, clusters: number[]) {
   let nearestIndex = 0
@@ -78,7 +99,7 @@ export function isSoicLikeComponent({
   memberObstacles: Obstacle[]
   inputSrj: SimpleRouteJson
 }) {
-  if (!isBgaLikeComponent(memberObstacles)) return false
+  if (!hasUniformPadDimensions(memberObstacles)) return false
 
   const rowAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.y),
@@ -87,8 +108,10 @@ export function isSoicLikeComponent({
     memberObstacles.map((obstacle) => obstacle.center.x),
   )
   const isTwoRowOrColumnBga =
-    (rowAxisValues.length === 2 && columnAxisValues.length >= 4) ||
-    (columnAxisValues.length === 2 && rowAxisValues.length >= 4)
+    (rowAxisValues.length === MIN_SOIC_SHORT_AXIS_COUNT &&
+      columnAxisValues.length >= MIN_SOIC_LONG_AXIS_COUNT) ||
+    (columnAxisValues.length === MIN_SOIC_SHORT_AXIS_COUNT &&
+      rowAxisValues.length >= MIN_SOIC_LONG_AXIS_COUNT)
 
   if (!isTwoRowOrColumnBga) return false
 
