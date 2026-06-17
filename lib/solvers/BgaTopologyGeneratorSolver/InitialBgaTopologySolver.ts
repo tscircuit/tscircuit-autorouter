@@ -17,6 +17,68 @@ export type InitialBgaTopologySolverInput = {
   unmarkedComponentObstacles: Obstacle[]
 }
 
+function getStableObstacleNodeToken(obstacle: Obstacle): string {
+  return (
+    obstacle.obstacleId ??
+    [
+      obstacle.componentId ?? "no-component",
+      obstacle.center.x,
+      obstacle.center.y,
+      obstacle.width,
+      obstacle.height,
+      obstacle.layers.join(","),
+    ].join(":")
+  )
+}
+
+function ensureUniqueMeshNodeIds(
+  meshNodes: CapacityMeshNode[],
+): CapacityMeshNode[] {
+  const seenNodeIds = new Map<string, number>()
+
+  return meshNodes.map((meshNode) => {
+    const seenCount = seenNodeIds.get(meshNode.capacityMeshNodeId) ?? 0
+    seenNodeIds.set(meshNode.capacityMeshNodeId, seenCount + 1)
+
+    if (seenCount === 0) return meshNode
+
+    return {
+      ...meshNode,
+      capacityMeshNodeId: `${meshNode.capacityMeshNodeId}__dup${seenCount}`,
+    }
+  })
+}
+
+function getStableGapNodeToken({
+  componentId,
+  orientationKey,
+  row,
+  col,
+  center,
+  width,
+  height,
+}: {
+  componentId: string
+  orientationKey: string
+  row: number
+  col: number
+  center: { x: number; y: number }
+  width: number
+  height: number
+}) {
+  return [
+    "cmn",
+    orientationKey,
+    componentId,
+    row,
+    col,
+    center.x,
+    center.y,
+    width,
+    height,
+  ].join("_")
+}
+
 function createMeshNodesFromBgaGap(input: {
   componentId: string
   bgaGap: BgaGap
@@ -26,7 +88,15 @@ function createMeshNodesFromBgaGap(input: {
   let orientationKey: string = "d"
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
   if (bgaGap.orientation === "vertical") orientationKey = "v"
-  const baseNodeId: string = `cmn_${orientationKey}_${componentId}_${bgaGap.row}_${bgaGap.col}`
+  const baseNodeId: string = getStableGapNodeToken({
+    componentId,
+    orientationKey,
+    row: bgaGap.row,
+    col: bgaGap.col,
+    center: bgaGap.center,
+    width: bgaGap.width,
+    height: bgaGap.height,
+  })
 
   if (bgaGap.orientation === "diagonal") {
     return [
@@ -76,26 +146,36 @@ function createMeshNodeFromMissingBgaSlot(input: {
     width: missingBgaSlot.width,
     height: missingBgaSlot.height,
     availableZ: [...freeLayers],
-    capacityMeshNodeId: `cmn_missing_${componentId}_${missingBgaSlot.row}_${missingBgaSlot.col}_all`,
+    capacityMeshNodeId: getStableGapNodeToken({
+      componentId,
+      orientationKey: "missing",
+      row: missingBgaSlot.row,
+      col: missingBgaSlot.col,
+      center: missingBgaSlot.center,
+      width: missingBgaSlot.width,
+      height: missingBgaSlot.height,
+    }).concat("_all"),
     layer: "",
   }
 }
 
 function createFreeObstacleMeshNodes(input: {
+  componentId: string
   obstacle: Obstacle
   freeLayers: number[]
   layerCount: number
 }): CapacityMeshNode[] {
-  const { obstacle, freeLayers, layerCount } = input
+  const { componentId, obstacle, freeLayers, layerCount } = input
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
   )
   const obstacleFreeLayers: number[] = freeLayers.filter(
     (layer) => !obstacleLayers.includes(layer),
   )
+  const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
 
   return obstacleFreeLayers.map((layer) => ({
-    capacityMeshNodeId: `free-${obstacle.obstacleId}-${layer}`,
+    capacityMeshNodeId: `free-${componentId}-${obstacleNodeToken}-${layer}`,
     center: obstacle.center,
     width: obstacle.width,
     height: obstacle.height,
@@ -105,15 +185,17 @@ function createFreeObstacleMeshNodes(input: {
 }
 
 function createObstacleMeshNode(
+  componentId: string,
   obstacle: Obstacle,
   layerCount: number,
 ): CapacityMeshNode {
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
   )
+  const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
 
   return {
-    capacityMeshNodeId: `obstacle-${obstacle.obstacleId}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
+    capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
     _containsObstacle: true,
     center: obstacle.center,
     width: obstacle.width,
@@ -204,23 +286,26 @@ export class InitialBgaTopologySolver extends BaseSolver {
       ),
       ...markedComponentObstacles.flatMap((obstacle) => [
         ...createFreeObstacleMeshNodes({
+          componentId,
           obstacle,
           freeLayers,
           layerCount: srj.layerCount,
         }),
-        createObstacleMeshNode(obstacle, srj.layerCount),
+        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
       ]),
       ...unmarkedComponentObstacles.flatMap((obstacle) => [
         // skip for unmarked becase we already have free layers available
         // this will cause overlaps srj18 013 is an good exmpale
         // ...createFreeObstacleMeshNodes({
+        //   componentId,
         //   obstacle,
         //   freeLayers,
         //   layerCount: srj.layerCount,
         // }),
-        createObstacleMeshNode(obstacle, srj.layerCount),
+        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
       ]),
     ]
+    this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes)
 
     this.solved = true
   }

@@ -185,20 +185,27 @@ const createPerfectlyBorderedQfpPads = ({
 }
 
 test("component detection only creates regions for BGA-like components", () => {
+  const inputSrj = {
+    ...createSrj([
+      createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
+      createPad({ componentId: "R1", obstacleId: "R1.2", x: 0, y: 0 }),
+      ...Array.from({ length: 9 }, (_, index) =>
+        createPad({
+          componentId: "U_BGA",
+          obstacleId: `U_BGA.${index + 1}`,
+          x: index % 3,
+          y: Math.floor(index / 3),
+        }),
+      ),
+    ]),
+    layerCount: 4,
+  }
   const passivePads = [
     createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
     createPad({ componentId: "R1", obstacleId: "R1.2", x: 0, y: 0 }),
   ]
-  const bgaPads = Array.from({ length: 9 }, (_, index) =>
-    createPad({
-      componentId: "U_BGA",
-      obstacleId: `U_BGA.${index + 1}`,
-      x: index % 3,
-      y: Math.floor(index / 3),
-    }),
-  )
   const solver = new ComponentDetectionSolver({
-    inputSrj: createSrj([...passivePads, ...bgaPads]),
+    inputSrj,
   })
 
   solver.solve()
@@ -206,8 +213,11 @@ test("component detection only creates regions for BGA-like components", () => {
   const detectedComponents = solver.getOutput()
   const componentObstacleSrj = createComponentObstacleSrj({
     detectedComponents,
-    inputSrj: createSrj([...passivePads, ...bgaPads]),
+    inputSrj,
   })
+  const replacementObstacle = componentObstacleSrj.obstacles.find(
+    (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
+  )
 
   expect(detectedComponents.map((component) => component.componentId)).toEqual([
     "U_BGA",
@@ -227,6 +237,13 @@ test("component detection only creates regions for BGA-like components", () => {
       (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
     ),
   ).toBe(true)
+  expect(replacementObstacle?.layers).toEqual([
+    "top",
+    "inner1",
+    "inner2",
+    "bottom",
+  ])
+  expect(replacementObstacle?.zLayers).toEqual([0, 1, 2, 3])
 })
 
 test("component detection accepts two-row and two-column BGA-like components", () => {

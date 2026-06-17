@@ -77,6 +77,7 @@ export class RemoveMeshNodeOverlppingWithUnmarkedObstacle extends BaseSolver {
       for (const z of nodeFreeLayers) {
         const nextMeshNode: CapacityMeshNode = {
           ...node,
+          capacityMeshNodeId: `${node.capacityMeshNodeId}:z${z}`,
           availableZ: [z],
           layer: `z${z}`,
         }
