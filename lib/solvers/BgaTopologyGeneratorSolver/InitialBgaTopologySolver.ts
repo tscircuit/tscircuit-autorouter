@@ -82,9 +82,12 @@ function createMeshNodeFromMissingBgaSlot(input: {
 function createFreeObstacleMeshNodes(input: {
   obstacle: Obstacle
   freeLayers: number[]
+  layerCount: number
 }): CapacityMeshNode[] {
-  const { obstacle, freeLayers } = input
-  const obstacleLayers: number[] = obstacle.layers.map(mapLayerNameToZ)
+  const { obstacle, freeLayers, layerCount } = input
+  const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
+    mapLayerNameToZ(layerName, layerCount),
+  )
   const obstacleFreeLayers: number[] = freeLayers.filter(
     (layer) => !obstacleLayers.includes(layer),
   )
@@ -99,8 +102,13 @@ function createFreeObstacleMeshNodes(input: {
   }))
 }
 
-function createObstacleMeshNode(obstacle: Obstacle): CapacityMeshNode {
-  const obstacleLayers: number[] = obstacle.layers.map(mapLayerNameToZ)
+function createObstacleMeshNode(
+  obstacle: Obstacle,
+  layerCount: number,
+): CapacityMeshNode {
+  const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
+    mapLayerNameToZ(layerName, layerCount),
+  )
 
   return {
     capacityMeshNodeId: `obstacle-${obstacle.obstacleId}`,
@@ -125,7 +133,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
     return [this.inputProblem] as const
   }
 
-  step(): void {
+  override _step(): void {
     const { srj, componentBounds, componentId } = this.inputProblem
 
     const componentObstacles: Obstacle[] = srj.obstacles.filter((obstacle) => {
@@ -142,7 +150,9 @@ export class InitialBgaTopologySolver extends BaseSolver {
       )
 
     const blockedLayers: number[] = copperPoursInBounds.flatMap((obstacle) =>
-      obstacle.layers.map(mapLayerNameToZ),
+      obstacle.layers.map((layerName) =>
+        mapLayerNameToZ(layerName, srj.layerCount),
+      ),
     )
 
     const freeLayers: number[] = Array.from(
@@ -190,8 +200,12 @@ export class InitialBgaTopologySolver extends BaseSolver {
         }),
       ),
       ...componentObstacles.flatMap((obstacle) => [
-        ...createFreeObstacleMeshNodes({ obstacle, freeLayers }),
-        createObstacleMeshNode(obstacle),
+        ...createFreeObstacleMeshNodes({
+          obstacle,
+          freeLayers,
+          layerCount: srj.layerCount,
+        }),
+        createObstacleMeshNode(obstacle, srj.layerCount),
       ]),
     ]
 
