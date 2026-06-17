@@ -226,6 +226,6 @@ export class InitialBgaTopologySolver extends BaseSolver {
   }
 
   getOutput(): CapacityMeshNode[] {
-    return  this.meshNodes
+    return this.meshNodes
   }
 }

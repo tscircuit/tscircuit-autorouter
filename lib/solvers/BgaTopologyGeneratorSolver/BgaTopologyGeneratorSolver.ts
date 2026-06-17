@@ -13,7 +13,6 @@ import {
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 
-
 class GapFill extends BaseSolver {
   constructor(public readonly inputProblem: { meshNodes: CapacityMeshNode[] }) {
     super()
@@ -23,7 +22,7 @@ class GapFill extends BaseSolver {
     this.solved = true
   }
 
-  getOutput() : CapacityMeshNode[] {
+  getOutput(): CapacityMeshNode[] {
     return this.inputProblem.meshNodes
   }
 }
@@ -57,8 +56,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       RemoveMeshNodeOverlppingWithUnmarkedObstacle,
       (solverInstance: BgaTopologyGeneratorSolver) => [
         {
-          meshNodes:
-            solverInstance.initialTopologySolver.getOutput(),
+          meshNodes: solverInstance.initialTopologySolver.getOutput(),
           obstacles: solverInstance.unmarkedComponentObstacles,
           layerCount: solverInstance.inputProblem.inputSrj.layerCount,
         },
@@ -69,10 +67,11 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       GapFill,
       (solverInstance: BgaTopologyGeneratorSolver) => [
         {
-          meshNodes: solverInstance.removeMeshNodeOverlppingWithUnmarkedObstacle.getOutput()
-        }
+          meshNodes:
+            solverInstance.removeMeshNodeOverlppingWithUnmarkedObstacle.getOutput(),
+        },
       ],
-    )
+    ),
   ]
 
   constructor(public readonly inputProblem: TopologyGeneratorSolverParams) {
