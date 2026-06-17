@@ -5,7 +5,7 @@ import {
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
-import { RemoveMeshNodeOverlappingSolver } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
+import { RemoveMeshNodeOverlppingWithUnmarkedObstacle } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
@@ -21,7 +21,7 @@ type BgaComponentObstacles = {
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
   initialTopologySolver?: InitialBgaTopologySolver
-  mergeObstacleMeshNodes?: RemoveMeshNodeOverlappingSolver
+  removeMeshNodeOverlppingWithUnmarkedObstacle?: RemoveMeshNodeOverlppingWithUnmarkedObstacle
   markedComponentObstacles: Obstacle[] = []
   unmarkedComponentObstacles: Obstacle[] = []
 
@@ -41,8 +41,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       ],
     ),
     definePipelineStep(
-      "mergeObstacleMeshNodes",
-      RemoveMeshNodeOverlappingSolver,
+      "removeMeshNodeOverlppingWithUnmarkedObstacle",
+      RemoveMeshNodeOverlppingWithUnmarkedObstacle,
       (solverInstance: BgaTopologyGeneratorSolver) => [
         {
           meshNodes:

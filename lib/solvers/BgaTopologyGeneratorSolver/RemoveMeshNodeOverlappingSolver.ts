@@ -12,7 +12,7 @@ export type RemoveMeshNodeOverlappingSolverInput = {
   layerCount: number
 }
 
-export class RemoveMeshNodeOverlappingSolver extends BaseSolver {
+export class RemoveMeshNodeOverlppingWithUnmarkedObstacle extends BaseSolver {
   obstacleQueue: Obstacle[] = []
   obstacleQueueIndex: number = 0
   meshNodes: CapacityMeshNode[] = []
