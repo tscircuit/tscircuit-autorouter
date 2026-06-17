@@ -15,16 +15,16 @@ export type InitialBgaTopologySolverInput = {
   componentId: string
 }
 
-function createMeshNodesFromBgaGap(params: {
+function createMeshNodesFromBgaGap(input: {
   componentId: string
   bgaGap: BgaGap
   freeLayers: number[]
 }): CapacityMeshNode[] {
-  const { componentId, bgaGap, freeLayers } = params
-  let orientationKey = "d"
+  const { componentId, bgaGap, freeLayers } = input
+  let orientationKey: string = "d"
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
   if (bgaGap.orientation === "vertical") orientationKey = "v"
-  const baseNodeId = `cmn_${orientationKey}_${componentId}_${bgaGap.row}_${bgaGap.col}`
+  const baseNodeId: string = `cmn_${orientationKey}_${componentId}_${bgaGap.row}_${bgaGap.col}`
 
   if (bgaGap.orientation === "diagonal") {
     return [
@@ -62,12 +62,12 @@ function createMeshNodesFromBgaGap(params: {
   }))
 }
 
-function createMeshNodeFromMissingBgaSlot(params: {
+function createMeshNodeFromMissingBgaSlot(input: {
   componentId: string
   missingBgaSlot: MissingBgaSlot
   freeLayers: number[]
 }): CapacityMeshNode {
-  const { componentId, missingBgaSlot, freeLayers } = params
+  const { componentId, missingBgaSlot, freeLayers } = input
 
   return {
     center: missingBgaSlot.center,
@@ -79,9 +79,43 @@ function createMeshNodeFromMissingBgaSlot(params: {
   }
 }
 
+function createFreeObstacleMeshNodes(input: {
+  obstacle: Obstacle
+  freeLayers: number[]
+}): CapacityMeshNode[] {
+  const { obstacle, freeLayers } = input
+  const obstacleLayers: number[] = obstacle.layers.map(mapLayerNameToZ)
+  const obstacleFreeLayers: number[] = freeLayers.filter(
+    (layer) => !obstacleLayers.includes(layer),
+  )
+
+  return obstacleFreeLayers.map((layer) => ({
+    capacityMeshNodeId: `free-${obstacle.obstacleId}-${layer}`,
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+    layer: `z${layer}`,
+    availableZ: [layer],
+  }))
+}
+
+function createObstacleMeshNode(obstacle: Obstacle): CapacityMeshNode {
+  const obstacleLayers: number[] = obstacle.layers.map(mapLayerNameToZ)
+
+  return {
+    capacityMeshNodeId: `obstacle-${obstacle.obstacleId}`,
+    _containsObstacle: true,
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+    layer: `z${obstacleLayers.join(",")}`,
+    availableZ: obstacleLayers,
+  }
+}
+
 export class InitialBgaTopologySolver extends BaseSolver {
   componentObstacles: Obstacle[] = []
-  freeMeshNodes: CapacityMeshNode[] = []
+  meshNodes: CapacityMeshNode[] = []
 
   constructor(public readonly inputProblem: InitialBgaTopologySolverInput) {
     super()
@@ -94,24 +128,24 @@ export class InitialBgaTopologySolver extends BaseSolver {
   step(): void {
     const { srj, componentBounds, componentId } = this.inputProblem
 
-    const componentObstacles = srj.obstacles.filter((obstacle) => {
+    const componentObstacles: Obstacle[] = srj.obstacles.filter((obstacle) => {
       return (
         doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds) &&
         obstacle.componentId === componentId
       )
     })
 
-    const copperPoursInBounds = srj.obstacles
+    const copperPoursInBounds: Obstacle[] = srj.obstacles
       .filter((obstacle) => obstacle.isCopperPour === true)
       .filter((obstacle) =>
         doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds),
       )
 
-    const blockedLayers = copperPoursInBounds.flatMap((obstacle) =>
+    const blockedLayers: number[] = copperPoursInBounds.flatMap((obstacle) =>
       obstacle.layers.map(mapLayerNameToZ),
     )
 
-    const freeLayers = Array.from(
+    const freeLayers: number[] = Array.from(
       { length: srj.layerCount },
       (_, layerIndex) => layerIndex,
     ).filter((layer) => !blockedLayers.includes(layer))
@@ -123,18 +157,17 @@ export class InitialBgaTopologySolver extends BaseSolver {
       return
     }
 
-    const bgaGrid = BgaGrid.fromObstacles(componentObstacles)
+    const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(componentObstacles)
 
     if (!bgaGrid) {
       this.solved = true
       return
     }
 
-    const axisGaps = bgaGrid.getAxisGaps()
-    const diagonalGaps = bgaGrid.getDiagonalGaps()
-    const missingBgaSlots = bgaGrid.getMissingSlots()
-
-    this.freeMeshNodes = [
+    const axisGaps: BgaGap[] = bgaGrid.getAxisGaps()
+    const diagonalGaps: BgaGap[] = bgaGrid.getDiagonalGaps()
+    const missingBgaSlots: MissingBgaSlot[] = bgaGrid.getMissingSlots()
+    this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
           componentId,
@@ -156,6 +189,10 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
         }),
       ),
+      ...componentObstacles.flatMap((obstacle) => [
+        ...createFreeObstacleMeshNodes({ obstacle, freeLayers }),
+        createObstacleMeshNode(obstacle),
+      ]),
     ]
 
     this.solved = true
@@ -163,7 +200,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
 
   getOutput(): TopologyGeneratorSolverOutput {
     return {
-      routingRegions: this.freeMeshNodes,
+      routingRegions: this.meshNodes,
     }
   }
 }
