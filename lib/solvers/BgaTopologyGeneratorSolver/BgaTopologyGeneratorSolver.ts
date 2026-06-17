@@ -13,11 +13,6 @@ import {
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 
-type BgaComponentObstacles = {
-  markedComponentObstacles: Obstacle[]
-  unmarkedComponentObstacles: Obstacle[]
-}
-
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
   initialTopologySolver?: InitialBgaTopologySolver
