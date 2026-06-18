@@ -9,6 +9,10 @@ import { AssignableAutoroutingPipeline1Solver } from "lib/autorouter-pipelines/A
 import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 import { AssignableAutoroutingPipeline3 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3"
 import { AutoroutingPipeline1_OriginalUnravel } from "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel"
+import {
+  AutoroutingPipelineSolver2_PortPointPathing,
+  CapacityMeshSolver,
+} from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing"
 import { AutoroutingPipelineSolver3_HgPortPointPathing } from "lib/autorouter-pipelines/AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing"
 import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 import { AutoroutingPipelineSolver5 } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache"
@@ -16,20 +20,18 @@ import { AutoroutingPipelineSolver6 } from "lib/autorouter-pipelines/Autorouting
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver8 } from "lib/autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
 import {
-  AutoroutingPipelineSolver2_PortPointPathing,
-  CapacityMeshSolver,
-} from "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing"
-import {
   getGlobalInMemoryCache,
   getGlobalLocalStorageCache,
 } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { getNodesNearNode } from "lib/solvers/UnravelSolver/getNodesNearNode"
+import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { SimpleRouteJson } from "lib/types"
 import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { createConnectionRegionErrorVisualization } from "lib/utils/createConnectionRegionErrorVisualization"
 import { limitVisualizations } from "lib/utils/limitVisualizations"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
@@ -42,15 +44,16 @@ import {
   type PipelineId,
 } from "./AutoroutingPipelineMenuBar"
 import { CacheDebugger } from "./CacheDebugger"
+import { KrtAutoroutingPipelineSolver } from "./KrtAutoroutingPipelineSolver"
 import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
+import { SolverInitializationErrorSolver } from "./SolverInitializationErrorSolver"
+import { getCurrentCircuitJson } from "./autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import { getDrcErrors } from "./getDrcErrors"
-import { getCurrentCircuitJson } from "./autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { extractCapacityMeshNodeIdFromObjectLabel } from "./utils/extractCapacityMeshNodeIdFromObjectLabel"
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
 import { getHighDensityNodeDownloadData } from "./utils/getHighDensityNodeDownloadData"
 import { prepareParamsForDownload } from "./utils/prepareParamsForDownload"
-import { KrtAutoroutingPipelineSolver } from "./KrtAutoroutingPipelineSolver"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -361,26 +364,28 @@ export const AutoroutingPipelineDebugger = ({
     } = {},
   ) => {
     const cacheProviderToUse = opts.cacheProvider ?? cacheProvider
-    if (createSolverProp) {
-      return createSolverProp(
-        applyLayerOverrideToSrj(srj, opts.layerOverride ?? layerOverride),
-        {
-          cacheProvider: cacheProviderToUse,
-          effort: opts.effort ?? effort,
-        },
-      )
-    }
-    const pipelineToUse = opts.pipelineId ?? selectedPipelineId
-    const effortToUse = opts.effort ?? effort
     const srjToUse = applyLayerOverrideToSrj(
       srj,
       opts.layerOverride ?? layerOverride,
     )
-    const SolverClass = PIPELINE_SOLVERS[pipelineToUse]
-    return new SolverClass(srjToUse, {
-      cacheProvider: cacheProviderToUse,
-      effort: effortToUse,
-    })
+    try {
+      if (createSolverProp) {
+        return createSolverProp(srjToUse, {
+          cacheProvider: cacheProviderToUse,
+          effort: opts.effort ?? effort,
+        })
+      }
+      const pipelineToUse = opts.pipelineId ?? selectedPipelineId
+      const effortToUse = opts.effort ?? effort
+      const SolverClass = PIPELINE_SOLVERS[pipelineToUse]
+      return new SolverClass(srjToUse, {
+        cacheProvider: cacheProviderToUse,
+        effort: effortToUse,
+      })
+    } catch (error) {
+      console.error("Failed to construct pipeline solver:", error)
+      return new SolverInitializationErrorSolver(srjToUse, error)
+    }
   }
 
   const [solver, setSolver] = useState<any>(() => {
@@ -405,26 +410,36 @@ export const AutoroutingPipelineDebugger = ({
     if (!SolverClass) {
       // Fallback to default pipeline if stored ID is invalid
       const fallbackClass = PIPELINE_SOLVERS[DEFAULT_PIPELINE_ID]
+      try {
+        return createSolverProp
+          ? createSolverProp(initialSrj, {
+              cacheProvider: initialCacheProvider,
+              effort: initialEffort,
+            })
+          : new fallbackClass(initialSrj, {
+              cacheProvider: initialCacheProvider,
+              effort: initialEffort,
+            })
+      } catch (error) {
+        console.error("Failed to construct fallback pipeline solver:", error)
+        return new SolverInitializationErrorSolver(initialSrj, error)
+      }
+    }
+
+    try {
       return createSolverProp
         ? createSolverProp(initialSrj, {
             cacheProvider: initialCacheProvider,
             effort: initialEffort,
           })
-        : new fallbackClass(initialSrj, {
+        : new SolverClass(initialSrj, {
             cacheProvider: initialCacheProvider,
             effort: initialEffort,
           })
+    } catch (error) {
+      console.error("Failed to construct initial pipeline solver:", error)
+      return new SolverInitializationErrorSolver(initialSrj, error)
     }
-
-    return createSolverProp
-      ? createSolverProp(initialSrj, {
-          cacheProvider: initialCacheProvider,
-          effort: initialEffort,
-        })
-      : new SolverClass(initialSrj, {
-          cacheProvider: initialCacheProvider,
-          effort: initialEffort,
-        })
   })
   const [previewMode, setPreviewMode] = useState(false)
   const [renderer, setRenderer] = useState<"canvas" | "vector">(
