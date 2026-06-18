@@ -1,4 +1,5 @@
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
+import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -81,6 +82,49 @@ interface Rect {
   width: number
   height: number
 }
+
+const getConnectionPointLayers = (point: ConnectionPoint): string[] =>
+  "layers" in point ? point.layers : [point.layer]
+
+const isPointInsideObstacle = (
+  point: ConnectionPoint,
+  obstacle: Pick<Obstacle, "center" | "width" | "height" | "layers">,
+) => {
+  if (
+    getConnectionPointLayers(point).length > 0 &&
+    !getConnectionPointLayers(point).some((layer) => obstacle.layers.includes(layer))
+  ) {
+    return false
+  }
+
+  const minX = obstacle.center.x - obstacle.width / 2
+  const maxX = obstacle.center.x + obstacle.width / 2
+  const minY = obstacle.center.y - obstacle.height / 2
+  const maxY = obstacle.center.y + obstacle.height / 2
+
+  return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
+}
+
+const clampPointToObstacle = (
+  point: ConnectionPoint,
+  obstacle: Pick<Obstacle, "center" | "width" | "height">,
+) => {
+  const minX = obstacle.center.x - obstacle.width / 2
+  const maxX = obstacle.center.x + obstacle.width / 2
+  const minY = obstacle.center.y - obstacle.height / 2
+  const maxY = obstacle.center.y + obstacle.height / 2
+
+  return {
+    x: Math.max(minX, Math.min(maxX, point.x)),
+    y: Math.max(minY, Math.min(maxY, point.y)),
+  }
+}
+
+const getObstacleKey = (obstacle: Obstacle, index: number) =>
+  obstacle.obstacleId ?? `${obstacle.componentId ?? "obstacle"}_${index}`
+
+const getPointConnectionIds = (point: ConnectionPoint) =>
+  [point.pointId, point.pcb_port_id].filter((id): id is string => Boolean(id))
 
 export function generateApproximatingRects(
   rotatedRect: RotatedRect,
@@ -362,6 +406,8 @@ export const addApproximatingRectsToSrj = (
   srj: SimpleRouteJson,
 ): SimpleRouteJson => {
   const obstaclesByRect = new Map<string, Obstacle>()
+  const approximatedObstaclesBySource = new Map<string, Obstacle[]>()
+  const originalObstaclesBySource = new Map<string, Obstacle>()
   const connectedRotatedObstacleCount = srj.obstacles.filter(
     (obstacle) =>
       obstacle.connectedTo.length > 0 &&
@@ -372,13 +418,17 @@ export const addApproximatingRectsToSrj = (
   const useSparseCenterlineApproximation =
     connectedRotatedObstacleCount > MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD
 
-  for (const obstacle of srj.obstacles) {
+  for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
     const convertedObstacle = convertObstacleToOldFormat(obstacle, {
       useSparseCenterlineApproximation:
         useSparseCenterlineApproximation &&
         obstacle.connectedTo.length > 0 &&
         !obstacle.obstacleId?.startsWith("trace_obstacle_"),
     })
+    const sourceKey = getObstacleKey(obstacle, obstacleIndex)
+    approximatedObstaclesBySource.set(sourceKey, convertedObstacle)
+    originalObstaclesBySource.set(sourceKey, obstacle)
+
     for (const converted of convertedObstacle) {
       const key = [
         converted.center.x.toFixed(6),
@@ -400,8 +450,58 @@ export const addApproximatingRectsToSrj = (
     }
   }
 
+  const repairedConnections = srj.connections.map((connection) => ({
+    ...connection,
+    pointsToConnect: connection.pointsToConnect.map((point) => {
+      const pointIds = getPointConnectionIds(point)
+      if (pointIds.length === 0) return point
+
+      for (const [sourceKey, originalObstacle] of originalObstaclesBySource) {
+        if (
+          !pointIds.some((pointId) => originalObstacle.connectedTo.includes(pointId))
+        ) {
+          continue
+        }
+
+        if (!isPointInsideObstacle(point, originalObstacle)) continue
+
+        const approximatedObstacles =
+          approximatedObstaclesBySource.get(sourceKey) ?? []
+        if (approximatedObstacles.length === 0) continue
+
+        if (
+          approximatedObstacles.some((obstacle) => isPointInsideObstacle(point, obstacle))
+        ) {
+          return point
+        }
+
+        let nearestObstacle = approximatedObstacles[0]!
+        let nearestDistance = Number.POSITIVE_INFINITY
+
+        for (const obstacle of approximatedObstacles) {
+          const clampedPoint = clampPointToObstacle(point, obstacle)
+          const distance =
+            (clampedPoint.x - point.x) ** 2 + (clampedPoint.y - point.y) ** 2
+
+          if (distance < nearestDistance) {
+            nearestDistance = distance
+            nearestObstacle = obstacle
+          }
+        }
+
+        return {
+          ...point,
+          ...clampPointToObstacle(point, nearestObstacle),
+        }
+      }
+
+      return point
+    }),
+  }))
+
   return {
     ...srj,
+    connections: repairedConnections,
     obstacles: [...obstaclesByRect.values()],
   }
 }
