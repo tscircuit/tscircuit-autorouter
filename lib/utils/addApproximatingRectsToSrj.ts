@@ -1,5 +1,6 @@
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -86,33 +87,25 @@ interface Rect {
 const getConnectionPointLayers = (point: ConnectionPoint): string[] =>
   "layers" in point ? point.layers : [point.layer]
 
-const isPointInsideObstacle = (
-  point: ConnectionPoint,
-  obstacle: Pick<Obstacle, "center" | "width" | "height" | "layers">,
-) => {
+const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
   if (
     getConnectionPointLayers(point).length > 0 &&
-    !getConnectionPointLayers(point).some((layer) => obstacle.layers.includes(layer))
+    !getConnectionPointLayers(point).some((layer) =>
+      obstacle.layers.includes(layer),
+    )
   ) {
     return false
   }
 
-  const minX = obstacle.center.x - obstacle.width / 2
-  const maxX = obstacle.center.x + obstacle.width / 2
-  const minY = obstacle.center.y - obstacle.height / 2
-  const maxY = obstacle.center.y + obstacle.height / 2
+  const { minX, maxX, minY, maxY } = getBoundFromCenteredRect(obstacle)
 
-  return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
+  return (
+    point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
+  )
 }
 
-const clampPointToObstacle = (
-  point: ConnectionPoint,
-  obstacle: Pick<Obstacle, "center" | "width" | "height">,
-) => {
-  const minX = obstacle.center.x - obstacle.width / 2
-  const maxX = obstacle.center.x + obstacle.width / 2
-  const minY = obstacle.center.y - obstacle.height / 2
-  const maxY = obstacle.center.y + obstacle.height / 2
+const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
+  const { minX, maxX, minY, maxY } = getBoundFromCenteredRect(obstacle)
 
   return {
     x: Math.max(minX, Math.min(maxX, point.x)),
@@ -458,7 +451,9 @@ export const addApproximatingRectsToSrj = (
 
       for (const [sourceKey, originalObstacle] of originalObstaclesBySource) {
         if (
-          !pointIds.some((pointId) => originalObstacle.connectedTo.includes(pointId))
+          !pointIds.some((pointId) =>
+            originalObstacle.connectedTo.includes(pointId),
+          )
         ) {
           continue
         }
@@ -470,7 +465,9 @@ export const addApproximatingRectsToSrj = (
         if (approximatedObstacles.length === 0) continue
 
         if (
-          approximatedObstacles.some((obstacle) => isPointInsideObstacle(point, obstacle))
+          approximatedObstacles.some((obstacle) =>
+            isPointInsideObstacle(point, obstacle),
+          )
         ) {
           return point
         }
