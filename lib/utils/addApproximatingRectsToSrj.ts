@@ -1,6 +1,10 @@
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
-import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import {
+  getBoundFromCenteredRect,
+  distance as calculateDistance,
+} from "@tscircuit/math-utils"
+import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -477,8 +481,7 @@ export const addApproximatingRectsToSrj = (
 
         for (const obstacle of approximatedObstacles) {
           const clampedPoint = clampPointToObstacle(point, obstacle)
-          const distance =
-            (clampedPoint.x - point.x) ** 2 + (clampedPoint.y - point.y) ** 2
+          const distance = calculateDistance(clampedPoint, point)
 
           if (distance < nearestDistance) {
             nearestDistance = distance
