@@ -758,7 +758,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
               2_000_000 * getEffortScale(params.effort),
             ),
             RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-            STATIC_REACHABILITY_PRECHECK: false,
+            STATIC_REACHABILITY_PRECHECK: true,
           },
         },
       )
