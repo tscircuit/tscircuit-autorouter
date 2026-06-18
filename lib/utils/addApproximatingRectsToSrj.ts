@@ -3,6 +3,7 @@ import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import {
   getBoundFromCenteredRect,
   distance as calculateDistance,
+  isPointInsideBounds,
 } from "@tscircuit/math-utils"
 import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
 
@@ -101,11 +102,7 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  const { minX, maxX, minY, maxY } = getBoundFromCenteredRect(obstacle)
-
-  return (
-    point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
-  )
+  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
