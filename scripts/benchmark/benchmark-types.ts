@@ -75,6 +75,34 @@ export type SolverRunSummary = {
   avgVia: number | null
 }
 
+export type BestViaCountRecord = {
+  datasetName: string
+  solverName: string
+  scenarioName: string
+  sampleNumber: number
+  viaCount: number
+  elapsedTimeMs: number
+}
+
+export type BenchmarkBestViasReport = {
+  version: 1
+  kind: "benchmark-best-vias"
+  records: BestViaCountRecord[]
+}
+
+export type BestViaCountCell = {
+  datasetName: string
+  solverName: string
+  scenarioName: string
+  label: string
+}
+
+export type BenchmarkBestViaCellsReport = {
+  version: 1
+  kind: "benchmark-best-via-cells"
+  cells: BestViaCountCell[]
+}
+
 export type BenchmarkReport = {
   version: 1
   datasetName: string
