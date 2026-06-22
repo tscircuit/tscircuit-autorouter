@@ -326,6 +326,23 @@ jobs:
           echo "datasets_json=${DATASETS_JSON}" >> "$GITHUB_OUTPUT"
           echo "Main branch benchmark datasets: ${DATASETS_JSON}"
 
+      - name: Download previous best via counts
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+        run: |
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/benchmark.yml/runs?branch=main&event=push&status=success&per_page=1" --jq '.workflow_runs[0].id' 2>/dev/null || echo "")
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+            echo '{"version":1,"kind":"benchmark-best-vias","records":[]}' > benchmark-best-vias-previous.json
+            exit 0
+          fi
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name benchmark-result --dir ./previous-main-artifact 2>/dev/null || true
+          if [ -f ./previous-main-artifact/benchmark-best-vias.json ]; then
+            cp ./previous-main-artifact/benchmark-best-vias.json benchmark-best-vias-previous.json
+          else
+            echo '{"version":1,"kind":"benchmark-best-vias","records":[]}' > benchmark-best-vias-previous.json
+          fi
+
       - name: Run benchmark
         env:
           BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
@@ -430,6 +447,11 @@ jobs:
 
           process.exit(result.status ?? 1)
           NODE
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF_NAME}" = "main" ]; then
+            bun scripts/benchmark/best-via-counts.ts merge --previous benchmark-best-vias-previous.json --current benchmark-result.json --out benchmark-best-vias.json
+          else
+            bun scripts/benchmark/best-via-counts.ts write-from-report --report benchmark-result.json --out benchmark-best-vias.json
+          fi
           cp benchmark-result.txt benchmark-result-pr.txt
           cp benchmark-result.json benchmark-result-pr.json
 
@@ -442,6 +464,8 @@ jobs:
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
             echo "(no main branch benchmark result available)" > benchmark-result-main.txt
             echo "" > benchmark-result-main.json
+            echo "" > benchmark-best-vias-main.json
+            bun scripts/benchmark/best-via-counts.ts write-cells --best-vias benchmark-best-vias-main.json --report benchmark-result-pr.json --out benchmark-via-cells.json
             exit 0
           fi
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --name benchmark-result --dir ./main-artifact 2>/dev/null || true
@@ -455,6 +479,12 @@ jobs:
           else
             echo "" > benchmark-result-main.json
           fi
+          if [ -f ./main-artifact/benchmark-best-vias.json ]; then
+            cp ./main-artifact/benchmark-best-vias.json benchmark-best-vias-main.json
+          else
+            echo "" > benchmark-best-vias-main.json
+          fi
+          bun scripts/benchmark/best-via-counts.ts write-cells --best-vias benchmark-best-vias-main.json --report benchmark-result-pr.json --out benchmark-via-cells.json
 
       - name: Post benchmark result comment before profile-solvers
         if: github.event_name == 'issue_comment' && steps.parse.outputs.status_comment_id != ''
@@ -570,6 +600,15 @@ jobs:
                 ]),
               )
             }
+            const buildViaCellIndex = (report) => {
+              if (!Array.isArray(report?.cells)) return new Map()
+              return new Map(
+                report.cells.map((cell) => [
+                  `${cell.datasetName}::${cell.solverName}::${cell.scenarioName}`,
+                  cell.label,
+                ]),
+              )
+            }
             const getDelta = (test, mainIndex) => {
               if (!mainIndex) return ''
               const key = `${test.solverName}::${test.scenarioName}`
@@ -581,21 +620,34 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
+            const getViaCell = (test, viaCellIndex, datasetName) => {
+              const key = `${datasetName}::${test.solverName}::${test.scenarioName}`
+              const viaCell = viaCellIndex?.get(key)
+              if (viaCell) return viaCell
+              return typeof test?.viaCount === 'number' ? String(test.viaCount) : ''
+            }
             const isUnchangedPassingTest = (test, mainIndex) => {
               if (!mainIndex) return false
               const key = `${test.solverName}::${test.scenarioName}`
               const mainTest = mainIndex.get(key)
+              const sameSolverViaUnchanged =
+                typeof test.viaCount === 'number' ||
+                typeof mainTest?.viaCount === 'number'
+                  ? test.viaCount === mainTest?.viaCount
+                  : true
               return (
                 Boolean(mainTest) &&
                 test.didSolve &&
                 test.relaxedDrcPassed &&
                 mainTest.didSolve &&
-                mainTest.relaxedDrcPassed
+                mainTest.relaxedDrcPassed &&
+                sameSolverViaUnchanged
               )
             }
             const renderTests = (report, options = {}) => {
               const includeDelta = Boolean(options.includeDelta)
               const mainIndex = options.mainIndex
+              const viaCellIndex = options.viaCellIndex
               if (!Array.isArray(report?.tests) || report.tests.length === 0) {
                 return ['Per-test results unavailable.']
               }
@@ -607,12 +659,12 @@ jobs:
               const omittedCount = report.tests.length - tests.length
               const header = includeDelta
                 ? [
-                    '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
-                    '| --- | --- | --- | --- | --- | --- | --- |',
+                    '| Solver | Sample | Status | Via | Time | Relaxed DRC | Error | Delta |',
+                    '| --- | --- | --- | ---: | --- | --- | --- | --- |',
                   ]
                 : [
-                    '| Solver | Sample | Status | Time | Relaxed DRC | Error |',
-                    '| --- | --- | --- | --- | --- | --- |',
+                    '| Solver | Sample | Status | Via | Time | Relaxed DRC | Error |',
+                    '| --- | --- | --- | ---: | --- | --- | --- |',
                   ]
               return [
                 ...(omittedCount > 0
@@ -621,8 +673,8 @@ jobs:
                 ...header,
                 ...tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${getViaCell(test, viaCellIndex, report.datasetName)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${getViaCell(test, viaCellIndex, report.datasetName)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }
@@ -688,7 +740,10 @@ jobs:
             const mainText = readText('benchmark-result-main.txt') ?? '(not available)'
             const prReport = readJson('benchmark-result-pr.json') ?? readJson('benchmark-result.json')
             const mainReport = readJson('benchmark-result-main.json')
-            const mainIndex = buildMainIndex(getMainReportForDataset(mainReport, prReport?.datasetName))
+            const viaCellReport = readJson('benchmark-via-cells.json')
+            const mainDatasetReport = getMainReportForDataset(mainReport, prReport?.datasetName)
+            const mainIndex = buildMainIndex(mainDatasetReport)
+            const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
 
@@ -715,6 +770,7 @@ jobs:
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
                 mainIndex,
+                viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
               }),
               ...(profileEnabled
@@ -923,10 +979,13 @@ jobs:
           path: |
             ./benchmark-result.txt
             ./benchmark-result.json
+            ./benchmark-best-vias.json
             ./benchmark-result-pr.txt
             ./benchmark-result-pr.json
             ./benchmark-result-main.txt
             ./benchmark-result-main.json
+            ./benchmark-best-vias-main.json
+            ./benchmark-via-cells.json
             ./profile-solvers-pr.txt
             ./profile-solvers-pr.json
             ./profile-solvers-main.txt
@@ -1047,6 +1106,15 @@ jobs:
                 ]),
               )
             }
+            const buildViaCellIndex = (report) => {
+              if (!Array.isArray(report?.cells)) return new Map()
+              return new Map(
+                report.cells.map((cell) => [
+                  `${cell.datasetName}::${cell.solverName}::${cell.scenarioName}`,
+                  cell.label,
+                ]),
+              )
+            }
             const getDelta = (test, mainIndex) => {
               if (!mainIndex) return ''
               const key = `${test.solverName}::${test.scenarioName}`
@@ -1058,21 +1126,34 @@ jobs:
               if (prScore < mainScore) return '❌'
               return ''
             }
+            const getViaCell = (test, viaCellIndex, datasetName) => {
+              const key = `${datasetName}::${test.solverName}::${test.scenarioName}`
+              const viaCell = viaCellIndex?.get(key)
+              if (viaCell) return viaCell
+              return typeof test?.viaCount === 'number' ? String(test.viaCount) : ''
+            }
             const isUnchangedPassingTest = (test, mainIndex) => {
               if (!mainIndex) return false
               const key = `${test.solverName}::${test.scenarioName}`
               const mainTest = mainIndex.get(key)
+              const sameSolverViaUnchanged =
+                typeof test.viaCount === 'number' ||
+                typeof mainTest?.viaCount === 'number'
+                  ? test.viaCount === mainTest?.viaCount
+                  : true
               return (
                 Boolean(mainTest) &&
                 test.didSolve &&
                 test.relaxedDrcPassed &&
                 mainTest.didSolve &&
-                mainTest.relaxedDrcPassed
+                mainTest.relaxedDrcPassed &&
+                sameSolverViaUnchanged
               )
             }
             const renderTests = (report, options = {}) => {
               const includeDelta = Boolean(options.includeDelta)
               const mainIndex = options.mainIndex
+              const viaCellIndex = options.viaCellIndex
               if (!Array.isArray(report?.tests) || report.tests.length === 0) {
                 return ['Per-test results unavailable.']
               }
@@ -1084,12 +1165,12 @@ jobs:
               const omittedCount = report.tests.length - tests.length
               const header = includeDelta
                 ? [
-                    '| Solver | Sample | Status | Time | Relaxed DRC | Error | Delta |',
-                    '| --- | --- | --- | --- | --- | --- | --- |',
+                    '| Solver | Sample | Status | Via | Time | Relaxed DRC | Error | Delta |',
+                    '| --- | --- | --- | ---: | --- | --- | --- | --- |',
                   ]
                 : [
-                    '| Solver | Sample | Status | Time | Relaxed DRC | Error |',
-                    '| --- | --- | --- | --- | --- | --- |',
+                    '| Solver | Sample | Status | Via | Time | Relaxed DRC | Error |',
+                    '| --- | --- | --- | ---: | --- | --- | --- |',
                   ]
               return [
                 ...(omittedCount > 0
@@ -1098,8 +1179,8 @@ jobs:
                 ...header,
                 ...tests.map((test) =>
                   includeDelta
-                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
-                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
+                    ? `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${getViaCell(test, viaCellIndex, report.datasetName)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} | ${getDelta(test, mainIndex)} |`
+                    : `| ${formatSolverName(test.solverName)} | ${getSampleLabel(test)} | ${getStatus(test)} | ${getViaCell(test, viaCellIndex, report.datasetName)} | ${formatTime(test.elapsedTimeMs)} | ${getDrc(test)} | ${getErrorCell(test)} |`,
                 ),
               ]
             }
@@ -1268,7 +1349,10 @@ jobs:
             const mainProfileSolversReport = readJson('profile-solvers-main.json')
             const prReport = readJson('benchmark-result-pr.json') ?? readJson('benchmark-result.json')
             const mainReport = readJson('benchmark-result-main.json')
-            const mainIndex = buildMainIndex(getMainReportForDataset(mainReport, prReport?.datasetName))
+            const viaCellReport = readJson('benchmark-via-cells.json')
+            const mainDatasetReport = getMainReportForDataset(mainReport, prReport?.datasetName)
+            const mainIndex = buildMainIndex(mainDatasetReport)
+            const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const jobStatus = '${{ job.status }}'
             const benchmarkFailed = jobStatus !== 'success'
@@ -1318,6 +1402,7 @@ jobs:
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
                 mainIndex,
+                viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
               }),
               ...(hasProfileSolvers
