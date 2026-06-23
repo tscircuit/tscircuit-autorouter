@@ -1,23 +1,36 @@
 import type { Bounds } from "@tscircuit/math-utils"
 import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import { getBoundsCenter } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import Flatbush from "flatbush"
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import type {
   DetectEdgesNotConnectedToMeshInput,
   EdgeSegmentWithObstacle,
 } from "./BgaGapFillTypes"
+import {
+  getGapFillEdgeColor,
+  getGapFillEdgeDirectionLabel,
+  getGapFillEdgeMidpoint,
+  getGapFillEdgeVisualId,
+  getGapFillObstacleEdges,
+  sortGapFillEdgesByLocation,
+} from "./gapFillVisualization"
 
 const EDGE_EPSILON: number = 1e-3
 const EDGE_SEARCH_MARGIN: number = 1e-3
 
 export class DetectEdgesNotConnectedToMesh extends BaseSolver {
   private meshIndex!: Flatbush
+  private allEdges: EdgeSegmentWithObstacle[] = []
   private queueEdges: EdgeSegmentWithObstacle[] = []
   private disconnectedEdges: EdgeSegmentWithObstacle[] = []
   private currentEdge: EdgeSegmentWithObstacle | null = null
+  private lastSearchBounds: Bounds | null = null
+  private lastCandidateMeshNodes: CapacityMeshNode[] = []
+  private lastMatchedMeshNode: CapacityMeshNode | null = null
 
   constructor(
     public readonly inputProblem: DetectEdgesNotConnectedToMeshInput,
@@ -44,41 +57,16 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
 
     this.meshIndex.finish()
 
-    const queueEdges: EdgeSegmentWithObstacle[] = []
-
-    for (const obstacle of this.inputProblem.unmarkedComponentObstacles) {
-      const obstacleBounds: Bounds = getBoundFromCenteredRect(obstacle)
-
-      queueEdges.push(
-        {
-          obstacle,
-          start: { x: obstacleBounds.minX, y: obstacleBounds.minY },
-          end: { x: obstacleBounds.minX, y: obstacleBounds.maxY },
-          expansionDirection: { x: -1, y: 0 },
-        },
-        {
-          obstacle,
-          start: { x: obstacleBounds.maxX, y: obstacleBounds.minY },
-          end: { x: obstacleBounds.maxX, y: obstacleBounds.maxY },
-          expansionDirection: { x: 1, y: 0 },
-        },
-        {
-          obstacle,
-          start: { x: obstacleBounds.minX, y: obstacleBounds.minY },
-          end: { x: obstacleBounds.maxX, y: obstacleBounds.minY },
-          expansionDirection: { x: 0, y: -1 },
-        },
-        {
-          obstacle,
-          start: { x: obstacleBounds.minX, y: obstacleBounds.maxY },
-          end: { x: obstacleBounds.maxX, y: obstacleBounds.maxY },
-          expansionDirection: { x: 0, y: 1 },
-        },
-      )
-    }
+    const queueEdges: EdgeSegmentWithObstacle[] = getGapFillObstacleEdges(
+      this.inputProblem.unmarkedComponentObstacles,
+    )
 
     this.queueEdges = queueEdges
+    this.allEdges = sortGapFillEdgesByLocation(queueEdges)
     this.currentEdge = null
+    this.lastSearchBounds = null
+    this.lastCandidateMeshNodes = []
+    this.lastMatchedMeshNode = null
   }
 
   override _step(): void {
@@ -87,11 +75,15 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
 
     if (!currentEdge) {
       this.currentEdge = null
+      this.lastSearchBounds = null
+      this.lastCandidateMeshNodes = []
+      this.lastMatchedMeshNode = null
       this.solved = true
       return
     }
 
     this.currentEdge = currentEdge
+    this.lastMatchedMeshNode = null
 
     const edgeIsVertical: boolean =
       Math.abs(currentEdge.start.x - currentEdge.end.x) <= EDGE_EPSILON
@@ -108,12 +100,17 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           minY: currentEdge.start.y - EDGE_SEARCH_MARGIN,
           maxY: currentEdge.start.y + EDGE_SEARCH_MARGIN,
         }
+    this.lastSearchBounds = searchBounds
 
     const candidateNodeIds: number[] = this.meshIndex.search(
       searchBounds.minX,
       searchBounds.minY,
       searchBounds.maxX,
       searchBounds.maxY,
+    )
+    this.lastCandidateMeshNodes = candidateNodeIds.map(
+      (candidateNodeId: number): CapacityMeshNode =>
+        this.inputProblem.meshNodes[candidateNodeId]!,
     )
 
     let isConnected: boolean = false
@@ -142,6 +139,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           Math.abs(meshNodeBounds.maxX - currentEdge.start.x) <= EDGE_EPSILON
         ) {
           isConnected = true
+          this.lastMatchedMeshNode = meshNode
           break
         }
 
@@ -150,6 +148,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           Math.abs(meshNodeBounds.minX - currentEdge.start.x) <= EDGE_EPSILON
         ) {
           isConnected = true
+          this.lastMatchedMeshNode = meshNode
           break
         }
 
@@ -174,6 +173,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
         Math.abs(meshNodeBounds.maxY - currentEdge.start.y) <= EDGE_EPSILON
       ) {
         isConnected = true
+        this.lastMatchedMeshNode = meshNode
         break
       }
 
@@ -182,6 +182,7 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
         Math.abs(meshNodeBounds.minY - currentEdge.start.y) <= EDGE_EPSILON
       ) {
         isConnected = true
+        this.lastMatchedMeshNode = meshNode
         break
       }
     }
@@ -196,50 +197,139 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    const pendingEdges: EdgeSegmentWithObstacle[] = this.queueEdges
     const disconnectedEdges: EdgeSegmentWithObstacle[] = this.disconnectedEdges
-
-    return {
-      rects: [
-        ...this.inputProblem.meshNodes.map((meshNode: CapacityMeshNode) => ({
-          ...createRectFromCapacityNode(meshNode, { rectMargin: 0.01 }),
-          fill: meshNode._containsObstacle
-            ? "rgba(120,120,120,0.18)"
-            : "rgba(120,120,120,0.08)",
-          stroke: meshNode._containsObstacle
-            ? "rgba(120,120,120,0.42)"
-            : "rgba(120,120,120,0.24)",
-        })),
-        ...this.inputProblem.unmarkedComponentObstacles.map((obstacle) => ({
+    const allEdges: EdgeSegmentWithObstacle[] =
+      this.allEdges.length > 0
+        ? this.allEdges
+        : [
+            ...disconnectedEdges,
+            ...(this.currentEdge ? [this.currentEdge] : []),
+          ]
+    const currentEdgeColor = this.currentEdge
+      ? getGapFillEdgeColor(this.currentEdge, 0.88)
+      : "rgba(40,40,40,0.4)"
+    const meshRects: Rect[] = this.inputProblem.meshNodes.map(
+      (meshNode: CapacityMeshNode): Rect => ({
+        ...createRectFromCapacityNode(meshNode, { rectMargin: 0.01 }),
+        fill: meshNode._containsObstacle
+          ? "rgba(120,120,120,0.18)"
+          : "rgba(120,120,120,0.08)",
+        stroke: meshNode._containsObstacle
+          ? "rgba(120,120,120,0.42)"
+          : "rgba(120,120,120,0.24)",
+      }),
+    )
+    const searchBandRects: Rect[] =
+      this.lastSearchBounds && this.currentEdge
+        ? [
+            {
+              center: getBoundsCenter(this.lastSearchBounds),
+              width: this.lastSearchBounds.maxX - this.lastSearchBounds.minX,
+              height: this.lastSearchBounds.maxY - this.lastSearchBounds.minY,
+              fill: getGapFillEdgeColor(this.currentEdge, 0.1),
+              stroke: getGapFillEdgeColor(this.currentEdge, 0.36),
+              label: [
+                getGapFillEdgeVisualId(this.currentEdge, allEdges),
+                "search band",
+              ].join(" "),
+            },
+          ]
+        : []
+    const candidateMeshRects: Rect[] = this.lastCandidateMeshNodes.map(
+      (meshNode: CapacityMeshNode): Rect => ({
+        ...createRectFromCapacityNode(meshNode, { rectMargin: 0.018 }),
+        fill:
+          meshNode === this.lastMatchedMeshNode
+            ? "rgba(0,180,90,0.24)"
+            : this.currentEdge
+              ? getGapFillEdgeColor(this.currentEdge, 0.16)
+              : "rgba(80,120,160,0.16)",
+        stroke:
+          meshNode === this.lastMatchedMeshNode
+            ? "rgba(0,150,80,0.88)"
+            : currentEdgeColor,
+        label: [
+          meshNode === this.lastMatchedMeshNode ? "matched" : "candidate",
+          meshNode.capacityMeshNodeId,
+          `z:${meshNode.availableZ.join(",")}`,
+        ].join("\n"),
+      }),
+    )
+    const obstacleRects: Rect[] =
+      this.inputProblem.unmarkedComponentObstacles.map(
+        (obstacle): Rect => ({
           center: obstacle.center,
           width: obstacle.width,
           height: obstacle.height,
           fill: "rgba(160,160,160,0.10)",
           stroke: "rgba(160,160,160,0.40)",
           label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
-        })),
-      ],
-      lines: [
-        ...pendingEdges.map((edge: EdgeSegmentWithObstacle) => ({
-          points: [edge.start, edge.end],
-          stroke: "rgba(160,160,160,0.55)",
+        }),
+      )
+    const disconnectedLines: Line[] = disconnectedEdges.map(
+      (edge: EdgeSegmentWithObstacle): Line => ({
+        points: [edge.start, edge.end],
+        strokeColor: getGapFillEdgeColor(edge, 0.14),
+        strokeWidth: 0.01,
+        strokeDash: "5 4",
+        label: [
+          getGapFillEdgeVisualId(edge, allEdges),
+          getGapFillEdgeDirectionLabel(edge),
+          "disconnected",
+        ].join(" "),
+      }),
+    )
+    const currentEdgeLines: Line[] = []
+    const currentEdgePoints: Point[] = []
+
+    if (this.currentEdge) {
+      const currentEdgeMidpoint: Point = getGapFillEdgeMidpoint(
+        this.currentEdge,
+      )
+      currentEdgeLines.push(
+        {
+          points: [this.currentEdge.start, this.currentEdge.end],
+          strokeColor: getGapFillEdgeColor(this.currentEdge, 1),
+          strokeWidth: 0.06,
+          label: [
+            getGapFillEdgeVisualId(this.currentEdge, allEdges),
+            getGapFillEdgeDirectionLabel(this.currentEdge),
+            "checking",
+          ].join(" "),
+        },
+        {
+          points: [
+            currentEdgeMidpoint,
+            {
+              x:
+                currentEdgeMidpoint.x +
+                this.currentEdge.expansionDirection.x * 0.16,
+              y:
+                currentEdgeMidpoint.y +
+                this.currentEdge.expansionDirection.y * 0.16,
+            },
+          ],
+          strokeColor: getGapFillEdgeColor(this.currentEdge, 0.82),
           strokeWidth: 0.02,
-        })),
-        ...disconnectedEdges.map((edge: EdgeSegmentWithObstacle) => ({
-          points: [edge.start, edge.end],
-          stroke: "rgba(255,0,0,0.95)",
-          strokeWidth: 0.04,
-        })),
-        ...(this.currentEdge
-          ? [
-              {
-                points: [this.currentEdge.start, this.currentEdge.end],
-                stroke: "rgba(255,140,0,0.98)",
-                strokeWidth: 0.05,
-              },
-            ]
-          : []),
+          strokeDash: "3 3",
+        },
+      )
+      currentEdgePoints.push({
+        ...currentEdgeMidpoint,
+        color: getGapFillEdgeColor(this.currentEdge, 1),
+        label: getGapFillEdgeVisualId(this.currentEdge, allEdges),
+      })
+    }
+
+    return {
+      rects: [
+        ...meshRects,
+        ...searchBandRects,
+        ...candidateMeshRects,
+        ...obstacleRects,
       ],
+      lines: [...disconnectedLines, ...currentEdgeLines],
+      points: currentEdgePoints,
     }
   }
 }
