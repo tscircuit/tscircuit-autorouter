@@ -256,14 +256,16 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       }),
     )
     const obstacleRects: Rect[] =
-      this.inputProblem.unmarkedComponentObstacles.map((obstacle): Rect => ({
-        center: obstacle.center,
-        width: obstacle.width,
-        height: obstacle.height,
-        fill: "rgba(160,160,160,0.10)",
-        stroke: "rgba(160,160,160,0.40)",
-        label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
-      }))
+      this.inputProblem.unmarkedComponentObstacles.map(
+        (obstacle): Rect => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(160,160,160,0.10)",
+          stroke: "rgba(160,160,160,0.40)",
+          label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
+        }),
+      )
     const disconnectedLines: Line[] = disconnectedEdges.map(
       (edge: EdgeSegmentWithObstacle): Line => ({
         points: [edge.start, edge.end],
@@ -281,7 +283,9 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
     const currentEdgePoints: Point[] = []
 
     if (this.currentEdge) {
-      const currentEdgeMidpoint: Point = getGapFillEdgeMidpoint(this.currentEdge)
+      const currentEdgeMidpoint: Point = getGapFillEdgeMidpoint(
+        this.currentEdge,
+      )
       currentEdgeLines.push(
         {
           points: [this.currentEdge.start, this.currentEdge.end],
