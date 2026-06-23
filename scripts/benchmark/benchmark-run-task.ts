@@ -1,4 +1,6 @@
+import { getPngBufferFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
+import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
 import { RELAXED_DRC_OPTIONS } from "../../lib/testing/drcPresets"
 import { getDrcErrors } from "../../lib/testing/getDrcErrors"
@@ -8,9 +10,10 @@ import type {
   SimplifiedPcbTrace,
 } from "../../lib/types/srj-types"
 import type {
+  BenchmarkSnapshotWithImage,
   BenchmarkTask,
   WorkerProgress,
-  WorkerResult,
+  WorkerResultWithImage,
 } from "./benchmark-types"
 
 type SolverInstance = {
@@ -32,6 +35,7 @@ type SolverInstance = {
   solve?: () => void | Promise<void>
   solveAsync?: () => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
+  getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
 }
 
@@ -39,9 +43,29 @@ type SolverOptions = {
   effort?: number
 }
 
+type SolverConstructor = new (
+  srj: SimpleRouteJson,
+  opts?: SolverOptions,
+) => SolverInstance
+
 type RunTaskOptions = {
   onProgress?: (progress: WorkerProgress) => void
   progressIntervalMs?: number
+}
+
+type DrcSummary = {
+  drcErrorCount: number
+  drcErrorTypes: Record<string, number>
+  drcErrorMessages: Array<{
+    message: string
+    count: number
+  }>
+}
+
+type FailureInfo = {
+  error?: string
+  errorPhaseName?: string
+  errorSolverName?: string
 }
 
 const DEFAULT_PROGRESS_INTERVAL_MS = 1000
@@ -74,20 +98,14 @@ export const getBenchmarkSolverOptions = (
 
 const getSolverConstructor = (solverName: string) => {
   if (solverName === "KrtAutoroutingPipelineSolver") {
-    return KrtAutoroutingPipelineSolver as new (
-      srj: SimpleRouteJson,
-      opts?: SolverOptions,
-    ) => SolverInstance
+    return KrtAutoroutingPipelineSolver as SolverConstructor
   }
 
   const ctor = (autorouterModule as Record<string, unknown>)[solverName]
   if (typeof ctor !== "function") {
     throw new Error(`Solver "${solverName}" was not found`)
   }
-  return ctor as new (
-    srj: SimpleRouteJson,
-    opts?: SolverOptions,
-  ) => SolverInstance
+  return ctor as SolverConstructor
 }
 
 export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
@@ -163,12 +181,7 @@ const incrementCount = (counts: Record<string, number>, key: string) => {
   counts[key] = (counts[key] ?? 0) + 1
 }
 
-const summarizeDrcErrors = (
-  errors: object[],
-): Pick<
-  WorkerResult,
-  "drcErrorCount" | "drcErrorTypes" | "drcErrorMessages"
-> => {
+const summarizeDrcErrors = (errors: object[]): DrcSummary => {
   const drcErrorTypes: Record<string, number> = {}
   const messageCounts: Record<string, number> = {}
 
@@ -208,7 +221,7 @@ const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
 const getFailureInfo = (
   solver: SolverInstance,
   fallbackError?: string,
-): Pick<WorkerResult, "error" | "errorPhaseName" | "errorSolverName"> => {
+): FailureInfo => {
   const pipelineStep =
     Array.isArray(solver.pipelineDef) &&
     typeof solver.currentPipelineStepIndex === "number"
@@ -325,10 +338,54 @@ const solveWithProgress = async (
   throw new Error("Solver does not implement step(), solve(), or solveAsync()")
 }
 
+const createBenchmarkSnapshot = async ({
+  task,
+  solver,
+  traces,
+  elapsedTimeMs,
+  viaCount,
+  relaxedDrcPassed,
+  drcErrorCount,
+}: {
+  task: BenchmarkTask
+  solver: SolverInstance
+  traces: SimplifiedPcbTrace[]
+  elapsedTimeMs: number
+  viaCount: number
+  relaxedDrcPassed: boolean
+  drcErrorCount?: number
+}): Promise<BenchmarkSnapshotWithImage> => {
+  const finalSrj: SimpleRouteJson = solver.getOutputSimpleRouteJson?.() ?? {
+    ...(solver.srjWithPointPairs ?? task.scenario),
+    traces,
+  }
+
+  const graphics = convertSrjToGraphicsObject(finalSrj)
+  const png = await getPngBufferFromGraphicsObject(graphics, {
+    backgroundColor: "white",
+    pngWidth: 1536,
+    pngHeight: 1536,
+  })
+  const imageDataUrl = `data:image/png;base64,${Buffer.from(png).toString("base64")}`
+
+  return {
+    datasetName: task.datasetName,
+    solverName: task.solverName,
+    scenarioName: task.scenarioName,
+    sampleNumber: task.sampleNumber,
+    label: `${task.datasetName} sample ${task.sampleNumber} - ${task.solverName}`,
+    elapsedTimeMs,
+    viaCount,
+    relaxedDrcPassed,
+    drcErrorCount,
+    imageDataUrl,
+  }
+}
+
 export const runTask = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
-): Promise<WorkerResult> => {
+): Promise<WorkerResultWithImage> => {
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined
@@ -373,6 +430,23 @@ export const runTask = async (
     const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])
+    let benchmarkSnapshot: BenchmarkSnapshotWithImage | undefined
+
+    try {
+      benchmarkSnapshot = await createBenchmarkSnapshot({
+        task,
+        solver,
+        traces,
+        elapsedTimeMs,
+        viaCount,
+        relaxedDrcPassed,
+        drcErrorCount: drcSummary.drcErrorCount,
+      })
+    } catch (error) {
+      console.error(
+        `[benchmark-snapshot] ${task.solverName} ${task.scenarioName} failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
 
     return {
       solverName: task.solverName,
@@ -383,6 +457,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      benchmarkSnapshot,
       ...drcSummary,
     }
   } catch (error) {
