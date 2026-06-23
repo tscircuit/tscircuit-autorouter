@@ -9,6 +9,12 @@
 
 > Don't format or lint the code.
 
+## Validation Policy
+
+- Run tests, builds, and focused checks locally by default.
+- Use Blacksmith only for benchmark runs unless the user explicitly asks to use
+  Blacksmith for another validation task.
+
 ## Code Style Guidelines
 
 - Use **TypeScript** with strict typing enabled
@@ -19,6 +25,13 @@
 - **Formatting**: Use Biome for consistent formatting (2-space indentation, double quotes for JSX)
 - **Comments**: Add meaningful comments for complex logic, avoid unnecessary comments
 - **Export patterns**: Export classes/functions directly from their definition files
+- Avoid over-abstraction. Prefer direct code until a helper removes real
+  duplication or clarifies a genuinely complex operation.
+- Do not create functions smaller than 6 lines.
+- Define types near the start of new code so variables, function parameters,
+  and return values have explicit types.
+- Always define function return types in new code.
+- Structure types so invalid states are not representable where practical.
 
 ## Architecture
 

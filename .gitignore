@@ -183,6 +183,7 @@ repomix-output.txt
 cosmos-export
 .yalc
 yalc.lock
+.vendor/
 **/.claude/settings.local.json
 
 # Generated test plans
