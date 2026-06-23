@@ -2,7 +2,7 @@ import type { Bounds } from "@tscircuit/math-utils"
 import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import Flatbush from "flatbush"
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -10,6 +10,14 @@ import type {
   EdgeSegmentWithObstacle,
   ExpandUnconnectedEdgesToMeshInput,
 } from "./BgaGapFillTypes"
+import {
+  getGapFillEdgeColor,
+  getGapFillEdgeDirectionLabel,
+  getGapFillExpandedNodeEdgeIndex,
+  getGapFillEdgeMidpoint,
+  getGapFillEdgeVisualId,
+  sortGapFillEdgesByLocation,
+} from "./gapFillVisualization"
 
 const EDGE_EPSILON: number = 1e-3
 const EDGE_SEARCH_MARGIN: number = 1e-3
@@ -393,29 +401,83 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
+    const edgeByIndex = this.inputProblem.edgesWithObstacle
+    const visualEdges: EdgeSegmentWithObstacle[] =
+      sortGapFillEdgesByLocation(edgeByIndex)
+
     return {
       rects: [
-        ...this.inputProblem.meshNodes.map((node) => ({
-          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
-          fill: node._containsObstacle
-            ? "rgba(255,0,0,0.16)"
-            : "rgba(0,120,255,0.08)",
-          stroke: node._containsObstacle
-            ? "rgba(255,0,0,0.35)"
-            : "rgba(0,120,255,0.28)",
-        })),
-        ...this.expandedNodes.map((node) => ({
-          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
-          fill: "rgba(0,200,120,0.24)",
-          stroke: "rgba(0,200,120,0.68)",
-          label: `expanded ${node.capacityMeshNodeId}`,
-        })),
+        ...this.inputProblem.meshNodes.map(
+          (node): Rect => ({
+            ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+            fill: node._containsObstacle
+              ? "rgba(255,0,0,0.16)"
+              : "rgba(0,120,255,0.08)",
+            stroke: node._containsObstacle
+              ? "rgba(255,0,0,0.35)"
+              : "rgba(0,120,255,0.28)",
+          }),
+        ),
+        ...this.expandedNodes.map((node): Rect => {
+          const edgeIndex = getGapFillExpandedNodeEdgeIndex(node)
+          const edge =
+            edgeIndex === null ? null : (edgeByIndex[edgeIndex] ?? null)
+
+          return {
+            ...createRectFromCapacityNode(node, {
+              rectMargin: 0.012,
+              zOffset: 0.01,
+            }),
+            fill: edge
+              ? getGapFillEdgeColor(edge, 0.24)
+              : "rgba(0,160,100,0.24)",
+            stroke: edge
+              ? getGapFillEdgeColor(edge, 0.72)
+              : "rgba(0,160,100,0.68)",
+            label: [
+              edge ? getGapFillEdgeVisualId(edge, visualEdges) : "E?",
+              "expanded",
+              node.capacityMeshNodeId,
+              `z:${node.availableZ.join(",")}`,
+            ].join("\n"),
+          }
+        }),
       ],
-      lines: this.inputProblem.edgesWithObstacle.map((edgeWithObstacle) => ({
-        points: [edgeWithObstacle.start, edgeWithObstacle.end],
-        stroke: "rgba(255,140,0,0.95)",
-        strokeWidth: 0.03,
-      })),
+      lines: [
+        ...this.inputProblem.edgesWithObstacle.map(
+          (edgeWithObstacle): Line => ({
+            points: [edgeWithObstacle.start, edgeWithObstacle.end],
+            strokeColor: getGapFillEdgeColor(edgeWithObstacle, 0.9),
+            strokeWidth: 0.034,
+            label: [
+              getGapFillEdgeVisualId(edgeWithObstacle, visualEdges),
+              getGapFillEdgeDirectionLabel(edgeWithObstacle),
+            ].join(" "),
+          }),
+        ),
+        ...this.inputProblem.edgesWithObstacle.map((edgeWithObstacle): Line => {
+          const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
+          return {
+            points: [
+              midpoint,
+              {
+                x: midpoint.x + edgeWithObstacle.expansionDirection.x * 0.16,
+                y: midpoint.y + edgeWithObstacle.expansionDirection.y * 0.16,
+              },
+            ],
+            strokeColor: getGapFillEdgeColor(edgeWithObstacle, 0.7),
+            strokeWidth: 0.016,
+            strokeDash: "3 3",
+          }
+        }),
+      ],
+      points: this.inputProblem.edgesWithObstacle.map(
+        (edgeWithObstacle): Point => ({
+          ...getGapFillEdgeMidpoint(edgeWithObstacle),
+          color: getGapFillEdgeColor(edgeWithObstacle, 0.95),
+          label: getGapFillEdgeVisualId(edgeWithObstacle, visualEdges),
+        }),
+      ),
     }
   }
 }
