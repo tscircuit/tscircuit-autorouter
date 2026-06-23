@@ -1,19 +1,22 @@
 #!/usr/bin/env bun
 
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
-import { readFile } from "node:fs/promises"
+import { appendFile, readFile, writeFile } from "node:fs/promises"
 import * as os from "node:os"
 import * as path from "node:path"
 import * as readline from "node:readline"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
   BenchmarkReport,
+  BenchmarkSnapshot,
+  BenchmarkSnapshotWithImage,
   BenchmarkTask,
   FailureSummary,
   SolverRunSummary,
   WorkerChildMessage,
   WorkerProgress,
   WorkerResult,
+  WorkerResultWithImage,
   WorkerTaskMessage,
 } from "./benchmark-types"
 import {
@@ -50,8 +53,17 @@ type WorkerSlot = {
 }
 
 type WorkerExecutionResult = {
-  result: WorkerResult
+  result: WorkerResultWithImage
   restartWorker: boolean
+}
+
+type BenchmarkSnapshotWriter = {
+  writeSnapshot: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
+  finish: () => Promise<void>
+}
+
+type RunBenchmarkTasksOptions = {
+  onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
 }
 
 const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
@@ -59,6 +71,7 @@ const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
 const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
+const BENCHMARK_SNAPSHOTS_HTML_PATH = "benchmark-snapshots.html"
 
 const formatTime = (timeMs: number | null) => {
   if (timeMs === null) {
@@ -72,6 +85,95 @@ const formatAverage = (value: number | null) => {
     return "n/a"
   }
   return value.toFixed(2)
+}
+
+const escapeHtml = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+
+const createSnapshotCardHtml = (
+  snapshot: BenchmarkSnapshotWithImage,
+): string => {
+  return `<section class="snapshot">
+  <h2>${escapeHtml(snapshot.label)}</h2>
+  <dl>
+    <div><dt>Dataset</dt><dd>${escapeHtml(snapshot.datasetName)}</dd></div>
+    <div><dt>Solver</dt><dd>${escapeHtml(snapshot.solverName)}</dd></div>
+    <div><dt>Sample</dt><dd>${escapeHtml(snapshot.sampleNumber)}</dd></div>
+    <div><dt>Scenario</dt><dd>${escapeHtml(snapshot.scenarioName)}</dd></div>
+    <div><dt>Time</dt><dd>${escapeHtml(formatTime(snapshot.elapsedTimeMs))}</dd></div>
+    <div><dt>Via</dt><dd>${escapeHtml(snapshot.viaCount)}</dd></div>
+    <div><dt>Relaxed DRC</dt><dd>${snapshot.relaxedDrcPassed ? "passed" : "failed"}</dd></div>
+  </dl>
+  <img src="${escapeHtml(snapshot.imageDataUrl)}" alt="${escapeHtml(snapshot.label)}" />
+</section>`
+}
+
+const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Benchmark Snapshots</title>
+  <style>
+    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #18212f; background: #f7f8fb; }
+    body { margin: 0; padding: 32px; }
+    main { max-width: 1160px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
+    p { margin: 0 0 24px; color: #4d5b6c; }
+    .snapshot, .empty { margin: 24px 0; padding: 20px; border: 1px solid #d8dee8; border-radius: 8px; background: #fff; }
+    h2 { margin: 0 0 14px; font-size: 18px; line-height: 1.3; }
+    dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; margin: 0 0 18px; }
+    dl div { min-width: 0; }
+    dt { font-size: 12px; color: #657184; }
+    dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+    img { display: block; width: 100%; max-width: 1024px; height: auto; border: 1px solid #e1e6ef; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Benchmark Snapshots</h1>
+    <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as data URLs for offline viewing.</p>
+`
+
+const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
+</body>
+</html>
+`
+
+const createBenchmarkSnapshotWriter = async (
+  htmlPath: string,
+): Promise<BenchmarkSnapshotWriter> => {
+  let snapshotCount = 0
+  let pendingWrite = Promise.resolve()
+
+  await writeFile(htmlPath, BENCHMARK_SNAPSHOTS_HTML_START)
+
+  return {
+    writeSnapshot: async (snapshot) => {
+      snapshotCount += 1
+      pendingWrite = pendingWrite.then(() =>
+        appendFile(htmlPath, `${createSnapshotCardHtml(snapshot)}\n`),
+      )
+      await pendingWrite
+    },
+    finish: async () => {
+      const htmlParts: string[] = []
+      if (snapshotCount === 0) {
+        htmlParts.push(
+          `    <section class="empty"><p>No solved benchmark snapshots were produced for this run.</p></section>`,
+        )
+      }
+      htmlParts.push(BENCHMARK_SNAPSHOTS_HTML_END)
+      pendingWrite = pendingWrite.then(() =>
+        appendFile(htmlPath, `${htmlParts.join("\n")}\n`),
+      )
+      await pendingWrite
+    },
+  }
 }
 
 const formatDurationLabel = (timeMs: number) => {
@@ -583,7 +685,7 @@ const createFailedResult = (
   error: string,
   didTimeout = false,
   latestProgress?: WorkerProgress,
-): WorkerResult => ({
+): WorkerResultWithImage => ({
   solverName: task.solverName,
   scenarioName: task.scenarioName,
   sampleNumber: task.sampleNumber,
@@ -679,7 +781,7 @@ const executeTaskOnWorker = (
     const startedAtMs = performance.now()
     let settled = false
 
-    const finish = (result: WorkerResult, restartWorker: boolean) => {
+    const finish = (result: WorkerResultWithImage, restartWorker: boolean) => {
       if (settled) {
         return
       }
@@ -794,6 +896,7 @@ const runBenchmarkTasks = async (
   tasks: BenchmarkTask[],
   concurrency: number,
   sampleTimeoutMs?: number,
+  options: RunBenchmarkTasksOptions = {},
 ) => {
   const workerCount = Math.min(concurrency, tasks.length)
   const heartbeatIntervalMs = getHeartbeatIntervalMs()
@@ -867,11 +970,23 @@ const runBenchmarkTasks = async (
         return
       }
 
-      const { result, restartWorker } = await executeTaskOnWorker(
+      const { result: workerResult, restartWorker } = await executeTaskOnWorker(
         slot,
         request,
         sampleTimeoutMs,
       )
+      if (workerResult.benchmarkSnapshot) {
+        await options.onBenchmarkSnapshot?.(workerResult.benchmarkSnapshot)
+      }
+      let result: WorkerResult = workerResult
+      if (workerResult.benchmarkSnapshot) {
+        const { imageDataUrl, ...benchmarkSnapshot } =
+          workerResult.benchmarkSnapshot
+        result = {
+          ...workerResult,
+          benchmarkSnapshot,
+        }
+      }
       results[request.taskId - 1] = result
       completedTaskCount += 1
 
@@ -1016,10 +1131,11 @@ const main = async () => {
     throw new Error(`No benchmark scenarios found for dataset "${datasetName}"`)
   }
 
-  const tasks = solvers.flatMap((solver) =>
+  const tasks: BenchmarkTask[] = solvers.flatMap((solver) =>
     scenarios.map(
       ({ scenarioName, sampleNumber, scenario }) =>
         ({
+          datasetName,
           solverName: solver,
           scenarioName,
           sampleNumber,
@@ -1032,7 +1148,17 @@ const main = async () => {
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
   )
 
-  const results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs)
+  const snapshotWriter = await createBenchmarkSnapshotWriter(
+    BENCHMARK_SNAPSHOTS_HTML_PATH,
+  )
+  let results: WorkerResult[]
+  try {
+    results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
+      onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
+    })
+  } finally {
+    await snapshotWriter.finish()
+  }
   const rows = solvers.map((solver) =>
     summarizeSolverResults(
       solver,
@@ -1043,6 +1169,7 @@ const main = async () => {
   const effortLabel = formatEffortLabel(
     scenarios.map(({ scenario }) =>
       getTaskEffort({
+        datasetName,
         solverName: solvers[0] ?? "",
         scenarioName: "",
         sampleNumber: 0,
@@ -1057,7 +1184,10 @@ const main = async () => {
   const timeoutSummaryText = formatFailureSummary(timeoutSummary)
   const failureSummary = summarizeFailures(results)
   const failureSummaryText = formatFailureSummary(failureSummary)
-  const output = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
+  const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
+    result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
+  )
+  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
@@ -1067,6 +1197,7 @@ const main = async () => {
     solverFailureSummary,
     timeoutSummary,
     failureSummary,
+    snapshots,
     tests: results,
   }
   await Bun.write("benchmark-result.txt", output)
@@ -1083,7 +1214,7 @@ const main = async () => {
   console.log("\nTop failure buckets:")
   console.log(failureSummaryText)
   console.log(
-    "Results written to benchmark-result.txt and benchmark-result.json",
+    `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
   )
 }
 

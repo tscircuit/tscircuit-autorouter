@@ -1,10 +1,27 @@
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
 export type BenchmarkTask = {
+  datasetName: string
   solverName: string
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
+}
+
+export type BenchmarkSnapshot = {
+  datasetName: string
+  solverName: string
+  scenarioName: string
+  sampleNumber: number
+  label: string
+  elapsedTimeMs: number
+  viaCount: number
+  relaxedDrcPassed: boolean
+  drcErrorCount?: number
+}
+
+export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
+  imageDataUrl: string
 }
 
 export type WorkerTaskMessage = {
@@ -25,7 +42,9 @@ export type WorkerProgress = {
   activeSubSolverIterations?: number
 }
 
-export type WorkerResult = {
+export type WorkerResult<
+  TBenchmarkSnapshot extends BenchmarkSnapshot = BenchmarkSnapshot,
+> = {
   solverName: string
   scenarioName: string
   sampleNumber: number
@@ -43,7 +62,10 @@ export type WorkerResult = {
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+  benchmarkSnapshot?: TBenchmarkSnapshot
 }
+
+export type WorkerResultWithImage = WorkerResult<BenchmarkSnapshotWithImage>
 
 export type FailureSummary = {
   failureKind: string
@@ -55,7 +77,7 @@ export type FailureSummary = {
 
 export type WorkerResultMessage = {
   taskId: number
-  result: WorkerResult
+  result: WorkerResultWithImage
 }
 
 export type WorkerProgressMessage = {
@@ -112,5 +134,6 @@ export type BenchmarkReport = {
   solverFailureSummary: FailureSummary[]
   timeoutSummary: FailureSummary[]
   failureSummary: FailureSummary[]
+  snapshots: BenchmarkSnapshot[]
   tests: WorkerResult[]
 }
