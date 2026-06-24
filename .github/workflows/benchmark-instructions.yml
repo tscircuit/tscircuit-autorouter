@@ -44,6 +44,7 @@ jobs:
               "- `/benchmark all 20 --dataset dataset01 --concurrency 8` -> all solvers, 20 scenarios, dataset01, 8 workers",
               "- `/benchmark AutoroutingPipelineSolver4 20 --profile-solvers` -> one solver, 20 scenarios, with profile solver comparison tables",
               "- `/benchmark --pipeline 4` -> same as `./benchmark.sh --pipeline 4`",
+              "- `/benchmark --cold-run N` -> run the benchmark N times as warmup before the saved run (warmup results are discarded)",
               "",
               "Use `/update-snapshots` (or `/us`) to run `BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 120_000` on the PR branch and auto-commit snapshot updates.",
               "Use `/usf` to read recent failed test files, run `BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 120_000 <files>`, auto-commit snapshot updates, then verify with `bun test <files>`.",

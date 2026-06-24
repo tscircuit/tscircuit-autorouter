@@ -35,6 +35,7 @@ type BenchmarkOptions = {
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
+  coldRun: number
 }
 
 type WorkerTaskAssignment = {
@@ -297,6 +298,7 @@ const parseArgs = (): BenchmarkOptions => {
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
+    coldRun: 0,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -322,6 +324,11 @@ const parseArgs = (): BenchmarkOptions => {
     }
     if (arg === "--effort") {
       options.effort = Number.parseInt(args[i + 1] ?? "", 10)
+      i += 1
+      continue
+    }
+    if (arg === "--cold-run") {
+      options.coldRun = Number.parseInt(args[i + 1] ?? "", 10)
       i += 1
       continue
     }
@@ -376,6 +383,10 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
     throw new Error("--effort must be a positive integer")
+  }
+
+  if (!Number.isInteger(options.coldRun) || options.coldRun < 0) {
+    throw new Error("--cold-run must be a non-negative integer")
   }
 
   return options
@@ -1085,6 +1096,7 @@ const main = async () => {
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
+    coldRun,
   } = parseArgs()
   const availableSolvers = await loadSolverNames(excludeAssignable)
   const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME]
@@ -1144,78 +1156,104 @@ const main = async () => {
     ),
   )
 
-  console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
-  )
+  // Execute one full benchmark pass. When isWarmup is true, no results are
+  // persisted (no snapshot HTML, no benchmark-result.{txt,json}) and no full
+  // results table is printed — the pass only exists to warm caches/JIT.
+  const runOnce = async (isWarmup: boolean): Promise<void> => {
+    let results: WorkerResult[]
+    if (isWarmup) {
+      // Run the benchmark in memory without writing snapshots to disk.
+      results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs)
+      console.log(
+        `Cold run complete (warmup, results not saved): ${results.length} tasks executed`,
+      )
+      return
+    }
 
-  const snapshotWriter = await createBenchmarkSnapshotWriter(
-    BENCHMARK_SNAPSHOTS_HTML_PATH,
-  )
-  let results: WorkerResult[]
-  try {
-    results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
-      onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
-    })
-  } finally {
-    await snapshotWriter.finish()
+    const snapshotWriter = await createBenchmarkSnapshotWriter(
+      BENCHMARK_SNAPSHOTS_HTML_PATH,
+    )
+    try {
+      results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
+        onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
+      })
+    } finally {
+      await snapshotWriter.finish()
+    }
+    const rows = solvers.map((solver) =>
+      summarizeSolverResults(
+        solver,
+        results.filter((result) => result.solverName === solver),
+      ),
+    )
+
+    const effortLabel = formatEffortLabel(
+      scenarios.map(({ scenario }) =>
+        getTaskEffort({
+          datasetName,
+          solverName: solvers[0] ?? "",
+          scenarioName: "",
+          sampleNumber: 0,
+          scenario,
+        }),
+      ),
+    )
+    const table = formatTable(rows)
+    const solverFailureSummary = summarizeSolverFailures(results)
+    const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
+    const timeoutSummary = summarizeTimeouts(results)
+    const timeoutSummaryText = formatFailureSummary(timeoutSummary)
+    const failureSummary = summarizeFailures(results)
+    const failureSummaryText = formatFailureSummary(failureSummary)
+    const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
+      result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
+    )
+    const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
+    const report: BenchmarkReport = {
+      version: 1,
+      datasetName,
+      scenarioCount: scenarios.length,
+      effortLabel,
+      summary: rows,
+      solverFailureSummary,
+      timeoutSummary,
+      failureSummary,
+      snapshots,
+      tests: results,
+    }
+    await Bun.write("benchmark-result.txt", output)
+    await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2))
+
+    console.log(`\nBenchmark Results (${effortLabel})\n`)
+    console.log(table)
+    console.log(`\nDataset: ${datasetName}`)
+    console.log(`\nScenarios: ${scenarios.length}`)
+    console.log("\nTop solver failure buckets:")
+    console.log(solverFailureSummaryText)
+    console.log("\nTop timeout buckets:")
+    console.log(timeoutSummaryText)
+    console.log("\nTop failure buckets:")
+    console.log(failureSummaryText)
+    console.log(
+      `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
+    )
   }
-  const rows = solvers.map((solver) =>
-    summarizeSolverResults(
-      solver,
-      results.filter((result) => result.solverName === solver),
-    ),
-  )
 
-  const effortLabel = formatEffortLabel(
-    scenarios.map(({ scenario }) =>
-      getTaskEffort({
-        datasetName,
-        solverName: solvers[0] ?? "",
-        scenarioName: "",
-        sampleNumber: 0,
-        scenario,
-      }),
-    ),
-  )
-  const table = formatTable(rows)
-  const solverFailureSummary = summarizeSolverFailures(results)
-  const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
-  const timeoutSummary = summarizeTimeouts(results)
-  const timeoutSummaryText = formatFailureSummary(timeoutSummary)
-  const failureSummary = summarizeFailures(results)
-  const failureSummaryText = formatFailureSummary(failureSummary)
-  const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
-    result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
-  )
-  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
-  const report: BenchmarkReport = {
-    version: 1,
-    datasetName,
-    scenarioCount: scenarios.length,
-    effortLabel,
-    summary: rows,
-    solverFailureSummary,
-    timeoutSummary,
-    failureSummary,
-    snapshots,
-    tests: results,
+  const runDescription = `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`
+
+  for (let coldRunIndex = 1; coldRunIndex <= coldRun; coldRunIndex += 1) {
+    console.log(
+      `\nCold run ${coldRunIndex}/${coldRun} (warmup, results not saved)`,
+    )
+    console.log(runDescription)
+    await runOnce(true)
   }
-  await Bun.write("benchmark-result.txt", output)
-  await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2))
 
-  console.log(`\nBenchmark Results (${effortLabel})\n`)
-  console.log(table)
-  console.log(`\nDataset: ${datasetName}`)
-  console.log(`\nScenarios: ${scenarios.length}`)
-  console.log("\nTop solver failure buckets:")
-  console.log(solverFailureSummaryText)
-  console.log("\nTop timeout buckets:")
-  console.log(timeoutSummaryText)
-  console.log("\nTop failure buckets:")
-  console.log(failureSummaryText)
-  console.log(
-    `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
-  )
+  if (coldRun > 0) {
+    console.log("\nFinal run (saving results)")
+  }
+  console.log(runDescription)
+  await runOnce(false)
 }
 
 main().catch((error) => {

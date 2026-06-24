@@ -36,6 +36,10 @@ on:
         description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, or srj18)"
         required: false
         type: string
+      cold_run:
+        description: Number of warmup runs before the saved run (optional, default 0; warmup results are discarded)
+        required: false
+        type: string
       profile_solvers:
         description: Show profile-solvers output for the benchmark scenarios
         required: false
@@ -273,6 +277,7 @@ jobs:
               const concurrency = (inputs.concurrency || '').trim()
               const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
               const datasetName = (inputs.dataset_name || '').trim()
+              const coldRun = (inputs.cold_run || '').trim()
               profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
 
               if (scenarioLimit) {
@@ -286,6 +291,9 @@ jobs:
               }
               if (datasetName) {
                 benchmarkArgs.push('--dataset', datasetName)
+              }
+              if (coldRun) {
+                benchmarkArgs.push('--cold-run', coldRun)
               }
               if (concurrency && concurrency.toLowerCase() !== 'auto') {
                 benchmarkConcurrency = concurrency
