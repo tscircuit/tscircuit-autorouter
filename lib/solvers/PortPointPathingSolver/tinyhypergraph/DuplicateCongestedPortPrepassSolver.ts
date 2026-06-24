@@ -9,20 +9,15 @@ import {
 
 export type DuplicateCongestedPortPrepassSolverInput = {
   serializedHyperGraph: SerializedHyperGraph
-  connectionCount: number
   effort: number
   minViaPadDiameter?: number
 }
 
 export type DuplicateCongestedPortPrepassSolverOutput = {
   serializedHyperGraph: SerializedHyperGraph
-  report?: DuplicateCongestedPortSolverReport
-  error?: string
-  skipped: boolean
+  report: DuplicateCongestedPortSolverReport
   duplicatedPortCount: number
 }
-
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
 export class DuplicateCongestedPortPrepassSolver extends BaseSolver {
   private output?: DuplicateCongestedPortPrepassSolverOutput
@@ -44,7 +39,6 @@ export class DuplicateCongestedPortPrepassSolver extends BaseSolver {
   override _step(): void {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-      this.updateStats()
 
       if (!this.activeSubSolver.solved && !this.activeSubSolver.failed) {
         return
@@ -57,40 +51,22 @@ export class DuplicateCongestedPortPrepassSolver extends BaseSolver {
           ...(this.failedSubSolvers ?? []),
           this.activeSubSolver,
         ]
-        this.output = {
-          serializedHyperGraph: this.inputProblem.serializedHyperGraph,
-          report: this.activeSubSolver.report,
-          error: duplicateSolverError,
-          skipped: false,
-          duplicatedPortCount:
-            this.activeSubSolver.report.duplicatedPorts.flatMap(
-              (duplicatedPort) => duplicatedPort.duplicatePortIds,
-            ).length,
-        }
-        this.activeSubSolver = null
-        this.updateStats()
-        this.solved = true
-        return
+        this.error = duplicateSolverError
+        this.failed = true
+        throw new Error(duplicateSolverError)
       }
 
-      this.output = this.getOutputFromDuplicateSolver(this.activeSubSolver)
-      this.activeSubSolver = null
-      this.updateStats()
-      this.solved = true
-      return
-    }
-
-    const shouldRun =
-      this.inputProblem.connectionCount <=
-      MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
-    if (!shouldRun) {
+      const duplicatedPortCount =
+        this.activeSubSolver.report.duplicatedPorts.reduce(
+          (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
+          0,
+        )
       this.output = {
-        serializedHyperGraph: this.inputProblem.serializedHyperGraph,
-        error: `Skipped for ${this.inputProblem.connectionCount} connections`,
-        skipped: true,
-        duplicatedPortCount: 0,
+        serializedHyperGraph: this.activeSubSolver.getOutput(),
+        report: this.activeSubSolver.report,
+        duplicatedPortCount,
       }
-      this.updateStats()
+      this.activeSubSolver = null
       this.solved = true
       return
     }
@@ -119,7 +95,6 @@ export class DuplicateCongestedPortPrepassSolver extends BaseSolver {
       },
     )
     this.activeSubSolver = this.duplicateSolver
-    this.updateStats()
   }
 
   override getOutput(): DuplicateCongestedPortPrepassSolverOutput {
@@ -132,32 +107,5 @@ export class DuplicateCongestedPortPrepassSolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     return this.duplicateSolver?.visualize() ?? super.visualize()
-  }
-
-  private getOutputFromDuplicateSolver(
-    solver: DuplicateCongestedPortSolver,
-  ): DuplicateCongestedPortPrepassSolverOutput {
-    const duplicatedPortCount = solver.report.duplicatedPorts.reduce(
-      (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-      0,
-    )
-    return {
-      serializedHyperGraph: solver.getOutput(),
-      report: solver.report,
-      skipped: false,
-      duplicatedPortCount,
-    }
-  }
-
-  private updateStats(): void {
-    this.stats = {
-      ...(this.duplicateSolver?.stats ?? {}),
-      duplicateCongestedPortSourceCount:
-        this.output?.report?.duplicatedPorts.length ?? 0,
-      duplicateCongestedPortCount: this.output?.duplicatedPortCount ?? 0,
-      duplicateCongestedPortFallbackToOriginal: Boolean(this.output?.error),
-      duplicateCongestedPortSkipped: Boolean(this.output?.skipped),
-      duplicateCongestedPortError: this.error ?? this.output?.error,
-    }
   }
 }
