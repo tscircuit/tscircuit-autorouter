@@ -197,3 +197,7 @@ result-*
 tmp
 
 *.received.svg
+
+# solve-srj18-failures resumable progress state
+.srj18-solve-progress.json
+.srj18-solve-progress.json.tmp-*
