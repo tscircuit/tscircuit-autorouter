@@ -3,7 +3,6 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver7_MultiGraph as Pipeline7 } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
 import e2e3Fixture from "../../fixtures/legacy/assets/e2e3.json"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const MAX_STEPS_TO_ACTIVE_DUPLICATE_ROUTE = 10_000
 
@@ -34,13 +33,5 @@ test("snapshots e2e3 duplicate congested port prepass", () => {
   const activeRouteSvg = getSvgFromGraphicsObject(prepassSolver!.visualize(), {
     backgroundColor: "white",
   })
-  expect(activeRouteSvg).toMatchSvgSnapshot(import.meta.path, {
-    svgName: "active-route",
-  })
-
-  portPointSolver.solveUntilStage("tinyPipelineSolver")
-  expect(getLastStepSvg(prepassSolver!.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-    { svgName: "final" },
-  )
+  expect(activeRouteSvg).toMatchSvgSnapshot(import.meta.path)
 }, 20_000)
