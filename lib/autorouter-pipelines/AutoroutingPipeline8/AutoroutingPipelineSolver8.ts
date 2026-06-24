@@ -199,7 +199,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     definePipelineStep(
       "nodeSolver",
       RectDiffPipeline,
-      (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! as any }],
+      (cms) => [
+        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 1 },
+      ],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []

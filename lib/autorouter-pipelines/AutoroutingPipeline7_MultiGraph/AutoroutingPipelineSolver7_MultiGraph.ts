@@ -328,6 +328,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.componentTopologyGeneratorSolver!.createComponentObstacleSrj(
               cms.srjWithPointPairs!,
             ) as any,
+          maxGapFillPasses: 1,
         },
       ],
       {
