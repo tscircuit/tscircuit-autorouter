@@ -164,7 +164,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       // Cast to any because RectDiffSolver uses an older SimpleRouteJson type
       // that doesn't support MultiLayerConnectionPoint yet
       (cms) => [
-        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 1 },
+        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 4 },
       ],
       {
         onSolved: (cms) => {

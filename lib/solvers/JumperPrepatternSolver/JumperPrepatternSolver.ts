@@ -147,7 +147,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       (solver) => [
         {
           simpleRouteJson: solver.srjWithPointPairs as any,
-          maxGapFillPasses: 1,
+          maxGapFillPasses: 4,
         },
       ],
       {

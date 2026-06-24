@@ -193,7 +193,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       "nodeSolver",
       RectDiffPipeline,
       (cms) => [
-        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 1 },
+        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 4 },
       ],
       {
         onSolved: (cms) => {
