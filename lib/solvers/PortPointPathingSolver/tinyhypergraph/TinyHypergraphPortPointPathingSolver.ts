@@ -29,7 +29,6 @@ import type {
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
-  DuplicateCongestedPortSolver,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -43,6 +42,11 @@ import type {
   RegionHg,
   RegionPortHg,
 } from "../hgportpointpathingsolver/types"
+import {
+  DuplicateCongestedPortPrepassSolver,
+  type DuplicateCongestedPortPrepassSolverInput,
+  type DuplicateCongestedPortPrepassSolverOutput,
+} from "./DuplicateCongestedPortPrepassSolver"
 
 type RouteMetadata = {
   connectionId: string
@@ -92,21 +96,6 @@ type LoadedTinyGraph = {
   }
 }
 
-type DuplicateCongestedPortPrepassSolverInput = {
-  serializedHyperGraph: SerializedHyperGraph
-  connectionCount: number
-  effort: number
-  minViaPadDiameter?: number
-}
-
-type DuplicateCongestedPortPrepassSolverOutput = {
-  serializedHyperGraph: SerializedHyperGraph
-  report?: DuplicateCongestedPortSolverReport
-  error?: string
-  skipped: boolean
-  duplicatedPortCount: number
-}
-
 const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
   typeof metadata === "object" && metadata !== null
     ? (metadata as TinyRegionMetadata)
@@ -138,8 +127,6 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
-const DUPLICATE_CONGESTED_PORT_PREPASS_OVERHEAD_ITERATIONS = 2
 // Outer pipeline overhead: create prepass, run prepass, create tiny pipeline,
 // then mark the outer pipeline solved after the tiny pipeline completes.
 const OUTER_PIPELINE_STAGE_OVERHEAD_ITERATIONS = 4
@@ -609,145 +596,6 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
-class DuplicateCongestedPortPrepassSolver extends BaseSolver {
-  private output?: DuplicateCongestedPortPrepassSolverOutput
-  private duplicateSolver?: DuplicateCongestedPortSolver
-  override activeSubSolver: DuplicateCongestedPortSolver | null = null
-
-  constructor(
-    public readonly inputProblem: DuplicateCongestedPortPrepassSolverInput,
-  ) {
-    super()
-    const duplicateRouteMaxIterations = Math.ceil(
-      2_000_000 * getEffortScale(this.inputProblem.effort),
-    )
-    this.MAX_ITERATIONS =
-      this.inputProblem.connectionCount * duplicateRouteMaxIterations +
-      this.inputProblem.connectionCount +
-      DUPLICATE_CONGESTED_PORT_PREPASS_OVERHEAD_ITERATIONS
-  }
-
-  override getConstructorParams(): readonly [
-    DuplicateCongestedPortPrepassSolverInput,
-  ] {
-    return [this.inputProblem] as const
-  }
-
-  override _step(): void {
-    if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      this.updateStats()
-
-      if (!this.activeSubSolver.solved && !this.activeSubSolver.failed) {
-        return
-      }
-
-      if (this.activeSubSolver.failed) {
-        const duplicateSolverError =
-          this.activeSubSolver.error ?? "DuplicateCongestedPortSolver failed"
-        this.failedSubSolvers = [
-          ...(this.failedSubSolvers ?? []),
-          this.activeSubSolver,
-        ]
-        this.output = {
-          serializedHyperGraph: this.inputProblem.serializedHyperGraph,
-          report: this.activeSubSolver.report,
-          error: duplicateSolverError,
-          skipped: false,
-          duplicatedPortCount:
-            this.activeSubSolver.report.duplicatedPorts.flatMap(
-              (duplicatedPort) => duplicatedPort.duplicatePortIds,
-            ).length,
-        }
-        this.activeSubSolver = null
-        this.updateStats()
-        this.solved = true
-        return
-      }
-
-      this.output = this.getOutputFromDuplicateSolver(this.activeSubSolver)
-      this.activeSubSolver = null
-      this.updateStats()
-      this.solved = true
-      return
-    }
-
-    const shouldRun =
-      this.inputProblem.connectionCount <=
-      MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
-    if (!shouldRun) {
-      this.output = {
-        serializedHyperGraph: this.inputProblem.serializedHyperGraph,
-        error: `Skipped for ${this.inputProblem.connectionCount} connections`,
-        skipped: true,
-        duplicatedPortCount: 0,
-      }
-      this.updateStats()
-      this.solved = true
-      return
-    }
-
-    this.duplicateSolver = new DuplicateCongestedPortSolver(
-      this.inputProblem.serializedHyperGraph,
-      {
-        duplicatePortProximity: 0.05,
-        routeSolveOptions: {
-          ...getTinyViaSizeOptions(this.inputProblem.minViaPadDiameter),
-          USE_SPARSE_CANDIDATE_STORAGE: true,
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-          GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(
-            2_000_000 * getEffortScale(this.inputProblem.effort),
-          ),
-          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-          STATIC_REACHABILITY_PRECHECK: true,
-        },
-      },
-    )
-    this.activeSubSolver = this.duplicateSolver
-    this.updateStats()
-  }
-
-  override getOutput(): DuplicateCongestedPortPrepassSolverOutput {
-    if (!this.output) {
-      throw new Error("Duplicate congested port prepass has not completed")
-    }
-
-    return this.output
-  }
-
-  override visualize(): GraphicsObject {
-    return this.duplicateSolver?.visualize() ?? super.visualize()
-  }
-
-  private getOutputFromDuplicateSolver(
-    solver: DuplicateCongestedPortSolver,
-  ): DuplicateCongestedPortPrepassSolverOutput {
-    const duplicatedPortCount = solver.report.duplicatedPorts.reduce(
-      (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-      0,
-    )
-    return {
-      serializedHyperGraph: solver.getOutput(),
-      report: solver.report,
-      skipped: false,
-      duplicatedPortCount,
-    }
-  }
-
-  private updateStats(): void {
-    this.stats = {
-      ...(this.duplicateSolver?.stats ?? {}),
-      duplicateCongestedPortSourceCount:
-        this.output?.report?.duplicatedPorts.length ?? 0,
-      duplicateCongestedPortCount: this.output?.duplicatedPortCount ?? 0,
-      duplicateCongestedPortFallbackToOriginal: Boolean(this.output?.error),
-      duplicateCongestedPortSkipped: Boolean(this.output?.skipped),
-      duplicateCongestedPortError: this.error ?? this.output?.error,
-    }
-  }
-}
-
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
@@ -923,17 +771,8 @@ export class TinyHypergraphPortPointPathingSolver extends BasePipelineSolver<HgP
     const tinyPipelineMaxIterations = getTinyHyperGraphPipelineMaxIterations(
       this.getTinyPipelineInput(),
     )
-    const duplicateRouteMaxIterations = Math.ceil(
-      2_000_000 * getEffortScale(this.inputProblem.effort),
-    )
-    const duplicatePrepassMaxIterations =
-      this.inputProblem.connections.length * duplicateRouteMaxIterations +
-      this.inputProblem.connections.length +
-      DUPLICATE_CONGESTED_PORT_PREPASS_OVERHEAD_ITERATIONS
     this.MAX_ITERATIONS =
-      duplicatePrepassMaxIterations +
-      tinyPipelineMaxIterations +
-      OUTER_PIPELINE_STAGE_OVERHEAD_ITERATIONS
+      tinyPipelineMaxIterations + OUTER_PIPELINE_STAGE_OVERHEAD_ITERATIONS
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
