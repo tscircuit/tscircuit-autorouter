@@ -52,10 +52,24 @@ jobs:
           committer: tscircuitbot <githubbot@tscircuit.com>
           author: tscircuitbot <githubbot@tscircuit.com>
 
-      - name: Enable auto-merge
+      - name: Merge version bump PR
         if: steps.create-pr.outputs.pull-request-number != ''
+        shell: bash
         run: |
-          gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --auto --squash --delete-branch
+          PULL_REQUEST_NUMBER="${{ steps.create-pr.outputs.pull-request-number }}"
+          MERGE_STATE="$(gh pr view "$PULL_REQUEST_NUMBER" --json mergeStateStatus --jq .mergeStateStatus)"
+
+          if [[ "$MERGE_STATE" == "CLEAN" ]]; then
+            echo "::warning title=Direct merge fallback used::PR #$PULL_REQUEST_NUMBER is already mergeable, so gh cannot enable auto-merge. Trying a direct squash merge."
+            {
+              echo "### Direct merge fallback used"
+              echo ""
+              echo "PR #$PULL_REQUEST_NUMBER had merge state \`$MERGE_STATE\`, so this workflow tried a direct squash merge instead of enabling auto-merge."
+            } >> "$GITHUB_STEP_SUMMARY"
+            gh pr merge "$PULL_REQUEST_NUMBER" --squash --delete-branch
+          else
+            gh pr merge "$PULL_REQUEST_NUMBER" --auto --squash --delete-branch
+          fi
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
 
