@@ -5,24 +5,6 @@ import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathi
 
 test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", () => {
   const solver = new TinyHypergraphPortPointPathingSolver(input as any)
-  const serializedSolvedRoutes = (solver as any).tinyPipelineSolver.inputProblem
-    .serializedHyperGraph.solvedRoutes
-
-  // expect(serializedSolvedRoutes).toEqual([
-  //   {
-  //     connection: {
-  //       connectionId: "bridge-repro",
-  //     },
-  //     path: [
-  //       { portId: "p0" },
-  //       { portId: "p1" },
-  //       { portId: "p2" },
-  //       { portId: "p3" },
-  //       { portId: "p4" },
-  //       { portId: "p5" },
-  //     ],
-  //   },
-  // ])
 
   solver.solve()
 
