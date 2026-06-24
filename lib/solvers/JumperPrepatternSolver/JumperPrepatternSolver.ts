@@ -144,7 +144,12 @@ export class JumperPrepatternSolver extends BaseSolver {
     definePipelineStep(
       "nodeSolver",
       RectDiffPipeline,
-      (solver) => [{ simpleRouteJson: solver.srjWithPointPairs as any }],
+      (solver) => [
+        {
+          simpleRouteJson: solver.srjWithPointPairs as any,
+          maxGapFillPasses: 4,
+        },
+      ],
       {
         onSolved: (solver) => {
           solver.capacityNodes = solver.nodeSolver?.getOutput().meshNodes ?? []

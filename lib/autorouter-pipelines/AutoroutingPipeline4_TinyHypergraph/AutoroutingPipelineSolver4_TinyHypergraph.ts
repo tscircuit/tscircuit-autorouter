@@ -192,7 +192,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     definePipelineStep(
       "nodeSolver",
       RectDiffPipeline,
-      (cms) => [{ simpleRouteJson: cms.srjWithPointPairs! as any }],
+      (cms) => [
+        { simpleRouteJson: cms.srjWithPointPairs! as any, maxGapFillPasses: 4 },
+      ],
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
