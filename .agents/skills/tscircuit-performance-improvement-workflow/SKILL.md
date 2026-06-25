@@ -1,22 +1,29 @@
 ---
 name: tscircuit-performance-improvement-workflow
-description: Iteratively improve the tscircuit autorouter's solve performance — lower p50 and p95 solve time on dataset01 while holding solve rate, average solve time, and DRC steady. Tracks ideas in idea.md, implements each in an isolated git worktree branched from origin/main via a subagent, benchmarks dataset01 using half the available CPUs, and logs every step in process.md.
+description: Iteratively improve the tscircuit autorouter's solve performance on dataset01 — primarily lowering p50 and p95 solve time, but treating any rise in solve rate (Completed %) as an outright win even at the cost of p50/p95, DRC, Avg Via, or average solve time. Tracks ideas in idea.md, implements each in an isolated git worktree branched from origin/main via a subagent, benchmarks dataset01 using half the available CPUs (serializing local benchmark runs, parallelizing only on Blacksmith CI), and logs every step in process.md.
 ---
 
 # tscircuit performance improvement workflow
 
 ## Goal
-Reduce the autorouter's **p50** and **p95** solve time on **dataset01**, while keeping ALL of these steady (no regression):
-- solve rate (number/percentage of samples solved)
-- average solve time
-- DRC (no new design-rule-check violations, no drop in DRC quality)
+Make the autorouter better on **dataset01**. The primary target is lowering **p50** and **p95** solve time. But there is one overriding rule that beats everything else:
 
-Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but regresses solve rate, avg, or DRC is NOT a win — discard it.
+> **Raising solve rate (`Completed %`) is ALWAYS a win, on its own.** Solving MORE samples is always good. Keep any change that increases `Completed %` — even if it does NOT lower p50/p95, and even if it pushes p50, p95, DRC (`Relaxed DRC Pass %`), `Avg Via`, or average solve time UP. "Completed % went up" always tips the decision to KEEP.
+
+The hold-steady constraints only apply **when `Completed %` is unchanged**. In that case you are doing a pure speed optimization, so keep a change only if **p50 ↓ AND p95 ↓** with no regression in:
+- solve rate (`Completed %`)
+- average solve time
+- `Avg Via`
+- DRC (`Relaxed DRC Pass %` — no new design-rule-check violations, no drop in DRC quality)
+
+Mixed / ambiguous trade-offs (e.g. `Completed %` flat, p50 down but p95 up) are a judgment call for the operator — log the numbers and reasoning in `process.md`. Discard a change only when nothing improved, or when there is a regression with no accompanying gain in `Completed %`.
 
 ## Conventions
 - Baseline first: always capture a baseline on dataset01 before changing any code.
 - dataset01 only: do not run other datasets unless explicitly instructed. dataset01 is already the benchmark default, but pass it explicitly (`--dataset dataset01`) so runs are unambiguous.
-- CPU budget: use floor(nproc/2) by default (min 1). Never use all CPUs unless explicitly instructed. The exact knob is the `--concurrency N` flag on `./benchmark.sh` (equivalently the `BENCHMARK_CONCURRENCY` env var). Its default is the full core count (`os.cpus().length`), so you MUST set it.
+- CPU budget: use floor(nproc/2) by default (min 1). Never use all CPUs unless explicitly instructed. The exact knob is the `--concurrency N` flag on `./benchmark.sh` (equivalently the `BENCHMARK_CONCURRENCY` env var). Its default is the full core count (`os.cpus().length`), so you MUST set it. This `--concurrency` is the worker-thread count *within a single run*; it is NOT about how many runs execute at once (see next bullet).
+- Serialize local benchmark runs: on the local machine, run only ONE `./benchmark.sh` process at a time. Ideas are implemented in parallel worktrees by subagents, but the benchmark *executions* must be serialized locally — queue them and run one after another. Two concurrent local runs would fight over the same cores and corrupt each other's timings (and overwrite the shared `benchmark-result.*` files in the repo root). `--concurrency` (= `$(( $(nproc)/2 ))`) still controls threads inside that single run.
+- Blacksmith CI is the exception: on Blacksmith cloud runners, benchmarks MAY run many-at-once in parallel because each run gets its own isolated cloud environment (and its own cores). So the subagent-per-idea fan-out can dispatch all the Blacksmith benchmark runs in parallel, but must still serialize any runs that happen on the local machine.
 - Branch from origin/main: every implementation worktree starts at origin/main unless instructed otherwise.
 - One idea → one git worktree → one subagent.
 
@@ -48,11 +55,11 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
 
    The run writes `benchmark-result.txt` and `benchmark-result.json` (and an HTML snapshot) to the repo root. Copy the P50 Time, P95 Time, Completed % (solve rate), and Relaxed DRC Pass % values from the printed table into `process.md`, and capture the per-sample `elapsedTimeMs` array from `benchmark-result.json` (used to derive the average — see "Benchmark command reference").
 
-2. **Idea backlog.** Create/update `idea.md` with ideas in state `tobedone`, each with a hypothesis (why it should lower p50/p95) and a risk (what it might regress).
+2. **Idea backlog.** Create/update `idea.md` with ideas in state `tobedone`, each with a hypothesis (why it should lower p50/p95 — or raise `Completed %`) and a risk (what it might regress).
 
 3. **Implement each `tobedone` idea via a subagent.** For each idea:
    - mark it `in-progress` in `idea.md`
-   - the subagent creates a git worktree branched from `origin/main`, implements the idea, and benchmarks dataset01 at the same CPU budget:
+   - the subagent creates a git worktree branched from `origin/main`, implements the idea, and benchmarks dataset01 at the same CPU budget. Run the benchmark on Blacksmith CI where multiple ideas' runs can proceed in parallel; if running locally, queue it so only one `./benchmark.sh` runs at a time (see Conventions):
 
      ```bash
      git fetch origin
@@ -65,14 +72,20 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
      ```
 
    - the subagent appends raw results (the table + the relevant `benchmark-result.json` figures) and intermediate process notes to `process.md`, and compares against the baseline.
-   - **Decision rule:** keep & mark `done` ONLY if p50 ↓ AND p95 ↓ AND solve-rate unchanged AND avg ~unchanged AND DRC not regressed. Otherwise mark `rejected` (with a reason) and discard the worktree:
+   - **Decision rule** (see "Goal" for the full statement):
+     1. **`Completed %` went UP → KEEP**, mark `done`. This overrides everything — keep it even if p50/p95/`Avg Via`/DRC/avg solve time got worse. Solving more samples always wins.
+     2. **`Completed %` unchanged → speed test:** keep & mark `done` only if **p50 ↓ AND p95 ↓** with no regression in solve rate, average solve time, `Avg Via`, or DRC.
+     3. **`Completed %` went DOWN, or nothing improved, or a regression with no completion gain → `rejected`** (with a reason).
+     4. **Mixed/ambiguous** (e.g. p50 ↓ but p95 ↑, `Completed %` flat) → operator judgment call; record the numbers and reasoning in `process.md`.
+
+     When marking `rejected`, discard the worktree:
 
      ```bash
      git worktree remove ../ar-<idea-slug> --force
      git branch -D perf/<idea-slug>
      ```
 
-4. **Report.** Summarize baseline-vs-best deltas in `process.md` (p50, p95, plus confirmation that solve rate, average, and DRC held steady).
+4. **Report.** Summarize baseline-vs-best deltas in `process.md`: `Completed %` change first (the headline — any gain is the win), then p50 and p95, plus `Avg Via`, average solve time, and DRC, noting for each kept change whether it was a solve-rate win or a steady-state speed win.
 
 ## Benchmark command reference
 
