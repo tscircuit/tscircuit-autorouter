@@ -303,9 +303,10 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     super()
     this.originalSrj = srj
     this.opts = { ...opts }
-    this.MAX_ITERATIONS = 100e6
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
+    // scale with effort so the outer cap never decapitates inner solvers
+    this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2

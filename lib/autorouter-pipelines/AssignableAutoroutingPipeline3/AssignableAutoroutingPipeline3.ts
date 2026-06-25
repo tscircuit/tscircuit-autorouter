@@ -457,11 +457,12 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     super()
     this.srj = srj
     this.opts = { ...opts }
-    this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
+    // scale with effort so the outer cap never decapitates inner solvers
+    this.MAX_ITERATIONS = 100e6 * this.effort
 
     // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
