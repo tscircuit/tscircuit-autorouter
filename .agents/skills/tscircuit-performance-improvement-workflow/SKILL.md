@@ -15,7 +15,7 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
 
 ## Conventions
 - Baseline first: always capture a baseline on dataset01 before changing any code.
-- dataset01 only: do not run other datasets unless explicitly instructed. dataset01 is already the benchmark default, but pass it explicitly so runs are unambiguous.
+- dataset01 only: do not run other datasets unless explicitly instructed. dataset01 is already the benchmark default, but pass it explicitly (`--dataset dataset01`) so runs are unambiguous.
 - CPU budget: use floor(nproc/2) by default (min 1). Never use all CPUs unless explicitly instructed. The exact knob is the `--concurrency N` flag on `./benchmark.sh` (equivalently the `BENCHMARK_CONCURRENCY` env var). Its default is the full core count (`os.cpus().length`), so you MUST set it.
 - Branch from origin/main: every implementation worktree starts at origin/main unless instructed otherwise.
 - One idea → one git worktree → one subagent.
@@ -43,7 +43,7 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
    git checkout -B perf-baseline origin/main
    bun install                                 # required: datasets are git deps
    CPUS=$(( $(nproc) / 2 )); [ "$CPUS" -lt 1 ] && CPUS=1
-   ./benchmark.sh --dataset 1 --concurrency "$CPUS"
+   ./benchmark.sh --dataset dataset01 --concurrency "$CPUS"
    ```
 
    The run writes `benchmark-result.txt` and `benchmark-result.json` (and an HTML snapshot) to the repo root. Copy the P50 Time, P95 Time, Completed % (solve rate), and Relaxed DRC Pass % values from the printed table into `process.md`, and capture the per-sample `elapsedTimeMs` array from `benchmark-result.json` (used to derive the average — see "Benchmark command reference").
@@ -61,7 +61,7 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
      bun install
      # ...implement the idea...
      CPUS=$(( $(nproc) / 2 )); [ "$CPUS" -lt 1 ] && CPUS=1
-     ./benchmark.sh --dataset 1 --concurrency "$CPUS"
+     ./benchmark.sh --dataset dataset01 --concurrency "$CPUS"
      ```
 
    - the subagent appends raw results (the table + the relevant `benchmark-result.json` figures) and intermediate process notes to `process.md`, and compares against the baseline.
@@ -78,12 +78,22 @@ Only p50 and p95 may move, and only downward. A change that lowers p50/p95 but r
 
 All commands are run from the repo root with Bun (this repo is Bun-only). The dataset packages are installed as git dependencies, so `bun install` must succeed before benchmarking.
 
-**Entry point.** `./benchmark.sh` is the canonical runner. It wraps `bun scripts/benchmark/index.ts` and, with no solver argument, benchmarks the default solver `AutoroutingPipelineSolver4`.
+**Entry point.** `./benchmark.sh` is the canonical runner. It wraps `bun scripts/benchmark/index.ts` and, with no solver argument, benchmarks the default solver `AutoroutingPipelineSolver4` (`DEFAULT_SOLVER_NAME` in `benchmark.sh`).
 
-**dataset01 only.** dataset01 is the default dataset, but pass it explicitly. Accepted aliases (from `scripts/benchmark/scenarios.ts`): `1`, `01`, `dataset1`, `dataset01`.
+Invocation shape:
+
+```
+./benchmark.sh [solver-name|all] [scenario-limit] --concurrency <n> --effort <n> --dataset <dataset01|zdwiel|srj05|srj11|srj12|srj13|srj14|srj15|srj16|srj18|srj19|srj20>
+```
+
+The first two positional args are an optional solver name (or `all`) and an optional scenario limit. For this workflow, leave the solver unset (defaults to `AutoroutingPipelineSolver4`) unless told otherwise.
+
+**Running via the PR `/benchmark` bot.** In a PR, comment `/benchmark ...`; the bot forwards everything after `/benchmark` directly to `./benchmark.sh`. So the dataset01 / half-CPU run is, e.g., `/benchmark --dataset dataset01 --concurrency <n>`. (Bot example for context: `/benchmark all 20 --dataset dataset01 --concurrency 8` runs all solvers, 20 scenarios, dataset01, 8 workers.)
+
+**dataset01 only.** Use the exact flag/value `--dataset dataset01`. dataset01 is also the default, and the runner additionally accepts the aliases `1`, `01`, `dataset1` (from `scripts/benchmark/scenarios.ts`), but prefer `dataset01`.
 
 ```bash
-./benchmark.sh --dataset 1 --concurrency "$CPUS"
+./benchmark.sh --dataset dataset01 --concurrency "$CPUS"
 ```
 
 To restrict to specific samples within dataset01 (1-based indices into dataset order): `--sample-numbers 1,2,3`. To cap the number of scenarios: `--scenario-limit N`. Do not pass these unless asked — the default runs the whole dataset.
@@ -92,11 +102,11 @@ To restrict to specific samples within dataset01 (1-based indices into dataset o
 - Flag: `--concurrency N` (or `--concurrency auto`, which resolves to the full core count).
 - Env var: `BENCHMARK_CONCURRENCY=N ./benchmark.sh ...`.
 - Default if unset: full core count (`os.cpus().length` in `scripts/benchmark/index.ts`; `getconf _NPROCESSORS_ONLN`/`nproc` in `benchmark.sh`).
-Set it to `floor(nproc/2)` (min 1):
+Set it to `floor(nproc/2)` (min 1) — i.e. `--concurrency $(( $(nproc) / 2 ))`:
 
 ```bash
 CPUS=$(( $(nproc) / 2 )); [ "$CPUS" -lt 1 ] && CPUS=1
-./benchmark.sh --dataset 1 --concurrency "$CPUS"
+./benchmark.sh --dataset dataset01 --concurrency "$CPUS"
 ```
 
 **Where the metrics are reported.** The run prints a results table to stdout and writes `benchmark-result.txt`, `benchmark-result.json`, and an HTML snapshot to the repo root. The stdout/`.txt` table columns are:
