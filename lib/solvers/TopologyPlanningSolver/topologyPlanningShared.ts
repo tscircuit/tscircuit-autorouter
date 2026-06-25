@@ -6,6 +6,7 @@ import {
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
+import RBush from "rbush"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import {
   createComponentObstacleSrj,
@@ -44,6 +45,18 @@ export interface ComponentTopologyBatchSolverParams {
 
 export interface ComponentTopologyBatchSolverOutput {
   componentMeshNodes: CapacityMeshNode[][]
+}
+
+interface ComponentRegionIndexItem {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  component: SerializedTopologyComponentInput
+}
+
+interface ComponentRegionIndex {
+  tree: RBush<ComponentRegionIndexItem>
 }
 
 /**
@@ -197,12 +210,11 @@ export function mergeMeshNodes({
 }): CapacityMeshNode[] {
   switch (mergeStrategy) {
     case "concat":
+      const componentRegionIndex = createComponentRegionIndex(components)
+
       return [
-        ...globalMeshNodes.filter(
-          (node) =>
-            !components.some((component) =>
-              isReplacementRegionNode({ node, component }),
-            ),
+        ...globalMeshNodes.filter((node) =>
+          shouldKeepGlobalMeshNode({ node, componentRegionIndex }),
         ),
         ...componentMeshNodes.flat(),
       ]
@@ -234,9 +246,14 @@ export function filterMeshNodesInsideComponentAreas({
 }): CapacityMeshNode[] {
   if (components.length === 0) return meshNodes
 
+  const componentRegionIndex = createComponentRegionIndex(components)
+
   return meshNodes.filter(
     (meshNode) =>
-      !components.some((component) =>
+      !getComponentsIntersectingMeshNode({
+        meshNode,
+        componentRegionIndex,
+      }).some((component) =>
         isMeshNodeFullyInsideObstacle({
           meshNode,
           obstacle: component.replacementObstacle,
@@ -273,16 +290,94 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
 }): GraphicsRect[] | undefined {
   if (!rects || components.length === 0) return rects
 
+  const componentRegionIndex = createComponentRegionIndex(components)
+
   return rects.filter(
     (rect) =>
       !isRectDiffNodeRect(rect) ||
-      !components.some((component) =>
+      !getComponentsIntersectingRect({
+        rect,
+        componentRegionIndex,
+      }).some((component) =>
         isRectFullyInsideObstacle({
           rect,
           obstacle: component.replacementObstacle,
         }),
       ),
   )
+}
+
+function createComponentRegionIndex(
+  components: SerializedTopologyComponentInput[],
+): ComponentRegionIndex {
+  const tree = new RBush<ComponentRegionIndexItem>()
+  const items = components.map((component) => {
+    const bounds = getBoundFromCenteredRect({
+      center: component.replacementObstacle.center,
+      width: component.replacementObstacle.width,
+      height: component.replacementObstacle.height,
+    })
+
+    return { ...bounds, component }
+  })
+  tree.load(items)
+  return { tree }
+}
+
+function getComponentsIntersectingMeshNode({
+  meshNode,
+  componentRegionIndex,
+}: {
+  meshNode: CapacityMeshNode
+  componentRegionIndex: ComponentRegionIndex
+}): SerializedTopologyComponentInput[] {
+  const bounds = getBoundFromCenteredRect({
+    center: meshNode.center,
+    width: meshNode.width,
+    height: meshNode.height,
+  })
+
+  return componentRegionIndex.tree
+    .search(bounds)
+    .map((item) => item.component)
+}
+
+function getComponentsIntersectingRect({
+  rect,
+  componentRegionIndex,
+}: {
+  rect: {
+    center?: { x: number; y: number }
+    width?: number
+    height?: number
+  }
+  componentRegionIndex: ComponentRegionIndex
+}): SerializedTopologyComponentInput[] {
+  if (!rect.center || rect.width === undefined || rect.height === undefined) {
+    return []
+  }
+  const bounds = getBoundFromCenteredRect({
+    center: rect.center,
+    width: rect.width,
+    height: rect.height,
+  })
+
+  return componentRegionIndex.tree
+    .search(bounds)
+    .map((item) => item.component)
+}
+
+function shouldKeepGlobalMeshNode({
+  node,
+  componentRegionIndex,
+}: {
+  node: CapacityMeshNode
+  componentRegionIndex: ComponentRegionIndex
+}): boolean {
+  return !getComponentsIntersectingMeshNode({
+    meshNode: node,
+    componentRegionIndex,
+  }).some((component) => isReplacementRegionNode({ node, component }))
 }
 
 /** Matches a global routing region against a detected component replacement obstacle. */
