@@ -10,6 +10,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
+  futureConnectionPenaltyCache: Map<string, number> = new Map()
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -133,12 +134,21 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionPenalty(node: Node, isVia: boolean) {
+    const cacheKey = `${node.x},${node.y},${node.z},${isVia ? 1 : 0}`
+    const cachedPenalty = this.futureConnectionPenaltyCache.get(cacheKey)
+    if (cachedPenalty !== undefined) {
+      return cachedPenalty
+    }
+
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
     const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
       const distToFuturePoint = distance(node, closestFuturePoint)
-      if (goalDist <= distToFuturePoint) return 0
+      if (goalDist <= distToFuturePoint) {
+        this.futureConnectionPenaltyCache.set(cacheKey, 0)
+        return 0
+      }
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
       const distRatio = distToFuturePoint / maxDist
       const maxPenalty = isVia
@@ -148,6 +158,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
       futureConnectionPenalty = maxPenalty * Math.exp(-distRatio * 5)
     }
+    this.futureConnectionPenaltyCache.set(cacheKey, futureConnectionPenalty)
     return futureConnectionPenalty
   }
 
