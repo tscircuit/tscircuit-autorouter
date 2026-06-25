@@ -15,13 +15,23 @@
 - Use Blacksmith only for benchmark runs unless the user explicitly asks to use
   Blacksmith for another validation task.
 
+## Fallback Logic
+
+> When a solver hits a state it can't explain, fix the root cause or throw. Do not add a fallback.
+
+Fallback logic is an anti-pattern here and a common mistake when extending the solvers. A fallback is any code that lets the pipeline keep running after something went wrong instead of surfacing it: catching a thrown error and continuing as if it succeeded, `?? []` / `|| default` on data that should always exist, "if strategy X fails, silently try Y", or marking a solve `solved` when it actually failed. Because the pipeline keeps going, the result isn't a crash you can debug — it's a silently wrong board.
+
+- **Don't**: `TinyHypergraphPortPointPathingSolver._step` catches the thrown error and calls `finishWithExistingSolverState`, which sets `solved = true; failed = false; error = null`. A `start regions not found` / `regions not found` error means region computation is broken upstream — fix why the region list is empty; do not add another branch that guesses around it.
+- **Do**: `assertDefined(startRegion, 'Could not find start region for connection "..."')` in `buildHyperGraph.ts` — fail loud, named, specific.
+- The "avoid throwing" note under Code Style applies to recoverable I/O at the edges, not to solver-internal invariants. A loud failure on bad input beats a plausible-looking wrong route.
+
 ## Code Style Guidelines
 
 - Use **TypeScript** with strict typing enabled
 - **Naming**: Use kebab-case for filenames, camelCase for variables/functions, PascalCase for classes/interfaces
 - **Imports**: Organize imports according to Biome rules (auto-organized when formatting)
 - **Components**: Create React components with proper type definitions
-- **Error handling**: Use try/catch blocks for error handling, avoid throwing errors in utility functions
+- **Error handling**: Use try/catch for recoverable I/O at the edges; do not swallow solver-internal errors. See **Fallback Logic** above — throw on unexpected/invalid solver state rather than adding a fallback.
 - **Formatting**: Use Biome for consistent formatting (2-space indentation, double quotes for JSX)
 - **Comments**: Add meaningful comments for complex logic, avoid unnecessary comments
 - **Export patterns**: Export classes/functions directly from their definition files
