@@ -108,7 +108,7 @@ const createSnapshotCardHtml = (
     <div><dt>Via</dt><dd>${escapeHtml(snapshot.viaCount)}</dd></div>
     <div><dt>Relaxed DRC</dt><dd>${snapshot.relaxedDrcPassed ? "passed" : "failed"}</dd></div>
   </dl>
-  <img src="${escapeHtml(snapshot.imageDataUrl)}" alt="${escapeHtml(snapshot.label)}" />
+  <div class="snapshot-image" role="img" aria-label="${escapeHtml(snapshot.label)}">${snapshot.imageSvg}</div>
 </section>`
 }
 
@@ -130,13 +130,14 @@ const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
     dl div { min-width: 0; }
     dt { font-size: 12px; color: #657184; }
     dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
-    img { display: block; width: 100%; max-width: 1024px; height: auto; border: 1px solid #e1e6ef; background: #fff; }
+    .snapshot-image { display: block; width: 100%; max-width: 1024px; border: 1px solid #e1e6ef; background: #fff; }
+    .snapshot-image svg { display: block; width: 100%; height: auto; }
   </style>
 </head>
 <body>
   <main>
     <h1>Benchmark Snapshots</h1>
-    <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as data URLs for offline viewing.</p>
+    <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as inline SVG for crisp offline viewing at any zoom.</p>
 `
 
 const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
@@ -980,7 +981,7 @@ const runBenchmarkTasks = async (
       }
       let result: WorkerResult = workerResult
       if (workerResult.benchmarkSnapshot) {
-        const { imageDataUrl, ...benchmarkSnapshot } =
+        const { imageSvg, ...benchmarkSnapshot } =
           workerResult.benchmarkSnapshot
         result = {
           ...workerResult,

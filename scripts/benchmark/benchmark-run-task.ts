@@ -1,4 +1,4 @@
-import { getPngBufferFromGraphicsObject } from "graphics-debug"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
@@ -361,12 +361,9 @@ const createBenchmarkSnapshot = async ({
   }
 
   const graphics = convertSrjToGraphicsObject(finalSrj)
-  const png = await getPngBufferFromGraphicsObject(graphics, {
+  const imageSvg = getSvgFromGraphicsObject(graphics, {
     backgroundColor: "white",
-    pngWidth: 1536,
-    pngHeight: 1536,
   })
-  const imageDataUrl = `data:image/png;base64,${Buffer.from(png).toString("base64")}`
 
   return {
     datasetName: task.datasetName,
@@ -378,7 +375,7 @@ const createBenchmarkSnapshot = async ({
     viaCount,
     relaxedDrcPassed,
     drcErrorCount,
-    imageDataUrl,
+    imageSvg,
   }
 }
 

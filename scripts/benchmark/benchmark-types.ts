@@ -21,7 +21,7 @@ export type BenchmarkSnapshot = {
 }
 
 export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
-  imageDataUrl: string
+  imageSvg: string
 }
 
 export type WorkerTaskMessage = {
