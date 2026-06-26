@@ -372,11 +372,12 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     super()
     this.srj = srj
     this.opts = { ...opts }
-    this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
+    // scale with effort so the outer cap never decapitates inner solvers
+    this.MAX_ITERATIONS = 100e6 * this.effort
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = srj.bounds.maxX - srj.bounds.minX
