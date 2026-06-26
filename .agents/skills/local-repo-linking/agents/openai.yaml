@@ -1,0 +1,4 @@
+interface:
+  display_name: "Local Repo Linking"
+  short_description: "Clone and link local dependency repos"
+  default_prompt: "Use $local-repo-linking to clone this dependency into .vdner and link it into the project."
