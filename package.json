@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "start": "cosmos",
-    "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
+    "build": "rustup target add wasm32-unknown-unknown && cargo build --manifest-path rust/port-point-pathing-wasm/Cargo.toml --target wasm32-unknown-unknown --release && cp rust/port-point-pathing-wasm/target/wasm32-unknown-unknown/release/port_point_pathing_wasm.wasm lib/solvers/PortPointPathingSolver/rust-wasm/port_point_pathing_wasm.wasm && tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap && cp lib/solvers/PortPointPathingSolver/rust-wasm/port_point_pathing_wasm.wasm dist/port_point_pathing_wasm.wasm",
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",

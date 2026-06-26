@@ -184,6 +184,7 @@ cosmos-export
 .yalc
 yalc.lock
 .vendor/
+.vender/
 **/.claude/settings.local.json
 
 # Generated test plans
@@ -191,9 +192,14 @@ yalc.lock
 hypergraph
 benchmark-result.txt
 benchmark-result.json
+benchmark-result.*
 benchmark-snapshots.html
 profile-solvers.json
 result-*
 tmp
 
 *.received.svg
+
+# Rust/WASM build outputs
+rust/**/target/
+lib/solvers/PortPointPathingSolver/rust-wasm/port_point_pathing_wasm.wasm

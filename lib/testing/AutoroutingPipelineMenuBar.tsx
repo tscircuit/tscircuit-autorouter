@@ -59,7 +59,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver8",
-    label: "Pipeline8 Preplaced Vias (Fab)",
+    label: "Pipeline8 Rust WASM Port Pathing",
   },
   {
     id: "AssignableAutoroutingPipeline1Solver",
