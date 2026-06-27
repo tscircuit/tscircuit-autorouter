@@ -1,6 +1,7 @@
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { createSideCenteredComponentPortPoints } from "lib/utils/createSideCenteredComponentPortPoints"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 
@@ -92,7 +93,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        childNodes.push({
+        const childNode: CapacityMeshNode = {
           ...node,
           capacityMeshNodeId: `${node.capacityMeshNodeId}__sub_${row}_${col}`,
           center: {
@@ -102,7 +103,17 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
           width: childWidth,
           height: childHeight,
           availableZ: [...node.availableZ],
-        })
+        }
+
+        childNodes.push(
+          node._componentPortPoints
+            ? {
+                ...childNode,
+                _componentPortPoints:
+                  createSideCenteredComponentPortPoints(childNode),
+              }
+            : childNode,
+        )
       }
     }
 

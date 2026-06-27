@@ -1,5 +1,16 @@
 export type CapacityMeshNodeId = string
 
+export type ComponentPortPointSide = "top" | "right" | "bottom" | "left"
+
+export interface ComponentPortPoint {
+  componentPortPointId: string
+  capacityMeshNodeId: CapacityMeshNodeId
+  side: ComponentPortPointSide
+  x: number
+  y: number
+  availableZ: number[]
+}
+
 export interface CapacityMesh {
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
@@ -32,6 +43,8 @@ export interface CapacityMeshNode {
   _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
   _isNarrowQfpPadGap?: boolean
   _soicRegionType?: "center" | "pad" | "pad-gap"
+
+  _componentPortPoints?: ComponentPortPoint[]
 
   _parent?: CapacityMeshNode
 }

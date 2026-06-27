@@ -7,6 +7,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { createSideCenteredComponentPortPoints } from "lib/utils/createSideCenteredComponentPortPoints"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
@@ -308,6 +309,14 @@ export class InitialBgaTopologySolver extends BaseSolver {
       ]),
     ]
     this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes)
+    this.meshNodes = this.meshNodes.map((meshNode) => {
+      if (meshNode._containsObstacle) return meshNode
+
+      return {
+        ...meshNode,
+        _componentPortPoints: createSideCenteredComponentPortPoints(meshNode),
+      }
+    })
 
     this.solved = true
   }
