@@ -32,6 +32,7 @@ type BenchmarkOptions = {
   sampleNumbers?: number[]
   concurrency: number
   effort?: number
+  minViaDiameter?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -326,6 +327,11 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--min-via-diameter") {
+      options.minViaDiameter = Number.parseFloat(args[i + 1] ?? "")
+      i += 1
+      continue
+    }
     if (arg === "--sample-timeout") {
       options.sampleTimeoutMs = parseDurationArg(
         args[i + 1] ?? "",
@@ -377,6 +383,13 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
     throw new Error("--effort must be a positive integer")
+  }
+
+  if (
+    options.minViaDiameter !== undefined &&
+    (!Number.isFinite(options.minViaDiameter) || options.minViaDiameter <= 0)
+  ) {
+    throw new Error("--min-via-diameter must be a positive number")
   }
 
   return options
@@ -1083,6 +1096,7 @@ const main = async () => {
     sampleNumbers,
     concurrency,
     effort,
+    minViaDiameter,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1107,6 +1121,7 @@ const main = async () => {
   const loadedScenarios = await loadScenarios(datasetName, {
     scenarioLimit,
     effort,
+    minViaDiameter,
   })
   const scenarios =
     sampleNumbers === undefined

@@ -235,6 +235,7 @@ export const loadScenarios = async (
   opts: {
     scenarioLimit?: number
     effort?: number
+    minViaDiameter?: number
   } = {},
 ) => {
   const applyEffortOverride = <T extends SimpleRouteJson>(
@@ -245,6 +246,16 @@ export const loadScenarios = async (
       ...scenario,
       effort: effortOverride,
     }) as T & { effort: number }
+
+  const applyMinViaDiameterOverride = <T extends SimpleRouteJson>(
+    scenario: T,
+    minViaDiameter: number,
+  ): T =>
+    ({
+      ...scenario,
+      minViaDiameter,
+      min_via_pad_diameter: minViaDiameter,
+    }) as T
 
   const datasetModule = await datasetLoaders[datasetName]()
   const scenarioKeyPattern = datasetScenarioKeyPatterns[datasetName]
@@ -257,9 +268,16 @@ export const loadScenarios = async (
       ([name, scenario]) =>
         [
           name,
-          opts.effort === undefined
-            ? scenario
-            : applyEffortOverride(scenario, opts.effort),
+          opts.minViaDiameter === undefined
+            ? opts.effort === undefined
+              ? scenario
+              : applyEffortOverride(scenario, opts.effort)
+            : applyMinViaDiameterOverride(
+                opts.effort === undefined
+                  ? scenario
+                  : applyEffortOverride(scenario, opts.effort),
+                opts.minViaDiameter,
+              ),
         ] as const,
     )
 

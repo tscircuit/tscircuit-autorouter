@@ -4,6 +4,7 @@ set -euo pipefail
 SOLVER_NAME=""
 SCENARIO_LIMIT=""
 EFFORT=""
+MIN_VIA_DIAMETER=""
 SAMPLE_TIMEOUT=""
 SAMPLE_NUMBERS=""
 INCLUDE_ASSIGNABLE=false
@@ -75,8 +76,8 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--min-via-diameter N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--min-via-diameter N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
@@ -84,6 +85,7 @@ Options:
   --scenario-limit N   Run only first N scenarios (same as second positional arg)
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
+  --min-via-diameter N Override scenario min via diameter for benchmark experiments
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
   --sample-numbers L   Run comma-separated 1-based sample numbers from the dataset order
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, or 20/srj20
@@ -173,6 +175,10 @@ while [ "$#" -gt 0 ]; do
       EFFORT="${2:-}"
       shift 2
       ;;
+    --min-via-diameter)
+      MIN_VIA_DIAMETER="${2:-}"
+      shift 2
+      ;;
     --sample-timeout)
       SAMPLE_TIMEOUT="${2:-}"
       shift 2
@@ -227,6 +233,10 @@ fi
 
 if [ -n "$EFFORT" ]; then
   CMD+=("--effort" "$EFFORT")
+fi
+
+if [ -n "$MIN_VIA_DIAMETER" ]; then
+  CMD+=("--min-via-diameter" "$MIN_VIA_DIAMETER")
 fi
 
 if [ -n "$SAMPLE_TIMEOUT" ]; then
