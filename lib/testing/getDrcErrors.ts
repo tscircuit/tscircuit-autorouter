@@ -2,7 +2,9 @@ import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
   checkSameNetViaSpacing,
+  checkViaTraceClearance,
 } from "@tscircuit/checks"
+import type { PcbVia, PcbViaTraceClearanceError } from "circuit-json"
 import { Point } from "graphics-debug"
 
 type CircuitJson = Parameters<typeof checkEachPcbTraceNonOverlapping>[0]
@@ -13,13 +15,28 @@ type SameNetViaError = ReturnType<typeof checkSameNetViaSpacing>[number]
 type DifferentNetViaError = ReturnType<
   typeof checkDifferentNetViaSpacing
 >[number]
-type ViaError = SameNetViaError | DifferentNetViaError
+type ViaError =
+  | SameNetViaError
+  | DifferentNetViaError
+  | PcbViaTraceClearanceError
 
 type DrcError = TraceError | ViaError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
 type LocationAwareDrcError = DrcError & { center: Point }
+
+const getPoint = (
+  point: unknown,
+): Point | null => {
+  if (!point || typeof point !== "object") return null
+  if (!("x" in point) || !("y" in point)) return null
+
+  const { x, y } = point
+  if (typeof x !== "number" || typeof y !== "number") return null
+
+  return { x, y }
+}
 
 export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
 export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
@@ -35,6 +52,21 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
 }
 
+const getPcbViasById = (
+  circuitJson: CircuitJson,
+): Map<string, PcbVia> => {
+  const vias = circuitJson.filter(
+    (element): element is PcbVia => element.type === "pcb_via",
+  )
+  const viasById = new Map<string, PcbVia>()
+
+  for (const via of vias) {
+    viasById.set(via.pcb_via_id, via)
+  }
+
+  return viasById
+}
+
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
@@ -43,10 +75,19 @@ export const getDrcErrors = (
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
-  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
+  const viasById = getPcbViasById(circuitJson)
+  const circuitJsonWithoutVias = circuitJson.filter(
+    (element) => element.type !== "pcb_via",
+  )
+
+  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJsonWithoutVias, {
+    minClearance: options.traceClearance,
+  })
+  const viaTraceErrors = checkViaTraceClearance(circuitJson, {
     minClearance: options.traceClearance,
   })
   const viaErrors = [
+    ...viaTraceErrors,
     ...checkSameNetViaSpacing(circuitJson, {
       minClearance: viaClearance,
     }),
@@ -55,30 +96,32 @@ export const getDrcErrors = (
     }),
   ]
 
-  const errors: DrcError[] = [...traceErrors, ...viaErrors]
+  const errors: DrcError[] = [
+    ...traceErrors,
+    ...viaErrors,
+  ]
 
-  const vias = circuitJson.filter(
-    (
-      element,
-    ): element is CircuitJsonElement & {
-      type: "pcb_via"
-      pcb_via_id: string
-      x: number
-      y: number
-    } => element.type === "pcb_via",
-  )
+  const errorsWithCenters: DrcErrorWithCenter[] = errors.map((error) => {
+    if ("center" in error) {
+      const center = getPoint(error.center)
+      if (center) {
+        return {
+          ...error,
+          center,
+        }
+      }
 
-  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
-
-  const errorsWithCenters = errors.map((error) => {
-    if ("center" in error && error.center) {
-      return error as DrcErrorWithCenter
+      const { center: _center, ...errorWithoutCenter } = error
+      return errorWithoutCenter
     }
 
     if ("pcb_center" in error && error.pcb_center) {
-      return {
-        ...error,
-        center: error.pcb_center,
+      const center = getPoint(error.pcb_center)
+      if (center) {
+        return {
+          ...error,
+          center,
+        }
       }
     }
 
@@ -127,8 +170,7 @@ export const getDrcErrors = (
     }
 
     return error
-  }) as DrcErrorWithCenter[]
-
+  })
   const locationAwareErrors = errorsWithCenters.filter(
     (error): error is LocationAwareDrcError => Boolean(error.center),
   )
