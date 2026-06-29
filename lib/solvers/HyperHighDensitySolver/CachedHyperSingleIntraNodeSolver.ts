@@ -28,7 +28,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const HYPER_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 2
+const HYPER_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 3
 
 export class CachedHyperSingleIntraNodeSolver
   extends HyperSingleIntraNodeSolver
@@ -108,6 +108,10 @@ export class CachedHyperSingleIntraNodeSolver
     const normalizedNodeData = {
       width: roundCoord(node.width),
       height: roundCoord(node.height),
+      center: {
+        x: roundCoord(center.x),
+        y: roundCoord(center.y),
+      },
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
       portPoints: normalizedPortPoints,
     }
@@ -123,14 +127,20 @@ export class CachedHyperSingleIntraNodeSolver
       }
     }
 
-    // 2. Normalize HyperParameters (select and sort relevant ones)
-    // Adjust this list based on which parameters actually affect this solver
+    const normalizedHyperParameters = Object.fromEntries(
+      Object.entries(this.constructorParams.hyperParameters ?? {})
+        .filter(([, value]) => value !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b)),
+    )
 
-    // 3. Create Key Data and Hash
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
       cacheSchemaVersion: HYPER_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
+      normalizedHyperParameters,
+      traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
+      viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
+      obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),
       // TODO connMap
     }
 

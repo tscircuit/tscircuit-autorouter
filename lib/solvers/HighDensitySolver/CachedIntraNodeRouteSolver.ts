@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -47,6 +47,7 @@ export class CachedIntraNodeRouteSolver
     | undefined
   initialUnsolvedConnections: {
     connectionName: string
+    rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
   }[]
 
@@ -95,8 +96,9 @@ export class CachedIntraNodeRouteSolver
   } {
     const center = this.nodeWithPortPoints.center
     const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, points }) => ({
+      ({ connectionName, rootConnectionName, points }) => ({
         connectionName,
+        rootConnectionName,
         points: points.map((point) => ({
           connectionName,
           x: roundCoord(point.x - center.x),
@@ -105,6 +107,28 @@ export class CachedIntraNodeRouteSolver
         })),
       }),
     )
+    const normalizedPortPoints = [...this.nodeWithPortPoints.portPoints]
+      .sort((a, b) => {
+        if (a.connectionName !== b.connectionName) {
+          return a.connectionName.localeCompare(b.connectionName)
+        }
+        if ((a.portPointId ?? "") !== (b.portPointId ?? "")) {
+          return (a.portPointId ?? "").localeCompare(b.portPointId ?? "")
+        }
+        if (a.x !== b.x) return a.x - b.x
+        if (a.y !== b.y) return a.y - b.y
+        return (a.z ?? 0) - (b.z ?? 0)
+      })
+      .map((portPoint) => ({
+        connectionName: portPoint.connectionName,
+        rootConnectionName: portPoint.rootConnectionName,
+        portPointId: portPoint.portPointId,
+        prevPortPointId: portPoint.prevPortPointId,
+        nextPortPointId: portPoint.nextPortPointId,
+        x: roundCoord(portPoint.x - center.x),
+        y: roundCoord(portPoint.y - center.y),
+        z: portPoint.z ?? 0,
+      }))
 
     const normalizedHyperParameters = Object.fromEntries(
       Object.entries(this.hyperParameters ?? {})
@@ -135,6 +159,7 @@ export class CachedIntraNodeRouteSolver
         availableZ: this.nodeWithPortPoints.availableZ
           ? [...this.nodeWithPortPoints.availableZ].sort()
           : undefined,
+        portPoints: normalizedPortPoints,
       },
       normalizedConnections,
       normalizedHyperParameters,
