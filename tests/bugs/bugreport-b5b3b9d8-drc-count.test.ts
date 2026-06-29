@@ -46,10 +46,12 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     return acc
   }, {})
 
-  expect(errors).toHaveLength(9)
-  expect(locationAwareErrors).toHaveLength(9)
+  expect(errors).toHaveLength(17)
+  expect(locationAwareErrors).toHaveLength(17)
   expect(errorCountByType).toEqual({
     pcb_trace_error: 8,
+    pcb_via_trace_clearance_error: 7,
+    pcb_pad_trace_clearance_error: 1,
     pcb_via_clearance_error: 1,
   })
 })
