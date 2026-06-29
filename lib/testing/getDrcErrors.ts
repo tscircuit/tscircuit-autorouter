@@ -1,21 +1,36 @@
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
+  checkPadTraceClearance,
   checkSameNetViaSpacing,
+  checkViaTraceClearance,
 } from "@tscircuit/checks"
+import type {
+  AnyCircuitElement,
+  PcbPadTraceClearanceError,
+  PcbTraceError,
+  PcbViaClearanceError,
+  PcbViaTraceClearanceError,
+} from "circuit-json"
+import {
+  type ConnectivityMap,
+  getFullConnectivityMapFromCircuitJson,
+} from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
 
-type CircuitJson = Parameters<typeof checkEachPcbTraceNonOverlapping>[0]
+type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
+type PcbViaWithTraceId = CircuitJsonElement & {
+  type: "pcb_via"
+  pcb_via_id: string
+  pcb_trace_id: string
+}
 
-type TraceError = ReturnType<typeof checkEachPcbTraceNonOverlapping>[number]
-type SameNetViaError = ReturnType<typeof checkSameNetViaSpacing>[number]
-type DifferentNetViaError = ReturnType<
-  typeof checkDifferentNetViaSpacing
->[number]
-type ViaError = SameNetViaError | DifferentNetViaError
-
-type DrcError = TraceError | ViaError
+type DrcError =
+  | PcbTraceError
+  | PcbViaTraceClearanceError
+  | PcbPadTraceClearanceError
+  | PcbViaClearanceError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -35,27 +50,59 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
 }
 
+const createDrcConnectivityMap = (
+  circuitJson: CircuitJson,
+): ConnectivityMap => {
+  const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+  const viaTraceConnections = circuitJson
+    .filter(
+      (element): element is PcbViaWithTraceId =>
+        element.type === "pcb_via" && typeof element.pcb_trace_id === "string",
+    )
+    .map((via) => [via.pcb_via_id, via.pcb_trace_id])
+
+  connMap.addConnections(viaTraceConnections)
+  return connMap
+}
+
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
+  const connMap = createDrcConnectivityMap(circuitJson)
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
+    connMap,
+    minClearance: options.traceClearance,
+  })
+  const viaTraceErrors = checkViaTraceClearance(circuitJson, {
+    connMap,
+    minClearance: options.traceClearance,
+  })
+  const padTraceErrors = checkPadTraceClearance(circuitJson, {
+    connMap,
     minClearance: options.traceClearance,
   })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
+      connMap,
       minClearance: viaClearance,
     }),
     ...checkDifferentNetViaSpacing(circuitJson, {
+      connMap,
       minClearance: viaClearance,
     }),
   ]
 
-  const errors: DrcError[] = [...traceErrors, ...viaErrors]
+  const errors: DrcError[] = [
+    ...traceErrors,
+    ...viaTraceErrors,
+    ...padTraceErrors,
+    ...viaErrors,
+  ]
 
   const vias = circuitJson.filter(
     (
