@@ -25,6 +25,21 @@ import {
 } from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 
+export type TinyHypergraphSectionMaskStrategy =
+  | { kind: "empty" }
+  | { kind: "automatic" }
+  | {
+      kind: "custom"
+      createSectionMask: TinyHyperGraphSectionPipelineInput["createSectionMask"]
+    }
+
+export interface TinyHypergraphPortPointPathingSolverOptions {
+  solveGraphOptions?: TinyHyperGraphSolverOptions
+  sectionSolverOptions?: TinyHyperGraphSectionSolverOptions
+  sectionMaskStrategy?: TinyHypergraphSectionMaskStrategy
+  sectionSearchConfig?: TinyHyperGraphSectionPipelineInput["sectionSearchConfig"]
+}
+
 type RouteMetadata = {
   connectionId: string
   mutuallyConnectedNetworkId?: string
@@ -139,6 +154,7 @@ const getTinyHyperGraphSolveGraphOptions = (
 const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  options: TinyHyperGraphSectionSolverOptions = {},
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
@@ -147,6 +163,7 @@ const getTinyHyperGraphSectionSolverOptions = (
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
+    ...options,
   }
 }
 
@@ -154,18 +171,37 @@ const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
   minViaPadDiameter?: number,
+  options: TinyHypergraphPortPointPathingSolverOptions = {},
 ): TinyHyperGraphSectionPipelineInput => ({
   serializedHyperGraph,
-  createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
-  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
-    effort,
-    minViaPadDiameter,
-  ),
+  ...getTinyHyperGraphSectionMaskInput(options.sectionMaskStrategy),
+  solveGraphOptions: {
+    ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+    ...options.solveGraphOptions,
+  },
   sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
     effort,
     minViaPadDiameter,
+    options.sectionSolverOptions,
   ),
+  sectionSearchConfig: options.sectionSearchConfig,
 })
+
+const getTinyHyperGraphSectionMaskInput = (
+  sectionMaskStrategy: TinyHypergraphSectionMaskStrategy = { kind: "empty" },
+): Pick<TinyHyperGraphSectionPipelineInput, "createSectionMask"> => {
+  if (sectionMaskStrategy.kind === "automatic") {
+    return {}
+  }
+
+  if (sectionMaskStrategy.kind === "custom") {
+    return { createSectionMask: sectionMaskStrategy.createSectionMask }
+  }
+
+  return {
+    createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
+  }
+}
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,
@@ -737,7 +773,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams,
+    private options: TinyHypergraphPortPointPathingSolverOptions = {},
+  ) {
     super()
     const serializedGraph = buildSerializedTinyGraph(params)
     const shouldRunDuplicateCongestedPortPrepass =
@@ -785,6 +824,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
+      this.options,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput)
@@ -1009,7 +1049,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   tryFinalAcceptance() {}
 
   getConstructorParams() {
-    return [this.params] as const
+    return [this.params, this.options] as const
   }
 
   visualize(): GraphicsObject {

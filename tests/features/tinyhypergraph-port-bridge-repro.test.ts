@@ -1,7 +1,25 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import input from "../../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json"
+import { HyperTinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/HyperTinyHypergraphPortPointPathingSolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+
+test("HyperTinyHypergraphPortPointPathingSolver solves a tiny graph variant", () => {
+  const solver = new HyperTinyHypergraphPortPointPathingSolver({
+    variants: [
+      {
+        name: "bridge-repro",
+        tinyParams: input as any,
+      },
+    ],
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.stats.winningTinyHypergraphVariant).toBe("bridge-repro")
+  expect(solver.getOutput().nodesWithPortPoints.length).toBeGreaterThan(0)
+})
 
 test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", () => {
   const solver = new TinyHypergraphPortPointPathingSolver(input as any)

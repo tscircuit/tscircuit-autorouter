@@ -8,7 +8,8 @@ import { CacheProvider } from "lib/cache/types"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
+import { HyperTinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/HyperTinyHypergraphPortPointPathingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -62,6 +63,7 @@ interface CapacityMeshSolverOptions {
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
+  useHyperTinyPortPointPathing?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -116,7 +118,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
+  portPointPathingSolver?: HyperTinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
@@ -254,22 +256,27 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      TinyHypergraphPortPointPathingSolver,
+      HyperTinyHypergraphPortPointPathingSolver,
       (cms) => {
-        const sharedEdgeSegments =
+        const baselineSharedEdgeSegments =
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
-        const { graph, connections } = buildHyperGraph({
-          capacityMeshNodes: cms.capacityNodes!,
-          layerCount: cms.srj.layerCount,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
-          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-        })
+        const availableSharedEdgeSegments =
+          cms.availableSegmentPointSolver!.getOutput()
 
-        return [
-          {
+        const buildTinyParams = (
+          segmentPortPoints: typeof baselineSharedEdgeSegments,
+        ): HgPortPointPathingSolverParams => {
+          const { graph, connections } = buildHyperGraph({
+            capacityMeshNodes: cms.capacityNodes!,
+            layerCount: cms.srj.layerCount,
+            segmentPortPoints: segmentPortPoints.flatMap(
+              (seg) => seg.portPoints,
+            ),
+            simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          })
+
+          return {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
@@ -299,6 +306,26 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
               GREEDY_MULTIPLIER: 0.7,
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
+          }
+        }
+
+        const variants = [
+          {
+            name: "baseline-cramped-ports",
+            tinyParams: buildTinyParams(baselineSharedEdgeSegments),
+          },
+        ]
+
+        if (cms.opts.useHyperTinyPortPointPathing) {
+          variants.push({
+            name: "available-segment-ports",
+            tinyParams: buildTinyParams(availableSharedEdgeSegments),
+          })
+        }
+
+        return [
+          {
+            variants,
           },
         ]
       },
