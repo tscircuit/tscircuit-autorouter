@@ -1,17 +1,29 @@
-import {
-  doBoundsOverlap,
-  getBoundFromCenteredRect,
-} from "@tscircuit/math-utils"
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import { getObstacleAvailableZ } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 export type RemoveMeshNodeOverlappingSolverInput = {
   meshNodes: CapacityMeshNode[]
   obstacles: Obstacle[]
   layerCount: number
+}
+
+function doBoundsHavePositiveAreaOverlap(
+  firstBounds: Bounds,
+  secondBounds: Bounds,
+): boolean {
+  const overlapWidth =
+    Math.min(firstBounds.maxX, secondBounds.maxX) -
+    Math.max(firstBounds.minX, secondBounds.minX)
+  const overlapHeight =
+    Math.min(firstBounds.maxY, secondBounds.maxY) -
+    Math.max(firstBounds.minY, secondBounds.minY)
+
+  return overlapWidth > 1e-9 && overlapHeight > 1e-9
 }
 
 export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
@@ -38,8 +50,9 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
     }
 
     const obstacle: Obstacle = this.obstacleQueue[this.obstacleQueueIndex]!
-    const obstacleAvailableZ: number[] = obstacle.layers.map((layerName) =>
-      mapLayerNameToZ(layerName, this.inputProblem.layerCount),
+    const obstacleAvailableZ: number[] = getObstacleAvailableZ(
+      obstacle,
+      this.inputProblem.layerCount,
     )
     const nextMeshNodes: CapacityMeshNode[] = []
 
@@ -58,7 +71,7 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
         continue
       }
 
-      const overlapsObstacle: boolean = doBoundsOverlap(
+      const overlapsObstacle: boolean = doBoundsHavePositiveAreaOverlap(
         getBoundFromCenteredRect(node),
         getBoundFromCenteredRect(obstacle),
       )

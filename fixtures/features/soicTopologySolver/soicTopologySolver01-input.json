@@ -1,0 +1,104 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.12,
+  "minViaPadDiameter": 0.32,
+  "defaultObstacleMargin": 0.08,
+  "bounds": {
+    "minX": -2.4,
+    "maxX": 2.4,
+    "minY": -2.4,
+    "maxY": 2.4
+  },
+  "obstacles": [
+    {
+      "obstacleId": "soic8_pin_1",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -1, "y": -1.2 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_1", "net_1"]
+    },
+    {
+      "obstacleId": "soic8_pin_2",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -1, "y": -0.4 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_2", "net_2"]
+    },
+    {
+      "obstacleId": "soic8_pin_3",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -1, "y": 0.4 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_3", "net_3"]
+    },
+    {
+      "obstacleId": "soic8_pin_4",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -1, "y": 1.2 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_4", "net_4"]
+    },
+    {
+      "obstacleId": "soic8_pin_5",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": -1.2 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_5", "net_5"]
+    },
+    {
+      "obstacleId": "soic8_pin_6",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": -0.4 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_6", "net_6"]
+    },
+    {
+      "obstacleId": "soic8_pin_7",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": 0.4 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_7", "net_7"]
+    },
+    {
+      "obstacleId": "soic8_pin_8",
+      "componentId": "U_SOIC8",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": 1.2 },
+      "width": 0.32,
+      "height": 0.48,
+      "connectedTo": ["U_SOIC8_8", "net_8"]
+    },
+    {
+      "obstacleId": "under_soic_top_obstacle",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": 0 },
+      "width": 0.52,
+      "height": 0.52,
+      "connectedTo": ["foreign_net"]
+    }
+  ],
+  "connections": []
+}

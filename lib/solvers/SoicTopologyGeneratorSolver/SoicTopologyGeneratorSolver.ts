@@ -1,6 +1,19 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
+import {
+  doBoundsOverlap,
+  getBoundFromCenteredRect,
+  getBoundingBox,
+} from "@tscircuit/math-utils"
 import type { Bounds } from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
+import {
+  BasePipelineSolver,
+  BaseSolver,
+  definePipelineStep,
+} from "@tscircuit/solver-utils"
+import type { PipelineStep } from "@tscircuit/solver-utils"
+import type { GraphicsObject } from "graphics-debug"
+import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
+import { MergeMeshNodes } from "lib/solvers/BgaTopologyGeneratorSolver/MergeMeshNodes"
+import { RemoveMeshNodeOverlappingWithUnmarkedObstacle } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
 import {
   clusterAxisValues,
   getLayerRange,
@@ -11,6 +24,7 @@ import {
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -39,6 +53,15 @@ export interface SoicTopologyGeneratorSolverOutput
   extends TopologyGeneratorSolverOutput {
   /** Routing regions derived from the SOIC pad rows/columns. These are not obstacle rectangles. */
   routingRegions: CapacityMeshNode[]
+}
+
+export interface InitialSoicTopologySolverInput {
+  srj: SoicTopologyGeneratorSolverParams["inputSrj"]
+  componentBounds: Bounds
+  componentId: string
+  markedComponentObstacles: Obstacle[]
+  viaDiameter?: number
+  obstacleMargin?: number
 }
 
 function createRectRegion(bounds: Bounds): RectRegion {
@@ -279,66 +302,69 @@ function createGapRegionsForSide({
   return regions
 }
 
-/**
- * Builds a fixed SOIC topology: a central body-gap region plus the routable
- * regions between adjacent pads on the two populated sides.
- */
-export class SoicTopologyGeneratorSolver extends BaseSolver {
-  static readonly componentKind = "soic"
-
+export class InitialSoicTopologySolver extends BaseSolver {
   private output: SoicTopologyGeneratorSolverOutput | null = null
 
-  constructor(public readonly inputProblem: SoicTopologyGeneratorSolverParams) {
+  constructor(public readonly inputProblem: InitialSoicTopologySolverInput) {
     super()
   }
 
-  override getConstructorParams() {
+  override getConstructorParams(): readonly [InitialSoicTopologySolverInput] {
     return [this.inputProblem] as const
   }
 
-  override _step() {
+  override _step(): void {
     if (this.output) {
       this.solved = true
       return
     }
 
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
+    const { srj, componentBounds, componentId, markedComponentObstacles } =
+      this.inputProblem
+    const { layerCount } = srj
     const availableZ = getLayerRange(layerCount)
-    const topologyObstacles = obstacles.filter(
-      (obstacle) => obstacle.componentId === componentId,
-    )
-    const soicObstacles =
-      topologyObstacles.length > 0 ? topologyObstacles : obstacles
-    const orientation = getSoicOrientation(soicObstacles)
+
+    if (markedComponentObstacles.length === 0) {
+      throw new Error(
+        `InitialSoicTopologySolver: component "${componentId}" has no marked SOIC pad obstacles`,
+      )
+    }
+
+    const orientation = getSoicOrientation(markedComponentObstacles)
     const sideGroups = groupSoicPads({
-      obstacles: soicObstacles,
+      obstacles: markedComponentObstacles,
       orientation,
     })
+    const activeSides: SoicSide[] =
+      orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
+
+    for (const side of activeSides) {
+      if (sideGroups[side].length === 0) {
+        throw new Error(
+          `InitialSoicTopologySolver: component "${componentId}" missing pads on ${side} side`,
+        )
+      }
+    }
+
     const centralBounds = getInnerSoicBounds({
-      bounds,
+      bounds: componentBounds,
       orientation,
       sideGroups,
     })
     const nodeScopeId = componentId
     const viaDiameter =
-      this.inputProblem.viaDiameter ??
-      getViaDimensions(this.inputProblem.inputSrj).padDiameter
+      this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
     const obstacleMargin =
-      this.inputProblem.obstacleMargin ??
-      this.inputProblem.inputSrj.defaultObstacleMargin ??
-      0.15
+      this.inputProblem.obstacleMargin ?? srj.defaultObstacleMargin ?? 0.15
     const multiLayerThreshold = (viaDiameter + obstacleMargin) * 2
-    const activeSides: SoicSide[] =
-      orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(soicObstacles),
+      ...getPadRegions(markedComponentObstacles),
       ...activeSides.flatMap((side) =>
         createGapRegionsForSide({
           side,
           sideObstacles: sideGroups[side],
-          bounds,
+          bounds: componentBounds,
           centralBounds,
         }),
       ),
@@ -374,10 +400,183 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
 
   getOutput(): SoicTopologyGeneratorSolverOutput {
     if (!this.output) {
-      throw new Error("SoicTopologyGeneratorSolver has not solved yet")
+      throw new Error("InitialSoicTopologySolver has not solved yet")
     }
 
     return this.output
+  }
+}
+
+/**
+ * Builds SOIC topology in the same staged shape as BGA: create SOIC-local
+ * regions, remove layers blocked by foreign obstacles under the component,
+ * fill disconnected obstacle edges, then merge full-layer mesh nodes.
+ */
+export class SoicTopologyGeneratorSolver extends BasePipelineSolver<SoicTopologyGeneratorSolverParams> {
+  static readonly componentKind = "soic"
+
+  initialTopologySolver!: InitialSoicTopologySolver
+  removeMeshNodeOverlappingWithUnmarkedObstacle!: RemoveMeshNodeOverlappingWithUnmarkedObstacle
+  gapfillDueToNodeRemoval!: GapFill
+  mergeMeshNodes!: MergeMeshNodes
+  markedComponentObstacles: Obstacle[] = []
+  unmarkedComponentObstacles: Obstacle[] = []
+
+  override pipelineDef: PipelineStep<BaseSolver>[] = [
+    definePipelineStep(
+      "initialTopologySolver",
+      InitialSoicTopologySolver,
+      (soicTopologyGeneratorSolver: SoicTopologyGeneratorSolver) => [
+        {
+          srj: soicTopologyGeneratorSolver.inputProblem.inputSrj,
+          componentBounds:
+            soicTopologyGeneratorSolver.inputProblem.detectedComponent.bounds,
+          componentId:
+            soicTopologyGeneratorSolver.inputProblem.detectedComponent
+              .componentId,
+          markedComponentObstacles:
+            soicTopologyGeneratorSolver.markedComponentObstacles,
+          viaDiameter: soicTopologyGeneratorSolver.inputProblem.viaDiameter,
+          obstacleMargin:
+            soicTopologyGeneratorSolver.inputProblem.obstacleMargin,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "removeMeshNodeOverlappingWithUnmarkedObstacle",
+      RemoveMeshNodeOverlappingWithUnmarkedObstacle,
+      (soicTopologyGeneratorSolver: SoicTopologyGeneratorSolver) => [
+        {
+          meshNodes:
+            soicTopologyGeneratorSolver.initialTopologySolver.getOutput()
+              .routingRegions,
+          obstacles: soicTopologyGeneratorSolver.unmarkedComponentObstacles,
+          layerCount:
+            soicTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "gapfillDueToNodeRemoval",
+      GapFill,
+      (soicTopologyGeneratorSolver: SoicTopologyGeneratorSolver) => [
+        {
+          meshNodes:
+            soicTopologyGeneratorSolver.removeMeshNodeOverlappingWithUnmarkedObstacle.getOutput(),
+          unmarkedComponentObstacles:
+            soicTopologyGeneratorSolver.unmarkedComponentObstacles,
+          layerCount:
+            soicTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "mergeMeshNodes",
+      MergeMeshNodes,
+      (soicTopologyGeneratorSolver: SoicTopologyGeneratorSolver) => [
+        {
+          meshNodes:
+            soicTopologyGeneratorSolver.gapfillDueToNodeRemoval.getOutput(),
+          layerCount:
+            soicTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
+        },
+      ],
+    ),
+  ]
+
+  constructor(public readonly inputProblem: SoicTopologyGeneratorSolverParams) {
+    super(inputProblem)
+  }
+
+  override _setup(): void {
+    const componentBounds = this.inputProblem.detectedComponent.bounds
+    const componentId = this.inputProblem.detectedComponent.componentId
+    const markedComponentObstacles: Obstacle[] = []
+    const unmarkedComponentObstacles: Obstacle[] = []
+
+    for (const obstacle of this.inputProblem.inputSrj.obstacles) {
+      const obstacleBounds = getBoundFromCenteredRect(obstacle)
+
+      if (!doBoundsOverlap(componentBounds, obstacleBounds)) {
+        continue
+      }
+
+      if (obstacle.componentId === componentId) {
+        markedComponentObstacles.push(obstacle)
+        continue
+      }
+
+      unmarkedComponentObstacles.push(obstacle)
+    }
+
+    this.markedComponentObstacles = markedComponentObstacles
+    this.unmarkedComponentObstacles = unmarkedComponentObstacles
+  }
+
+  override getConstructorParams(): readonly [
+    SoicTopologyGeneratorSolverParams,
+  ] {
+    return [this.inputProblem] as const
+  }
+
+  override getOutput(): SoicTopologyGeneratorSolverOutput {
+    if (!this.mergeMeshNodes) {
+      throw new Error("SoicTopologyGeneratorSolver has not solved yet")
+    }
+
+    return {
+      routingRegions: this.mergeMeshNodes.getOutput(),
+    }
+  }
+
+  override initialVisualize(): GraphicsObject | null {
+    const componentBounds = this.inputProblem.detectedComponent.bounds
+
+    return {
+      rects: [
+        {
+          center: {
+            x: (componentBounds.minX + componentBounds.maxX) / 2,
+            y: (componentBounds.minY + componentBounds.maxY) / 2,
+          },
+          width: componentBounds.maxX - componentBounds.minX,
+          height: componentBounds.maxY - componentBounds.minY,
+          fill: "rgba(0,0,0,0)",
+          stroke: "rgba(30,30,30,0.65)",
+          label: `soic ${this.inputProblem.detectedComponent.componentId}`,
+        },
+        ...this.markedComponentObstacles.map((obstacle: Obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,0,0,0.18)",
+          stroke: "rgba(255,0,0,0.52)",
+          label: `pad ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+        ...this.unmarkedComponentObstacles.map((obstacle: Obstacle) => ({
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          fill: "rgba(255,140,0,0.14)",
+          stroke: "rgba(255,140,0,0.42)",
+          label: `foreign ${obstacle.obstacleId ?? "obstacle"}`,
+        })),
+      ],
+    }
+  }
+
+  override finalVisualize(): GraphicsObject | null {
+    return {
+      rects: this.getOutput().routingRegions.map((node: CapacityMeshNode) => ({
+        ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+        fill: node._containsObstacle
+          ? "rgba(255,0,0,0.16)"
+          : "rgba(0,120,255,0.12)",
+        stroke: node._containsObstacle
+          ? "rgba(255,0,0,0.36)"
+          : "rgba(0,120,255,0.42)",
+      })),
+    }
   }
 }
 
