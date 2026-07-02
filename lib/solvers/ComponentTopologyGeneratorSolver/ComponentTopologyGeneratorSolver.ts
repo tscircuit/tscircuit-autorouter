@@ -16,6 +16,8 @@ import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 export interface ComponentTopologyGeneratorSolverParams {
   detectedComponents: DetectedComponent[]
   inputSrj: SimpleRouteJson
+  viaDiameter?: number
+  obstacleMargin?: number
 }
 
 export type ComponentTopologyGeneratorSolverOutput = CapacityMeshNode[]
@@ -155,6 +157,8 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
     this.activeTopologyGenerator = TopologyGenerator.create({
       inputSrj: this.inputProblem.inputSrj,
       detectedComponent,
+      viaDiameter: this.inputProblem.viaDiameter,
+      obstacleMargin: this.inputProblem.obstacleMargin,
     })
   }
 

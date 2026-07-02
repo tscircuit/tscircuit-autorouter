@@ -1,4 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { doBoundsOverlap } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -165,16 +166,31 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
-function isGlobalMeshNodeInsideDetectedComponent(
+function isGlobalMeshNodeOverlappingDetectedComponent(
   node: CapacityMeshNode,
   detectedComponents: DetectedComponent[],
 ) {
-  return detectedComponents.some(
-    (detectedComponent) =>
-      node.center.x - node.width / 2 >= detectedComponent.bounds.minX &&
-      node.center.x + node.width / 2 <= detectedComponent.bounds.maxX &&
-      node.center.y - node.height / 2 >= detectedComponent.bounds.minY &&
-      node.center.y + node.height / 2 <= detectedComponent.bounds.maxY,
+  const nodeBounds = {
+    minX: node.center.x - node.width / 2,
+    maxX: node.center.x + node.width / 2,
+    minY: node.center.y - node.height / 2,
+    maxY: node.center.y + node.height / 2,
+  }
+
+  return detectedComponents.some((detectedComponent) =>
+    doBoundsOverlap(nodeBounds, detectedComponent.bounds),
+  )
+}
+
+function isGlobalComponentTargetNode(
+  node: CapacityMeshNode,
+  detectedComponents: DetectedComponent[],
+) {
+  return (
+    node._containsTarget === true &&
+    node._containsObstacle === true &&
+    node.availableZ.length > 1 &&
+    isGlobalMeshNodeOverlappingDetectedComponent(node, detectedComponents)
   )
 }
 
@@ -278,6 +294,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         {
           detectedComponents: cms.componentDetectionSolver!.getOutput(),
           inputSrj: cms.srj,
+          viaDiameter: cms.viaDiameter,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
       ],
       {
@@ -339,10 +357,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           ).filter(
             (node) =>
               !detectedComponents ||
-              !isGlobalMeshNodeInsideDetectedComponent(
-                node,
-                detectedComponents,
-              ),
+              !isGlobalComponentTargetNode(node, detectedComponents),
           )
           const componentMeshNodes =
             cms.componentTopologyGeneratorSolver?.getOutput() ?? []

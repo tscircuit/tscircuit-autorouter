@@ -380,7 +380,7 @@ test("component detection does not require a fully populated large grid", () => 
 })
 
 test("topology planning creates BGA component mesh nodes for larger components", () => {
-  const inputSrj = createSrj(
+  const inputSrj: SimpleRouteJson = createSrj(
     createGridPads({ componentId: "U_3X4", rows: 3, columns: 4 }),
   )
   const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
@@ -393,8 +393,38 @@ test("topology planning creates BGA component mesh nodes for larger components",
   topologyPlanningSolver.solve()
 
   const output = topologyPlanningSolver.getOutput()
+  const largeViaInputSrj: SimpleRouteJson = {
+    ...inputSrj,
+    layerCount: 4,
+    minViaPadDiameter: 0.8,
+  }
+  const largeViaComponentDetectionSolver = new ComponentDetectionSolver({
+    inputSrj: largeViaInputSrj,
+  })
+  largeViaComponentDetectionSolver.solve()
+  const largeViaTopologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
+    inputSrj: largeViaInputSrj,
+    componentDetectionOutput: largeViaComponentDetectionSolver.getOutput(),
+    viaDiameter: 0.8,
+  })
+  largeViaTopologyPlanningSolver.solve()
+  const largeViaOutput = largeViaTopologyPlanningSolver.getOutput()
+  const largeViaGapNodes = largeViaOutput.componentMeshNodes[0]!.filter(
+    (node) => !node._containsObstacle,
+  )
+
   expect(output.componentMeshNodes).toHaveLength(1)
   expect(output.componentMeshNodes[0]!.length).toBeGreaterThan(0)
+  expect(
+    output.componentMeshNodes[0]!.some(
+      (node) => !node._containsObstacle && node.availableZ.length > 1,
+    ),
+  ).toBe(true)
+  expect(largeViaOutput.componentMeshNodes).toHaveLength(1)
+  expect(largeViaGapNodes.length).toBeGreaterThan(0)
+  expect(largeViaGapNodes.every((node) => node.availableZ.length === 1)).toBe(
+    true,
+  )
   expect(
     output.componentMeshNodes[0]!.every((node) =>
       node.capacityMeshNodeId.includes("U_3X4"),
