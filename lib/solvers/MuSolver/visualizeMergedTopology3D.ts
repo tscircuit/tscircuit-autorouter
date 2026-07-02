@@ -19,8 +19,7 @@ const Z_STROKE_COLORS = [
 
 const SEAM_STROKE_COLOR = "rgba(220,20,60,0.95)"
 
-const fillForZ = (z: number): string =>
-  Z_FILL_COLORS[z % Z_FILL_COLORS.length]!
+const fillForZ = (z: number): string => Z_FILL_COLORS[z % Z_FILL_COLORS.length]!
 
 const strokeForZ = (z: number): string =>
   Z_STROKE_COLORS[z % Z_STROKE_COLORS.length]!

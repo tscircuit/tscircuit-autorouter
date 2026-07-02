@@ -40,10 +40,9 @@ const runExample = async (
 
   const merged = solver.getOutput().routingRegions
 
-  const isoSvg = getSvgFromGraphicsObject(
-    visualizeTopologyIsometric(merged),
-    { backgroundColor: "white" },
-  )
+  const isoSvg = getSvgFromGraphicsObject(visualizeTopologyIsometric(merged), {
+    backgroundColor: "white",
+  })
   const sliceSvg = getSvgFromGraphicsObject(
     visualizeTopologySlices(merged, example.layerCount),
     { backgroundColor: "white" },
@@ -57,7 +56,10 @@ const runExample = async (
     "  span kinds (merged):",
     JSON.stringify(countSpanKinds(merged, example.layerCount)),
   )
-  console.log("  seam regions by case:", JSON.stringify(solver.stats.seamsByCase))
+  console.log(
+    "  seam regions by case:",
+    JSON.stringify(solver.stats.seamsByCase),
+  )
   console.log("  total seam regions:", solver.stats.seamRegionCount)
   console.log(`  wrote ${name}-isometric.svg and ${name}-slices.svg`)
 }

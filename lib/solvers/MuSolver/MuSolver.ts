@@ -25,7 +25,9 @@ export class MuSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const { regions, seamStats } = mergeTwoTopologiesWithStats(this.inputProblem)
+    const { regions, seamStats } = mergeTwoTopologiesWithStats(
+      this.inputProblem,
+    )
     this.mergedRegions = regions
 
     this.stats = {

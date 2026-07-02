@@ -50,11 +50,7 @@ export const getBounds = (node: CapacityMeshNode): Bounds => ({
   maxY: node.center.y + node.height / 2,
 })
 
-export const doBoundsOverlap = (
-  a: Bounds,
-  b: Bounds,
-  epsilon = 0,
-): boolean => {
+export const doBoundsOverlap = (a: Bounds, b: Bounds, epsilon = 0): boolean => {
   return (
     a.minX < b.maxX - epsilon &&
     a.maxX > b.minX + epsilon &&
@@ -96,9 +92,6 @@ export const intersectZ = (
   return a.availableZ.filter((z) => bSet.has(z)).sort((p, q) => p - q)
 }
 
-export const unionZ = (
-  a: CapacityMeshNode,
-  b: CapacityMeshNode,
-): number[] => {
+export const unionZ = (a: CapacityMeshNode, b: CapacityMeshNode): number[] => {
   return [...new Set([...a.availableZ, ...b.availableZ])].sort((p, q) => p - q)
 }

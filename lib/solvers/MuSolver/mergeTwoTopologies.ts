@@ -44,16 +44,17 @@ const makeSeamRegion = (
 }
 
 /** Splits a rect into a horizontal band (full width) at the given y center. */
-const bandRect = (rect: RectSpec, bandHeight: number, centerY: number): RectSpec => ({
+const bandRect = (
+  rect: RectSpec,
+  bandHeight: number,
+  centerY: number,
+): RectSpec => ({
   center: { x: rect.center.x, y: centerY },
   width: rect.width,
   height: bandHeight,
 })
 
-const missingLayer = (
-  node: CapacityMeshNode,
-  layerCount: number,
-): number => {
+const missingLayer = (node: CapacityMeshNode, layerCount: number): number => {
   for (let z = 0; z < layerCount; z += 1) {
     if (!node.availableZ.includes(z)) return z
   }
@@ -109,7 +110,12 @@ export const mergeTwoTopologiesWithStats = (
         // seam column per z across the full stack.
         for (let z = 0; z < layerCount; z += 1) {
           seamRegions.push(
-            makeSeamRegion(a.capacityMeshNodeId, b.capacityMeshNodeId, [z], overlapRect),
+            makeSeamRegion(
+              a.capacityMeshNodeId,
+              b.capacityMeshNodeId,
+              [z],
+              overlapRect,
+            ),
           )
           seamStats["every+every"] += 1
         }
@@ -124,7 +130,12 @@ export const mergeTwoTopologiesWithStats = (
         // (the missing layer exists only on the every side).
         for (const z of shared) {
           seamRegions.push(
-            makeSeamRegion(a.capacityMeshNodeId, b.capacityMeshNodeId, [z], overlapRect),
+            makeSeamRegion(
+              a.capacityMeshNodeId,
+              b.capacityMeshNodeId,
+              [z],
+              overlapRect,
+            ),
           )
           seamStats["every+all-but-one"] += 1
         }
@@ -138,7 +149,12 @@ export const mergeTwoTopologiesWithStats = (
         if (p === q) {
           // Same missing layer: shared === a === b, one band covers the seam.
           seamRegions.push(
-            makeSeamRegion(a.capacityMeshNodeId, b.capacityMeshNodeId, shared, overlapRect),
+            makeSeamRegion(
+              a.capacityMeshNodeId,
+              b.capacityMeshNodeId,
+              shared,
+              overlapRect,
+            ),
           )
           seamStats["all-but-one+all-but-one"] += 1
           continue
