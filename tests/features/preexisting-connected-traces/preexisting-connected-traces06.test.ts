@@ -9,8 +9,8 @@ test(
     const srj = structuredClone(scenario) as SimpleRouteJson
 
     const { outputSrj } = solveAndSnapshot(srj, import.meta.path, {
-      problem: "A preexisting escape trace passes through U1 pin1 but stops before reaching R1 pin1.",
-      expected: "Pipeline7 should emit one new trace that finishes the route to the 0603 pad.",
+      problem: "A preexisting escape trace passes through U1 pin1 and ends at a free point outside the pad.",
+      expected: "Pipeline7 should emit one new trace from the free escape point to the 0603 pad.",
     })
 
     expect(outputSrj.traces).toHaveLength(1)
