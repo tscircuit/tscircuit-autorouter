@@ -8,7 +8,7 @@ SAMPLE_TIMEOUT=""
 SAMPLE_NUMBERS=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
-DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver7_MultiGraph"
+DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver4"
 PIPELINE_ID=""
 
 resolve_pipeline_solver_name() {
@@ -91,24 +91,24 @@ Options:
   -h, --help           Show this help
 
 Defaults:
-  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver7_MultiGraph.
+  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver4.
   Use "all" to benchmark every available solver.
 
 Examples:
   ./benchmark.sh
-  ./benchmark.sh AutoroutingPipelineSolver7_MultiGraph
+  ./benchmark.sh AutoroutingPipelineSolver4
   ./benchmark.sh all 20 --concurrency auto
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --effort 2
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --sample-timeout 90s
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --effort 2
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --sample-timeout 90s
   ./benchmark.sh --sample-numbers 120,139,148 --concurrency 8 --sample-timeout 120s
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --scenario-limit 20
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset zdwiel --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset zdwiel --scenario-limit 20
   ./benchmark.sh --pipeline 4
   ./benchmark.sh --pipeline 5
   ./benchmark.sh --pipeline 6
   ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline krt
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset srj05 --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver4 --dataset srj05 --scenario-limit 20
   ./benchmark.sh --dataset 11 --scenario-limit 20
   ./benchmark.sh --dataset 12 --scenario-limit 10
   ./benchmark.sh --dataset 13

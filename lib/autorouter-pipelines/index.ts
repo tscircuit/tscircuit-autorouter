@@ -7,6 +7,7 @@ export { AutoroutingPipelineSolver3_HgPortPointPathing } from "./AutoroutingPipe
 export {
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver4_TinyHypergraph,
+  AutoroutingPipelineSolver4_TinyHypergraph as AutoroutingPipelineSolver,
 } from "./AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
 export {
   AutoroutingPipelineSolver5,
@@ -16,8 +17,5 @@ export {
   AutoroutingPipelineSolver6,
   AutoroutingPipelineSolver6_PolyHypergraph,
 } from "./AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
-export {
-  AutoroutingPipelineSolver7_MultiGraph,
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "./AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+export { AutoroutingPipelineSolver7_MultiGraph } from "./AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./AutoroutingPipeline8/AutoroutingPipelineSolver8"
