@@ -33,6 +33,9 @@ export interface CapacityMeshNode {
   _isNarrowQfpPadGap?: boolean
   _soicRegionType?: "center" | "pad" | "pad-gap"
 
+  /** Marks a seam region emitted by MuSolver when merging two topologies. */
+  _muSeam?: boolean
+
   _parent?: CapacityMeshNode
 }
 

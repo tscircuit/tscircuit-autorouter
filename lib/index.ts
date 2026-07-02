@@ -55,6 +55,7 @@ export type {
 } from "./types/high-density-types"
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
+export { MuSolver } from "./solvers/MuSolver/MuSolver"
 export { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 export type {
   DrcError,
