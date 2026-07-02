@@ -71,14 +71,6 @@ const isPointInsideObstacle = (
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
-const isObstacleConnectedToRoute = (
-  obstacle: Obstacle,
-  route: HighDensityRoute,
-) =>
-  obstacle.connectedTo.includes(route.connectionName) ||
-  (route.rootConnectionName !== undefined &&
-    obstacle.connectedTo.includes(route.rootConnectionName))
-
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
   obstacles: Obstacle[],
@@ -87,7 +79,9 @@ const isSameNetMultilayerObstacleRoute = (
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route) &&
+      (obstacle.connectedTo.includes(route.connectionName) ||
+        (route.rootConnectionName !== undefined &&
+          obstacle.connectedTo.includes(route.rootConnectionName))) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
 

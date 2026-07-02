@@ -8,7 +8,6 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
@@ -66,7 +65,12 @@ const isThroughObstacleSegment = (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap) &&
+        obstacle.obstacleId !== undefined &&
+        (opts.connMap?.areIdsConnected(
+          hdRoute.connectionName,
+          obstacle.obstacleId,
+        ) ??
+          false) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle),
     ) ?? false

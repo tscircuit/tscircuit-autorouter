@@ -6,13 +6,12 @@ import {
 } from "@tscircuit/math-utils"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 
 const CURSOR_STEP_DISTANCE = 0.1
 const MIN_TERMINAL_TAPER_DISTANCE = 0.75
@@ -532,7 +531,15 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+      if (
+        obstacle.obstacleId === undefined ||
+        !(this.connMap?.areIdsConnected(
+          route.connectionName,
+          obstacle.obstacleId,
+        ) ?? false)
+      ) {
+        continue
+      }
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)

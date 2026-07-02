@@ -15,7 +15,6 @@ import {
   computeGapBetweenBoxes,
   segmentToBoundsMinDistance,
 } from "@tscircuit/math-utils"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 
@@ -104,26 +103,25 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       height: bounds.maxY - bounds.minY,
     }
 
-    this.filteredObstacles = this.obstacles
-      .filter(
-        (obstacle) =>
-          !isObstacleConnectedToRoute(obstacle, this.inputRoute, this.connMap),
-      )
-      .filter((obstacle) => {
-        if (
-          isObstacleConnectedToRoute(obstacle, this.inputRoute, this.connMap)
-        ) {
-          return false
-        }
-
-        const distance = computeGapBetweenBoxes(boundsBox, obstacle)
-
-        if (distance < this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2) {
-          return true
-        }
-
+    this.filteredObstacles = this.obstacles.filter((obstacle) => {
+      if (
+        obstacle.obstacleId !== undefined &&
+        this.connMap.areIdsConnected(
+          this.inputRoute.connectionName,
+          obstacle.obstacleId,
+        )
+      ) {
         return false
-      })
+      }
+
+      const distance = computeGapBetweenBoxes(boundsBox, obstacle)
+
+      if (distance < this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2) {
+        return true
+      }
+
+      return false
+    })
 
     this.filteredObstaclePathSegments = this.otherHdRoutes.flatMap(
       (hdRoute) => {
@@ -283,19 +281,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   }
 
   private isSameNetRoute(route: HighDensityIntraNodeRoute): boolean {
-    const inputIds = [
+    return this.connMap.areIdsConnected(
       this.inputRoute.connectionName,
-      this.inputRoute.rootConnectionName,
-    ].filter((id): id is string => id !== undefined)
-    const routeIds = [route.connectionName, route.rootConnectionName].filter(
-      (id): id is string => id !== undefined,
-    )
-
-    return inputIds.some((inputId) =>
-      routeIds.some(
-        (routeId) =>
-          inputId === routeId || this.connMap.areIdsConnected(inputId, routeId),
-      ),
+      route.connectionName,
     )
   }
 

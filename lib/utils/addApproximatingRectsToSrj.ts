@@ -365,11 +365,8 @@ const convertObstacleToOldFormat = (
       : obstacle.obstacleId?.startsWith("trace_obstacle_")
         ? generateApproximatingRects(rotatedRect, rectCount)
         : generateCenterlineApproximatingRects(rotatedRect, rectCount)
-  const preserveConnectedToOnEveryApproximation =
-    obstacle.obstacleId?.startsWith("trace_obstacle_") === true
   const connectedRectIndex =
-    obstacle.connectedTo.length > 0 &&
-    !preserveConnectedToOnEveryApproximation
+    obstacle.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {
           const closestRect = rects[closestIndex]!
           const closestDistance =
@@ -383,23 +380,29 @@ const convertObstacleToOldFormat = (
         }, 0)
       : -1
 
-  return rects.map((rect, index) => ({
-    ...obstacleWithoutRotation,
-    obstacleId:
-      index === connectedRectIndex
-        ? obstacleWithoutRotation.obstacleId
-        : obstacleWithoutRotation.obstacleId
-          ? `${obstacleWithoutRotation.obstacleId}_approx_${index}`
-          : undefined,
-    connectedTo:
-      index === connectedRectIndex ||
-      preserveConnectedToOnEveryApproximation
-        ? obstacleWithoutRotation.connectedTo
-        : [],
-    center: rect.center,
-    width: rect.width,
-    height: rect.height,
-  }))
+  return rects.map((rect, index) => {
+    const isConnectedRect = index === connectedRectIndex
+    const obstacleId = isConnectedRect
+      ? obstacleWithoutRotation.obstacleId
+      : obstacleWithoutRotation.obstacleId
+        ? `${obstacleWithoutRotation.obstacleId}_approx_${index}`
+        : undefined
+    const connectedTo = isConnectedRect
+      ? obstacleWithoutRotation.connectedTo
+      : obstacleWithoutRotation.connectedTo.length > 0 &&
+          obstacleWithoutRotation.obstacleId
+        ? [obstacleWithoutRotation.obstacleId]
+        : []
+
+    return {
+      ...obstacleWithoutRotation,
+      obstacleId,
+      connectedTo,
+      center: rect.center,
+      width: rect.width,
+      height: rect.height,
+    }
+  })
 }
 
 export const addApproximatingRectsToSrj = (

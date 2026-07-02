@@ -394,6 +394,18 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
         },
       ],
+      {
+        onSolved: (cms) => {
+          cms.connMap.addConnections(
+            cms.highDensityStitchSolver!.mergedHdRoutes
+              .filter((route) => route.rootConnectionName !== undefined)
+              .map((route) => [
+                route.connectionName,
+                route.rootConnectionName!,
+              ]),
+          )
+        },
+      },
     ),
     definePipelineStep(
       "traceSimplificationSolver",
