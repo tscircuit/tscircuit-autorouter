@@ -186,27 +186,6 @@ function createFreeObstacleMeshNodes(input: {
   }))
 }
 
-function createObstacleMeshNode(
-  componentId: string,
-  obstacle: Obstacle,
-  layerCount: number,
-): CapacityMeshNode {
-  const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
-    mapLayerNameToZ(layerName, layerCount),
-  )
-  const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
-
-  return {
-    capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
-    _containsObstacle: true,
-    center: obstacle.center,
-    width: obstacle.width,
-    height: obstacle.height,
-    layer: `z${obstacleLayers.join(",")}`,
-    availableZ: obstacleLayers,
-  }
-}
-
 export class InitialBgaTopologySolver extends BaseSolver {
   componentObstacles: Obstacle[] = []
   meshNodes: CapacityMeshNode[] = []
@@ -220,13 +199,8 @@ export class InitialBgaTopologySolver extends BaseSolver {
   }
 
   override _step(): void {
-    const {
-      srj,
-      componentBounds,
-      componentId,
-      markedComponentObstacles,
-      unmarkedComponentObstacles,
-    } = this.inputProblem
+    const { srj, componentBounds, componentId, markedComponentObstacles } =
+      this.inputProblem
 
     const copperPoursInBounds: Obstacle[] = srj.obstacles
       .filter((obstacle) => obstacle.isCopperPour === true)
@@ -286,26 +260,14 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
         }),
       ),
-      ...markedComponentObstacles.flatMap((obstacle) => [
-        ...createFreeObstacleMeshNodes({
+      ...markedComponentObstacles.flatMap((obstacle) =>
+        createFreeObstacleMeshNodes({
           componentId,
           obstacle,
           freeLayers,
           layerCount: srj.layerCount,
         }),
-        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
-      ]),
-      ...unmarkedComponentObstacles.flatMap((obstacle) => [
-        // skip for unmarked becase we already have free layers available
-        // this will cause overlaps srj18 013 is an good exmpale
-        // ...createFreeObstacleMeshNodes({
-        //   componentId,
-        //   obstacle,
-        //   freeLayers,
-        //   layerCount: srj.layerCount,
-        // }),
-        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
-      ]),
+      ),
     ]
     this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes)
 
