@@ -11,6 +11,7 @@ import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
+  srj?: SimpleRouteJson,
 ): {
   pointIdToGroup: Map<string, number>
   zeroWeightEdges: Array<{
@@ -20,6 +21,8 @@ export const getExternalConnectionState = (
   }>
 } => {
   const externalGroups = connection.externallyConnectedPointIds ?? []
+  const routedTraceGroups = getTraceConnectedPointGroups(connection, srj)
+  const allExternalGroups = [...externalGroups, ...routedTraceGroups]
   const pointIdToGroup = new Map<string, number>()
   const pointById = new Map<string, ConnectionPoint>()
 
@@ -35,7 +38,7 @@ export const getExternalConnectionState = (
     weight: number
   }> = []
 
-  externalGroups.forEach((group, idx) => {
+  allExternalGroups.forEach((group, idx) => {
     const groupPoints = group
       .map((pointId) => pointById.get(pointId))
       .filter((point): point is ConnectionPoint => Boolean(point))
@@ -61,6 +64,36 @@ export const getExternalConnectionState = (
   })
 
   return { pointIdToGroup, zeroWeightEdges }
+}
+
+const getTraceConnectedPointGroups = (
+  connection: SimpleRouteConnection,
+  srj: SimpleRouteJson | undefined,
+): string[][] => {
+  if (!srj?.traces?.length) return []
+
+  const connectionPointIds = new Set(
+    connection.pointsToConnect
+      .map((point) => point.pointId)
+      .filter((pointId): pointId is string => Boolean(pointId)),
+  )
+
+  if (connectionPointIds.size === 0) return []
+
+  const routedTraceGroups: string[][] = []
+  for (const trace of srj.traces) {
+    const traceConnectsTo = trace.connectsTo ?? []
+    if (traceConnectsTo.length < 2) continue
+
+    const connectedPointIds = traceConnectsTo.filter((connectsTo) =>
+      connectionPointIds.has(connectsTo),
+    )
+    if (connectedPointIds.length >= 2) {
+      routedTraceGroups.push(connectedPointIds)
+    }
+  }
+
+  return routedTraceGroups
 }
 
 export const areExternallyConnected = (
@@ -114,8 +147,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } =
-      getExternalConnectionState(connection)
+    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+      connection,
+      this.ogSrj,
+    )
 
     if (connection.pointsToConnect.length === 2) {
       if (

@@ -42,6 +42,7 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
   and return values have explicit types.
 - Always define function return types in new code.
 - Structure types so invalid states are not representable where practical.
+- ONE TEST PER FILE
 
 ## Architecture
 

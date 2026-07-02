@@ -44,12 +44,14 @@ const createSegmentObstacle = ({
   end,
   width,
   layer,
+  connectedTo,
 }: {
   obstacleId: string
   start: { x: number; y: number }
   end: { x: number; y: number }
   width: number
   layer: string
+  connectedTo: string[]
 }): Obstacle | null => {
   const dx = end.x - start.x
   const dy = end.y - start.y
@@ -68,7 +70,7 @@ const createSegmentObstacle = ({
     width: length,
     height: Math.max(width, MIN_OBSTACLE_DIMENSION),
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
-    connectedTo: [],
+    connectedTo,
   }
 }
 
@@ -81,6 +83,8 @@ export const getObstaclesFromSrjTraces = (
   const viaDimensions = getViaDimensions(srj)
 
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
+    const connectedTo = trace.connectsTo ?? []
+
     for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
       const routePoint = trace.route[pointIndex]!
 
@@ -97,7 +101,7 @@ export const getObstaclesFromSrjTraces = (
           center: { x: routePoint.x, y: routePoint.y },
           width: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           height: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
-          connectedTo: [],
+          connectedTo,
         })
         continue
       }
@@ -109,6 +113,7 @@ export const getObstaclesFromSrjTraces = (
           end: routePoint.end,
           width: routePoint.width,
           layer: routePoint.from_layer,
+          connectedTo,
         })
 
         if (obstacle) {
@@ -144,6 +149,7 @@ export const getObstaclesFromSrjTraces = (
         end: nextRoutePoint,
         width: routePoint.width,
         layer: routePoint.layer,
+        connectedTo,
       })
 
       if (obstacle) traceObstacles.push(obstacle)

@@ -1,0 +1,47 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.1,
+  "defaultObstacleMargin": 0.1,
+  "bounds": { "minX": -8, "maxX": 8, "minY": -6, "maxY": 6 },
+  "obstacles": [
+    { "obstacleId": "U1.pin1", "type": "rect", "layers": ["top"], "center": { "x": -5.15, "y": 0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin1", "source_net_u1_pin1_resistors", "preexisting_u1_pin1_to_r1_pin1"] },
+    { "obstacleId": "U1.pin2", "type": "rect", "layers": ["top"], "center": { "x": -5.15, "y": -0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin2"] },
+    { "obstacleId": "U1.pin3", "type": "rect", "layers": ["top"], "center": { "x": -0.85, "y": -0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin3"] },
+    { "obstacleId": "U1.pin4", "type": "rect", "layers": ["top"], "center": { "x": -0.85, "y": 0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin4", "source_net_u1_pin4_decoupler"] },
+    { "obstacleId": "R1.pin1", "type": "rect", "layers": ["top"], "center": { "x": 1.675, "y": 2.2 }, "width": 0.8, "height": 0.95, "connectedTo": ["R1.pin1", "source_net_u1_pin1_resistors", "preexisting_u1_pin1_to_r1_pin1"] },
+    { "obstacleId": "R1.pin2", "type": "rect", "layers": ["top"], "center": { "x": 3.325, "y": 2.2 }, "width": 0.8, "height": 0.95, "connectedTo": ["R1.pin2"] },
+    { "obstacleId": "R2.pin1", "type": "rect", "layers": ["top"], "center": { "x": 1.675, "y": 0.4 }, "width": 0.8, "height": 0.95, "connectedTo": ["R2.pin1", "source_net_u1_pin1_resistors"] },
+    { "obstacleId": "R2.pin2", "type": "rect", "layers": ["top"], "center": { "x": 3.325, "y": 0.4 }, "width": 0.8, "height": 0.95, "connectedTo": ["R2.pin2"] },
+    { "obstacleId": "C1.pin1", "type": "rect", "layers": ["top"], "center": { "x": 1.675, "y": -2.2 }, "width": 0.8, "height": 0.95, "connectedTo": ["C1.pin1", "source_net_u1_pin4_decoupler"] },
+    { "obstacleId": "C1.pin2", "type": "rect", "layers": ["top"], "center": { "x": 3.325, "y": -2.2 }, "width": 0.8, "height": 0.95, "connectedTo": ["C1.pin2"] }
+  ],
+  "connections": [
+    {
+      "name": "source_net_u1_pin1_resistors",
+      "pointsToConnect": [
+        { "x": -5.15, "y": 0.635, "layer": "top", "pointId": "U1.pin1", "pcb_port_id": "U1.pin1" },
+        { "x": 1.675, "y": 2.2, "layer": "top", "pointId": "R1.pin1", "pcb_port_id": "R1.pin1" },
+        { "x": 1.675, "y": 0.4, "layer": "top", "pointId": "R2.pin1", "pcb_port_id": "R2.pin1" }
+      ]
+    },
+    {
+      "name": "source_net_u1_pin4_decoupler",
+      "pointsToConnect": [
+        { "x": -0.85, "y": 0.635, "layer": "top", "pointId": "U1.pin4", "pcb_port_id": "U1.pin4" },
+        { "x": 1.675, "y": -2.2, "layer": "top", "pointId": "C1.pin1", "pcb_port_id": "C1.pin1" }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "preexisting_u1_pin1_to_r1_pin1",
+      "connection_name": "preexisting_u1_pin1_to_r1_pin1",
+      "connectsTo": ["U1.pin1", "R1.pin1"],
+      "route": [
+        { "route_type": "wire", "x": -5.15, "y": 0.635, "width": 0.1, "layer": "top" },
+        { "route_type": "wire", "x": 1.675, "y": 2.2, "width": 0.1, "layer": "top" }
+      ]
+    }
+  ]
+}

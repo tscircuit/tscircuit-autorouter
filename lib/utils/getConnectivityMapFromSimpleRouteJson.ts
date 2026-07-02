@@ -40,6 +40,9 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
       if ("pcb_port_id" in point && point.pcb_port_id) {
         connMap.addConnections([[connection.name, point.pcb_port_id as string]])
       }
+      if (point.pointId) {
+        connMap.addConnections([[connection.name, point.pointId]])
+      }
     }
   }
   for (const obstacle of srj.obstacles) {
@@ -54,6 +57,21 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
             .map((l) => mapLayerNameToZ(l, srj.layerCount))
             .sort()
             .join("-")}`,
+        ].filter(Boolean),
+      ),
+    )
+
+    if (connectionGroup.length > 0) {
+      connMap.addConnections([connectionGroup])
+    }
+  }
+  for (const trace of srj.traces ?? []) {
+    const connectionGroup = Array.from(
+      new Set(
+        [
+          trace.pcb_trace_id,
+          trace.connection_name,
+          ...(trace.connectsTo ?? []),
         ].filter(Boolean),
       ),
     )
