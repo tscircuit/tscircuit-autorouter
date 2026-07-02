@@ -68,6 +68,10 @@ export interface SimpleRouteJson {
 
 export interface Obstacle {
   obstacleId?: string
+  approximationSource?: {
+    obstacleId: string
+    connectedTo: Array<TraceId | NetId>
+  }
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
   type: "rect"

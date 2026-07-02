@@ -17,6 +17,7 @@ import {
 } from "@tscircuit/math-utils"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
+import { ObstacleConnectionIdentity } from "lib/utils/ObstacleConnectionIdentity"
 
 interface Point {
   x: number
@@ -103,30 +104,24 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       height: bounds.maxY - bounds.minY,
     }
 
-    this.filteredObstacles = this.obstacles
-      .filter(
-        (obstacle) =>
-          !obstacle.connectedTo.some((id) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, id),
-          ),
-      )
-      .filter((obstacle) => {
-        if (
-          obstacle.connectedTo.some((obsId) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, obsId),
-          )
-        ) {
-          return false
-        }
-
-        const distance = computeGapBetweenBoxes(boundsBox, obstacle)
-
-        if (distance < this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2) {
-          return true
-        }
-
+    this.filteredObstacles = this.obstacles.filter((obstacle) => {
+      if (
+        ObstacleConnectionIdentity.fromObstacle(obstacle).isOwnedByRoute(
+          this.inputRoute,
+          this.connMap,
+        )
+      ) {
         return false
-      })
+      }
+
+      const distance = computeGapBetweenBoxes(boundsBox, obstacle)
+
+      if (distance < this.OBSTACLE_MARGIN + this.TRACE_THICKNESS / 2) {
+        return true
+      }
+
+      return false
+    })
 
     this.filteredObstaclePathSegments = this.otherHdRoutes.flatMap(
       (hdRoute) => {

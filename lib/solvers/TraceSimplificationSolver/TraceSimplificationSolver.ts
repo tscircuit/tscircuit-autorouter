@@ -8,6 +8,7 @@ import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameN
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { ObstacleConnectionIdentity } from "lib/utils/ObstacleConnectionIdentity"
 
 type Phase = "via_removal" | "via_merging" | "path_simplification"
 
@@ -100,19 +101,9 @@ export class TraceSimplificationSolver extends BaseSolver {
   }
 
   private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle) {
-    return obstacle.connectedTo.some(
-      (connectedId) =>
-        connectedId === route.connectionName ||
-        connectedId === route.rootConnectionName ||
-        this.simplificationConfig.connMap.areIdsConnected(
-          route.connectionName,
-          connectedId,
-        ) ||
-        (route.rootConnectionName !== undefined &&
-          this.simplificationConfig.connMap.areIdsConnected(
-            route.rootConnectionName,
-            connectedId,
-          )),
+    return ObstacleConnectionIdentity.fromObstacle(obstacle).isOwnedByRoute(
+      route,
+      this.simplificationConfig.connMap,
     )
   }
 
