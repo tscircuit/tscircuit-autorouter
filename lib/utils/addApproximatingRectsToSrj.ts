@@ -120,6 +120,20 @@ const getObstacleKey = (obstacle: Obstacle, index: number) =>
 const getPointConnectionIds = (point: ConnectionPoint) =>
   [point.pointId, point.pcb_port_id].filter((id): id is string => Boolean(id))
 
+const mergeObstacleConnections = (
+  existingObstacle: Obstacle,
+  nextObstacle: Obstacle,
+): Obstacle => {
+  const connectedTo = [
+    ...new Set([...existingObstacle.connectedTo, ...nextObstacle.connectedTo]),
+  ]
+
+  return {
+    ...existingObstacle,
+    connectedTo,
+  }
+}
+
 export function generateApproximatingRects(
   rotatedRect: RotatedRect,
   numRects = 2,
@@ -456,9 +470,10 @@ export const addApproximatingRectsToSrj = (
         continue
       }
 
-      existingObstacle.connectedTo = [
-        ...new Set([...existingObstacle.connectedTo, ...converted.connectedTo]),
-      ]
+      obstaclesByRect.set(
+        key,
+        mergeObstacleConnections(existingObstacle, converted),
+      )
     }
   }
 

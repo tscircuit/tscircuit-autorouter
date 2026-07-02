@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import type { SimpleRouteJson } from "lib/types"
-import { ObstacleConnectionIdentity } from "lib/utils/ObstacleConnectionIdentity"
+import {
+  isObstacleConnectedToRoute,
+  isObstacleOwnedByRoute,
+} from "lib/utils/obstacle-connection-identity"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 
 const assertDefined = <T>(value: T | undefined, message: string): T => {
@@ -52,15 +55,13 @@ test("approximated trace obstacle children keep ownership separate from connecti
 
   expect(approximationSource.connectedTo).toEqual(["source_trace_1"])
   expect(
-    ObstacleConnectionIdentity.fromObstacle(child).isConnectedToRoute(
+    isObstacleConnectedToRoute(
+      child,
       { connectionName: "source_trace_1" },
       connMap,
     ),
   ).toBe(false)
   expect(
-    ObstacleConnectionIdentity.fromObstacle(child).isOwnedByRoute(
-      { connectionName: "source_trace_1" },
-      connMap,
-    ),
+    isObstacleOwnedByRoute(child, { connectionName: "source_trace_1" }, connMap),
   ).toBe(true)
 })

@@ -17,7 +17,7 @@ import {
 } from "@tscircuit/math-utils"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
-import { ObstacleConnectionIdentity } from "lib/utils/ObstacleConnectionIdentity"
+import { isObstacleOwnedByRoute } from "lib/utils/obstacle-connection-identity"
 
 interface Point {
   x: number
@@ -105,12 +105,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     this.filteredObstacles = this.obstacles.filter((obstacle) => {
-      if (
-        ObstacleConnectionIdentity.fromObstacle(obstacle).isOwnedByRoute(
-          this.inputRoute,
-          this.connMap,
-        )
-      ) {
+      if (isObstacleOwnedByRoute(obstacle, this.inputRoute, this.connMap)) {
         return false
       }
 
