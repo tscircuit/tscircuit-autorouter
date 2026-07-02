@@ -147,8 +147,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } =
-      getExternalConnectionState(connection, this.ogSrj)
+    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+      connection,
+      this.ogSrj,
+    )
 
     if (connection.pointsToConnect.length === 2) {
       if (
