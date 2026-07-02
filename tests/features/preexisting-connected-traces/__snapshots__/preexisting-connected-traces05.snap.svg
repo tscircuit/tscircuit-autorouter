@@ -1,0 +1,185 @@
+<svg width="640" height="2076" viewBox="0 0 640 2076" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><text x="12" y="21" font-family="monospace" font-size="15" font-weight="700" fill="#111">Input: stored SRJ with preexisting traces</text><text x="12" y="41" font-family="monospace" font-size="12" fill="#333">One net has a preexisting U1-R1 route; a separate U1-C1 net is not pre-routed.</text><g transform="translate(0 52)"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-5.15,0.635 1.675,2.2" data-type="line" data-label="" points="69.86666666666667,282.06933333333336 477.5466666666667,188.58666666666664" fill="none" stroke="red" stroke-width="5.973333333333334"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="-5.15" data-y="0.635" x="40.00000000000003" y="264.1493333333334" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-5.15" data-y="-0.635" x="40.00000000000003" y="340.0106666666667" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-0.85" data-y="-0.635" x="296.85333333333335" y="340.0106666666667" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="-0.85" data-y="0.635" x="296.85333333333335" y="264.1493333333334" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="2.2" x="453.6533333333333" y="160.2133333333333" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="2.2" x="552.2133333333334" y="160.2133333333333" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="0.4" x="453.6533333333333" y="267.73333333333335" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="0.4" x="552.2133333333334" y="267.73333333333335" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="1.675" data-y="-2.2" x="453.6533333333333" y="423.04" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="-2.2" x="552.2133333333334" y="423.04" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="-5.15" data-y="0.635" cx="69.86666666666667" cy="282.06933333333336" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="2.2" cx="477.5466666666667" cy="188.58666666666664" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="0.4" cx="477.5466666666667" cy="296.1066666666667" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="-0.85" data-y="0.635" cx="326.72" cy="282.06933333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="1.675" data-y="-2.2" cx="477.5466666666667" cy="451.41333333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":59.733333333333334,"c":0,"e":377.49333333333334,"b":0,"d":-59.733333333333334,"f":320};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></g>
+  </g>
+  <g transform="translate(0, 692) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><text x="12" y="21" font-family="monospace" font-size="15" font-weight="700" fill="#111">Pipeline7 output: newly routed traces only</text><text x="12" y="41" font-family="monospace" font-size="12" fill="#333">Pipeline7 should emit one trace for each remaining net.</text><g transform="translate(0 52)"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="1.675,-2.2 1.675,-1.89" data-type="line" data-label="" points="477.5466666666667,451.41333333333336 477.5466666666667,432.896" fill="none" stroke="hsl(170, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,-1.89 -0.85,0.635" data-type="line" data-label="" points="477.5466666666667,432.896 326.72,282.06933333333336" fill="none" stroke="hsl(170, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,0.4 1.675,1.647861207960794" data-type="line" data-label="" points="477.5466666666667,296.1066666666667 477.5466666666667,221.56775717780857" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,1.647861207960794 1.5676556786020945,1.7552055293586994" data-type="line" data-label="" points="477.5466666666667,221.56775717780857 471.1346325351651,215.155723046307" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.5676556786020945,1.7552055293586994 1.675,1.8250080000000004" data-type="line" data-label="" points="471.1346325351651,215.155723046307 477.5466666666667,210.98618879999998" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="-5.15" data-y="0.635" x="40.00000000000003" y="264.1493333333334" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-5.15" data-y="-0.635" x="40.00000000000003" y="340.0106666666667" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-0.85" data-y="-0.635" x="296.85333333333335" y="340.0106666666667" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="-0.85" data-y="0.635" x="296.85333333333335" y="264.1493333333334" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="2.2" x="453.6533333333333" y="160.2133333333333" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="2.2" x="552.2133333333334" y="160.2133333333333" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="0.4" x="453.6533333333333" y="267.73333333333335" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="0.4" x="552.2133333333334" y="267.73333333333335" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="1.675" data-y="-2.2" x="453.6533333333333" y="423.04" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="-2.2" x="552.2133333333334" y="423.04" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="-5.15" data-y="0.635" cx="69.86666666666667" cy="282.06933333333336" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="2.2" cx="477.5466666666667" cy="188.58666666666664" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="0.4" cx="477.5466666666667" cy="296.1066666666667" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="-0.85" data-y="0.635" cx="326.72" cy="282.06933333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="1.675" data-y="-2.2" cx="477.5466666666667" cy="451.41333333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g id="crosshair__stack1" style="display: none"><line id="crosshair-h__stack1" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":59.733333333333334,"c":0,"e":377.49333333333334,"b":0,"d":-59.733333333333334,"f":320};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></g>
+  </g>
+  <g transform="translate(0, 1384) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><text x="12" y="21" font-family="monospace" font-size="15" font-weight="700" fill="#111">Combined output: Pipeline7 output plus preexisting traces</text><text x="12" y="41" font-family="monospace" font-size="12" fill="#333">This panel should show the full routed board state.</text><g transform="translate(0 52)"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-5.15,0.635 1.675,2.2" data-type="line" data-label="" points="69.86666666666667,282.06933333333336 477.5466666666667,188.58666666666664" fill="none" stroke="red" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,-2.2 1.675,-1.89" data-type="line" data-label="" points="477.5466666666667,451.41333333333336 477.5466666666667,432.896" fill="none" stroke="hsl(170, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,-1.89 -0.85,0.635" data-type="line" data-label="" points="477.5466666666667,432.896 326.72,282.06933333333336" fill="none" stroke="hsl(170, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,0.4 1.675,1.647861207960794" data-type="line" data-label="" points="477.5466666666667,296.1066666666667 477.5466666666667,221.56775717780857" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.675,1.647861207960794 1.5676556786020945,1.7552055293586994" data-type="line" data-label="" points="477.5466666666667,221.56775717780857 471.1346325351651,215.155723046307" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><polyline data-points="1.5676556786020945,1.7552055293586994 1.675,1.8250080000000004" data-type="line" data-label="" points="471.1346325351651,215.155723046307 477.5466666666667,210.98618879999998" fill="none" stroke="hsl(0, 100%, 50%)" stroke-width="5.973333333333334"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="-5.15" data-y="0.635" x="40.00000000000003" y="264.1493333333334" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-5.15" data-y="-0.635" x="40.00000000000003" y="340.0106666666667" width="59.73333333333329" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="-0.85" data-y="-0.635" x="296.85333333333335" y="340.0106666666667" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="-0.85" data-y="0.635" x="296.85333333333335" y="264.1493333333334" width="59.73333333333335" height="35.839999999999975" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="2.2" x="453.6533333333333" y="160.2133333333333" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="2.2" x="552.2133333333334" y="160.2133333333333" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin1_resistors" data-x="1.675" data-y="0.4" x="453.6533333333333" y="267.73333333333335" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="0.4" x="552.2133333333334" y="267.73333333333335" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top
+source_net_u1_pin4_decoupler" data-x="1.675" data-y="-2.2" x="453.6533333333333" y="423.04" width="47.78666666666669" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><rect data-type="rect" data-label="top" data-x="3.325" data-y="-2.2" x="552.2133333333334" y="423.04" width="47.78666666666663" height="56.74666666666667" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.016741071428571428"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="-5.15" data-y="0.635" cx="69.86666666666667" cy="282.06933333333336" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="2.2" cx="477.5466666666667" cy="188.58666666666664" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin1_resistors
+source_net_u1_pin1_resistors
+top" data-x="1.675" data-y="0.4" cx="477.5466666666667" cy="296.1066666666667" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="-0.85" data-y="0.635" cx="326.72" cy="282.06933333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_u1_pin4_decoupler
+source_net_u1_pin4_decoupler
+top" data-x="1.675" data-y="-2.2" cx="477.5466666666667" cy="451.41333333333336" r="3" fill="hsl(170, 100%, 50%)"/></g><g id="crosshair__stack2" style="display: none"><line id="crosshair-h__stack2" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack2" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack2" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":59.733333333333334,"c":0,"e":377.49333333333334,"b":0,"d":-59.733333333333334,"f":320};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></g>
+  </g>
+</svg>

@@ -101,6 +101,7 @@ export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
   connection_name: string
+  connectsTo?: Array<TraceId | NetId | PointId>
   route: Array<
     | {
         route_type: "wire"

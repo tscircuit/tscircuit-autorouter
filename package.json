@@ -88,6 +88,7 @@
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
-    "object-hash": "^3.0.0"
+    "object-hash": "^3.0.0",
+    "stack-svgs": "^0.0.1"
   }
 }

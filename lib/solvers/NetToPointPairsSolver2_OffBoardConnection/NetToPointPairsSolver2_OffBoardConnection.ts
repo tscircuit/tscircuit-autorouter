@@ -125,7 +125,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     // This logic is copied from the parent class
     const { pointIdToGroup, zeroWeightEdges } =
-      getExternalConnectionState(currentConnection)
+      getExternalConnectionState(currentConnection, this.ogSrj)
 
     if (currentConnection.pointsToConnect.length === 2) {
       if (

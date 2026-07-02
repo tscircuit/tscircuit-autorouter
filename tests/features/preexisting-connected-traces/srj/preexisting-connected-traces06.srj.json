@@ -1,0 +1,35 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.1,
+  "defaultObstacleMargin": 0.1,
+  "bounds": { "minX": -7, "maxX": 7, "minY": -5, "maxY": 5 },
+  "obstacles": [
+    { "obstacleId": "U1.pin1", "type": "rect", "layers": ["top"], "center": { "x": -4.15, "y": 0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin1", "source_net_u1_pin1_to_r1_pin1", "preexisting_escape_through_u1_pin1"] },
+    { "obstacleId": "U1.pin2", "type": "rect", "layers": ["top"], "center": { "x": -4.15, "y": -0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin2"] },
+    { "obstacleId": "U1.pin3", "type": "rect", "layers": ["top"], "center": { "x": 0.15, "y": -0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin3"] },
+    { "obstacleId": "U1.pin4", "type": "rect", "layers": ["top"], "center": { "x": 0.15, "y": 0.635 }, "width": 1, "height": 0.6, "connectedTo": ["U1.pin4"] },
+    { "obstacleId": "R1.pin1", "type": "rect", "layers": ["top"], "center": { "x": 2.175, "y": 1.4 }, "width": 0.8, "height": 0.95, "connectedTo": ["R1.pin1", "source_net_u1_pin1_to_r1_pin1"] },
+    { "obstacleId": "R1.pin2", "type": "rect", "layers": ["top"], "center": { "x": 3.825, "y": 1.4 }, "width": 0.8, "height": 0.95, "connectedTo": ["R1.pin2"] }
+  ],
+  "connections": [
+    {
+      "name": "source_net_u1_pin1_to_r1_pin1",
+      "pointsToConnect": [
+        { "x": -4.15, "y": 0.635, "layer": "top", "pointId": "U1.pin1", "pcb_port_id": "U1.pin1" },
+        { "x": 2.175, "y": 1.4, "layer": "top", "pointId": "R1.pin1", "pcb_port_id": "R1.pin1" }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "preexisting_escape_through_u1_pin1",
+      "connection_name": "preexisting_escape_through_u1_pin1",
+      "connectsTo": ["U1.pin1"],
+      "route": [
+        { "route_type": "wire", "x": -4.65, "y": 0.635, "width": 0.1, "layer": "top" },
+        { "route_type": "wire", "x": -3.45, "y": 0.635, "width": 0.1, "layer": "top" }
+      ]
+    }
+  ]
+}
