@@ -60,10 +60,7 @@ export const isObstacleOwnedByRoute = (
   route: RouteConnectionIds,
   connMap?: ConnectivityLookup,
 ): boolean => {
-  const ownerConnectionIds =
-    obstacle.approximationSource?.connectedTo ?? obstacle.connectedTo
-
-  return new ObstacleConnectionIds(ownerConnectionIds).matchesRoute(
+  return new ObstacleConnectionIds(obstacle.connectedTo).matchesRoute(
     route,
     connMap,
   )

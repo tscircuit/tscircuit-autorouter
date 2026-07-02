@@ -6,10 +6,6 @@ export type OffBoardConnectionId = string
 export type ObstacleId = string
 export type RootConnectionName = string
 export type ObstacleConnectionId = TraceId | NetId
-export type ObstacleApproximationSource = {
-  obstacleId: ObstacleId
-  connectedTo: Array<ObstacleConnectionId>
-}
 export type TerminalViaHint = {
   toLayer: string
   viaDiameter?: number
@@ -73,7 +69,6 @@ export interface SimpleRouteJson {
 
 export interface Obstacle {
   obstacleId?: string
-  approximationSource?: ObstacleApproximationSource
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
   type: "rect"

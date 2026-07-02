@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import type { SimpleRouteJson } from "lib/types"
-import {
-  isObstacleConnectedToRoute,
-  isObstacleOwnedByRoute,
-} from "lib/utils/obstacle-connection-identity"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { isObstacleConnectedToRoute } from "lib/utils/obstacle-connection-identity"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 
 const assertDefined = <T>(value: T | undefined, message: string): T => {
@@ -14,7 +12,7 @@ const assertDefined = <T>(value: T | undefined, message: string): T => {
   return value
 }
 
-test("approximated trace obstacle children keep ownership separate from connection anchors", () => {
+test("approximated trace obstacle children inherit connectivity through connMap", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -34,34 +32,25 @@ test("approximated trace obstacle children keep ownership separate from connecti
     ],
     connections: [],
   }
-  const connMap = {
-    areIdsConnected: (left: string, right: string) =>
-      left === right ||
-      (left === "source_trace_1" && right === "source_trace_1"),
-  }
 
   const converted = addApproximatingRectsToSrj(srj)
-  const disconnectedChild = converted.obstacles.find(
-    (obstacle) => obstacle.connectedTo.length === 0,
-  )
   const child = assertDefined(
-    disconnectedChild,
-    "Expected an approximation child without direct connectedTo",
+    converted.obstacles.find((obstacle) =>
+      obstacle.obstacleId?.endsWith("_approx_1"),
+    ),
+    "Expected an approximation child obstacle",
   )
-  const approximationSource = assertDefined(
-    child.approximationSource,
-    "Expected approximation child to carry source ownership",
-  )
+  const connMap = getConnectivityMapFromSimpleRouteJson(converted)
 
-  expect(approximationSource.connectedTo).toEqual(["source_trace_1"])
+  expect(child.connectedTo).toEqual(["source_trace_1"])
+  expect(connMap.areIdsConnected("source_trace_1", child.obstacleId!)).toBe(
+    true,
+  )
   expect(
     isObstacleConnectedToRoute(
       child,
       { connectionName: "source_trace_1" },
       connMap,
     ),
-  ).toBe(false)
-  expect(
-    isObstacleOwnedByRoute(child, { connectionName: "source_trace_1" }, connMap),
   ).toBe(true)
 })

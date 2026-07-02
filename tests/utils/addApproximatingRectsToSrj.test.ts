@@ -91,7 +91,7 @@ test("addApproximatingRectsToSrj slices slender rotated obstacles into compact r
   ).toBe(true)
 })
 
-test("addApproximatingRectsToSrj only keeps connectivity on one approximating rect", () => {
+test("addApproximatingRectsToSrj keeps connectivity on every approximating rect", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -116,7 +116,7 @@ test("addApproximatingRectsToSrj only keeps connectivity on one approximating re
 
   expect(
     converted.obstacles.filter((o) => o.connectedTo.length > 0),
-  ).toHaveLength(1)
+  ).toHaveLength(converted.obstacles.length)
   expect(
     converted.obstacles.filter((o) => o.obstacleId === "connected_rotated_pad"),
   ).toHaveLength(1)

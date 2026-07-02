@@ -383,44 +383,18 @@ const convertObstacleToOldFormat = (
   } else {
     rects = generateCenterlineApproximatingRects(rotatedRect, rectCount)
   }
-  const connectedRectIndex =
-    obstacle.connectedTo.length > 0
-      ? rects.reduce((closestIndex, rect, index) => {
-          const closestRect = rects[closestIndex]!
-          const closestDistance =
-            (closestRect.center.x - obstacle.center.x) ** 2 +
-            (closestRect.center.y - obstacle.center.y) ** 2
-          const distance =
-            (rect.center.x - obstacle.center.x) ** 2 +
-            (rect.center.y - obstacle.center.y) ** 2
-
-          return distance < closestDistance ? index : closestIndex
-        }, 0)
-      : -1
-  let approximationSource: Obstacle["approximationSource"] | undefined
-  if (rects.length > 1) {
-    approximationSource = {
-      obstacleId: obstacleWithoutRotation.obstacleId ?? sourceKey,
-      connectedTo: [...obstacleWithoutRotation.connectedTo],
-    }
-  }
-
   return rects.map((rect, index) => {
     let obstacleId: string | undefined
-    let connectedTo: Obstacle["connectedTo"] = []
 
-    if (index === connectedRectIndex) {
+    if (index === 0) {
       obstacleId = obstacleWithoutRotation.obstacleId
-      connectedTo = obstacleWithoutRotation.connectedTo
     } else if (obstacleWithoutRotation.obstacleId !== undefined) {
       obstacleId = `${obstacleWithoutRotation.obstacleId}_approx_${index}`
     }
 
     return {
       ...obstacleWithoutRotation,
-      approximationSource,
       obstacleId,
-      connectedTo,
       center: rect.center,
       width: rect.width,
       height: rect.height,
