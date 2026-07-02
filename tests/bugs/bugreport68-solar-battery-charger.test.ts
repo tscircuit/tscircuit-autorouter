@@ -10,7 +10,6 @@ const simpleRouteJson = srj as SimpleRouteJson
 
 test("bugreport68-solar-battery-charger.srj.json", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(simpleRouteJson)
-  solver.solveUntilPhase("escapeViaLocationSolver")
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
