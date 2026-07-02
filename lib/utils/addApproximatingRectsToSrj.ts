@@ -1,11 +1,9 @@
-import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import {
   getBoundFromCenteredRect,
   distance as calculateDistance,
   isPointInsideBounds,
 } from "@tscircuit/math-utils"
-import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -328,53 +326,61 @@ const getRotatedObstacleApproximationRectCount = (
 
 const convertObstacleToOldFormat = (
   obstacle: Obstacle,
+  sourceKey: string,
   opts: { useSparseCenterlineApproximation?: boolean } = {},
 ): Obstacle[] => {
-  const rotationDegrees = obstacle.ccwRotationDegrees
+  const sourceObstacleId =
+    obstacle.obstacleId ??
+    (obstacle.connectedTo.length > 0 ? sourceKey : undefined)
+  const obstacleWithId =
+    sourceObstacleId && obstacle.obstacleId === undefined
+      ? { ...obstacle, obstacleId: sourceObstacleId }
+      : obstacle
+  const rotationDegrees = obstacleWithId.ccwRotationDegrees
 
   if (
     typeof rotationDegrees !== "number" ||
     !Number.isFinite(rotationDegrees)
   ) {
-    return [obstacle]
+    return [obstacleWithId]
   }
 
   if (isAxisAlignedRotation(rotationDegrees)) {
-    return [removeAxisAlignedRotation(obstacle, rotationDegrees)]
+    return [removeAxisAlignedRotation(obstacleWithId, rotationDegrees)]
   }
 
   const {
     ccwRotationDegrees: _ccwRotationDegrees,
     ...obstacleWithoutRotation
-  } = obstacle
+  } = obstacleWithId
 
   const rotatedRect = {
-    center: obstacle.center,
-    width: obstacle.width,
-    height: obstacle.height,
+    center: obstacleWithId.center,
+    width: obstacleWithId.width,
+    height: obstacleWithId.height,
     rotation: rotationDegrees,
   }
-  const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
+  const rectCount = getRotatedObstacleApproximationRectCount(obstacleWithId)
   const rects = opts.useSparseCenterlineApproximation
     ? generateSparseCenterlineApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
           rotatedRect,
-          getMaxLocalApproximationRectLength(obstacle),
+          getMaxLocalApproximationRectLength(obstacleWithId),
         )
-      : obstacle.obstacleId?.startsWith("trace_obstacle_")
+      : obstacleWithId.obstacleId?.startsWith("trace_obstacle_")
         ? generateApproximatingRects(rotatedRect, rectCount)
         : generateCenterlineApproximatingRects(rotatedRect, rectCount)
   const connectedRectIndex =
-    obstacle.connectedTo.length > 0
+    obstacleWithId.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {
           const closestRect = rects[closestIndex]!
           const closestDistance =
-            (closestRect.center.x - obstacle.center.x) ** 2 +
-            (closestRect.center.y - obstacle.center.y) ** 2
+            (closestRect.center.x - obstacleWithId.center.x) ** 2 +
+            (closestRect.center.y - obstacleWithId.center.y) ** 2
           const distance =
-            (rect.center.x - obstacle.center.x) ** 2 +
-            (rect.center.y - obstacle.center.y) ** 2
+            (rect.center.x - obstacleWithId.center.x) ** 2 +
+            (rect.center.y - obstacleWithId.center.y) ** 2
 
           return distance < closestDistance ? index : closestIndex
         }, 0)
@@ -383,15 +389,14 @@ const convertObstacleToOldFormat = (
   return rects.map((rect, index) => {
     const isConnectedRect = index === connectedRectIndex
     const obstacleId = isConnectedRect
-      ? obstacleWithoutRotation.obstacleId
-      : obstacleWithoutRotation.obstacleId
-        ? `${obstacleWithoutRotation.obstacleId}_approx_${index}`
+      ? sourceObstacleId
+      : sourceObstacleId
+        ? `${sourceObstacleId}_approx_${index}`
         : undefined
     const connectedTo = isConnectedRect
       ? obstacleWithoutRotation.connectedTo
-      : obstacleWithoutRotation.connectedTo.length > 0 &&
-          obstacleWithoutRotation.obstacleId
-        ? [obstacleWithoutRotation.obstacleId]
+      : obstacleWithoutRotation.connectedTo.length > 0 && sourceObstacleId
+        ? [sourceObstacleId]
         : []
 
     return {
@@ -422,13 +427,13 @@ export const addApproximatingRectsToSrj = (
     connectedRotatedObstacleCount > MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
-    const convertedObstacle = convertObstacleToOldFormat(obstacle, {
+    const sourceKey = getObstacleKey(obstacle, obstacleIndex)
+    const convertedObstacle = convertObstacleToOldFormat(obstacle, sourceKey, {
       useSparseCenterlineApproximation:
         useSparseCenterlineApproximation &&
         obstacle.connectedTo.length > 0 &&
         !obstacle.obstacleId?.startsWith("trace_obstacle_"),
     })
-    const sourceKey = getObstacleKey(obstacle, obstacleIndex)
     approximatedObstaclesBySource.set(sourceKey, convertedObstacle)
     originalObstaclesBySource.set(sourceKey, obstacle)
 
