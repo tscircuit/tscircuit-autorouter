@@ -18,6 +18,9 @@ test(
     })
 
     expect(outputSrj.traces).toHaveLength(2)
+    expect(outputSrj.traces?.every((trace) => trace.route.length <= 3)).toBe(
+      true,
+    )
   },
   { timeout: 60_000 },
 )

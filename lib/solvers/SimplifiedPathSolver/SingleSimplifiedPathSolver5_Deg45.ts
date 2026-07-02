@@ -15,6 +15,7 @@ import {
   computeGapBetweenBoxes,
   segmentToBoundsMinDistance,
 } from "@tscircuit/math-utils"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 
@@ -106,15 +107,11 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     this.filteredObstacles = this.obstacles
       .filter(
         (obstacle) =>
-          !obstacle.connectedTo.some((id) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, id),
-          ),
+          !isObstacleConnectedToRoute(obstacle, this.inputRoute, this.connMap),
       )
       .filter((obstacle) => {
         if (
-          obstacle.connectedTo.some((obsId) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, obsId),
-          )
+          isObstacleConnectedToRoute(obstacle, this.inputRoute, this.connMap)
         ) {
           return false
         }
@@ -130,12 +127,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     this.filteredObstaclePathSegments = this.otherHdRoutes.flatMap(
       (hdRoute) => {
-        if (
-          this.connMap.areIdsConnected(
-            this.inputRoute.connectionName,
-            hdRoute.connectionName,
-          )
-        ) {
+        if (this.isSameNetRoute(hdRoute)) {
           return []
         }
 
@@ -158,12 +150,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     this.segmentTree = new SegmentTree(this.filteredObstaclePathSegments)
 
     this.filteredVias = this.otherHdRoutes.flatMap((hdRoute) => {
-      if (
-        this.connMap.areIdsConnected(
-          this.inputRoute.connectionName,
-          hdRoute.connectionName,
-        )
-      ) {
+      if (this.isSameNetRoute(hdRoute)) {
         return []
       }
 
@@ -256,12 +243,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // Collect jumper pads from other routes as obstacles
     this.filteredJumperPads = this.otherHdRoutes.flatMap((hdRoute) => {
-      if (
-        this.connMap.areIdsConnected(
-          this.inputRoute.connectionName,
-          hdRoute.connectionName,
-        )
-      ) {
+      if (this.isSameNetRoute(hdRoute)) {
         return []
       }
 
@@ -298,6 +280,23 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // Compute path segments and total length
     this.computePathSegments()
+  }
+
+  private isSameNetRoute(route: HighDensityIntraNodeRoute): boolean {
+    const inputIds = [
+      this.inputRoute.connectionName,
+      this.inputRoute.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
+    const routeIds = [route.connectionName, route.rootConnectionName].filter(
+      (id): id is string => id !== undefined,
+    )
+
+    return inputIds.some((inputId) =>
+      routeIds.some(
+        (routeId) =>
+          inputId === routeId || this.connMap.areIdsConnected(inputId, routeId),
+      ),
+    )
   }
 
   // Compute the path segments and their distances
