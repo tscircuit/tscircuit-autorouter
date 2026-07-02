@@ -389,7 +389,12 @@ const convertObstacleToOldFormat = (
           ? `${obstacleWithoutRotation.obstacleId}_approx_${index}`
           : undefined,
     connectedTo:
-      index === connectedRectIndex ? obstacleWithoutRotation.connectedTo : [],
+      index === connectedRectIndex
+        ? obstacleWithoutRotation.connectedTo
+        : obstacleWithoutRotation.obstacleId &&
+            obstacleWithoutRotation.connectedTo.length > 0
+          ? [obstacleWithoutRotation.obstacleId]
+          : [],
     center: rect.center,
     width: rect.width,
     height: rect.height,

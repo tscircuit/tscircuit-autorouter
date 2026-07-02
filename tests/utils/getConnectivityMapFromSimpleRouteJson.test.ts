@@ -3,7 +3,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import type { SimpleRouteJson } from "lib/types"
 
 describe("getConnectivityMapFromSimpleRouteJson", () => {
-  test("includes off-board obstacle connections", () => {
+  test("includes obstacle-derived connections", () => {
     const srj: SimpleRouteJson = {
       layerCount: 2,
       minTraceWidth: 0.2,
@@ -20,12 +20,22 @@ describe("getConnectivityMapFromSimpleRouteJson", () => {
           offBoardConnectsTo: ["obstacle_b"],
         },
         {
+          obstacleId: "connected_rotated_pad",
           type: "rect",
           layers: ["top"],
-          center: { x: 2, y: 2 },
+          center: { x: 3, y: 3 },
           width: 1,
           height: 1,
-          connectedTo: ["obstacle_b"],
+          connectedTo: ["net_a"],
+        },
+        {
+          obstacleId: "connected_rotated_pad_approx_1",
+          type: "rect",
+          layers: ["top"],
+          center: { x: 4, y: 4 },
+          width: 1,
+          height: 1,
+          connectedTo: ["connected_rotated_pad"],
         },
       ],
     }
@@ -33,5 +43,14 @@ describe("getConnectivityMapFromSimpleRouteJson", () => {
     const connMap = getConnectivityMapFromSimpleRouteJson(srj)
 
     expect(connMap.areIdsConnected("obstacle_a", "obstacle_b")).toBe(true)
+    expect(
+      connMap.areIdsConnected(
+        "connected_rotated_pad_approx_1",
+        "connected_rotated_pad",
+      ),
+    ).toBe(true)
+    expect(
+      connMap.areIdsConnected("connected_rotated_pad_approx_1", "net_a"),
+    ).toBe(true)
   })
 })
