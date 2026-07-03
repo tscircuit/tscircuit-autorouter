@@ -542,6 +542,35 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
   }
 
+  private appendOriginalRouteTailToEnd(): void {
+    const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
+    if (!lastPointInNewRoute) return
+
+    let lastOriginalRouteIndex = -1
+    for (let i = this.inputRoute.route.length - 1; i >= 0; i--) {
+      if (this.arePointsEqual(this.inputRoute.route[i], lastPointInNewRoute)) {
+        lastOriginalRouteIndex = i
+        break
+      }
+    }
+
+    if (lastOriginalRouteIndex >= 0) {
+      const startDistance =
+        lastOriginalRouteIndex === 0
+          ? 0
+          : this.pathSegments[lastOriginalRouteIndex - 1]?.endDistance
+      this.appendOriginalRouteSlice(
+        startDistance ?? this.tailDistanceAlongPath,
+        this.inputRoute.route.length - 1,
+      )
+      return
+    }
+
+    this.newRoute.push({
+      ...this.inputRoute.route[this.inputRoute.route.length - 1],
+    })
+  }
+
   moveHead(distance: number) {
     this.lastHeadMoveDistance = distance
     this.headDistanceAlongPath = Math.min(
@@ -568,23 +597,29 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     if (tailHasReachedEnd) {
       // Make sure to add the last point if needed
       const lastPoint = this.inputRoute.route[this.inputRoute.route.length - 1]
-      if (
-        this.newRoute.length === 0 ||
-        !this.arePointsEqual(this.newRoute[this.newRoute.length - 1], lastPoint)
-      ) {
-        // TODO find path from tail to end w/ 45 degree paths
+      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
+      if (!lastPointInNewRoute) {
         this.newRoute.push(lastPoint)
+      } else if (!this.arePointsEqual(lastPointInNewRoute, lastPoint)) {
+        const pathToEnd = this.find45DegreePath(lastPointInNewRoute, lastPoint)
+        if (pathToEnd) {
+          this.addPathToResult(pathToEnd)
+        } else {
+          this.appendOriginalRouteTailToEnd()
+        }
       }
       this.solved = true
       return
     }
 
     if (headHasReachedEnd) {
-      const tailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
       const endPoint = this.inputRoute.route[this.inputRoute.route.length - 1]
+      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
 
       // Try to find a valid 45-degree path
-      const path45 = this.find45DegreePath(tailPoint, endPoint)
+      const path45 = lastPointInNewRoute
+        ? this.find45DegreePath(lastPointInNewRoute, endPoint)
+        : null
 
       if (path45) {
         // Add the path to the result
@@ -595,20 +630,12 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
       // No valid 45-degree path to the end. Keep any valid simplified prefix
       // and preserve only the remaining original tail to guarantee connectivity.
-      const connectorStartDistance = this.lastValidPath
-        ? this.lastValidPathHeadDistance
-        : this.tailDistanceAlongPath
-
       if (this.lastValidPath) {
         this.addPathToResult(this.lastValidPath)
         this.lastValidPath = null
       }
 
-      const startIndex = this.getNearestIndexForDistance(connectorStartDistance)
-      this.appendOriginalRouteSlice(
-        connectorStartDistance,
-        this.inputRoute.route.length - 1,
-      )
+      this.appendOriginalRouteTailToEnd()
 
       this.tailDistanceAlongPath = this.totalPathLength
       this.headDistanceAlongPath = this.totalPathLength
