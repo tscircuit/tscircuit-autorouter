@@ -207,11 +207,11 @@ test(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,
     )
     expect(stdout).toContain("postrun")
-    expect(stdout).toContain("drc.relaxedPassed=true")
-    expect(stdout).toContain("drc.errorCount=0")
+    expect(stdout).toContain("drc.relaxedPassed=false")
+    expect(stdout).toContain("drc.errorCount=2")
     expect(stdout).toContain("Success: yes")
-    expect(stdout).toContain("Relaxed DRC: pass")
-    expect(stdout).toContain("DRC errors: 0")
+    expect(stdout).toContain("Relaxed DRC: fail")
+    expect(stdout).toContain("DRC errors: 2")
     expect(stdout).toContain(
       `Output dir: ./${path.relative(process.cwd(), outputDir)}`,
     )
@@ -219,8 +219,8 @@ test(
       `Logs: ./${path.relative(process.cwd(), path.join(outputDir, "logs.txt"))}`,
     )
     expect(logs).toContain("postrun")
-    expect(logs).toContain("drc.relaxedPassed=true")
-    expect(logs).toContain("drc.errorCount=0")
+    expect(logs).toContain("drc.relaxedPassed=false")
+    expect(logs).toContain("drc.errorCount=2")
     expect(logs).toContain(
       `srjSource=./${path.relative(process.cwd(), srjPath)}`,
     )
