@@ -373,8 +373,12 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     // If closer to the end of the segment, return the next index
     const segment = this.pathSegments[segmentIndex]
     const midDistance = (segment.startDistance + segment.endDistance) / 2
-
-    return distance > midDistance ? segmentIndex + 1 : segmentIndex
+    const currentSegmentIndex = segmentIndex
+    let nextSegmentIndex = segmentIndex + 1
+    if (nextSegmentIndex >= this.pathSegments.length) {
+      nextSegmentIndex = currentSegmentIndex
+    }
+    return distance > midDistance ? nextSegmentIndex : currentSegmentIndex
   }
 
   // Check if a path segment is valid
