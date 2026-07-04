@@ -361,7 +361,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private getNearestIndexForDistance(distance: number): number {
     if (distance <= 0) return 0
     if (distance >= this.totalPathLength)
-      return this.inputRoute.route.length - 1
+      return this.pathSegments.length - 1
 
     // Find the segment that contains this distance
     const segmentIndex = this.pathSegments.findIndex(
