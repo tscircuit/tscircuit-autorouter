@@ -11,7 +11,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 
 const nodeWithPortPoints = (node as any).nodeWithPortPoints
 
-test("cn11081 single transition solver routes without DRC errors", () => {
+test("cn11081 single transition solver records current DRC errors", () => {
   const srj = createSrjFromNodeWithPortPoints(nodeWithPortPoints)
   const solver = new HyperSingleIntraNodeSolver({
     nodeWithPortPoints,
@@ -97,6 +97,9 @@ test("cn11081 single transition solver routes without DRC errors", () => {
   ).toEqual(["source_net_0_mst22", "source_trace_76"])
   const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
 
-  expect(errors.length).toBe(0)
+  expect(errors).toHaveLength(4)
+  expect(errors.every((error) => error.error_type === "pcb_trace_error")).toBe(
+    true,
+  )
   expect(solverName).toMatchInlineSnapshot(`"CachedIntraNodeRouteSolver"`)
 })

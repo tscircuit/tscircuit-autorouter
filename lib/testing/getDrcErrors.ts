@@ -3,6 +3,7 @@ import {
   checkEachPcbTraceNonOverlapping,
   checkPadTraceClearance,
   checkSameNetViaSpacing,
+  checkTracesAreContiguous,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
@@ -99,6 +100,7 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
+    ...checkTracesAreContiguous(circuitJson),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
