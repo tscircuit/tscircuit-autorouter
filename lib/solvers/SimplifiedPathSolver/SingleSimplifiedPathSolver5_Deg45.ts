@@ -360,8 +360,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   // Find nearest index in the original route for a given distance
   private getNearestIndexForDistance(distance: number): number {
     if (distance <= 0) return 0
-    if (distance >= this.totalPathLength)
-      return this.pathSegments.length - 1
+    if (distance >= this.totalPathLength) return this.pathSegments.length - 1
 
     // Find the segment that contains this distance
     const segmentIndex = this.pathSegments.findIndex(
