@@ -520,7 +520,16 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     startDistance: number,
     endIndexInclusive: number,
   ) {
-    const startIndex = this.getNearestIndexForDistance(startDistance)
+    const startIndex = this.pathSegments.findIndex(
+      (segment) =>
+        startDistance >= segment.startDistance &&
+        startDistance <= segment.endDistance,
+    )
+    if (startIndex === -1) {
+      throw new Error(
+        `Could not find path segment containing distance ${startDistance}`,
+      )
+    }
 
     for (
       let routeIndex = startIndex + 1;
