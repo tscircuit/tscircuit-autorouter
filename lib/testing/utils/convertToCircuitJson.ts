@@ -208,6 +208,12 @@ function convertHdRouteToCircuitJsonTraces(
   return traces
 }
 
+const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
+  obstacles.flatMap((obstacle) => [
+    `obstacle_${obstacle.center.x.toFixed(3)}_${obstacle.center.y.toFixed(3)}_${obstacle.layers.join(".")}`,
+    ...obstacle.connectedTo,
+  ])
+
 /**
  * Create source_trace elements from the SimpleRouteJson connections
  * These represent the logical connections between points
@@ -279,18 +285,21 @@ function createSourceTraces(
           ...connectedPortIds,
         ]),
       ]
+      sourceTrace.connected_source_net_ids = [
+        ...new Set([
+          ...(sourceTrace.connected_source_net_ids ?? []),
+          ...getObstacleConnectivityIds(obstaclesContainingEndpoints),
+        ]),
+      ]
     } else {
       // Create a new source_trace for this connection
       sourceTraces.push({
         type: "source_trace",
         source_trace_id: netConnectionName,
-        connected_source_port_ids: connectedPortIds.concat(
-          obstaclesContainingEndpoints.flatMap((o) => [
-            `obstacle_${o.center.x.toFixed(3)}_${o.center.y.toFixed(3)}_${o.layers.join(".")}`,
-            ...o.connectedTo,
-          ]),
+        connected_source_port_ids: connectedPortIds,
+        connected_source_net_ids: getObstacleConnectivityIds(
+          obstaclesContainingEndpoints,
         ),
-        connected_source_net_ids: [],
       })
     }
   })
