@@ -209,10 +209,7 @@ function convertHdRouteToCircuitJsonTraces(
 }
 
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
-  obstacles.flatMap((obstacle) => [
-    `obstacle_${obstacle.center.x.toFixed(3)}_${obstacle.center.y.toFixed(3)}_${obstacle.layers.join(".")}`,
-    ...obstacle.connectedTo,
-  ])
+  Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
 /**
  * Create source_trace elements from the SimpleRouteJson connections

@@ -283,6 +283,11 @@ test("keeps obstacle connectivity out of source trace endpoint expectations", ()
   ])
   expect(sourceTrace?.connected_source_net_ids).toContain("pcb_port_2")
   expect(sourceTrace?.connected_source_net_ids).toContain("pcb_smtpad_2")
+  expect(
+    sourceTrace?.connected_source_net_ids.some((id) =>
+      id.startsWith("obstacle_"),
+    ),
+  ).toBe(false)
 
   const { errors } = getDrcErrors(circuitJson)
 
