@@ -86,11 +86,11 @@ const printHelp = () => {
   console.log(
     [
       "Usage:",
-      "  ./run-sample.sh [--pipeline 4] --srj-path path/to/srj.json",
-      "  ./run-sample.sh [--pipeline 4] --sample 1 [--dataset dataset01]",
+      "  ./run-sample.sh [--pipeline 7] --srj-path path/to/srj.json",
+      "  ./run-sample.sh [--pipeline 7] --sample 1 [--dataset dataset01]",
       "",
       "Options:",
-      "  --pipeline N     Pipeline to run (1, 2, 3, 4, or 7; defaults to 4)",
+      "  --pipeline N     Pipeline to run (1, 2, 3, 4, or 7; defaults to 7)",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
       `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
@@ -103,7 +103,7 @@ const printHelp = () => {
       "",
       "Examples:",
       "  ./run-sample.sh --sample 1",
-      "  ./run-sample.sh --pipeline 4 --sample 3 --dataset dataset01",
+      "  ./run-sample.sh --pipeline 7 --sample 3 --dataset dataset01",
       "  ./run-sample.sh --srj-path fixtures/legacy/assets/e2e3.json",
     ].join("\n"),
   )
@@ -269,7 +269,7 @@ const emitLogLines = async (
 const parseArgs = (): RunSampleOptions => {
   const args = process.argv.slice(2)
   const options: RunSampleOptions = {
-    pipeline: 4,
+    pipeline: 7,
     dataset: "dataset01",
     pngSize: 1536,
     writeAiVisuals: false,
