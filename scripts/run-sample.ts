@@ -7,6 +7,7 @@ import {
   AutoroutingPipelineSolver2_PortPointPathing,
   AutoroutingPipelineSolver3_HgPortPointPathing,
   AutoroutingPipelineSolver4,
+  AutoroutingPipelineSolver7_MultiGraph,
 } from "../lib"
 import {
   PipelineStageDebugRunner,
@@ -24,7 +25,7 @@ import {
   toSimpleRouteJson,
 } from "./benchmark/scenarios"
 
-type PipelineId = 1 | 2 | 3 | 4
+type PipelineId = 1 | 2 | 3 | 4 | 7
 
 type SolverOptions = {
   effort?: number
@@ -48,6 +49,8 @@ type RunSampleOptions = {
   outDir?: string
   pngSize: number
   effort?: number
+  stopAfterStage?: string
+  writeAiVisuals: boolean
 }
 
 const PIPELINE_SOLVERS: Record<
@@ -73,6 +76,10 @@ const PIPELINE_SOLVERS: Record<
     solverName: "AutoroutingPipelineSolver4",
     SolverConstructor: AutoroutingPipelineSolver4,
   },
+  7: {
+    solverName: "AutoroutingPipelineSolver7_MultiGraph",
+    SolverConstructor: AutoroutingPipelineSolver7_MultiGraph,
+  },
 }
 
 const printHelp = () => {
@@ -83,12 +90,14 @@ const printHelp = () => {
       "  ./run-sample.sh [--pipeline 4] --sample 1 [--dataset dataset01]",
       "",
       "Options:",
-      "  --pipeline N     Pipeline to run (1-4, defaults to 4)",
+      "  --pipeline N     Pipeline to run (1, 2, 3, 4, or 7; defaults to 4)",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
       `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
       "  --out-dir PATH   Override the output directory (default: ./tmp/run-N)",
       "  --png-size N     Square PNG size in pixels, min 1024 (default: 1536)",
+      "  --stop-after-stage NAME  Stop after capturing a pipeline stage",
+      "  --ai-visuals     Also write SVG, GraphicsObject JSON, and per-step PNGs",
       "  --effort N       Override solver effort",
       "  -h, --help       Show this help",
       "",
@@ -105,6 +114,16 @@ const parsePositiveInt = (rawValue: string, flagName: string) => {
   if (!Number.isFinite(value) || value < 1) {
     throw new Error(`${flagName} must be a positive integer`)
   }
+  return value
+}
+
+const parsePositiveNumber = (rawValue: string, flagName: string) => {
+  const value = Number.parseFloat(rawValue)
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${flagName} must be a positive number`)
+  }
+
   return value
 }
 
@@ -253,6 +272,7 @@ const parseArgs = (): RunSampleOptions => {
     pipeline: 4,
     dataset: "dataset01",
     pngSize: 1536,
+    writeAiVisuals: false,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -266,7 +286,7 @@ const parseArgs = (): RunSampleOptions => {
     if (arg === "--pipeline") {
       const pipelineId = parsePositiveInt(args[i + 1] ?? "", "--pipeline")
       if (!(pipelineId in PIPELINE_SOLVERS)) {
-        throw new Error("--pipeline must be one of 1, 2, 3, or 4")
+        throw new Error("--pipeline must be one of 1, 2, 3, 4, or 7")
       }
       options.pipeline = pipelineId as PipelineId
       i += 1
@@ -321,8 +341,23 @@ const parseArgs = (): RunSampleOptions => {
       continue
     }
 
+    if (arg === "--stop-after-stage") {
+      const stopAfterStage = args[i + 1]
+      if (!stopAfterStage || stopAfterStage.startsWith("-")) {
+        throw new Error("--stop-after-stage requires a value")
+      }
+      options.stopAfterStage = stopAfterStage
+      i += 1
+      continue
+    }
+
+    if (arg === "--ai-visuals") {
+      options.writeAiVisuals = true
+      continue
+    }
+
     if (arg === "--effort") {
-      options.effort = parsePositiveInt(args[i + 1] ?? "", "--effort")
+      options.effort = parsePositiveNumber(args[i + 1] ?? "", "--effort")
       i += 1
       continue
     }
@@ -409,6 +444,10 @@ const main = async () => {
     outputDir: resolvedOutputDir,
     pngWidth: options.pngSize,
     pngHeight: options.pngSize,
+    writeSvg: options.writeAiVisuals,
+    writeGraphicsJson: options.writeAiVisuals,
+    writeStepPngs: options.writeAiVisuals,
+    stopAfterStage: options.stopAfterStage,
     context: {
       pipeline: options.pipeline,
       solver: pipelineConfig.solverName,
@@ -416,6 +455,8 @@ const main = async () => {
       sample: options.sample ?? "",
       scenarioName: input.scenarioName,
       srjSource: input.sourceLabel,
+      stopAfterStage: options.stopAfterStage ?? "",
+      aiVisuals: options.writeAiVisuals,
     },
     onLog,
   })
@@ -472,7 +513,8 @@ const main = async () => {
     )
   }
 
-  const success = result.solved && !result.failed
+  const success =
+    (result.solved && !result.failed) || Boolean(result.stoppedAfterStage)
   const drcSummary =
     relaxedDrcPassed === null ? "not-run" : relaxedDrcPassed ? "pass" : "fail"
 
@@ -484,6 +526,9 @@ const main = async () => {
   console.log(`Output dir: ${toRelativePath(result.outputDir)}`)
   console.log(`Logs: ${toRelativePath(result.logsPath)}`)
   console.log(`Stage PNGs: ${result.stageArtifacts.length}`)
+  if (result.stoppedAfterStage) {
+    console.log(`Stopped after stage: ${result.stoppedAfterStage}`)
+  }
 
   if (drcErrors.length > 0) {
     console.log(`DRC details written to: ${toRelativePath(result.logsPath)}`)

@@ -15,6 +15,31 @@
 - Use Blacksmith only for benchmark runs unless the user explicitly asks to use
   Blacksmith for another validation task.
 
+## Visualization Debugging
+
+When changing or reviewing solver `visualize()` / `preview()` output, use the
+`tscircuit-visualization` skill.
+
+Prefer existing graphics artifact tooling instead of ad hoc screenshots:
+
+- Use `PipelineStageDebugRunner` for per-stage artifacts.
+- Use `scripts/run-sample.ts --ai-visuals` to export PNG, SVG,
+  GraphicsObject JSON, and per-step PNGs.
+- Inspect the generated PNGs before making visual changes.
+
+For pipeline 7 first-stage visual debugging, use:
+
+```bash
+bun scripts/run-sample.ts \
+  --pipeline 7 \
+  --dataset srj18 \
+  --sample 1 \
+  --effort 0.1 \
+  --stop-after-stage componentDetectionSolver \
+  --ai-visuals \
+  --out-dir /tmp/pipeline7-visuals
+```
+
 ## Fallback Logic
 
 > When a solver hits a state it can't explain, fix the root cause or throw. Do not add a fallback.
