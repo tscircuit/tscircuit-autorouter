@@ -10,7 +10,10 @@ import {
 } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { AutoroutingPipelineSolver4 } from "lib"
+import {
+  AutoroutingPipelineSolver4,
+  AutoroutingPipelineSolver7_MultiGraph,
+} from "lib"
 import { PipelineStageDebugRunner } from "lib/testing/PipelineStageDebugRunner"
 import type { SimpleRouteJson } from "lib/types"
 import {
@@ -59,6 +62,18 @@ const getPipeline4StageNumber = (stageName: string) => {
 
   if (stageIndex === -1) {
     throw new Error(`Missing pipeline4 stage: ${stageName}`)
+  }
+
+  return stageIndex + 1
+}
+
+const getPipeline7StageNumber = (stageName: string) => {
+  const stageIndex = new AutoroutingPipelineSolver7_MultiGraph(
+    srj,
+  ).pipelineDef.findIndex((stage) => stage.solverName === stageName)
+
+  if (stageIndex === -1) {
+    throw new Error(`Missing pipeline7 stage: ${stageName}`)
   }
 
   return stageIndex + 1
@@ -192,16 +207,23 @@ test(
     const stdout = proc.stdout.toString()
     const stderr = proc.stderr.toString()
     const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
-    const netToPointPairsStage = getPipeline4StageNumber(
+    const netToPointPairsStage = getPipeline7StageNumber(
       "netToPointPairsSolver",
     )
-    const traceWidthStage = getPipeline4StageNumber("traceWidthSolver")
+    const componentTopologyStage = getPipeline7StageNumber(
+      "componentTopologyGeneratorSolver",
+    )
+    const traceWidthStage = getPipeline7StageNumber("traceWidthSolver")
 
     expect(proc.exitCode).toBe(0)
     expect(stderr).toBe("")
     expect(stdout).toContain("startedAt=")
+    expect(stdout).toContain("pipeline=7")
     expect(stdout).toContain(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
+    )
+    expect(stdout).toContain(
+      `captured stage=${componentTopologyStage} name=componentTopologyGeneratorSolver`,
     )
     expect(stdout).toContain(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,

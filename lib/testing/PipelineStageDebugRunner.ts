@@ -1,6 +1,9 @@
 import { appendFile, mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { getPngBufferFromGraphicsObject } from "graphics-debug"
+import {
+  getPngBufferFromGraphicsObject,
+  getSvgFromGraphicsObject,
+} from "graphics-debug"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 
@@ -25,6 +28,9 @@ export type PipelineStageArtifact = {
   stageName: string
   stageNumber: number
   pngPath: string
+  svgPath?: string
+  graphicsJsonPath?: string
+  stepPngPaths: string[]
 }
 
 export type PipelineStageDebugRunnerResult = {
@@ -34,6 +40,7 @@ export type PipelineStageDebugRunnerResult = {
   solved: boolean
   failed: boolean
   error: string | null
+  stoppedAfterStage: string | null
 }
 
 export class PipelineStageDebugRunner<
@@ -44,6 +51,10 @@ export class PipelineStageDebugRunner<
   readonly logsPath: string
   readonly pngWidth: number
   readonly pngHeight: number
+  readonly writeSvg: boolean
+  readonly writeGraphicsJson: boolean
+  readonly writeStepPngs: boolean
+  readonly stopAfterStage?: string
   readonly context: Record<string, string | number | boolean | null | undefined>
   readonly onLog?: (line: string) => void
 
@@ -54,6 +65,10 @@ export class PipelineStageDebugRunner<
     outputDir: string
     pngWidth?: number
     pngHeight?: number
+    writeSvg?: boolean
+    writeGraphicsJson?: boolean
+    writeStepPngs?: boolean
+    stopAfterStage?: string
     context?: Record<string, string | number | boolean | null | undefined>
     onLog?: (line: string) => void
   }) {
@@ -62,6 +77,10 @@ export class PipelineStageDebugRunner<
     this.logsPath = path.join(this.outputDir, "logs.txt")
     this.pngWidth = opts.pngWidth ?? 1536
     this.pngHeight = opts.pngHeight ?? 1536
+    this.writeSvg = opts.writeSvg ?? false
+    this.writeGraphicsJson = opts.writeGraphicsJson ?? false
+    this.writeStepPngs = opts.writeStepPngs ?? false
+    this.stopAfterStage = opts.stopAfterStage
     this.context = opts.context ?? {}
     this.onLog = opts.onLog
   }
@@ -79,6 +98,7 @@ export class PipelineStageDebugRunner<
     )
 
     let currentPhase = this.pipelineSolver.getCurrentPhase()
+    let stoppedAfterStage: string | null = null
     if (currentPhase !== "none") {
       await this.log(this.getStageEnterLogLine(currentPhase))
     }
@@ -97,6 +117,10 @@ export class PipelineStageDebugRunner<
 
       if (currentPhase !== previousPhase && previousPhase !== "none") {
         await this.captureStage(previousPhase)
+        if (previousPhase === this.stopAfterStage) {
+          stoppedAfterStage = previousPhase
+          break
+        }
       }
 
       if (currentPhase !== previousPhase && currentPhase !== "none") {
@@ -108,7 +132,11 @@ export class PipelineStageDebugRunner<
       }
     }
 
-    if (currentPhase !== "none" && !this.hasStageArtifact(currentPhase)) {
+    if (
+      !stoppedAfterStage &&
+      currentPhase !== "none" &&
+      !this.hasStageArtifact(currentPhase)
+    ) {
       await this.captureStage(currentPhase)
     }
 
@@ -116,7 +144,13 @@ export class PipelineStageDebugRunner<
       await this.log(`thrownError=${this.formatError(thrownError)}`)
     }
 
-    const status = this.pipelineSolver.solved ? "solved" : "failed"
+    const status = stoppedAfterStage
+      ? "stopped"
+      : this.pipelineSolver.solved
+        ? "solved"
+        : this.pipelineSolver.failed
+          ? "failed"
+          : "incomplete"
     await this.log(
       `completed status=${status} iterations=${this.pipelineSolver.iterations} error=${this.pipelineSolver.error ?? ""}`,
     )
@@ -130,6 +164,7 @@ export class PipelineStageDebugRunner<
       error:
         this.pipelineSolver.error ??
         (thrownError ? this.formatError(thrownError) : null),
+      stoppedAfterStage,
     }
   }
 
@@ -154,25 +189,128 @@ export class PipelineStageDebugRunner<
       this.outputDir,
       `stage${String(stageNumber).padStart(2, "0")}-${this.getSafeStageName(stageName)}.png`,
     )
+    const basePath = pngPath.slice(0, -".png".length)
+    const graphics = stageSolver.visualize()
 
-    const png = await getPngBufferFromGraphicsObject(stageSolver.visualize(), {
+    const png = await getPngBufferFromGraphicsObject(graphics, {
+      backgroundColor: "white",
       pngWidth: this.pngWidth,
       pngHeight: this.pngHeight,
     })
 
     await writeFile(pngPath, png)
 
+    const stepPngPaths = this.writeStepPngs
+      ? await this.writeStepPngsForGraphics(basePath, graphics)
+      : []
+    const svgPath = this.writeSvg ? `${basePath}.svg` : undefined
+    const graphicsJsonPath = this.writeGraphicsJson
+      ? `${basePath}.graphics.json`
+      : undefined
+
+    if (svgPath) {
+      await writeFile(
+        svgPath,
+        getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
+      )
+    }
+
+    if (graphicsJsonPath) {
+      await writeFile(graphicsJsonPath, JSON.stringify(graphics, null, 2))
+    }
+
     const artifact = {
       stageName,
       stageNumber,
       pngPath,
+      svgPath,
+      graphicsJsonPath,
+      stepPngPaths,
     } satisfies PipelineStageArtifact
     this.stageArtifacts.push(artifact)
 
     const elapsedTimeMs = this.pipelineSolver.timeSpentOnPhase?.[stageName]
     await this.log(
-      `captured stage=${stageNumber} name=${stageName} solver=${stageSolver.getSolverName?.() ?? "unknown"} iterations=${stageSolver.iterations ?? 0} elapsedMs=${elapsedTimeMs?.toFixed(1) ?? "n/a"} png=${this.toDisplayPath(pngPath)}`,
+      `captured stage=${stageNumber} name=${stageName} solver=${stageSolver.getSolverName?.() ?? "unknown"} iterations=${stageSolver.iterations ?? 0} elapsedMs=${elapsedTimeMs?.toFixed(1) ?? "n/a"} png=${this.toDisplayPath(pngPath)} steps=${stepPngPaths.length}`,
     )
+  }
+
+  private async writeStepPngsForGraphics(
+    basePath: string,
+    graphics: GraphicsObject,
+  ): Promise<string[]> {
+    const stepPngPaths: string[] = []
+
+    for (const step of this.getObjectSteps(graphics)) {
+      const stepPngPath = `${basePath}.step-${step}.png`
+      await writeFile(
+        stepPngPath,
+        await getPngBufferFromGraphicsObject(
+          this.filterGraphicsByStep(graphics, step),
+          {
+            backgroundColor: "white",
+            pngWidth: this.pngWidth,
+            pngHeight: this.pngHeight,
+          },
+        ),
+      )
+      stepPngPaths.push(stepPngPath)
+    }
+
+    return stepPngPaths
+  }
+
+  private getObjectSteps(graphics: GraphicsObject): number[] {
+    const steps = new Set<number>()
+    const collect = (objects: Array<{ step?: number }> | undefined): void => {
+      for (const object of objects ?? []) {
+        if (typeof object.step === "number") steps.add(object.step)
+      }
+    }
+
+    collect(graphics.points)
+    collect(graphics.lines)
+    collect(graphics.infiniteLines)
+    collect(graphics.rects)
+    collect(graphics.polygons)
+    collect(graphics.circles)
+    collect(graphics.texts)
+    collect(graphics.arrows)
+
+    return [...steps].sort((a, b) => a - b)
+  }
+
+  private filterGraphicsByStep(
+    graphics: GraphicsObject,
+    step: number,
+  ): GraphicsObject {
+    return {
+      ...graphics,
+      points: graphics.points?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      lines: graphics.lines?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      infiniteLines: graphics.infiniteLines?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      rects: graphics.rects?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      polygons: graphics.polygons?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      circles: graphics.circles?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      texts: graphics.texts?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+      arrows: graphics.arrows?.filter(
+        (object) => object.step === undefined || object.step === step,
+      ),
+    }
   }
 
   private getStageEnterLogLine(stageName: string) {
