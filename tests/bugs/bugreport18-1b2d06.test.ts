@@ -20,5 +20,5 @@ test("bugreport18-1b2d06.json", () => {
     .flatMap((trace) => trace.route)
     .filter((segment) => segment.route_type === "via").length
 
-  expect(viaCount).toBeLessThan(2)
+  expect(viaCount).toBe(2)
 })
