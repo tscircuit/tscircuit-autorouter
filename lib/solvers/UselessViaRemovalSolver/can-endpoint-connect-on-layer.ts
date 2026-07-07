@@ -45,7 +45,5 @@ export const canEndpointConnectOnLayer = ({
     )
   }
 
-  throw new Error(
-    `UselessViaRemovalSolver could not find endpoint obstacle for route "${route.connectionName}" at (${endpointX}, ${endpointY})`,
-  )
+  return false
 }
