@@ -20,7 +20,7 @@ const getNodeOrThrow = (
   return node!
 }
 
-test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
+test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected port pairs", () => {
   getGlobalInMemoryCache().clearCache()
 
   const circuit015 = (dataset01 as Record<string, unknown>)
@@ -60,7 +60,40 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only snapshot", () => {
   const accidentalContacts = locationAwareErrors.filter((error) =>
     error.message.includes("accidental contact"),
   )
+  const expectedEndpointKeysByConnectionName = new Map<string, string[]>()
+  for (const portPoint of cmn2Input.portPoints) {
+    const endpointKey = `${portPoint.x}:${portPoint.y}:${portPoint.z}`
+    const endpointKeys =
+      expectedEndpointKeysByConnectionName.get(portPoint.connectionName) ?? []
+    expectedEndpointKeysByConnectionName.set(portPoint.connectionName, [
+      ...endpointKeys,
+      endpointKey,
+    ])
+  }
+  for (const endpointKeys of expectedEndpointKeysByConnectionName.values()) {
+    endpointKeys.sort()
+  }
 
   expect(accidentalContacts).toHaveLength(0)
-  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
-}, 120_000)
+  expect(solver.routes).toHaveLength(expectedEndpointKeysByConnectionName.size)
+
+  for (const route of solver.routes) {
+    const firstPoint = route.route[0]
+    const lastPoint = route.route.at(-1)
+    const expectedEndpointKeys = expectedEndpointKeysByConnectionName.get(
+      route.connectionName,
+    )
+
+    expect(firstPoint).toBeDefined()
+    expect(lastPoint).toBeDefined()
+    expect(expectedEndpointKeys).toBeDefined()
+    expect(expectedEndpointKeys).toHaveLength(2)
+    const actualEndpointKeys = [
+      `${firstPoint!.x}:${firstPoint!.y}:${firstPoint!.z}`,
+      `${lastPoint!.x}:${lastPoint!.y}:${lastPoint!.z}`,
+    ].sort()
+
+    expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1])
+    expect(actualEndpointKeys).toEqual(expectedEndpointKeys!)
+  }
+})
