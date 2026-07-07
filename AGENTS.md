@@ -72,3 +72,14 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
 ## Architecture
 
 The codebase follows a modular architecture with solvers handling different aspects of autorouting. The main export is the `AutoroutingPipelineSolver` which orchestrates the routing process and contains all the stages.
+
+## Writing tests
+
+When writing visualization snapshot tests, read the `tscircuit-visualization`
+skill first. Do not set timeouts in test code; CI controls test timeouts.
+When running tests locally, pass a large timeout, such as `--timeout 9999999`.
+
+When asked to update snapshots, run
+`BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999`. If only specific tests are
+failing because of a change, update only those failing tests. Do not spend time
+updating every test.
