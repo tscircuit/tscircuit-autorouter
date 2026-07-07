@@ -16,6 +16,57 @@ interface RouteSection {
   points: HighDensityRoute["route"]
 }
 
+const routeIsSameNet = (
+  route: HighDensityRoute,
+  otherRoute: HighDensityRoute,
+  connMap: ConnectivityMap,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+  const otherRouteIds = [
+    otherRoute.connectionName,
+    otherRoute.rootConnectionName,
+  ].filter((id): id is string => id !== undefined)
+
+  return routeIds.some((routeId) =>
+    otherRouteIds.some(
+      (otherRouteId) =>
+        otherRouteId === routeId ||
+        connMap.areIdsConnected(otherRouteId, routeId),
+    ),
+  )
+}
+
+const obstacleIsSameNet = (
+  obstacle: Obstacle,
+  route: HighDensityRoute,
+  connMap: ConnectivityMap,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+
+  // Same-net pads and copper should not block via removal collision checks.
+  return routeIds.some((routeId) =>
+    obstacle.connectedTo.some(
+      (connectedId) =>
+        connectedId === routeId || connMap.areIdsConnected(connectedId, routeId),
+    ),
+  )
+}
+
+const obstacleIsRouteEndpoint = (
+  obstacle: Obstacle,
+  route: HighDensityRoute,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+
+  return routeIds.some((routeId) => obstacle.connectedTo.includes(routeId))
+}
+
 export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleRouteUselessViaRemovalSolver"
@@ -48,51 +99,6 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.connMap = params.connMap
 
     this.routeSections = this.breakRouteIntoSections(this.unsimplifiedRoute)
-  }
-
-  private routeIsSameNet(route: HighDensityRoute): boolean {
-    const currentRouteIds = [
-      this.unsimplifiedRoute.connectionName,
-      this.unsimplifiedRoute.rootConnectionName,
-    ].filter((id): id is string => id !== undefined)
-    const otherRouteIds = [
-      route.connectionName,
-      route.rootConnectionName,
-    ].filter((id): id is string => id !== undefined)
-
-    return currentRouteIds.some((currentRouteId) =>
-      otherRouteIds.some(
-        (otherRouteId) =>
-          otherRouteId === currentRouteId ||
-          this.connMap.areIdsConnected(otherRouteId, currentRouteId),
-      ),
-    )
-  }
-
-  private obstacleIsSameNet(obstacle: Obstacle): boolean {
-    const currentRouteIds = [
-      this.unsimplifiedRoute.connectionName,
-      this.unsimplifiedRoute.rootConnectionName,
-    ].filter((id): id is string => id !== undefined)
-
-    // Same-net pads and copper should not block via removal collision checks.
-    return currentRouteIds.some((currentRouteId) =>
-      obstacle.connectedTo.some(
-        (connectedId) =>
-          connectedId === currentRouteId ||
-          this.connMap.areIdsConnected(connectedId, currentRouteId),
-      ),
-    )
-  }
-
-  private obstacleIsRouteEndpoint(obstacle: Obstacle): boolean {
-    const currentRootName = this.unsimplifiedRoute.rootConnectionName
-
-    return obstacle.connectedTo.some(
-      (connectedId) =>
-        connectedId === this.unsimplifiedRoute.connectionName ||
-        connectedId === currentRootName,
-    )
   }
 
   breakRouteIntoSections(route: HighDensityRoute) {
@@ -248,7 +254,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     // Filter to obstacles that this trace connects to and contain the endpoint
     const connectedObstacles = nearbyObstacles.filter((obstacle) => {
-      if (!this.obstacleIsRouteEndpoint(obstacle)) {
+      if (!obstacleIsRouteEndpoint(obstacle, this.unsimplifiedRoute)) {
         return false
       }
       // Check if the endpoint is within or very close to the obstacle bounds
@@ -298,7 +304,13 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       )
 
       for (const { conflictingRoute, distance } of conflictingRoutes) {
-        if (this.routeIsSameNet(conflictingRoute)) {
+        if (
+          routeIsSameNet(
+            this.unsimplifiedRoute,
+            conflictingRoute,
+            this.connMap,
+          )
+        ) {
           continue
         }
 
@@ -330,7 +342,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       for (const obstacle of obstacles) {
         // Skip obstacles that are connected to this trace
         // (the trace is supposed to connect to them)
-        if (this.obstacleIsSameNet(obstacle)) {
+        if (
+          obstacleIsSameNet(obstacle, this.unsimplifiedRoute, this.connMap)
+        ) {
           continue
         }
 

@@ -33,13 +33,6 @@ type Via = {
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 1.5
 const OBSTACLE_MARGIN = 0.1
 
-type ViaMoveContext = {
-  connMap: ConnectivityMap
-  mergedViaHdRoutes: HighDensityRoute[]
-  hdRouteSHI: HighDensityRouteSpatialIndex
-  obstacleSHI: ObstacleSpatialHashIndex
-}
-
 const getNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
@@ -71,7 +64,12 @@ const obstacleIsSameNet = (
 const canMoveViaTo = (
   viaToRemove: Via,
   viaKeep: Via,
-  context: ViaMoveContext,
+  context: {
+    connMap: ConnectivityMap
+    mergedViaHdRoutes: HighDensityRoute[]
+    hdRouteSHI: HighDensityRouteSpatialIndex
+    obstacleSHI: ObstacleSpatialHashIndex
+  },
 ): boolean => {
   const route = context.mergedViaHdRoutes[viaToRemove.routeIndex]
   if (!route) {
