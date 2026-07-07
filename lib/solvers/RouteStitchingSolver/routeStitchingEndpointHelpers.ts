@@ -173,11 +173,12 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
-}) => {
-  let closestTerminal = [...params.terminals].sort(comparePoints)[0]
+}): Point3 => {
+  const sortedTerminals: Point3[] = [...params.terminals].sort(comparePoints)
+  let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
-  for (const terminal of params.terminals.slice(1)) {
+  for (const terminal of sortedTerminals.slice(1)) {
     const terminalDistance = distance(params.islandEndpoint, terminal)
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||

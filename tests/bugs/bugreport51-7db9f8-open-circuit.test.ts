@@ -8,14 +8,14 @@ import bugReport from "../../fixtures/bug-reports/bugreport51-7db9f8/bugreport51
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-// Every solved connection must reach both of its terminals. Today
-// source_trace_150 (two pads 1mm apart) is emitted as a single degenerate
-// route point on its start port and never reaches its end port — an open
-// circuit shipped as solved=true. Root cause: RouteStitchingSolver's
-// snapIslandEndpointToNearestTerminal skips terminals[0] whenever it is not
-// the comparePoints-first terminal, so both island endpoints snap to the
-// same terminal.
-test.failing(
+// Every solved connection must reach both of its terminals. Previously
+// source_trace_150 (two pads 1mm apart) was emitted as a single degenerate
+// route point on its start port and never reached its end port — an open
+// circuit shipped as solved=true, because RouteStitchingSolver's
+// snapIslandEndpointToNearestTerminal skipped terminals[0] whenever it was
+// not the comparePoints-first terminal, so both island endpoints snapped to
+// the same terminal.
+test(
   "bugreport51-7db9f8 pipeline7 output reaches both terminals of every connection",
   () => {
     const solver = new AutoroutingPipelineSolver7_MultiGraph(
