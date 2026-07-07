@@ -343,6 +343,54 @@ export const convertHdRouteToSimplifiedRoute = (
     }
   }
 
+  // Same-region connection fallback. When both endpoints of a connection fall in
+  // a single capacity node, no region boundary is crossed. The terminal port
+  // points are filtered out of the HD node graph (buildInputNodesWithPortPoints
+  // drops `_tinyTerminal` ports because they are normally attached only at route
+  // ends), so the HD solver returns a degenerate single-point route and the net
+  // is left unconnected - e.g. two adjacent same-net pads in one node. Emit the
+  // direct intra-node segment between the two endpoints so the connection is
+  // actually made.
+  const distinctWireXy = new Set(
+    result
+      .filter((seg) => seg.route_type === "wire")
+      .map((seg) => `${(seg as { x: number }).x},${(seg as { y: number }).y}`),
+  )
+  const cps = opts.connectionPoints
+  if (cps && cps.length >= 2 && distinctWireXy.size < 2) {
+    const a = cps[0]
+    const b = cps[cps.length - 1]
+    if (
+      isSingleLayerConnectionPoint(a) &&
+      isSingleLayerConnectionPoint(b) &&
+      (a.x !== b.x || a.y !== b.y)
+    ) {
+      const width = hdRoute.traceThickness
+      if (a.layer === b.layer) {
+        return [
+          { route_type: "wire", x: a.x, y: a.y, width, layer: a.layer },
+          { route_type: "wire", x: b.x, y: b.y, width, layer: b.layer },
+        ]
+      }
+      return [
+        { route_type: "wire", x: a.x, y: a.y, width, layer: a.layer },
+        { route_type: "wire", x: b.x, y: b.y, width, layer: a.layer },
+        {
+          route_type: "via",
+          x: b.x,
+          y: b.y,
+          from_layer: a.layer,
+          to_layer: b.layer,
+          via_diameter: hdRoute.viaDiameter,
+          ...(opts.defaultViaHoleDiameter !== undefined
+            ? { via_hole_diameter: opts.defaultViaHoleDiameter }
+            : {}),
+        },
+        { route_type: "wire", x: b.x, y: b.y, width, layer: b.layer },
+      ]
+    }
+  }
+
   return attachTerminalViasToSimplifiedRoute({
     route: result,
     hdRoute,

@@ -428,4 +428,30 @@ describe("convertHdRouteToSimplifiedRoute", () => {
       ]
     `)
   })
+
+  test("completes a degenerate same-region route from the connection endpoints", () => {
+    // When both endpoints of a connection fall in a single capacity node, the HD
+    // solver returns a degenerate single-point route (the terminal ports are
+    // filtered out of the node graph), leaving the net unconnected. The converter
+    // must fall back to the direct segment between the two endpoints.
+    const input: HighDensityIntraNodeRoute = {
+      connectionName: "same-region",
+      traceThickness: 0.15,
+      viaDiameter: 0.6,
+      route: [{ x: -4.92, y: 4.4, z: 0 }],
+      vias: [],
+    }
+    const connectionPoints: ConnectionPoint[] = [
+      { x: -4.92, y: 5.2, layer: "top" },
+      { x: -4.92, y: 4.4, layer: "top" },
+    ] as ConnectionPoint[]
+
+    const result = convertHdRouteToSimplifiedRoute(input, 2, { connectionPoints })
+
+    expect(result).toEqual([
+      { route_type: "wire", x: -4.92, y: 5.2, width: 0.15, layer: "top" },
+      { route_type: "wire", x: -4.92, y: 4.4, width: 0.15, layer: "top" },
+    ])
+  })
+
 })
