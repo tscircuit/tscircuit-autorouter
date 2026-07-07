@@ -60,16 +60,16 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
   const accidentalContacts = locationAwareErrors.filter((error) =>
     error.message.includes("accidental contact"),
   )
-  const expectedEndpointKeysByConnectionName = cmn2Input.portPoints.reduce(
-    (endpointKeysByConnectionName, portPoint) => {
-      const endpointKeys =
-        endpointKeysByConnectionName.get(portPoint.connectionName) ?? []
-      endpointKeys.push(`${portPoint.x}:${portPoint.y}:${portPoint.z}`)
-      endpointKeysByConnectionName.set(portPoint.connectionName, endpointKeys)
-      return endpointKeysByConnectionName
-    },
-    new Map<string, string[]>(),
-  )
+  const expectedEndpointKeysByConnectionName = new Map<string, string[]>()
+  for (const portPoint of cmn2Input.portPoints) {
+    const endpointKey = `${portPoint.x}:${portPoint.y}:${portPoint.z}`
+    const endpointKeys =
+      expectedEndpointKeysByConnectionName.get(portPoint.connectionName) ?? []
+    expectedEndpointKeysByConnectionName.set(portPoint.connectionName, [
+      ...endpointKeys,
+      endpointKey,
+    ])
+  }
   for (const endpointKeys of expectedEndpointKeysByConnectionName.values()) {
     endpointKeys.sort()
   }
@@ -84,22 +84,19 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
       route.connectionName,
     )
 
-    if (!firstPoint || !lastPoint) {
-      throw new Error(`Route "${route.connectionName}" is missing endpoints`)
-    }
-    if (!expectedEndpointKeys) {
-      throw new Error(
-        `Missing expected endpoints for route "${route.connectionName}"`,
-      )
-    }
-
+    expect(firstPoint).toBeDefined()
+    expect(lastPoint).toBeDefined()
+    expect(expectedEndpointKeys).toBeDefined()
+    const checkedFirstPoint = firstPoint as (typeof route.route)[number]
+    const checkedLastPoint = lastPoint as (typeof route.route)[number]
+    const checkedExpectedEndpointKeys = expectedEndpointKeys as string[]
     expect(expectedEndpointKeys).toHaveLength(2)
     const actualEndpointKeys = [
-      `${firstPoint.x}:${firstPoint.y}:${firstPoint.z}`,
-      `${lastPoint.x}:${lastPoint.y}:${lastPoint.z}`,
+      `${checkedFirstPoint.x}:${checkedFirstPoint.y}:${checkedFirstPoint.z}`,
+      `${checkedLastPoint.x}:${checkedLastPoint.y}:${checkedLastPoint.z}`,
     ].sort()
 
     expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1])
-    expect(actualEndpointKeys).toEqual(expectedEndpointKeys)
+    expect(actualEndpointKeys).toEqual(checkedExpectedEndpointKeys)
   }
 })
