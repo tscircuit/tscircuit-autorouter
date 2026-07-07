@@ -4,69 +4,12 @@ import {
   HighDensityRoute,
   HighDensityRouteSpatialIndex,
 } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { Obstacle } from "lib/types"
-
-interface RouteSection {
-  startIndex: number
-  endIndex: number
-  z: number
-  points: HighDensityRoute["route"]
-}
-
-const routeIsSameNet = (
-  route: HighDensityRoute,
-  otherRoute: HighDensityRoute,
-  connMap: ConnectivityMap,
-): boolean => {
-  const routeIds = [route.connectionName, route.rootConnectionName].filter(
-    (id): id is string => id !== undefined,
-  )
-  const otherRouteIds = [
-    otherRoute.connectionName,
-    otherRoute.rootConnectionName,
-  ].filter((id): id is string => id !== undefined)
-
-  return routeIds.some((routeId) =>
-    otherRouteIds.some(
-      (otherRouteId) =>
-        otherRouteId === routeId ||
-        connMap.areIdsConnected(otherRouteId, routeId),
-    ),
-  )
-}
-
-const obstacleIsSameNet = (
-  obstacle: Obstacle,
-  route: HighDensityRoute,
-  connMap: ConnectivityMap,
-): boolean => {
-  const routeIds = [route.connectionName, route.rootConnectionName].filter(
-    (id): id is string => id !== undefined,
-  )
-
-  // Same-net pads and copper should not block via removal collision checks.
-  return routeIds.some((routeId) =>
-    obstacle.connectedTo.some(
-      (connectedId) =>
-        connectedId === routeId ||
-        connMap.areIdsConnected(connectedId, routeId),
-    ),
-  )
-}
-
-const obstacleIsRouteEndpoint = (
-  obstacle: Obstacle,
-  route: HighDensityRoute,
-): boolean => {
-  const routeIds = [route.connectionName, route.rootConnectionName].filter(
-    (id): id is string => id !== undefined,
-  )
-
-  return routeIds.some((routeId) => obstacle.connectedTo.includes(routeId))
-}
+import { breakRouteIntoSections } from "./break-route-into-sections"
+import { canEndpointConnectOnLayer } from "./can-endpoint-connect-on-layer"
+import { canSectionMoveToLayer } from "./can-section-move-to-layer"
+import type { RouteSection } from "./route-section"
 
 export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   override getSolverName(): string {
@@ -84,7 +27,6 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
-  ENDPOINT_LAYER_EPSILON = 0.01
 
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
@@ -99,38 +41,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.unsimplifiedRoute = params.unsimplifiedRoute
     this.connMap = params.connMap
 
-    this.routeSections = this.breakRouteIntoSections(this.unsimplifiedRoute)
-  }
-
-  breakRouteIntoSections(route: HighDensityRoute) {
-    const routeSections: this["routeSections"] = []
-    const routePoints = route.route
-    if (routePoints.length === 0) return []
-
-    let currentSection = {
-      startIndex: 0,
-      endIndex: -1,
-      z: routePoints[0].z,
-      points: [routePoints[0]],
-    }
-    for (let i = 1; i < routePoints.length; i++) {
-      if (routePoints[i].z === currentSection.z) {
-        currentSection.points.push(routePoints[i])
-      } else {
-        currentSection.endIndex = i - 1
-        routeSections.push(currentSection)
-        currentSection = {
-          startIndex: i,
-          endIndex: -1,
-          z: routePoints[i].z,
-          points: [routePoints[i]],
-        }
-      }
-    }
-    currentSection.endIndex = routePoints.length - 1
-    routeSections.push(currentSection)
-
-    return routeSections
+    this.routeSections = breakRouteIntoSections(this.unsimplifiedRoute)
   }
 
   _step() {
@@ -149,14 +60,25 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         const targetZ = secondSection.z
         // Check that the endpoint obstacle supports the target layer
         const firstPoint = firstSection.points[0]
-        const endpointSupportsLayer = this.canEndpointConnectOnLayer(
-          firstPoint.x,
-          firstPoint.y,
+        const endpointSupportsLayer = canEndpointConnectOnLayer({
+          endpointX: firstPoint.x,
+          endpointY: firstPoint.y,
           targetZ,
-        )
+          obstacleSHI: this.obstacleSHI,
+          route: this.unsimplifiedRoute,
+        })
         if (
           endpointSupportsLayer &&
-          this.canSectionMoveToLayer({ currentSection: firstSection, targetZ })
+          canSectionMoveToLayer({
+            currentSection: firstSection,
+            targetZ,
+            route: this.unsimplifiedRoute,
+            hdRouteSHI: this.hdRouteSHI,
+            obstacleSHI: this.obstacleSHI,
+            connMap: this.connMap,
+            defaultTraceThickness: this.TRACE_THICKNESS,
+            obstacleMargin: this.OBSTACLE_MARGIN,
+          })
         ) {
           firstSection.z = targetZ
           firstSection.points = firstSection.points.map((p) => ({
@@ -184,14 +106,25 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           const targetZ = secondLastSection.z
           // Check that the endpoint obstacle supports the target layer
           const lastPoint = lastSection.points[lastSection.points.length - 1]
-          const endpointSupportsLayer = this.canEndpointConnectOnLayer(
-            lastPoint.x,
-            lastPoint.y,
+          const endpointSupportsLayer = canEndpointConnectOnLayer({
+            endpointX: lastPoint.x,
+            endpointY: lastPoint.y,
             targetZ,
-          )
+            obstacleSHI: this.obstacleSHI,
+            route: this.unsimplifiedRoute,
+          })
           if (
             endpointSupportsLayer &&
-            this.canSectionMoveToLayer({ currentSection: lastSection, targetZ })
+            canSectionMoveToLayer({
+              currentSection: lastSection,
+              targetZ,
+              route: this.unsimplifiedRoute,
+              hdRouteSHI: this.hdRouteSHI,
+              obstacleSHI: this.obstacleSHI,
+              connMap: this.connMap,
+              defaultTraceThickness: this.TRACE_THICKNESS,
+              obstacleMargin: this.OBSTACLE_MARGIN,
+            })
           ) {
             lastSection.z = targetZ
             lastSection.points = lastSection.points.map((p) => ({
@@ -220,7 +153,18 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     const targetZ = prevSection.z
 
-    if (this.canSectionMoveToLayer({ currentSection, targetZ })) {
+    if (
+      canSectionMoveToLayer({
+        currentSection,
+        targetZ,
+        route: this.unsimplifiedRoute,
+        hdRouteSHI: this.hdRouteSHI,
+        obstacleSHI: this.obstacleSHI,
+        connMap: this.connMap,
+        defaultTraceThickness: this.TRACE_THICKNESS,
+        obstacleMargin: this.OBSTACLE_MARGIN,
+      })
+    ) {
       currentSection.z = targetZ
       currentSection.points = currentSection.points.map((p) => ({
         ...p,
@@ -232,140 +176,6 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
     this.currentSectionIndex++
     return
-  }
-
-  /**
-   * Check if an endpoint (first or last point of the route) can connect
-   * to a different layer. This is only allowed if the obstacles the endpoint
-   * connects to support that layer.
-   */
-  canEndpointConnectOnLayer(
-    endpointX: number,
-    endpointY: number,
-    targetZ: number,
-  ): boolean {
-    // Find obstacles near the endpoint that are connected to this route
-    // Use a larger search area to find obstacles the endpoint might be inside
-    const nearbyObstacles = this.obstacleSHI.searchArea(
-      endpointX,
-      endpointY,
-      2, // Search wider area
-      2,
-    )
-
-    // Filter to obstacles that this trace connects to and contain the endpoint
-    const connectedObstacles = nearbyObstacles.filter((obstacle) => {
-      if (!obstacleIsRouteEndpoint(obstacle, this.unsimplifiedRoute)) {
-        return false
-      }
-      // Check if the endpoint is within or very close to the obstacle bounds
-      const halfWidth = obstacle.width / 2 + 0.05 // Add small margin
-      const halfHeight = obstacle.height / 2 + 0.05
-      const withinX = Math.abs(endpointX - obstacle.center.x) <= halfWidth
-      const withinY = Math.abs(endpointY - obstacle.center.y) <= halfHeight
-      return withinX && withinY
-    })
-
-    // If we found connected obstacles, check if any support the target layer
-    if (connectedObstacles.length > 0) {
-      return connectedObstacles.some((obstacle) =>
-        obstacle.zLayers?.includes(targetZ),
-      )
-    }
-
-    // If the route already proves this exact endpoint location exists on the
-    // target layer, treat it as an explicitly multilayer endpoint.
-    return this.unsimplifiedRoute.route.some(
-      (point) =>
-        Math.abs(point.x - endpointX) <= this.ENDPOINT_LAYER_EPSILON &&
-        Math.abs(point.y - endpointY) <= this.ENDPOINT_LAYER_EPSILON &&
-        point.z === targetZ,
-    )
-  }
-
-  canSectionMoveToLayer({
-    currentSection,
-    targetZ,
-  }: {
-    currentSection: RouteSection
-    targetZ: number
-  }): boolean {
-    const currentTraceThickness =
-      this.unsimplifiedRoute.traceThickness ?? this.TRACE_THICKNESS
-
-    // Evaluate if the section layer can be changed without hitting anything
-    for (let i = 0; i < currentSection.points.length - 1; i++) {
-      const A = { ...currentSection.points[i], z: targetZ }
-      const B = { ...currentSection.points[i + 1], z: targetZ }
-
-      const conflictingRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
-        A,
-        B,
-        currentTraceThickness / 2,
-      )
-
-      for (const { conflictingRoute, distance } of conflictingRoutes) {
-        if (
-          routeIsSameNet(this.unsimplifiedRoute, conflictingRoute, this.connMap)
-        ) {
-          continue
-        }
-
-        const otherTraceThickness =
-          conflictingRoute.traceThickness ?? this.TRACE_THICKNESS
-        const minDistance = currentTraceThickness / 2 + otherTraceThickness / 2
-        if (distance < minDistance) {
-          return false
-        }
-      }
-
-      const segmentBox = {
-        centerX: (A.x + B.x) / 2,
-        centerY: (A.y + B.y) / 2,
-        width: Math.abs(A.x - B.x),
-        height: Math.abs(A.y - B.y),
-      }
-
-      const searchMargin = currentTraceThickness / 2 + this.OBSTACLE_MARGIN
-
-      // Obstacle check
-      const obstacles = this.obstacleSHI.searchArea(
-        segmentBox.centerX,
-        segmentBox.centerY,
-        segmentBox.width + searchMargin * 2, // Expand search width
-        segmentBox.height + searchMargin * 2, // Expand search height
-      )
-
-      for (const obstacle of obstacles) {
-        // Skip obstacles that are connected to this trace
-        // (the trace is supposed to connect to them)
-        if (obstacleIsSameNet(obstacle, this.unsimplifiedRoute, this.connMap)) {
-          continue
-        }
-
-        // For obstacles that support the target layer, only skip if the trace
-        // is connecting TO the obstacle (at segment endpoints)
-        if (obstacle.zLayers?.includes(targetZ)) {
-          // Check if either endpoint of this segment is at the obstacle center
-          const isAtObstacle =
-            (Math.abs(A.x - obstacle.center.x) < 0.01 &&
-              Math.abs(A.y - obstacle.center.y) < 0.01) ||
-            (Math.abs(B.x - obstacle.center.x) < 0.01 &&
-              Math.abs(B.y - obstacle.center.y) < 0.01)
-          if (isAtObstacle) {
-            continue
-          }
-        }
-
-        const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
-
-        if (distToObstacle < searchMargin) {
-          return false
-        }
-      }
-    }
-
-    return true
   }
 
   getConstructorParams() {

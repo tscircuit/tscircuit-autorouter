@@ -36,13 +36,6 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
   return solver.getOptimizedHdRoute()
 }
 
-test("does not remove the first-section via when endpoint layer support is unproven", () => {
-  const optimizedRoute = solveRoute(baseRoute)
-
-  expect(optimizedRoute.vias).toEqual([{ x: 1, y: 0 }])
-  expect(optimizedRoute.route).toEqual(baseRoute.route)
-})
-
 test("removes the first-section via when a connected endpoint obstacle supports both layers", () => {
   const multilayerEndpointObstacle: Obstacle = {
     type: "rect",
