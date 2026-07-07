@@ -7,6 +7,7 @@ import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/Use
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export default () => (
   <GenericSolverDebugger
@@ -17,6 +18,7 @@ export default () => (
           viaRemoval.obstacleSHI.obstacles as any,
         ),
         unsimplifiedRoute: viaRemoval.unsimplifiedRoute,
+        connMap: new ConnectivityMap({}),
       })
       return solver
     }}

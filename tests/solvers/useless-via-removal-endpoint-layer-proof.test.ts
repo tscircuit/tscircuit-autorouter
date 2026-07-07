@@ -4,6 +4,7 @@ import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 const baseRoute: HighDensityRoute = {
   connectionName: "source_net_test",
@@ -24,6 +25,7 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
     obstacleSHI: new ObstacleSpatialHashIndex("flatbush", obstacles),
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
+    connMap: new ConnectivityMap({ net0: [route.connectionName] }),
   })
 
   solver.solve()

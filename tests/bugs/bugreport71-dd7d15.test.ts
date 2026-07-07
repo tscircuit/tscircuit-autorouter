@@ -33,8 +33,8 @@ test("bugreport71-dd7d15.json", () => {
       via.y < 3.2,
   )
 
-  expect(vias.length).toBeLessThanOrEqual(78)
-  expect(sourceNet3CenterClusterVias).toHaveLength(2)
+  expect(vias.length).toBeLessThanOrEqual(74)
+  expect(sourceNet3CenterClusterVias).toHaveLength(0)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
