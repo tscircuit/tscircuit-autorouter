@@ -58,6 +58,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -77,33 +78,6 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
-}
-
-class MergedComponentTopologyView extends BaseSolver {
-  constructor(
-    private readonly topologyPlanningSolver: MultiGraphTopologyPlannerSolver,
-  ) {
-    super()
-    this.solved = topologyPlanningSolver.solved
-    this.failed = topologyPlanningSolver.failed
-    this.error = topologyPlanningSolver.error
-    this.stats = topologyPlanningSolver.stats
-  }
-
-  getOutput(): CapacityMeshNode[] {
-    return this.topologyPlanningSolver.getOutput().componentMeshNodes.flat()
-  }
-
-  override visualize(): GraphicsObject {
-    return (
-      this.topologyPlanningSolver.finalVisualize() ??
-      this.topologyPlanningSolver.visualize()
-    )
-  }
-
-  override preview(): GraphicsObject {
-    return this.visualize()
-  }
 }
 
 /**
