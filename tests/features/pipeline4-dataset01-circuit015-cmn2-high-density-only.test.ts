@@ -60,17 +60,19 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
   const accidentalContacts = locationAwareErrors.filter((error) =>
     error.message.includes("accidental contact"),
   )
-  const expectedEndpointKeysByConnectionName = new Map(
-    cmn2Input.portPoints.map((portPoint) => [
-      portPoint.connectionName,
-      cmn2Input.portPoints
-        .filter(
-          (candidate) => candidate.connectionName === portPoint.connectionName,
-        )
-        .map((candidate) => `${candidate.x}:${candidate.y}:${candidate.z}`)
-        .sort(),
-    ]),
+  const expectedEndpointKeysByConnectionName = cmn2Input.portPoints.reduce(
+    (endpointKeysByConnectionName, portPoint) => {
+      const endpointKeys =
+        endpointKeysByConnectionName.get(portPoint.connectionName) ?? []
+      endpointKeys.push(`${portPoint.x}:${portPoint.y}:${portPoint.z}`)
+      endpointKeysByConnectionName.set(portPoint.connectionName, endpointKeys)
+      return endpointKeysByConnectionName
+    },
+    new Map<string, string[]>(),
   )
+  for (const endpointKeys of expectedEndpointKeysByConnectionName.values()) {
+    endpointKeys.sort()
+  }
 
   expect(accidentalContacts).toHaveLength(0)
   expect(solver.routes).toHaveLength(expectedEndpointKeysByConnectionName.size)
@@ -81,12 +83,20 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
     const expectedEndpointKeys = expectedEndpointKeysByConnectionName.get(
       route.connectionName,
     )
-    expect(firstPoint).toBeDefined()
-    expect(lastPoint).toBeDefined()
+
+    if (!firstPoint || !lastPoint) {
+      throw new Error(`Route "${route.connectionName}" is missing endpoints`)
+    }
+    if (!expectedEndpointKeys) {
+      throw new Error(
+        `Missing expected endpoints for route "${route.connectionName}"`,
+      )
+    }
+
     expect(expectedEndpointKeys).toHaveLength(2)
     const actualEndpointKeys = [
-      `${firstPoint!.x}:${firstPoint!.y}:${firstPoint!.z}`,
-      `${lastPoint!.x}:${lastPoint!.y}:${lastPoint!.z}`,
+      `${firstPoint.x}:${firstPoint.y}:${firstPoint.z}`,
+      `${lastPoint.x}:${lastPoint.y}:${lastPoint.z}`,
     ].sort()
 
     expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1])
