@@ -10,13 +10,14 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
-  connMap?: ConnectivityMap
+  connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
 }
 
@@ -27,6 +28,125 @@ type Via = {
   net: string
   routeIndex: number
   layers: number[]
+}
+
+const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 1.5
+const OBSTACLE_MARGIN = 0.1
+
+type ViaMoveContext = {
+  connMap: ConnectivityMap
+  mergedViaHdRoutes: HighDensityRoute[]
+  hdRouteSHI: HighDensityRouteSpatialIndex
+  obstacleSHI: ObstacleSpatialHashIndex
+}
+
+const getNetForRoute = (
+  connMap: ConnectivityMap,
+  route: HighDensityRoute,
+): string => {
+  const net = connMap.idToNetMap[route.connectionName]
+  if (!net) {
+    throw new Error(
+      `SameNetViaMergerSolver could not find net for route "${route.connectionName}"`,
+    )
+  }
+
+  return net
+}
+
+const obstacleIsSameNet = (
+  connMap: ConnectivityMap,
+  obstacle: Obstacle,
+  via: Via,
+): boolean => {
+  for (const connectedId of obstacle.connectedTo) {
+    if (connectedId === via.net) return true
+    if (connMap.idToNetMap[connectedId] === via.net) return true
+    if (connMap.areIdsConnected(connectedId, via.net)) return true
+  }
+
+  return false
+}
+
+const canMoveViaTo = (
+  viaToRemove: Via,
+  viaKeep: Via,
+  context: ViaMoveContext,
+): boolean => {
+  const route = context.mergedViaHdRoutes[viaToRemove.routeIndex]
+  if (!route) {
+    throw new Error(
+      `SameNetViaMergerSolver could not find route for via at index ${viaToRemove.routeIndex}`,
+    )
+  }
+
+  const transitionLayers = new Set<number>()
+  for (let i = 1; i < route.route.length; i++) {
+    const prev = route.route[i - 1]
+    const curr = route.route[i]
+    if (prev.z === curr.z) continue
+    if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+
+    transitionLayers.add(prev.z)
+    transitionLayers.add(curr.z)
+  }
+
+  if (transitionLayers.size === 0) {
+    throw new Error(
+      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y})`,
+    )
+  }
+
+  for (const z of transitionLayers) {
+    const traceThickness = route.traceThickness
+    const start = { x: viaToRemove.x, y: viaToRemove.y, z }
+    const end = { x: viaKeep.x, y: viaKeep.y, z }
+
+    if (start.x === end.x && start.y === end.y) continue
+
+    const conflictingRoutes = context.hdRouteSHI.getConflictingRoutesForSegment(
+      start,
+      end,
+      traceThickness / 2,
+    )
+
+    for (const { conflictingRoute, distance } of conflictingRoutes) {
+      if (conflictingRoute.connectionName === route.connectionName) continue
+
+      const minDistance =
+        traceThickness / 2 + conflictingRoute.traceThickness / 2
+      if (distance < minDistance) return false
+    }
+
+    const segmentBox = {
+      centerX: (start.x + end.x) / 2,
+      centerY: (start.y + end.y) / 2,
+      width: Math.abs(start.x - end.x),
+      height: Math.abs(start.y - end.y),
+    }
+    const searchMargin = traceThickness / 2 + OBSTACLE_MARGIN
+    const obstacles = context.obstacleSHI.searchArea(
+      segmentBox.centerX,
+      segmentBox.centerY,
+      segmentBox.width + searchMargin * 2,
+      segmentBox.height + searchMargin * 2,
+    )
+
+    for (const obstacle of obstacles) {
+      if (!obstacle.zLayers) {
+        throw new Error(
+          `SameNetViaMergerSolver found obstacle without zLayers near via at (${viaToRemove.x}, ${viaToRemove.y})`,
+        )
+      }
+      if (!obstacle.zLayers.includes(z)) continue
+      if (obstacleIsSameNet(context.connMap, obstacle, viaToRemove)) continue
+      if (segmentToBoxMinDistance(start, end, obstacle) < searchMargin) {
+        return false
+      }
+    }
+  }
+
+  return true
 }
 
 export class SameNetViaMergerSolver extends BaseSolver {
@@ -40,17 +160,21 @@ export class SameNetViaMergerSolver extends BaseSolver {
   vias: Via[]
   offendingVias: [Via, Via][]
   currentViaRoutes: HighDensityIntraNodeRoute[] = []
-  connMap?: ConnectivityMap
+  connMap: ConnectivityMap
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
 
-  obstacleSHI: ObstacleSpatialHashIndex | null = null
-  hdRouteSHI: HighDensityRouteSpatialIndex | null = null
+  obstacleSHI: ObstacleSpatialHashIndex
+  hdRouteSHI: HighDensityRouteSpatialIndex
 
   constructor(private input: SameNetViaMergerSolverInput) {
     super()
+    if (!input.connMap) {
+      throw new Error("SameNetViaMergerSolver requires connMap")
+    }
+
     this.input = {
       ...input,
       obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
@@ -77,7 +201,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.rebuildVias()
   }
 
-  private rebuildVias() {
+  private rebuildVias(): void {
     this.vias = []
     this.viasByNet = new Map<string, Via[]>()
 
@@ -85,12 +209,19 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const route = this.mergedViaHdRoutes[i]
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
+        const layers = [...new Set(route.route.map((p) => p.z))]
+        if (layers.length === 0) {
+          throw new Error(
+            `SameNetViaMergerSolver found via on route "${route.connectionName}" with no route points`,
+          )
+        }
+
         const via: Via = {
           x: viaPoint.x,
           y: viaPoint.y,
           diameter: route.viaDiameter,
-          net: this.connMap?.idToNetMap[route.connectionName] ?? "",
-          layers: [...new Set(route.route.map((p) => p.z))],
+          net: getNetForRoute(this.connMap, route),
+          layers,
           routeIndex: i,
         }
         this.vias.push(via)
@@ -101,13 +232,13 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
   }
 
-  private getViaKey(via: Via) {
+  private getViaKey(via: Via): string {
     return [via.routeIndex, via.x, via.y, via.layers.join(","), via.net].join(
       ":",
     )
   }
 
-  private dedupeRouteVias(route: HighDensityRoute) {
+  private dedupeRouteVias(route: HighDensityRoute): void {
     const seenViaLocations = new Set<string>()
     route.vias = route.vias.filter((via) => {
       const key = `${via.x}:${via.y}`
@@ -132,8 +263,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const cellSize = maxDiameter
       const buckets = new Map<string, number[]>()
 
-      // Build direct-overlap stars instead of connected components so a via is
-      // only moved to another via it physically overlaps.
+      // Build stars instead of connected components so a via is only moved to
+      // another via that directly overlaps or has a clear short same-net merge.
       for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
         const via = viasInNet[viaIndex]
         const cellX = Math.floor(via.x / cellSize)
@@ -148,10 +279,13 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const keep = viasInNet[viaIndex]
         const cellX = Math.floor(keep.x / cellSize)
         const cellY = Math.floor(keep.y / cellSize)
+        const neighborCellRadius = Math.ceil(
+          NEAR_VIA_MERGE_DISTANCE_MULTIPLIER,
+        )
         const remove: Via[] = []
 
-        for (let dx = -1; dx <= 1; dx++) {
-          for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -neighborCellRadius; dx <= neighborCellRadius; dx++) {
+          for (let dy = -neighborCellRadius; dy <= neighborCellRadius; dy++) {
             const bucket = buckets.get(`${cellX + dx}:${cellY + dy}`)
             if (!bucket) continue
 
@@ -163,10 +297,29 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const pairDx = keep.x - candidate.x
               const pairDy = keep.y - candidate.y
               const squaredDistance = pairDx * pairDx + pairDy * pairDy
-              const maxDistance = keep.diameter / 2 + candidate.diameter / 2
-              const maxSquaredDistance = maxDistance * maxDistance
+              const directOverlapDistance =
+                keep.diameter / 2 + candidate.diameter / 2
+              const nearMergeDistance =
+                directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
 
-              if (squaredDistance <= maxSquaredDistance && squaredDistance) {
+              if (squaredDistance === 0) continue
+
+              if (
+                squaredDistance <= directOverlapDistance * directOverlapDistance
+              ) {
+                remove.push(candidate)
+                continue
+              }
+
+              if (
+                squaredDistance <= nearMergeDistance * nearMergeDistance &&
+                canMoveViaTo(candidate, keep, {
+                  connMap: this.connMap,
+                  mergedViaHdRoutes: this.mergedViaHdRoutes,
+                  hdRouteSHI: this.hdRouteSHI,
+                  obstacleSHI: this.obstacleSHI,
+                })
+              ) {
                 remove.push(candidate)
               }
             }
@@ -207,43 +360,48 @@ export class SameNetViaMergerSolver extends BaseSolver {
     return groups
   }
 
-  private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true) {
-    const route = this.mergedViaHdRoutes[viaToRemove.routeIndex].route
+  private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true): void {
     const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
-
-    for (let i = 0; i < viaToRemove.layers.length; i++) {
-      for (let j = route.length - 1; j >= 1; j--) {
-        const prev = route[j - 1]
-        const curr = route[j]
-
-        if (curr.x === viaToRemove.x && curr.y === viaToRemove.y) {
-          route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: curr.z })
-          route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
-
-          routeToUpdate.vias = routeToUpdate.vias.map((vx) =>
-            vx.x === viaToRemove.x && vx.y === viaToRemove.y
-              ? { x: viaKeep.x, y: viaKeep.y }
-              : vx,
-          )
-          this.dedupeRouteVias(routeToUpdate)
-
-          if (rebuildVias) this.rebuildVias()
-          return
-        }
-      }
+    if (!routeToUpdate) {
+      throw new Error(
+        `SameNetViaMergerSolver could not find route for via at index ${viaToRemove.routeIndex}`,
+      )
     }
 
-    routeToUpdate.vias = routeToUpdate.vias.map((vx) =>
-      vx.x === viaToRemove.x && vx.y === viaToRemove.y
-        ? { x: viaKeep.x, y: viaKeep.y }
-        : vx,
-    )
-    this.dedupeRouteVias(routeToUpdate)
+    const route = routeToUpdate.route
+    let replacedVia = false
 
-    if (rebuildVias) this.rebuildVias()
+    for (let j = route.length - 1; j >= 1; j--) {
+      const prev = route[j - 1]
+      const curr = route[j]
+      if (prev.z === curr.z) continue
+      if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+
+      route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: curr.z })
+      route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
+
+      routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
+        if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
+        replacedVia = true
+        return { x: viaKeep.x, y: viaKeep.y }
+      })
+      if (!replacedVia) {
+        throw new Error(
+          `SameNetViaMergerSolver could not find via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
+        )
+      }
+
+      this.dedupeRouteVias(routeToUpdate)
+      if (rebuildVias) this.rebuildVias()
+      return
+    }
+
+    throw new Error(
+      `SameNetViaMergerSolver could not find route transition for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
+    )
   }
 
-  _step() {
+  _step(): void {
     const groups = this.getOffendingViaGroupsBatch()
 
     if (groups.length === 0) {
@@ -259,6 +417,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
       }
     }
     this.rebuildVias()
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.mergedViaHdRoutes)
     this.stats.mergedViaGroups = groups.length
     this.stats.mergedViaCount = mergedViaCount
   }
@@ -281,10 +440,16 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
     // Visualize obstacles
     for (const obstacle of this.input.obstacles) {
+      if (!obstacle.zLayers) {
+        throw new Error(
+          `SameNetViaMergerSolver found obstacle without zLayers while visualizing`,
+        )
+      }
+
       let fillColor = "rgba(128, 128, 128, 0.2)" // Default faded gray
       const strokeColor = "rgba(128, 128, 128, 0.5)"
-      const isOnLayer0 = obstacle.zLayers?.includes(0)
-      const isOnLayer1 = obstacle.zLayers?.includes(1)
+      const isOnLayer0 = obstacle.zLayers.includes(0)
+      const isOnLayer1 = obstacle.zLayers.includes(1)
 
       if (isOnLayer0 && isOnLayer1) {
         fillColor = "rgba(128, 0, 128, 0.2)" // Faded purple for both layers
@@ -308,7 +473,12 @@ export class SameNetViaMergerSolver extends BaseSolver {
       // Skip routes with no points
       if (route.route.length === 0) continue
 
-      const color = this.input.colorMap[route.connectionName] || "#888888"
+      const color = this.input.colorMap[route.connectionName]
+      if (!color) {
+        throw new Error(
+          `SameNetViaMergerSolver could not find color for route "${route.connectionName}"`,
+        )
+      }
 
       // Add lines connecting route points on the same layer
       for (let i = 0; i < route.route.length - 1; i++) {
@@ -346,15 +516,14 @@ export class SameNetViaMergerSolver extends BaseSolver {
           color,
           label: route.connectionName,
         })
-        visualization.rects.push(...(jumperGraphics.rects ?? []))
-        visualization.lines.push(...(jumperGraphics.lines ?? []))
+        if (!jumperGraphics.rects || !jumperGraphics.lines) {
+          throw new Error(
+            `SameNetViaMergerSolver expected jumper graphics for route "${route.connectionName}"`,
+          )
+        }
+        visualization.rects.push(...jumperGraphics.rects)
+        visualization.lines.push(...jumperGraphics.lines)
       }
-    }
-
-    if (this.activeSubSolver) {
-      visualization.lines.push(
-        ...(this.activeSubSolver.visualize().lines ?? []),
-      )
     }
 
     return visualization
