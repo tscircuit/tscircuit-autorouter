@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Same-Net Via Fix, Line by Line</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-neutral-950 text-neutral-100">
+    <main class="mx-auto max-w-6xl px-5 py-8">
+      <header class="border-b border-neutral-800 pb-6">
+        <p class="text-sm font-semibold uppercase tracking-wide text-sky-300">
+          tscircuit-autorouter
+        </p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight">
+          Same-net via cleanup, line by line
+        </h1>
+        <p class="mt-3 max-w-3xl leading-7 text-neutral-300">
+          This page explains the meaningful code in the fix. It skips imports,
+          class boilerplate, and UI noise. The core idea: use
+          <code class="rounded bg-neutral-800 px-1.5 py-0.5 text-sky-200">ConnectivityMap</code>
+          when deciding whether copper belongs to the same electrical net.
+        </p>
+      </header>
+
+      <section class="grid gap-5 py-7 md:grid-cols-3">
+        <div class="rounded border border-red-900/60 bg-red-950/30 p-5">
+          <h2 class="font-semibold text-red-100">Problem</h2>
+          <p class="mt-2 text-sm leading-6 text-red-100/80">
+            The route had vias that looked like crossings. They were same-net,
+            but the via-removal solver treated sibling same-net routes like
+            blockers.
+          </p>
+        </div>
+        <div class="rounded border border-amber-900/60 bg-amber-950/30 p-5">
+          <h2 class="font-semibold text-amber-100">Mistake</h2>
+          <p class="mt-2 text-sm leading-6 text-amber-100/80">
+            The old logic mostly trusted route id equality. But two different
+            route ids can still be one electrical net.
+          </p>
+        </div>
+        <div class="rounded border border-emerald-900/60 bg-emerald-950/30 p-5">
+          <h2 class="font-semibold text-emerald-100">Fix</h2>
+          <p class="mt-2 text-sm leading-6 text-emerald-100/80">
+            Compare route ids through <code>connMap</code>. Same-net copper is
+            not a blocker for via-removal collision checks.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-6">
+        <article class="rounded border border-neutral-800 bg-neutral-900 p-5">
+          <h2 class="text-xl font-semibold">1. Route-to-route same-net check</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-neutral-300">
+            This replaces a hard-to-read chain of OR conditions. It turns each
+            route into a small list of possible ids, then asks if any pair is
+            the same id or connected by <code>connMap</code>.
+          </p>
+
+          <div class="mt-5 overflow-hidden rounded border border-neutral-800">
+            <div class="bg-neutral-950 px-4 py-2 font-mono text-xs text-neutral-400">
+              routeIsSameNet
+            </div>
+            <div class="grid lg:grid-cols-[1.15fr_1fr]">
+              <pre class="overflow-x-auto bg-black p-4 text-sm leading-6 text-neutral-200"><code>const routeIsSameNet = (
+  route: HighDensityRoute,
+  otherRoute: HighDensityRoute,
+  connMap: ConnectivityMap,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+  const otherRouteIds = [
+    otherRoute.connectionName,
+    otherRoute.rootConnectionName,
+  ].filter((id): id is string => id !== undefined)
+
+  return routeIds.some((routeId) =>
+    otherRouteIds.some(
+      (otherRouteId) =>
+        otherRouteId === routeId ||
+        connMap.areIdsConnected(otherRouteId, routeId),
+    ),
+  )
+}</code></pre>
+              <div class="space-y-3 border-t border-neutral-800 p-4 text-sm leading-6 text-neutral-300 lg:border-l lg:border-t-0">
+                <p><b>Line 1-5:</b> plain function, not a class method. It only needs inputs.</p>
+                <p><b>routeIds:</b> current route name plus root route name if present.</p>
+                <p><b>otherRouteIds:</b> same list for the possible blocker route.</p>
+                <p><b>filter:</b> removes undefined root names and tells TypeScript the array is strings.</p>
+                <p><b>some + some:</b> compare every id pair without writing a giant boolean expression.</p>
+                <p><b>equal id:</b> exact same route/root means same net.</p>
+                <p><b>connMap:</b> different ids can still be electrically connected.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="rounded border border-neutral-800 bg-neutral-900 p-5">
+          <h2 class="text-xl font-semibold">2. Obstacle-to-route same-net check</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-neutral-300">
+            Obstacles can be pads or copper features. If an obstacle is on the
+            same net as the route, it should not block via-removal collision
+            checks.
+          </p>
+
+          <div class="mt-5 overflow-hidden rounded border border-neutral-800">
+            <div class="bg-neutral-950 px-4 py-2 font-mono text-xs text-neutral-400">
+              obstacleIsSameNet
+            </div>
+            <div class="grid lg:grid-cols-[1.15fr_1fr]">
+              <pre class="overflow-x-auto bg-black p-4 text-sm leading-6 text-neutral-200"><code>const obstacleIsSameNet = (
+  obstacle: Obstacle,
+  route: HighDensityRoute,
+  connMap: ConnectivityMap,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+
+  // Same-net pads and copper should not block via removal collision checks.
+  return routeIds.some((routeId) =>
+    obstacle.connectedTo.some(
+      (connectedId) =>
+        connectedId === routeId || connMap.areIdsConnected(connectedId, routeId),
+    ),
+  )
+}</code></pre>
+              <div class="space-y-3 border-t border-neutral-800 p-4 text-sm leading-6 text-neutral-300 lg:border-l lg:border-t-0">
+                <p><b>Inputs:</b> obstacle, route, and connectivity map. No hidden instance state.</p>
+                <p><b>routeIds:</b> all ids that identify this route electrically.</p>
+                <p><b>Comment:</b> explains the non-obvious PCB rule.</p>
+                <p><b>obstacle.connectedTo:</b> ids the pad/copper says it belongs to.</p>
+                <p><b>connectedId === routeId:</b> direct match.</p>
+                <p><b>areIdsConnected:</b> indirect same-net match.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="rounded border border-neutral-800 bg-neutral-900 p-5">
+          <h2 class="text-xl font-semibold">3. Endpoint proof stays strict</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-neutral-300">
+            This is intentionally different. A same-net sibling pad can be safe
+            to ignore as a collision blocker, but it must not prove that this
+            route endpoint supports another layer.
+          </p>
+
+          <div class="mt-5 overflow-hidden rounded border border-neutral-800">
+            <div class="bg-neutral-950 px-4 py-2 font-mono text-xs text-neutral-400">
+              obstacleIsRouteEndpoint
+            </div>
+            <div class="grid lg:grid-cols-[1.15fr_1fr]">
+              <pre class="overflow-x-auto bg-black p-4 text-sm leading-6 text-neutral-200"><code>const obstacleIsRouteEndpoint = (
+  obstacle: Obstacle,
+  route: HighDensityRoute,
+): boolean => {
+  const routeIds = [route.connectionName, route.rootConnectionName].filter(
+    (id): id is string => id !== undefined,
+  )
+
+  return routeIds.some((routeId) => obstacle.connectedTo.includes(routeId))
+}</code></pre>
+              <div class="space-y-3 border-t border-neutral-800 p-4 text-sm leading-6 text-neutral-300 lg:border-l lg:border-t-0">
+                <p><b>No connMap here:</b> that is the point.</p>
+                <p><b>Exact endpoint only:</b> the obstacle must directly name this route or root.</p>
+                <p><b>Why:</b> same-net sibling pads should not authorize moving this route endpoint to another layer.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="rounded border border-neutral-800 bg-neutral-900 p-5">
+          <h2 class="text-xl font-semibold">4. Where the helpers are used</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-neutral-300">
+            The solver uses these helpers inside <code>canSectionMoveToLayer</code>
+            and endpoint checks.
+          </p>
+
+          <div class="mt-5 grid gap-4 lg:grid-cols-3">
+            <div class="rounded border border-neutral-800 bg-black p-4">
+              <p class="font-mono text-sm text-sky-200">endpoint check</p>
+              <pre class="mt-3 overflow-x-auto text-xs leading-5 text-neutral-300"><code>if (!obstacleIsRouteEndpoint(
+  obstacle,
+  this.unsimplifiedRoute,
+)) {
+  return false
+}</code></pre>
+              <p class="mt-3 text-sm leading-6 text-neutral-400">
+                Strict. Only actual endpoint obstacles count.
+              </p>
+            </div>
+
+            <div class="rounded border border-neutral-800 bg-black p-4">
+              <p class="font-mono text-sm text-sky-200">route collision</p>
+              <pre class="mt-3 overflow-x-auto text-xs leading-5 text-neutral-300"><code>if (routeIsSameNet(
+  this.unsimplifiedRoute,
+  conflictingRoute,
+  this.connMap,
+)) {
+  continue
+}</code></pre>
+              <p class="mt-3 text-sm leading-6 text-neutral-400">
+                Same-net sibling route does not block via removal.
+              </p>
+            </div>
+
+            <div class="rounded border border-neutral-800 bg-black p-4">
+              <p class="font-mono text-sm text-sky-200">obstacle collision</p>
+              <pre class="mt-3 overflow-x-auto text-xs leading-5 text-neutral-300"><code>if (obstacleIsSameNet(
+  obstacle,
+  this.unsimplifiedRoute,
+  this.connMap,
+)) {
+  continue
+}</code></pre>
+              <p class="mt-3 text-sm leading-6 text-neutral-400">
+                Same-net pads/copper do not block collision checks.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="rounded border border-neutral-800 bg-neutral-900 p-5">
+          <h2 class="text-xl font-semibold">5. The `canMoveViaTo` cleanup</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-neutral-300">
+            `ViaMoveContext` was a named type used once. It is now inline at the
+            one function that needs it.
+          </p>
+
+          <div class="mt-5 overflow-hidden rounded border border-neutral-800">
+            <div class="bg-neutral-950 px-4 py-2 font-mono text-xs text-neutral-400">
+              canMoveViaTo
+            </div>
+            <div class="grid lg:grid-cols-[1.15fr_1fr]">
+              <pre class="overflow-x-auto bg-black p-4 text-sm leading-6 text-neutral-200"><code>const canMoveViaTo = (
+  viaToRemove: Via,
+  viaKeep: Via,
+  context: {
+    connMap: ConnectivityMap
+    mergedViaHdRoutes: HighDensityRoute[]
+    hdRouteSHI: HighDensityRouteSpatialIndex
+    obstacleSHI: ObstacleSpatialHashIndex
+  },
+): boolean => {</code></pre>
+              <div class="space-y-3 border-t border-neutral-800 p-4 text-sm leading-6 text-neutral-300 lg:border-l lg:border-t-0">
+                <p><b>viaToRemove:</b> via we want to delete.</p>
+                <p><b>viaKeep:</b> via location we want to reuse.</p>
+                <p><b>context:</b> data needed to simulate the move.</p>
+                <p><b>Why inline:</b> the shape is used once, so a named type added indirection without buying reuse.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
