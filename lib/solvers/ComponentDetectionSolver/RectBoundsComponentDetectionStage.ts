@@ -1,6 +1,8 @@
+import { getBoundingBox } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getStringColor, safeTransparentize } from "lib/solvers/colors"
+import { areBoundsInsideBounds } from "lib/solvers/TopologyPlanningSolver/topologyPlanningShared"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type {
@@ -243,6 +245,21 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
     const detectedEntries = Object.entries(grouped).filter(
       ([componentId, memberObstacles]) => {
+        const boardBounds = this.inputSrj.bounds
+        const hasOutOfBoundsObstacle = memberObstacles.some((obstacle) => {
+          const obstacleBounds = getBoundingBox(obstacle)
+
+          return !areBoundsInsideBounds({
+            bounds: obstacleBounds,
+            outerBounds: boardBounds,
+            epsilon: 0,
+          })
+        })
+
+        if (hasOutOfBoundsObstacle) {
+          return false
+        }
+
         const componentKind = detectComponentKind({
           memberObstacles,
           inputSrj: this.inputSrj,

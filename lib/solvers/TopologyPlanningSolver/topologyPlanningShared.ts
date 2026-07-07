@@ -428,7 +428,7 @@ function isRectFullyInsideObstacle({
  * @note `@tscircuit/math-utils` currently provides overlap/intersection
  * helpers, while full bounds containment still needs explicit edge comparison.
  */
-function areBoundsInsideBounds({
+export function areBoundsInsideBounds({
   bounds,
   outerBounds,
   epsilon,
