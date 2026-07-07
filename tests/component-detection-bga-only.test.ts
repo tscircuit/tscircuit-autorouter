@@ -46,7 +46,7 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   minTraceWidth: 0.1,
   obstacles,
   connections: [],
-  bounds: { minX: -2, maxX: 4, minY: -2, maxY: 4 },
+  bounds: { minX: -2, maxX: 4.5, minY: -2, maxY: 4.5 },
 })
 
 const countComponentObstacles = (
