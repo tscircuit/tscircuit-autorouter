@@ -46,6 +46,13 @@ export interface ComponentTopologyBatchSolverOutput {
   componentMeshNodes: CapacityMeshNode[][]
 }
 
+type NodeFragment = {
+  bounds: Bounds
+  suffix: string
+}
+
+const GEOMETRY_EPSILON = 1e-9
+
 /**
  * Builds the component-local SRJ passed into BGA topology generation.
  *
@@ -131,7 +138,7 @@ export function normalizeInput(
           detectedComponents,
           inputSrj: input.inputSrj,
         })
-      : undefined) ??
+      : input.inputSrj) ??
     input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
@@ -197,16 +204,259 @@ export function mergeMeshNodes({
 }): CapacityMeshNode[] {
   switch (mergeStrategy) {
     case "concat":
-      return [
-        ...globalMeshNodes.filter(
-          (node) =>
-            !components.some((component) =>
-              isReplacementRegionNode({ node, component }),
-            ),
-        ),
-        ...componentMeshNodes.flat(),
-      ]
+      const globalNodesForMergedTopology = getGlobalMeshNodesForMergedTopology({
+        meshNodes: globalMeshNodes,
+        components,
+      })
+      const componentMeshNodesWithCutouts = componentMeshNodes.flatMap(
+        (nodes, componentIndex) => {
+          const component = components[componentIndex]
+          if (!component) {
+            throw new Error(
+              `Missing topology component for component mesh node group ${componentIndex}`,
+            )
+          }
+          const cutoutNodes = globalNodesForMergedTopology.filter((node) =>
+            isNodeCenterInsideObstacle({
+              node,
+              obstacle: component.replacementObstacle,
+            }),
+          )
+
+          return nodes.flatMap((node) =>
+            splitCapacityNodeAroundCutouts({
+              node,
+              cutoutNodes,
+            }),
+          )
+        },
+      )
+
+      return [...globalNodesForMergedTopology, ...componentMeshNodesWithCutouts]
   }
+}
+
+function getGlobalMeshNodesForMergedTopology({
+  meshNodes,
+  components,
+}: {
+  meshNodes: CapacityMeshNode[]
+  components: SerializedTopologyComponentInput[]
+}): CapacityMeshNode[] {
+  if (components.length === 0) return meshNodes
+
+  return meshNodes.filter((node) =>
+    components.every((component) => {
+      if (isReplacementRegionNode({ node, component })) return false
+      if (
+        isNodeInsideOrOverlappingObstacle({
+          node,
+          obstacle: component.replacementObstacle,
+        })
+      ) {
+        if (
+          isNodeCenterInsideObstacle({
+            node,
+            obstacle: component.replacementObstacle,
+          })
+        ) {
+          return Boolean(node._containsObstacle || node._containsTarget)
+        }
+
+        return true
+      }
+
+      return true
+    }),
+  )
+}
+
+function splitCapacityNodeAroundCutouts({
+  node,
+  cutoutNodes,
+}: {
+  node: CapacityMeshNode
+  cutoutNodes: CapacityMeshNode[]
+}): CapacityMeshNode[] {
+  if (node._containsObstacle || cutoutNodes.length === 0) return [node]
+
+  let fragments: NodeFragment[] = [
+    {
+      bounds: getCapacityMeshNodeBounds(node),
+      suffix: "",
+    },
+  ]
+
+  for (let cutoutIndex = 0; cutoutIndex < cutoutNodes.length; cutoutIndex++) {
+    const cutoutBounds = getCapacityMeshNodeBounds(cutoutNodes[cutoutIndex]!)
+    fragments = fragments.flatMap((fragment) =>
+      subtractBoundsFromFragment({
+        fragment,
+        cutoutBounds,
+        cutoutIndex,
+      }),
+    )
+  }
+
+  if (fragments.length === 1 && fragments[0]!.suffix === "") return [node]
+
+  return fragments.map((fragment, index) =>
+    createCapacityMeshNodeFromBounds({
+      sourceNode: node,
+      bounds: fragment.bounds,
+      capacityMeshNodeId: `${node.capacityMeshNodeId}__merge_${index}${fragment.suffix}`,
+    }),
+  )
+}
+
+function subtractBoundsFromFragment({
+  fragment,
+  cutoutBounds,
+  cutoutIndex,
+}: {
+  fragment: NodeFragment
+  cutoutBounds: Bounds
+  cutoutIndex: number
+}): NodeFragment[] {
+  const intersection = getBoundsIntersection(fragment.bounds, cutoutBounds)
+  if (!intersection) return [fragment]
+
+  const candidateFragments: NodeFragment[] = [
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: fragment.bounds.maxX,
+        minY: fragment.bounds.minY,
+        maxY: intersection.minY,
+      },
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_top`,
+    },
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: fragment.bounds.maxX,
+        minY: intersection.maxY,
+        maxY: fragment.bounds.maxY,
+      },
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_bottom`,
+    },
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: intersection.minX,
+        minY: intersection.minY,
+        maxY: intersection.maxY,
+      },
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_left`,
+    },
+    {
+      bounds: {
+        minX: intersection.maxX,
+        maxX: fragment.bounds.maxX,
+        minY: intersection.minY,
+        maxY: intersection.maxY,
+      },
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_right`,
+    },
+  ]
+
+  return candidateFragments.filter((candidate) =>
+    isValidCutoutFragment(candidate.bounds),
+  )
+}
+
+function createCapacityMeshNodeFromBounds({
+  sourceNode,
+  bounds,
+  capacityMeshNodeId,
+}: {
+  sourceNode: CapacityMeshNode
+  bounds: Bounds
+  capacityMeshNodeId: string
+}): CapacityMeshNode {
+  return {
+    ...sourceNode,
+    capacityMeshNodeId,
+    center: {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    },
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
+    availableZ: [...sourceNode.availableZ],
+  }
+}
+
+function getBoundsIntersection(
+  boundsA: Bounds,
+  boundsB: Bounds,
+): Bounds | null {
+  const intersection = {
+    minX: Math.max(boundsA.minX, boundsB.minX),
+    maxX: Math.min(boundsA.maxX, boundsB.maxX),
+    minY: Math.max(boundsA.minY, boundsB.minY),
+    maxY: Math.min(boundsA.maxY, boundsB.maxY),
+  }
+
+  if (!isValidCutoutFragment(intersection)) return null
+
+  return intersection
+}
+
+function getCapacityMeshNodeBounds(node: CapacityMeshNode): Bounds {
+  return getBoundFromCenteredRect({
+    center: node.center,
+    width: node.width,
+    height: node.height,
+  })
+}
+
+function isValidCutoutFragment(bounds: Bounds): boolean {
+  const width = bounds.maxX - bounds.minX
+  const height = bounds.maxY - bounds.minY
+  const hasValidWidth = Number.isFinite(width) && width > GEOMETRY_EPSILON
+  const hasValidHeight = Number.isFinite(height) && height > GEOMETRY_EPSILON
+
+  return hasValidWidth && hasValidHeight
+}
+
+function isNodeInsideOrOverlappingObstacle({
+  node,
+  obstacle,
+}: {
+  node: CapacityMeshNode
+  obstacle: Obstacle
+}): boolean {
+  const nodeBounds = getCapacityMeshNodeBounds(node)
+  const obstacleBounds = getBoundFromCenteredRect({
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+  })
+
+  return doBoundsOverlap(nodeBounds, obstacleBounds)
+}
+
+function isNodeCenterInsideObstacle({
+  node,
+  obstacle,
+}: {
+  node: CapacityMeshNode
+  obstacle: Obstacle
+}): boolean {
+  const obstacleBounds = getBoundFromCenteredRect({
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+  })
+  const centerInsideX =
+    node.center.x >= obstacleBounds.minX - GEOMETRY_EPSILON &&
+    node.center.x <= obstacleBounds.maxX + GEOMETRY_EPSILON
+  const centerInsideY =
+    node.center.y >= obstacleBounds.minY - GEOMETRY_EPSILON &&
+    node.center.y <= obstacleBounds.maxY + GEOMETRY_EPSILON
+
+  return centerInsideX && centerInsideY
 }
 
 /**
@@ -322,8 +572,12 @@ function isReplacementRegionNode({
     node.center.x <= replacementMaxX + epsilon &&
     node.center.y >= replacementMinY - epsilon &&
     node.center.y <= replacementMaxY + epsilon
+  const nodeArea = node.width * node.height
+  const replacementArea = replacementObstacle.width * replacementObstacle.height
+  const isLargeReplacementNode =
+    nodeCenterInsideReplacement && nodeArea >= replacementArea * 0.2
 
-  return nodeCenterInsideReplacement || isExactReplacementNode
+  return isExactReplacementNode || isLargeReplacementNode
 }
 
 /**

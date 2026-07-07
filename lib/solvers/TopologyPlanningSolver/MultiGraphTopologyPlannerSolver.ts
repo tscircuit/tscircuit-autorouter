@@ -120,7 +120,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       globalMeshNodes,
       componentMeshNodes,
       mergedMeshNodes: mergeMeshNodes({
-        globalMeshNodes,
+        globalMeshNodes: rawGlobalMeshNodes,
         components: this.normalizedInput.components,
         componentMeshNodes,
         mergeStrategy: "concat",
