@@ -76,15 +76,16 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
   expect(solver.routes).toHaveLength(expectedEndpointKeysByConnectionName.size)
 
   for (const route of solver.routes) {
-    expect(route.route.length).toBeGreaterThan(1)
+    const firstPoint = route.route[0]
     const lastPoint = route.route.at(-1)
     const expectedEndpointKeys = expectedEndpointKeysByConnectionName.get(
       route.connectionName,
     )
+    expect(firstPoint).toBeDefined()
     expect(lastPoint).toBeDefined()
     expect(expectedEndpointKeys).toHaveLength(2)
     const actualEndpointKeys = [
-      `${route.route[0].x}:${route.route[0].y}:${route.route[0].z}`,
+      `${firstPoint!.x}:${firstPoint!.y}:${firstPoint!.z}`,
       `${lastPoint!.x}:${lastPoint!.y}:${lastPoint!.z}`,
     ].sort()
 
