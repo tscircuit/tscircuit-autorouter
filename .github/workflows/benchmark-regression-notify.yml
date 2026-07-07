@@ -1,0 +1,136 @@
+name: Benchmark Regression Notify
+
+# Posts to Slack when the main benchmark regresses.
+
+on:
+  workflow_run:
+    workflows: ["Autorouting Benchmark"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  notify:
+    name: Detect and notify benchmark regressions
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout code at benchmarked commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Download current benchmark artifact
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          gh run download "${{ github.event.workflow_run.id }}" \
+            --repo "${{ github.repository }}" \
+            --name benchmark-result \
+            --dir ./current
+
+          if [ ! -f ./current/benchmark-result.json ]; then
+            echo "Current run artifact is missing benchmark-result.json" >&2
+            exit 1
+          fi
+
+      - name: Download previous main benchmark artifact (baseline)
+        id: baseline
+        env:
+          GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          CURRENT_SHA="${{ github.event.workflow_run.head_sha }}"
+          CURRENT_RUN_ID="${{ github.event.workflow_run.id }}"
+
+          PREV_RUN_ID=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow=benchmark.yml \
+            --branch main \
+            --event push \
+            --status success \
+            --limit 20 \
+            --json databaseId,headSha,createdAt \
+            --jq "[.[] | select((.databaseId|tostring) != \"${CURRENT_RUN_ID}\" and .headSha != \"${CURRENT_SHA}\")] | sort_by(.createdAt) | reverse | .[0].databaseId")
+
+          if [ -z "$PREV_RUN_ID" ] || [ "$PREV_RUN_ID" = "null" ]; then
+            echo "No previous successful main benchmark run found; cold start."
+            echo "has_baseline=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Using previous main run $PREV_RUN_ID as baseline."
+          gh run download "$PREV_RUN_ID" \
+            --repo "${{ github.repository }}" \
+            --name benchmark-result \
+            --dir ./baseline
+
+          if [ -f ./baseline/benchmark-result.json ]; then
+            echo "has_baseline=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Baseline run $PREV_RUN_ID artifact is missing benchmark-result.json" >&2
+            exit 1
+          fi
+
+      - name: Detect regressions
+        id: detect
+        run: |
+          set -euo pipefail
+
+          case "${{ steps.baseline.outputs.has_baseline }}" in
+            true)
+              BASELINE_ARGS=(--baseline ./baseline/benchmark-result.json)
+              ;;
+            false)
+              BASELINE_ARGS=(--allow-missing-baseline)
+              ;;
+            *)
+              echo "Invalid has_baseline output: '${{ steps.baseline.outputs.has_baseline }}'" >&2
+              exit 1
+              ;;
+          esac
+
+          bun scripts/benchmark/detect-benchmark-regressions.ts \
+            --current ./current/benchmark-result.json \
+            "${BASELINE_ARGS[@]}" \
+            --out benchmark-regressions.json \
+            --slack-out slack-payload.json \
+            --run-url "${{ github.event.workflow_run.html_url }}" \
+            --commit "${{ github.event.workflow_run.head_sha }}" \
+            --commit-url "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}"
+
+      - name: Require Slack webhook
+        if: steps.detect.outputs.hasRegressions == 'true' && env.SLACK_WEBHOOK_URL == ''
+        run: |
+          echo "SLACK_WEBHOOK_URL is required when benchmark regressions are detected" >&2
+          exit 1
+
+      - name: Post to Slack
+        if: steps.detect.outputs.hasRegressions == 'true' && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          set -euo pipefail
+
+          curl --fail-with-body -sS -X POST \
+            -H 'Content-type: application/json' \
+            --data @slack-payload.json \
+            "$SLACK_WEBHOOK_URL"
