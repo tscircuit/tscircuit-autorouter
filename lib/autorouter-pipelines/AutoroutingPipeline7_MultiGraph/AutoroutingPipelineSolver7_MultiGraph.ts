@@ -452,12 +452,26 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
+        const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
+          cms.componentTopologyGeneratorSolver?.getOutput(),
+        )
+        // Component-local topology owns endpoint resolution inside detected
+        // components, while earlier mesh/edge stages keep their existing order.
+        const capacityNodesForHyperGraph = [
+          ...cms.capacityNodes!.filter((node) =>
+            componentCapacityMeshNodeIds.has(node.capacityMeshNodeId),
+          ),
+          ...cms.capacityNodes!.filter(
+            (node) =>
+              !componentCapacityMeshNodeIds.has(node.capacityMeshNodeId),
+          ),
+        ]
         const sharedEdgeSegments =
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
-          capacityMeshNodes: cms.capacityNodes!,
+          capacityMeshNodes: capacityNodesForHyperGraph,
           layerCount: cms.srj.layerCount,
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
