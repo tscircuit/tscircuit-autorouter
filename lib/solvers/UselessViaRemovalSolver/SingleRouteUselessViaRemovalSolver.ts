@@ -66,6 +66,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           targetZ,
           obstacleSHI: this.obstacleSHI,
           route: this.unsimplifiedRoute,
+          connMap: this.connMap,
         })
         if (
           endpointSupportsLayer &&
@@ -112,6 +113,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             targetZ,
             obstacleSHI: this.obstacleSHI,
             route: this.unsimplifiedRoute,
+            connMap: this.connMap,
           })
           if (
             endpointSupportsLayer &&
