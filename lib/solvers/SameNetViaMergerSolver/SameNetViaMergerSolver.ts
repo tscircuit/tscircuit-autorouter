@@ -279,9 +279,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const keep = viasInNet[viaIndex]
         const cellX = Math.floor(keep.x / cellSize)
         const cellY = Math.floor(keep.y / cellSize)
-        const neighborCellRadius = Math.ceil(
-          NEAR_VIA_MERGE_DISTANCE_MULTIPLIER,
-        )
+        const neighborCellRadius = Math.ceil(NEAR_VIA_MERGE_DISTANCE_MULTIPLIER)
         const remove: Via[] = []
 
         for (let dx = -neighborCellRadius; dx <= neighborCellRadius; dx++) {
@@ -305,7 +303,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
               if (squaredDistance === 0) continue
 
               if (
-                squaredDistance <= directOverlapDistance * directOverlapDistance
+                squaredDistance <=
+                directOverlapDistance * directOverlapDistance
               ) {
                 remove.push(candidate)
                 continue

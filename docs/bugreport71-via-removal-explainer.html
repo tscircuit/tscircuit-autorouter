@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bugreport71 Via Removal Path</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-zinc-950 text-zinc-100 antialiased">
+    <main class="mx-auto max-w-6xl px-6 py-8">
+      <header class="border-b border-zinc-800 pb-6">
+        <p class="text-sm font-medium uppercase tracking-wide text-cyan-300">
+          tscircuit autorouter
+        </p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">
+          Bugreport71: why the bad via cluster happened
+        </h1>
+        <p class="mt-3 max-w-3xl text-base leading-7 text-zinc-300">
+          The screenshot showed same-net vias and trace geometry crossing in a
+          tight cluster. It was not a different-net DRC failure. The route was
+          electrically valid, but the simplification pipeline left unnecessary
+          vias because one solver treated same-net sibling copper as an
+          obstacle.
+        </p>
+      </header>
+
+      <section class="grid gap-5 py-8 lg:grid-cols-3">
+        <article class="rounded border border-red-900/60 bg-red-950/30 p-5">
+          <h2 class="text-lg font-semibold text-red-100">Visible Symptom</h2>
+          <p class="mt-3 text-sm leading-6 text-red-100/80">
+            The center cluster around source net 3 contained a short
+            top-bottom-top detour. Two vias remained close to a same-net
+            sibling route, making the output look like a via crossing trace
+            geometry.
+          </p>
+        </article>
+
+        <article class="rounded border border-amber-900/60 bg-amber-950/30 p-5">
+          <h2 class="text-lg font-semibold text-amber-100">Root Cause</h2>
+          <p class="mt-3 text-sm leading-6 text-amber-100/80">
+            `SingleRouteUselessViaRemovalSolver` only ignored conflicts for
+            the exact same route id. It did not use `ConnectivityMap`, so a
+            sibling route on the same electrical net blocked a valid layer
+            move.
+          </p>
+        </article>
+
+        <article class="rounded border border-emerald-900/60 bg-emerald-950/30 p-5">
+          <h2 class="text-lg font-semibold text-emerald-100">Fix</h2>
+          <p class="mt-3 text-sm leading-6 text-emerald-100/80">
+            Via removal now receives `connMap` and treats connected sibling
+            routes and obstacles as same-net non-blockers for collision checks.
+            Endpoint layer proof stays stricter and only accepts the actual
+            route endpoint.
+          </p>
+        </article>
+      </section>
+
+      <section class="mb-8 rounded border border-zinc-800 bg-zinc-900/70 p-5">
+        <div class="flex flex-col gap-2 border-b border-zinc-800 pb-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="text-sm font-medium uppercase tracking-wide text-fuchsia-300">
+              Change Story
+            </p>
+            <h2 class="mt-2 text-2xl font-semibold text-white">
+              The route was not broken, it was being protected from the wrong thing
+            </h2>
+          </div>
+          <p class="max-w-md text-sm leading-6 text-zinc-400">
+            This is the human path through the fix, from screenshot to solver
+            behavior.
+          </p>
+        </div>
+
+        <div class="mt-6 grid gap-5">
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-red-300">
+                Scene 1
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The screenshot looked illegal
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                The cluster had vias sitting right on top of trace geometry.
+                Visually it looked like the autorouter had crossed copper in a
+                way that should never ship.
+              </p>
+              <p class="mt-3 rounded border border-zinc-800 bg-black p-3 font-mono text-xs text-zinc-300">
+                "Bad thing on screen" did not automatically mean "different-net DRC failure".
+              </p>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                Scene 2
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The geometry check cleared different nets
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                I scanned the output routes around that area. The suspicious
+                contacts were same-net or self-route contacts, not collisions
+                between unrelated nets. That changed the question.
+              </p>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <div class="rounded border border-zinc-800 bg-black p-3">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Wrong question
+                  </p>
+                  <p class="mt-1 font-mono text-xs text-red-200">
+                    "Why did DRC allow this?"
+                  </p>
+                </div>
+                <div class="rounded border border-zinc-800 bg-black p-3">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Right question
+                  </p>
+                  <p class="mt-1 font-mono text-xs text-emerald-200">
+                    "Why did simplification leave these vias?"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-cyan-300">
+                Scene 3
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The route had a removable detour
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                The bad-looking route had this shape: start on one layer, drop
+                through a via, run a short section on the other layer, then come
+                back through another via. If the middle section can live on the
+                neighboring layer, both vias are useless.
+              </p>
+              <pre class="mt-3 overflow-x-auto rounded border border-zinc-800 bg-black p-4 text-xs text-zinc-300"><code>top segment
+  -> via down
+    -> short bottom segment
+  -> via up
+top segment</code></pre>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-violet-300">
+                Scene 4
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The solver was too literal
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                `SingleRouteUselessViaRemovalSolver` asked whether the moved
+                section would hit another route. But "another route" is not the
+                same as "another net". The same electrical net can be split
+                across multiple route ids.
+              </p>
+              <pre class="mt-3 overflow-x-auto rounded border border-zinc-800 bg-black p-4 text-xs text-zinc-300"><code>// old mental model
+if (conflictingRoute.connectionName === currentRoute.connectionName) {
+  ignoreIt()
+}
+
+// missing idea
+// route-a and route-b can still be the same electrical net</code></pre>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                Scene 5
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The fix made via removal net-aware
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                I threaded the required `ConnectivityMap` into via removal and
+                taught the collision check to treat connected sibling routes as
+                same-net copper. Different-net routes still block the move.
+              </p>
+              <pre class="mt-3 overflow-x-auto rounded border border-zinc-800 bg-black p-4 text-xs text-zinc-300"><code>private routeIsSameNet(route: HighDensityRoute): boolean {
+  return (
+    route.connectionName === this.unsimplifiedRoute.connectionName ||
+    this.connMap.areIdsConnected(
+      route.connectionName,
+      this.unsimplifiedRoute.connectionName,
+    )
+  )
+}</code></pre>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-sky-300">
+                Scene 6
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                Then the guardrail got tightened
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                A review pass caught an important edge: same-net sibling pads
+                are safe to ignore as blockers, but they should not prove that
+                this exact route endpoint supports another layer. So endpoint
+                proof stayed exact while collision checks became net-aware.
+              </p>
+              <pre class="mt-3 overflow-x-auto rounded border border-zinc-800 bg-black p-4 text-xs text-zinc-300"><code>// collision check: same-net is allowed
+if (this.obstacleIsSameNet(obstacle)) continue
+
+// endpoint proof: only this route endpoint counts
+if (!this.obstacleIsRouteEndpoint(obstacle)) return false</code></pre>
+            </div>
+          </article>
+
+          <article class="grid gap-4 rounded bg-zinc-950 p-5 md:grid-cols-[10rem_1fr]">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                Scene 7
+              </p>
+              <p class="mt-1 text-lg font-semibold text-white">
+                The visible result got simpler
+              </p>
+            </div>
+            <div class="text-sm leading-6 text-zinc-300">
+              <p>
+                In bugreport71, the source-net-3 center cluster went from two
+                leftover vias to zero. The fix did not hide bad data and did
+                not add a fallback. It made the correct solver understand the
+                actual net relationship.
+              </p>
+              <div class="mt-3 rounded border border-emerald-900 bg-emerald-950/40 p-4">
+                <p class="font-mono text-xs text-emerald-100">
+                  expect(sourceNet3CenterClusterVias).toHaveLength(0)
+                </p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+        <div class="rounded border border-zinc-800 bg-zinc-900/70 p-5">
+          <h2 class="text-xl font-semibold text-white">Before and After</h2>
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <figure class="rounded bg-black p-4">
+              <figcaption class="mb-3 text-sm font-medium text-zinc-300">
+                Before: unnecessary layer hop remains
+              </figcaption>
+              <svg viewBox="0 0 280 210" class="h-56 w-full">
+                <rect width="280" height="210" fill="#050505" />
+                <g stroke="#134e4a" stroke-width="1">
+                  <path d="M20 35H260M20 80H260M20 125H260M20 170H260" />
+                  <path d="M45 15V195M95 15V195M145 15V195M195 15V195M245 15V195" />
+                </g>
+                <path
+                  d="M42 74 L94 132 L147 132 L197 83"
+                  fill="none"
+                  stroke="#22c55e"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M92 42 L120 72 L148 102 L178 132"
+                  fill="none"
+                  stroke="#fde047"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M142 25 L142 83 L167 112"
+                  fill="none"
+                  stroke="#a855f7"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M142 83 L142 132"
+                  fill="none"
+                  stroke="#2563eb"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                />
+                <circle cx="142" cy="83" r="18" fill="#d946ef" />
+                <circle cx="142" cy="132" r="18" fill="#d946ef" />
+                <circle cx="142" cy="83" r="8" fill="#1d4ed8" />
+                <circle cx="142" cy="132" r="8" fill="#1d4ed8" />
+                <text x="18" y="196" fill="#fca5a5" font-size="12">
+                  two vias left in same-net cluster
+                </text>
+              </svg>
+            </figure>
+
+            <figure class="rounded bg-black p-4">
+              <figcaption class="mb-3 text-sm font-medium text-zinc-300">
+                After: same-net blocker no longer prevents removal
+              </figcaption>
+              <svg viewBox="0 0 280 210" class="h-56 w-full">
+                <rect width="280" height="210" fill="#050505" />
+                <g stroke="#134e4a" stroke-width="1">
+                  <path d="M20 35H260M20 80H260M20 125H260M20 170H260" />
+                  <path d="M45 15V195M95 15V195M145 15V195M195 15V195M245 15V195" />
+                </g>
+                <path
+                  d="M42 74 L94 132 L147 132 L197 83"
+                  fill="none"
+                  stroke="#22c55e"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M92 42 L120 72 L148 102 L178 132"
+                  fill="none"
+                  stroke="#fde047"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M142 25 L142 83 L142 132 L167 112"
+                  fill="none"
+                  stroke="#a855f7"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="142" cy="83" r="7" fill="#22d3ee" />
+                <circle cx="142" cy="132" r="7" fill="#22d3ee" />
+                <text x="18" y="196" fill="#86efac" font-size="12">
+                  detour flattened, no extra vias here
+                </text>
+              </svg>
+            </figure>
+          </div>
+        </div>
+
+        <div class="rounded border border-zinc-800 bg-zinc-900/70 p-5">
+          <h2 class="text-xl font-semibold text-white">Full Code Path</h2>
+          <ol class="mt-5 space-y-4">
+            <li class="rounded border border-zinc-800 bg-zinc-950 p-4">
+              <p class="font-mono text-sm text-cyan-200">
+                fixtures/bug-reports/bugreport71-dd7d15
+              </p>
+              <p class="mt-2 text-sm leading-6 text-zinc-300">
+                The fixture feeds a `SimpleRouteJson` board into
+                `AutoroutingPipelineSolver`.
+              </p>
+            </li>
+            <li class="rounded border border-zinc-800 bg-zinc-950 p-4">
+              <p class="font-mono text-sm text-cyan-200">
+                TraceSimplificationSolver
+              </p>
+              <p class="mt-2 text-sm leading-6 text-zinc-300">
+                The simplification pipeline runs via removal, via merging, and
+                path simplification. The important part is that via removal now
+                receives the same required `connMap` as the other net-aware
+                solvers.
+              </p>
+            </li>
+            <li class="rounded border border-zinc-800 bg-zinc-950 p-4">
+              <p class="font-mono text-sm text-cyan-200">
+                UselessViaRemovalSolver
+              </p>
+              <p class="mt-2 text-sm leading-6 text-zinc-300">
+                This wrapper runs `SingleRouteUselessViaRemovalSolver` once per
+                high-density route and passes `connMap` into each instance.
+              </p>
+            </li>
+            <li class="rounded border border-zinc-800 bg-zinc-950 p-4">
+              <p class="font-mono text-sm text-cyan-200">
+                SingleRouteUselessViaRemovalSolver
+              </p>
+              <p class="mt-2 text-sm leading-6 text-zinc-300">
+                It breaks one route into same-layer sections. If a middle
+                section can move to the layer of both neighboring sections,
+                the two vias around that section are removed.
+              </p>
+            </li>
+            <li class="rounded border border-zinc-800 bg-zinc-950 p-4">
+              <p class="font-mono text-sm text-cyan-200">
+                canSectionMoveToLayer
+              </p>
+              <p class="mt-2 text-sm leading-6 text-zinc-300">
+                This is where the bug lived. Different-net routes still block
+                the move. Same-net sibling routes found through `connMap` no
+                longer block it.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="mt-8 grid gap-8 lg:grid-cols-2">
+        <div class="rounded border border-zinc-800 bg-zinc-900/70 p-5">
+          <h2 class="text-xl font-semibold text-white">What Was Wrong</h2>
+          <div class="mt-5 space-y-4 text-sm leading-6 text-zinc-300">
+            <p>
+              The route contained a section like top to bottom to top. That
+              pattern is removable when the middle section can safely live on
+              the top layer.
+            </p>
+            <p>
+              The old collision check asked: "Does the moved segment hit any
+              route other than itself?" That sounds safe, but it missed a PCB
+              routing detail: different route ids can be part of the same
+              electrical net.
+            </p>
+            <p>
+              In bugreport71, the only thing blocking the layer move was
+              same-net sibling copper. Because the solver treated that sibling
+              as a blocker, it kept the layer hop and left the visible bad via
+              cluster.
+            </p>
+          </div>
+        </div>
+
+        <div class="rounded border border-zinc-800 bg-zinc-900/70 p-5">
+          <h2 class="text-xl font-semibold text-white">Important Guardrails</h2>
+          <ul class="mt-5 space-y-3 text-sm leading-6 text-zinc-300">
+            <li class="rounded bg-zinc-950 p-3">
+              No fallback was added. `connMap` is a required input where this
+              solver is constructed.
+            </li>
+            <li class="rounded bg-zinc-950 p-3">
+              Same-net sibling routes are non-blockers only for collision
+              checks during via removal.
+            </li>
+            <li class="rounded bg-zinc-950 p-3">
+              Endpoint layer proof remains strict. A same-net sibling pad does
+              not prove that this route endpoint can move layers.
+            </li>
+            <li class="rounded bg-zinc-950 p-3">
+              Via merging remains stricter. It must not merge a via through a
+              sibling same-net route if that would create a visual crossing.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="mt-8 rounded border border-zinc-800 bg-zinc-900/70 p-5">
+        <h2 class="text-xl font-semibold text-white">Files Involved</h2>
+        <div class="mt-5 grid gap-3 md:grid-cols-2">
+          <div class="rounded bg-zinc-950 p-4">
+            <p class="font-mono text-sm text-cyan-200">
+              lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver.ts
+            </p>
+            <p class="mt-2 text-sm text-zinc-300">
+              Adds net-aware route and obstacle checks.
+            </p>
+          </div>
+          <div class="rounded bg-zinc-950 p-4">
+            <p class="font-mono text-sm text-cyan-200">
+              lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver.ts
+            </p>
+            <p class="mt-2 text-sm text-zinc-300">
+              Requires `connMap` and passes it to the per-route solver.
+            </p>
+          </div>
+          <div class="rounded bg-zinc-950 p-4">
+            <p class="font-mono text-sm text-cyan-200">
+              lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts
+            </p>
+            <p class="mt-2 text-sm text-zinc-300">
+              Wires the existing simplification `connMap` into via removal.
+            </p>
+          </div>
+          <div class="rounded bg-zinc-950 p-4">
+            <p class="font-mono text-sm text-cyan-200">
+              tests/bugs/bugreport71-dd7d15.test.ts
+            </p>
+            <p class="mt-2 text-sm text-zinc-300">
+              Asserts the source-net-3 center cluster has zero vias after the
+              fix.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

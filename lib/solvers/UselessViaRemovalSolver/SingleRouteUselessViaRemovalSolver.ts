@@ -51,44 +51,37 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   }
 
   private routeIsSameNet(route: HighDensityRoute): boolean {
-    const currentRootName = this.unsimplifiedRoute.rootConnectionName
-    const otherRootName = route.rootConnectionName
+    const currentRouteIds = [
+      this.unsimplifiedRoute.connectionName,
+      this.unsimplifiedRoute.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
+    const otherRouteIds = [
+      route.connectionName,
+      route.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
 
-    return (
-      route.connectionName === this.unsimplifiedRoute.connectionName ||
-      route.connectionName === currentRootName ||
-      otherRootName === this.unsimplifiedRoute.connectionName ||
-      (currentRootName !== undefined && otherRootName === currentRootName) ||
-      this.connMap.areIdsConnected(
-        route.connectionName,
-        this.unsimplifiedRoute.connectionName,
-      ) ||
-      (currentRootName !== undefined &&
-        this.connMap.areIdsConnected(route.connectionName, currentRootName)) ||
-      (otherRootName !== undefined &&
-        this.connMap.areIdsConnected(
-          otherRootName,
-          this.unsimplifiedRoute.connectionName,
-        )) ||
-      (currentRootName !== undefined &&
-        otherRootName !== undefined &&
-        this.connMap.areIdsConnected(otherRootName, currentRootName))
+    return currentRouteIds.some((currentRouteId) =>
+      otherRouteIds.some(
+        (otherRouteId) =>
+          otherRouteId === currentRouteId ||
+          this.connMap.areIdsConnected(otherRouteId, currentRouteId),
+      ),
     )
   }
 
   private obstacleIsSameNet(obstacle: Obstacle): boolean {
-    const currentRootName = this.unsimplifiedRoute.rootConnectionName
+    const currentRouteIds = [
+      this.unsimplifiedRoute.connectionName,
+      this.unsimplifiedRoute.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
 
-    return obstacle.connectedTo.some(
-      (connectedId) =>
-        connectedId === this.unsimplifiedRoute.connectionName ||
-        connectedId === currentRootName ||
-        this.connMap.areIdsConnected(
-          connectedId,
-          this.unsimplifiedRoute.connectionName,
-        ) ||
-        (currentRootName !== undefined &&
-          this.connMap.areIdsConnected(connectedId, currentRootName)),
+    // Same-net pads and copper should not block via removal collision checks.
+    return currentRouteIds.some((currentRouteId) =>
+      obstacle.connectedTo.some(
+        (connectedId) =>
+          connectedId === currentRouteId ||
+          this.connMap.areIdsConnected(connectedId, currentRouteId),
+      ),
     )
   }
 
