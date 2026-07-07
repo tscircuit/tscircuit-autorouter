@@ -87,16 +87,13 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
     expect(firstPoint).toBeDefined()
     expect(lastPoint).toBeDefined()
     expect(expectedEndpointKeys).toBeDefined()
-    const checkedFirstPoint = firstPoint as (typeof route.route)[number]
-    const checkedLastPoint = lastPoint as (typeof route.route)[number]
-    const checkedExpectedEndpointKeys = expectedEndpointKeys as string[]
     expect(expectedEndpointKeys).toHaveLength(2)
     const actualEndpointKeys = [
-      `${checkedFirstPoint.x}:${checkedFirstPoint.y}:${checkedFirstPoint.z}`,
-      `${checkedLastPoint.x}:${checkedLastPoint.y}:${checkedLastPoint.z}`,
+      `${firstPoint!.x}:${firstPoint!.y}:${firstPoint!.z}`,
+      `${lastPoint!.x}:${lastPoint!.y}:${lastPoint!.z}`,
     ].sort()
 
     expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1])
-    expect(actualEndpointKeys).toEqual(checkedExpectedEndpointKeys)
+    expect(actualEndpointKeys).toEqual(expectedEndpointKeys!)
   }
 })
