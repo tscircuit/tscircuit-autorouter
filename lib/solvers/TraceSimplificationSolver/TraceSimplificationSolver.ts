@@ -232,6 +232,7 @@ export class TraceSimplificationSolver extends BaseSolver {
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
+            connMap: this.simplificationConfig.connMap,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []

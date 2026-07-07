@@ -68,6 +68,7 @@ const runSimplificationLoop = (
     obstacles: context.srj.obstacles,
     colorMap: context.colorMap,
     layerCount: context.srj.layerCount,
+    connMap: context.connMap,
   })
   viaRemoval.solve()
 

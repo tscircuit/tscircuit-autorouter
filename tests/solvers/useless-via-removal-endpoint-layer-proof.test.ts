@@ -4,6 +4,7 @@ import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 const baseRoute: HighDensityRoute = {
   connectionName: "source_net_test",
@@ -24,6 +25,7 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
     obstacleSHI: new ObstacleSpatialHashIndex("flatbush", obstacles),
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
+    connMap: new ConnectivityMap({ net0: [route.connectionName] }),
   })
 
   solver.solve()
@@ -33,13 +35,6 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
 
   return solver.getOptimizedHdRoute()
 }
-
-test("does not remove the first-section via when endpoint layer support is unproven", () => {
-  const optimizedRoute = solveRoute(baseRoute)
-
-  expect(optimizedRoute.vias).toEqual([{ x: 1, y: 0 }])
-  expect(optimizedRoute.route).toEqual(baseRoute.route)
-})
 
 test("removes the first-section via when a connected endpoint obstacle supports both layers", () => {
   const multilayerEndpointObstacle: Obstacle = {

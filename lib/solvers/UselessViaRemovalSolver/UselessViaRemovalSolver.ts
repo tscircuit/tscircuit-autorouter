@@ -9,12 +9,14 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
+  connMap: ConnectivityMap
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -74,6 +76,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       hdRouteSHI: this.hdRouteSHI!,
       obstacleSHI: this.obstacleSHI!,
       unsimplifiedRoute: unprocessedRoute,
+      connMap: this.input.connMap,
     })
   }
 
