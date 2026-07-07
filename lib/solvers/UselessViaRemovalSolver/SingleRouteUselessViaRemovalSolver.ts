@@ -51,7 +51,8 @@ const obstacleIsSameNet = (
   return routeIds.some((routeId) =>
     obstacle.connectedTo.some(
       (connectedId) =>
-        connectedId === routeId || connMap.areIdsConnected(connectedId, routeId),
+        connectedId === routeId ||
+        connMap.areIdsConnected(connectedId, routeId),
     ),
   )
 }
@@ -305,11 +306,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
       for (const { conflictingRoute, distance } of conflictingRoutes) {
         if (
-          routeIsSameNet(
-            this.unsimplifiedRoute,
-            conflictingRoute,
-            this.connMap,
-          )
+          routeIsSameNet(this.unsimplifiedRoute, conflictingRoute, this.connMap)
         ) {
           continue
         }
@@ -342,9 +339,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       for (const obstacle of obstacles) {
         // Skip obstacles that are connected to this trace
         // (the trace is supposed to connect to them)
-        if (
-          obstacleIsSameNet(obstacle, this.unsimplifiedRoute, this.connMap)
-        ) {
+        if (obstacleIsSameNet(obstacle, this.unsimplifiedRoute, this.connMap)) {
           continue
         }
 
