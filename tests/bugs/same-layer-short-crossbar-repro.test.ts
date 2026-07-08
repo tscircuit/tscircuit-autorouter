@@ -62,7 +62,6 @@ const convertHdRoutesToPcbTraces = (
 const overlapErrors = (srj: SimpleRouteJson, traces: SimplifiedPcbTraces) =>
   getDrcErrors(
     convertToCircuitJson(srj, traces, { minTraceWidth: srj.minTraceWidth }),
-    { minTraceWidth: srj.minTraceWidth },
   ).locationAwareErrors.filter((e) => e.message.includes("overlaps with trace"))
 
 // The raw merged routes still short (the pipeline models crossings as cost, not a
