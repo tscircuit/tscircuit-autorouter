@@ -210,8 +210,8 @@ test(
     const netToPointPairsStage = getPipeline7StageNumber(
       "netToPointPairsSolver",
     )
-    const componentTopologyStage = getPipeline7StageNumber(
-      "componentTopologyGeneratorSolver",
+    const topologyPlanningStage = getPipeline7StageNumber(
+      "topologyPlanningSolver",
     )
     const traceWidthStage = getPipeline7StageNumber("traceWidthSolver")
 
@@ -223,7 +223,7 @@ test(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
     )
     expect(stdout).toContain(
-      `captured stage=${componentTopologyStage} name=componentTopologyGeneratorSolver`,
+      `captured stage=${topologyPlanningStage} name=topologyPlanningSolver`,
     )
     expect(stdout).toContain(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,

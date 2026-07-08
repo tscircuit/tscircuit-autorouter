@@ -1,5 +1,4 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { doBoundsOverlap } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -7,11 +6,11 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { ComponentTopologyGeneratorSolver } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -46,7 +45,6 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
-import type { DetectedComponent } from "../../solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
@@ -60,6 +58,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -166,34 +165,6 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
-function isGlobalMeshNodeOverlappingDetectedComponent(
-  node: CapacityMeshNode,
-  detectedComponents: DetectedComponent[],
-) {
-  const nodeBounds = {
-    minX: node.center.x - node.width / 2,
-    maxX: node.center.x + node.width / 2,
-    minY: node.center.y - node.height / 2,
-    maxY: node.center.y + node.height / 2,
-  }
-
-  return detectedComponents.some((detectedComponent) =>
-    doBoundsOverlap(nodeBounds, detectedComponent.bounds),
-  )
-}
-
-function isGlobalComponentTargetNode(
-  node: CapacityMeshNode,
-  detectedComponents: DetectedComponent[],
-) {
-  return (
-    node._containsTarget === true &&
-    node._containsObstacle === true &&
-    node.availableZ.length > 1 &&
-    isGlobalMeshNodeOverlappingDetectedComponent(node, detectedComponents)
-  )
-}
-
 function definePipelineStep<
   T extends new (
     ...args: any[]
@@ -223,7 +194,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
-  componentTopologyGeneratorSolver?: ComponentTopologyGeneratorSolver
+  componentTopologyGeneratorSolver?: MergedComponentTopologyView
+  topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
@@ -288,23 +260,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [{ inputSrj: cms.srj }],
     ),
     definePipelineStep(
-      "componentTopologyGeneratorSolver",
-      ComponentTopologyGeneratorSolver,
-      (cms) => [
-        {
-          detectedComponents: cms.componentDetectionSolver!.getOutput(),
-          inputSrj: cms.srj,
-          viaDiameter: cms.viaDiameter,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        },
-      ],
-      {
-        onSolved: (cms) => {
-          cms.capacityNodes = cms.componentTopologyGeneratorSolver!.getOutput()
-        },
-      },
-    ),
-    definePipelineStep(
       "escapeViaLocationSolver",
       EscapeViaLocationSolver,
       (cms) => [
@@ -338,31 +293,25 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "globalTopologyGeneratorSolver",
-      RectDiffPipeline,
+      "topologyPlanningSolver",
+      MultiGraphTopologyPlannerSolver,
       (cms) => [
         {
-          simpleRouteJson:
-            cms.componentTopologyGeneratorSolver!.createComponentObstacleSrj(
-              cms.srjWithPointPairs!,
-            ) as any,
-          maxGapFillPasses: 4,
+          inputSrj: cms.srjWithPointPairs!,
+          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
+          viaDiameter: cms.viaDiameter,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
       ],
       {
         onSolved: (cms) => {
-          const detectedComponents = cms.componentDetectionSolver?.getOutput()
-          const globalMeshNodes = (
-            cms.globalTopologyGeneratorSolver?.getOutput().meshNodes ?? []
-          ).filter(
-            (node) =>
-              !detectedComponents ||
-              !isGlobalComponentTargetNode(node, detectedComponents),
-          )
-          const componentMeshNodes =
-            cms.componentTopologyGeneratorSolver?.getOutput() ?? []
+          const output = cms.topologyPlanningSolver!.getOutput()
 
-          cms.capacityNodes = [...globalMeshNodes, ...componentMeshNodes]
+          cms.capacityNodes = output.mergedMeshNodes
+          cms.globalTopologyGeneratorSolver =
+            cms.topologyPlanningSolver!.globalTopologySolver
+          cms.componentTopologyGeneratorSolver =
+            new MergedComponentTopologyView(cms.topologyPlanningSolver!)
         },
       },
     ),
@@ -410,7 +359,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       MultiTargetNecessaryCrampedPortPointSolver,
       (cms) => {
         const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-          cms.componentTopologyGeneratorSolver?.getOutput(),
+          cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
         )
 
         return [
@@ -434,7 +383,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-            cms.componentTopologyGeneratorSolver?.getOutput(),
+            cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
           )
 
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =

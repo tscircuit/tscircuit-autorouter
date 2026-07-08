@@ -7,6 +7,7 @@ import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detecto
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { mergeMeshNodes } from "./merge-mesh-nodes"
 import {
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
@@ -14,7 +15,6 @@ import {
   createComponentSrj,
   filterMeshNodesInsideComponentAreas,
   filterRectDiffNodeRectsInsideComponentAreas,
-  mergeMeshNodes,
   normalizeInput,
 } from "./topologyPlanningShared"
 
@@ -120,7 +120,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       globalMeshNodes,
       componentMeshNodes,
       mergedMeshNodes: mergeMeshNodes({
-        globalMeshNodes,
+        globalMeshNodes: rawGlobalMeshNodes,
         components: this.normalizedInput.components,
         componentMeshNodes,
         mergeStrategy: "concat",

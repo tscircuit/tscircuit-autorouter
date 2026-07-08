@@ -26,7 +26,6 @@ import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
-  TopologyMeshMergeStrategy,
 } from "./MultiGraphTopologyPlannerSolver"
 
 export interface NormalizedTopologyPlannerInput {
@@ -131,7 +130,7 @@ export function normalizeInput(
           detectedComponents,
           inputSrj: input.inputSrj,
         })
-      : undefined) ??
+      : input.inputSrj) ??
     input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
@@ -178,35 +177,6 @@ function serializeDetectedComponents({
       }),
     }
   })
-}
-
-/**
- * Replaces the global component-region node with the finer component-local
- * routing regions.
- */
-export function mergeMeshNodes({
-  globalMeshNodes,
-  components,
-  componentMeshNodes,
-  mergeStrategy,
-}: {
-  globalMeshNodes: CapacityMeshNode[]
-  components: SerializedTopologyComponentInput[]
-  componentMeshNodes: CapacityMeshNode[][]
-  mergeStrategy: TopologyMeshMergeStrategy
-}): CapacityMeshNode[] {
-  switch (mergeStrategy) {
-    case "concat":
-      return [
-        ...globalMeshNodes.filter(
-          (node) =>
-            !components.some((component) =>
-              isReplacementRegionNode({ node, component }),
-            ),
-        ),
-        ...componentMeshNodes.flat(),
-      ]
-  }
 }
 
 /**
@@ -283,47 +253,6 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
         }),
       ),
   )
-}
-
-/** Matches a global routing region against a detected component replacement obstacle. */
-function isReplacementRegionNode({
-  node,
-  component,
-}: {
-  node: CapacityMeshNode
-  component: SerializedTopologyComponentInput
-}) {
-  const { replacementObstacle } = component
-  const epsilon = 1e-9
-  const isExactReplacementNode =
-    Math.abs(node.center.x - replacementObstacle.center.x) <= epsilon &&
-    Math.abs(node.center.y - replacementObstacle.center.y) <= epsilon &&
-    Math.abs(node.width - replacementObstacle.width) <= epsilon &&
-    Math.abs(node.height - replacementObstacle.height) <= epsilon
-
-  if (
-    component.componentKind !== "qfp" &&
-    component.componentKind !== "qfp_thermalpad" &&
-    component.componentKind !== "soic"
-  ) {
-    return isExactReplacementNode
-  }
-
-  const replacementMinX =
-    replacementObstacle.center.x - replacementObstacle.width / 2
-  const replacementMaxX =
-    replacementObstacle.center.x + replacementObstacle.width / 2
-  const replacementMinY =
-    replacementObstacle.center.y - replacementObstacle.height / 2
-  const replacementMaxY =
-    replacementObstacle.center.y + replacementObstacle.height / 2
-  const nodeCenterInsideReplacement =
-    node.center.x >= replacementMinX - epsilon &&
-    node.center.x <= replacementMaxX + epsilon &&
-    node.center.y >= replacementMinY - epsilon &&
-    node.center.y <= replacementMaxY + epsilon
-
-  return nodeCenterInsideReplacement || isExactReplacementNode
 }
 
 /**
@@ -436,7 +365,7 @@ export function areBoundsInsideBounds({
   bounds: Bounds
   outerBounds: Bounds
   epsilon: number
-}) {
+}): boolean {
   return (
     bounds.minX >= outerBounds.minX - epsilon &&
     bounds.maxX <= outerBounds.maxX + epsilon &&

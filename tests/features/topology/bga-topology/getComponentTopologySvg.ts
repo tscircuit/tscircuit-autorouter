@@ -7,14 +7,14 @@ export const getComponentTopologySvg = (srj: SimpleRouteJson) => {
     structuredClone(srj),
     { cacheProvider: null },
   )
-  const componentTopologyStepIndex = solver.pipelineDef.findIndex(
-    (step) => step.solverName === "componentTopologyGeneratorSolver",
+  const topologyPlanningStepIndex = solver.pipelineDef.findIndex(
+    (step) => step.solverName === "topologyPlanningSolver",
   )
 
   while (
     !solver.solved &&
     !solver.failed &&
-    solver.currentPipelineStepIndex <= componentTopologyStepIndex
+    solver.currentPipelineStepIndex <= topologyPlanningStepIndex
   ) {
     solver.step()
   }

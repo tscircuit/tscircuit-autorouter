@@ -15,9 +15,8 @@ test("bugreport70-4e510c pipeline7 failure visualization", (): void => {
 
   solver.solve()
 
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(solver.getCurrentPhase()).toBe("portPointPathingSolver")
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
