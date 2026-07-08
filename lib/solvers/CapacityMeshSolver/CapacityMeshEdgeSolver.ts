@@ -5,7 +5,6 @@ import type {
   CapacityMeshNodeId,
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
-import { distance } from "@tscircuit/math-utils"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
@@ -59,6 +58,10 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
 
   handleTargetNodes() {
     const targetNodes = this.nodes.filter((node) => node._containsTarget)
+    const nodeById = new Map(
+      this.nodes.map((node) => [node.capacityMeshNodeId, node]),
+    )
+
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
         const nodeA = targetNodes[i]!
@@ -74,36 +77,31 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
-    // If a target node is not connected to any other node, then it is "inside
-    // an obstacle" (this is the case almost 100% of the time when we place
-    // targets inside of PCB pads)
-    // To fix this we connect it to the nearest nodes without obstacles
     for (const targetNode of targetNodes) {
-      const hasEdge = this.edges.some((edge) =>
-        edge.nodeIds.includes(targetNode.capacityMeshNodeId),
-      )
-      if (hasEdge) continue
+      if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
+        continue
+      }
 
-      let nearestNode: CapacityMeshNode | null = null
-      let nearestDistance = Infinity
-      for (const node of this.nodes) {
-        if (node._containsObstacle) continue
-        if (node._containsTarget) continue
-        const dist = distance(targetNode.center, node.center)
-        if (dist < nearestDistance) {
-          nearestDistance = dist
-          nearestNode = node
-        }
-      }
-      if (nearestNode) {
-        this.edges.push({
-          capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
-          nodeIds: [
-            targetNode.capacityMeshNodeId,
-            nearestNode.capacityMeshNodeId,
-          ],
-        })
-      }
+      const hasRoutingEdge = this.edges.some((edge) => {
+        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
+        const otherNodeId =
+          edge.nodeIds[0] === targetNode.capacityMeshNodeId
+            ? edge.nodeIds[1]
+            : edge.nodeIds[0]
+        const otherNode = nodeById.get(otherNodeId)
+        if (!otherNode) return false
+
+        return (
+          !otherNode._containsObstacle &&
+          !otherNode._containsTarget &&
+          this.doNodesHaveSharedLayer(targetNode, otherNode)
+        )
+      })
+      if (hasRoutingEdge) continue
+
+      throw new Error(
+        `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,
+      )
     }
   }
 

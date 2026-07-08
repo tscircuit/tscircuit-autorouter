@@ -1,4 +1,5 @@
 import type { Obstacle } from "lib/types"
+import { getCompleteAxisCoordinates } from "./get-complete-axis-coordinates"
 
 const AXIS_EPSILON = 1e-3
 
@@ -28,17 +29,27 @@ type BgaSlot = {
   obstacle?: Obstacle
 }
 
-function getMinimumPositiveDiff(axisCoordinates: number[]): number | null {
-  let minimumDiff = Number.POSITIVE_INFINITY
+function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
+  const positiveDiffs: number[] = []
 
   for (let index = 1; index < axisCoordinates.length; index++) {
     const diff = axisCoordinates[index]! - axisCoordinates[index - 1]!
     if (diff > AXIS_EPSILON) {
-      minimumDiff = Math.min(minimumDiff, diff)
+      positiveDiffs.push(diff)
     }
   }
 
-  return Number.isFinite(minimumDiff) ? minimumDiff : null
+  if (positiveDiffs.length === 0) return null
+
+  const minimumDiff = Math.min(...positiveDiffs)
+  const adjacentDiffs = positiveDiffs
+    .filter((diff) => diff <= minimumDiff * 1.5)
+    .sort((a, b) => a - b)
+  const medianIndex = Math.floor(adjacentDiffs.length / 2)
+
+  return adjacentDiffs.length % 2 === 0
+    ? (adjacentDiffs[medianIndex - 1]! + adjacentDiffs[medianIndex]!) / 2
+    : adjacentDiffs[medianIndex]!
 }
 
 function getUniqueSortedAxisCoordinates(axisCoordinates: number[]): number[] {
@@ -53,21 +64,21 @@ export class BgaGrid {
   static fromObstacles(obstacles: Obstacle[]): BgaGrid | null {
     if (obstacles.length === 0) return null
 
-    const xCoordinates = getUniqueSortedAxisCoordinates(
+    const observedXCoordinates = getUniqueSortedAxisCoordinates(
       obstacles.map((obstacle) => obstacle.center.x),
     )
-    const yCoordinates = getUniqueSortedAxisCoordinates(
+    const observedYCoordinates = getUniqueSortedAxisCoordinates(
       obstacles.map((obstacle) => obstacle.center.y),
     )
-    const pitchX = getMinimumPositiveDiff(xCoordinates)
-    const pitchY = getMinimumPositiveDiff(yCoordinates)
+    const pitchX = estimateAdjacentAxisPitch(observedXCoordinates)
+    const pitchY = estimateAdjacentAxisPitch(observedYCoordinates)
 
     if (pitchX === null || pitchY === null) return null
 
     return new BgaGrid({
       obstacles,
-      xCoordinates,
-      yCoordinates,
+      xCoordinates: getCompleteAxisCoordinates(observedXCoordinates, pitchX),
+      yCoordinates: getCompleteAxisCoordinates(observedYCoordinates, pitchY),
       pitchX,
       pitchY,
     })
@@ -98,16 +109,8 @@ export class BgaGrid {
     this.pitchY = params.pitchY
     this.originX = this.xCoordinates[0]!
     this.originY = this.yCoordinates[0]!
-    this.colCount =
-      Math.round(
-        (this.xCoordinates[this.xCoordinates.length - 1]! - this.originX) /
-          this.pitchX,
-      ) + 1
-    this.rowCount =
-      Math.round(
-        (this.yCoordinates[this.yCoordinates.length - 1]! - this.originY) /
-          this.pitchY,
-      ) + 1
+    this.colCount = this.xCoordinates.length
+    this.rowCount = this.yCoordinates.length
     this.padWidth = params.obstacles[0]!.width
     this.padHeight = params.obstacles[0]!.height
 
@@ -126,23 +129,28 @@ export class BgaGrid {
   }
 
   private getAxisIndex(
-    origin: number,
-    pitch: number,
+    axisCoordinates: number[],
     coordinate: number,
   ): number | null {
-    const axisIndex = Math.round((coordinate - origin) / pitch)
-    const alignedCoordinate = origin + axisIndex * pitch
-    return Math.abs(alignedCoordinate - coordinate) <= AXIS_EPSILON
-      ? axisIndex
-      : null
+    let closestAxisIndex = -1
+    let closestDistance = Number.POSITIVE_INFINITY
+
+    for (let axisIndex = 0; axisIndex < axisCoordinates.length; axisIndex++) {
+      const distance = Math.abs(axisCoordinates[axisIndex]! - coordinate)
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestAxisIndex = axisIndex
+      }
+    }
+
+    return closestDistance <= AXIS_EPSILON ? closestAxisIndex : null
   }
 
   private getAxisCoordinate(
-    origin: number,
-    pitch: number,
+    axisCoordinates: number[],
     axisIndex: number,
   ): number {
-    return roundCoordinate(origin + axisIndex * pitch)
+    return axisCoordinates[axisIndex]!
   }
 
   hasPadAt(row: number, col: number): boolean {
@@ -150,8 +158,8 @@ export class BgaGrid {
   }
 
   getSlotForObstacle(obstacle: Obstacle): { row: number; col: number } | null {
-    const row = this.getAxisIndex(this.originY, this.pitchY, obstacle.center.y)
-    const col = this.getAxisIndex(this.originX, this.pitchX, obstacle.center.x)
+    const row = this.getAxisIndex(this.yCoordinates, obstacle.center.y)
+    const col = this.getAxisIndex(this.xCoordinates, obstacle.center.x)
 
     if (row === null || col === null) return null
     if (row < 0 || row >= this.rowCount) return null
@@ -162,14 +170,15 @@ export class BgaGrid {
 
   getSlotCenter(row: number, col: number): { x: number; y: number } {
     return {
-      x: this.getAxisCoordinate(this.originX, this.pitchX, col),
-      y: this.getAxisCoordinate(this.originY, this.pitchY, row),
+      x: this.getAxisCoordinate(this.xCoordinates, col),
+      y: this.getAxisCoordinate(this.yCoordinates, row),
     }
   }
 
   getHorizontalGap(row: number, col: number): BgaGap {
     const leftPadCenter = this.getSlotCenter(row, col)
     const rightPadCenter = this.getSlotCenter(row, col + 1)
+    const pitchX = Math.abs(rightPadCenter.x - leftPadCenter.x)
 
     return {
       orientation: "horizontal",
@@ -179,7 +188,7 @@ export class BgaGrid {
         x: roundCoordinate((leftPadCenter.x + rightPadCenter.x) / 2),
         y: leftPadCenter.y,
       },
-      width: this.pitchX - this.padWidth,
+      width: pitchX - this.padWidth,
       height: this.padHeight,
       isBetweenTwoPads: this.hasPadAt(row, col) && this.hasPadAt(row, col + 1),
     }
@@ -188,6 +197,7 @@ export class BgaGrid {
   getVerticalGap(row: number, col: number): BgaGap {
     const topPadCenter = this.getSlotCenter(row, col)
     const bottomPadCenter = this.getSlotCenter(row + 1, col)
+    const pitchY = Math.abs(bottomPadCenter.y - topPadCenter.y)
 
     return {
       orientation: "vertical",
@@ -198,7 +208,7 @@ export class BgaGrid {
         y: roundCoordinate((topPadCenter.y + bottomPadCenter.y) / 2),
       },
       width: this.padWidth,
-      height: this.pitchY - this.padHeight,
+      height: pitchY - this.padHeight,
       isBetweenTwoPads: this.hasPadAt(row, col) && this.hasPadAt(row + 1, col),
     }
   }
@@ -206,6 +216,8 @@ export class BgaGrid {
   getDiagonalGap(row: number, col: number): BgaGap {
     const topLeftPadCenter = this.getSlotCenter(row, col)
     const bottomRightPadCenter = this.getSlotCenter(row + 1, col + 1)
+    const pitchX = Math.abs(bottomRightPadCenter.x - topLeftPadCenter.x)
+    const pitchY = Math.abs(bottomRightPadCenter.y - topLeftPadCenter.y)
 
     return {
       orientation: "diagonal",
@@ -215,8 +227,8 @@ export class BgaGrid {
         x: roundCoordinate((topLeftPadCenter.x + bottomRightPadCenter.x) / 2),
         y: roundCoordinate((topLeftPadCenter.y + bottomRightPadCenter.y) / 2),
       },
-      width: this.pitchX - this.padWidth,
-      height: this.pitchY - this.padHeight,
+      width: pitchX - this.padWidth,
+      height: pitchY - this.padHeight,
       isBetweenTwoPads:
         this.hasPadAt(row, col) && this.hasPadAt(row + 1, col + 1),
     }
