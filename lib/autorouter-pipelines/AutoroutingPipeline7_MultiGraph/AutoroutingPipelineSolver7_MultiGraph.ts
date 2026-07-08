@@ -60,6 +60,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import { guaranteeNoSameLayerShorts } from "lib/utils/guaranteeNoSameLayerShorts"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -978,7 +979,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       }
     }
 
-    return traces
+    // Safety net: a router must never emit a short. The capacity pipeline models
+    // same-layer crossings as via-resolvable cost, so an unresolved one can
+    // survive here as a different-net same-layer overlap. Truncate any such
+    // offender to a ratsnest (recoverable) rather than ship a shorted board.
+    return guaranteeNoSameLayerShorts(traces, 0)
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
