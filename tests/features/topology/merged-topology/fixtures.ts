@@ -1,7 +1,8 @@
-import { getSvgFromGraphicsObject } from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
 type RectSpec = {
   id: string
@@ -22,6 +23,22 @@ type ForeignTargetSpec = {
   outsideX: number
   outsideY: number
 }
+
+type MergedTopologySolveResult = {
+  topologyPlanningSolver: MultiGraphTopologyPlannerSolver
+  rawGlobalMeshNodes: CapacityMeshNode[]
+}
+
+type WalkthroughPanel = {
+  title: string
+  meshNodes: CapacityMeshNode[]
+  overlayMeshNodes: CapacityMeshNode[]
+  fill: string
+  stroke: string
+}
+
+type GraphicsRect = NonNullable<GraphicsObject["rects"]>[number]
+type GraphicsText = NonNullable<GraphicsObject["texts"]>[number]
 
 const baseRouteJson = {
   layerCount: 2,
@@ -308,7 +325,9 @@ export function createBgaMergedTopologySrj(): SimpleRouteJson {
   })
 }
 
-export function getMergedTopologySvg(inputSrj: SimpleRouteJson): string {
+function solveMergedTopology(
+  inputSrj: SimpleRouteJson,
+): MergedTopologySolveResult {
   const componentDetectionSolver = new ComponentDetectionSolver({
     inputSrj,
   })
@@ -328,9 +347,146 @@ export function getMergedTopologySvg(inputSrj: SimpleRouteJson): string {
     )
   }
 
+  const globalTopologyOutput = topologyPlanningSolver.getStageOutput<{
+    meshNodes: CapacityMeshNode[]
+  }>("globalTopologySolver")
+
+  if (!globalTopologyOutput) {
+    throw new Error(
+      "Topology planning solver did not provide global mesh nodes",
+    )
+  }
+
+  return {
+    topologyPlanningSolver,
+    rawGlobalMeshNodes: globalTopologyOutput.meshNodes,
+  }
+}
+
+function createWalkthroughPanelRects({
+  panel,
+  panelIndex,
+}: {
+  panel: WalkthroughPanel
+  panelIndex: number
+}): GraphicsRect[] {
+  const panelSpacing = 9
+  const offsetX = panelIndex * panelSpacing
+  const borderRect: GraphicsRect = {
+    center: { x: offsetX, y: 0 },
+    width: 8.35,
+    height: 8.35,
+    fill: "rgba(255,255,255,0)",
+    stroke: "rgba(40,40,40,0.28)",
+    layer: "walkthrough-frame",
+    label: panel.title,
+  }
+  const baseRects = panel.meshNodes.map((node) => {
+    const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
+
+    return {
+      ...rect,
+      center: { x: rect.center.x + offsetX, y: rect.center.y },
+      fill: node._containsObstacle ? "rgba(235,60,45,0.18)" : panel.fill,
+      stroke: node._containsObstacle ? "rgba(235,60,45,0.72)" : panel.stroke,
+      label: `${panel.title}\n${node.capacityMeshNodeId}`,
+    }
+  })
+  const overlayRects = panel.overlayMeshNodes.map((node) => {
+    const rect = createRectFromCapacityNode(node, { rectMargin: 0.015 })
+
+    return {
+      ...rect,
+      center: { x: rect.center.x + offsetX, y: rect.center.y },
+      fill: node._containsObstacle
+        ? "rgba(235,60,45,0.28)"
+        : "rgba(255,165,0,0.22)",
+      stroke: node._containsObstacle
+        ? "rgba(235,60,45,0.86)"
+        : "rgba(190,115,0,0.78)",
+      label: `kept global region\n${node.capacityMeshNodeId}`,
+    }
+  })
+
+  return [borderRect, ...baseRects, ...overlayRects]
+}
+
+function createWalkthroughPanelTexts(): GraphicsText[] {
+  const panelSpacing = 9
+  const titles = [
+    "1 global topology",
+    "2 component topology",
+    "3 kept global regions",
+    "4 merged topology",
+  ]
+
+  return titles.map((title, panelIndex) => ({
+    x: panelIndex * panelSpacing - 3.85,
+    y: 4.45,
+    text: title,
+    anchorSide: "top_left",
+    fontSize: 0.34,
+    color: "black",
+  }))
+}
+
+export function getMergedTopologySvg(inputSrj: SimpleRouteJson): string {
+  const { topologyPlanningSolver } = solveMergedTopology(inputSrj)
   const graphics = topologyPlanningSolver.finalVisualize()
   if (!graphics) {
     throw new Error("Topology planning solver did not provide visualization")
+  }
+
+  return getSvgFromGraphicsObject(graphics, { backgroundColor: "white" })
+}
+
+export function getMergedTopologyWalkthroughSvg(
+  inputSrj: SimpleRouteJson,
+): string {
+  const { topologyPlanningSolver, rawGlobalMeshNodes } =
+    solveMergedTopology(inputSrj)
+  const output = topologyPlanningSolver.getOutput()
+  const componentMeshNodes = output.componentMeshNodes.flat()
+  const panels: WalkthroughPanel[] = [
+    {
+      title: "global topology",
+      meshNodes: rawGlobalMeshNodes,
+      overlayMeshNodes: [],
+      fill: "rgba(70,80,95,0.12)",
+      stroke: "rgba(70,80,95,0.42)",
+    },
+    {
+      title: "component topology",
+      meshNodes: componentMeshNodes,
+      overlayMeshNodes: [],
+      fill: "rgba(0,120,255,0.13)",
+      stroke: "rgba(0,120,255,0.58)",
+    },
+    {
+      title: "component plus kept global",
+      meshNodes: componentMeshNodes,
+      overlayMeshNodes: output.globalMeshNodes,
+      fill: "rgba(0,120,255,0.09)",
+      stroke: "rgba(0,120,255,0.36)",
+    },
+    {
+      title: "merged topology",
+      meshNodes: output.mergedMeshNodes,
+      overlayMeshNodes: [],
+      fill: "rgba(0,120,255,0.13)",
+      stroke: "rgba(0,120,255,0.58)",
+    },
+  ]
+  const rects = panels.flatMap((panel, panelIndex) =>
+    createWalkthroughPanelRects({ panel, panelIndex }),
+  )
+  const graphics: GraphicsObject = {
+    title: "Merged topology walkthrough",
+    rects,
+    lines: [],
+    points: [],
+    circles: [],
+    texts: createWalkthroughPanelTexts(),
   }
 
   return getSvgFromGraphicsObject(graphics, { backgroundColor: "white" })
