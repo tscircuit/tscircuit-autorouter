@@ -80,6 +80,87 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
+const VIA_COMPONENT_BOUNDS_EPSILON = 1e-6
+const VIA_ROUTE_POINT_TOLERANCE = 1e-3
+
+function moveViasOutOfBgaComponentBounds(
+  routes: HighDensityRoute[],
+  components: ComponentDetectionSolver["output"],
+): HighDensityRoute[] {
+  const bgaBounds = (components ?? [])
+    .filter((component) => component.componentKind === "bga")
+    .map((component) => component.bounds)
+  if (bgaBounds.length === 0) return routes
+
+  return routes.map((route) => {
+    let routeChanged = false
+    const routePoints = route.route.map((point) => ({ ...point }))
+    const vias = route.vias.map((via) => {
+      const containingBounds = bgaBounds.find(
+        (bounds) =>
+          via.x >= bounds.minX - VIA_COMPONENT_BOUNDS_EPSILON &&
+          via.x <= bounds.maxX + VIA_COMPONENT_BOUNDS_EPSILON &&
+          via.y >= bounds.minY - VIA_COMPONENT_BOUNDS_EPSILON &&
+          via.y <= bounds.maxY + VIA_COMPONENT_BOUNDS_EPSILON,
+      )
+      if (!containingBounds) return { ...via }
+
+      const distances = [
+        {
+          axis: "x" as const,
+          value: containingBounds.minX - VIA_COMPONENT_BOUNDS_EPSILON,
+          distance: Math.abs(via.x - containingBounds.minX),
+        },
+        {
+          axis: "x" as const,
+          value: containingBounds.maxX + VIA_COMPONENT_BOUNDS_EPSILON,
+          distance: Math.abs(containingBounds.maxX - via.x),
+        },
+        {
+          axis: "y" as const,
+          value: containingBounds.minY - VIA_COMPONENT_BOUNDS_EPSILON,
+          distance: Math.abs(via.y - containingBounds.minY),
+        },
+        {
+          axis: "y" as const,
+          value: containingBounds.maxY + VIA_COMPONENT_BOUNDS_EPSILON,
+          distance: Math.abs(containingBounds.maxY - via.y),
+        },
+      ].sort((a, b) => a.distance - b.distance)
+      const nearestBoundary = distances[0]!
+      const movedVia =
+        nearestBoundary.axis === "x"
+          ? { x: nearestBoundary.value, y: via.y }
+          : { x: via.x, y: nearestBoundary.value }
+
+      for (let index = 0; index < routePoints.length; index++) {
+        const routePoint = routePoints[index]!
+        if (
+          Math.abs(routePoint.x - via.x) > VIA_ROUTE_POINT_TOLERANCE ||
+          Math.abs(routePoint.y - via.y) > VIA_ROUTE_POINT_TOLERANCE
+        ) {
+          continue
+        }
+        routePoints[index] = {
+          ...routePoint,
+          x: movedVia.x,
+          y: movedVia.y,
+        }
+      }
+
+      routeChanged = true
+      return movedVia
+    })
+
+    if (!routeChanged) return route
+    return {
+      ...route,
+      route: routePoints,
+      vias,
+    }
+  })
+}
+
 /**
  * Collects the capacity mesh node ids produced by component-local topology
  * generation.
@@ -880,11 +961,20 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    return (
+    const outputHdRoutes =
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
+
+    const throughObstacleNormalizedRoutes =
+      this.traceSimplificationSolver?.markThroughObstacleSegments(
+        outputHdRoutes,
+      ) ?? outputHdRoutes
+
+    return moveViasOutOfBgaComponentBounds(
+      throughObstacleNormalizedRoutes,
+      this.componentDetectionSolver?.getOutput(),
     )
   }
 
