@@ -83,6 +83,7 @@ const canMoveViaTo = (
     const prev = route.route[i - 1]
     const curr = route.route[i]
     if (prev.z === curr.z) continue
+    if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
     if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
 
     transitionLayers.add(prev.z)
@@ -110,6 +111,8 @@ const canMoveViaTo = (
 
     for (const { conflictingRoute, distance } of conflictingRoutes) {
       if (conflictingRoute.connectionName === route.connectionName) continue
+      if (getNetForRoute(context.connMap, conflictingRoute) === viaToRemove.net)
+        continue
 
       const minDistance =
         traceThickness / 2 + conflictingRoute.traceThickness / 2
@@ -366,36 +369,63 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     const route = routeToUpdate.route
+    const routePointIndexesToMove = new Set<number>()
     let replacedVia = false
 
     for (let j = route.length - 1; j >= 1; j--) {
       const prev = route[j - 1]
       const curr = route[j]
       if (prev.z === curr.z) continue
+      if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
       if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
 
-      route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: curr.z })
-      route.splice(j, 0, { x: viaKeep.x, y: viaKeep.y, z: prev.z })
-
-      routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
-        if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
-        replacedVia = true
-        return { x: viaKeep.x, y: viaKeep.y }
-      })
-      if (!replacedVia) {
-        throw new Error(
-          `SameNetViaMergerSolver could not find via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
-        )
+      let clusterStartIndex = j - 1
+      while (
+        clusterStartIndex > 0 &&
+        route[clusterStartIndex - 1]!.x === viaToRemove.x &&
+        route[clusterStartIndex - 1]!.y === viaToRemove.y
+      ) {
+        clusterStartIndex--
       }
 
-      this.dedupeRouteVias(routeToUpdate)
-      if (rebuildVias) this.rebuildVias()
-      return
+      let clusterEndIndex = j
+      while (
+        clusterEndIndex < route.length - 1 &&
+        route[clusterEndIndex + 1]!.x === viaToRemove.x &&
+        route[clusterEndIndex + 1]!.y === viaToRemove.y
+      ) {
+        clusterEndIndex++
+      }
+
+      for (let k = clusterStartIndex; k <= clusterEndIndex; k++) {
+        routePointIndexesToMove.add(k)
+      }
     }
 
-    throw new Error(
-      `SameNetViaMergerSolver could not find route transition for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
-    )
+    if (routePointIndexesToMove.size === 0) {
+      throw new Error(
+        `SameNetViaMergerSolver could not find route transition for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
+      )
+    }
+
+    for (const routePointIndex of routePointIndexesToMove) {
+      const point = route[routePointIndex]
+      route[routePointIndex] = { ...point, x: viaKeep.x, y: viaKeep.y }
+    }
+
+    routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
+      if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
+      replacedVia = true
+      return { x: viaKeep.x, y: viaKeep.y }
+    })
+    if (!replacedVia) {
+      throw new Error(
+        `SameNetViaMergerSolver could not find via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
+      )
+    }
+
+    this.dedupeRouteVias(routeToUpdate)
+    if (rebuildVias) this.rebuildVias()
   }
 
   _step(): void {
