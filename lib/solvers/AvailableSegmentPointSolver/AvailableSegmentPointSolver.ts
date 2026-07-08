@@ -157,7 +157,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     for (const segment of this.sharedEdgeSegments) {
       for (const portPoint of segment.portPoints) {
         for (const nodeId of portPoint.nodeIds) {
-          portCountByNodeId.set(nodeId, (portCountByNodeId.get(nodeId) ?? 0) + 1)
+          portCountByNodeId.set(
+            nodeId,
+            (portCountByNodeId.get(nodeId) ?? 0) + 1,
+          )
         }
       }
     }
@@ -169,8 +172,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
       const area = Math.max(node.width * node.height, this.minPortSpacing ** 2)
       const portDensity = portCount / area
-      const excessDensity =
-        portDensity - this.nodePortDensityPenaltyThreshold
+      const excessDensity = portDensity - this.nodePortDensityPenaltyThreshold
       if (excessDensity <= 0) continue
 
       const narrowDimension = Math.max(
@@ -183,16 +185,16 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       )
       penaltyByNodeId.set(
         nodeId,
-        excessDensity *
-          narrownessFactor *
-          this.nodePortDensityPenaltyFactor,
+        excessDensity * narrownessFactor * this.nodePortDensityPenaltyFactor,
       )
     }
 
     for (const segment of this.sharedEdgeSegments) {
       for (const portPoint of segment.portPoints) {
         const nodePenalty = Math.max(
-          ...portPoint.nodeIds.map((nodeId) => penaltyByNodeId.get(nodeId) ?? 0),
+          ...portPoint.nodeIds.map(
+            (nodeId) => penaltyByNodeId.get(nodeId) ?? 0,
+          ),
         )
         if (nodePenalty <= 0) continue
         portPoint.tinyHypergraphPortPenalty =

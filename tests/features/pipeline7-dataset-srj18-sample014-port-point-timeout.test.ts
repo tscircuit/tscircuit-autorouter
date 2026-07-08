@@ -23,7 +23,7 @@ test("pipeline7 dataset-srj18 sample014 solves port point pathing at default eff
   expect(solver.failed).toBe(false)
   expect(portPointPathingSolver?.failed).toBe(false)
   expect(portPointPathingSolver?.solved).toBe(true)
-  expect(portPointPathingSolver?.stats.metadataPortPenaltyCount).toBeGreaterThan(
-    0,
-  )
+  expect(
+    portPointPathingSolver?.stats.metadataPortPenaltyCount,
+  ).toBeGreaterThan(0)
 })
