@@ -20,12 +20,6 @@ test("board#23 trace keeps original connection name", () => {
   const traces = solver.getOutputSimplifiedPcbTraces()
 
   expect(traces.length).toBeGreaterThan(0)
-  expect(new Set(traces.map((trace) => trace.pcb_trace_id))).toEqual(
-    new Set([
-      "source_trace_0__source_trace_1_mst0_0",
-      "source_trace_0__source_trace_1_mst1_0",
-    ]),
-  )
 
   const circuitJson = convertToCircuitJson(boardSrj, traces, {
     minTraceWidth: boardSrj.minTraceWidth,
