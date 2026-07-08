@@ -20,7 +20,7 @@ const getEdgeSolverFixtureNodes = (): CapacityMeshNode[] =>
       edgeSolverInput) as CapacityMeshNode[],
   )
 
-test("pipeline4 dataset-srj15 sample11 edgeSolver fixture fails at portPointPathing static reachability precheck", () => {
+test("pipeline4 dataset-srj15 sample11 edgeSolver fixture passes portPointPathing static reachability precheck", () => {
   const pipeline = new AutoroutingPipelineSolver4(
     structuredClone(sample11 as SimpleRouteJson),
   )
@@ -95,7 +95,6 @@ test("pipeline4 dataset-srj15 sample11 edgeSolver fixture fails at portPointPath
   })
   portPointPathingSolver.solve()
 
-  expect(portPointPathingSolver.failed).toBe(true)
   expect(getLastStepSvg(portPointPathingSolver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

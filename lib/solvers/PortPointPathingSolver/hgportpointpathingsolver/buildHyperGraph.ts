@@ -11,7 +11,7 @@ import {
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
-import { checkIfConnectionPointIsInRegion } from "./checkIfConnectionPointIsInRegion"
+import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
   RawPort,
   ConnectionHg,
@@ -213,20 +213,16 @@ export function buildHyperGraph(params: {
   for (const connection of params.simpleRouteJsonConnections) {
     const [startPoint, endPoint] = connection.pointsToConnect
 
-    const startRegion = graph.regions.find((region) =>
-      checkIfConnectionPointIsInRegion({
-        point: startPoint,
-        region,
-        layerCount: params.layerCount,
-      }),
-    )
-    const endRegion = graph.regions.find((region) =>
-      checkIfConnectionPointIsInRegion({
-        point: endPoint,
-        region,
-        layerCount: params.layerCount,
-      }),
-    )
+    const startRegion = selectConnectionPointRegion({
+      graph,
+      point: startPoint,
+      layerCount: params.layerCount,
+    })
+    const endRegion = selectConnectionPointRegion({
+      graph,
+      point: endPoint,
+      layerCount: params.layerCount,
+    })
 
     assertDefined(
       startRegion,
