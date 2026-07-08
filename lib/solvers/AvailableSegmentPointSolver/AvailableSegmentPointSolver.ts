@@ -61,6 +61,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   minPortSpacing: number
+  maxPortPointsPerLayer?: number
+  nodePortDensityPenaltyFactor: number
+  nodePortDensityPenaltyThreshold: number
 
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   nodeEdgeMap: Map<CapacityMeshNodeId, CapacityMeshEdge[]>
@@ -86,6 +89,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    maxPortPointsPerLayer,
+    nodePortDensityPenaltyFactor,
+    nodePortDensityPenaltyThreshold,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -93,6 +99,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    maxPortPointsPerLayer?: number
+    nodePortDensityPenaltyFactor?: number
+    nodePortDensityPenaltyThreshold?: number
   }) {
     super()
     this.nodes = nodes
@@ -103,6 +112,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     // Port spacing: each trace extends traceWidth/2 from center, plus obstacleMargin clearance
     // Center-to-center distance = traceWidth + obstacleMargin
     this.minPortSpacing = this.traceWidth + this.obstacleMargin
+    this.maxPortPointsPerLayer = maxPortPointsPerLayer
+    this.nodePortDensityPenaltyFactor = nodePortDensityPenaltyFactor ?? 0
+    this.nodePortDensityPenaltyThreshold = nodePortDensityPenaltyThreshold ?? 4
     this.colorMap = colorMap ?? {}
 
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
@@ -133,6 +145,58 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         for (const portPoint of segment.portPoints) {
           this.portPointMap.set(portPoint.segmentPortPointId, portPoint)
         }
+      }
+    }
+    this.applyNodePortDensityPenalties()
+  }
+
+  private applyNodePortDensityPenalties(): void {
+    if (this.nodePortDensityPenaltyFactor <= 0) return
+
+    const portCountByNodeId = new Map<CapacityMeshNodeId, number>()
+    for (const segment of this.sharedEdgeSegments) {
+      for (const portPoint of segment.portPoints) {
+        for (const nodeId of portPoint.nodeIds) {
+          portCountByNodeId.set(nodeId, (portCountByNodeId.get(nodeId) ?? 0) + 1)
+        }
+      }
+    }
+
+    const penaltyByNodeId = new Map<CapacityMeshNodeId, number>()
+    for (const [nodeId, portCount] of portCountByNodeId) {
+      const node = this.nodeMap.get(nodeId)
+      if (!node || node._containsTarget) continue
+
+      const area = Math.max(node.width * node.height, this.minPortSpacing ** 2)
+      const portDensity = portCount / area
+      const excessDensity =
+        portDensity - this.nodePortDensityPenaltyThreshold
+      if (excessDensity <= 0) continue
+
+      const narrowDimension = Math.max(
+        Math.min(node.width, node.height),
+        this.minPortSpacing,
+      )
+      const narrownessFactor = Math.max(
+        1,
+        (this.minPortSpacing * 4) / narrowDimension,
+      )
+      penaltyByNodeId.set(
+        nodeId,
+        excessDensity *
+          narrownessFactor *
+          this.nodePortDensityPenaltyFactor,
+      )
+    }
+
+    for (const segment of this.sharedEdgeSegments) {
+      for (const portPoint of segment.portPoints) {
+        const nodePenalty = Math.max(
+          ...portPoint.nodeIds.map((nodeId) => penaltyByNodeId.get(nodeId) ?? 0),
+        )
+        if (nodePenalty <= 0) continue
+        portPoint.tinyHypergraphPortPenalty =
+          (portPoint.tinyHypergraphPortPenalty ?? 0) + nodePenalty
       }
     }
   }
@@ -229,6 +293,15 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     if (maxPortPoints > 5) {
       maxPortPoints = 5 + Math.floor(maxPortPoints / 4)
+    }
+    if (
+      this.maxPortPointsPerLayer !== undefined &&
+      Number.isFinite(this.maxPortPointsPerLayer)
+    ) {
+      maxPortPoints = Math.min(
+        maxPortPoints,
+        Math.max(1, Math.floor(this.maxPortPointsPerLayer)),
+      )
     }
 
     // First pass: compute all XY positions and find which is closest to segment center
