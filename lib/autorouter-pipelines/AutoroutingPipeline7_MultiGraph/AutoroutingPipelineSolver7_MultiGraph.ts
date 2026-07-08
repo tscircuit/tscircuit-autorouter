@@ -580,6 +580,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
@@ -880,16 +881,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    const outputHdRoutes =
+    return (
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
-
-    return (
-      this.traceSimplificationSolver?.markThroughObstacleSegments(
-        outputHdRoutes,
-      ) ?? outputHdRoutes
     )
   }
 
