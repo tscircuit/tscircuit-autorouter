@@ -145,9 +145,30 @@ test("merged topology preserves inner targets in QFP center", async (): Promise<
     getSolverSvgFrames({
       solver: createMergedTopologySolver(createQfpMergedTopologySrj()),
       frames: [
-        { type: "solver", solverName: "globalTopologySolver" },
-        { type: "solver", solverName: "componentTopologyBatchSolver" },
-        { type: "pipeline", step: "end" },
+        {
+          type: "solver",
+          solverName: "globalTopologySolver",
+          step: 80,
+          layer: "split",
+        },
+        {
+          type: "solver",
+          solverName: "globalTopologySolver",
+          layer: "split",
+        },
+        {
+          type: "solver",
+          solverName: "componentTopologyBatchSolver",
+          step: 2,
+          layer: "split",
+        },
+        {
+          type: "solver",
+          solverName: "componentTopologyBatchSolver",
+          layer: "split",
+        },
+        { type: "pipeline", step: 218, layer: "split" },
+        { type: "pipeline", step: "end", layer: "split" },
       ],
       columns: 3,
     }),

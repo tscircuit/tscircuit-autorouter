@@ -176,8 +176,12 @@ test("merged topology preserves inner targets around QFP thermal pad", async ():
       ),
       frames: [
         { type: "solver", solverName: "globalTopologySolver" },
-        { type: "solver", solverName: "componentTopologyBatchSolver" },
-        { type: "pipeline", step: "end" },
+        {
+          type: "solver",
+          solverName: "componentTopologyBatchSolver",
+          layer: 0,
+        },
+        { type: "pipeline", step: "end", layer: "split" },
       ],
       columns: 3,
     }),

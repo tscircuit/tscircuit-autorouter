@@ -44,11 +44,29 @@ type SvgFramesOptions = {
   backgroundColor?: string
 }
 
+type SvgFrameLayer = number | "split"
+
+type SvgFrameLayerOptions = {
+  /** Numeric z-layer to show, or "split" to stack all detected z-layers inside this frame. */
+  layer?: SvgFrameLayer
+}
+
+type LayeredGraphicsItem = {
+  layer?: string
+  label?: string
+  text?: string
+}
+
+type SplitLayerSlot = {
+  width: number
+  height: number
+}
+
 /** Graphics method to use for a captured frame. */
 type SolverSvgFrameView = "visualize" | "preview"
 type InternalSolverSvgFrameView = SolverSvgFrameView | "finalVisualize"
 
-export type SolverSvgFrame =
+export type SolverSvgFrame = (
   | {
       /** Captures the root solver after a specific root iteration. */
       type: "step"
@@ -75,6 +93,8 @@ export type SolverSvgFrame =
       /** Overrides the graphics method. Pipeline end uses finalVisualize() internally when omitted. */
       view?: SolverSvgFrameView
     }
+) &
+  SvgFrameLayerOptions
 
 export type GraphicsSvgFrame = {
   /** Label prefix shown above this frame. */
@@ -87,6 +107,8 @@ export type GraphicsSvgFrame = {
   iteration?: number
   /** GraphicsObject rendered inside this frame cell. */
   graphics: GraphicsObject
+  /** Numeric z-layer shown in this frame, or "split" to stack all detected z-layers inside this frame. */
+  layer?: SvgFrameLayer
 }
 
 type SolverSvgFramesParams = {
@@ -141,7 +163,7 @@ export function getSolverSvgFrames({
 
 export function getGraphicsSvgFrames({
   frames,
-  columns = Math.min(frames.length, 3),
+  columns,
   gap,
   cellWidth,
   cellHeight,
@@ -151,7 +173,14 @@ export function getGraphicsSvgFrames({
     throw new Error("getGraphicsSvgFrames requires at least one frame")
   }
 
-  const frameBounds = frames.map((frame) => getUsableBounds(frame.graphics))
+  const splitLayerSlot = getSplitLayerSlot(frames)
+  const renderedFrames = frames.map((frame) =>
+    prepareFrameForRendering(frame, splitLayerSlot),
+  )
+  const frameColumns = columns ?? Math.min(renderedFrames.length, 3)
+  const frameBounds = renderedFrames.map((frame) =>
+    getUsableBounds(frame.graphics),
+  )
   const measuredCellWidth =
     cellWidth ??
     Math.max(...frameBounds.map((bounds) => bounds.maxX - bounds.minX))
@@ -164,11 +193,11 @@ export function getGraphicsSvgFrames({
   const rowHeight = measuredCellHeight + labelFontSize * 1.8
   let framesGraphics: GraphicsObject = emptyGraphics
 
-  for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
-    const frame = frames[frameIndex]!
+  for (let frameIndex = 0; frameIndex < renderedFrames.length; frameIndex++) {
+    const frame = renderedFrames[frameIndex]!
     const bounds = frameBounds[frameIndex]!
-    const column = frameIndex % columns
-    const row = Math.floor(frameIndex / columns)
+    const column = frameIndex % frameColumns
+    const row = Math.floor(frameIndex / frameColumns)
     const cellMinX = column * (measuredCellWidth + cellGap)
     const cellMinY = -row * (rowHeight + cellGap)
     framesGraphics = mergeGraphics(
@@ -187,6 +216,206 @@ export function getGraphicsSvgFrames({
   }
 
   return getSvgFromGraphicsObject(framesGraphics, { backgroundColor })
+}
+
+function prepareFrameForRendering(
+  frame: GraphicsSvgFrame,
+  splitLayerSlot: SplitLayerSlot,
+): GraphicsSvgFrame {
+  if (frame.layer === "split") {
+    return {
+      ...frame,
+      graphics: createSplitLayerGraphics(frame.graphics, splitLayerSlot),
+    }
+  }
+
+  if (typeof frame.layer === "number") {
+    if (!Number.isInteger(frame.layer) || frame.layer < 0) return frame
+
+    return {
+      ...frame,
+      graphics: filterGraphicsObjectByLayers(frame.graphics, [frame.layer]),
+    }
+  }
+
+  return frame
+}
+
+function getSplitLayerSlot(frames: GraphicsSvgFrame[]): SplitLayerSlot {
+  const frameBounds = frames.map((frame) => getUsableBounds(frame.graphics))
+  const width = Math.max(
+    ...frameBounds.map((bounds) => bounds.maxX - bounds.minX),
+  )
+  const height = Math.max(
+    ...frameBounds.map((bounds) => bounds.maxY - bounds.minY),
+  )
+
+  return { width, height }
+}
+
+function createSplitLayerGraphics(
+  graphics: GraphicsObject,
+  splitLayerSlot: SplitLayerSlot,
+): GraphicsObject {
+  const splitLayerList = getGraphicsObjectLayers(graphics)
+  if (splitLayerList.length === 0) return cloneGraphicsObject(graphics)
+
+  const bounds = getUsableBounds(graphics)
+  const graphicsWidth = bounds.maxX - bounds.minX
+  const graphicsHeight = bounds.maxY - bounds.minY
+  const slotWidth = Math.max(splitLayerSlot.width, graphicsWidth)
+  const slotHeight = Math.max(splitLayerSlot.height, graphicsHeight)
+  const slotMinX = bounds.minX + graphicsWidth / 2 - slotWidth / 2
+  const slotMinY = bounds.minY + graphicsHeight / 2 - slotHeight / 2
+  const layerGap = Math.max(slotHeight * 0.12, 0.2)
+  const labelGap = Math.max(slotWidth * 0.05, 0.2)
+  const labelFontSize = Math.max(Math.min(slotWidth, slotHeight) * 0.08, 0.12)
+  let splitGraphics: GraphicsObject = emptyGraphics
+
+  for (let layerIndex = 0; layerIndex < splitLayerList.length; layerIndex++) {
+    const layer = splitLayerList[layerIndex]!
+    const layerGraphics = filterGraphicsObjectByLayers(graphics, [layer])
+    const layerBounds = getUsableBounds(layerGraphics)
+    const layerWidth = layerBounds.maxX - layerBounds.minX
+    const layerHeight = layerBounds.maxY - layerBounds.minY
+    const yOffset = -layerIndex * (slotHeight + layerGap)
+
+    splitGraphics = mergeGraphics(
+      splitGraphics,
+      mergeGraphics(
+        translateGraphics(
+          layerGraphics,
+          slotMinX + (slotWidth - layerWidth) / 2 - layerBounds.minX,
+          slotMinY +
+            (slotHeight - layerHeight) / 2 +
+            yOffset -
+            layerBounds.minY,
+        ),
+        {
+          rects: [
+            {
+              center: {
+                x: slotMinX + slotWidth / 2,
+                y: slotMinY + slotHeight / 2 + yOffset,
+              },
+              width: slotWidth,
+              height: slotHeight,
+              fill: "rgba(255,255,255,0)",
+              stroke: "rgba(40,40,40,0.14)",
+              label: `z${layer}`,
+            },
+          ],
+          texts: [
+            {
+              x: slotMinX - labelGap,
+              y: slotMinY + slotHeight / 2 + yOffset,
+              text: `z${layer}`,
+              anchorSide: "center_right",
+              fontSize: labelFontSize,
+              color: "black",
+            },
+          ],
+        },
+      ),
+    )
+  }
+
+  return splitGraphics
+}
+
+function getGraphicsObjectLayers(graphics: GraphicsObject): number[] {
+  const layerSet = new Set<number>()
+  const addElementLayers = (item: LayeredGraphicsItem): void => {
+    for (const layer of parseGraphicsItemLayers(item)) {
+      layerSet.add(layer)
+    }
+  }
+
+  graphics.points?.forEach(addElementLayers)
+  graphics.lines?.forEach(addElementLayers)
+  graphics.infiniteLines?.forEach(addElementLayers)
+  graphics.rects?.forEach(addElementLayers)
+  graphics.circles?.forEach(addElementLayers)
+  graphics.polygons?.forEach(addElementLayers)
+  graphics.arrows?.forEach(addElementLayers)
+  graphics.texts?.forEach(addElementLayers)
+
+  return [...layerSet].sort((a, b) => a - b)
+}
+
+function filterGraphicsObjectByLayers(
+  graphics: GraphicsObject,
+  layers: number[],
+): GraphicsObject {
+  const shouldKeep = (item: LayeredGraphicsItem): boolean =>
+    isVisibleOnAnyLayer(item, layers)
+
+  return cloneGraphicsObject({
+    ...graphics,
+    points: graphics.points?.filter(shouldKeep),
+    lines: graphics.lines?.filter(shouldKeep),
+    infiniteLines: graphics.infiniteLines?.filter(shouldKeep),
+    rects: graphics.rects?.filter(shouldKeep),
+    circles: graphics.circles?.filter(shouldKeep),
+    polygons: graphics.polygons?.filter(shouldKeep),
+    arrows: graphics.arrows?.filter(shouldKeep),
+    texts: graphics.texts?.filter(shouldKeep),
+  })
+}
+
+function isVisibleOnAnyLayer(
+  item: LayeredGraphicsItem,
+  selectedLayers: number[],
+): boolean {
+  const elementLayers = parseGraphicsItemLayers(item)
+  if (elementLayers.length === 0) return true
+
+  return elementLayers.some((layer) => selectedLayers.includes(layer))
+}
+
+function parseGraphicsItemLayers(item: LayeredGraphicsItem): number[] {
+  const layerLayers = parseGraphicsLayer(item.layer)
+  if (layerLayers.length > 0) return layerLayers
+
+  const labelLayers = parseGraphicsLayerText(item.label)
+  if (labelLayers.length > 0) return labelLayers
+
+  return parseGraphicsLayerText(item.text)
+}
+
+function parseGraphicsLayer(graphicsLayer: string | undefined): number[] {
+  const trimmedLayer = graphicsLayer?.trim()
+  if (!trimmedLayer?.startsWith("z")) return []
+
+  return parseLayerNumberList(trimmedLayer.slice(1).replaceAll("z", ""))
+}
+
+function parseGraphicsLayerText(text: string | undefined): number[] {
+  if (!text) return []
+
+  const layerSet = new Set<number>()
+  for (const match of text.matchAll(
+    /\b(?:availableZ|z):\s*([0-9]+(?:\s*,\s*[0-9]+)*)/gi,
+  )) {
+    parseLayerNumberList(match[1]!).forEach((layer) => layerSet.add(layer))
+  }
+  for (const match of text.matchAll(/(?:^|[^a-zA-Z0-9])z([0-9]+)\b/gi)) {
+    const layer = Number(match[1])
+    if (Number.isInteger(layer) && layer >= 0) layerSet.add(layer)
+  }
+
+  return [...layerSet].sort((a, b) => a - b)
+}
+
+function parseLayerNumberList(layerList: string): number[] {
+  const layerSet = new Set<number>()
+
+  for (const layerText of layerList.split(",")) {
+    const layer = Number(layerText.trim())
+    if (Number.isInteger(layer) && layer >= 0) layerSet.add(layer)
+  }
+
+  return [...layerSet].sort((a, b) => a - b)
 }
 
 function captureSolverFrame({
@@ -215,6 +444,7 @@ function captureSolverFrame({
         solver,
         view: frame.view ?? "visualize",
       }),
+      layer: frame.layer,
     }
   }
 
@@ -243,6 +473,7 @@ function captureSolverFrame({
       solver: targetSolver,
       view: frame.view ?? "visualize",
     }),
+    layer: frame.layer,
   }
 }
 
@@ -268,6 +499,7 @@ function capturePipelineFrame({
         solver,
         view: frame.view ?? "visualize",
       }),
+      layer: frame.layer,
     }
   }
 
@@ -286,6 +518,7 @@ function capturePipelineFrame({
       solver,
       view: frame.view ?? "finalVisualize",
     }),
+    layer: frame.layer,
   }
 }
 
@@ -467,21 +700,29 @@ function getUsableBounds(graphics: GraphicsObject): Bounds {
 }
 
 function getFrameLabel(frame: GraphicsSvgFrame): string {
+  const layerLabel = getFrameLayerLabel(frame)
+
   if (typeof frame.step === "number") {
-    return `${frame.name} step ${frame.step}`
+    return `${frame.name} step ${frame.step}${layerLabel}`
   }
 
   if (frame.step) {
     const stepLabel = frame.step
     const iterationLabel =
       typeof frame.iteration === "number" ? ` step ${frame.iteration}` : ""
-    return `${frame.name} ${stepLabel}${iterationLabel}`
+    return `${frame.name} ${stepLabel}${iterationLabel}${layerLabel}`
   }
 
   const stepLabel =
     typeof frame.iteration === "number" ? ` step ${frame.iteration}` : ""
 
-  return `${frame.name} pipeline end${stepLabel}`
+  return `${frame.name} pipeline end${stepLabel}${layerLabel}`
+}
+
+function getFrameLayerLabel(frame: GraphicsSvgFrame): string {
+  if (typeof frame.layer !== "number") return ""
+
+  return ` z${frame.layer}`
 }
 
 function getFrameName({
