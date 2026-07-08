@@ -10,16 +10,19 @@ import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { getPointKey } from "lib/utils/getPointKey"
 
+type ConnectionPointEdge = {
+  from: ConnectionPoint
+  to: ConnectionPoint
+  weight: number
+}
+
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
   srj?: SimpleRouteJson,
 ): {
   pointIdToGroup: Map<string, number>
-  zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }>
+  zeroWeightEdges: ConnectionPointEdge[]
+  candidateEdges: ConnectionPointEdge[]
 } => {
   const externalGroups = connection.externallyConnectedPointIds ?? []
   const routedTraceGroups = getTraceConnectedPointGroups(connection, srj)
@@ -33,11 +36,8 @@ export const getExternalConnectionState = (
     }
   }
 
-  const zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }> = []
+  const zeroWeightEdges: ConnectionPointEdge[] = []
+  const candidateEdges: ConnectionPointEdge[] = []
   const pointByKey = new Map(
     connection.pointsToConnect.map((point) => [getPointKey(point), point]),
   )
@@ -80,7 +80,23 @@ export const getExternalConnectionState = (
     })
   }
 
-  return { pointIdToGroup, zeroWeightEdges }
+  for (const [from, to] of connection.candidateConnectionPointPairs ?? []) {
+    const currentFrom = pointByKey.get(getPointKey(from))
+    const currentTo = pointByKey.get(getPointKey(to))
+    if (!currentFrom || !currentTo) {
+      continue
+    }
+    candidateEdges.push({
+      from: currentFrom,
+      to: currentTo,
+      weight: Math.hypot(
+        currentFrom.x - currentTo.x,
+        currentFrom.y - currentTo.y,
+      ),
+    })
+  }
+
+  return { pointIdToGroup, zeroWeightEdges, candidateEdges }
 }
 
 const getTraceConnectedPointGroups = (
@@ -164,10 +180,8 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
-      connection,
-      this.ogSrj,
-    )
+    const { pointIdToGroup, zeroWeightEdges, candidateEdges } =
+      getExternalConnectionState(connection, this.ogSrj)
 
     if (connection.pointsToConnect.length === 2) {
       if (
@@ -188,7 +202,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
+      extraEdges: [...zeroWeightEdges, ...candidateEdges],
     })
 
     let mstIdx = 0

@@ -91,6 +91,9 @@ export function mergeConnections(
     const preferredConnectionPointPairs: Array<
       [ConnectionPoint, ConnectionPoint]
     > = []
+    const candidateConnectionPointPairs: Array<
+      [ConnectionPoint, ConnectionPoint]
+    > = []
     const sourceTraceConnectionPointPairs: Array<
       [ConnectionPoint, ConnectionPoint]
     > = []
@@ -136,6 +139,11 @@ export function mergeConnections(
           ...simpleRouteConnection.preferredConnectionPointPairs,
         )
       }
+      if (simpleRouteConnection.candidateConnectionPointPairs) {
+        candidateConnectionPointPairs.push(
+          ...simpleRouteConnection.candidateConnectionPointPairs,
+        )
+      }
       if (simpleRouteConnection.pointsToConnect.length === 2) {
         const [fromPoint, toPoint] = simpleRouteConnection.pointsToConnect
         if (
@@ -177,6 +185,8 @@ export function mergeConnections(
           fromPoint.pointId,
           toPoint.pointId,
         ])
+      } else if (fromPoint.layer !== toPoint.layer) {
+        candidateConnectionPointPairs.push([fromPoint, toPoint])
       } else {
         preferredConnectionPointPairs.push([fromPoint, toPoint])
       }
@@ -196,6 +206,10 @@ export function mergeConnections(
       preferredConnectionPointPairs:
         preferredConnectionPointPairs.length > 0
           ? preferredConnectionPointPairs
+          : undefined,
+      candidateConnectionPointPairs:
+        candidateConnectionPointPairs.length > 0
+          ? candidateConnectionPointPairs
           : undefined,
       netConnectionName:
         mergedNetConnectionNames.size > 0

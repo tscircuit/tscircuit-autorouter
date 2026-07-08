@@ -93,6 +93,7 @@ export interface SimpleRouteConnection {
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
   preferredConnectionPointPairs?: Array<[ConnectionPoint, ConnectionPoint]>
+  candidateConnectionPointPairs?: Array<[ConnectionPoint, ConnectionPoint]>
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]
