@@ -62,6 +62,11 @@ type SplitLayerSlot = {
   height: number
 }
 
+type TitleSegment = {
+  text: string
+  color: string
+}
+
 /** Graphics method to use for a captured frame. */
 type SolverSvgFrameView = "visualize" | "preview"
 type InternalSolverSvgFrameView = SolverSvgFrameView | "finalVisualize"
@@ -188,9 +193,9 @@ export function getGraphicsSvgFrames({
     cellHeight ??
     Math.max(...frameBounds.map((bounds) => bounds.maxY - bounds.minY))
   const cellGap = gap ?? measuredCellWidth * 0.16
-  const labelFontSize = Math.min(measuredCellWidth, measuredCellHeight) * 0.055
+  const labelFontSize = Math.min(measuredCellWidth, measuredCellHeight) * 0.082
   const labelGap = labelFontSize * 0.7
-  const rowHeight = measuredCellHeight + labelFontSize * 1.8
+  const rowHeight = measuredCellHeight + labelFontSize * 3.4
   let framesGraphics: GraphicsObject = emptyGraphics
 
   for (let frameIndex = 0; frameIndex < renderedFrames.length; frameIndex++) {
@@ -642,12 +647,21 @@ function createCellGraphics({
 }): GraphicsObject {
   const width = bounds.maxX - bounds.minX
   const height = bounds.maxY - bounds.minY
-  const label = getFrameLabel(frame)
-  const labelWidth = label.length * labelFontSize * 0.62
+  const titleLines = getFrameTitleLines(frame)
+  const label = titleLines
+    .map((line) => line.map((segment) => segment.text).join(""))
+    .join(" ")
+  const labelWidth = Math.max(
+    ...titleLines.map((line) => getTitleSegmentsWidth(line, labelFontSize)),
+  )
   const adjustedFontSize =
     labelWidth > cellWidth
       ? (cellWidth / labelWidth) * labelFontSize
       : labelFontSize
+  const borderStrokeWidth = Math.max(
+    Math.min(cellWidth, cellHeight) * 0.006,
+    0.05,
+  )
 
   return mergeGraphics(
     {
@@ -657,10 +671,17 @@ function createCellGraphics({
           width: cellWidth,
           height: cellHeight,
           fill: "rgba(255,255,255,0)",
-          stroke: "rgba(40,40,40,0.24)",
+          stroke: "rgba(25,25,25,0.42)",
           label,
         },
       ],
+      lines: createFrameBorderLines({
+        cellMinX,
+        cellMinY,
+        cellWidth,
+        cellHeight,
+        strokeWidth: borderStrokeWidth,
+      }),
     },
     mergeGraphics(
       translateGraphics(
@@ -669,19 +690,192 @@ function createCellGraphics({
         cellMinY + (cellHeight - height) / 2 - bounds.minY,
       ),
       {
-        texts: [
-          {
-            x: cellMinX + cellWidth / 2,
-            y: cellMinY + cellHeight + labelGap,
-            text: label,
-            anchorSide: "bottom_center",
-            fontSize: adjustedFontSize,
-            color: "black",
-          },
-        ],
+        texts: createTitleTexts({
+          lines: titleLines,
+          x: cellMinX + cellWidth / 2,
+          y: cellMinY + cellHeight + labelGap,
+          maxWidth: cellWidth,
+          fontSize: adjustedFontSize,
+        }),
       },
     ),
   )
+}
+
+function createFrameBorderLines({
+  cellMinX,
+  cellMinY,
+  cellWidth,
+  cellHeight,
+  strokeWidth,
+}: {
+  cellMinX: number
+  cellMinY: number
+  cellWidth: number
+  cellHeight: number
+  strokeWidth: number
+}): NonNullable<GraphicsObject["lines"]> {
+  const minX = cellMinX
+  const maxX = cellMinX + cellWidth
+  const minY = cellMinY
+  const maxY = cellMinY + cellHeight
+  const strokeColor = "rgba(25,25,25,0.62)"
+
+  return [
+    {
+      points: [
+        { x: minX, y: minY },
+        { x: maxX, y: minY },
+      ],
+      strokeColor,
+      strokeWidth,
+    },
+    {
+      points: [
+        { x: maxX, y: minY },
+        { x: maxX, y: maxY },
+      ],
+      strokeColor,
+      strokeWidth,
+    },
+    {
+      points: [
+        { x: maxX, y: maxY },
+        { x: minX, y: maxY },
+      ],
+      strokeColor,
+      strokeWidth,
+    },
+    {
+      points: [
+        { x: minX, y: maxY },
+        { x: minX, y: minY },
+      ],
+      strokeColor,
+      strokeWidth,
+    },
+  ]
+}
+
+function createTitleTexts({
+  lines,
+  x,
+  y,
+  maxWidth,
+  fontSize,
+}: {
+  lines: TitleSegment[][]
+  x: number
+  y: number
+  maxWidth: number
+  fontSize: number
+}): NonNullable<GraphicsObject["texts"]> {
+  const lineGap = fontSize * 1.12
+  const titleTexts: NonNullable<GraphicsObject["texts"]> = []
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex]!
+    const lineFontSize = getFittedFontSize({
+      segments: line,
+      fontSize,
+      maxWidth,
+    })
+    const lineY = y + (lines.length - lineIndex - 1) * lineGap
+    let segmentX = x - getTitleSegmentsWidth(line, lineFontSize) / 2
+
+    for (const segment of line) {
+      const segmentWidth = getTextWidth(segment.text, lineFontSize)
+      titleTexts.push({
+        x: segmentX,
+        y: lineY,
+        text: segment.text,
+        anchorSide: "bottom_left",
+        fontSize: lineFontSize,
+        color: segment.color,
+      })
+      segmentX += segmentWidth
+    }
+  }
+
+  return titleTexts
+}
+
+function getFittedFontSize({
+  segments,
+  fontSize,
+  maxWidth,
+}: {
+  segments: TitleSegment[]
+  fontSize: number
+  maxWidth: number
+}): number {
+  const titleWidth = getTitleSegmentsWidth(segments, fontSize)
+  if (titleWidth <= maxWidth) return fontSize
+
+  return (maxWidth / titleWidth) * fontSize
+}
+
+function getTitleSegmentsWidth(
+  segments: TitleSegment[],
+  fontSize: number,
+): number {
+  return segments.reduce(
+    (width, segment) => width + getTextWidth(segment.text, fontSize),
+    0,
+  )
+}
+
+function getTextWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.62
+}
+
+function getFrameTitleLines(frame: GraphicsSvgFrame): TitleSegment[][] {
+  const phase = getFramePhase(frame)
+  const stepValue = getFrameStepValue(frame)
+  const layerValue = getFrameLayerValue(frame)
+  const nameText = phase === "step" ? frame.name : `${frame.name}:${phase}`
+  const nameSegments: TitleSegment[] = [
+    { text: nameText, color: "rgb(18,18,18)" },
+  ]
+  const metadataSegments: TitleSegment[] = []
+
+  metadataSegments.push(
+    {
+      text: `step:${stepValue}`,
+      color: "rgb(190,92,12)",
+    },
+    { text: ` layer:${layerValue}`, color: "rgb(120,58,175)" },
+  )
+
+  return [nameSegments, metadataSegments]
+}
+
+function getFramePhase(frame: GraphicsSvgFrame): string {
+  if (frame.step === "start") return "start"
+  if (frame.step === "end") return "end"
+  if (frame.pipeline === "end") return "end"
+  if (typeof frame.step === "number") return "step"
+
+  return "frame"
+}
+
+function getFrameStepValue(frame: GraphicsSvgFrame): string {
+  if (typeof frame.iteration === "number") {
+    return String(frame.iteration)
+  }
+
+  if (typeof frame.step === "number") {
+    return String(frame.step)
+  }
+
+  return "unknown"
+}
+
+function getFrameLayerValue(frame: GraphicsSvgFrame): string {
+  if (frame.layer === "split") return "split"
+  if (typeof frame.layer === "number") return `z${frame.layer}`
+
+  return "all"
 }
 
 function getUsableBounds(graphics: GraphicsObject): Bounds {
@@ -697,32 +891,6 @@ function getUsableBounds(graphics: GraphicsObject): Bounds {
     minY: -1,
     maxY: 1,
   }
-}
-
-function getFrameLabel(frame: GraphicsSvgFrame): string {
-  const layerLabel = getFrameLayerLabel(frame)
-
-  if (typeof frame.step === "number") {
-    return `${frame.name} step ${frame.step}${layerLabel}`
-  }
-
-  if (frame.step) {
-    const stepLabel = frame.step
-    const iterationLabel =
-      typeof frame.iteration === "number" ? ` step ${frame.iteration}` : ""
-    return `${frame.name} ${stepLabel}${iterationLabel}${layerLabel}`
-  }
-
-  const stepLabel =
-    typeof frame.iteration === "number" ? ` step ${frame.iteration}` : ""
-
-  return `${frame.name} pipeline end${stepLabel}${layerLabel}`
-}
-
-function getFrameLayerLabel(frame: GraphicsSvgFrame): string {
-  if (typeof frame.layer !== "number") return ""
-
-  return ` z${frame.layer}`
 }
 
 function getFrameName({
