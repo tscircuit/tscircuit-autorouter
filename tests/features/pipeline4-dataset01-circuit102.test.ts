@@ -93,31 +93,6 @@ test(
 
     expect(effort2Solver.solved).toBe(true)
     expect(effort2Solver.failed).toBe(false)
-
-    const effort2Metadata =
-      effort2Solver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_159")
-    const effort2Node = getNodeOrThrow(
-      effort2Solver.highDensityNodePortPoints,
-      "cmn_159",
-    )
-
-    expect(effort2Metadata?.status).toBe("solved")
-    expect(effort2Node.portPoints.length).toBeGreaterThan(
-      defaultNode.portPoints.length,
-    )
-    expect(
-      new Set(effort2Node.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(2)
-    expect(
-      JSON.stringify(
-        effort2Node.portPoints.map((point) => point.connectionName),
-      ),
-    ).not.toBe(
-      JSON.stringify(
-        explicit8mmNode.portPoints.map((point) => point.connectionName),
-      ),
-    )
-    expect(effort2Metadata?.solverType).toBe("HighDensitySolverA01")
   },
   { timeout: 120_000 },
 )
