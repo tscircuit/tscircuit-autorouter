@@ -142,7 +142,7 @@ export class TraceSimplificationSolver extends BaseSolver {
     )
   }
 
-  private markThroughObstacleSegments(
+  markThroughObstacleSegments(
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
     return routes.map((route) => ({

@@ -880,11 +880,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    return (
+    const outputHdRoutes =
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
+
+    return (
+      this.traceSimplificationSolver?.markThroughObstacleSegments(
+        outputHdRoutes,
+      ) ?? outputHdRoutes
     )
   }
 
