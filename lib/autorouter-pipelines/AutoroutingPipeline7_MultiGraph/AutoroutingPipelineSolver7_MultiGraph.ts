@@ -80,6 +80,72 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
+type RouteViaCluster = {
+  routeIndex: number
+  rootConnectionName: string
+  viaOrdinal: number
+  pointIndexes: number[]
+  x: number
+  y: number
+}
+
+function getConnMapNetId(
+  connMap: ConnectivityMap,
+  id: string | undefined,
+): string | undefined {
+  if (!id) return undefined
+
+  const netId = connMap.idToNetMap[id]
+  if (netId) return netId
+
+  return connMap.getNetConnectedToId(id)
+}
+
+function getConnMapAwareGlobalDrcSrj(
+  connMap: ConnectivityMap,
+  srjWithPointPairs: SimpleRouteJson | undefined,
+): SimpleRouteJson {
+  if (!srjWithPointPairs) {
+    throw new Error("Cannot build GlobalDrc SRJ before point pairs exist")
+  }
+
+  return {
+    ...srjWithPointPairs,
+    connections: srjWithPointPairs.connections.map((connection) => {
+      const netConnectionName =
+        getConnMapNetId(connMap, connection.name) ??
+        getConnMapNetId(connMap, connection.rootConnectionName) ??
+        connection.netConnectionName
+
+      return netConnectionName
+        ? { ...connection, netConnectionName }
+        : connection
+    }),
+    obstacles: srjWithPointPairs.obstacles.map((obstacle) => {
+      const connectedTo = new Set(obstacle.connectedTo)
+      for (const connectedId of obstacle.connectedTo) {
+        const netId = getConnMapNetId(connMap, connectedId)
+        if (netId) connectedTo.add(netId)
+      }
+
+      return { ...obstacle, connectedTo: [...connectedTo] }
+    }),
+  }
+}
+
+function getConnMapAwareGlobalDrcHdRoutes(
+  connMap: ConnectivityMap,
+  hdRoutes: HighDensityRoute[],
+): HighDensityRoute[] {
+  return hdRoutes.map((route) => {
+    const rootConnectionName =
+      getConnMapNetId(connMap, route.connectionName) ??
+      getConnMapNetId(connMap, route.rootConnectionName)
+
+    return rootConnectionName ? { ...route, rootConnectionName } : route
+  })
+}
+
 /**
  * Collects the capacity mesh node ids produced by component-local topology
  * generation.
@@ -578,8 +644,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          srj: getConnMapAwareGlobalDrcSrj(
+            cms.connMap,
+            cms.srjWithPointPairs,
+          ) as any,
+          hdRoutes: getConnMapAwareGlobalDrcHdRoutes(
+            cms.connMap,
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          ) as any,
           effort: cms.effort,
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
@@ -634,6 +706,222 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.minTraceWidth = this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
+  }
+
+  private getConnMapNetId(id: string | undefined): string | undefined {
+    return getConnMapNetId(this.connMap, id)
+  }
+
+  private getConnMapAwareGlobalDrcSrj(): SimpleRouteJson {
+    return getConnMapAwareGlobalDrcSrj(this.connMap, this.srjWithPointPairs)
+  }
+
+  private getConnMapAwareGlobalDrcHdRoutes(
+    hdRoutes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    return getConnMapAwareGlobalDrcHdRoutes(this.connMap, hdRoutes)
+  }
+
+  private getRouteViaClusters(
+    route: HighDensityRoute,
+    routeIndex: number,
+  ): RouteViaCluster[] {
+    const clusters: RouteViaCluster[] = []
+    const seenPointIndexes = new Set<number>()
+
+    for (let index = 0; index < route.route.length - 1; index++) {
+      const current = route.route[index]
+      const next = route.route[index + 1]
+      if (!current || !next) continue
+      if (current.z === next.z) continue
+      if (
+        Math.abs(current.x - next.x) > 1e-9 ||
+        Math.abs(current.y - next.y) > 1e-9
+      ) {
+        continue
+      }
+
+      const pointIndexes = [index, index + 1]
+      for (let cursor = index - 1; cursor >= 0; cursor--) {
+        const point = route.route[cursor]
+        if (
+          !point ||
+          Math.abs(point.x - current.x) > 1e-9 ||
+          Math.abs(point.y - current.y) > 1e-9
+        ) {
+          break
+        }
+        pointIndexes.push(cursor)
+      }
+      for (let cursor = index + 2; cursor < route.route.length; cursor++) {
+        const point = route.route[cursor]
+        if (
+          !point ||
+          Math.abs(point.x - current.x) > 1e-9 ||
+          Math.abs(point.y - current.y) > 1e-9
+        ) {
+          break
+        }
+        pointIndexes.push(cursor)
+      }
+
+      const uniquePointIndexes = [...new Set(pointIndexes)].sort(
+        (a, b) => a - b,
+      )
+      if (
+        uniquePointIndexes.some((pointIndex) =>
+          seenPointIndexes.has(pointIndex),
+        )
+      ) {
+        continue
+      }
+
+      for (const pointIndex of uniquePointIndexes) {
+        seenPointIndexes.add(pointIndex)
+      }
+
+      clusters.push({
+        routeIndex,
+        rootConnectionName: route.rootConnectionName ?? route.connectionName,
+        viaOrdinal: clusters.length,
+        pointIndexes: uniquePointIndexes,
+        x: current.x,
+        y: current.y,
+      })
+    }
+
+    return clusters
+  }
+
+  private getRouteViasFromTransitions(
+    route: HighDensityRoute,
+  ): HighDensityRoute["vias"] {
+    const vias: HighDensityRoute["vias"] = []
+
+    for (const cluster of this.getRouteViaClusters(route, 0)) {
+      const via = {
+        x: Number(cluster.x.toFixed(3)),
+        y: Number(cluster.y.toFixed(3)),
+      }
+      const previousVia = vias.at(-1)
+      if (
+        previousVia &&
+        Math.abs(previousVia.x - via.x) <= 1e-9 &&
+        Math.abs(previousVia.y - via.y) <= 1e-9
+      ) {
+        continue
+      }
+      vias.push(via)
+    }
+
+    return vias
+  }
+
+  private preserveConnMapSameNetViaClusters(
+    inputHdRoutes: HighDensityRoute[],
+    outputHdRoutes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    const inputClustersByRootAndPosition = new Map<string, RouteViaCluster[]>()
+
+    for (
+      let routeIndex = 0;
+      routeIndex < inputHdRoutes.length;
+      routeIndex++
+    ) {
+      const route = inputHdRoutes[routeIndex]
+      if (!route) continue
+      for (const cluster of this.getRouteViaClusters(route, routeIndex)) {
+        const clusterKey = [
+          cluster.rootConnectionName,
+          cluster.x.toFixed(6),
+          cluster.y.toFixed(6),
+        ].join(":")
+        inputClustersByRootAndPosition.set(clusterKey, [
+          ...(inputClustersByRootAndPosition.get(clusterKey) ?? []),
+          cluster,
+        ])
+      }
+    }
+
+    const sharedInputClusters = [
+      ...inputClustersByRootAndPosition.values(),
+    ].filter(
+      (clusters) =>
+        new Set(clusters.map((cluster) => cluster.routeIndex)).size > 1,
+    )
+    if (sharedInputClusters.length === 0) return outputHdRoutes
+
+    const outputRoutes = outputHdRoutes.map((route) => ({
+      ...route,
+      route: route.route.map((point) => ({ ...point })),
+    }))
+    const outputClustersByRouteIndex = new Map<number, RouteViaCluster[]>()
+    for (let routeIndex = 0; routeIndex < outputRoutes.length; routeIndex++) {
+      const route = outputRoutes[routeIndex]
+      if (!route) continue
+      outputClustersByRouteIndex.set(
+        routeIndex,
+        this.getRouteViaClusters(route, routeIndex),
+      )
+    }
+
+    for (const inputClusterGroup of sharedInputClusters) {
+      const outputClusterGroup: RouteViaCluster[] = []
+      for (const inputCluster of inputClusterGroup) {
+        const routeClusters = outputClustersByRouteIndex.get(
+          inputCluster.routeIndex,
+        )
+        const outputCluster = routeClusters?.find(
+          (cluster) => cluster.viaOrdinal === inputCluster.viaOrdinal,
+        )
+        if (outputCluster) outputClusterGroup.push(outputCluster)
+      }
+      if (outputClusterGroup.length < 2) continue
+
+      const clusterX =
+        outputClusterGroup.reduce((sum, cluster) => sum + cluster.x, 0) /
+        outputClusterGroup.length
+      const clusterY =
+        outputClusterGroup.reduce((sum, cluster) => sum + cluster.y, 0) /
+        outputClusterGroup.length
+
+      for (const cluster of outputClusterGroup) {
+        const route = outputRoutes[cluster.routeIndex]
+        if (!route) continue
+        for (const pointIndex of cluster.pointIndexes) {
+          const point = route.route[pointIndex]
+          if (!point) continue
+          point.x = clusterX
+          point.y = clusterY
+        }
+      }
+    }
+
+    return outputRoutes.map((route) => ({
+      ...route,
+      vias: this.getRouteViasFromTransitions(route),
+    }))
+  }
+
+  private getGlobalDrcOutputHdRoutes(): HighDensityRoute[] | null {
+    if (!this.globalDrcForceImproveSolver) return null
+
+    const originalRootConnectionNameByConnectionName = new Map(
+      (this.traceWidthSolver?.getHdRoutesWithWidths() ?? []).map((route) => [
+        route.connectionName,
+        route.rootConnectionName,
+      ]),
+    )
+
+    return this.preserveConnMapSameNetViaClusters(
+      this.globalDrcForceImproveSolver.inputHdRoutes,
+      this.globalDrcForceImproveSolver.getOutput(),
+    ).map((route) => ({
+      ...route,
+      rootConnectionName: originalRootConnectionNameByConnectionName.get(
+        route.connectionName,
+      ),
+    }))
   }
 
   getConstructorParams() {
@@ -881,7 +1169,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     const outputHdRoutes =
-      this.globalDrcForceImproveSolver?.getOutput() ??
+      this.getGlobalDrcOutputHdRoutes() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
