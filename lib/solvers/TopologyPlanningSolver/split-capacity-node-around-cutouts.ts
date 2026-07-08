@@ -18,7 +18,14 @@ export function splitCapacityNodeAroundCutouts({
   node: CapacityMeshNode
   cutoutNodes: CapacityMeshNode[]
 }): CapacityMeshNode[] {
-  if (node._containsObstacle || cutoutNodes.length === 0) return [node]
+  const nodeAvailableZ = new Set(node.availableZ)
+  const layerRelevantCutoutNodes = cutoutNodes.filter((cutoutNode) =>
+    cutoutNode.availableZ.some((z) => nodeAvailableZ.has(z)),
+  )
+
+  if (node._containsObstacle || layerRelevantCutoutNodes.length === 0) {
+    return [node]
+  }
 
   let fragments: NodeFragment[] = [
     {
@@ -27,8 +34,14 @@ export function splitCapacityNodeAroundCutouts({
     },
   ]
 
-  for (let cutoutIndex = 0; cutoutIndex < cutoutNodes.length; cutoutIndex++) {
-    const cutoutBounds = getCapacityMeshNodeBounds(cutoutNodes[cutoutIndex]!)
+  for (
+    let cutoutIndex = 0;
+    cutoutIndex < layerRelevantCutoutNodes.length;
+    cutoutIndex++
+  ) {
+    const cutoutBounds = getCapacityMeshNodeBounds(
+      layerRelevantCutoutNodes[cutoutIndex]!,
+    )
     fragments = fragments.flatMap((fragment) =>
       subtractBoundsFromFragment({
         fragment,
