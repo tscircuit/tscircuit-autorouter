@@ -29,7 +29,7 @@ type BgaSlot = {
   obstacle?: Obstacle
 }
 
-function getMinimumPositiveDiff(axisCoordinates: number[]): number | null {
+function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
   const positiveDiffs: number[] = []
 
   for (let index = 1; index < axisCoordinates.length; index++) {
@@ -70,8 +70,8 @@ export class BgaGrid {
     const observedYCoordinates = getUniqueSortedAxisCoordinates(
       obstacles.map((obstacle) => obstacle.center.y),
     )
-    const pitchX = getMinimumPositiveDiff(observedXCoordinates)
-    const pitchY = getMinimumPositiveDiff(observedYCoordinates)
+    const pitchX = estimateAdjacentAxisPitch(observedXCoordinates)
+    const pitchY = estimateAdjacentAxisPitch(observedYCoordinates)
 
     if (pitchX === null || pitchY === null) return null
 
@@ -109,16 +109,8 @@ export class BgaGrid {
     this.pitchY = params.pitchY
     this.originX = this.xCoordinates[0]!
     this.originY = this.yCoordinates[0]!
-    this.colCount =
-      Math.round(
-        (this.xCoordinates[this.xCoordinates.length - 1]! - this.originX) /
-          this.pitchX,
-      ) + 1
-    this.rowCount =
-      Math.round(
-        (this.yCoordinates[this.yCoordinates.length - 1]! - this.originY) /
-          this.pitchY,
-      ) + 1
+    this.colCount = this.xCoordinates.length
+    this.rowCount = this.yCoordinates.length
     this.padWidth = params.obstacles[0]!.width
     this.padHeight = params.obstacles[0]!.height
 

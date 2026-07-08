@@ -142,13 +142,14 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     node1: CapacityMeshNode,
     node2: CapacityMeshNode,
   ): SharedEdgeSegment | null {
+    const overlap = this.findOverlappingSegment(node1, node2)
+    if (!overlap) return null
+
     // Compute mutually available Z layers
     const availableZ = node1.availableZ.filter((z) =>
       node2.availableZ.includes(z),
     )
     if (availableZ.length === 0) return null
-    const overlap = this.findOverlappingSegment(node1, node2)
-    if (!overlap) return null
 
     // Compute how many port points can fit on this segment
     const segmentLength = Math.sqrt(
