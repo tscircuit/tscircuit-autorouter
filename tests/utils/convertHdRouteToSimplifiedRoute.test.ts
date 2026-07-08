@@ -446,12 +446,13 @@ describe("convertHdRouteToSimplifiedRoute", () => {
       { x: -4.92, y: 4.4, layer: "top" },
     ] as ConnectionPoint[]
 
-    const result = convertHdRouteToSimplifiedRoute(input, 2, { connectionPoints })
+    const result = convertHdRouteToSimplifiedRoute(input, 2, {
+      connectionPoints,
+    })
 
     expect(result).toEqual([
       { route_type: "wire", x: -4.92, y: 5.2, width: 0.15, layer: "top" },
       { route_type: "wire", x: -4.92, y: 4.4, width: 0.15, layer: "top" },
     ])
   })
-
 })
