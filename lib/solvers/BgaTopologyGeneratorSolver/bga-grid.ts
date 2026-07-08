@@ -1,4 +1,5 @@
 import type { Obstacle } from "lib/types"
+import { getCompleteAxisCoordinates } from "./get-complete-axis-coordinates"
 
 const AXIS_EPSILON = 1e-3
 
@@ -57,38 +58,6 @@ function getUniqueSortedAxisCoordinates(axisCoordinates: number[]): number[] {
 
 function roundCoordinate(coordinate: number): number {
   return Number(coordinate.toFixed(6))
-}
-
-function getCompleteAxisCoordinates(
-  axisCoordinates: number[],
-  pitch: number,
-): number[] {
-  const completeAxisCoordinates: number[] = []
-
-  for (let index = 0; index < axisCoordinates.length; index++) {
-    const currentCoordinate = axisCoordinates[index]!
-    completeAxisCoordinates.push(currentCoordinate)
-
-    const nextCoordinate = axisCoordinates[index + 1]
-    if (nextCoordinate === undefined) continue
-
-    const slotDistance = Math.round(
-      (nextCoordinate - currentCoordinate) / pitch,
-    )
-    if (slotDistance <= 1) continue
-
-    for (let slotOffset = 1; slotOffset < slotDistance; slotOffset++) {
-      const interpolationFraction = slotOffset / slotDistance
-      completeAxisCoordinates.push(
-        roundCoordinate(
-          currentCoordinate +
-            (nextCoordinate - currentCoordinate) * interpolationFraction,
-        ),
-      )
-    }
-  }
-
-  return completeAxisCoordinates
 }
 
 export class BgaGrid {
