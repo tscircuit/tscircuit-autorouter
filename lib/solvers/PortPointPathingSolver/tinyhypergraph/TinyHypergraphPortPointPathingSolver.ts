@@ -23,6 +23,7 @@ import {
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
 } from "tiny-hypergraph/lib/index"
+import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 
 type RouteMetadata = {
@@ -205,6 +206,7 @@ const getSharedConnectionZ = (params: {
 
 const toSerializedRegionData = (
   region: HgPortPointPathingSolverParams["graph"]["regions"][number],
+  netId?: number,
 ) => {
   const regionMetadata = region.d as typeof region.d & TinyRegionMetadata
   const bounds = regionMetadata.bounds
@@ -237,6 +239,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    ...(netId !== undefined ? { netId } : {}),
   }
 }
 
@@ -260,11 +263,62 @@ const toSerializedPortData = (
 const buildSerializedTinyGraph = (
   params: HgPortPointPathingSolverParams,
 ): SerializedHyperGraph => {
+  const netIndexById = new Map<string, number>()
+  const getNetIndex = (routeMetadata: RouteMetadata) => {
+    const netId =
+      routeMetadata.mutuallyConnectedNetworkId ?? routeMetadata.connectionId
+    let netIndex = netIndexById.get(netId)
+    if (netIndex === undefined) {
+      netIndex = netIndexById.size
+      netIndexById.set(netId, netIndex)
+    }
+    return netIndex
+  }
+  const regionNetCandidates = new Map<string, Set<number>>()
+  for (const connection of params.connections) {
+    const routeMetadata: RouteMetadata = {
+      connectionId: connection.connectionId,
+      mutuallyConnectedNetworkId:
+        connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+      simpleRouteConnection: connection.simpleRouteConnection,
+    }
+    const routeNetIndex = getNetIndex(routeMetadata)
+    for (const point of connection.simpleRouteConnection?.pointsToConnect ??
+      []) {
+      for (const region of params.graph.regions) {
+        if (
+          !checkIfConnectionPointIsInRegion({
+            point,
+            region,
+            layerCount: params.layerCount,
+          })
+        ) {
+          continue
+        }
+
+        let netCandidates = regionNetCandidates.get(region.regionId)
+        if (!netCandidates) {
+          netCandidates = new Set<number>()
+          regionNetCandidates.set(region.regionId, netCandidates)
+        }
+        netCandidates.add(routeNetIndex)
+      }
+    }
+  }
+  const regionNetIdByRegionId = new Map<string, number>()
+  for (const [regionId, netCandidates] of regionNetCandidates) {
+    if (netCandidates.size !== 1) continue
+    regionNetIdByRegionId.set(regionId, [...netCandidates][0]!)
+  }
+
   const regions: SerializedHyperGraph["regions"] = params.graph.regions.map(
     (region) => ({
       regionId: region.regionId,
       pointIds: region.ports.map((port) => port.d.portId),
-      d: toSerializedRegionData(region),
+      d: toSerializedRegionData(
+        region,
+        regionNetIdByRegionId.get(region.regionId),
+      ),
     }),
   )
 
@@ -289,18 +343,6 @@ const buildSerializedTinyGraph = (
   )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
-  const netIndexById = new Map<string, number>()
-  const getNetIndex = (routeMetadata: RouteMetadata) => {
-    const netId =
-      routeMetadata.mutuallyConnectedNetworkId ?? routeMetadata.connectionId
-    let netIndex = netIndexById.get(netId)
-    if (netIndex === undefined) {
-      netIndex = netIndexById.size
-      netIndexById.set(netId, netIndex)
-    }
-    return netIndex
-  }
-
   for (const connection of params.connections) {
     const routeMetadata: RouteMetadata = {
       connectionId: connection.connectionId,

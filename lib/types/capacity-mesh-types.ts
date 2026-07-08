@@ -40,5 +40,6 @@ export interface CapacityMeshEdge {
   capacityMeshEdgeId: string
   nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   isOffboardEdge?: boolean
+  isTargetEscapeEdge?: boolean
   offboardNetName?: string
 }

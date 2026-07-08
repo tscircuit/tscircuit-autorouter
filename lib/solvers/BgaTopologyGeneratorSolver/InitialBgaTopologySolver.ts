@@ -1,11 +1,18 @@
 import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
+  pointToBoxDistance,
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import type {
+  CapacityMeshNode,
+  ConnectionPoint,
+  Obstacle,
+  SimpleRouteJson,
+} from "lib/types"
+import { getConnectionPointLayers } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -13,6 +20,7 @@ import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 
 const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+const TARGET_POINT_OBSTACLE_TOLERANCE = 1e-3
 
 export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
@@ -211,19 +219,82 @@ function createFreeObstacleMeshNodes(input: {
   }))
 }
 
+function isConnectionPointOnObstacle(input: {
+  point: ConnectionPoint
+  obstacle: Obstacle
+  layerCount: number
+}): boolean {
+  const pointIds = [input.point.pointId, input.point.pcb_port_id].filter(
+    (pointId): pointId is string => typeof pointId === "string",
+  )
+  if (
+    pointIds.some((pointId) => input.obstacle.connectedTo.includes(pointId))
+  ) {
+    return true
+  }
+
+  if (input.obstacle.connectedTo.length === 0) return false
+
+  if (
+    pointToBoxDistance(input.point, input.obstacle) >
+    TARGET_POINT_OBSTACLE_TOLERANCE
+  ) {
+    return false
+  }
+
+  const pointZLayers = getConnectionPointLayers(input.point).map((layer) =>
+    mapLayerNameToZ(layer, input.layerCount),
+  )
+  const obstacleZLayers = input.obstacle.layers.map((layer) =>
+    mapLayerNameToZ(layer, input.layerCount),
+  )
+  return pointZLayers.some((z) => obstacleZLayers.includes(z))
+}
+
+function getObstacleTargetConnectionName(input: {
+  obstacle: Obstacle
+  srj: SimpleRouteJson
+}): string | undefined {
+  for (const connection of input.srj.connections) {
+    for (const point of connection.pointsToConnect) {
+      if (
+        isConnectionPointOnObstacle({
+          point,
+          obstacle: input.obstacle,
+          layerCount: input.srj.layerCount,
+        })
+      ) {
+        return connection.rootConnectionName ?? connection.name
+      }
+    }
+  }
+
+  return undefined
+}
+
 function createObstacleMeshNode(
   componentId: string,
   obstacle: Obstacle,
-  layerCount: number,
+  srj: SimpleRouteJson,
 ): CapacityMeshNode {
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
-    mapLayerNameToZ(layerName, layerCount),
+    mapLayerNameToZ(layerName, srj.layerCount),
   )
   const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
+  const targetConnectionName = getObstacleTargetConnectionName({
+    obstacle,
+    srj,
+  })
 
   return {
     capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
     _containsObstacle: true,
+    ...(targetConnectionName
+      ? {
+          _containsTarget: true,
+          _targetConnectionName: targetConnectionName,
+        }
+      : {}),
     center: obstacle.center,
     width: obstacle.width,
     height: obstacle.height,
@@ -325,7 +396,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
           layerCount: srj.layerCount,
         }),
-        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
+        createObstacleMeshNode(componentId, obstacle, srj),
       ]),
       ...unmarkedComponentObstacles.flatMap((obstacle) => [
         // skip for unmarked becase we already have free layers available
@@ -336,7 +407,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
         //   freeLayers,
         //   layerCount: srj.layerCount,
         // }),
-        createObstacleMeshNode(componentId, obstacle, srj.layerCount),
+        createObstacleMeshNode(componentId, obstacle, srj),
       ]),
     ]
     this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes)
