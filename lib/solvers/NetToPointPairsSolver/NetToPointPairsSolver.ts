@@ -8,6 +8,7 @@ import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { getPointKey } from "lib/utils/getPointKey"
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
@@ -37,6 +38,9 @@ export const getExternalConnectionState = (
     to: ConnectionPoint
     weight: number
   }> = []
+  const pointByKey = new Map(
+    connection.pointsToConnect.map((point) => [getPointKey(point), point]),
+  )
 
   allExternalGroups.forEach((group, idx) => {
     const groupPoints = group
@@ -62,6 +66,19 @@ export const getExternalConnectionState = (
       })
     }
   })
+
+  for (const [from, to] of connection.preferredConnectionPointPairs ?? []) {
+    const currentFrom = pointByKey.get(getPointKey(from))
+    const currentTo = pointByKey.get(getPointKey(to))
+    if (!currentFrom || !currentTo) {
+      continue
+    }
+    zeroWeightEdges.push({
+      from: currentFrom,
+      to: currentTo,
+      weight: 0,
+    })
+  }
 
   return { pointIdToGroup, zeroWeightEdges }
 }

@@ -92,6 +92,7 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
+  preferredConnectionPointPairs?: Array<[ConnectionPoint, ConnectionPoint]>
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]

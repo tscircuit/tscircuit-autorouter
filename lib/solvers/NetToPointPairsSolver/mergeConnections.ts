@@ -88,6 +88,12 @@ export function mergeConnections(
     const mergedRootConnectionNames: Set<string> = new Set()
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
+    const preferredConnectionPointPairs: Array<
+      [ConnectionPoint, ConnectionPoint]
+    > = []
+    const sourceTraceConnectionPointPairs: Array<
+      [ConnectionPoint, ConnectionPoint]
+    > = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
 
@@ -117,6 +123,23 @@ export function mergeConnections(
           ...simpleRouteConnection.externallyConnectedPointIds,
         )
       }
+      if (simpleRouteConnection.preferredConnectionPointPairs) {
+        preferredConnectionPointPairs.push(
+          ...simpleRouteConnection.preferredConnectionPointPairs,
+        )
+      }
+      if (simpleRouteConnection.pointsToConnect.length === 2) {
+        const [fromPoint, toPoint] = simpleRouteConnection.pointsToConnect
+        if (
+          simpleRouteConnection.name.startsWith("source_trace_") &&
+          fromPoint?.pointId &&
+          toPoint?.pointId
+        ) {
+          sourceTraceConnectionPointPairs.push([fromPoint, toPoint])
+        } else {
+          preferredConnectionPointPairs.push([fromPoint!, toPoint!])
+        }
+      }
 
       // Collect netConnectionNames (deduplicate)
       if (simpleRouteConnection.netConnectionName) {
@@ -133,6 +156,21 @@ export function mergeConnections(
       }
     })
 
+    for (const [fromPoint, toPoint] of sourceTraceConnectionPointPairs) {
+      if (
+        uniqueConnectionPoints.size > 2 &&
+        fromPoint.pointId &&
+        toPoint.pointId
+      ) {
+        mergedExternallyConnectedPointIds.push([
+          fromPoint.pointId,
+          toPoint.pointId,
+        ])
+      } else {
+        preferredConnectionPointPairs.push([fromPoint, toPoint])
+      }
+    }
+
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
       name: Array.from(mergedNames).join("__"), // Combine original names
@@ -143,6 +181,10 @@ export function mergeConnections(
       externallyConnectedPointIds:
         mergedExternallyConnectedPointIds.length > 0
           ? mergedExternallyConnectedPointIds
+          : undefined,
+      preferredConnectionPointPairs:
+        preferredConnectionPointPairs.length > 0
+          ? preferredConnectionPointPairs
           : undefined,
       netConnectionName:
         mergedNetConnectionNames.size > 0
