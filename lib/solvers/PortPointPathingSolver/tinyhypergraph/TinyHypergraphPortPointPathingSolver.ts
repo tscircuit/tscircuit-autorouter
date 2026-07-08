@@ -113,7 +113,8 @@ const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
-export const getEffortScale = (effort: number) => Math.max(Number(effort) || 1, 1e-2)
+export const getEffortScale = (effort: number) =>
+  Math.max(Number(effort) || 1, 1e-2)
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
