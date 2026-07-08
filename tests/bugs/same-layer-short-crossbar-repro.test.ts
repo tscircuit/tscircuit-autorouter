@@ -1,0 +1,90 @@
+import { expect, test } from "bun:test"
+import { AutoroutingPipelineSolver } from "lib"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import type {
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+} from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+
+// Minimal reproduction for #1507 / #1513: on a dense board the pipeline models a
+// same-layer crossing as via-resolvable *cost* (see
+// calculateCrossingProbabilityOfFailure), not a hard constraint, so when the
+// high-density stage cannot actually resolve one it survives to the output as a
+// different-net same-layer overlap - a real short that getDrcErrors flags.
+//
+// Crossbar: N nets whose endpoints are reversed left<->right, all starting on the
+// top layer, packed into a small 2-layer area so every net must cross every other.
+// That saturates the via budget and forces at least one unresolved same-layer
+// crossing into the routed output.
+const buildCrossbarSrj = (
+  n: number,
+  pitch: number,
+  xSpan: number,
+): SimpleRouteJson => ({
+  layerCount: 2,
+  minTraceWidth: 0.15,
+  bounds: { minX: -1, maxX: xSpan + 1, minY: -1, maxY: (n - 1) * pitch + 1 },
+  obstacles: [],
+  connections: Array.from({ length: n }, (_, i) => ({
+    name: `net${i}`,
+    pointsToConnect: [
+      { x: 0, y: i * pitch, layer: "top" },
+      { x: xSpan, y: (n - 1 - i) * pitch, layer: "top" },
+    ],
+  })),
+})
+
+const convertHdRoutesToPcbTraces = (
+  srj: SimpleRouteJson,
+  hdRoutes: HighDensityRoute[],
+): SimplifiedPcbTraces =>
+  srj.connections.flatMap((connection) => {
+    const netConnectionName =
+      connection.netConnectionName ??
+      connection.rootConnectionName ??
+      connection.name
+    return hdRoutes
+      .filter((route) => route.connectionName === connection.name)
+      .map(
+        (route, index): SimplifiedPcbTrace => ({
+          type: "pcb_trace",
+          pcb_trace_id: `${connection.name}_${index}`,
+          connection_name: netConnectionName,
+          route: convertHdRouteToSimplifiedRoute(route, srj.layerCount),
+        }),
+      )
+  })
+
+const sameLayerShortErrors = (srj: SimpleRouteJson) => {
+  const pipeline = new AutoroutingPipelineSolver(structuredClone(srj))
+  pipeline.solve()
+  expect(pipeline.failed).toBe(false)
+
+  const srjWithPointPairs = pipeline.srjWithPointPairs ?? srj
+  const hdRoutes = pipeline.highDensityStitchSolver?.mergedHdRoutes
+  if (!hdRoutes)
+    throw new Error("pipeline produced no merged high-density routes")
+
+  return getDrcErrors(
+    convertToCircuitJson(
+      srjWithPointPairs,
+      convertHdRoutesToPcbTraces(srjWithPointPairs, hdRoutes),
+      { minTraceWidth: srj.minTraceWidth },
+    ),
+    { minTraceWidth: srj.minTraceWidth },
+  ).locationAwareErrors.filter((e) => e.message.includes("overlaps with trace"))
+}
+
+// Documents the bug: on `main` the routed output contains different-net
+// same-layer overlaps. #1513's guaranteeNoSameLayerShorts pass makes this empty.
+test("dense crossbar leaves different-net same-layer shorts in the output", () => {
+  // 22 reversed nets in a 2 x ~8.4 mm window: the via budget saturates and the
+  // pipeline emits many different-net same-layer overlaps (26 on main at time of
+  // writing). #1513 truncates each offender to a ratsnest, so this reaches 0.
+  const errors = sameLayerShortErrors(buildCrossbarSrj(22, 0.4, 2))
+  expect(errors.length).toBeGreaterThan(0)
+}, 90_000)
