@@ -22,6 +22,19 @@ test("bugreport2", () => {
   // })
 
   solver.solve()
+  const outputSrj = solver.getOutputSimpleRouteJson()
+  const traceCountByConnectionName = new Map<string, number>()
+
+  for (const trace of outputSrj.traces ?? []) {
+    const connectionName = trace.connection_name
+    traceCountByConnectionName.set(
+      connectionName,
+      (traceCountByConnectionName.get(connectionName) ?? 0) + 1,
+    )
+  }
+
+  expect(outputSrj.traces?.length).toBe(19)
+  expect(traceCountByConnectionName.get("source_trace_4__source_net_2")).toBe(4)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

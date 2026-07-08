@@ -96,6 +96,7 @@ export function mergeConnections(
     > = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let hasSourceNetConnection = false
+    const sourceNetPointKeys = new Set<PointKey>()
     let nominalTraceWidth: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
@@ -111,6 +112,9 @@ export function mergeConnections(
       mergedNames.add(simpleRouteConnection.name)
       if (simpleRouteConnection.name.startsWith("source_net_")) {
         hasSourceNetConnection = true
+        for (const connectionPoint of simpleRouteConnection.pointsToConnect) {
+          sourceNetPointKeys.add(getPointKey(connectionPoint))
+        }
       }
       if (simpleRouteConnection.rootConnectionName) {
         mergedRootConnectionNames.add(simpleRouteConnection.rootConnectionName)
@@ -165,7 +169,9 @@ export function mergeConnections(
         hasSourceNetConnection &&
         uniqueConnectionPoints.size > 2 &&
         fromPoint.pointId &&
-        toPoint.pointId
+        toPoint.pointId &&
+        sourceNetPointKeys.has(getPointKey(fromPoint)) &&
+        sourceNetPointKeys.has(getPointKey(toPoint))
       ) {
         mergedExternallyConnectedPointIds.push([
           fromPoint.pointId,
