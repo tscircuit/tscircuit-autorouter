@@ -119,8 +119,12 @@ test("merged topology preserves inner targets in vertical SOIC center", async ()
     getSolverSvgFrames({
       solver: createMergedTopologySolver(createSoicVerticalMergedTopologySrj()),
       frames: [
-        { type: "solver", solverName: "globalTopologySolver" },
-        { type: "solver", solverName: "componentTopologyBatchSolver" },
+        { type: "solver", solverName: "globalTopologySolver", layer: 1 },
+        {
+          type: "solver",
+          solverName: "componentTopologyBatchSolver",
+          layer: "split",
+        },
         { type: "pipeline", step: "end" },
       ],
       columns: 3,
