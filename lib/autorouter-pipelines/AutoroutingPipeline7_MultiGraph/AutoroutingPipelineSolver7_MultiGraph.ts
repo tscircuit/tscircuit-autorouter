@@ -5,7 +5,10 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import {
+  ComponentDetectionSolver,
+  type ComponentDetectionSolverOutput,
+} from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -85,7 +88,7 @@ const VIA_ROUTE_POINT_TOLERANCE = 1e-3
 
 function moveViasOutOfBgaComponentBounds(
   routes: HighDensityRoute[],
-  components: ComponentDetectionSolver["output"],
+  components: ComponentDetectionSolverOutput | undefined,
 ): HighDensityRoute[] {
   const bgaBounds = (components ?? [])
     .filter((component) => component.componentKind === "bga")
