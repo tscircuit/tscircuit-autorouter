@@ -7,6 +7,7 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import { findTargetEscapeSegment } from "./findTargetEscapeSegment"
 
 export interface SegmentPortPoint {
   segmentPortPointId: string
@@ -149,9 +150,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     if (availableZ.length === 0) return null
     const overlap =
       this.findOverlappingSegment(node1, node2) ??
-      (edge.isTargetEscapeEdge
-        ? this.findTargetEscapeSegment(node1, node2)
-        : null)
+      (edge.isTargetEscapeEdge ? findTargetEscapeSegment(node1, node2) : null)
     if (!overlap) return null
 
     // Compute how many port points can fit on this segment
@@ -339,34 +338,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       }
     }
     return false
-  }
-
-  private findTargetEscapeSegment(
-    node: CapacityMeshNode,
-    adjNode: CapacityMeshNode,
-  ): { start: { x: number; y: number }; end: { x: number; y: number } } {
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
-    const adjLeft = adjNode.center.x - adjNode.width / 2
-    const adjRight = adjNode.center.x + adjNode.width / 2
-    const adjTop = adjNode.center.y - adjNode.height / 2
-    const adjBottom = adjNode.center.y + adjNode.height / 2
-    const nodeClosestPoint = {
-      x: Math.max(nodeLeft, Math.min(adjNode.center.x, nodeRight)),
-      y: Math.max(nodeTop, Math.min(adjNode.center.y, nodeBottom)),
-    }
-    const adjClosestPoint = {
-      x: Math.max(adjLeft, Math.min(node.center.x, adjRight)),
-      y: Math.max(adjTop, Math.min(node.center.y, adjBottom)),
-    }
-    const midpoint = {
-      x: (nodeClosestPoint.x + adjClosestPoint.x) / 2,
-      y: (nodeClosestPoint.y + adjClosestPoint.y) / 2,
-    }
-
-    return { start: midpoint, end: midpoint }
   }
 
   private findOverlappingSegment(
