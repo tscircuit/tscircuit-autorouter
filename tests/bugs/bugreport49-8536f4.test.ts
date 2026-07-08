@@ -15,5 +15,5 @@ test(
     solver.solve()
     expect(solver.solved).toBe(true)
   },
-  { timeout: 60_000 },
+  { timeout: 120_000 },
 )

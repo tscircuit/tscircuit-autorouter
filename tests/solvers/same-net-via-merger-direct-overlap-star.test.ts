@@ -24,7 +24,9 @@ test("SameNetViaMergerSolver keeps chain consolidation centered on direct overla
     obstacles: [],
     colorMap: {},
     layerCount: 2,
-    connMap: new ConnectivityMap({}),
+    connMap: new ConnectivityMap({
+      net0: ["route-a", "route-b", "route-c"],
+    }),
   })
 
   solver.solve()
@@ -33,8 +35,10 @@ test("SameNetViaMergerSolver keeps chain consolidation centered on direct overla
   expect(solver.iterations).toBeLessThan(10)
 
   const routes = solver.getMergedViaHdRoutes()
-  expect(routes).not.toBeNull()
-  expect(routes!.flatMap((route) => route.vias)).toEqual([
+  if (!routes) {
+    throw new Error("Expected SameNetViaMergerSolver to emit merged routes")
+  }
+  expect(routes.flatMap((route) => route.vias)).toEqual([
     { x: 0.25, y: 0 },
     { x: 0.25, y: 0 },
     { x: 0.25, y: 0 },

@@ -4,6 +4,7 @@ import viaRemoval from "fixtures/legacy/assets/viaremoval01.json" with {
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export default () => (
   <GenericSolverDebugger
@@ -13,6 +14,7 @@ export default () => (
         obstacles: viaRemoval[0].obstacles as any,
         colorMap: viaRemoval[0].colorMap,
         layerCount: 2,
+        connMap: new ConnectivityMap({}),
       })
       solver.step()
       return solver
