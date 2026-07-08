@@ -150,6 +150,30 @@ type AsyncPipelineDebuggerSolver = PipelineDebuggerSolver & {
   solveAsync?: () => Promise<void>
 }
 
+const getOutputViaCount = (solver: PipelineDebuggerSolver): number | null => {
+  if (!solver.solved || solver.failed) return null
+  if (typeof solver.getOutputSimplifiedPcbTraces !== "function") return null
+
+  try {
+    const traces = solver.getOutputSimplifiedPcbTraces()
+    if (!Array.isArray(traces)) return null
+
+    return traces.reduce((count, trace) => {
+      if (!Array.isArray(trace.route)) return count
+
+      return (
+        count +
+        trace.route.filter(
+          (routePoint: { route_type?: string }) =>
+            routePoint.route_type === "via",
+        ).length
+      )
+    }, 0)
+  } catch {
+    return null
+  }
+}
+
 const waitForNextPaint = () =>
   new Promise<void>((resolve) => {
     if (
@@ -1106,6 +1130,10 @@ export const AutoroutingPipelineDebugger = ({
       solver.failed,
     ],
   )
+  const viaCount = useMemo(
+    () => getOutputViaCount(solver as PipelineDebuggerSolver),
+    [solver, solver.iterations, solver.solved, solver.failed],
+  )
 
   return (
     <div className="p-4">
@@ -1271,6 +1299,11 @@ export const AutoroutingPipelineDebugger = ({
               `${solver.srj.connections.length} (*)`}
           </span>
         </div>
+        {viaCount !== null && (
+          <div className="border p-2 rounded">
+            Via Count: <span className="font-bold">{viaCount}</span>
+          </div>
+        )}
         {solveTime !== null && (
           <div className="border p-2 rounded">
             Time to Solve:{" "}
