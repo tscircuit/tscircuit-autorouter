@@ -7,7 +7,6 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
-import { findTargetEscapeSegment } from "./findTargetEscapeSegment"
 
 export interface SegmentPortPoint {
   segmentPortPointId: string
@@ -148,9 +147,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       node2.availableZ.includes(z),
     )
     if (availableZ.length === 0) return null
-    const overlap =
-      this.findOverlappingSegment(node1, node2) ??
-      (edge.isTargetEscapeEdge ? findTargetEscapeSegment(node1, node2) : null)
+    const overlap = this.findOverlappingSegment(node1, node2)
     if (!overlap) return null
 
     // Compute how many port points can fit on this segment

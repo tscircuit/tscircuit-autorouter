@@ -5,7 +5,6 @@ import type {
   CapacityMeshNodeId,
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
-import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
@@ -78,11 +77,11 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
-    // If a target node is not connected to any other node, then it is "inside
-    // an obstacle" (this is the case almost 100% of the time when we place
-    // targets inside of PCB pads)
-    // To fix this we connect it to the nearest nodes without obstacles
     for (const targetNode of targetNodes) {
+      if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
+        continue
+      }
+
       const hasRoutingEdge = this.edges.some((edge) => {
         if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
         const otherNodeId =
@@ -100,30 +99,9 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       })
       if (hasRoutingEdge) continue
 
-      let nearestNode: CapacityMeshNode | null = null
-      let nearestDistance = Infinity
-      for (const node of this.nodes) {
-        if (node._containsObstacle) continue
-        if (node._containsTarget) continue
-        if (!this.doNodesHaveSharedLayer(targetNode, node)) continue
-        const boxDistance = pointToBoxDistance(targetNode.center, node)
-        const dist =
-          boxDistance + distance(targetNode.center, node.center) * 1e-6
-        if (dist < nearestDistance) {
-          nearestDistance = dist
-          nearestNode = node
-        }
-      }
-      if (nearestNode) {
-        this.edges.push({
-          capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
-          nodeIds: [
-            targetNode.capacityMeshNodeId,
-            nearestNode.capacityMeshNodeId,
-          ],
-          isTargetEscapeEdge: true,
-        })
-      }
+      throw new Error(
+        `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,
+      )
     }
   }
 
