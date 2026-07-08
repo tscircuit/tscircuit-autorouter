@@ -107,7 +107,8 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         if (node._containsTarget) continue
         if (!this.doNodesHaveSharedLayer(targetNode, node)) continue
         const boxDistance = pointToBoxDistance(targetNode.center, node)
-        const dist = boxDistance + distance(targetNode.center, node.center) * 1e-6
+        const dist =
+          boxDistance + distance(targetNode.center, node.center) * 1e-6
         if (dist < nearestDistance) {
           nearestDistance = dist
           nearestNode = node
