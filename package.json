@@ -29,6 +29,7 @@
     "@tsci/tscircuit.dataset-srj19-bga-passive-overlays": "git+https://github.com/tscircuit/dataset-srj19.git#5104d03ed72a9090d76ea1f42ae9f4bc439f7534",
     "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj20.git#9384fb8f45fb479b97178ddfa42fc74c69afbbec",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
+    "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#33dc6a6b6670ff939fe981662dfd5528bb4e5d3a",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#68565d64307a31c92927f077539dba0829c3c63f",
     "@tscircuit/checks": "^0.0.141",
     "@tscircuit/circuit-json-util": "^0.0.94",

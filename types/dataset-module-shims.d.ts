@@ -13,6 +13,19 @@ declare module "@tsci/seveibar.dataset-srj13" {
   export = dataset
 }
 
+declare module "@tsci/0hmX.multi-component-dataset-srj01" {
+  export const circuit001: any
+  export const circuit002: any
+  export const circuit003: any
+  export const circuit004: any
+  export const circuit005: any
+  export const circuit006: any
+  export const circuit007: any
+  export const circuit008: any
+  export const circuit009: any
+  export const circuit010: any
+}
+
 declare module "dataset-srj18" {
   export const dataset: any
 }
