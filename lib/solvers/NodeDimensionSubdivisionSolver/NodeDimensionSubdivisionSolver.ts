@@ -69,7 +69,22 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       return true
     }
 
+    if (this.shouldPreserveSmallTopologyNode(node)) {
+      return false
+    }
+
     return hasMinAreaLimit && node.width * node.height < this.minNodeArea
+  }
+
+  private shouldPreserveSmallTopologyNode(node: CapacityMeshNode): boolean {
+    if (!node._topologyMergeRole) {
+      return false
+    }
+    if (node.width <= 0 || node.height <= 0) {
+      return false
+    }
+
+    return true
   }
 
   private subdivideNode(node: CapacityMeshNode): CapacityMeshNode[] {

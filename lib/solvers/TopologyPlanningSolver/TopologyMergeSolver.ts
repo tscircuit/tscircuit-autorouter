@@ -9,7 +9,6 @@ import {
   getBoundsIntersection,
   getCapacityMeshNodeBounds,
   isNodeCenterInsideObstacle,
-  isNodeInsideOrOverlappingObstacle,
   isValidCapacityBounds,
 } from "./capacity-node-geometry"
 import { getGlobalMeshNodesForMergedTopology } from "./get-global-mesh-nodes-for-merged-topology"
@@ -32,6 +31,13 @@ type ClippedCutout = {
 }
 
 type TopologyNodeRole = "global" | "component" | "interface"
+
+type TopologyDomain = {
+  domainId: string
+  role: "global" | "component"
+  componentId: string
+  nodes: CapacityMeshNode[]
+}
 
 const TOPOLOGY_OVERLAP_TOLERANCE = 1e-5
 
@@ -138,19 +144,6 @@ function shouldPreserveGlobalNodeAsCutout(node: CapacityMeshNode): boolean {
 
 function isRoutingNode(node: CapacityMeshNode): boolean {
   return !node._containsObstacle
-}
-
-function isNodeRelevantToComponent({
-  node,
-  component,
-}: {
-  node: CapacityMeshNode
-  component: SerializedTopologyComponentInput
-}): boolean {
-  return isNodeInsideOrOverlappingObstacle({
-    node,
-    obstacle: component.replacementObstacle,
-  })
 }
 
 function canHostVia({
@@ -326,79 +319,6 @@ function getTopologyInterfaceCandidate({
   }
 }
 
-function getInterfaceCandidateKey(
-  candidate: TopologyInterfaceCandidate,
-): string {
-  const bounds = candidate.bounds
-
-  return JSON.stringify({
-    minX: bounds.minX.toFixed(9),
-    maxX: bounds.maxX.toFixed(9),
-    minY: bounds.minY.toFixed(9),
-    maxY: bounds.maxY.toFixed(9),
-  })
-}
-
-function createTopologyInterfaceNodesForComponent({
-  component,
-  componentNodes,
-  globalNodes,
-  viaDiameter,
-}: {
-  component: SerializedTopologyComponentInput
-  componentNodes: CapacityMeshNode[]
-  globalNodes: CapacityMeshNode[]
-  viaDiameter: number | undefined
-}): CapacityMeshNode[] {
-  const interfaceCandidatesByKey = new Map<string, TopologyInterfaceCandidate>()
-  const relevantGlobalNodes = globalNodes.filter(
-    (globalNode: CapacityMeshNode) =>
-      isRoutingNode(globalNode) &&
-      !shouldPreserveGlobalNodeAsCutout(globalNode) &&
-      isNodeRelevantToComponent({ node: globalNode, component }),
-  )
-
-  for (const componentNode of componentNodes) {
-    if (!isRoutingNode(componentNode)) continue
-
-    for (const globalNode of relevantGlobalNodes) {
-      const candidate = getTopologyInterfaceCandidate({
-        globalNode,
-        componentNode,
-        viaDiameter,
-      })
-      if (!candidate) continue
-
-      const candidateKey = getInterfaceCandidateKey(candidate)
-      const existingCandidate = interfaceCandidatesByKey.get(candidateKey)
-      if (existingCandidate) {
-        existingCandidate.availableZ = getSortedUniqueZ([
-          ...existingCandidate.availableZ,
-          ...candidate.availableZ,
-        ])
-        existingCandidate.sourceNodeIds = getSortedUniqueStrings([
-          ...existingCandidate.sourceNodeIds,
-          ...candidate.sourceNodeIds,
-        ])
-        continue
-      }
-      interfaceCandidatesByKey.set(candidateKey, candidate)
-    }
-  }
-
-  return [...interfaceCandidatesByKey.values()].map(
-    (candidate: TopologyInterfaceCandidate, index: number): CapacityMeshNode =>
-      createBoundsNode({
-        bounds: candidate.bounds,
-        capacityMeshNodeId: `topology-interface:${component.componentId}:${index}`,
-        availableZ: candidate.availableZ,
-        role: "interface",
-        componentId: component.componentId,
-        sourceNodeIds: candidate.sourceNodeIds,
-      }),
-  )
-}
-
 function addSortedCutCoordinate(
   coordinates: number[],
   coordinate: number,
@@ -425,7 +345,10 @@ function getClippedCutoutBounds({
   nodeBounds: Bounds
   cutoutNode: CapacityMeshNode
 }): Bounds | null {
-  return getBoundsIntersection(nodeBounds, getCapacityMeshNodeBounds(cutoutNode))
+  return getBoundsIntersection(
+    nodeBounds,
+    getCapacityMeshNodeBounds(cutoutNode),
+  )
 }
 
 function isCellCoveredByCutout({
@@ -636,6 +559,150 @@ function createPlanarFragmentsAroundCutouts({
   return fragments
 }
 
+function shouldUseNodeForTopologyInterface(node: CapacityMeshNode): boolean {
+  if (!isRoutingNode(node)) return false
+  if (shouldPreserveGlobalNodeAsCutout(node)) return false
+  if (!Number.isFinite(node.width) || !Number.isFinite(node.height)) {
+    return false
+  }
+
+  return node.width > GEOMETRY_EPSILON && node.height > GEOMETRY_EPSILON
+}
+
+function createTopologyInterfaceCandidatesForDomains({
+  domains,
+  viaDiameter,
+}: {
+  domains: TopologyDomain[]
+  viaDiameter: number | undefined
+}): TopologyInterfaceCandidate[] {
+  const interfaceCandidates: TopologyInterfaceCandidate[] = []
+
+  for (
+    let firstDomainIndex = 0;
+    firstDomainIndex < domains.length;
+    firstDomainIndex++
+  ) {
+    const firstDomain = domains[firstDomainIndex]!
+    const firstNodes = firstDomain.nodes.filter(
+      shouldUseNodeForTopologyInterface,
+    )
+
+    for (
+      let secondDomainIndex = firstDomainIndex + 1;
+      secondDomainIndex < domains.length;
+      secondDomainIndex++
+    ) {
+      const secondDomain = domains[secondDomainIndex]!
+      const secondNodes = secondDomain.nodes.filter(
+        shouldUseNodeForTopologyInterface,
+      )
+
+      for (const firstNode of firstNodes) {
+        for (const secondNode of secondNodes) {
+          const candidate = getTopologyInterfaceCandidate({
+            globalNode: firstNode,
+            componentNode: secondNode,
+            viaDiameter,
+          })
+          if (!candidate) continue
+
+          interfaceCandidates.push({
+            bounds: candidate.bounds,
+            availableZ: candidate.availableZ,
+            sourceNodeIds: getSortedUniqueStrings(candidate.sourceNodeIds),
+          })
+        }
+      }
+    }
+  }
+
+  return interfaceCandidates
+}
+
+function createPlanarTopologyInterfaceNodes({
+  candidates,
+}: {
+  candidates: TopologyInterfaceCandidate[]
+}): CapacityMeshNode[] {
+  if (candidates.length === 0) return []
+
+  const xCuts: number[] = []
+  const yCuts: number[] = []
+  for (const candidate of candidates) {
+    addSortedCutCoordinate(xCuts, candidate.bounds.minX)
+    addSortedCutCoordinate(xCuts, candidate.bounds.maxX)
+    addSortedCutCoordinate(yCuts, candidate.bounds.minY)
+    addSortedCutCoordinate(yCuts, candidate.bounds.maxY)
+  }
+
+  const interfaceNodes: CapacityMeshNode[] = []
+  for (let xIndex = 0; xIndex < xCuts.length - 1; xIndex++) {
+    for (let yIndex = 0; yIndex < yCuts.length - 1; yIndex++) {
+      const cellBounds: Bounds = {
+        minX: xCuts[xIndex]!,
+        maxX: xCuts[xIndex + 1]!,
+        minY: yCuts[yIndex]!,
+        maxY: yCuts[yIndex + 1]!,
+      }
+      if (!isValidCapacityBounds(cellBounds)) continue
+
+      const coveringCandidates = candidates.filter(
+        (candidate: TopologyInterfaceCandidate): boolean =>
+          isCellCoveredByCutout({
+            cellBounds,
+            cutoutBounds: candidate.bounds,
+          }),
+      )
+      if (coveringCandidates.length === 0) continue
+
+      const availableZ = getSortedUniqueZ(
+        coveringCandidates.flatMap(
+          (candidate: TopologyInterfaceCandidate): number[] =>
+            candidate.availableZ,
+        ),
+      )
+      const sourceNodeIds = getSortedUniqueStrings(
+        coveringCandidates.flatMap(
+          (candidate: TopologyInterfaceCandidate): string[] =>
+            candidate.sourceNodeIds,
+        ),
+      )
+      if (availableZ.length === 0 || sourceNodeIds.length === 0) continue
+
+      interfaceNodes.push(
+        createBoundsNode({
+          bounds: cellBounds,
+          capacityMeshNodeId: `topology-interface:${interfaceNodes.length}`,
+          availableZ,
+          role: "interface",
+          componentId: "interface",
+          sourceNodeIds,
+        }),
+      )
+    }
+  }
+
+  return interfaceNodes
+}
+
+function createTopologyInterfaceNodesForDomains({
+  domains,
+  viaDiameter,
+}: {
+  domains: TopologyDomain[]
+  viaDiameter: number | undefined
+}): CapacityMeshNode[] {
+  const candidates = createTopologyInterfaceCandidatesForDomains({
+    domains,
+    viaDiameter,
+  })
+
+  return createPlanarTopologyInterfaceNodes({
+    candidates,
+  })
+}
+
 function createCapacityMeshNodeFromLayeredFragment({
   sourceNode,
   fragment,
@@ -667,8 +734,10 @@ function splitCapacityNodeAroundLayeredCutouts({
   cutoutNodes: CapacityMeshNode[]
 }): CapacityMeshNode[] {
   const nodeAvailableZ = new Set(node.availableZ)
-  const layerRelevantCutoutNodes = cutoutNodes.filter((cutoutNode) =>
-    cutoutNode.availableZ.some((z: number) => nodeAvailableZ.has(z)),
+  const layerRelevantCutoutNodes = cutoutNodes.filter(
+    (cutoutNode: CapacityMeshNode): boolean =>
+      cutoutNode._topologyMergeRole === "interface" ||
+      cutoutNode.availableZ.some((z: number) => nodeAvailableZ.has(z)),
   )
 
   if (node._containsObstacle || layerRelevantCutoutNodes.length === 0) {
@@ -826,7 +895,9 @@ function formatNodeBounds(node: CapacityMeshNode): string {
   ].join(" ")
 }
 
-function assertNoTopologyMergeBoundaryOverlaps(nodes: CapacityMeshNode[]): void {
+function assertNoTopologyMergeBoundaryOverlaps(
+  nodes: CapacityMeshNode[],
+): void {
   const routingNodes = nodes.filter(shouldCheckSameLayerOverlap)
 
   for (let i = 0; i < routingNodes.length; i++) {
@@ -880,7 +951,7 @@ export function mergeTopologyMeshNodes({
     )
   }
 
-  let mergedGlobalNodes = getGlobalMeshNodesForMergedTopology({
+  const initialGlobalNodes = getGlobalMeshNodesForMergedTopology({
     meshNodes: globalMeshNodes,
     components,
   }).map(
@@ -889,58 +960,81 @@ export function mergeTopologyMeshNodes({
       _topologyMergeRole: "global",
     }),
   )
-  const mergedComponentNodeGroups: CapacityMeshNode[][] = []
-  const topologyInterfaceMeshNodes: CapacityMeshNode[] = []
 
-  for (
-    let componentIndex = 0;
-    componentIndex < components.length;
-    componentIndex++
-  ) {
-    const component = components[componentIndex]
-    const rawComponentNodes = componentMeshNodes[componentIndex]
-    if (!component || !rawComponentNodes) {
-      throw new Error(
-        `TopologyMergeSolver missing component or mesh nodes at index ${componentIndex}`,
+  const initialComponentNodeGroups = components.map(
+    (
+      component: SerializedTopologyComponentInput,
+      componentIndex: number,
+    ): CapacityMeshNode[] => {
+      const rawComponentNodes = componentMeshNodes[componentIndex]
+      if (!rawComponentNodes) {
+        throw new Error(
+          `TopologyMergeSolver missing component mesh nodes at index ${componentIndex}`,
+        )
+      }
+
+      const componentNodes = rawComponentNodes.map(
+        (node: CapacityMeshNode): CapacityMeshNode => ({
+          ...node,
+          _topologyMergeRole: "component",
+          _topologyMergeComponentId: component.componentId,
+        }),
       )
-    }
+      const cutoutNodes = getCutoutNodesForComponent({
+        globalNodes: initialGlobalNodes,
+        component,
+      })
 
-    const componentNodes = rawComponentNodes.map(
-      (node: CapacityMeshNode): CapacityMeshNode => ({
-        ...node,
-        _topologyMergeRole: "component",
-        _topologyMergeComponentId: component.componentId,
-      }),
-    )
-    const interfaceNodes = createTopologyInterfaceNodesForComponent({
-      component,
-      componentNodes,
-      globalNodes: mergedGlobalNodes,
-      viaDiameter,
-    })
-    const cutoutNodes = getCutoutNodesForComponent({
-      globalNodes: mergedGlobalNodes,
-      component,
-    })
-    const componentCutouts = [...cutoutNodes, ...interfaceNodes]
-
-    mergedGlobalNodes = splitNodesAroundCutouts({
-      nodes: mergedGlobalNodes,
-      cutoutNodes: interfaceNodes,
-      role: "global",
-      componentId: component.componentId,
-    })
-
-    mergedComponentNodeGroups.push(
-      splitNodesAroundCutouts({
+      return splitNodesAroundCutouts({
         nodes: componentNodes,
-        cutoutNodes: componentCutouts,
+        cutoutNodes,
         role: "component",
         componentId: component.componentId,
+      })
+    },
+  )
+
+  const topologyDomains: TopologyDomain[] = [
+    {
+      domainId: "global",
+      role: "global",
+      componentId: "global",
+      nodes: initialGlobalNodes,
+    },
+    ...components.map(
+      (
+        component: SerializedTopologyComponentInput,
+        componentIndex: number,
+      ): TopologyDomain => ({
+        domainId: component.componentId,
+        role: "component",
+        componentId: component.componentId,
+        nodes: initialComponentNodeGroups[componentIndex]!,
       }),
-    )
-    topologyInterfaceMeshNodes.push(...interfaceNodes)
-  }
+    ),
+  ]
+  const topologyInterfaceMeshNodes = createTopologyInterfaceNodesForDomains({
+    domains: topologyDomains,
+    viaDiameter,
+  })
+  const splitTopologyDomains = topologyDomains.map(
+    (domain: TopologyDomain): TopologyDomain => ({
+      ...domain,
+      nodes: splitNodesAroundCutouts({
+        nodes: domain.nodes,
+        cutoutNodes: topologyInterfaceMeshNodes,
+        role: domain.role,
+        componentId: domain.componentId,
+      }),
+    }),
+  )
+  const mergedGlobalNodes = splitTopologyDomains[0]!.nodes
+  const mergedComponentNodeGroups = components.map(
+    (
+      _component: SerializedTopologyComponentInput,
+      componentIndex: number,
+    ): CapacityMeshNode[] => splitTopologyDomains[componentIndex + 1]!.nodes,
+  )
 
   const mergedMeshNodes = [
     ...mergedGlobalNodes,

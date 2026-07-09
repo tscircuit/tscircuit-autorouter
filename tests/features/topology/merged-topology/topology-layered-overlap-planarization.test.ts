@@ -165,26 +165,22 @@ test("topology merge planarizes layered overlap into aligned interface ports", a
   expect(interfaceNode.height).toBe(2)
 
   expect(
-    output.globalMeshNodes.some(
-      (node: CapacityMeshNode) =>
-        doesNodeMatchBounds({
-          node,
-          bounds: { minX: -1, maxX: 0, minY: 1, maxY: 3 },
-          availableZ: [1, 2, 3],
-        }),
+    output.globalMeshNodes.some((node: CapacityMeshNode) =>
+      doesNodeMatchBounds({
+        node,
+        bounds: { minX: -1, maxX: 0, minY: 1, maxY: 3 },
+        availableZ: [1, 2, 3],
+      }),
     ),
   ).toBe(true)
   expect(
-    output.componentMeshNodes
-      .flat()
-      .some(
-        (node: CapacityMeshNode) =>
-          doesNodeMatchBounds({
-            node,
-            bounds: { minX: -1, maxX: 0, minY: -3, maxY: -1 },
-            availableZ: [0, 1, 2],
-          }),
-      ),
+    output.componentMeshNodes.flat().some((node: CapacityMeshNode) =>
+      doesNodeMatchBounds({
+        node,
+        bounds: { minX: -1, maxX: 0, minY: -3, maxY: -1 },
+        availableZ: [0, 1, 2],
+      }),
+    ),
   ).toBe(true)
   expect(
     routingNodes.some((node: CapacityMeshNode) =>
@@ -207,9 +203,7 @@ test("topology merge planarizes layered overlap into aligned interface ports", a
 
   for (let i = 0; i < routingNodes.length; i++) {
     for (let j = i + 1; j < routingNodes.length; j++) {
-      expect(doNodesOverlapInXy(routingNodes[i]!, routingNodes[j]!)).toBe(
-        false,
-      )
+      expect(doNodesOverlapInXy(routingNodes[i]!, routingNodes[j]!)).toBe(false)
       expect(
         doNodesOverlapOnSharedLayer(routingNodes[i]!, routingNodes[j]!),
       ).toBe(false)
