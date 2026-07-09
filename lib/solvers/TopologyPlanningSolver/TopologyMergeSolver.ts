@@ -13,12 +13,17 @@ import {
   isValidCapacityBounds,
 } from "./capacity-node-geometry"
 import { getGlobalMeshNodesForMergedTopology } from "./get-global-mesh-nodes-for-merged-topology"
-import { splitCapacityNodeAroundCutouts } from "./split-capacity-node-around-cutouts"
 
 type TopologyInterfaceCandidate = {
   bounds: Bounds
   availableZ: number[]
   sourceNodeIds: string[]
+}
+
+type LayeredNodeFragment = {
+  bounds: Bounds
+  availableZ: number[]
+  suffix: string
 }
 
 type TopologyNodeRole = "global" | "component" | "interface"
@@ -46,6 +51,17 @@ function getSortedUniqueStrings(values: string[]): string[] {
   return [...new Set(values)].sort()
 }
 
+function areZSetsEqual(firstZ: number[], secondZ: number[]): boolean {
+  if (firstZ.length !== secondZ.length) return false
+
+  const secondZSet = new Set(secondZ)
+  for (const z of firstZ) {
+    if (!secondZSet.has(z)) return false
+  }
+
+  return true
+}
+
 function getSharedZ(
   firstNode: CapacityMeshNode,
   secondNode: CapacityMeshNode,
@@ -69,6 +85,13 @@ function getBoundsWidth(bounds: Bounds): number {
 
 function getBoundsHeight(bounds: Bounds): number {
   return bounds.maxY - bounds.minY
+}
+
+function getBoundsCenter(bounds: Bounds): { x: number; y: number } {
+  return {
+    x: (bounds.minX + bounds.maxX) / 2,
+    y: (bounds.minY + bounds.maxY) / 2,
+  }
 }
 
 function createBoundsNode({
@@ -306,7 +329,6 @@ function getInterfaceCandidateKey(
     maxX: bounds.maxX.toFixed(9),
     minY: bounds.minY.toFixed(9),
     maxY: bounds.maxY.toFixed(9),
-    availableZ: candidate.availableZ,
   })
 }
 
@@ -343,6 +365,10 @@ function createTopologyInterfaceNodesForComponent({
       const candidateKey = getInterfaceCandidateKey(candidate)
       const existingCandidate = interfaceCandidatesByKey.get(candidateKey)
       if (existingCandidate) {
+        existingCandidate.availableZ = getSortedUniqueZ([
+          ...existingCandidate.availableZ,
+          ...candidate.availableZ,
+        ])
         existingCandidate.sourceNodeIds = getSortedUniqueStrings([
           ...existingCandidate.sourceNodeIds,
           ...candidate.sourceNodeIds,
@@ -366,6 +392,163 @@ function createTopologyInterfaceNodesForComponent({
   )
 }
 
+function subtractLayeredCutoutFromFragment({
+  fragment,
+  cutoutNode,
+  cutoutIndex,
+}: {
+  fragment: LayeredNodeFragment
+  cutoutNode: CapacityMeshNode
+  cutoutIndex: number
+}): LayeredNodeFragment[] {
+  const intersection = getBoundsIntersection(
+    fragment.bounds,
+    getCapacityMeshNodeBounds(cutoutNode),
+  )
+  if (!intersection) return [fragment]
+
+  const cutoutZ = new Set(cutoutNode.availableZ)
+  const overlappingZ = fragment.availableZ.filter((z: number) => cutoutZ.has(z))
+  if (overlappingZ.length === 0) return [fragment]
+
+  const candidateFragments: LayeredNodeFragment[] = [
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: fragment.bounds.maxX,
+        minY: fragment.bounds.minY,
+        maxY: intersection.minY,
+      },
+      availableZ: fragment.availableZ,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_top`,
+    },
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: fragment.bounds.maxX,
+        minY: intersection.maxY,
+        maxY: fragment.bounds.maxY,
+      },
+      availableZ: fragment.availableZ,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_bottom`,
+    },
+    {
+      bounds: {
+        minX: fragment.bounds.minX,
+        maxX: intersection.minX,
+        minY: intersection.minY,
+        maxY: intersection.maxY,
+      },
+      availableZ: fragment.availableZ,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_left`,
+    },
+    {
+      bounds: {
+        minX: intersection.maxX,
+        maxX: fragment.bounds.maxX,
+        minY: intersection.minY,
+        maxY: intersection.maxY,
+      },
+      availableZ: fragment.availableZ,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_right`,
+    },
+  ]
+  const remainingInsideZ = fragment.availableZ.filter(
+    (z: number) => !cutoutZ.has(z),
+  )
+
+  if (remainingInsideZ.length > 0) {
+    candidateFragments.push({
+      bounds: intersection,
+      availableZ: remainingInsideZ,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_layer_remainder`,
+    })
+  }
+
+  return candidateFragments.filter((candidate: LayeredNodeFragment): boolean =>
+    isValidCapacityBounds(candidate.bounds),
+  )
+}
+
+function createCapacityMeshNodeFromLayeredFragment({
+  sourceNode,
+  fragment,
+  capacityMeshNodeId,
+}: {
+  sourceNode: CapacityMeshNode
+  fragment: LayeredNodeFragment
+  capacityMeshNodeId: string
+}): CapacityMeshNode {
+  const availableZ = getSortedUniqueZ(fragment.availableZ)
+  const center = getBoundsCenter(fragment.bounds)
+
+  return {
+    ...sourceNode,
+    capacityMeshNodeId,
+    center,
+    width: getBoundsWidth(fragment.bounds),
+    height: getBoundsHeight(fragment.bounds),
+    layer: `z${availableZ.join(",")}`,
+    availableZ,
+  }
+}
+
+function splitCapacityNodeAroundLayeredCutouts({
+  node,
+  cutoutNodes,
+}: {
+  node: CapacityMeshNode
+  cutoutNodes: CapacityMeshNode[]
+}): CapacityMeshNode[] {
+  const nodeAvailableZ = new Set(node.availableZ)
+  const layerRelevantCutoutNodes = cutoutNodes.filter((cutoutNode) =>
+    cutoutNode.availableZ.some((z: number) => nodeAvailableZ.has(z)),
+  )
+
+  if (node._containsObstacle || layerRelevantCutoutNodes.length === 0) {
+    return [node]
+  }
+
+  let fragments: LayeredNodeFragment[] = [
+    {
+      bounds: getCapacityMeshNodeBounds(node),
+      availableZ: getSortedUniqueZ(node.availableZ),
+      suffix: "",
+    },
+  ]
+
+  for (
+    let cutoutIndex = 0;
+    cutoutIndex < layerRelevantCutoutNodes.length;
+    cutoutIndex++
+  ) {
+    const cutoutNode = layerRelevantCutoutNodes[cutoutIndex]!
+    fragments = fragments.flatMap((fragment: LayeredNodeFragment) =>
+      subtractLayeredCutoutFromFragment({
+        fragment,
+        cutoutNode,
+        cutoutIndex,
+      }),
+    )
+  }
+
+  if (
+    fragments.length === 1 &&
+    fragments[0]!.suffix === "" &&
+    areZSetsEqual(fragments[0]!.availableZ, node.availableZ)
+  ) {
+    return [node]
+  }
+
+  return fragments.map((fragment: LayeredNodeFragment, index: number) =>
+    createCapacityMeshNodeFromLayeredFragment({
+      sourceNode: node,
+      fragment,
+      capacityMeshNodeId: `${node.capacityMeshNodeId}__merge_${index}${fragment.suffix}`,
+    }),
+  )
+}
+
 function splitNodesAroundCutouts({
   nodes,
   cutoutNodes,
@@ -378,7 +561,7 @@ function splitNodesAroundCutouts({
   componentId: string
 }): CapacityMeshNode[] {
   return nodes.flatMap((node: CapacityMeshNode): CapacityMeshNode[] =>
-    splitCapacityNodeAroundCutouts({
+    splitCapacityNodeAroundLayeredCutouts({
       node,
       cutoutNodes,
     }).map((splitNode: CapacityMeshNode): CapacityMeshNode => {
@@ -410,6 +593,92 @@ function getCutoutNodesForComponent({
         obstacle: component.replacementObstacle,
       }),
   )
+}
+
+function doNodesShareAnyZ(
+  firstNode: CapacityMeshNode,
+  secondNode: CapacityMeshNode,
+): boolean {
+  const secondZ = new Set(secondNode.availableZ)
+
+  for (const z of firstNode.availableZ) {
+    if (secondZ.has(z)) return true
+  }
+
+  return false
+}
+
+function shouldCheckSameLayerOverlap(node: CapacityMeshNode): boolean {
+  if (!node._topologyMergeRole) return false
+  if (node._containsObstacle || node._containsTarget) return false
+  if (!Number.isFinite(node.width) || !Number.isFinite(node.height)) {
+    return false
+  }
+
+  return node.width > GEOMETRY_EPSILON && node.height > GEOMETRY_EPSILON
+}
+
+function shouldCheckSameLayerOverlapPair({
+  firstNode,
+  secondNode,
+}: {
+  firstNode: CapacityMeshNode
+  secondNode: CapacityMeshNode
+}): boolean {
+  if (!shouldCheckSameLayerOverlap(firstNode)) return false
+  if (!shouldCheckSameLayerOverlap(secondNode)) return false
+  if (firstNode._topologyMergeRole !== secondNode._topologyMergeRole) {
+    return true
+  }
+  if (firstNode._topologyMergeRole === "interface") return true
+
+  return (
+    firstNode._topologyMergeComponentId !== undefined &&
+    secondNode._topologyMergeComponentId !== undefined &&
+    firstNode._topologyMergeComponentId !== secondNode._topologyMergeComponentId
+  )
+}
+
+function formatNodeBounds(node: CapacityMeshNode): string {
+  const bounds = getCapacityMeshNodeBounds(node)
+
+  return [
+    `minX=${bounds.minX.toFixed(6)}`,
+    `maxX=${bounds.maxX.toFixed(6)}`,
+    `minY=${bounds.minY.toFixed(6)}`,
+    `maxY=${bounds.maxY.toFixed(6)}`,
+    `z=${node.availableZ.join(",")}`,
+  ].join(" ")
+}
+
+function assertNoSameLayerTopologyOverlaps(nodes: CapacityMeshNode[]): void {
+  const routingNodes = nodes.filter(shouldCheckSameLayerOverlap)
+
+  for (let i = 0; i < routingNodes.length; i++) {
+    const firstNode = routingNodes[i]!
+    for (let j = i + 1; j < routingNodes.length; j++) {
+      const secondNode = routingNodes[j]!
+      if (!shouldCheckSameLayerOverlapPair({ firstNode, secondNode })) {
+        continue
+      }
+      if (!doNodesShareAnyZ(firstNode, secondNode)) continue
+
+      const overlapBounds = getBoundsIntersection(
+        getCapacityMeshNodeBounds(firstNode),
+        getCapacityMeshNodeBounds(secondNode),
+      )
+      if (!overlapBounds) continue
+
+      throw new Error(
+        [
+          "TopologyMergeSolver produced overlapping routing nodes on a shared layer:",
+          `${firstNode.capacityMeshNodeId} (${formatNodeBounds(firstNode)})`,
+          `${secondNode.capacityMeshNodeId} (${formatNodeBounds(secondNode)})`,
+          `overlap minX=${overlapBounds.minX.toFixed(6)} maxX=${overlapBounds.maxX.toFixed(6)} minY=${overlapBounds.minY.toFixed(6)} maxY=${overlapBounds.maxY.toFixed(6)}`,
+        ].join(" "),
+      )
+    }
+  }
 }
 
 export function mergeTopologyMeshNodes({
@@ -493,15 +762,19 @@ export function mergeTopologyMeshNodes({
     topologyInterfaceMeshNodes.push(...interfaceNodes)
   }
 
+  const mergedMeshNodes = [
+    ...mergedGlobalNodes,
+    ...mergedComponentNodeGroups.flat(),
+    ...topologyInterfaceMeshNodes,
+  ]
+
+  assertNoSameLayerTopologyOverlaps(mergedMeshNodes)
+
   return {
     globalMeshNodes: mergedGlobalNodes,
     componentMeshNodes: mergedComponentNodeGroups,
     topologyInterfaceMeshNodes,
-    mergedMeshNodes: [
-      ...mergedGlobalNodes,
-      ...mergedComponentNodeGroups.flat(),
-      ...topologyInterfaceMeshNodes,
-    ],
+    mergedMeshNodes,
   }
 }
 
