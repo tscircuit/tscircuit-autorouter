@@ -9,6 +9,7 @@ on:
 
 jobs:
   test:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
