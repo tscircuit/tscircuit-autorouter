@@ -10,7 +10,10 @@ import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/Necessar
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import {
+  MultiGraphTopologyPlannerSolver,
+  type MultiGraphTopologyPlannerSolverOutput,
+} from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -93,6 +96,15 @@ function getComponentCapacityMeshNodeIds(
   return new Set(
     (capacityMeshNodes ?? []).map((node) => node.capacityMeshNodeId),
   )
+}
+
+function getTopologyProtectedMeshNodes(
+  topologyOutput: MultiGraphTopologyPlannerSolverOutput | null | undefined,
+) {
+  return [
+    ...(topologyOutput?.componentMeshNodes.flat() ?? []),
+    ...(topologyOutput?.topologyInterfaceMeshNodes ?? []),
+  ]
 }
 
 /**
@@ -359,7 +371,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       MultiTargetNecessaryCrampedPortPointSolver,
       (cms) => {
         const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-          cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
+          getTopologyProtectedMeshNodes(
+            cms.topologyPlanningSolver?.getOutput(),
+          ),
         )
 
         return [
@@ -383,7 +397,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-            cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
+            getTopologyProtectedMeshNodes(
+              cms.topologyPlanningSolver?.getOutput(),
+            ),
           )
 
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =

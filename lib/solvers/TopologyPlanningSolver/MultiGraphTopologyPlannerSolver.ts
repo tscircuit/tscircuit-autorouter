@@ -7,13 +7,15 @@ import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detecto
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { mergeMeshNodes } from "./merge-mesh-nodes"
+import {
+  TopologyMergeSolver,
+  type TopologyMergeSolverOutput,
+} from "./TopologyMergeSolver"
 import {
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
   type NormalizedTopologyPlannerInput,
   createComponentSrj,
-  filterMeshNodesInsideComponentAreas,
   filterRectDiffNodeRectsInsideComponentAreas,
   normalizeInput,
 } from "./topologyPlanningShared"
@@ -46,6 +48,7 @@ export interface MultiGraphTopologyPlannerSolverOutput {
   componentNoConnectionSrjs: SimpleRouteJson[]
   globalMeshNodes: CapacityMeshNode[]
   componentMeshNodes: CapacityMeshNode[][]
+  topologyInterfaceMeshNodes: CapacityMeshNode[]
   mergedMeshNodes: CapacityMeshNode[]
 }
 
@@ -56,6 +59,7 @@ export interface MultiGraphTopologyPlannerSolverOutput {
 export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams> {
   globalTopologySolver?: RectDiffPipeline
   componentTopologyBatchSolver?: ComponentTopologyBatchSolver
+  topologyMergeSolver?: TopologyMergeSolver
 
   private normalizedInput: NormalizedTopologyPlannerInput
 
@@ -84,6 +88,13 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         },
       ],
     ),
+    definePipelineStep(
+      "topologyMergeSolver",
+      TopologyMergeSolver,
+      (instance: MultiGraphTopologyPlannerSolver) => [
+        instance.getTopologyMergeSolverInput(),
+      ],
+    ),
   ]
 
   constructor(params: MultiGraphTopologyPlannerSolverParams) {
@@ -104,27 +115,27 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
       )?.meshNodes ?? []
-    const globalMeshNodes = filterMeshNodesInsideComponentAreas({
-      meshNodes: rawGlobalMeshNodes,
-      components: this.normalizedInput.components,
-    })
-    const componentMeshNodes =
+    const rawComponentMeshNodes =
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
       )?.componentMeshNodes ?? []
+    const mergeOutput = this.getStageOutput<TopologyMergeSolverOutput>(
+      "topologyMergeSolver",
+    ) ?? {
+      globalMeshNodes: rawGlobalMeshNodes,
+      componentMeshNodes: rawComponentMeshNodes,
+      topologyInterfaceMeshNodes: [],
+      mergedMeshNodes: rawGlobalMeshNodes,
+    }
     const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
 
     return {
       globalNoConnectionSrj: this.normalizedInput.globalNoConnectionSrj,
       componentNoConnectionSrjs,
-      globalMeshNodes,
-      componentMeshNodes,
-      mergedMeshNodes: mergeMeshNodes({
-        globalMeshNodes: rawGlobalMeshNodes,
-        components: this.normalizedInput.components,
-        componentMeshNodes,
-        mergeStrategy: "concat",
-      }),
+      globalMeshNodes: mergeOutput.globalMeshNodes,
+      componentMeshNodes: mergeOutput.componentMeshNodes,
+      topologyInterfaceMeshNodes: mergeOutput.topologyInterfaceMeshNodes,
+      mergedMeshNodes: mergeOutput.mergedMeshNodes,
     }
   }
 
@@ -157,17 +168,37 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
             node.capacityMeshNodeId.includes(candidate.componentId),
           )
           const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
+          const isInterfaceNode = node._topologyMergeRole === "interface"
+          const isComponentNode = node._topologyMergeRole === "component"
           return {
             ...rect,
             fill: node._containsObstacle
               ? safeTransparentize("red", 0.82)
-              : "rgba(0, 120, 255, 0.12)",
+              : isInterfaceNode
+                ? "rgba(255, 155, 20, 0.28)"
+                : isComponentNode
+                  ? "rgba(0, 120, 255, 0.12)"
+                  : "rgba(70, 80, 95, 0.1)",
             stroke: node._containsObstacle
               ? safeTransparentize("red", 0.3)
-              : "rgba(0, 120, 255, 0.55)",
-            label: component
-              ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
-              : node.capacityMeshNodeId,
+              : isInterfaceNode
+                ? "rgba(205, 110, 0, 0.78)"
+                : isComponentNode
+                  ? "rgba(0, 120, 255, 0.55)"
+                  : "rgba(70, 80, 95, 0.42)",
+            label: isInterfaceNode
+              ? [
+                  `INTERFACE ${node.capacityMeshNodeId}`,
+                  `availableZ: ${node.availableZ.join(",")}`,
+                  node._topologyMergeSourceNodeIds?.length
+                    ? `from: ${node._topologyMergeSourceNodeIds.join(",")}`
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join("\n")
+              : component
+                ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
+                : node.capacityMeshNodeId,
           }
         }),
       ],
@@ -205,6 +236,30 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
     return {
       simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
       maxGapFillPasses: 4,
+    }
+  }
+
+  /** Builds the explicit component/global topology interface merge input. */
+  private getTopologyMergeSolverInput(): TopologyMergeSolver["inputProblem"] {
+    const rawGlobalMeshNodes =
+      this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
+        "globalTopologySolver",
+      )?.meshNodes ?? []
+    const componentMeshNodes =
+      this.getStageOutput<ComponentTopologyBatchSolverOutput>(
+        "componentTopologyBatchSolver",
+      )?.componentMeshNodes ?? []
+
+    return {
+      globalMeshNodes: rawGlobalMeshNodes,
+      components: this.normalizedInput.components,
+      componentMeshNodes,
+      layerCount: this.inputProblem.inputSrj.layerCount,
+      viaDiameter:
+        this.inputProblem.viaDiameter ??
+        this.inputProblem.inputSrj.minViaPadDiameter ??
+        this.inputProblem.inputSrj.min_via_pad_diameter ??
+        this.inputProblem.inputSrj.minViaDiameter,
     }
   }
 
