@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="600" viewBox="0 0 980 600">
+  <style>
+    .title { font: 700 28px Arial, sans-serif; fill: #111827; }
+    .subtitle { font: 18px Arial, sans-serif; fill: #374151; }
+    .axis { font: 15px Arial, sans-serif; fill: #4b5563; }
+    .value { font: 700 18px Arial, sans-serif; fill: #111827; }
+    .detail { font: 15px Consolas, monospace; fill: #111827; }
+    .note { font: 700 17px Arial, sans-serif; fill: #b45309; }
+  </style>
+  <rect width="980" height="600" fill="#f8fafc" />
+  <text x="48" y="56" class="title">Autorouter obstacle margin clearance snapshot</text>
+  <text x="48" y="91" class="subtitle">Expected: produced different-net clearance grows as defaultObstacleMargin increases.</text>
+  <text x="48" y="120" class="note">Bug: margin 0.2 produces 0.0992mm, smaller than margin 0 at 0.1135mm.</text>
+  <line x1="90" y1="380" x2="850" y2="380" stroke="#94a3b8" stroke-width="2" />
+  <line x1="90" y1="150" x2="90" y2="380" stroke="#94a3b8" stroke-width="2" />
+  <text x="30" y="158" class="axis">0.32mm</text>
+  <text x="42" y="380" class="axis">0mm</text>
+  <polyline points="132.00,298.43 336.00,289.63 540.00,308.68 744.00,298.15" fill="none" stroke="#0f172a" stroke-width="3" stroke-linejoin="round" />
+  
+      <g>
+        <rect x="90" y="298.43" width="84" height="81.57" rx="8" fill="#2563eb" />
+        <text x="132" y="284.43" text-anchor="middle" class="value">0.1135mm</text>
+        <text x="132" y="416" text-anchor="middle" class="axis">margin 0</text>
+      </g>
+
+      <g>
+        <rect x="294" y="289.63" width="84" height="90.37" rx="8" fill="#2563eb" />
+        <text x="336" y="275.63" text-anchor="middle" class="value">0.1257mm</text>
+        <text x="336" y="416" text-anchor="middle" class="axis">margin 0.1</text>
+      </g>
+
+      <g>
+        <rect x="498" y="308.68" width="84" height="71.32" rx="8" fill="#f97316" />
+        <text x="540" y="294.68" text-anchor="middle" class="value">0.0992mm</text>
+        <text x="540" y="416" text-anchor="middle" class="axis">margin 0.2</text>
+      </g>
+
+      <g>
+        <rect x="702" y="298.15" width="84" height="81.85" rx="8" fill="#2563eb" />
+        <text x="744" y="284.15" text-anchor="middle" class="value">0.1139mm</text>
+        <text x="744" y="416" text-anchor="middle" class="axis">margin 0.3</text>
+      </g>
+  <text x="90" y="470" class="detail">defaultObstacleMargin=0 -> min gap 0.1135mm between source_net_1 and source_trace_5 on top</text>
+<text x="90" y="494" class="detail">defaultObstacleMargin=0.1 -> min gap 0.1257mm between source_net_1 and source_trace_5 on top</text>
+<text x="90" y="518" class="detail">defaultObstacleMargin=0.2 -> min gap 0.0992mm between source_net_1 and source_trace_5 on top</text>
+<text x="90" y="542" class="detail">defaultObstacleMargin=0.3 -> min gap 0.1139mm between source_net_1 and source_trace_5 on top</text>
+</svg>
