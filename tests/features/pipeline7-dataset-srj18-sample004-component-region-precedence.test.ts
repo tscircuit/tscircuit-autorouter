@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("pipeline7 dataset-srj18 sample004 uses merged topology for port point pathing endpoints", async (): Promise<void> => {
+test("pipeline7 dataset-srj18 sample004 uses merged topology before solving port points", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 4, 0.1)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     effort: 0.1,
@@ -37,8 +37,13 @@ test("pipeline7 dataset-srj18 sample004 uses merged topology for port point path
   }
 
   expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
   expect(solver.portPointPathingSolver?.failed).toBe(false)
   expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(
+    solver.portPointPathingSolver?.stats
+      .impossibleSingleLayerCrossingNodeCount ?? 0,
+  ).toBe(0)
   expect(
     solver.portPointPathingSolver?.stats.staticallyUnroutableRouteCount ?? 0,
   ).toBe(0)

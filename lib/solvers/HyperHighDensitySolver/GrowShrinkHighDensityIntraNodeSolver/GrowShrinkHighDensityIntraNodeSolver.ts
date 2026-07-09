@@ -6,11 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
-import {
-  createInvalidDirectConnectionRoutes,
-  createInvalidSameLayerCrossingRoutes,
-  hasImpossibleSameLayerCrossingGeometry,
-} from "./invalidSameLayerCrossingGeometry"
+import { hasImpossibleSameLayerCrossingGeometry } from "./invalidSameLayerCrossingGeometry"
 
 type HyperSingleIntraNodeSolverParams = ConstructorParameters<
   typeof HyperSingleIntraNodeSolver
@@ -22,7 +18,6 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
   HyperSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
-    fallbackToInvalidGeometryOnFailure?: boolean
   }
 
 const scalePoint = <T extends { x: number; y: number }>(
@@ -121,16 +116,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
-      this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
-        this.nodeWithPortPoints,
-        params.traceWidth ?? 0.15,
-        params.viaDiameter ?? 0.3,
-      )
-      this.solved = true
-      this.progress = 1
+      this.failed = true
+      this.error =
+        "GrowShrinkHighDensityIntraNodeSolver cannot route single-layer node with different-root same-layer crossings"
       this.stats = {
-        invalidGeometryFallback: true,
-        reason: "single-layer node has same-layer crossings",
+        impossibleGeometry: true,
+        reason: "single-layer node has different-root same-layer crossings",
       }
     }
   }
@@ -199,25 +190,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
-      if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
-        this.solvedRoutes = createInvalidDirectConnectionRoutes(
-          this.nodeWithPortPoints,
-          this.constructorParams.traceWidth ?? 0.15,
-          this.constructorParams.viaDiameter ?? 0.3,
-        )
-        this.solved = true
-        this.failed = false
-        this.progress = 1
-        this.stats = {
-          ...this.stats,
-          invalidGeometryFallback: true,
-          reason: "growth attempts exhausted",
-          lastError: this.error,
-        }
-        this.error = null
-        return
-      }
-
       this.failed = true
       this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
       return
@@ -234,9 +206,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
     if (this.solvedRoutes.length > 0) {
       return {
-        title: this.stats.invalidGeometryFallback
-          ? "Invalid same-layer crossing geometry"
-          : "Grow/shrink high density routes",
+        title: "Grow/shrink high density routes",
         lines: this.solvedRoutes.flatMap((route, routeIndex) =>
           route.route.slice(0, -1).map((point, pointIndex) => {
             const nextPoint = route.route[pointIndex + 1]
@@ -248,12 +218,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               label: connectionLabel(
                 route.connectionName,
                 route.rootConnectionName,
-                [
-                  `z${point.z}`,
-                  this.stats.invalidGeometryFallback
-                    ? "invalid fallback route"
-                    : undefined,
-                ].filter(Boolean) as string[],
+                [`z${point.z}`],
               ),
             }
           }),
@@ -281,12 +246,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             center: this.nodeWithPortPoints.center,
             width: this.nodeWithPortPoints.width,
             height: this.nodeWithPortPoints.height,
-            fill: this.stats.invalidGeometryFallback
-              ? "rgba(245, 158, 11, 0.12)"
-              : "rgba(14, 165, 233, 0.08)",
-            stroke: this.stats.invalidGeometryFallback
-              ? "rgba(217, 119, 6, 0.8)"
-              : "rgba(14, 165, 233, 0.55)",
+            fill: "rgba(14, 165, 233, 0.08)",
+            stroke: "rgba(14, 165, 233, 0.55)",
             label: [
               this.nodeWithPortPoints.capacityMeshNodeId,
               this.stats.reason,

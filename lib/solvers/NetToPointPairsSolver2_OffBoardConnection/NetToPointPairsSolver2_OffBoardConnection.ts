@@ -6,7 +6,9 @@ import {
 import { DSU } from "lib/utils/dsu"
 import {
   areExternallyConnected,
+  getEdgeKey,
   getExternalConnectionState,
+  getRequiredOriginalEdges,
   NetToPointPairsSolver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
@@ -124,12 +126,32 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
-      currentConnection,
-      this.ogSrj,
+    const { pointIdToGroup, zeroWeightEdges, originalTwoPointEdges } =
+      getExternalConnectionState(currentConnection, this.ogSrj)
+    const requiredOriginalEdges = getRequiredOriginalEdges(
+      originalTwoPointEdges,
+      pointIdToGroup,
+    )
+    const requiredOriginalEdgeKeys = new Set(
+      requiredOriginalEdges.map(getEdgeKey),
     )
 
+    for (const edge of requiredOriginalEdges) {
+      this.newConnections.push({
+        pointsToConnect: [edge.from, edge.to],
+        name: edge.name,
+        rootConnectionName:
+          currentConnection.rootConnectionName ?? currentConnection.name,
+        mergedConnectionNames: currentConnection.mergedConnectionNames,
+        netConnectionName:
+          edge.netConnectionName ?? currentConnection.netConnectionName,
+        nominalTraceWidth:
+          edge.nominalTraceWidth ?? currentConnection.nominalTraceWidth,
+      })
+    }
+
     if (currentConnection.pointsToConnect.length === 2) {
+      if (requiredOriginalEdges.length > 0) return
       if (
         areExternallyConnected(
           pointIdToGroup,
@@ -155,7 +177,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+      { extraEdges: [...zeroWeightEdges, ...originalTwoPointEdges] },
     )
 
     let mstEdgeIndex = 0
@@ -163,6 +185,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
         continue
       }
+      if (requiredOriginalEdgeKeys.has(getEdgeKey(mstEdge))) continue
 
       const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
         mstEdge.from,

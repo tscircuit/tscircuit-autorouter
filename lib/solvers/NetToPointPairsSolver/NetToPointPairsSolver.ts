@@ -3,67 +3,171 @@ import {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
+import { getPointKey } from "lib/utils/getPointKey"
+import { DSU } from "lib/utils/dsu"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
+export type WeightedConnectionPointEdge = {
+  from: ConnectionPoint
+  to: ConnectionPoint
+  weight: number
+}
+
+export type OriginalTwoPointConnectionEdge = WeightedConnectionPointEdge & {
+  name: string
+  netConnectionName?: string
+  nominalTraceWidth?: number
+  required: boolean
+}
+
+type ExternalConnectionState = {
+  pointIdToGroup: Map<string, number>
+  zeroWeightEdges: WeightedConnectionPointEdge[]
+  originalTwoPointEdges: OriginalTwoPointConnectionEdge[]
+}
+
+const isSourceTraceConnection = (
+  connection: SimpleRouteConnection,
+): boolean => {
+  const sourceTraceId = (connection as { source_trace_id?: unknown })
+    .source_trace_id
+  if (typeof sourceTraceId === "string") return true
+  if (connection.name.startsWith("source_trace_")) return true
+  return false
+}
+
+const buildExternalConnectionGroups = (
+  allExternalGroups: string[][],
+  pointById: Map<string, ConnectionPoint>,
+): {
+  pointIdToGroup: Map<string, number>
+  zeroWeightEdges: WeightedConnectionPointEdge[]
+} => {
+  const pointIds = [
+    ...new Set(
+      allExternalGroups.flat().filter((pointId) => pointById.has(pointId)),
+    ),
+  ]
+  const dsu = new DSU(pointIds)
+  const zeroWeightEdges: WeightedConnectionPointEdge[] = []
+
+  for (const group of allExternalGroups) {
+    const groupPointIds = group.filter((pointId) => pointById.has(pointId))
+    const representativePointId = groupPointIds[0]
+    if (!representativePointId) continue
+
+    for (let i = 1; i < groupPointIds.length; i++) {
+      const pointId = groupPointIds[i]!
+      dsu.union(representativePointId, pointId)
+      zeroWeightEdges.push({
+        from: pointById.get(representativePointId)!,
+        to: pointById.get(pointId)!,
+        weight: 0,
+      })
+    }
+  }
+
+  const groupIndexByRoot = new Map<string, number>()
+  const pointIdToGroup = new Map<string, number>()
+  for (const pointId of pointIds) {
+    const root = dsu.find(pointId)
+    if (!groupIndexByRoot.has(root)) {
+      groupIndexByRoot.set(root, groupIndexByRoot.size)
+    }
+    pointIdToGroup.set(pointId, groupIndexByRoot.get(root)!)
+  }
+
+  return { pointIdToGroup, zeroWeightEdges }
+}
+
+const getOriginalTwoPointEdges = (
+  connection: SimpleRouteConnection,
+  srj: SimpleRouteJson | undefined,
+  pointByKey: Map<string, ConnectionPoint>,
+): OriginalTwoPointConnectionEdge[] => {
+  const mergedConnectionNames = new Set(connection.mergedConnectionNames ?? [])
+  if (!srj || mergedConnectionNames.size === 0) {
+    return []
+  }
+
+  const edges: OriginalTwoPointConnectionEdge[] = []
+  for (const originalConnection of srj.connections) {
+    if (!mergedConnectionNames.has(originalConnection.name)) continue
+    if (originalConnection.pointsToConnect.length !== 2) continue
+
+    const from = pointByKey.get(
+      getPointKey(originalConnection.pointsToConnect[0]!),
+    )
+    const to = pointByKey.get(
+      getPointKey(originalConnection.pointsToConnect[1]!),
+    )
+    if (!from || !to || getPointKey(from) === getPointKey(to)) continue
+
+    edges.push({
+      from,
+      to,
+      weight: 0,
+      name: originalConnection.name,
+      netConnectionName: originalConnection.netConnectionName,
+      nominalTraceWidth: originalConnection.nominalTraceWidth,
+      required: isSourceTraceConnection(originalConnection),
+    })
+  }
+
+  return edges
+}
+
+export const getEdgeKey = (
+  edge: Pick<WeightedConnectionPointEdge, "from" | "to">,
+): string => {
+  const fromKey = getPointKey(edge.from)
+  const toKey = getPointKey(edge.to)
+  return fromKey < toKey ? `${fromKey}::${toKey}` : `${toKey}::${fromKey}`
+}
+
+export const getRequiredOriginalEdges = (
+  originalTwoPointEdges: OriginalTwoPointConnectionEdge[],
+  pointIdToGroup: Map<string, number>,
+): OriginalTwoPointConnectionEdge[] => {
+  return originalTwoPointEdges.filter(
+    (edge) =>
+      edge.required &&
+      !areExternallyConnected(pointIdToGroup, edge.from, edge.to),
+  )
+}
+
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
   srj?: SimpleRouteJson,
-): {
-  pointIdToGroup: Map<string, number>
-  zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }>
-} => {
+): ExternalConnectionState => {
   const externalGroups = connection.externallyConnectedPointIds ?? []
   const routedTraceGroups = getTraceConnectedPointGroups(connection, srj)
   const allExternalGroups = [...externalGroups, ...routedTraceGroups]
-  const pointIdToGroup = new Map<string, number>()
   const pointById = new Map<string, ConnectionPoint>()
+  const pointByKey = new Map<string, ConnectionPoint>()
 
   for (const point of connection.pointsToConnect) {
+    pointByKey.set(getPointKey(point), point)
     if (point.pointId) {
       pointById.set(point.pointId, point)
     }
   }
 
-  const zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }> = []
+  const { pointIdToGroup, zeroWeightEdges } = buildExternalConnectionGroups(
+    allExternalGroups,
+    pointById,
+  )
+  const originalTwoPointEdges = getOriginalTwoPointEdges(
+    connection,
+    srj,
+    pointByKey,
+  )
 
-  allExternalGroups.forEach((group, idx) => {
-    const groupPoints = group
-      .map((pointId) => pointById.get(pointId))
-      .filter((point): point is ConnectionPoint => Boolean(point))
-
-    for (const point of groupPoints) {
-      if (point.pointId) {
-        pointIdToGroup.set(point.pointId, idx)
-      }
-    }
-
-    const representativePoint = groupPoints[0]
-    if (!representativePoint) {
-      return
-    }
-
-    for (let i = 1; i < groupPoints.length; i++) {
-      zeroWeightEdges.push({
-        from: representativePoint,
-        to: groupPoints[i]!,
-        weight: 0,
-      })
-    }
-  })
-
-  return { pointIdToGroup, zeroWeightEdges }
+  return { pointIdToGroup, zeroWeightEdges, originalTwoPointEdges }
 }
 
 const getTraceConnectedPointGroups = (
@@ -147,12 +251,31 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
-      connection,
-      this.ogSrj,
+    const { pointIdToGroup, zeroWeightEdges, originalTwoPointEdges } =
+      getExternalConnectionState(connection, this.ogSrj)
+    const requiredOriginalEdges = getRequiredOriginalEdges(
+      originalTwoPointEdges,
+      pointIdToGroup,
+    )
+    const requiredOriginalEdgeKeys = new Set(
+      requiredOriginalEdges.map(getEdgeKey),
     )
 
+    for (const edge of requiredOriginalEdges) {
+      this.newConnections.push({
+        pointsToConnect: [edge.from, edge.to],
+        name: edge.name,
+        rootConnectionName: connection.rootConnectionName ?? connection.name,
+        mergedConnectionNames: connection.mergedConnectionNames,
+        netConnectionName:
+          edge.netConnectionName ?? connection.netConnectionName,
+        nominalTraceWidth:
+          edge.nominalTraceWidth ?? connection.nominalTraceWidth,
+      })
+    }
+
     if (connection.pointsToConnect.length === 2) {
+      if (requiredOriginalEdges.length > 0) return
       if (
         areExternallyConnected(
           pointIdToGroup,
@@ -171,12 +294,13 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
+      extraEdges: [...zeroWeightEdges, ...originalTwoPointEdges],
     })
 
     let mstIdx = 0
     for (const edge of edges) {
       if (areExternallyConnected(pointIdToGroup, edge.from, edge.to)) continue
+      if (requiredOriginalEdgeKeys.has(getEdgeKey(edge))) continue
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,

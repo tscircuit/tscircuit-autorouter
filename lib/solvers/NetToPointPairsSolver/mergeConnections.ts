@@ -8,6 +8,26 @@ import {
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
 
+const getMergedRootConnectionName = (params: {
+  mergedNames: Set<string>
+  mergedRootConnectionNames: Set<string>
+  mergedNetConnectionNames: Set<string>
+}): string | undefined => {
+  if (params.mergedRootConnectionNames.size === 1) {
+    return Array.from(params.mergedRootConnectionNames)[0]
+  }
+
+  const logicalSourceNetNames = Array.from(params.mergedNames).filter((name) =>
+    name.startsWith("source_net_"),
+  )
+  if (logicalSourceNetNames.length === 1) return logicalSourceNetNames[0]
+
+  if (params.mergedNetConnectionNames.size === 1) {
+    return Array.from(params.mergedNetConnectionNames)[0]
+  }
+  return undefined
+}
+
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
  * This is useful for grouping related traces/nets that were defined separately
@@ -148,10 +168,11 @@ export function mergeConnections(
         mergedNetConnectionNames.size > 0
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
-      rootConnectionName:
-        mergedRootConnectionNames.size === 1
-          ? Array.from(mergedRootConnectionNames)[0]
-          : undefined,
+      rootConnectionName: getMergedRootConnectionName({
+        mergedNames,
+        mergedRootConnectionNames,
+        mergedNetConnectionNames,
+      }),
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
 

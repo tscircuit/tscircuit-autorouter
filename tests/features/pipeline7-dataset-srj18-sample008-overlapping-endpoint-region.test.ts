@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("pipeline7 dataset-srj18 sample008 picks routable overlapping endpoint region", async (): Promise<void> => {
+test("pipeline7 dataset-srj18 sample008 solves port points without static unroutables", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 8, 0.1)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     effort: 0.1,
@@ -20,7 +20,13 @@ test("pipeline7 dataset-srj18 sample008 picks routable overlapping endpoint regi
   }
 
   expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
   expect(solver.portPointPathingSolver?.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(
+    solver.portPointPathingSolver?.stats
+      .impossibleSingleLayerCrossingNodeCount ?? 0,
+  ).toBe(0)
   expect(
     solver.portPointPathingSolver?.stats.staticallyUnroutableRouteCount ?? 0,
   ).toBe(0)

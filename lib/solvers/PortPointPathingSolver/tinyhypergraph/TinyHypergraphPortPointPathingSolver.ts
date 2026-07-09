@@ -16,6 +16,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
   type DuplicateCongestedPortSolverReport,
+  type Candidate,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
   TinyHyperGraphSolver,
@@ -82,6 +83,14 @@ type LoadedTinyGraph = {
   }
 }
 
+type ImpossibleSingleLayerCrossingNode = {
+  nodeId: CapacityMeshNodeId
+  availableZ: number[]
+  portPointCount: number
+  sameLayerCrossingCount: number
+  differentRootSameLayerCrossingCount: number
+}
+
 const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
   typeof metadata === "object" && metadata !== null
     ? (metadata as TinyRegionMetadata)
@@ -99,7 +108,7 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 1,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-  GREEDY_FINAL_ROUTE_ITERS: 4,
+  GREEDY_FINAL_ROUTE_ITERS: 0,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -107,7 +116,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 1,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-  GREEDY_FINAL_ROUTE_ITERS: 4,
+  GREEDY_FINAL_ROUTE_ITERS: 0,
   MAX_RIPS_WITHOUT_MAX_REGION_COST_IMPROVEMENT: 6,
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST: Number.POSITIVE_INFINITY,
 }
@@ -133,7 +142,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
-    RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
+    RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
 }
@@ -585,7 +594,226 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+const findImpossibleSingleLayerCrossingNodes = (
+  nodesWithPortPoints: NodeWithPortPoints[],
+): ImpossibleSingleLayerCrossingNode[] => {
+  const impossibleNodes: ImpossibleSingleLayerCrossingNode[] = []
+
+  for (const node of nodesWithPortPoints) {
+    const availableZSource = node.availableZ?.length
+      ? node.availableZ
+      : node.portPoints.map((point) => point.z ?? 0)
+    const availableZ = [...new Set(availableZSource)].sort((a, b) => a - b)
+    if (availableZ.length !== 1) continue
+
+    const crossings = getIntraNodeCrossingsUsingCircle(node)
+    if (crossings.numDifferentRootSameLayerCrossings === 0) continue
+
+    impossibleNodes.push({
+      nodeId: node.capacityMeshNodeId,
+      availableZ,
+      portPointCount: node.portPoints.length,
+      sameLayerCrossingCount: crossings.numSameLayerCrossings,
+      differentRootSameLayerCrossingCount:
+        crossings.numDifferentRootSameLayerCrossings,
+    })
+  }
+
+  return impossibleNodes
+}
+
+class DistanceCostTinyHyperGraphSolver extends TinyHyperGraphSolver {
+  override computeG(
+    currentCandidate: Candidate,
+    neighborPortId: number,
+  ): number {
+    const baseCost = super.computeG(currentCandidate, neighborPortId)
+    if (!Number.isFinite(baseCost)) return baseCost
+
+    const dx =
+      this.topology.portX[currentCandidate.portId]! -
+      this.topology.portX[neighborPortId]!
+    const dy =
+      this.topology.portY[currentCandidate.portId]! -
+      this.topology.portY[neighborPortId]!
+    return baseCost + Math.hypot(dx, dy) * this.DISTANCE_TO_COST
+  }
+}
+
+class FinitePathTinyHyperGraphSolver extends DistanceCostTinyHyperGraphSolver {
+  finitePathCandidateExpansionCount = 0
+
+  override _step(): void {
+    const { problem, state } = this
+
+    if (state.currentRouteId === undefined) {
+      if (state.unroutedRoutes.length === 0) {
+        this.onAllRoutesRouted()
+        return
+      }
+
+      state.currentRouteId = state.unroutedRoutes.shift()
+      state.currentRouteNetId = problem.routeNet[state.currentRouteId!]
+      this.routeAttemptCountByRouteId[state.currentRouteId!] += 1
+      this.resetCandidateBestCosts()
+      state.goalPortId = problem.routeEndPort[state.currentRouteId!]
+    }
+
+    this.routeCurrentConnectionWithFinitePath()
+  }
+
+  private routeCurrentConnectionWithFinitePath(): void {
+    const { problem, state, topology } = this
+    const currentRouteId = state.currentRouteId
+    if (currentRouteId === undefined) return
+
+    const startPortId = problem.routeStartPort[currentRouteId]!
+    const startRegionIds = topology.incidentPortRegion[startPortId] ?? []
+    const startCandidates = startRegionIds
+      .filter((regionId) => !this.isRegionReservedForDifferentNet(regionId))
+      .map(
+        (regionId): Candidate => ({
+          portId: startPortId,
+          nextRegionId: regionId,
+          f: 0,
+          g: 0,
+          h: 0,
+        }),
+      )
+
+    if (startCandidates.length === 0) {
+      this.onOutOfCandidates()
+      return
+    }
+
+    const queue: Candidate[] = [...startCandidates]
+    const seenHopIds = new Set(
+      startCandidates.map((candidate) =>
+        this.getHopId(candidate.portId, candidate.nextRegionId),
+      ),
+    )
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      const currentCandidate = queue[queueIndex]!
+      this.finitePathCandidateExpansionCount += 1
+
+      if (this.isRegionReservedForDifferentNet(currentCandidate.nextRegionId)) {
+        continue
+      }
+
+      for (const neighborPortId of this.getSortedNeighborPortIds(
+        currentCandidate.nextRegionId,
+      )) {
+        const assignedNetId = state.portAssignment[neighborPortId]
+        if (this.isPortReservedForDifferentNet(neighborPortId)) continue
+        if (neighborPortId === currentCandidate.portId) continue
+
+        const nextCost = this.computeG(currentCandidate, neighborPortId)
+        if (!Number.isFinite(nextCost)) continue
+
+        if (neighborPortId === state.goalPortId) {
+          if (
+            assignedNetId !== -1 &&
+            assignedNetId !== state.currentRouteNetId
+          ) {
+            continue
+          }
+          this.onPathFound(currentCandidate)
+          return
+        }
+
+        if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+          continue
+        }
+        if (problem.portSectionMask[neighborPortId] === 0) continue
+
+        const nextRegionId = this.getNextRegionId(
+          currentCandidate.nextRegionId,
+          neighborPortId,
+        )
+        if (
+          nextRegionId === undefined ||
+          this.isRegionReservedForDifferentNet(nextRegionId)
+        ) {
+          continue
+        }
+
+        const hopId = this.getHopId(neighborPortId, nextRegionId)
+        if (seenHopIds.has(hopId)) continue
+        seenHopIds.add(hopId)
+        queue.push({
+          prevRegionId: currentCandidate.nextRegionId,
+          nextRegionId,
+          portId: neighborPortId,
+          g: nextCost,
+          h: this.computeH(neighborPortId),
+          f: nextCost,
+          prevCandidate: currentCandidate,
+        })
+      }
+    }
+
+    this.onOutOfCandidates()
+  }
+
+  private getNextRegionId(
+    currentRegionId: number,
+    portId: number,
+  ): number | undefined {
+    const incidentRegions = this.topology.incidentPortRegion[portId] ?? []
+    return incidentRegions[0] === currentRegionId
+      ? incidentRegions[1]
+      : incidentRegions[0]
+  }
+
+  private getSortedNeighborPortIds(regionId: number): number[] {
+    const goalPortId = this.state.goalPortId
+    const goalX = this.topology.portX[goalPortId] ?? 0
+    const goalY = this.topology.portY[goalPortId] ?? 0
+    return [...(this.topology.regionIncidentPorts[regionId] ?? [])].sort(
+      (leftPortId, rightPortId) => {
+        const leftDistance = Math.hypot(
+          (this.topology.portX[leftPortId] ?? 0) - goalX,
+          (this.topology.portY[leftPortId] ?? 0) - goalY,
+        )
+        const rightDistance = Math.hypot(
+          (this.topology.portX[rightPortId] ?? 0) - goalX,
+          (this.topology.portY[rightPortId] ?? 0) - goalY,
+        )
+        return leftDistance - rightDistance
+      },
+    )
+  }
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+  override pipelineDef = [
+    {
+      solverName: "solveGraph",
+      solverClass: FinitePathTinyHyperGraphSolver,
+      getConstructorParams: (
+        instance: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+      ) => {
+        const { topology, problem } = instance.loadHyperGraph(
+          instance.inputProblem.serializedHyperGraph,
+        )
+
+        return [
+          topology,
+          problem,
+          instance.getSolveGraphOptions(),
+        ] as ConstructorParameters<typeof FinitePathTinyHyperGraphSolver>
+      },
+    },
+    {
+      solverName: "optimizeSection",
+      solverClass: TinyHyperGraphSectionSolver,
+      getConstructorParams: (
+        instance: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+      ) => instance.getSectionStageParams(),
+    },
+  ]
+
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
@@ -618,17 +846,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
-    try {
-      super._step()
-    } catch (error) {
-      if (this.tryAcceptSolveGraphWithoutSerializedOutput(error)) {
-        return
-      }
-      if (this.trySkipOptimizeSection(error)) {
-        return
-      }
-      throw error
-    }
+    super._step()
     this.configureSolver(this.activeSubSolver)
   }
 
@@ -672,58 +890,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
     this.configuredSolvers.add(solver)
   }
-
-  private trySkipOptimizeSection(error: unknown) {
-    if (this.getCurrentStageName() !== "optimizeSection") {
-      return false
-    }
-
-    const solveGraphOutput =
-      this.getStageOutput<SerializedHyperGraph>("solveGraph")
-
-    if (!solveGraphOutput) {
-      return false
-    }
-
-    this.pipelineOutputs.optimizeSection = solveGraphOutput
-    this.finishWithExistingSolverState({
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private tryAcceptSolveGraphWithoutSerializedOutput(error: unknown) {
-    if (this.getCurrentStageName() !== "solveGraph") {
-      return false
-    }
-
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (!solveGraphSolver?.solved || solveGraphSolver.failed) {
-      return false
-    }
-
-    this.finishWithExistingSolverState({
-      solveGraphSerializationSkipped: true,
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private finishWithExistingSolverState(extraStats: Record<string, unknown>) {
-    this.currentPipelineStageIndex = this.pipelineDef.length
-    this.activeSubSolver = null
-    this.solved = true
-    this.failed = false
-    this.error = null
-    this.stats = {
-      ...this.stats,
-      ...extraStats,
-    }
-  }
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
@@ -754,7 +920,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: true,
             ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-            GREEDY_FINAL_ROUTE_ITERS: 4,
+            GREEDY_FINAL_ROUTE_ITERS: 0,
             MAX_ITERATIONS: Math.ceil(
               2_000_000 * getEffortScale(params.effort),
             ),
@@ -852,6 +1018,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+    this.failOnImpossibleSingleLayerCrossingTopology()
   }
 
   preview(): GraphicsObject {
@@ -880,6 +1047,28 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   private getSolvedTinySolver(): TinyHyperGraphSolver {
     return this.tinyPipelineSolver.getSolvedTinySolver()
+  }
+
+  private failOnImpossibleSingleLayerCrossingTopology(): void {
+    if (!this.solved || this.failed) return
+
+    const impossibleNodes = findImpossibleSingleLayerCrossingNodes(
+      this.getOutput().nodesWithPortPoints,
+    )
+    if (impossibleNodes.length === 0) return
+
+    const sampleNodeIds = impossibleNodes
+      .slice(0, 5)
+      .map((node) => node.nodeId)
+      .join(",")
+    this.solved = false
+    this.failed = true
+    this.error = `TinyHypergraphPortPointPathingSolver produced impossible different-root single-layer crossing topology in ${impossibleNodes.length} nodes: ${sampleNodeIds}`
+    this.stats = {
+      ...this.stats,
+      impossibleSingleLayerCrossingNodeCount: impossibleNodes.length,
+      impossibleSingleLayerCrossingNodes: impossibleNodes.slice(0, 20),
+    }
   }
 
   private getRouteMetadata(

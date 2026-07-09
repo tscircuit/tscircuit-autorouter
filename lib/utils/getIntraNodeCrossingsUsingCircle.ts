@@ -1,5 +1,11 @@
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 
+type Chord = {
+  endpoints: [number, number]
+  connectionName: string
+  rootConnectionName: string
+}
+
 /**
  * Maps a boundary point to a 1D perimeter coordinate.
  * Starting at top-left corner, going clockwise:
@@ -72,21 +78,32 @@ function areCoincident(t1: number, t2: number, eps: number = 1e-6): boolean {
  *
  * Uses O(n^2) algorithm to correctly handle coincident endpoints.
  */
-function countChordCrossings(chords: Array<[number, number]>): number {
-  if (chords.length < 2) return 0
+function countChordCrossings(chords: Chord[]): {
+  total: number
+  differentRoot: number
+} {
+  if (chords.length < 2) {
+    return { total: 0, differentRoot: 0 }
+  }
 
   // Normalize each chord so first endpoint is smaller
-  const normalizedChords = chords.map(([t1, t2]) =>
-    t1 < t2 ? ([t1, t2] as [number, number]) : ([t2, t1] as [number, number]),
-  )
+  const normalizedChords = chords.map((chord) => {
+    const [t1, t2] = chord.endpoints
+    const endpoints =
+      t1 < t2 ? ([t1, t2] as [number, number]) : ([t2, t1] as [number, number])
+    return { ...chord, endpoints }
+  })
 
   let crossings = 0
+  let differentRootCrossings = 0
 
   // Check all pairs of chords
   for (let i = 0; i < normalizedChords.length; i++) {
-    const [a, b] = normalizedChords[i]
+    const chord1 = normalizedChords[i]
+    const [a, b] = chord1.endpoints
     for (let j = i + 1; j < normalizedChords.length; j++) {
-      const [c, d] = normalizedChords[j]
+      const chord2 = normalizedChords[j]
+      const [c, d] = chord2.endpoints
 
       // Skip if chords share a coincident endpoint
       if (
@@ -101,11 +118,14 @@ function countChordCrossings(chords: Array<[number, number]>): number {
       // Two chords cross iff their endpoints interleave: a < c < b < d OR c < a < d < b
       if ((a < c && c < b && b < d) || (c < a && a < d && d < b)) {
         crossings++
+        if (chord1.rootConnectionName !== chord2.rootConnectionName) {
+          differentRootCrossings++
+        }
       }
     }
   }
 
-  return crossings
+  return { total: crossings, differentRoot: differentRootCrossings }
 }
 
 /**
@@ -126,24 +146,33 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
   // Group port points by connectionName
   const connectionPointsMap = new Map<
     string,
-    Array<{ x: number; y: number; z: number }>
+    {
+      rootConnectionName: string
+      points: Array<{ x: number; y: number; z: number }>
+    }
   >()
 
   for (const pp of node.portPoints) {
-    const points = connectionPointsMap.get(pp.connectionName) ?? []
-    // Avoid duplicate points
-    if (!points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)) {
-      points.push({ x: pp.x, y: pp.y, z: pp.z })
+    const existing = connectionPointsMap.get(pp.connectionName) ?? {
+      rootConnectionName: pp.rootConnectionName ?? pp.connectionName,
+      points: [],
     }
-    connectionPointsMap.set(pp.connectionName, points)
+    // Avoid duplicate points
+    if (
+      !existing.points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)
+    ) {
+      existing.points.push({ x: pp.x, y: pp.y, z: pp.z })
+    }
+    connectionPointsMap.set(pp.connectionName, existing)
   }
 
   // Separate same-layer pairs from transition pairs
-  const sameLayerPairsByZ = new Map<number, Array<[number, number]>>()
-  const transitionPairs: Array<[number, number]> = []
+  const sameLayerPairsByZ = new Map<number, Chord[]>()
+  const transitionPairs: Chord[] = []
   let numEntryExitLayerChanges = 0
 
-  for (const [connectionName, points] of connectionPointsMap) {
+  for (const [connectionName, group] of connectionPointsMap) {
+    const { points, rootConnectionName } = group
     if (points.length < 2) continue
 
     // Get the two endpoints for this connection
@@ -158,28 +187,40 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
       // Same layer - add to the layer's chord list
       const z = p1.z
       const chords = sameLayerPairsByZ.get(z) ?? []
-      chords.push([t1, t2])
+      chords.push({
+        endpoints: [t1, t2],
+        connectionName,
+        rootConnectionName,
+      })
       sameLayerPairsByZ.set(z, chords)
     } else {
       // Transition pair - different layers
       numEntryExitLayerChanges++
-      transitionPairs.push([t1, t2])
+      transitionPairs.push({
+        endpoints: [t1, t2],
+        connectionName,
+        rootConnectionName,
+      })
     }
   }
 
   // Count same-layer crossings (per layer, then sum)
   let numSameLayerCrossings = 0
+  let numDifferentRootSameLayerCrossings = 0
   for (const [z, chords] of sameLayerPairsByZ) {
-    numSameLayerCrossings += countChordCrossings(chords)
+    const crossingCounts = countChordCrossings(chords)
+    numSameLayerCrossings += crossingCounts.total
+    numDifferentRootSameLayerCrossings += crossingCounts.differentRoot
   }
 
   // Count transition pair crossings
   // Transition pairs can cross each other regardless of layer
-  const numTransitionPairCrossings = countChordCrossings(transitionPairs)
+  const transitionCrossingCounts = countChordCrossings(transitionPairs)
 
   return {
     numSameLayerCrossings,
+    numDifferentRootSameLayerCrossings,
     numEntryExitLayerChanges,
-    numTransitionPairCrossings,
+    numTransitionPairCrossings: transitionCrossingCounts.total,
   }
 }
