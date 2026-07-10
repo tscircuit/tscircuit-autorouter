@@ -165,7 +165,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       }
       this.newConnections.push({
         ...connection,
-        __rootConnectionNames: connection.__rootConnectionNames ?? [connection.name],
+        __rootConnectionNames: connection.__rootConnectionNames ?? [
+          connection.name,
+        ],
       })
       return
     }
@@ -180,7 +182,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
-        __rootConnectionNames: connection.__rootConnectionNames ?? [connection.name],
+        __rootConnectionNames: connection.__rootConnectionNames ?? [
+          connection.name,
+        ],
         netConnectionName: connection.netConnectionName,
       })
     }
