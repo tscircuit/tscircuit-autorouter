@@ -9,6 +9,7 @@ import type {
   ConnectionPathResult,
   PortPointCandidate,
 } from "../PortPointPathingSolver/PortPointPathingSolver"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 export interface PortPointSectionParams {
   centerOfSectionCapacityNodeId: CapacityMeshNodeId
@@ -217,7 +218,7 @@ function cutPathsToSection(
     if (!result.path || result.path.length === 0) continue
 
     const connectionName = result.connection.name
-    const rootConnectionName = result.connection.__rootConnectionNames?.[0]
+    const rootConnectionName = getConnectionNetworkName(result.connection)
 
     // Find all indices that are within the section
     const indicesInSection: number[] = []

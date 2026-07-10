@@ -14,7 +14,7 @@
         "y": 8.715,
         "z": 0,
         "connectionName": "source_trace_0",
-        "__rootConnectionNames": ["source_trace_0"]
+        "rootConnectionName": "source_trace_0"
       },
       {
         "portPointId": "ce18_pp1_z0",
@@ -22,7 +22,7 @@
         "y": -9.065000000000001,
         "z": 0,
         "connectionName": "source_trace_0",
-        "__rootConnectionNames": ["source_trace_0"]
+        "rootConnectionName": "source_trace_0"
       },
       {
         "portPointId": "ce10_pp1_z0",
@@ -30,7 +30,7 @@
         "y": 1.0950000000000004,
         "z": 0,
         "connectionName": "source_trace_3",
-        "__rootConnectionNames": ["source_trace_3"]
+        "rootConnectionName": "source_trace_3"
       },
       {
         "portPointId": "ce17_pp2_z0",
@@ -38,7 +38,7 @@
         "y": -10.795,
         "z": 0,
         "connectionName": "source_trace_3",
-        "__rootConnectionNames": ["source_trace_3"]
+        "rootConnectionName": "source_trace_3"
       },
       {
         "portPointId": "ce11_pp1_z0",
@@ -46,7 +46,7 @@
         "y": 3.6350000000000007,
         "z": 0,
         "connectionName": "source_trace_2",
-        "__rootConnectionNames": ["source_trace_2"]
+        "rootConnectionName": "source_trace_2"
       },
       {
         "portPointId": "ce17_pp4_z0",
@@ -54,7 +54,7 @@
         "y": -10.175,
         "z": 0,
         "connectionName": "source_trace_2",
-        "__rootConnectionNames": ["source_trace_2"]
+        "rootConnectionName": "source_trace_2"
       },
       {
         "portPointId": "ce9_pp1_z0",
@@ -62,7 +62,7 @@
         "y": -1.4449999999999996,
         "z": 0,
         "connectionName": "source_trace_4",
-        "__rootConnectionNames": ["source_trace_4"]
+        "rootConnectionName": "source_trace_4"
       },
       {
         "portPointId": "ce17_pp1_z0",
@@ -70,7 +70,7 @@
         "y": -11.105,
         "z": 0,
         "connectionName": "source_trace_4",
-        "__rootConnectionNames": ["source_trace_4"]
+        "rootConnectionName": "source_trace_4"
       },
       {
         "portPointId": "ce8_pp1_z0",
@@ -78,7 +78,7 @@
         "y": -3.9849999999999985,
         "z": 0,
         "connectionName": "source_trace_5",
-        "__rootConnectionNames": ["source_trace_5"]
+        "rootConnectionName": "source_trace_5"
       },
       {
         "portPointId": "ce17_pp0_z0",
@@ -86,7 +86,7 @@
         "y": -11.415000000000001,
         "z": 0,
         "connectionName": "source_trace_5",
-        "__rootConnectionNames": ["source_trace_5"]
+        "rootConnectionName": "source_trace_5"
       },
       {
         "portPointId": "ce16_pp2_z0",
@@ -94,7 +94,7 @@
         "y": 10.485000000000001,
         "z": 0,
         "connectionName": "source_trace_6",
-        "__rootConnectionNames": ["source_trace_6"]
+        "rootConnectionName": "source_trace_6"
       },
       {
         "portPointId": "ce30_pp1_z0",
@@ -102,7 +102,7 @@
         "y": 6.175,
         "z": 0,
         "connectionName": "source_trace_6",
-        "__rootConnectionNames": ["source_trace_6"]
+        "rootConnectionName": "source_trace_6"
       },
       {
         "portPointId": "ce13_pp1_z0",
@@ -110,7 +110,7 @@
         "y": 6.175000000000001,
         "z": 0,
         "connectionName": "source_trace_1",
-        "__rootConnectionNames": ["source_trace_1"]
+        "rootConnectionName": "source_trace_1"
       },
       {
         "portPointId": "ce17_pp5_z0",
@@ -118,7 +118,7 @@
         "y": -9.865,
         "z": 0,
         "connectionName": "source_trace_1",
-        "__rootConnectionNames": ["source_trace_1"]
+        "rootConnectionName": "source_trace_1"
       },
       {
         "portPointId": "ce5_pp0_z0",
@@ -126,7 +126,7 @@
         "y": -7.915000000000001,
         "z": 0,
         "connectionName": "source_trace_7",
-        "__rootConnectionNames": ["source_trace_7"]
+        "rootConnectionName": "source_trace_7"
       },
       {
         "portPointId": "ce32_pp1_z0",
@@ -134,7 +134,7 @@
         "y": 8.715,
         "z": 0,
         "connectionName": "source_trace_7",
-        "__rootConnectionNames": ["source_trace_7"]
+        "rootConnectionName": "source_trace_7"
       }
     ],
     "availableZ": [0]

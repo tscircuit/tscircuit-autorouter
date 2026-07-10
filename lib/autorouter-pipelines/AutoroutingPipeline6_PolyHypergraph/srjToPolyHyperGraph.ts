@@ -13,6 +13,7 @@ import type {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 type AnyObstacle = Omit<Obstacle, "type"> & {
   type: string
@@ -182,8 +183,7 @@ export const getPolyGraphConnectionsFromSrj = (
       const pairConnection = getPairConnection(connection, start, end, index)
       return {
         connectionId: pairConnection.name,
-        mutuallyConnectedNetworkId:
-          pairConnection.__rootConnectionNames?.[0] ?? pairConnection.name,
+        mutuallyConnectedNetworkId: getConnectionNetworkName(pairConnection),
         start,
         end,
         simpleRouteConnection: pairConnection,

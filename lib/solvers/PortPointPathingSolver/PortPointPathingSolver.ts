@@ -27,6 +27,7 @@ import { getConnectionsWithNodes as getConnectionsWithNodesShared } from "./getC
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
 import { computeSectionScoreWithJumpers } from "../MultiSectionPortPointOptimizer/computeSectionScoreWithJumpers"
 import { calculateNodeProbabilityOfFailureWithJumpers } from "../MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 export interface PortPointPathingHyperParameters {
   SHUFFLE_SEED?: number
@@ -852,8 +853,9 @@ export class PortPointPathingSolver extends BaseSolver {
     nodeId: CapacityMeshNodeId,
     hasTouchedOffBoardNode?: boolean,
   ) {
-    const currentRootConnectionName =
-      this.currentConnection?.connection.__rootConnectionNames?.[0]
+    const currentRootConnectionName = this.currentConnection
+      ? getConnectionNetworkName(this.currentConnection.connection)
+      : undefined
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
 
     const availablePortPoints: InputPortPoint[] = []
@@ -892,8 +894,9 @@ export class PortPointPathingSolver extends BaseSolver {
   ): InputPortPoint[] {
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
     // const currentNode = this.nodeMap.get(nodeId)
-    const currentRootConnectionName =
-      this.currentConnection?.connection.__rootConnectionNames?.[0]
+    const currentRootConnectionName = this.currentConnection
+      ? getConnectionNetworkName(this.currentConnection.connection)
+      : undefined
 
     // Group by "other side node" + z
     const portsOnSameEdgeMap = new Map<string, InputPortPoint[]>()
@@ -986,8 +989,9 @@ export class PortPointPathingSolver extends BaseSolver {
   ) {
     const currentNode = this.nodeMap.get(nodeId)
     if (!currentNode) return []
-    const currentRootConnectionName =
-      this.currentConnection?.connection.__rootConnectionNames?.[0]
+    const currentRootConnectionName = this.currentConnection
+      ? getConnectionNetworkName(this.currentConnection.connection)
+      : undefined
     const availablePortPoints: (InputPortPoint & {
       throughNodeId: CapacityMeshNodeId
     })[] = []
@@ -1226,7 +1230,7 @@ export class PortPointPathingSolver extends BaseSolver {
         y: startPoint.y,
         z: startCandidate.z,
         connectionName: connection.name,
-        rootConnectionName: connection.__rootConnectionNames?.[0],
+        rootConnectionName: getConnectionNetworkName(connection),
       })
       this.nodeAssignedPortPoints.set(
         startCandidate.currentNodeId,
@@ -1242,7 +1246,7 @@ export class PortPointPathingSolver extends BaseSolver {
         y: endPoint.y,
         z: endCandidate.z,
         connectionName: connection.name,
-        rootConnectionName: connection.__rootConnectionNames?.[0],
+        rootConnectionName: getConnectionNetworkName(connection),
       })
       this.nodeAssignedPortPoints.set(endCandidate.currentNodeId, endPortPoints)
     }
@@ -1336,8 +1340,9 @@ export class PortPointPathingSolver extends BaseSolver {
     }
 
     const connectionName = nextConnection.connection.name
-    const rootConnectionName =
-      nextConnection.connection.__rootConnectionNames?.[0]
+    const rootConnectionName = getConnectionNetworkName(
+      nextConnection.connection,
+    )
     const startPoint = nextConnection.connection.pointsToConnect[0]
 
     if (!this.candidates) {

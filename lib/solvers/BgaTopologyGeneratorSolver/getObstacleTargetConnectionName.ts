@@ -1,4 +1,5 @@
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { isConnectionPointOnObstacle } from "./isConnectionPointOnObstacle"
 
 export function getObstacleTargetConnectionName(input: {
@@ -14,7 +15,7 @@ export function getObstacleTargetConnectionName(input: {
           layerCount: input.srj.layerCount,
         })
       ) {
-        return connection.__rootConnectionNames?.[0] ?? connection.name
+        return getConnectionNetworkName(connection)
       }
     }
   }

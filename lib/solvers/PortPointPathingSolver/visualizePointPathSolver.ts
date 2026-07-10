@@ -349,7 +349,7 @@ export function visualizePointPathSolver(
           color: connectionColor,
           label: [
             `Start: ${currentConnection.connection.name}`,
-            `${currentConnection.connection.__rootConnectionNames?.[0]}`,
+            `${currentConnection.connection.__rootConnectionNames?.join(", ")}`,
           ].join("\n"),
         })
 
@@ -359,7 +359,7 @@ export function visualizePointPathSolver(
           color: connectionColor,
           label: [
             `End: ${currentConnection.connection.name}`,
-            `${currentConnection.connection.__rootConnectionNames?.[0]}`,
+            `${currentConnection.connection.__rootConnectionNames?.join(", ")}`,
           ].join("\n"),
         })
 

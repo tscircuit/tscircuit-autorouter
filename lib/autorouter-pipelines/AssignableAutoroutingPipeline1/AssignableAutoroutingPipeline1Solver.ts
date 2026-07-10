@@ -18,6 +18,7 @@ import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolv
 import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
@@ -719,8 +720,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     const connections = this.srjWithPointPairs?.connections ?? []
 
     for (const connection of connections) {
-      const netConnectionName = connection.netConnectionName
-      const rootConnectionName = connection.__rootConnectionNames?.[0]
+      const connectionNetworkName = getConnectionNetworkName(connection)
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
@@ -732,8 +732,8 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name:
-            netConnectionName ?? rootConnectionName ?? connection.name,
+          connection_name: connectionNetworkName,
+          connectsTo: connection.__rootConnectionNames,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

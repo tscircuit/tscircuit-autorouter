@@ -29,6 +29,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -600,10 +601,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     const allHdRoutes = this._getOutputHdRoutes()
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
-      const netConnectionName =
-        connection.netConnectionName ??
-        this.srj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+      const connectionNetworkName = getConnectionNetworkName(connection)
 
       const hdRoutes = allHdRoutes.filter(
         (r) => r.connectionName === connection.name,
@@ -614,10 +612,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name:
-            netConnectionName ??
-            connection.__rootConnectionNames?.[0] ??
-            connection.name,
+          connection_name: connectionNetworkName,
+          connectsTo: connection.__rootConnectionNames,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

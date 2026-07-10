@@ -23,7 +23,7 @@ test("pipeline7 dataset-srj18 sample006 routes BGA endpoint with aligned mesh bo
   const [params] = portPointPathingSolver!.getConstructorParams()
   const targetRoute = params.connections.find(
     (connection) =>
-      connection.connectionId === "source_trace_53__source_net_131",
+      connection.connectionId === "source_net_131__source_trace_53",
   )
 
   expect(solver.failed).toBe(false)

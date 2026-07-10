@@ -94,7 +94,6 @@ export interface SimpleRouteConnection {
   name: string
   __rootConnectionNames?: string[]
   isOffBoard?: boolean
-  netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
 

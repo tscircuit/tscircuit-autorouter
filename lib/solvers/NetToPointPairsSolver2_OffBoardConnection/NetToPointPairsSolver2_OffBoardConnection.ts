@@ -176,7 +176,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
           currentConnection.name,
         ],
-        netConnectionName: currentConnection.netConnectionName,
       })
     }
   }

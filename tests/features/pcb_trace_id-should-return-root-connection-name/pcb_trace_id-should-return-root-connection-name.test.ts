@@ -25,6 +25,14 @@ test("board#23 trace keeps original connection name", () => {
       "source_trace_0__source_trace_1_mst1_0",
     ]),
   )
+  expect(
+    traces.every(
+      (trace) =>
+        trace.connection_name === "source_trace_0__source_trace_1" &&
+        trace.connectsTo?.includes("source_trace_0") &&
+        trace.connectsTo.includes("source_trace_1"),
+    ),
+  ).toBe(true)
 
   const circuitJson = convertToCircuitJson(boardSrj, traces, {
     minTraceWidth: boardSrj.minTraceWidth,

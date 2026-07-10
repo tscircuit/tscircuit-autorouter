@@ -10,6 +10,7 @@ import type {
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import bugReport from "../../fixtures/bug-reports/simplification-trace-overlap-repro/simplification-trace-overlap-repro.json" with {
   type: "json",
 }
@@ -21,10 +22,7 @@ const convertHdRoutesToPcbTraces = (
   hdRoutes: HighDensityRoute[],
 ): SimplifiedPcbTraces =>
   srjWithPointPairs.connections.flatMap((connection) => {
-    const netConnectionName =
-      connection.netConnectionName ??
-      connection.__rootConnectionNames?.[0] ??
-      connection.name
+    const connectionNetworkName = getConnectionNetworkName(connection)
 
     return hdRoutes
       .filter((route) => route.connectionName === connection.name)
@@ -32,7 +30,7 @@ const convertHdRoutesToPcbTraces = (
         (route, index): SimplifiedPcbTrace => ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
-          connection_name: netConnectionName,
+          connection_name: connectionNetworkName,
           route: convertHdRouteToSimplifiedRoute(route, srj.layerCount),
         }),
       )

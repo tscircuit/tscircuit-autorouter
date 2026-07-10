@@ -3,6 +3,7 @@ import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { LayerName, mapZToLayerName } from "lib/utils/mapZToLayerName"
 
@@ -230,10 +231,7 @@ function createSourceTraces(
       .filter(Boolean)
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
-    const netConnectionName =
-      connection.netConnectionName ||
-      connection.__rootConnectionNames?.[0] ||
-      connection.name
+    const connectionNetworkName = getConnectionNetworkName(connection)
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
@@ -270,7 +268,8 @@ function createSourceTraces(
     // Check if this source_trace already exists
     const existingSourceTrace = sourceTraces.find(
       (st) =>
-        st.type === "source_trace" && st.source_trace_id === netConnectionName,
+        st.type === "source_trace" &&
+        st.source_trace_id === connectionNetworkName,
     )
 
     if (existingSourceTrace) {
@@ -292,7 +291,7 @@ function createSourceTraces(
       // Create a new source_trace for this connection
       sourceTraces.push({
         type: "source_trace",
-        source_trace_id: netConnectionName,
+        source_trace_id: connectionNetworkName,
         connected_source_port_ids: connectedPortIds,
         connected_source_net_ids: getObstacleConnectivityIds(
           obstaclesContainingEndpoints,
@@ -300,6 +299,35 @@ function createSourceTraces(
       })
     }
   })
+
+  for (const route of hdRoutes) {
+    if (!("type" in route) || route.type !== "pcb_trace") continue
+    if (!route.connectsTo || route.connectsTo.length === 0) continue
+    if (
+      sourceTraces.some(
+        (trace) =>
+          trace.type === "source_trace" &&
+          trace.source_trace_id === route.connection_name,
+      )
+    ) {
+      continue
+    }
+
+    const connectedSourcePortIds = srj.connections
+      .filter((connection) => route.connectsTo!.includes(connection.name))
+      .flatMap((connection) =>
+        connection.pointsToConnect.flatMap((point) =>
+          point.pcb_port_id ? [point.pcb_port_id] : [],
+        ),
+      )
+
+    sourceTraces.push({
+      type: "source_trace",
+      source_trace_id: route.connection_name,
+      connected_source_port_ids: Array.from(new Set(connectedSourcePortIds)),
+      connected_source_net_ids: [],
+    })
+  }
 
   return sourceTraces
 }
@@ -669,10 +697,7 @@ export function convertToCircuitJson(
   // Build a map of connection names to simplify lookups
   const connectionMap = new Map<string, string>()
   srjWithPointPairs.connections.forEach((conn) => {
-    connectionMap.set(
-      conn.name,
-      conn.netConnectionName || conn.__rootConnectionNames?.[0] || conn.name,
-    )
+    connectionMap.set(conn.name, getConnectionNetworkName(conn))
   })
 
   // Process routes based on their type

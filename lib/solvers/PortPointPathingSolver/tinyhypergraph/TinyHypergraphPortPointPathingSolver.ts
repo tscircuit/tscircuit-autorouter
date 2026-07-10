@@ -26,6 +26,7 @@ import {
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 type RouteMetadata = {
   connectionId: string
@@ -180,7 +181,9 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
 
 const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
-  routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
+  (routeMetadata.simpleRouteConnection
+    ? getConnectionNetworkName(routeMetadata.simpleRouteConnection)
+    : undefined) ??
   routeMetadata.mutuallyConnectedNetworkId
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>

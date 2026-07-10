@@ -4,6 +4,7 @@ import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
@@ -349,9 +350,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         unsolvedRoutes.length > 1
           ? this.getSharedRootPathRoutes({
               connectionName,
-              rootConnectionName:
-                connection.__rootConnectionNames?.[0] ??
-                hdRoutes[0]?.rootConnectionName,
+              rootConnectionName: getConnectionNetworkName(connection),
               hdRoutes,
               allHdRoutes: canonicalHdRoutes,
               start,

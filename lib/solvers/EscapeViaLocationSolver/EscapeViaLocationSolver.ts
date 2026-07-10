@@ -17,6 +17,7 @@ import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getPointKey } from "lib/utils/getPointKey"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   doesSegmentCrossPolygonBoundary,
@@ -128,7 +129,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
       [
         connection.name,
         ...(connection.__rootConnectionNames ?? []),
-        connection.netConnectionName,
       ].filter((id): id is string => Boolean(id)),
     )
   }
@@ -777,8 +777,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
             x: candidate.x,
             y: candidate.y,
             connectionName: connection.name,
-            rootConnectionName:
-              connection.__rootConnectionNames?.[0] ?? connection.name,
+            rootConnectionName: getConnectionNetworkName(connection),
             sourcePointIndex: pointIndex,
             sourcePointId: point.pointId,
             sourceLayer,

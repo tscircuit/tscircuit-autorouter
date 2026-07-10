@@ -13,6 +13,7 @@ import { CapacityHyperParameters } from "../CapacityHyperParameters"
 import { GraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "../colors"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 export type Candidate = {
   prevCandidate: Candidate | null
@@ -210,7 +211,7 @@ export class CapacityPathingSolver extends BaseSolver {
         capacityPaths.push({
           capacityPathId: connection.connection.name,
           connectionName: connection.connection.name,
-          rootConnectionName: connection.connection.__rootConnectionNames?.[0],
+          rootConnectionName: getConnectionNetworkName(connection.connection),
           nodeIds: path.map((node) => node.capacityMeshNodeId),
         })
       }

@@ -181,7 +181,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         this.fragmentedConnections.push({
           name: fragment.connectionName,
           pointsToConnect,
-          netConnectionName: originalConnection.netConnectionName,
           __rootConnectionNames: originalConnection.__rootConnectionNames,
         })
       }

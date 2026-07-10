@@ -6,6 +6,7 @@ import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
 } from "lib/types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 
 export type RerouteRectRegion = {
   shape: "rect"
@@ -289,7 +290,7 @@ const createRerouteEndpointObstacle = ({
   height: point.width,
   connectedTo: [
     connection.name,
-    connection.__rootConnectionNames?.[0] ?? connection.name,
+    ...(connection.__rootConnectionNames ?? []),
   ],
 })
 
@@ -576,7 +577,7 @@ export const reconnectReroutedSimpleRouteJsonRegion = (
   const rerouteConnectionToRoot = new Map(
     reroutedSrj.connections.map((connection) => [
       connection.name,
-      connection.__rootConnectionNames?.[0] ?? connection.name,
+      getConnectionNetworkName(connection),
     ]),
   )
 

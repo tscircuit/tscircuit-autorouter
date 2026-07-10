@@ -26,7 +26,7 @@
         "y": 10.32,
         "z": 1,
         "connectionName": "source_net_6_mst2",
-        "__rootConnectionNames": ["source_net_6"]
+        "rootConnectionName": "source_net_6"
       },
       {
         "portPointId": "ce290_pp0_z1::1",
@@ -34,7 +34,7 @@
         "y": 10.55,
         "z": 1,
         "connectionName": "source_net_6_mst2",
-        "__rootConnectionNames": ["source_net_6"]
+        "rootConnectionName": "source_net_6"
       },
       {
         "portPointId": "ce915_pp0_z1::1",
@@ -42,7 +42,7 @@
         "y": 10.32,
         "z": 1,
         "connectionName": "source_net_3_mst1",
-        "__rootConnectionNames": ["source_net_3"]
+        "rootConnectionName": "source_net_3"
       },
       {
         "portPointId": "ce504_pp0_z1::1",
@@ -50,7 +50,7 @@
         "y": 10.780000000000001,
         "z": 1,
         "connectionName": "source_net_3_mst1",
-        "__rootConnectionNames": ["source_net_3"]
+        "rootConnectionName": "source_net_3"
       },
       {
         "portPointId": "ce504_pp3_z1::1",
@@ -58,7 +58,7 @@
         "y": 10.780000000000001,
         "z": 1,
         "connectionName": "source_net_3_mst1",
-        "__rootConnectionNames": ["source_net_3"]
+        "rootConnectionName": "source_net_3"
       },
       {
         "portPointId": "ce904_pp0_z1::1",
@@ -66,7 +66,7 @@
         "y": 10.32,
         "z": 1,
         "connectionName": "source_net_3_mst1",
-        "__rootConnectionNames": ["source_net_3"]
+        "rootConnectionName": "source_net_3"
       },
       {
         "portPointId": "ce915_pp1_z1::1",
@@ -74,7 +74,7 @@
         "y": 10.32,
         "z": 1,
         "connectionName": "source_net_2_mst1",
-        "__rootConnectionNames": ["source_net_2"]
+        "rootConnectionName": "source_net_2"
       },
       {
         "portPointId": "ce504_pp1_z1::1",
@@ -82,7 +82,7 @@
         "y": 10.780000000000001,
         "z": 1,
         "connectionName": "source_net_2_mst1",
-        "__rootConnectionNames": ["source_net_2"]
+        "rootConnectionName": "source_net_2"
       }
     ],
     "availableZ": [1]

@@ -30,6 +30,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -861,10 +862,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     const allHdRoutes = this._getOutputHdRoutes()
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
-      const netConnectionName =
-        connection.netConnectionName ??
-        this.originalSrj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+      const connectionNetworkName = getConnectionNetworkName(connection)
 
       const hdRoutes = allHdRoutes.filter(
         (r) => r.connectionName === connection.name,
@@ -875,10 +873,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name:
-            netConnectionName ??
-            connection.__rootConnectionNames?.[0] ??
-            connection.name,
+          connection_name: connectionNetworkName,
+          connectsTo: connection.__rootConnectionNames,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
             defaultViaHoleDiameter: this.viaHoleDiameter,

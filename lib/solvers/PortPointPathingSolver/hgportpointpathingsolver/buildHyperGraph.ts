@@ -5,6 +5,7 @@ import type {
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import {
   getAssignableViaAvailableZ,
   getAssignableViaId,
@@ -235,8 +236,7 @@ export function buildHyperGraph(params: {
 
     connections.push({
       connectionId: connection.name,
-      mutuallyConnectedNetworkId:
-        connection.__rootConnectionNames?.[0] ?? connection.name,
+      mutuallyConnectedNetworkId: getConnectionNetworkName(connection),
       startRegion,
       endRegion,
       simpleRouteConnection: connection,

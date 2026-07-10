@@ -20,6 +20,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getConnectionNetworkName } from "lib/utils/getConnectionNetworkName"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -774,10 +775,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     const allHdRoutes = this._getOutputHdRoutes()
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
-      const netConnectionName =
-        connection.netConnectionName ??
-        this.srj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+      const connectionNetworkName = getConnectionNetworkName(connection)
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
@@ -789,10 +787,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
-          connection_name:
-            netConnectionName ??
-            connection.__rootConnectionNames?.[0] ??
-            connection.name,
+          connection_name: connectionNetworkName,
+          connectsTo: connection.__rootConnectionNames,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }
 

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Root Connection Control Flow</title>
+  <!-- PROTOTYPE: three explainer layouts, switchable with ?variant=A|B|C. -->
+  <style>
+    :root{--ink:#17211b;--muted:#627067;--paper:#f4f1e8;--card:#fffdf7;--line:#c8cec4;--green:#175c3b;--lime:#cde85a;--orange:#ef7d42;--blue:#387ca5;--shadow:0 18px 50px #17211b18}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}button{font:inherit}.shell{max-width:1220px;margin:auto;padding:34px 24px 110px}.eyebrow{color:var(--green);font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero{display:grid;grid-template-columns:1.4fr .7fr;gap:28px;align-items:end;margin:34px 0 40px}.hero h1{font:800 clamp(42px,7vw,88px)/.9 system-ui,sans-serif;letter-spacing:-.06em;margin:8px 0 20px;max-width:880px}.hero p{font:18px/1.55 system-ui,sans-serif;color:var(--muted);max-width:720px}.legend{background:var(--ink);color:white;padding:22px;border-radius:20px;box-shadow:var(--shadow)}.legend div{display:flex;align-items:center;gap:10px;margin:8px 0}.dot{width:10px;height:10px;border-radius:50%;background:var(--lime)}.dot.orange{background:var(--orange)}.dot.blue{background:#7fc7ef}.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}.variant{display:none}.variant.active{display:block}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:34px;align-items:stretch}.step{position:relative;padding:22px;min-height:270px}.step:not(:last-child):after{content:"→";position:absolute;right:-29px;top:44%;font-size:30px;color:var(--green);font-weight:900}.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--lime);font-weight:900}.step h2{font:750 22px/1.1 system-ui,sans-serif;margin:18px 0 10px}.step p{color:var(--muted)}code,.code{font:13px/1.5 ui-monospace,monospace;background:#17211b;color:#e8f1e8;border-radius:12px;padding:14px;display:block;white-space:pre-wrap}.callout{margin-top:34px;padding:24px 28px;border-left:8px solid var(--orange);font:650 20px/1.45 system-ui,sans-serif}.lineage{padding:30px}.lineage-row{display:grid;grid-template-columns:220px 1fr;gap:25px;padding:26px 0;border-bottom:1px solid var(--line)}.lineage-row:last-child{border:0}.label{font:800 20px system-ui,sans-serif}.chips{display:flex;gap:10px;flex-wrap:wrap}.chip{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:white}.chip.root{background:#e9f5a9;border-color:#b1c944}.connector{color:var(--green);font-weight:900;margin:0 6px}.split{display:grid;grid-template-columns:1fr 1fr;gap:24px}.explain{padding:26px}.explain h2{font:750 26px system-ui,sans-serif}.rule{display:grid;grid-template-columns:40px 1fr;gap:12px;margin:22px 0}.rule b{display:grid;place-items:center;width:34px;height:34px;background:var(--orange);color:white;border-radius:8px}.debugger{display:grid;grid-template-columns:270px 1fr;min-height:560px;overflow:hidden}.sidebar{background:var(--ink);color:white;padding:24px}.stage{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;background:transparent;color:#b9c5bd;padding:13px 12px;cursor:pointer}.stage.on{color:white;border-color:var(--lime);background:#ffffff10}.stage small{display:block;color:#8da097}.screen{padding:30px}.screen h2{font:800 34px system-ui,sans-serif;margin:0 0 8px}.stage-content{display:none}.stage-content.on{display:block}.compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}.compare h3{font:700 15px system-ui,sans-serif}.switcher{position:fixed;z-index:10;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:15px;background:#111815;color:white;border:1px solid #ffffff33;padding:9px;border-radius:999px;box-shadow:0 10px 40px #0005}.switcher button{width:40px;height:40px;border:0;border-radius:50%;background:#ffffff14;color:white;cursor:pointer}.switcher button:hover{background:var(--lime);color:var(--ink)}#variant-label{min-width:210px;text-align:center;font-weight:800}.footer-note{text-align:center;color:var(--muted);margin-top:34px}@media(max-width:900px){.hero,.split,.debugger{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.step{min-height:0}.step:not(:last-child):after{content:"↓";right:50%;top:auto;bottom:-34px}.lineage-row{grid-template-columns:1fr}.sidebar{display:flex;overflow:auto}.stage{min-width:180px}.compare{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="eyebrow">tscircuit autorouter · internal data flow</div>
+    <header class="hero">
+      <div><h1>One electrical net. Many routed branches.</h1><p>This page follows a connection from Simple Route JSON through merging and point-pair generation. The key idea: <code style="display:inline;padding:3px 7px">__rootConnectionNames</code> records every original electrical identity represented by a connection.</p></div>
+      <aside class="legend"><div><i class="dot"></i>Persistent root identity</div><div><i class="dot orange"></i>Transformation boundary</div><div><i class="dot blue"></i>Single routed branch</div></aside>
+    </header>
+
+    <section class="variant" data-variant="A">
+      <div class="flow">
+        <article class="panel step"><span class="num">1</span><h2>Receive SRJ</h2><p>Connections arrive with names and points.</p><span class="code">A: p0 → p1
+B: p1 → p2</span></article>
+        <article class="panel step"><span class="num">2</span><h2>Find shared points</h2><p>A disjoint-set groups connections touching the same point key.</p><span class="code">point p1
+├─ connection A
+└─ connection B</span></article>
+        <article class="panel step"><span class="num">3</span><h2>Merge the group</h2><p>Points are deduplicated. Missing roots become each connection's name.</p><span class="code">name: "A__B"
+__rootConnectionNames:
+["A", "B"]</span></article>
+        <article class="panel step"><span class="num">4</span><h2>Create point pairs</h2><p>The MST splits a multi-point net into branches while copying the full root array.</p><span class="code">A__B_mst0
+A__B_mst1</span></article>
+        <article class="panel step"><span class="num">5</span><h2>Route & emit</h2><p>Solvers use a singular branch root where needed; emitted trace IDs stay branch-specific.</p><span class="code">pcb_trace_id:
+"A__B_mst0_0"</span></article>
+      </div>
+      <div class="panel callout">Why an array? A merged connection can represent A and B simultaneously. A singular root would discard information; <code style="display:inline;padding:3px 7px">mergedConnectionNames</code> duplicated that missing information and is now unnecessary.</div>
+    </section>
+
+    <section class="variant" data-variant="B">
+      <div class="panel lineage">
+        <div class="lineage-row"><div class="label">Input identities</div><div class="chips"><span class="chip">connection A</span><span class="chip">connection B</span><span class="connector">share p1</span></div></div>
+        <div class="lineage-row"><div class="label">Root resolution</div><div class="chips"><span class="chip">A has no roots → use "A"</span><span class="chip">B has no roots → use "B"</span></div></div>
+        <div class="lineage-row"><div class="label">Merged identity</div><div class="chips"><span class="chip">name: A__B</span><span class="chip root">root: A</span><span class="chip root">root: B</span></div></div>
+        <div class="lineage-row"><div class="label">Branch identity</div><div class="chips"><span class="chip">A__B_mst0</span><span class="chip">A__B_mst1</span><span class="connector">both carry</span><span class="chip root">[A, B]</span></div></div>
+      </div>
+      <div class="split" style="margin-top:24px"><article class="panel explain"><h2>The invariant</h2><div class="rule"><b>1</b><span>A connection may omit <code style="display:inline;padding:2px 5px">__rootConnectionNames</code> before merging.</span></div><div class="rule"><b>2</b><span>A merged connection always has a non-empty root array.</span></div><div class="rule"><b>3</b><span>No fallback silently invents an unrelated root.</span></div></article><article class="panel explain"><h2>What disappeared</h2><span class="code">// removed
+rootConnectionName?: string
+mergedConnectionNames?: string[]
+
+// canonical internal SRJ metadata
+__rootConnectionNames?: string[]</span></article></div>
+    </section>
+
+    <section class="variant" data-variant="C">
+      <div class="panel debugger"><nav class="sidebar"><button class="stage on" data-stage="0">01 · Input<small>two connections</small></button><button class="stage" data-stage="1">02 · Union<small>shared-point group</small></button><button class="stage" data-stage="2">03 · Merge<small>canonical roots</small></button><button class="stage" data-stage="3">04 · Split<small>MST branches</small></button></nav><div class="screen">
+        <div class="stage-content on" data-content="0"><h2>Input: identity is local</h2><p>Each connection knows its own name. Root metadata is optional at this boundary.</p><div class="compare"><div><h3>Connection A</h3><span class="code">{ name: "A", points: [p0,p1] }</span></div><div><h3>Connection B</h3><span class="code">{ name: "B", points: [p1,p2] }</span></div></div></div>
+        <div class="stage-content" data-content="1"><h2>Union: geometry reveals connectivity</h2><p><strong>p1</strong> appears in both connections, so DSU places A and B in one component.</p><span class="code">find(A) === find(B) // true</span></div>
+        <div class="stage-content" data-content="2"><h2>Merge: preserve every root</h2><p>Because neither input declares roots, their names become roots. The result cannot lose either electrical identity.</p><span class="code">{
+  name: "A__B",
+  __rootConnectionNames: ["A", "B"],
+  pointsToConnect: [p0, p1, p2]
+}</span></div>
+        <div class="stage-content" data-content="3"><h2>Split: route manageable branches</h2><p>The MST creates two point-pair jobs. Their names are operational; the root array is electrical lineage.</p><div class="compare"><span class="code">A__B_mst0
+roots: [A,B]
+p0 → p1</span><span class="code">A__B_mst1
+roots: [A,B]
+p1 → p2</span></div></div>
+      </div></div>
+      <p class="footer-note">Click stages to inspect state at each control-flow boundary.</p>
+    </section>
+  </main>
+  <div class="switcher"><button id="prev" aria-label="Previous variant">←</button><div id="variant-label"></div><button id="next" aria-label="Next variant">→</button></div>
+  <script>
+    const variants=[['A','Control flow'],['B','Data lineage'],['C','Step debugger']];
+    const params=new URLSearchParams(location.search);let index=Math.max(0,variants.findIndex(v=>v[0]===(params.get('variant')||'A')));
+    function render(){const key=variants[index][0];document.querySelectorAll('.variant').forEach(el=>el.classList.toggle('active',el.dataset.variant===key));document.getElementById('variant-label').textContent=`${key} — ${variants[index][1]}`;params.set('variant',key);history.replaceState(null,'',`${location.pathname}?${params}`)}
+    function cycle(delta){index=(index+delta+variants.length)%variants.length;render()}document.getElementById('prev').onclick=()=>cycle(-1);document.getElementById('next').onclick=()=>cycle(1);addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(e.target.tagName)||e.target.isContentEditable)return;if(e.key==='ArrowLeft')cycle(-1);if(e.key==='ArrowRight')cycle(1)});
+    document.querySelectorAll('.stage').forEach(button=>button.onclick=()=>{document.querySelectorAll('.stage').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.stage-content').forEach(x=>x.classList.remove('on'));button.classList.add('on');document.querySelector(`[data-content="${button.dataset.stage}"]`).classList.add('on')});render();
+  </script>
+</body>
+</html>
