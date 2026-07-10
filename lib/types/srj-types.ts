@@ -57,6 +57,7 @@ export interface SimpleRouteJson {
   minTraceToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
+  differentialPairs: Array<DifferentialPair>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
@@ -64,6 +65,11 @@ export interface SimpleRouteJson {
   allowJumpers?: boolean
   /** Available jumper types for routing. Defaults to ["0603"] */
   availableJumperTypes?: JumperType[]
+}
+
+export interface DifferentialPair {
+  connectionNames: [string, string],
+  lengthTolerance: 0.1
 }
 
 export interface Obstacle {
