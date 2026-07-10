@@ -94,11 +94,33 @@ const escapeHtml = (value: unknown): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 
+const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
+  let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "")
+  sanitizedSvg = sanitizedSvg.replace(
+    /<g\b[^>]*\bid=["']crosshair["'][\s\S]*?<\/g>/gi,
+    "",
+  )
+  sanitizedSvg = sanitizedSvg.replace(
+    /<g>\s*<circle\b(?=[^>]*\bdata-type=["']point["'])(?=[^>]*\bdata-label=["']Cursor["'])[^>]*\/>\s*<\/g>/gi,
+    "",
+  )
+  sanitizedSvg = sanitizedSvg.replace(
+    /<text\b(?=[^>]*\bdata-label=["']Cursor["'])[\s\S]*?<\/text>/gi,
+    "",
+  )
+  return sanitizedSvg
+}
+
 const createSnapshotCardHtml = (
   snapshot: BenchmarkSnapshotWithImage,
+  snapshotIndex: number,
 ): string => {
+  const snapshotLabel = escapeHtml(snapshot.label)
+  const snapshotDescriptionId = `snapshot-${snapshotIndex}-description`
+  const sanitizedImageSvg = sanitizeBenchmarkSnapshotSvg(snapshot.imageSvg)
+
   return `<section class="snapshot">
-  <h2>${escapeHtml(snapshot.label)}</h2>
+  <h2>${snapshotLabel}</h2>
   <dl>
     <div><dt>Dataset</dt><dd>${escapeHtml(snapshot.datasetName)}</dd></div>
     <div><dt>Solver</dt><dd>${escapeHtml(snapshot.solverName)}</dd></div>
@@ -108,7 +130,15 @@ const createSnapshotCardHtml = (
     <div><dt>Via</dt><dd>${escapeHtml(snapshot.viaCount)}</dd></div>
     <div><dt>Relaxed DRC</dt><dd>${snapshot.relaxedDrcPassed ? "passed" : "failed"}</dd></div>
   </dl>
-  <div class="snapshot-image" role="img" aria-label="${escapeHtml(snapshot.label)}">${snapshot.imageSvg}</div>
+  <div class="snapshot-viewer" data-snapshot-viewer>
+    <div class="viewer-toolbar" role="toolbar" aria-label="Snapshot View Controls">
+      <p class="viewer-hint">Scroll to zoom. Zoom, then drag to pan.</p>
+      <button type="button" data-viewer-action="reset" aria-label="Reset View">Reset</button>
+      <button type="button" data-viewer-action="fullscreen" aria-label="Enter Fullscreen">Enter Fullscreen</button>
+    </div>
+    <div id="${snapshotDescriptionId}" class="sr-only">Scroll or use the plus and minus keys to zoom. After zooming, drag or use arrow keys to pan ${snapshotLabel}.</div>
+    <div class="snapshot-image" data-viewer-viewport tabindex="0" role="img" aria-label="${snapshotLabel}" aria-describedby="${snapshotDescriptionId}">${sanitizedImageSvg}</div>
+  </div>
 </section>`
 }
 
@@ -119,28 +149,294 @@ const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Benchmark Snapshots</title>
   <style>
-    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #18212f; background: #f7f8fb; }
-    body { margin: 0; padding: 32px; }
+    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #171717; background: #f5f5f4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; overflow-x: hidden; }
+    button { font: inherit; }
+    .skip-link { position: fixed; left: 16px; top: 16px; z-index: 20; transform: translateY(-64px); border: 1px solid #a3a3a3; border-radius: 6px; background: #fff; color: #171717; padding: 8px 12px; text-decoration: none; box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
+    .skip-link:focus-visible { transform: translateY(0); outline: 3px solid #525252; outline-offset: 2px; }
     main { max-width: 1160px; margin: 0 auto; }
-    h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
-    p { margin: 0 0 24px; color: #4d5b6c; }
-    .snapshot, .empty { margin: 24px 0; padding: 20px; border: 1px solid #d8dee8; border-radius: 8px; background: #fff; }
-    h2 { margin: 0 0 14px; font-size: 18px; line-height: 1.3; }
+    h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; text-wrap: balance; }
+    p { margin: 0 0 24px; color: #525252; }
+    .snapshot, .empty { margin: 24px 0; padding: 20px; border: 1px solid #d4d4d4; border-radius: 8px; background: #fbfbfa; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+    .snapshot { content-visibility: auto; contain-intrinsic-size: 860px; }
+    h2 { margin: 0 0 14px; font-size: 18px; line-height: 1.3; text-wrap: balance; overflow-wrap: anywhere; }
     dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; margin: 0 0 18px; }
     dl div { min-width: 0; }
-    dt { font-size: 12px; color: #657184; }
+    dt { font-size: 12px; color: #737373; }
     dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
-    .snapshot-image { display: block; width: 100%; max-width: 1024px; border: 1px solid #e1e6ef; background: #fff; }
-    .snapshot-image svg { display: block; width: 100%; height: auto; }
+    .snapshot-viewer { border: 1px solid #d4d4d4; border-radius: 8px; background: #f5f5f4; overflow: hidden; }
+    .viewer-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; min-height: 48px; padding: 8px; border-bottom: 1px solid #e5e5e5; background: #fafaf9; }
+    .viewer-hint { margin: 0 auto 0 0; color: #525252; font-size: 13px; }
+    .viewer-toolbar button { min-height: 32px; border: 1px solid #a3a3a3; border-radius: 6px; background: #fff; color: #171717; padding: 5px 10px; cursor: pointer; touch-action: manipulation; }
+    .viewer-toolbar button:hover { background: #f5f5f5; border-color: #737373; }
+    .viewer-toolbar button:active { background: #e5e5e5; }
+    .viewer-toolbar button:focus-visible, .snapshot-image:focus-visible { outline: 3px solid #525252; outline-offset: 2px; }
+    .snapshot-image { display: grid; place-items: start; width: 100%; min-height: 320px; max-height: 72vh; aspect-ratio: 1 / 1; overflow: hidden; background: #fbfbfa; cursor: grab; touch-action: pan-y pinch-zoom; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .snapshot-image.is-zoomed { touch-action: none; }
+    .snapshot-image.is-panning { cursor: grabbing; }
+    .snapshot-image svg { display: block; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
+    .snapshot-viewer:fullscreen { display: flex; flex-direction: column; width: 100vw; height: 100vh; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: #f5f5f4; }
+    .snapshot-viewer:fullscreen .viewer-toolbar { flex: 0 0 auto; border: 1px solid #d4d4d4; border-radius: 8px 8px 0 0; }
+    .snapshot-viewer:fullscreen .snapshot-image { flex: 1 1 auto; min-height: 0; max-height: none; aspect-ratio: auto; border: 1px solid #d4d4d4; border-top: 0; border-radius: 0 0 8px 8px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (max-width: 720px) {
+      body { padding: 16px; }
+      .snapshot, .empty { padding: 14px; }
+      .viewer-toolbar { justify-content: flex-start; }
+      .viewer-hint { flex-basis: 100%; }
+      .snapshot-image { min-height: 260px; }
+    }
   </style>
 </head>
 <body>
-  <main>
+  <a class="skip-link" href="#benchmark-snapshots-main">Skip To Snapshots</a>
+  <main id="benchmark-snapshots-main">
     <h1>Benchmark Snapshots</h1>
     <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as inline SVG for crisp offline viewing at any zoom.</p>
 `
 
 const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
+  <script>
+    (() => {
+      const minScale = 1
+      const maxScale = 20
+
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+
+      const getButton = (viewer, action) =>
+        viewer.querySelector('[data-viewer-action="' + action + '"]')
+
+      const applyView = (state) => {
+        const boundedScale = clamp(state.scale, minScale, maxScale)
+        state.scale = boundedScale
+        if (boundedScale === minScale) {
+          state.x = 0
+          state.y = 0
+        }
+        state.viewport.classList.toggle("is-zoomed", boundedScale > minScale)
+        state.svg.style.transform =
+          "translate(" + state.x + "px, " + state.y + "px) scale(" + state.scale + ")"
+      }
+
+      const zoomAt = (state, clientX, clientY, nextScale) => {
+        const rect = state.viewport.getBoundingClientRect()
+        const pointX = clientX - rect.left
+        const pointY = clientY - rect.top
+        const scale = clamp(nextScale, minScale, maxScale)
+        const contentX = (pointX - state.x) / state.scale
+        const contentY = (pointY - state.y) / state.scale
+        state.x = pointX - contentX * scale
+        state.y = pointY - contentY * scale
+        state.scale = scale
+        applyView(state)
+      }
+
+      const zoomFromCenter = (state, multiplier) => {
+        const rect = state.viewport.getBoundingClientRect()
+        zoomAt(
+          state,
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+          state.scale * multiplier,
+        )
+      }
+
+      const resetView = (state) => {
+        state.scale = 1
+        state.x = 0
+        state.y = 0
+        applyView(state)
+      }
+
+      const getPointerDistance = (pointers) => {
+        const first = pointers[0]
+        const second = pointers[1]
+        const deltaX = first.clientX - second.clientX
+        const deltaY = first.clientY - second.clientY
+        return Math.hypot(deltaX, deltaY)
+      }
+
+      const getPointerCenter = (pointers) => {
+        const first = pointers[0]
+        const second = pointers[1]
+        return {
+          clientX: (first.clientX + second.clientX) / 2,
+          clientY: (first.clientY + second.clientY) / 2,
+        }
+      }
+
+      const initViewer = (viewer) => {
+        const viewport = viewer.querySelector("[data-viewer-viewport]")
+        const svg = viewport?.querySelector("svg")
+        if (!viewport || !svg) return
+
+        svg.querySelector("#crosshair")?.remove()
+        svg.querySelectorAll("script").forEach((script) => script.remove())
+
+        const state = {
+          viewer,
+          viewport,
+          svg,
+          scale: 1,
+          x: 0,
+          y: 0,
+          pointers: new Map(),
+          dragStart: null,
+          pinchStart: null,
+        }
+
+        const fullscreenButton = getButton(viewer, "fullscreen")
+
+        getButton(viewer, "reset")?.addEventListener("click", () => {
+          resetView(state)
+        })
+        if (!document.fullscreenEnabled || !viewer.requestFullscreen) {
+          fullscreenButton?.setAttribute("hidden", "")
+        } else {
+          fullscreenButton?.addEventListener("click", async () => {
+            if (document.fullscreenElement === viewer) {
+              await document.exitFullscreen()
+              return
+            }
+            await viewer.requestFullscreen()
+          })
+        }
+
+        viewport.addEventListener(
+          "wheel",
+          (event) => {
+            if (state.scale === minScale && !event.ctrlKey && event.deltaY > 0) {
+              return
+            }
+            event.preventDefault()
+            const multiplier = Math.exp(-event.deltaY * 0.001)
+            zoomAt(state, event.clientX, event.clientY, state.scale * multiplier)
+          },
+          { passive: false },
+        )
+
+        viewport.addEventListener("keydown", (event) => {
+          const panStep = event.shiftKey ? 80 : 32
+          if (event.key === "+" || event.key === "=") {
+            event.preventDefault()
+            zoomFromCenter(state, 1.25)
+          }
+          if (event.key === "-" || event.key === "_") {
+            event.preventDefault()
+            zoomFromCenter(state, 0.8)
+          }
+          if (event.key === "0") {
+            event.preventDefault()
+            resetView(state)
+          }
+          if (state.scale > minScale && event.key === "ArrowLeft") {
+            event.preventDefault()
+            state.x += panStep
+            applyView(state)
+          }
+          if (state.scale > minScale && event.key === "ArrowRight") {
+            event.preventDefault()
+            state.x -= panStep
+            applyView(state)
+          }
+          if (state.scale > minScale && event.key === "ArrowUp") {
+            event.preventDefault()
+            state.y += panStep
+            applyView(state)
+          }
+          if (state.scale > minScale && event.key === "ArrowDown") {
+            event.preventDefault()
+            state.y -= panStep
+            applyView(state)
+          }
+        })
+
+        viewport.addEventListener("pointerdown", (event) => {
+          state.pointers.set(event.pointerId, event)
+          viewport.setPointerCapture?.(event.pointerId)
+          if (state.pointers.size === 1 && state.scale > minScale) {
+            state.dragStart = {
+              clientX: event.clientX,
+              clientY: event.clientY,
+              x: state.x,
+              y: state.y,
+            }
+            viewport.classList.add("is-panning")
+          }
+          if (state.pointers.size === 2) {
+            const pointers = [...state.pointers.values()]
+            state.pinchStart = {
+              distance: getPointerDistance(pointers),
+              scale: state.scale,
+            }
+          }
+        })
+
+        viewport.addEventListener("pointermove", (event) => {
+          if (!state.pointers.has(event.pointerId)) return
+          state.pointers.set(event.pointerId, event)
+          if (state.pointers.size === 2 && state.pinchStart) {
+            const pointers = [...state.pointers.values()]
+            const center = getPointerCenter(pointers)
+            const distance = getPointerDistance(pointers)
+            zoomAt(
+              state,
+              center.clientX,
+              center.clientY,
+              state.pinchStart.scale * (distance / state.pinchStart.distance),
+            )
+            return
+          }
+          if (state.dragStart && state.scale > minScale) {
+            state.x = state.dragStart.x + event.clientX - state.dragStart.clientX
+            state.y = state.dragStart.y + event.clientY - state.dragStart.clientY
+            applyView(state)
+          }
+        })
+
+        const finishPointer = (event) => {
+          state.pointers.delete(event.pointerId)
+          if (state.pointers.size < 2) {
+            state.pinchStart = null
+            state.dragStart = null
+            if (state.pointers.size === 1 && state.scale > minScale) {
+              const pointer = [...state.pointers.values()][0]
+              state.dragStart = {
+                clientX: pointer.clientX,
+                clientY: pointer.clientY,
+                x: state.x,
+                y: state.y,
+              }
+            }
+          }
+          if (state.pointers.size === 0) {
+            state.dragStart = null
+            viewport.classList.remove("is-panning")
+          }
+        }
+
+        viewport.addEventListener("pointerup", finishPointer)
+        viewport.addEventListener("pointercancel", finishPointer)
+        viewport.addEventListener("lostpointercapture", finishPointer)
+        applyView(state)
+      }
+
+      document.querySelectorAll("[data-snapshot-viewer]").forEach(initViewer)
+      document.addEventListener("fullscreenchange", () => {
+        document.querySelectorAll("[data-snapshot-viewer]").forEach((viewer) => {
+          const button = getButton(viewer, "fullscreen")
+          const isFullscreen = document.fullscreenElement === viewer
+          if (!button) return
+          button.textContent = isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"
+          button.setAttribute(
+            "aria-label",
+            isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
+          )
+        })
+      })
+    })()
+  </script>
 </body>
 </html>
 `
@@ -156,8 +452,12 @@ const createBenchmarkSnapshotWriter = async (
   return {
     writeSnapshot: async (snapshot) => {
       snapshotCount += 1
+      const snapshotIndex = snapshotCount
       pendingWrite = pendingWrite.then(() =>
-        appendFile(htmlPath, `${createSnapshotCardHtml(snapshot)}\n`),
+        appendFile(
+          htmlPath,
+          `${createSnapshotCardHtml(snapshot, snapshotIndex)}\n`,
+        ),
       )
       await pendingWrite
     },

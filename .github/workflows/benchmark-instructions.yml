@@ -11,6 +11,7 @@ permissions:
 jobs:
   post-instructions:
     name: Post benchmark instructions
+    if: github.event_name != 'pull_request_target' || !startsWith(github.event.pull_request.head.ref, 'version-bumps/')
     runs-on: ubuntu-latest
     steps:
       - name: Comment benchmark usage
