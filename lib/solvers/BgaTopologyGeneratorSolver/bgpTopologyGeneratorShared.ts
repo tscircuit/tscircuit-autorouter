@@ -55,7 +55,7 @@ function clusterBoundaryValues(values: number[]): number[] {
 }
 
 /** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
-function getObstacleAvailableZ(
+export function getObstacleAvailableZ(
   obstacle: Obstacle,
   layerCount: number,
 ): number[] {

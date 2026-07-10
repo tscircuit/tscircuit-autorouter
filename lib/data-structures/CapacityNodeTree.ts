@@ -13,9 +13,13 @@ export class CapacityNodeTree {
       const nodeMinY = node.center.y - node.height / 2
       const nodeMaxX = node.center.x + node.width / 2
       const nodeMaxY = node.center.y + node.height / 2
-      for (let x = nodeMinX; x <= nodeMaxX; x += this.CELL_SIZE) {
-        for (let y = nodeMinY; y <= nodeMaxY; y += this.CELL_SIZE) {
-          const bucketKey = this.getBucketKey(x, y)
+      const minBucketX = Math.floor(nodeMinX / this.CELL_SIZE)
+      const maxBucketX = Math.floor(nodeMaxX / this.CELL_SIZE)
+      const minBucketY = Math.floor(nodeMinY / this.CELL_SIZE)
+      const maxBucketY = Math.floor(nodeMaxY / this.CELL_SIZE)
+      for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
+        for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
+          const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
           const bucket = this.buckets.get(bucketKey)
           if (!bucket) {
             this.buckets.set(bucketKey, [node])
@@ -43,9 +47,13 @@ export class CapacityNodeTree {
     const minY = centerY - height / 2
     const maxX = centerX + width / 2
     const maxY = centerY + height / 2
-    for (let x = minX; x <= maxX; x += this.CELL_SIZE) {
-      for (let y = minY; y <= maxY; y += this.CELL_SIZE) {
-        const bucketKey = this.getBucketKey(x, y)
+    const minBucketX = Math.floor(minX / this.CELL_SIZE)
+    const maxBucketX = Math.floor(maxX / this.CELL_SIZE)
+    const minBucketY = Math.floor(minY / this.CELL_SIZE)
+    const maxBucketY = Math.floor(maxY / this.CELL_SIZE)
+    for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
+      for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
+        const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
         const bucket = this.buckets.get(bucketKey) || []
         for (const node of bucket) {
           if (alreadyAddedNodes.has(node.capacityMeshNodeId)) continue

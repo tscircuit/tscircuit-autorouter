@@ -1,12 +1,14 @@
 import type { CapacityMeshNode } from "lib/types"
 import type { SerializedTopologyComponentInput } from "./MultiGraphTopologyPlannerSolver"
-import {
-  GEOMETRY_EPSILON,
-  isNodeCenterInsideObstacle,
-  isNodeInsideOrOverlappingObstacle,
-} from "./capacity-node-geometry"
+import { GEOMETRY_EPSILON } from "./capacity-node-geometry"
 
-export function getGlobalMeshNodesForMergedTopology({
+/**
+ * Retains the global topology as an input to common refinement. RectDiff marks
+ * synthetic component replacement regions as obstacles and targets; those
+ * flags describe the temporary global solve, not physical copper keepouts, so
+ * they are cleared before the component-local topology groups are overlaid.
+ */
+export function getGlobalMeshNodesForTopologyMerging({
   meshNodes,
   components,
 }: {
@@ -15,30 +17,20 @@ export function getGlobalMeshNodesForMergedTopology({
 }): CapacityMeshNode[] {
   if (components.length === 0) return meshNodes
 
-  return meshNodes.filter((node) =>
-    components.every((component) => {
-      if (isReplacementRegionNode({ node, component })) return false
-      if (
-        isNodeInsideOrOverlappingObstacle({
-          node,
-          obstacle: component.replacementObstacle,
-        })
-      ) {
-        if (
-          isNodeCenterInsideObstacle({
-            node,
-            obstacle: component.replacementObstacle,
-          })
-        ) {
-          return Boolean(node._containsObstacle || node._containsTarget)
-        }
+  return meshNodes.map((node) => {
+    const isSyntheticComponentRegion = components.some((component) =>
+      isReplacementRegionNode({ node, component }),
+    )
+    if (!isSyntheticComponentRegion) return node
 
-        return true
-      }
-
-      return true
-    }),
-  )
+    return {
+      ...node,
+      _containsObstacle: undefined,
+      _completelyInsideObstacle: undefined,
+      _containsTarget: undefined,
+      _targetConnectionName: undefined,
+    }
+  })
 }
 
 /** Matches a global routing region against a detected component replacement obstacle. */
