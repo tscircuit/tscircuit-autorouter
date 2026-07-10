@@ -13,6 +13,7 @@ export const DATASET_NAMES = [
   "srj18",
   "srj19",
   "srj20",
+  "srj23",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -20,7 +21,7 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 23/srj23"
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -76,6 +77,12 @@ const datasetAliases: Record<string, DatasetName> = {
   "dataset-srj20": "srj20",
   "dataset-srj20-partial-bga-breakouts": "srj20",
   "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts": "srj20",
+  "23": "srj23",
+  dataset23: "srj23",
+  srj23: "srj23",
+  "dataset-srj23": "srj23",
+  "45-degree-trace-srj23": "srj23",
+  "@tsci/0hmx.45-degree-trace-srj23": "srj23",
   zdwiel: "zdwiel",
 }
 
@@ -186,6 +193,8 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
       getSpecifier: (sampleId) =>
         `@tsci/tscircuit.dataset-srj20-partial-bga-breakouts/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
     }),
+  srj23: async () =>
+    (await import("@tsci/0hmX.45-degree-trace-srj23")) as DatasetModule,
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -201,6 +210,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj18: /^sample\d{3}$/,
   srj19: /^sample\d{3}Circuit$/,
   srj20: /^sample\d{3}Circuit$/,
+  srj23: /^circuit\d{3}$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {

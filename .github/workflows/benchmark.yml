@@ -33,7 +33,7 @@ on:
         default: false
         type: boolean
       dataset_name:
-        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, or srj18)"
+        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, srj18, srj19, srj20, or srj23)"
         required: false
         type: string
       profile_solvers:

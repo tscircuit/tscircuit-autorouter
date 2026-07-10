@@ -26,7 +26,7 @@ jobs:
               "",
               "```",
               "/benchmark [benchmark.sh args...]",
-              "/benchmark [solver-name|all] [scenario-limit] --concurrency <n> --effort <n> --dataset <dataset01|zdwiel|srj05|srj11|srj12|srj13|srj14|srj15|srj16|srj18> [--profile-solvers]",
+              "/benchmark [solver-name|all] [scenario-limit] --concurrency <n> --effort <n> --dataset <dataset01|zdwiel|srj05|srj11|srj12|srj13|srj14|srj15|srj16|srj18|srj19|srj20|srj23> [--profile-solvers]",
               "```",
               "",
               "Everything after `/benchmark` is forwarded directly to `./benchmark.sh`, except `--profile-solvers`, which adds main/PR profile comparison tables to the result comment.",
