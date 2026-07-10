@@ -2752,7 +2752,7 @@
   "connections": [
     {
       "name": "source_net_10_reroute_source_net_10_mst1_0_0",
-      "rootConnectionName": "source_net_10",
+      "__rootConnectionNames": ["source_net_10"],
       "pointsToConnect": [
         {
           "x": 14.90061447544839,
@@ -2768,7 +2768,7 @@
     },
     {
       "name": "source_net_7_reroute_source_net_7_mst0_0_0",
-      "rootConnectionName": "source_net_7",
+      "__rootConnectionNames": ["source_net_7"],
       "pointsToConnect": [
         {
           "x": 17.525,

@@ -182,7 +182,7 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           name: fragment.connectionName,
           pointsToConnect,
           netConnectionName: originalConnection.netConnectionName,
-          rootConnectionName: originalConnection.rootConnectionName, // Propagate rootConnectionName
+          __rootConnectionNames: originalConnection.__rootConnectionNames,
         })
       }
     }

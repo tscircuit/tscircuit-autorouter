@@ -2326,7 +2326,7 @@
           "pcb_port_id": "pcb_port_io_pin_001"
         }
       ],
-      "rootConnectionName": "bga_conn_001",
+      "__rootConnectionNames": ["bga_conn_001"],
       "connectedNet": "bga_net_064"
     },
     {
@@ -2348,7 +2348,7 @@
           "pcb_port_id": "pcb_port_io_pin_002"
         }
       ],
-      "rootConnectionName": "bga_conn_002",
+      "__rootConnectionNames": ["bga_conn_002"],
       "connectedNet": "bga_net_073"
     },
     {
@@ -2370,7 +2370,7 @@
           "pcb_port_id": "pcb_port_io_pin_003"
         }
       ],
-      "rootConnectionName": "bga_conn_003",
+      "__rootConnectionNames": ["bga_conn_003"],
       "connectedNet": "bga_net_006"
     },
     {
@@ -2392,7 +2392,7 @@
           "pcb_port_id": "pcb_port_io_pin_004"
         }
       ],
-      "rootConnectionName": "bga_conn_004",
+      "__rootConnectionNames": ["bga_conn_004"],
       "connectedNet": "bga_net_033"
     },
     {
@@ -2414,7 +2414,7 @@
           "pcb_port_id": "pcb_port_io_pin_005"
         }
       ],
-      "rootConnectionName": "bga_conn_005",
+      "__rootConnectionNames": ["bga_conn_005"],
       "connectedNet": "bga_net_076"
     },
     {
@@ -2436,7 +2436,7 @@
           "pcb_port_id": "pcb_port_io_pin_006"
         }
       ],
-      "rootConnectionName": "bga_conn_006",
+      "__rootConnectionNames": ["bga_conn_006"],
       "connectedNet": "bga_net_100"
     },
     {
@@ -2458,7 +2458,7 @@
           "pcb_port_id": "pcb_port_io_pin_007"
         }
       ],
-      "rootConnectionName": "bga_conn_007",
+      "__rootConnectionNames": ["bga_conn_007"],
       "connectedNet": "bga_net_012"
     },
     {
@@ -2480,7 +2480,7 @@
           "pcb_port_id": "pcb_port_io_pin_008"
         }
       ],
-      "rootConnectionName": "bga_conn_008",
+      "__rootConnectionNames": ["bga_conn_008"],
       "connectedNet": "bga_net_072"
     },
     {
@@ -2502,7 +2502,7 @@
           "pcb_port_id": "pcb_port_io_pin_009"
         }
       ],
-      "rootConnectionName": "bga_conn_009",
+      "__rootConnectionNames": ["bga_conn_009"],
       "connectedNet": "bga_net_025"
     },
     {
@@ -2524,7 +2524,7 @@
           "pcb_port_id": "pcb_port_io_pin_010"
         }
       ],
-      "rootConnectionName": "bga_conn_010",
+      "__rootConnectionNames": ["bga_conn_010"],
       "connectedNet": "bga_net_032"
     },
     {
@@ -2546,7 +2546,7 @@
           "pcb_port_id": "pcb_port_io_pin_011"
         }
       ],
-      "rootConnectionName": "bga_conn_011",
+      "__rootConnectionNames": ["bga_conn_011"],
       "connectedNet": "bga_net_046"
     },
     {
@@ -2568,7 +2568,7 @@
           "pcb_port_id": "pcb_port_io_pin_012"
         }
       ],
-      "rootConnectionName": "bga_conn_012",
+      "__rootConnectionNames": ["bga_conn_012"],
       "connectedNet": "bga_net_086"
     },
     {
@@ -2590,7 +2590,7 @@
           "pcb_port_id": "pcb_port_io_pin_013"
         }
       ],
-      "rootConnectionName": "bga_conn_013",
+      "__rootConnectionNames": ["bga_conn_013"],
       "connectedNet": "bga_net_002"
     },
     {
@@ -2612,7 +2612,7 @@
           "pcb_port_id": "pcb_port_io_pin_014"
         }
       ],
-      "rootConnectionName": "bga_conn_014",
+      "__rootConnectionNames": ["bga_conn_014"],
       "connectedNet": "bga_net_050"
     },
     {
@@ -2634,7 +2634,7 @@
           "pcb_port_id": "pcb_port_io_pin_015"
         }
       ],
-      "rootConnectionName": "bga_conn_015",
+      "__rootConnectionNames": ["bga_conn_015"],
       "connectedNet": "bga_net_092"
     },
     {
@@ -2656,7 +2656,7 @@
           "pcb_port_id": "pcb_port_io_pin_016"
         }
       ],
-      "rootConnectionName": "bga_conn_016",
+      "__rootConnectionNames": ["bga_conn_016"],
       "connectedNet": "bga_net_060"
     },
     {
@@ -2678,7 +2678,7 @@
           "pcb_port_id": "pcb_port_io_pin_017"
         }
       ],
-      "rootConnectionName": "bga_conn_017",
+      "__rootConnectionNames": ["bga_conn_017"],
       "connectedNet": "bga_net_088"
     },
     {
@@ -2700,7 +2700,7 @@
           "pcb_port_id": "pcb_port_io_pin_018"
         }
       ],
-      "rootConnectionName": "bga_conn_018",
+      "__rootConnectionNames": ["bga_conn_018"],
       "connectedNet": "bga_net_098"
     },
     {
@@ -2722,7 +2722,7 @@
           "pcb_port_id": "pcb_port_io_pin_019"
         }
       ],
-      "rootConnectionName": "bga_conn_019",
+      "__rootConnectionNames": ["bga_conn_019"],
       "connectedNet": "bga_net_063"
     },
     {
@@ -2744,7 +2744,7 @@
           "pcb_port_id": "pcb_port_io_pin_020"
         }
       ],
-      "rootConnectionName": "bga_conn_020",
+      "__rootConnectionNames": ["bga_conn_020"],
       "connectedNet": "bga_net_054"
     },
     {
@@ -2766,7 +2766,7 @@
           "pcb_port_id": "pcb_port_io_pin_021"
         }
       ],
-      "rootConnectionName": "bga_conn_021",
+      "__rootConnectionNames": ["bga_conn_021"],
       "connectedNet": "bga_net_061"
     },
     {
@@ -2788,7 +2788,7 @@
           "pcb_port_id": "pcb_port_io_pin_022"
         }
       ],
-      "rootConnectionName": "bga_conn_022",
+      "__rootConnectionNames": ["bga_conn_022"],
       "connectedNet": "bga_net_079"
     },
     {
@@ -2810,7 +2810,7 @@
           "pcb_port_id": "pcb_port_io_pin_023"
         }
       ],
-      "rootConnectionName": "bga_conn_023",
+      "__rootConnectionNames": ["bga_conn_023"],
       "connectedNet": "bga_net_091"
     },
     {
@@ -2832,7 +2832,7 @@
           "pcb_port_id": "pcb_port_io_pin_024"
         }
       ],
-      "rootConnectionName": "bga_conn_024",
+      "__rootConnectionNames": ["bga_conn_024"],
       "connectedNet": "bga_net_090"
     },
     {
@@ -2854,7 +2854,7 @@
           "pcb_port_id": "pcb_port_io_pin_025"
         }
       ],
-      "rootConnectionName": "bga_conn_025",
+      "__rootConnectionNames": ["bga_conn_025"],
       "connectedNet": "bga_net_035"
     },
     {
@@ -2876,7 +2876,7 @@
           "pcb_port_id": "pcb_port_io_pin_026"
         }
       ],
-      "rootConnectionName": "bga_conn_026",
+      "__rootConnectionNames": ["bga_conn_026"],
       "connectedNet": "bga_net_023"
     },
     {
@@ -2898,7 +2898,7 @@
           "pcb_port_id": "pcb_port_io_pin_027"
         }
       ],
-      "rootConnectionName": "bga_conn_027",
+      "__rootConnectionNames": ["bga_conn_027"],
       "connectedNet": "bga_net_094"
     },
     {
@@ -2920,7 +2920,7 @@
           "pcb_port_id": "pcb_port_io_pin_028"
         }
       ],
-      "rootConnectionName": "bga_conn_028",
+      "__rootConnectionNames": ["bga_conn_028"],
       "connectedNet": "bga_net_003"
     },
     {
@@ -2942,7 +2942,7 @@
           "pcb_port_id": "pcb_port_io_pin_029"
         }
       ],
-      "rootConnectionName": "bga_conn_029",
+      "__rootConnectionNames": ["bga_conn_029"],
       "connectedNet": "bga_net_043"
     },
     {
@@ -2964,7 +2964,7 @@
           "pcb_port_id": "pcb_port_io_pin_030"
         }
       ],
-      "rootConnectionName": "bga_conn_030",
+      "__rootConnectionNames": ["bga_conn_030"],
       "connectedNet": "bga_net_031"
     }
   ],

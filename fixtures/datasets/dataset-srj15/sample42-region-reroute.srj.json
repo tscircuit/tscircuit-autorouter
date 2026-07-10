@@ -59520,7 +59520,7 @@
   "connections": [
     {
       "name": "source_net_10_reroute_source_net_10_0_0",
-      "rootConnectionName": "source_net_10",
+      "__rootConnectionNames": ["source_net_10"],
       "pointsToConnect": [
         {
           "x": -10.531999999999998,
@@ -59536,7 +59536,7 @@
     },
     {
       "name": "source_net_9_reroute_source_net_9_0_0",
-      "rootConnectionName": "source_net_9",
+      "__rootConnectionNames": ["source_net_9"],
       "pointsToConnect": [
         {
           "x": -13,
@@ -59552,7 +59552,7 @@
     },
     {
       "name": "source_net_8_reroute_source_net_8_0_0",
-      "rootConnectionName": "source_net_8",
+      "__rootConnectionNames": ["source_net_8"],
       "pointsToConnect": [
         {
           "x": -13,
@@ -59568,7 +59568,7 @@
     },
     {
       "name": "source_net_7_reroute_source_net_7_0_0",
-      "rootConnectionName": "source_net_7",
+      "__rootConnectionNames": ["source_net_7"],
       "pointsToConnect": [
         {
           "x": -19.538,
@@ -59584,7 +59584,7 @@
     },
     {
       "name": "source_trace_314_reroute_source_trace_314_0_0",
-      "rootConnectionName": "source_trace_314",
+      "__rootConnectionNames": ["source_trace_314"],
       "pointsToConnect": [
         {
           "x": -14.947999999999999,
@@ -59600,7 +59600,7 @@
     },
     {
       "name": "source_trace_274_reroute_source_trace_274_0_0",
-      "rootConnectionName": "source_trace_274",
+      "__rootConnectionNames": ["source_trace_274"],
       "pointsToConnect": [
         {
           "x": -13,
@@ -59616,7 +59616,7 @@
     },
     {
       "name": "source_trace_267_reroute_source_trace_267_0_0",
-      "rootConnectionName": "source_trace_267",
+      "__rootConnectionNames": ["source_trace_267"],
       "pointsToConnect": [
         {
           "x": -13,
@@ -59632,7 +59632,7 @@
     },
     {
       "name": "source_trace_260_reroute_source_trace_260_0_0",
-      "rootConnectionName": "source_trace_260",
+      "__rootConnectionNames": ["source_trace_260"],
       "pointsToConnect": [
         {
           "x": -13,
@@ -59648,7 +59648,7 @@
     },
     {
       "name": "source_trace_253_reroute_source_trace_253_0_0",
-      "rootConnectionName": "source_trace_253",
+      "__rootConnectionNames": ["source_trace_253"],
       "pointsToConnect": [
         {
           "x": -17.338,
@@ -59664,7 +59664,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst28_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,
@@ -59680,7 +59680,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst28_0_1",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -19.538,
@@ -59696,7 +59696,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst29_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,
@@ -59712,7 +59712,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst30_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,
@@ -59728,7 +59728,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst81_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,

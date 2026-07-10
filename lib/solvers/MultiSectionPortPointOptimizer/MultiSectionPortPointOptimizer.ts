@@ -669,8 +669,9 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
 
       const syntheticConnection: SimpleRouteConnection = {
         name: cutConnectionName,
-        rootConnectionName:
+        __rootConnectionNames: [
           sectionPath.rootConnectionName ?? sectionPath.connectionName,
+        ],
         pointsToConnect: [
           {
             x: startPoint.x,
@@ -727,7 +728,9 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           const syntheticResult: ConnectionPathResult = {
             connection: {
               name: sectionPath.connectionName,
-              rootConnectionName: sectionPath.rootConnectionName,
+              __rootConnectionNames: sectionPath.rootConnectionName
+                ? [sectionPath.rootConnectionName]
+                : undefined,
               pointsToConnect: originalResult.connection.pointsToConnect,
             },
             path: sectionPath.points.map((p) => ({

@@ -14,7 +14,7 @@
         "y": -8,
         "z": 0,
         "connectionName": "power",
-        "rootConnectionName": "power"
+        "__rootConnectionNames": ["power"]
       },
       {
         "portPointId": "pp2",
@@ -22,7 +22,7 @@
         "y": 8,
         "z": 0,
         "connectionName": "power",
-        "rootConnectionName": "power"
+        "__rootConnectionNames": ["power"]
       },
       {
         "portPointId": "pp3",
@@ -30,7 +30,7 @@
         "y": 0,
         "z": 0,
         "connectionName": "ground",
-        "rootConnectionName": "ground"
+        "__rootConnectionNames": ["ground"]
       },
       {
         "portPointId": "pp4",
@@ -38,7 +38,7 @@
         "y": 0,
         "z": 0,
         "connectionName": "ground",
-        "rootConnectionName": "ground"
+        "__rootConnectionNames": ["ground"]
       },
       {
         "portPointId": "pp5",
@@ -46,7 +46,7 @@
         "y": 8,
         "z": 0,
         "connectionName": "data_0",
-        "rootConnectionName": "data_0"
+        "__rootConnectionNames": ["data_0"]
       },
       {
         "portPointId": "pp6",
@@ -54,7 +54,7 @@
         "y": -8,
         "z": 0,
         "connectionName": "data_0",
-        "rootConnectionName": "data_0"
+        "__rootConnectionNames": ["data_0"]
       },
       {
         "portPointId": "pp7",
@@ -62,7 +62,7 @@
         "y": -10,
         "z": 0,
         "connectionName": "data_1",
-        "rootConnectionName": "data_1"
+        "__rootConnectionNames": ["data_1"]
       },
       {
         "portPointId": "pp8",
@@ -70,7 +70,7 @@
         "y": 10,
         "z": 0,
         "connectionName": "data_1",
-        "rootConnectionName": "data_1"
+        "__rootConnectionNames": ["data_1"]
       }
     ],
     "availableZ": [0, 1]

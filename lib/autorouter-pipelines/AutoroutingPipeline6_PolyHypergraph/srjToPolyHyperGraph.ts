@@ -163,7 +163,9 @@ const getPairConnection = (
   return {
     ...connection,
     name,
-    rootConnectionName: connection.rootConnectionName ?? connection.name,
+    __rootConnectionNames: connection.__rootConnectionNames ?? [
+      connection.name,
+    ],
     pointsToConnect: [start, end],
   } satisfies SimpleRouteConnection
 }
@@ -181,7 +183,7 @@ export const getPolyGraphConnectionsFromSrj = (
       return {
         connectionId: pairConnection.name,
         mutuallyConnectedNetworkId:
-          pairConnection.rootConnectionName ?? pairConnection.name,
+          pairConnection.__rootConnectionNames?.[0] ?? pairConnection.name,
         start,
         end,
         simpleRouteConnection: pairConnection,

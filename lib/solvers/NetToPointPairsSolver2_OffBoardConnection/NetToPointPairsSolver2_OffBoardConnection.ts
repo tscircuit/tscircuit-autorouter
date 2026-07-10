@@ -147,8 +147,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
-        rootConnectionName:
-          currentConnection.rootConnectionName ?? currentConnection.name,
+        __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
+          currentConnection.name,
+        ],
       })
       return
     }
@@ -172,9 +173,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       this.newConnections.push({
         pointsToConnect: optimizedMstEdge.pointsToConnect,
         name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
-        rootConnectionName:
-          currentConnection.rootConnectionName ?? currentConnection.name,
-        mergedConnectionNames: currentConnection.mergedConnectionNames,
+        __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
+          currentConnection.name,
+        ],
         netConnectionName: currentConnection.netConnectionName,
       })
     }

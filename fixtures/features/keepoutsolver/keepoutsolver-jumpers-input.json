@@ -3,7 +3,7 @@
     "hdRoutes": [
       {
         "connectionName": "source_trace_0",
-        "rootConnectionName": "source_trace_0",
+        "__rootConnectionNames": ["source_trace_0"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -106,7 +106,7 @@
       },
       {
         "connectionName": "source_trace_1",
-        "rootConnectionName": "source_trace_1",
+        "__rootConnectionNames": ["source_trace_1"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -264,7 +264,7 @@
       },
       {
         "connectionName": "source_trace_2",
-        "rootConnectionName": "source_trace_2",
+        "__rootConnectionNames": ["source_trace_2"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -519,7 +519,7 @@
       },
       {
         "connectionName": "source_trace_3",
-        "rootConnectionName": "source_trace_3",
+        "__rootConnectionNames": ["source_trace_3"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -712,7 +712,7 @@
       },
       {
         "connectionName": "source_trace_4",
-        "rootConnectionName": "source_trace_4",
+        "__rootConnectionNames": ["source_trace_4"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -915,7 +915,7 @@
       },
       {
         "connectionName": "source_trace_5",
-        "rootConnectionName": "source_trace_5",
+        "__rootConnectionNames": ["source_trace_5"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -1143,7 +1143,7 @@
       },
       {
         "connectionName": "source_trace_6",
-        "rootConnectionName": "source_trace_6",
+        "__rootConnectionNames": ["source_trace_6"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [
@@ -1371,7 +1371,7 @@
       },
       {
         "connectionName": "source_trace_7",
-        "rootConnectionName": "source_trace_7",
+        "__rootConnectionNames": ["source_trace_7"],
         "traceThickness": 0.15,
         "viaDiameter": 0.6,
         "route": [

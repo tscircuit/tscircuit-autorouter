@@ -236,7 +236,7 @@ export function buildHyperGraph(params: {
     connections.push({
       connectionId: connection.name,
       mutuallyConnectedNetworkId:
-        connection.rootConnectionName ?? connection.name,
+        connection.__rootConnectionNames?.[0] ?? connection.name,
       startRegion,
       endRegion,
       simpleRouteConnection: connection,
