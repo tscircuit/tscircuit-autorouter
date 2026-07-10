@@ -57,7 +57,7 @@ export interface SimpleRouteJson {
   minTraceToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
-  differentialPairs: Array<DifferentialPair>
+  differentialPairs?: Array<DifferentialPair>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
