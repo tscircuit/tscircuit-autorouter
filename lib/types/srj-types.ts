@@ -68,7 +68,7 @@ export interface SimpleRouteJson {
 }
 
 export interface DifferentialPair {
-  connectionNames: [string, string],
+  connectionNames: [string, string]
   lengthTolerance: 0.1
 }
 
