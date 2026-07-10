@@ -3,6 +3,11 @@ declare module "@tscircuit/autorouting-dataset-01" {
   export = dataset
 }
 
+declare module "@tsci/0hmX.45-degree-trace-srj23" {
+  const dataset: Record<string, any>
+  export = dataset
+}
+
 declare module "@tscircuit/dataset-srj05" {
   const dataset: any
   export = dataset
