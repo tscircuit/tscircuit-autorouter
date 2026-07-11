@@ -1,344 +1,55 @@
-import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { prepareTopologyMergingInput } from "./topology-merging-input"
 import {
-  getBoundsIntersection,
-  getCapacityMeshNodeBounds,
-  isValidCapacityBounds,
-} from "../TopologyPlanningSolver/capacity-node-geometry"
+  createTopologyMergingOutputNodes,
+  type TopologyMergingOutputProvenance,
+  validateTopologyMergingOutput,
+} from "./topology-merging-output"
+import {
+  compactTopologyMergingRegions,
+  doesBoundsContainPoint,
+  getCanonicalCoordinates,
+  getLayerTopologiesForCoveredNodes,
+  restoreAuthoritativeTargetRegions,
+} from "./topology-merging-regions"
+import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
+import type {
+  PreparedTopologyMergingNode,
+  TopologyMergingRegion,
+  TopologyMergingSolverParams,
+} from "./topology-merging-types"
 
-const TOPOLOGY_MERGING_EPSILON = 1e-5
-const TOPOLOGY_PROVENANCE_EPSILON = TOPOLOGY_MERGING_EPSILON * 4
-
-export interface TopologyMergingNodeGroup {
-  groupId: string
-  nodes: CapacityMeshNode[]
-  isComponent: boolean
-}
-
-export interface TopologyMergingSolverParams {
-  nodeGroups: readonly TopologyMergingNodeGroup[]
-  layerCount: number
-}
-
-type PreparedNode = {
-  sourceKey: string
-  groupIndex: number
-  node: CapacityMeshNode
-  bounds: Bounds
-}
-
-type TopologyMode =
-  | "passthrough"
-  | "merged"
-  | "target-passthrough"
-  | "target-merged"
-
-type TopologyRegion = {
-  bounds: Bounds
-  availableZ: number[]
-  sourceKeys: string[]
-  topologyMode: TopologyMode
-  topologySignature: string
-}
-
-type LayerTopology = {
-  availableZ: number[]
-  sourceKeys: string[]
-  topologyMode: TopologyMode
-  topologySignature: string
-}
-
-type RegionMetadata = Pick<
-  CapacityMeshNode,
-  | "_containsObstacle"
-  | "_completelyInsideObstacle"
-  | "_containsTarget"
-  | "_targetConnectionName"
-  | "_isVirtualOffboard"
-  | "_offboardNetName"
-  | "_offBoardConnectionId"
-  | "_offBoardConnectedCapacityMeshNodeIds"
-  | "_qfpRegionType"
-  | "_isNarrowQfpPadGap"
-  | "_soicRegionType"
-  | "_isComponentTopologyNode"
->
-
-function getCanonicalCoordinates(values: number[]): number[] {
-  const sortedValues = [...values].sort((a, b) => a - b)
-  const coordinates: number[] = []
-
-  for (const value of sortedValues) {
-    const previousValue = coordinates[coordinates.length - 1]
-    if (
-      previousValue === undefined ||
-      Math.abs(value - previousValue) > TOPOLOGY_MERGING_EPSILON
-    ) {
-      coordinates.push(value)
-    }
-  }
-
-  return coordinates
-}
-
-function doesBoundsContainPoint(
-  bounds: Bounds,
-  point: { x: number; y: number },
-): boolean {
-  return (
-    point.x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
-    point.x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON &&
-    point.y >= bounds.minY - TOPOLOGY_MERGING_EPSILON &&
-    point.y <= bounds.maxY + TOPOLOGY_MERGING_EPSILON
-  )
-}
-
-function getRegionMergeKey(region: TopologyRegion): string {
-  return JSON.stringify({
-    availableZ: region.availableZ,
-    topologySignature: region.topologySignature,
-  })
-}
-
-function getCoordinateKey(value: number): string {
-  return value.toPrecision(15)
-}
-
-function getHorizontalMergeBucketKey(region: TopologyRegion): string {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minY: getCoordinateKey(region.bounds.minY),
-    maxY: getCoordinateKey(region.bounds.maxY),
-  })
-}
-
-function getVerticalMergeBucketKey(region: TopologyRegion): string {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minX: getCoordinateKey(region.bounds.minX),
-    maxX: getCoordinateKey(region.bounds.maxX),
-  })
-}
-
-function mergeRegionRun(
-  regions: TopologyRegion[],
-  direction: "horizontal" | "vertical",
-): TopologyRegion[] {
-  const sortedRegions = [...regions].sort((a, b) =>
-    direction === "horizontal"
-      ? a.bounds.minX - b.bounds.minX
-      : a.bounds.minY - b.bounds.minY,
-  )
-  const mergedRegions: TopologyRegion[] = []
-
-  for (const region of sortedRegions) {
-    const previousRegion = mergedRegions[mergedRegions.length - 1]
-    const regionsTouch =
-      previousRegion !== undefined &&
-      (direction === "horizontal"
-        ? Math.abs(previousRegion.bounds.maxX - region.bounds.minX) <=
-          TOPOLOGY_MERGING_EPSILON
-        : Math.abs(previousRegion.bounds.maxY - region.bounds.minY) <=
-          TOPOLOGY_MERGING_EPSILON)
-
-    if (!previousRegion || !regionsTouch) {
-      mergedRegions.push({
-        ...region,
-        bounds: { ...region.bounds },
-        availableZ: [...region.availableZ],
-        sourceKeys: [...region.sourceKeys],
-      })
-      continue
-    }
-
-    if (direction === "horizontal") {
-      previousRegion.bounds.maxX = region.bounds.maxX
-    } else {
-      previousRegion.bounds.maxY = region.bounds.maxY
-    }
-  }
-
-  return mergedRegions
-}
-
-function compactRegionsInDirection(
-  regions: TopologyRegion[],
-  direction: "horizontal" | "vertical",
-): TopologyRegion[] {
-  const regionsByMergeBucket = new Map<string, TopologyRegion[]>()
-
-  for (const region of regions) {
-    const bucketKey =
-      direction === "horizontal"
-        ? getHorizontalMergeBucketKey(region)
-        : getVerticalMergeBucketKey(region)
-    const bucket = regionsByMergeBucket.get(bucketKey) ?? []
-    bucket.push(region)
-    regionsByMergeBucket.set(bucketKey, bucket)
-  }
-
-  return [...regionsByMergeBucket.values()].flatMap((bucket) =>
-    mergeRegionRun(bucket, direction),
-  )
-}
-
-function compactTopologyRegions(regions: TopologyRegion[]): TopologyRegion[] {
-  let compactedRegions = regions
-
-  while (true) {
-    const horizontallyCompacted = compactRegionsInDirection(
-      compactedRegions,
-      "horizontal",
-    )
-    const verticallyCompacted = compactRegionsInDirection(
-      horizontallyCompacted,
-      "vertical",
-    )
-
-    if (verticallyCompacted.length === compactedRegions.length) {
-      return verticallyCompacted
-    }
-
-    compactedRegions = verticallyCompacted
-  }
-}
-
-function getUniqueOptionalValue<T>(
-  values: Array<T | undefined>,
-  fieldName: string,
-  sourceNodeIds: string[],
-): T | undefined {
-  const definedValues = Array.from(
-    new Set(values.filter((value): value is T => value !== undefined)),
-  )
-
-  if (definedValues.length > 1) {
-    throw new Error(
-      `TopologyMergingSolver: conflicting ${fieldName} values for overlapping source nodes ${sourceNodeIds.join(", ")}`,
-    )
-  }
-
-  return definedValues[0]
-}
-
-function getAgreedOptionalValue<T>(
-  values: Array<T | undefined>,
-): T | undefined {
-  const definedValues = Array.from(
-    new Set(values.filter((value): value is T => value !== undefined)),
-  )
-
-  return definedValues.length === 1 ? definedValues[0] : undefined
-}
-
-function getRegionMetadata({
-  sourceNodes,
-  isComponentTopologyNode,
-}: {
-  sourceNodes: CapacityMeshNode[]
-  isComponentTopologyNode: boolean
-}): RegionMetadata {
-  const sourceNodeIds = sourceNodes.map((node) => node.capacityMeshNodeId)
-  const targetConnectionName = getUniqueOptionalValue(
-    sourceNodes.map((node) => node._targetConnectionName),
-    "target connection",
-    sourceNodeIds,
-  )
-  const offBoardConnectionId = getUniqueOptionalValue(
-    sourceNodes.map((node) => node._offBoardConnectionId),
-    "off-board connection",
-    sourceNodeIds,
-  )
-  const offboardNetName = getUniqueOptionalValue(
-    sourceNodes.map((node) => node._offboardNetName),
-    "off-board net",
-    sourceNodeIds,
-  )
-  const offBoardConnectedCapacityMeshNodeIds = Array.from(
-    new Set(
-      sourceNodes.flatMap(
-        (node) => node._offBoardConnectedCapacityMeshNodeIds ?? [],
-      ),
-    ),
-  )
-
-  return {
-    _containsObstacle:
-      sourceNodes.some((node) => node._containsObstacle) || undefined,
-    _completelyInsideObstacle:
-      sourceNodes.some((node) => node._completelyInsideObstacle) || undefined,
-    _containsTarget:
-      sourceNodes.some((node) => node._containsTarget) || undefined,
-    _targetConnectionName: targetConnectionName,
-    _isVirtualOffboard:
-      sourceNodes.some((node) => node._isVirtualOffboard) || undefined,
-    _offboardNetName: offboardNetName,
-    _offBoardConnectionId: offBoardConnectionId,
-    _offBoardConnectedCapacityMeshNodeIds:
-      offBoardConnectedCapacityMeshNodeIds.length > 0
-        ? offBoardConnectedCapacityMeshNodeIds
-        : undefined,
-    _qfpRegionType: getAgreedOptionalValue(
-      sourceNodes.map((node) => node._qfpRegionType),
-    ),
-    _isNarrowQfpPadGap:
-      sourceNodes.some((node) => node._isNarrowQfpPadGap) || undefined,
-    _soicRegionType: getAgreedOptionalValue(
-      sourceNodes.map((node) => node._soicRegionType),
-    ),
-    _isComponentTopologyNode: isComponentTopologyNode || undefined,
-  }
-}
-
-function doBoundsMatch(a: Bounds, b: Bounds): boolean {
-  return (
-    Math.abs(a.minX - b.minX) <= TOPOLOGY_MERGING_EPSILON &&
-    Math.abs(a.maxX - b.maxX) <= TOPOLOGY_MERGING_EPSILON &&
-    Math.abs(a.minY - b.minY) <= TOPOLOGY_MERGING_EPSILON &&
-    Math.abs(a.maxY - b.maxY) <= TOPOLOGY_MERGING_EPSILON
-  )
-}
-
-function doLayersMatch(a: number[], b: number[]): boolean {
-  return a.length === b.length && a.every((z, index) => z === b[index])
-}
+export type {
+  TopologyMergingNodeGroup,
+  TopologyMergingSolverParams,
+} from "./topology-merging-types"
 
 export class TopologyMergingSolver extends BaseSolver {
-  private readonly preparedNodes: PreparedNode[] = []
-  private readonly preparedNodeBySourceKey = new Map<string, PreparedNode>()
-  private readonly outputGroupIndexesByNodeId = new Map<string, number[]>()
-  private readonly outputSourceKeysByNodeId = new Map<string, string[]>()
+  private readonly preparedNodes: PreparedTopologyMergingNode[]
+  private readonly preparedNodeBySourceKey: Map<
+    string,
+    PreparedTopologyMergingNode
+  >
+  private readonly outputProvenance: TopologyMergingOutputProvenance = {
+    groupIndexesByNodeId: new Map<string, number[]>(),
+    sourceKeysByNodeId: new Map<string, string[]>(),
+  }
   private readonly xCoordinates: number[]
-  private readonly atomicRegions: TopologyRegion[] = []
+  private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
 
   constructor(public readonly inputProblem: TopologyMergingSolverParams) {
     super()
     this.MAX_ITERATIONS = 100_000
-    this.validateInput()
 
-    for (
-      let groupIndex = 0;
-      groupIndex < this.inputProblem.nodeGroups.length;
-      groupIndex++
-    ) {
-      const group = this.inputProblem.nodeGroups[groupIndex]!
-      for (const node of group.nodes) {
-        const preparedNode: PreparedNode = {
-          sourceKey: `${group.groupId}:${node.capacityMeshNodeId}`,
-          groupIndex,
-          node,
-          bounds: getCapacityMeshNodeBounds(node),
-        }
-        this.preparedNodes.push(preparedNode)
-        this.preparedNodeBySourceKey.set(preparedNode.sourceKey, preparedNode)
-      }
-    }
-
+    const { preparedNodes, preparedNodeBySourceKey } =
+      prepareTopologyMergingInput(inputProblem)
+    this.preparedNodes = preparedNodes
+    this.preparedNodeBySourceKey = preparedNodeBySourceKey
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
@@ -357,20 +68,7 @@ export class TopologyMergingSolver extends BaseSolver {
 
   override _step(): void {
     if (this.inputProblem.nodeGroups.length === 1) {
-      const passthroughGroup = this.inputProblem.nodeGroups[0]!
-      this.outputNodes = passthroughGroup.nodes
-      for (const node of this.outputNodes) {
-        this.outputGroupIndexesByNodeId.set(node.capacityMeshNodeId, [0])
-        this.outputSourceKeysByNodeId.set(node.capacityMeshNodeId, [
-          `${passthroughGroup.groupId}:${node.capacityMeshNodeId}`,
-        ])
-      }
-      this.stats.processedXSlabCount = this.stats.xSlabCount
-      this.stats.atomicRegionCount = 0
-      this.stats.compactedRegionCount = 0
-      this.stats.outputNodeCount = this.outputNodes.length
-      this.stats.passthroughNodeCount = this.outputNodes.length
-      this.solved = true
+      this.completePassthroughTopology()
       return
     }
 
@@ -382,12 +80,22 @@ export class TopologyMergingSolver extends BaseSolver {
       return
     }
 
-    const topologyRegions = this.restoreAuthoritativeTargetRegions(
-      this.atomicRegions,
-    )
-    const compactedRegions = compactTopologyRegions(topologyRegions)
-    this.outputNodes = this.createOutputNodes(compactedRegions)
-    this.validateOutput(this.outputNodes)
+    const topologyRegions = restoreAuthoritativeTargetRegions({
+      regions: this.atomicRegions,
+      preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+    })
+    const compactedRegions = compactTopologyMergingRegions(topologyRegions)
+    this.outputNodes = createTopologyMergingOutputNodes({
+      regions: compactedRegions,
+      preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+      nodeGroups: this.inputProblem.nodeGroups,
+      provenance: this.outputProvenance,
+    })
+    validateTopologyMergingOutput({
+      nodes: this.outputNodes,
+      preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+      provenance: this.outputProvenance,
+    })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
     this.solved = true
@@ -412,7 +120,13 @@ export class TopologyMergingSolver extends BaseSolver {
   override visualize(): GraphicsObject {
     const nodes = this.solved
       ? this.outputNodes
-      : this.createOutputNodes(this.atomicRegions, false)
+      : createTopologyMergingOutputNodes({
+          regions: this.atomicRegions,
+          preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          nodeGroups: this.inputProblem.nodeGroups,
+          provenance: this.outputProvenance,
+          preserveSourceIds: false,
+        })
 
     return {
       title: `Topology Merging: ${nodes.length} refined regions`,
@@ -434,73 +148,24 @@ export class TopologyMergingSolver extends BaseSolver {
     }
   }
 
-  private validateInput(): void {
-    if (!Number.isInteger(this.inputProblem.layerCount)) {
-      throw new Error("TopologyMergingSolver: layerCount must be an integer")
-    }
-    if (this.inputProblem.layerCount <= 0) {
-      throw new Error("TopologyMergingSolver: layerCount must be positive")
-    }
-    if (this.inputProblem.nodeGroups.length === 0) {
-      throw new Error(
-        "TopologyMergingSolver: at least one node group is required",
+  private completePassthroughTopology(): void {
+    const passthroughGroup = this.inputProblem.nodeGroups[0]!
+    this.outputNodes = passthroughGroup.nodes
+    for (const node of this.outputNodes) {
+      this.outputProvenance.groupIndexesByNodeId.set(
+        node.capacityMeshNodeId,
+        [0],
       )
+      this.outputProvenance.sourceKeysByNodeId.set(node.capacityMeshNodeId, [
+        `${passthroughGroup.groupId}:${node.capacityMeshNodeId}`,
+      ])
     }
-
-    const groupIds = new Set<string>()
-    let nodeCount = 0
-    for (const group of this.inputProblem.nodeGroups) {
-      if (groupIds.has(group.groupId)) {
-        throw new Error(
-          `TopologyMergingSolver: duplicate topology group id "${group.groupId}"`,
-        )
-      }
-      groupIds.add(group.groupId)
-      nodeCount += group.nodes.length
-      if (group.nodes.length === 0) {
-        throw new Error(
-          `TopologyMergingSolver: topology group "${group.groupId}" is empty`,
-        )
-      }
-
-      const nodeIds = new Set<string>()
-      for (const node of group.nodes) {
-        if (nodeIds.has(node.capacityMeshNodeId)) {
-          throw new Error(
-            `TopologyMergingSolver: duplicate node id "${node.capacityMeshNodeId}" in group "${group.groupId}"`,
-          )
-        }
-        nodeIds.add(node.capacityMeshNodeId)
-        this.validateInputNode(node, group.groupId)
-      }
-    }
-
-    if (nodeCount === 0) {
-      throw new Error("TopologyMergingSolver: topology node groups are empty")
-    }
-  }
-
-  private validateInputNode(node: CapacityMeshNode, groupId: string): void {
-    if (!isValidCapacityBounds(getCapacityMeshNodeBounds(node))) {
-      throw new Error(
-        `TopologyMergingSolver: node "${node.capacityMeshNodeId}" in group "${groupId}" has invalid bounds`,
-      )
-    }
-    if (node.availableZ.length === 0) {
-      throw new Error(
-        `TopologyMergingSolver: node "${node.capacityMeshNodeId}" in group "${groupId}" has no available layers`,
-      )
-    }
-
-    const sortedAvailableZ = [...new Set(node.availableZ)].sort((a, b) => a - b)
-    const hasInvalidLayer = sortedAvailableZ.some(
-      (z) => !Number.isInteger(z) || z < 0 || z >= this.inputProblem.layerCount,
-    )
-    if (hasInvalidLayer || !doLayersMatch(sortedAvailableZ, node.availableZ)) {
-      throw new Error(
-        `TopologyMergingSolver: node "${node.capacityMeshNodeId}" in group "${groupId}" has invalid or unsorted availableZ`,
-      )
-    }
+    this.stats.processedXSlabCount = this.stats.xSlabCount
+    this.stats.atomicRegionCount = 0
+    this.stats.compactedRegionCount = 0
+    this.stats.outputNodeCount = this.outputNodes.length
+    this.stats.passthroughNodeCount = this.outputNodes.length
+    this.solved = true
   }
 
   private processCurrentXSlab(): void {
@@ -529,7 +194,11 @@ export class TopologyMergingSolver extends BaseSolver {
       )
       if (coveringNodes.length === 0) continue
 
-      const layerTopologies = this.getLayerTopologies(coveringNodes)
+      const layerTopologies = getLayerTopologiesForCoveredNodes({
+        coveringNodes,
+        nodeGroups: this.inputProblem.nodeGroups,
+        layerCount: this.inputProblem.layerCount,
+      })
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },
@@ -540,360 +209,5 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
-  }
-
-  private getLayerTopologies(coveringNodes: PreparedNode[]): LayerTopology[] {
-    const layerTopologyBySignature = new Map<string, LayerTopology>()
-    for (let z = 0; z < this.inputProblem.layerCount; z++) {
-      const nodesOnLayer = coveringNodes
-        .filter(({ node }) => node.availableZ.includes(z))
-        .sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))
-      if (nodesOnLayer.length === 0) continue
-
-      const activeGroupIndexes = new Set(
-        nodesOnLayer.map(({ groupIndex }) => groupIndex),
-      )
-      const targetObstacleNodes = nodesOnLayer.filter(
-        ({ node }) => node._containsObstacle && node._containsTarget,
-      )
-      const globalTargetObstacleNodes = targetObstacleNodes.filter(
-        ({ groupIndex }) =>
-          !this.inputProblem.nodeGroups[groupIndex]!.isComponent,
-      )
-      const targetGroupIndexes = new Set(
-        targetObstacleNodes.map(({ groupIndex }) => groupIndex),
-      )
-      const topologyMode: TopologyMode =
-        targetObstacleNodes.length > 0
-          ? globalTargetObstacleNodes.length > 0 ||
-            targetGroupIndexes.size === 1
-            ? "target-passthrough"
-            : "target-merged"
-          : activeGroupIndexes.size === 1
-            ? "passthrough"
-            : "merged"
-      const sourceKeyGroups =
-        topologyMode === "target-passthrough"
-          ? (globalTargetObstacleNodes.length > 0
-              ? globalTargetObstacleNodes
-              : targetObstacleNodes
-            ).map(({ sourceKey }) => [sourceKey])
-          : topologyMode === "target-merged"
-            ? [targetObstacleNodes.map(({ sourceKey }) => sourceKey).sort()]
-            : topologyMode === "passthrough"
-              ? nodesOnLayer.map(({ sourceKey }) => [sourceKey])
-              : [nodesOnLayer.map(({ sourceKey }) => sourceKey).sort()]
-
-      for (const sourceKeys of sourceKeyGroups) {
-        const topologySignature = JSON.stringify({
-          mode: topologyMode,
-          sourceKeys,
-        })
-        const existingTopology = layerTopologyBySignature.get(topologySignature)
-        if (existingTopology) {
-          existingTopology.availableZ.push(z)
-        } else {
-          layerTopologyBySignature.set(topologySignature, {
-            availableZ: [z],
-            sourceKeys,
-            topologyMode,
-            topologySignature,
-          })
-        }
-      }
-    }
-
-    return [...layerTopologyBySignature.values()]
-  }
-
-  private restoreAuthoritativeTargetRegions(
-    regions: TopologyRegion[],
-  ): TopologyRegion[] {
-    const topologyModesBySourceKey = new Map<string, Set<TopologyMode>>()
-    for (const region of regions) {
-      for (const sourceKey of region.sourceKeys) {
-        const topologyModes =
-          topologyModesBySourceKey.get(sourceKey) ?? new Set<TopologyMode>()
-        topologyModes.add(region.topologyMode)
-        topologyModesBySourceKey.set(sourceKey, topologyModes)
-      }
-    }
-
-    const restorableSourceKeys = new Set(
-      [...topologyModesBySourceKey.entries()]
-        .filter(
-          ([, topologyModes]) =>
-            topologyModes.size === 1 && topologyModes.has("target-passthrough"),
-        )
-        .map(([sourceKey]) => sourceKey),
-    )
-    if (restorableSourceKeys.size === 0) return regions
-
-    const retainedRegions = regions.filter(
-      (region) =>
-        region.topologyMode !== "target-passthrough" ||
-        !restorableSourceKeys.has(region.sourceKeys[0]!),
-    )
-    const restoredRegions = [...restorableSourceKeys].map((sourceKey) => {
-      const preparedNode = this.preparedNodeBySourceKey.get(sourceKey)
-      if (!preparedNode) {
-        throw new Error(
-          `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
-        )
-      }
-      return {
-        bounds: { ...preparedNode.bounds },
-        availableZ: [...preparedNode.node.availableZ],
-        sourceKeys: [sourceKey],
-        topologyMode: "target-passthrough" as const,
-        topologySignature: JSON.stringify({
-          mode: "target-passthrough",
-          sourceKeys: [sourceKey],
-        }),
-      }
-    })
-
-    return [...retainedRegions, ...restoredRegions]
-  }
-
-  private createOutputNodes(
-    regions: TopologyRegion[],
-    preserveSourceIds = true,
-  ): CapacityMeshNode[] {
-    if (preserveSourceIds) {
-      this.outputGroupIndexesByNodeId.clear()
-      this.outputSourceKeysByNodeId.clear()
-    }
-    const sortedRegions = [...regions].sort(
-      (a, b) =>
-        a.bounds.minX - b.bounds.minX ||
-        a.bounds.minY - b.bounds.minY ||
-        a.bounds.maxX - b.bounds.maxX ||
-        a.bounds.maxY - b.bounds.maxY ||
-        a.availableZ[0]! - b.availableZ[0]!,
-    )
-    const usedNodeIds = new Set<string>()
-
-    return sortedRegions.map((region, regionIndex) => {
-      const sourcePreparedNodes = region.sourceKeys.map((sourceKey) => {
-        const preparedNode = this.preparedNodeBySourceKey.get(sourceKey)
-        if (!preparedNode) {
-          throw new Error(
-            `TopologyMergingSolver: missing source node for "${sourceKey}"`,
-          )
-        }
-        return preparedNode
-      })
-      const sourceNodes = sourcePreparedNodes.map(({ node }) => node)
-      const isComponentTopologyNode = sourcePreparedNodes.some(
-        ({ groupIndex }) =>
-          this.inputProblem.nodeGroups[groupIndex]!.isComponent,
-      )
-      const metadata: RegionMetadata =
-        sourceNodes.length === 1
-          ? {
-              _isComponentTopologyNode: isComponentTopologyNode
-                ? true
-                : sourceNodes[0]!._isComponentTopologyNode,
-            }
-          : getRegionMetadata({
-              sourceNodes,
-              isComponentTopologyNode,
-            })
-      const preservedSourceNode =
-        preserveSourceIds && sourcePreparedNodes.length === 1
-          ? sourcePreparedNodes[0]!.node
-          : null
-      const canPreserveSourceId = Boolean(
-        preservedSourceNode &&
-          doBoundsMatch(
-            region.bounds,
-            getCapacityMeshNodeBounds(preservedSourceNode),
-          ) &&
-          doLayersMatch(region.availableZ, preservedSourceNode.availableZ) &&
-          !usedNodeIds.has(preservedSourceNode.capacityMeshNodeId),
-      )
-      let capacityMeshNodeId = canPreserveSourceId
-        ? preservedSourceNode!.capacityMeshNodeId
-        : `topology_merge_${regionIndex}`
-      while (usedNodeIds.has(capacityMeshNodeId)) {
-        capacityMeshNodeId = `${capacityMeshNodeId}_next`
-      }
-      usedNodeIds.add(capacityMeshNodeId)
-
-      if (preserveSourceIds) {
-        this.outputGroupIndexesByNodeId.set(capacityMeshNodeId, [
-          ...new Set(sourcePreparedNodes.map(({ groupIndex }) => groupIndex)),
-        ])
-        this.outputSourceKeysByNodeId.set(capacityMeshNodeId, [
-          ...region.sourceKeys,
-        ])
-      }
-
-      return {
-        ...(preservedSourceNode ?? sourceNodes[0]),
-        ...metadata,
-        capacityMeshNodeId,
-        center: {
-          x: (region.bounds.minX + region.bounds.maxX) / 2,
-          y: (region.bounds.minY + region.bounds.maxY) / 2,
-        },
-        width: region.bounds.maxX - region.bounds.minX,
-        height: region.bounds.maxY - region.bounds.minY,
-        layer: `z${region.availableZ.join(",")}`,
-        availableZ: [...region.availableZ],
-        _adjacentNodeIds: undefined,
-        _parent: undefined,
-        _strawNode: undefined,
-        _strawParentCapacityMeshNodeId: undefined,
-      }
-    })
-  }
-
-  private validateOutput(nodes: CapacityMeshNode[]): void {
-    const nodeIds = new Set<string>()
-    for (const node of nodes) {
-      if (nodeIds.has(node.capacityMeshNodeId)) {
-        throw new Error(
-          `TopologyMergingSolver: duplicate output node id "${node.capacityMeshNodeId}"`,
-        )
-      }
-      nodeIds.add(node.capacityMeshNodeId)
-
-      if (!isValidCapacityBounds(getCapacityMeshNodeBounds(node))) {
-        throw new Error(
-          `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has invalid bounds`,
-        )
-      }
-      if (node.availableZ.length === 0) {
-        throw new Error(
-          `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has no available layers`,
-        )
-      }
-
-      const sourceKeys = this.outputSourceKeysByNodeId.get(
-        node.capacityMeshNodeId,
-      )
-      if (!sourceKeys) {
-        throw new Error(
-          `TopologyMergingSolver: missing output provenance for node "${node.capacityMeshNodeId}"`,
-        )
-      }
-      if (sourceKeys.length === 1) {
-        this.validateSingleSourceOutput(node, sourceKeys[0]!)
-      }
-    }
-
-    for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
-      const nodeA = nodes[aIndex]!
-      for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
-        const nodeB = nodes[bIndex]!
-        const sharesLayer = nodeA.availableZ.some((z) =>
-          nodeB.availableZ.includes(z),
-        )
-        if (!sharesLayer) continue
-
-        const intersection = getBoundsIntersection(
-          getCapacityMeshNodeBounds(nodeA),
-          getCapacityMeshNodeBounds(nodeB),
-        )
-        if (!intersection) continue
-        const intersectionWidth = intersection.maxX - intersection.minX
-        const intersectionHeight = intersection.maxY - intersection.minY
-        if (
-          intersectionWidth <= TOPOLOGY_PROVENANCE_EPSILON ||
-          intersectionHeight <= TOPOLOGY_PROVENANCE_EPSILON
-        ) {
-          continue
-        }
-
-        const nodeAGroupIndexes = this.outputGroupIndexesByNodeId.get(
-          nodeA.capacityMeshNodeId,
-        )
-        const nodeBGroupIndexes = this.outputGroupIndexesByNodeId.get(
-          nodeB.capacityMeshNodeId,
-        )
-        if (!nodeAGroupIndexes || !nodeBGroupIndexes) {
-          throw new Error(
-            `TopologyMergingSolver: missing output provenance for overlapping nodes "${nodeA.capacityMeshNodeId}" and "${nodeB.capacityMeshNodeId}"`,
-          )
-        }
-        const nodeASourceKeys = this.outputSourceKeysByNodeId.get(
-          nodeA.capacityMeshNodeId,
-        )
-        const nodeBSourceKeys = this.outputSourceKeysByNodeId.get(
-          nodeB.capacityMeshNodeId,
-        )
-        if (!nodeASourceKeys || !nodeBSourceKeys) {
-          throw new Error(
-            `TopologyMergingSolver: missing source provenance for overlapping nodes "${nodeA.capacityMeshNodeId}" and "${nodeB.capacityMeshNodeId}"`,
-          )
-        }
-        const isPreservedIntraGroupOverlap =
-          nodeAGroupIndexes.length === 1 &&
-          nodeBGroupIndexes.length === 1 &&
-          nodeAGroupIndexes[0] === nodeBGroupIndexes[0] &&
-          nodeASourceKeys.length === 1 &&
-          nodeBSourceKeys.length === 1 &&
-          nodeASourceKeys[0] !== nodeBSourceKeys[0] &&
-          this.didSourcesOverlapOnSharedLayer(
-            nodeASourceKeys[0]!,
-            nodeBSourceKeys[0]!,
-            nodeA.availableZ.filter((z) => nodeB.availableZ.includes(z)),
-          )
-        if (isPreservedIntraGroupOverlap) continue
-
-        throw new Error(
-          `TopologyMergingSolver: output nodes "${nodeA.capacityMeshNodeId}" and "${nodeB.capacityMeshNodeId}" have an unresolved inter-group overlap on a shared layer`,
-        )
-      }
-    }
-  }
-
-  private validateSingleSourceOutput(
-    node: CapacityMeshNode,
-    sourceKey: string,
-  ): void {
-    const preparedNode = this.preparedNodeBySourceKey.get(sourceKey)
-    if (!preparedNode) {
-      throw new Error(
-        `TopologyMergingSolver: missing source node for output "${node.capacityMeshNodeId}"`,
-      )
-    }
-
-    const bounds = getCapacityMeshNodeBounds(node)
-    const isInsideSource =
-      bounds.minX >= preparedNode.bounds.minX - TOPOLOGY_PROVENANCE_EPSILON &&
-      bounds.maxX <= preparedNode.bounds.maxX + TOPOLOGY_PROVENANCE_EPSILON &&
-      bounds.minY >= preparedNode.bounds.minY - TOPOLOGY_PROVENANCE_EPSILON &&
-      bounds.maxY <= preparedNode.bounds.maxY + TOPOLOGY_PROVENANCE_EPSILON
-    const usesOnlySourceLayers = node.availableZ.every((z) =>
-      preparedNode.node.availableZ.includes(z),
-    )
-    if (!isInsideSource || !usesOnlySourceLayers) {
-      throw new Error(
-        `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" escapes its source geometry or layers`,
-      )
-    }
-  }
-
-  private didSourcesOverlapOnSharedLayer(
-    sourceKeyA: string,
-    sourceKeyB: string,
-    sharedLayers: number[],
-  ): boolean {
-    const sourceA = this.preparedNodeBySourceKey.get(sourceKeyA)
-    const sourceB = this.preparedNodeBySourceKey.get(sourceKeyB)
-    if (!sourceA || !sourceB || sharedLayers.length === 0) return false
-
-    const sourcesShareLayer = sharedLayers.some(
-      (z) =>
-        sourceA.node.availableZ.includes(z) &&
-        sourceB.node.availableZ.includes(z),
-    )
-    return (
-      sourcesShareLayer &&
-      getBoundsIntersection(sourceA.bounds, sourceB.bounds) !== null
-    )
   }
 }
