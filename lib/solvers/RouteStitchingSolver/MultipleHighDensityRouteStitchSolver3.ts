@@ -16,7 +16,10 @@ import {
   selectRoutesAlongEndpointPath,
   snapIslandEndpointToNearestTerminal,
 } from "./routeStitchingEndpointHelpers"
-import { compareRoutes } from "./routeStitchingShared"
+import {
+  compareRoutes,
+  MAX_STITCH_GAP_DISTANCE_3,
+} from "./routeStitchingShared"
 
 const TERMINAL_MATCH_TOLERANCE = 1e-3
 
@@ -311,10 +314,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: terminalLayerPoints,
+          maxSnapDistance: MAX_STITCH_GAP_DISTANCE_3,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
           terminals: terminalLayerPoints,
+          maxSnapDistance: MAX_STITCH_GAP_DISTANCE_3,
         })
       } else {
         start = globalStart

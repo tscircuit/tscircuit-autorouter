@@ -347,6 +347,7 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
+  maxSnapDistance: number
 }) => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
@@ -368,7 +369,7 @@ export const snapIslandEndpointToNearestTerminal = (params: {
     }
   }
 
-  return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+  return closestDistance <= params.maxSnapDistance
     ? closestTerminal
     : params.islandEndpoint
 }
