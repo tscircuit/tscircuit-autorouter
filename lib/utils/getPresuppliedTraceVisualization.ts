@@ -2,7 +2,16 @@ import type { GraphicsObject } from "graphics-debug"
 import { parseToRgb } from "polished"
 import { safeTransparentize } from "lib/solvers/colors"
 import type { SimpleRouteJson } from "lib/types"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import {
+  convertSrjToGraphicsObject,
+  type ConvertSrjToGraphicsObjectOptions,
+} from "lib/utils/convertSrjToGraphicsObject"
+
+type PresuppliedTraceVisualizationParams = {
+  srj: SimpleRouteJson
+  opacity?: number
+  visualizationOptions?: ConvertSrjToGraphicsObjectOptions
+}
 
 const setColorOpacity = (color: string | undefined, opacity: number) => {
   if (!color || color === "none") return color
@@ -15,14 +24,18 @@ const setColorOpacity = (color: string | undefined, opacity: number) => {
   }
 }
 
-export const getPresuppliedTraceVisualization = (
-  srj: SimpleRouteJson,
+export const getPresuppliedTraceVisualization = ({
+  srj,
   opacity = 0.25,
-): GraphicsObject => {
-  const traceVisualization = convertSrjToGraphicsObject({
-    ...srj,
-    obstacles: [],
-  })
+  visualizationOptions = {},
+}: PresuppliedTraceVisualizationParams): GraphicsObject => {
+  const traceVisualization = convertSrjToGraphicsObject(
+    {
+      ...srj,
+      obstacles: [],
+    },
+    visualizationOptions,
+  )
 
   return {
     ...traceVisualization,

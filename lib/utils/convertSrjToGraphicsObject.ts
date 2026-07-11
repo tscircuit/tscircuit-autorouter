@@ -24,6 +24,12 @@ const TRACE_LAYER_COLORS = {
   inner6: "magenta",
 } satisfies Record<LayerName, string>
 
+export type TraceColorMode = "layer" | "net"
+
+export type ConvertSrjToGraphicsObjectOptions = {
+  traceColorMode?: TraceColorMode
+}
+
 function getTraceLayerColor(layerName: string): string {
   if (!Object.hasOwn(TRACE_LAYER_COLORS, layerName)) {
     throw new Error(`No trace visualization color for layer "${layerName}"`)
@@ -32,13 +38,17 @@ function getTraceLayerColor(layerName: string): string {
   return TRACE_LAYER_COLORS[layerName as LayerName]
 }
 
-export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
+export const convertSrjToGraphicsObject = (
+  srj: SimpleRouteJson,
+  options: ConvertSrjToGraphicsObjectOptions = {},
+) => {
   const lines: Line[] = []
   const circles: Circle[] = []
   const points: Point[] = []
   const rects: Rect[] = []
 
   const colorMap: Record<string, string> = getColorMap(srj)
+  const traceColorMode = options.traceColorMode ?? "layer"
   const layerCount = srj.layerCount
   const viaDimensions = getViaDimensions(srj)
   const formatObstacleLabel = createObstacleLabelFormatter(srj)
@@ -118,7 +128,10 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
           circles.push({
             center: { x: routePoint.x, y: routePoint.y },
             radius: viaRadius,
-            fill: "blue",
+            fill:
+              traceColorMode === "net"
+                ? colorMap[trace.connection_name]!
+                : "blue",
             stroke: "none",
             layer: `z${zLayers.join(",")}`,
           })
@@ -214,7 +227,10 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
 
           traceWidth = routePoint.width
           const isTopLayer = routePoint.layer === "top"
-          const baseColor = getTraceLayerColor(routePoint.layer)
+          const baseColor =
+            traceColorMode === "net"
+              ? colorMap[trace.connection_name]!
+              : getTraceLayerColor(routePoint.layer)
 
           // Create a line between consecutive wire segments on the same layer
           lines.push({
@@ -227,6 +243,9 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
             strokeColor: isTopLayer
               ? baseColor
               : safeTransparentize(baseColor, 0.5),
+            ...(traceColorMode === "net"
+              ? { label: trace.connection_name }
+              : {}),
             // Use dashed line for non-top layers
             ...(isTopLayer ? {} : { strokeDash: [0.2, 0.2] }),
           })

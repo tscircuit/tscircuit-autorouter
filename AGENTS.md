@@ -25,6 +25,7 @@ Prefer existing graphics artifact tooling instead of ad hoc screenshots:
 - Use `PipelineStageDebugRunner` for per-stage artifacts.
 - Use `scripts/run-sample.ts --ai-visuals` to export PNG, SVG,
   GraphicsObject JSON, and per-step PNGs.
+- If you need Pipeline 7 visuals colored by net instead of layer, use `--net-colors`.
 - Inspect the generated PNGs before making visual changes.
 
 For pipeline 7 first-stage visual debugging, use:
@@ -37,6 +38,7 @@ bun scripts/run-sample.ts \
   --effort 0.1 \
   --stop-after-stage componentDetectionSolver \
   --ai-visuals \
+  --net-colors \
   --out-dir /tmp/pipeline7-visuals
 ```
 

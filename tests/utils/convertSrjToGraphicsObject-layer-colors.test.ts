@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
+import { getColorMap, safeTransparentize } from "lib/solvers/colors"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import type { SimpleRouteJson } from "lib/types"
 
-test("colors wire segments by their board layer", () => {
+test("colors wire segments by layer by default and by connection in net mode", () => {
   const srj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.15,
@@ -121,4 +122,26 @@ test("colors wire segments by their board layer", () => {
   expect(lineByLayer.get("z1")?.strokeColor).toBe("rgba(0,128,0,0.5)")
   expect(lineByLayer.get("z2")?.strokeColor).toBe("rgba(255,255,0,0.5)")
   expect(lineByLayer.get("z3")?.strokeColor).toBe("rgba(0,0,255,0.5)")
+
+  const netGraphics = convertSrjToGraphicsObject(srj, {
+    traceColorMode: "net",
+  })
+  const netLineByLayer = new Map(
+    netGraphics.lines.map((line) => [line.layer, line]),
+  )
+  const colorMap = getColorMap(srj)
+
+  expect(netLineByLayer.get("z0")?.strokeColor).toBe(colorMap["top-net"])
+  expect(netLineByLayer.get("z1")?.strokeColor).toBe(
+    safeTransparentize(colorMap["inner1-net"]!, 0.5),
+  )
+  expect(netLineByLayer.get("z2")?.strokeColor).toBe(
+    safeTransparentize(colorMap["inner2-net"]!, 0.5),
+  )
+  expect(netLineByLayer.get("z3")?.strokeColor).toBe(
+    safeTransparentize(colorMap["bottom-net"]!, 0.5),
+  )
+  expect(netGraphics.lines.every((line) => line.label?.endsWith("-net"))).toBe(
+    true,
+  )
 })

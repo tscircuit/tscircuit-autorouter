@@ -37,7 +37,7 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
 
     return combineVisualizations(
       convertSrjToGraphicsObject({ ...this.outputSrj, traces: [] }),
-      getPresuppliedTraceVisualization(this.outputSrj),
+      getPresuppliedTraceVisualization({ srj: this.outputSrj }),
     )
   }
 }

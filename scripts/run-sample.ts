@@ -1,7 +1,18 @@
 #!/usr/bin/env bun
 
-import { appendFile, mkdir, readFile, readdir } from "node:fs/promises"
+import {
+  appendFile,
+  mkdir,
+  readFile,
+  readdir,
+  writeFile,
+} from "node:fs/promises"
 import path from "node:path"
+import {
+  getPngBufferFromGraphicsObject,
+  getSvgFromGraphicsObject,
+  type GraphicsObject,
+} from "graphics-debug"
 import {
   AutoroutingPipeline1_OriginalUnravel,
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -34,6 +45,8 @@ type SolverOptions = {
 type PipelineRunSolver = StageDebuggablePipelineSolver & {
   srjWithPointPairs?: SimpleRouteJson
   getOutputSimplifiedPcbTraces?: () => unknown[]
+  getOutputSimpleRouteJson: () => SimpleRouteJson
+  visualizeFinalOutput?: () => GraphicsObject
 }
 
 type PipelineSolverConstructor = new (
@@ -51,6 +64,7 @@ type RunSampleOptions = {
   effort?: number
   stopAfterStage?: string
   writeAiVisuals: boolean
+  netColors: boolean
 }
 
 const PIPELINE_SOLVERS: Record<
@@ -98,6 +112,7 @@ const printHelp = () => {
       "  --png-size N     Square PNG size in pixels, min 1024 (default: 1536)",
       "  --stop-after-stage NAME  Stop after capturing a pipeline stage",
       "  --ai-visuals     Also write SVG, GraphicsObject JSON, and per-step PNGs",
+      "  --net-colors     Pipeline 7: color every visualization by net and write aggregate artifacts (implies --ai-visuals)",
       "  --effort N       Override solver effort",
       "  -h, --help       Show this help",
       "",
@@ -273,6 +288,7 @@ const parseArgs = (): RunSampleOptions => {
     dataset: "dataset01",
     pngSize: 1536,
     writeAiVisuals: false,
+    netColors: false,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -356,6 +372,12 @@ const parseArgs = (): RunSampleOptions => {
       continue
     }
 
+    if (arg === "--net-colors") {
+      options.netColors = true
+      options.writeAiVisuals = true
+      continue
+    }
+
     if (arg === "--effort") {
       options.effort = parsePositiveNumber(args[i + 1] ?? "", "--effort")
       i += 1
@@ -371,6 +393,10 @@ const parseArgs = (): RunSampleOptions => {
 
   if (options.pngSize < 1024) {
     throw new Error("--png-size must be at least 1024")
+  }
+
+  if (options.netColors && options.pipeline !== 7) {
+    throw new Error("--net-colors is currently supported by pipeline 7 only")
   }
 
   return options
@@ -434,6 +460,7 @@ const main = async () => {
 
   const pipelineSolver = new pipelineConfig.SolverConstructor(input.scenario, {
     effort: options.effort,
+    visualizationTraceColorMode: options.netColors ? "net" : "layer",
   })
   const onLog = (line: string) => {
     console.log(line)
@@ -462,6 +489,33 @@ const main = async () => {
   })
 
   const result = await runner.run()
+  let netColorArtifactPath: string | null = null
+  if (options.netColors && result.solved && !result.failed) {
+    const graphics = pipelineSolver.visualizeFinalOutput?.()
+    if (!graphics) {
+      throw new Error(
+        "Pipeline 7 does not provide a final-output visualization",
+      )
+    }
+    const basePath = path.join(resolvedOutputDir, "final-net-colors")
+    netColorArtifactPath = `${basePath}.png`
+    await writeFile(
+      netColorArtifactPath,
+      await getPngBufferFromGraphicsObject(graphics, {
+        backgroundColor: "white",
+        pngWidth: options.pngSize,
+        pngHeight: options.pngSize,
+      }),
+    )
+    await writeFile(
+      `${basePath}.svg`,
+      getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
+    )
+    await writeFile(
+      `${basePath}.graphics.json`,
+      JSON.stringify(graphics, null, 2),
+    )
+  }
   let relaxedDrcPassed: boolean | null = null
   let drcErrors: Array<Record<string, unknown>> = []
 
@@ -526,6 +580,11 @@ const main = async () => {
   console.log(`Output dir: ${toRelativePath(result.outputDir)}`)
   console.log(`Logs: ${toRelativePath(result.logsPath)}`)
   console.log(`Stage PNGs: ${result.stageArtifacts.length}`)
+  if (netColorArtifactPath) {
+    console.log(
+      `Net-colored final PNG: ${toRelativePath(netColorArtifactPath)}`,
+    )
+  }
   if (result.stoppedAfterStage) {
     console.log(`Stopped after stage: ${result.stoppedAfterStage}`)
   }
