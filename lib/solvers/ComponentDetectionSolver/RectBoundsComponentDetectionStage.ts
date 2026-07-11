@@ -11,6 +11,30 @@ import type {
   DetectedComponent,
 } from "./ComponentDetectionSolver"
 import { detectComponentKind, type ComponentKind } from "./detectors"
+import { isQfpPerimeterPadObstacle } from "./detectors/qfp/qfpShared"
+
+// Component-local topologies cannot overlap. The old detector's 32-pad cap
+// incidentally kept high-pin overlapping footprints in the global topology.
+const MAX_QFP_PADS_WITHOUT_OVERLAP_GUARD = 32
+
+function doDetectedComponentBoundsOverlap(
+  first: DetectedComponent,
+  second: DetectedComponent,
+): boolean {
+  return (
+    first.bounds.minX < second.bounds.maxX &&
+    first.bounds.maxX > second.bounds.minX &&
+    first.bounds.minY < second.bounds.maxY &&
+    first.bounds.maxY > second.bounds.minY
+  )
+}
+
+function hasHighPinCountQfpPads(memberObstacles: Obstacle[]): boolean {
+  const qfpPerimeterPadCount = memberObstacles.filter(
+    isQfpPerimeterPadObstacle,
+  ).length
+  return qfpPerimeterPadCount > MAX_QFP_PADS_WITHOUT_OVERLAP_GUARD
+}
 
 /**
  * Current detection stage: groups SRJ obstacles by component and replaces each
@@ -194,6 +218,41 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
   }
 
   private finalizeOutput() {
+    const overlappingComponentIds = new Set<string>()
+    for (let index = 0; index < this.detectedComponents.length; index += 1) {
+      const component = this.detectedComponents[index]!
+      for (
+        let otherIndex = index + 1;
+        otherIndex < this.detectedComponents.length;
+        otherIndex += 1
+      ) {
+        const otherComponent = this.detectedComponents[otherIndex]!
+        if (!doDetectedComponentBoundsOverlap(component, otherComponent)) {
+          continue
+        }
+        const componentMemberObstacles =
+          this.groupedComponentObstacles[component.componentId] ?? []
+        if (
+          (component.componentKind === "qfp" ||
+            component.componentKind === "qfp_thermalpad") &&
+          hasHighPinCountQfpPads(componentMemberObstacles)
+        ) {
+          overlappingComponentIds.add(component.componentId)
+        }
+        const otherComponentMemberObstacles =
+          this.groupedComponentObstacles[otherComponent.componentId] ?? []
+        if (
+          (otherComponent.componentKind === "qfp" ||
+            otherComponent.componentKind === "qfp_thermalpad") &&
+          hasHighPinCountQfpPads(otherComponentMemberObstacles)
+        ) {
+          overlappingComponentIds.add(otherComponent.componentId)
+        }
+      }
+    }
+    this.detectedComponents = this.detectedComponents.filter(
+      (component) => !overlappingComponentIds.has(component.componentId),
+    )
     this.output = this.detectedComponents.map((component) => ({
       ...component,
       bounds: { ...component.bounds },
@@ -224,6 +283,8 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       detectedSoicComponentIds: this.detectedComponents
         .filter((component) => component.componentKind === "soic")
         .map((component) => component.componentId),
+      overlappingDetectedComponentCount: overlappingComponentIds.size,
+      overlappingDetectedComponentIds: [...overlappingComponentIds].sort(),
       remainingComponentCount: this.unprocessedComponentIds.length,
       hasActiveComponent: this.currentComponentId !== null,
     }

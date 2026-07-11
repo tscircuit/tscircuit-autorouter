@@ -2,7 +2,7 @@ import type { Obstacle } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 
 const MIN_QFP_PADS_PER_SIDE = 3
-const MAX_QFP_PAD_COUNT = 32
+const MAX_QFP_PAD_COUNT = 256
 const MAX_QFP_THERMAL_PAD_COUNT = 4
 const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
@@ -64,7 +64,7 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
   return { counts, maxNearestSideRatio }
 }
 
-function isQfpPerimeterPadObstacle(obstacle: Obstacle) {
+export function isQfpPerimeterPadObstacle(obstacle: Obstacle) {
   const minSide = Math.min(obstacle.width, obstacle.height)
   const maxSide = Math.max(obstacle.width, obstacle.height)
 

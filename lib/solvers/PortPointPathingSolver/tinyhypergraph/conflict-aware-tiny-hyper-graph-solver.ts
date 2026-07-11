@@ -168,6 +168,16 @@ export class ConflictAwareTinyHyperGraphSolver extends CostConsistentTinyHyperGr
     }
   }
 
+  protected override tryGreedyFinalRouteAcceptance(): boolean {
+    const remainingRouteIds = this.getRemainingRouteIdsForGreedyFinalRoute()
+    this.stats = {
+      ...this.stats,
+      skippedUnconstrainedGreedyFinalRouteOnTimeout: true,
+      greedyFinalRouteRemainingRouteCount: remainingRouteIds.length,
+    }
+    return false
+  }
+
   assertNoStrictCrossNetCrossingsInCommittedState(): void {
     for (let regionId = 0; regionId < this.topology.regionCount; regionId++) {
       if (!this.isKnownSingleLayerRegion(regionId)) continue

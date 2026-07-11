@@ -2,6 +2,8 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
+const ENDPOINT_OBSTACLE_TOLERANCE = 1e-6
+
 export const canEndpointConnectOnLayer = ({
   endpointX,
   endpointY,
@@ -32,8 +34,8 @@ export const canEndpointConnectOnLayer = ({
     if (!obstacleIsConnectedToRoute) {
       return false
     }
-    const halfWidth = obstacle.width / 2 + 0.05
-    const halfHeight = obstacle.height / 2 + 0.05
+    const halfWidth = obstacle.width / 2 + ENDPOINT_OBSTACLE_TOLERANCE
+    const halfHeight = obstacle.height / 2 + ENDPOINT_OBSTACLE_TOLERANCE
     const withinX = Math.abs(endpointX - obstacle.center.x) <= halfWidth
     const withinY = Math.abs(endpointY - obstacle.center.y) <= halfHeight
     return withinX && withinY
