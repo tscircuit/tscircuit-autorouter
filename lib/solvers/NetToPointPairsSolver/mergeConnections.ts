@@ -84,7 +84,6 @@ export function mergeConnections(
     }
 
     const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>()
-    const mergedNames: Set<string> = new Set()
     const mergedRootConnectionNames: Set<string> = new Set()
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
@@ -100,10 +99,13 @@ export function mergeConnections(
         ),
       )
 
-      // Collect names
-      mergedNames.add(simpleRouteConnection.name)
-      if (simpleRouteConnection.rootConnectionName) {
-        mergedRootConnectionNames.add(simpleRouteConnection.rootConnectionName)
+      const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
+      if (rootConnectionNames && rootConnectionNames.length > 0) {
+        for (const rootConnectionName of rootConnectionNames) {
+          mergedRootConnectionNames.add(rootConnectionName)
+        }
+      } else {
+        mergedRootConnectionNames.add(simpleRouteConnection.name)
       }
 
       // Merge isOffBoard property
@@ -135,8 +137,9 @@ export function mergeConnections(
 
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
-      name: Array.from(mergedNames).join("__"), // Combine original names
-      mergedConnectionNames: Array.from(mergedNames), // Store original names
+      name: simpleRouteConnectionGroup
+        .map((connection) => connection.name)
+        .join("__"),
       pointsToConnect: Array.from(uniqueConnectionPoints.values()),
       isOffBoard: isOffBoard,
       // Only include if there are any mergedExternallyConnectedPointIds
@@ -148,10 +151,7 @@ export function mergeConnections(
         mergedNetConnectionNames.size > 0
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
-      rootConnectionName:
-        mergedRootConnectionNames.size === 1
-          ? Array.from(mergedRootConnectionNames)[0]
-          : undefined,
+      __rootConnectionNames: Array.from(mergedRootConnectionNames),
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
 

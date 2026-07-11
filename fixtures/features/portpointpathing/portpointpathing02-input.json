@@ -382,7 +382,7 @@
             }
           ],
           "source_trace_id": "source_trace_7",
-          "rootConnectionName": "source_trace_7"
+          "__rootConnectionNames": ["source_trace_7"]
         },
         {
           "name": "source_trace_6",
@@ -403,7 +403,7 @@
             }
           ],
           "source_trace_id": "source_trace_6",
-          "rootConnectionName": "source_trace_6"
+          "__rootConnectionNames": ["source_trace_6"]
         },
         {
           "name": "source_trace_5",
@@ -424,7 +424,7 @@
             }
           ],
           "source_trace_id": "source_trace_5",
-          "rootConnectionName": "source_trace_5"
+          "__rootConnectionNames": ["source_trace_5"]
         },
         {
           "name": "source_trace_4",
@@ -445,7 +445,7 @@
             }
           ],
           "source_trace_id": "source_trace_4",
-          "rootConnectionName": "source_trace_4"
+          "__rootConnectionNames": ["source_trace_4"]
         },
         {
           "name": "source_trace_3",
@@ -466,7 +466,7 @@
             }
           ],
           "source_trace_id": "source_trace_3",
-          "rootConnectionName": "source_trace_3"
+          "__rootConnectionNames": ["source_trace_3"]
         },
         {
           "name": "source_trace_2",
@@ -487,7 +487,7 @@
             }
           ],
           "source_trace_id": "source_trace_2",
-          "rootConnectionName": "source_trace_2"
+          "__rootConnectionNames": ["source_trace_2"]
         },
         {
           "name": "source_trace_1",
@@ -508,7 +508,7 @@
             }
           ],
           "source_trace_id": "source_trace_1",
-          "rootConnectionName": "source_trace_1"
+          "__rootConnectionNames": ["source_trace_1"]
         },
         {
           "name": "source_trace_0",
@@ -529,7 +529,7 @@
             }
           ],
           "source_trace_id": "source_trace_0",
-          "rootConnectionName": "source_trace_0"
+          "__rootConnectionNames": ["source_trace_0"]
         }
       ],
       "minTraceWidth": 0.15

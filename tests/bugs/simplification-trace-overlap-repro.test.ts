@@ -23,7 +23,7 @@ const convertHdRoutesToPcbTraces = (
   srjWithPointPairs.connections.flatMap((connection) => {
     const netConnectionName =
       connection.netConnectionName ??
-      connection.rootConnectionName ??
+      connection.__rootConnectionNames?.[0] ??
       connection.name
 
     return hdRoutes

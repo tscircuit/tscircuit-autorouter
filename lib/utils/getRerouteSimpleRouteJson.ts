@@ -265,7 +265,7 @@ const createRerouteConnection = ({
   end: LocatedPoint
 }): SimpleRouteConnection => ({
   name: `${trace.connection_name}_reroute_${trace.pcb_trace_id}_${ripIndex}`,
-  rootConnectionName: trace.connection_name,
+  __rootConnectionNames: [trace.connection_name],
   pointsToConnect: [
     locatedPointToConnectionPoint(start),
     locatedPointToConnectionPoint(end),
@@ -289,7 +289,7 @@ const createRerouteEndpointObstacle = ({
   height: point.width,
   connectedTo: [
     connection.name,
-    connection.rootConnectionName ?? connection.name,
+    connection.__rootConnectionNames?.[0] ?? connection.name,
   ],
 })
 
@@ -576,7 +576,7 @@ export const reconnectReroutedSimpleRouteJsonRegion = (
   const rerouteConnectionToRoot = new Map(
     reroutedSrj.connections.map((connection) => [
       connection.name,
-      connection.rootConnectionName ?? connection.name,
+      connection.__rootConnectionNames?.[0] ?? connection.name,
     ]),
   )
 

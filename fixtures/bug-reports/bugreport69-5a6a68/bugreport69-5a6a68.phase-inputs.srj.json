@@ -13854,7 +13854,7 @@
     "connections": [
       {
         "name": "source_trace_25_reroute_pcb_trace_51_0",
-        "rootConnectionName": "source_trace_25",
+        "__rootConnectionNames": ["source_trace_25"],
         "pointsToConnect": [
           {
             "x": 10,
@@ -13870,7 +13870,7 @@
       },
       {
         "name": "source_trace_54_reroute_pcb_trace_98_0",
-        "rootConnectionName": "source_trace_54",
+        "__rootConnectionNames": ["source_trace_54"],
         "pointsToConnect": [
           {
             "x": 5.715000000000401,
@@ -13886,7 +13886,7 @@
       },
       {
         "name": "source_trace_54_reroute_pcb_trace_99_0",
-        "rootConnectionName": "source_trace_54",
+        "__rootConnectionNames": ["source_trace_54"],
         "pointsToConnect": [
           {
             "x": 5.715000000000401,
@@ -13902,7 +13902,7 @@
       },
       {
         "name": "source_trace_72_reroute_pcb_trace_127_0",
-        "rootConnectionName": "source_trace_72",
+        "__rootConnectionNames": ["source_trace_72"],
         "pointsToConnect": [
           {
             "x": 0,
@@ -13918,7 +13918,7 @@
       },
       {
         "name": "source_trace_73_reroute_pcb_trace_128_0",
-        "rootConnectionName": "source_trace_73",
+        "__rootConnectionNames": ["source_trace_73"],
         "pointsToConnect": [
           {
             "x": 0.6347000000003789,
@@ -13934,7 +13934,7 @@
       },
       {
         "name": "source_trace_73_reroute_pcb_trace_129_0",
-        "rootConnectionName": "source_trace_73",
+        "__rootConnectionNames": ["source_trace_73"],
         "pointsToConnect": [
           {
             "x": 0.6347000000003789,
@@ -13950,7 +13950,7 @@
       },
       {
         "name": "source_trace_74_reroute_pcb_trace_130_0",
-        "rootConnectionName": "source_trace_74",
+        "__rootConnectionNames": ["source_trace_74"],
         "pointsToConnect": [
           {
             "x": 10,
@@ -13966,7 +13966,7 @@
       },
       {
         "name": "source_trace_75_reroute_pcb_trace_132_0",
-        "rootConnectionName": "source_trace_75",
+        "__rootConnectionNames": ["source_trace_75"],
         "pointsToConnect": [
           {
             "x": 3.175000000000381,
@@ -13982,7 +13982,7 @@
       },
       {
         "name": "source_trace_76_reroute_pcb_trace_133_0",
-        "rootConnectionName": "source_trace_76",
+        "__rootConnectionNames": ["source_trace_76"],
         "pointsToConnect": [
           {
             "x": 3.4671000000003858,
@@ -13998,7 +13998,7 @@
       },
       {
         "name": "source_trace_76_reroute_pcb_trace_134_0",
-        "rootConnectionName": "source_trace_76",
+        "__rootConnectionNames": ["source_trace_76"],
         "pointsToConnect": [
           {
             "x": 3.4671000000003858,
@@ -14014,7 +14014,7 @@
       },
       {
         "name": "source_trace_76_reroute_pcb_trace_135_0",
-        "rootConnectionName": "source_trace_76",
+        "__rootConnectionNames": ["source_trace_76"],
         "pointsToConnect": [
           {
             "x": 3.4671000000003858,
@@ -14030,7 +14030,7 @@
       },
       {
         "name": "source_trace_80_reroute_pcb_trace_143_0",
-        "rootConnectionName": "source_trace_80",
+        "__rootConnectionNames": ["source_trace_80"],
         "pointsToConnect": [
           {
             "x": 9.25800000000038,
@@ -14046,7 +14046,7 @@
       },
       {
         "name": "source_trace_80_reroute_pcb_trace_144_0",
-        "rootConnectionName": "source_trace_80",
+        "__rootConnectionNames": ["source_trace_80"],
         "pointsToConnect": [
           {
             "x": 7.711000000000375,

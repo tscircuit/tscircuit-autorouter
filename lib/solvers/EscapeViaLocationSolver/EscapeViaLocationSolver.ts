@@ -127,9 +127,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
     return new Set(
       [
         connection.name,
-        connection.rootConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
         connection.netConnectionName,
-        ...(connection.mergedConnectionNames ?? []),
       ].filter((id): id is string => Boolean(id)),
     )
   }
@@ -779,7 +778,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
             y: candidate.y,
             connectionName: connection.name,
             rootConnectionName:
-              connection.rootConnectionName ?? connection.name,
+              connection.__rootConnectionNames?.[0] ?? connection.name,
             sourcePointIndex: pointIndex,
             sourcePointId: point.pointId,
             sourceLayer,
@@ -858,9 +857,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
       (obstacle) => obstacle.isCopperPour,
     )
     const originalConnections = this.ogSrj.connections
-    const originalConnectionByName = new Map(
-      originalConnections.map((connection) => [connection.name, connection]),
-    )
     const newConnections = originalConnections.map((connection) =>
       structuredClone(connection),
     )
@@ -871,15 +867,17 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const mergedConnections = mergeConnections([...originalConnections])
 
     for (const mergedConnection of mergedConnections) {
-      const groupConnectionNames = mergedConnection.mergedConnectionNames ?? [
-        mergedConnection.name,
-      ]
-      const groupConnections = groupConnectionNames
-        .map((connectionName) => originalConnectionByName.get(connectionName))
-        .filter(
-          (connection): connection is SimpleRouteConnection =>
-            connection !== undefined,
+      const mergedRootConnectionNames = new Set(
+        mergedConnection.__rootConnectionNames ?? [mergedConnection.name],
+      )
+      const groupConnections = originalConnections.filter((connection) => {
+        const rootConnectionNames = connection.__rootConnectionNames ?? [
+          connection.name,
+        ]
+        return rootConnectionNames.some((name) =>
+          mergedRootConnectionNames.has(name),
         )
+      })
 
       if (groupConnections.length === 0) {
         continue

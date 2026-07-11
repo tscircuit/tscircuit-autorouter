@@ -2700,7 +2700,7 @@
         }
       ],
       "name": "source_net_15_mst1",
-      "rootConnectionName": "source_net_15"
+      "__rootConnectionNames": ["source_net_15"]
     }
   ],
   "layerCount": 4,

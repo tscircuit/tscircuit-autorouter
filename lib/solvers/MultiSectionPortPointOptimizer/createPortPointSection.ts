@@ -217,7 +217,7 @@ function cutPathsToSection(
     if (!result.path || result.path.length === 0) continue
 
     const connectionName = result.connection.name
-    const rootConnectionName = result.connection.rootConnectionName
+    const rootConnectionName = result.connection.__rootConnectionNames?.[0]
 
     // Find all indices that are within the section
     const indicesInSection: number[] = []

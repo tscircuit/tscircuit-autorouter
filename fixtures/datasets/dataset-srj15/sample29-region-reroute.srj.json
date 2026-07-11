@@ -18542,7 +18542,7 @@
   "connections": [
     {
       "name": "source_net_49_reroute_source_net_49_mst0_0_0",
-      "rootConnectionName": "source_net_49",
+      "__rootConnectionNames": ["source_net_49"],
       "pointsToConnect": [
         {
           "x": 4.49,
@@ -18558,7 +18558,7 @@
     },
     {
       "name": "source_net_10_reroute_source_net_10_mst1_0_0",
-      "rootConnectionName": "source_net_10",
+      "__rootConnectionNames": ["source_net_10"],
       "pointsToConnect": [
         {
           "x": 21.386,
@@ -18574,7 +18574,7 @@
     },
     {
       "name": "source_net_9_reroute_source_net_9_mst1_0_0",
-      "rootConnectionName": "source_net_9",
+      "__rootConnectionNames": ["source_net_9"],
       "pointsToConnect": [
         {
           "x": 21.386,
@@ -18590,7 +18590,7 @@
     },
     {
       "name": "source_net_8_reroute_source_net_8_0_0",
-      "rootConnectionName": "source_net_8",
+      "__rootConnectionNames": ["source_net_8"],
       "pointsToConnect": [
         {
           "x": 21.386,
@@ -18606,7 +18606,7 @@
     },
     {
       "name": "source_net_7_reroute_source_net_7_0_0",
-      "rootConnectionName": "source_net_7",
+      "__rootConnectionNames": ["source_net_7"],
       "pointsToConnect": [
         {
           "x": 21.386,
@@ -18622,7 +18622,7 @@
     },
     {
       "name": "source_net_6_reroute_source_net_6_0_0",
-      "rootConnectionName": "source_net_6",
+      "__rootConnectionNames": ["source_net_6"],
       "pointsToConnect": [
         {
           "x": 19.05,
@@ -18638,7 +18638,7 @@
     },
     {
       "name": "source_net_5_reroute_source_net_5_0_0",
-      "rootConnectionName": "source_net_5",
+      "__rootConnectionNames": ["source_net_5"],
       "pointsToConnect": [
         {
           "x": 16.51,
@@ -18654,7 +18654,7 @@
     },
     {
       "name": "source_net_4_reroute_source_net_4_mst1_0_0",
-      "rootConnectionName": "source_net_4",
+      "__rootConnectionNames": ["source_net_4"],
       "pointsToConnect": [
         {
           "x": 2.81,
@@ -18670,7 +18670,7 @@
     },
     {
       "name": "source_net_1_reroute_source_net_1_mst22_0_0",
-      "rootConnectionName": "source_net_1",
+      "__rootConnectionNames": ["source_net_1"],
       "pointsToConnect": [
         {
           "x": 2.81,
@@ -18686,7 +18686,7 @@
     },
     {
       "name": "source_net_1_reroute_source_net_1_mst23_0_0",
-      "rootConnectionName": "source_net_1",
+      "__rootConnectionNames": ["source_net_1"],
       "pointsToConnect": [
         {
           "x": 7.99,
@@ -18702,7 +18702,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst5_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 3.8099999999999996,
@@ -18718,7 +18718,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst15_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 5.51,
@@ -18734,7 +18734,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst20_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 4.575,
@@ -18750,7 +18750,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst42_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 5.51,

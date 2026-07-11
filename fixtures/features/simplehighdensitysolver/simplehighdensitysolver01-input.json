@@ -15,28 +15,28 @@
             "y": 17.45,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 29.189999999999998,
             "y": 10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 29.189999999999998,
             "y": 7.8100000000000005,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 5.880000000000003,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -55,56 +55,56 @@
             "y": 16.35834066666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -5.879999999999997,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -14.600036200000073,
             "y": 7.574979833333307,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -5.879999999999997,
             "y": 13.6625,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -14.600036200000073,
             "y": 17.041672533333333,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -5.879999999999997,
             "y": 14.3375,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -14.600036200000073,
             "y": 15.675008800000002,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -14.600036200000073,
             "y": 9.999999999999943,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -123,56 +123,56 @@
             "y": 16.86391444444443,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -16.800031800000074,
             "y": 16.35834066666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -16.800031800000074,
             "y": 9.999999999999943,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -20.991656066666717,
             "y": 0.8001908000001023,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -23.199968200000043,
             "y": 17.591685833333322,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -16.800031800000074,
             "y": 17.041672533333333,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -23.19996820000004,
             "y": 1.1501256500000336,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -16.800031800000074,
             "y": 15.675008800000002,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -191,70 +191,70 @@
             "y": -4.746436785714346,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -16.800031800000074,
             "y": -12.425058500000079,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -16.800031800000074,
             "y": -16.641716833333412,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -23.199968200000036,
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -20.991656066666717,
             "y": 0.8001908000001023,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -16.800031800000074,
             "y": -1.2750605000000785,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -16.800031800000074,
             "y": -15.958384966666747,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -23.19996820000004,
             "y": -0.5349599800000062,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -16.800031800000074,
             "y": -2.4250585000000786,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -23.19996820000004,
             "y": -0.16490971999997006,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -273,28 +273,28 @@
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 16.80003179999996,
             "y": -2.4250585000000786,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 23.199968199999926,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 16.80003179999996,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -313,14 +313,14 @@
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 1.27,
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -339,28 +339,28 @@
             "y": -7.065025549999953,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           },
           {
             "x": 9.890000000000002,
             "y": -1.951666666666668,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           },
           {
             "x": 14.600036199999959,
             "y": 2.0750594999999645,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           },
           {
             "x": 9.890000000000002,
             "y": 0.5883333333333327,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           }
         ],
         "availableZ": [0]
@@ -379,42 +379,42 @@
             "y": 2.0750594999999645,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           },
           {
             "x": -9.89,
             "y": 3.1283333333333356,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           },
           {
             "x": -14.600036200000075,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -9.89,
             "y": -4.491666666666665,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -14.600036200000075,
             "y": -7.065025550000128,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           },
           {
             "x": -9.89,
             "y": -6.5850543000001105,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           }
         ],
         "availableZ": [0]
@@ -433,42 +433,42 @@
             "y": -9.571666666666669,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 14.600036199999959,
             "y": -12.425058500000079,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 9.89,
             "y": -10.895000000000003,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 14.600036199999959,
             "y": -16.86391444444448,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 9.89,
             "y": -12.111666666666668,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 14.600036199999959,
             "y": -17.59168583333336,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -487,28 +487,28 @@
             "y": -14.651666666666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -14.600036200000075,
             "y": -16.641716833333412,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -9.89,
             "y": -10.894999999999998,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -14.600036200000075,
             "y": -15.958384966666747,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -527,28 +527,28 @@
             "y": -16.86391444444448,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 29.19,
             "y": -17.78,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 14.600036199999959,
             "y": -17.59168583333336,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 29.189999999999998,
             "y": -19.385184726672197,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -567,28 +567,28 @@
             "y": 19.39,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -23.199968200000043,
             "y": 16.86391444444443,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -29.189999999999998,
             "y": 19.775,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -23.199968200000043,
             "y": 17.591685833333322,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -607,14 +607,14 @@
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 25.399963799999927,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -633,14 +633,14 @@
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -29.19,
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -659,14 +659,14 @@
             "y": -10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 23.199968199999926,
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -685,14 +685,14 @@
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -29.19,
             "y": -7.809971250000018,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -711,14 +711,14 @@
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 15.52503443999996,
             "y": -1.5000605000000786,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -737,28 +737,28 @@
             "y": -16.641716833333412,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -16.800031800000074,
             "y": -16.641716833333412,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -14.600036200000075,
             "y": -15.958384966666747,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -16.800031800000074,
             "y": -15.958384966666747,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -777,14 +777,14 @@
             "y": -3.0000575000000786,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -16.800031800000074,
             "y": -4.746436785714346,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -803,14 +803,14 @@
             "y": -1.2750605000000785,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -14.600036200000075,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           }
         ],
         "availableZ": [0]
@@ -829,28 +829,28 @@
             "y": 11.500060499999964,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -16.800031800000074,
             "y": 9.999999999999943,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -14.600036200000073,
             "y": 9.999999999999943,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.875033560000073,
             "y": 8.499939499999922,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -869,42 +869,42 @@
             "y": 16.35834066666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -14.600036200000073,
             "y": 16.35834066666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -16.800031800000074,
             "y": 17.041672533333333,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -14.600036200000073,
             "y": 17.041672533333333,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -16.800031800000074,
             "y": 15.675008800000002,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -14.600036200000073,
             "y": 15.675008800000002,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -923,28 +923,28 @@
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 5.880000000000003,
             "y": 17.45,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -5.294999999999998,
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -1.27,
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -963,42 +963,42 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -4.709999999999999,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -5.879999999999997,
             "y": 13.6625,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -5.294999999999998,
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -5.879999999999997,
             "y": 14.3375,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -5.294999999999998,
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1017,14 +1017,14 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 4.710000000000001,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -1043,14 +1043,14 @@
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -25.399963800000045,
             "y": -10.000000000000057,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -1069,28 +1069,28 @@
             "y": 19.39,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -29.189999999999998,
             "y": 19.39,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -32.849999999999994,
             "y": 19.775,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -29.189999999999998,
             "y": 19.775,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1109,14 +1109,14 @@
             "y": -19.385184726672197,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 32.730000000000004,
             "y": -18.78,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -1135,28 +1135,28 @@
             "y": 18.78,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -32.849999999999994,
             "y": 19.39,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -36.50999999999999,
             "y": 19.34694033573221,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -32.849999999999994,
             "y": 19.775,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1175,14 +1175,14 @@
             "y": 18.78,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -36.50999999999999,
             "y": 19.34694033573221,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1201,14 +1201,14 @@
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 23.199968199999926,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1227,28 +1227,28 @@
             "y": -0.5349599800000062,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -25.39996380000004,
             "y": -5.684341886080802e-14,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -23.19996820000004,
             "y": -0.16490971999997006,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -23.19996820000004,
             "y": 1.1501256500000336,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1267,14 +1267,14 @@
             "y": -11.119999999999997,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -9.89,
             "y": -10.894999999999998,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1293,14 +1293,14 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 2.54,
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1319,14 +1319,14 @@
             "y": 11.572500000000002,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 31.729999999999997,
             "y": 12.44625,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -1345,14 +1345,14 @@
             "y": 10.90625,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 31.459999999999997,
             "y": 11.572500000000002,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -1371,14 +1371,14 @@
             "y": 4.826250000000002,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": 3.9524999999999917,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1397,14 +1397,14 @@
             "y": 3.0325000000000006,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": 1.4124999999999908,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1423,14 +1423,14 @@
             "y": 3.9524999999999917,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": 3.0325000000000006,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1449,14 +1449,14 @@
             "y": 0.49250000000000016,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": -1.1275000000000102,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1475,14 +1475,14 @@
             "y": 1.4124999999999908,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": 0.49250000000000016,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1501,14 +1501,14 @@
             "y": -1.1275000000000102,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.73,
             "y": -1.793749999999999,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1527,14 +1527,14 @@
             "y": -6.2075000000000085,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": -4.587499999999999,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1553,14 +1553,14 @@
             "y": -4.587499999999999,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.73,
             "y": -4.333749999999998,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1579,14 +1579,14 @@
             "y": -8.747500000000006,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": -7.127499999999998,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1605,14 +1605,14 @@
             "y": -7.127499999999998,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": -6.2075000000000085,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1631,14 +1631,14 @@
             "y": -9.41375,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.46,
             "y": -8.747500000000006,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1657,14 +1657,14 @@
             "y": -10.180000000000003,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 9.89,
             "y": -10.895000000000003,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1683,14 +1683,14 @@
             "y": -12.111666666666668,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 8.889999999999999,
             "y": -11.920000000000002,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -1709,28 +1709,28 @@
             "y": -9.571666666666669,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 8.89,
             "y": -9.38,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 8.735000000000001,
             "y": -10.180000000000003,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 8.89,
             "y": -9.38,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1749,14 +1749,14 @@
             "y": -1.951666666666668,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           },
           {
             "x": 8.89,
             "y": -1.7600000000000016,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           }
         ],
         "availableZ": [0]
@@ -1775,14 +1775,14 @@
             "y": 0.5883333333333327,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           },
           {
             "x": 8.89,
             "y": 0.7799999999999994,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           }
         ],
         "availableZ": [0]
@@ -1801,14 +1801,14 @@
             "y": -14.651666666666667,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -8.890000000000002,
             "y": -14.459999999999999,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -1827,14 +1827,14 @@
             "y": -11.119999999999997,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -8.890000000000002,
             "y": -11.919999999999998,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -1853,14 +1853,14 @@
             "y": -6.5850543000001105,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           },
           {
             "x": -8.89,
             "y": -6.839999999999999,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           }
         ],
         "availableZ": [0]
@@ -1879,14 +1879,14 @@
             "y": -4.491666666666665,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -8.89,
             "y": -4.299999999999999,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           }
         ],
         "availableZ": [0]
@@ -1905,14 +1905,14 @@
             "y": 3.1283333333333356,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           },
           {
             "x": -8.889999999999999,
             "y": 3.320000000000002,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           }
         ],
         "availableZ": [0]
@@ -1931,14 +1931,14 @@
             "y": 2.0750594999999645,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           },
           {
             "x": 15.70003399999996,
             "y": 2.2500589999999647,
             "z": 0,
             "connectionName": "source_trace_4",
-            "rootConnectionName": "source_trace_4"
+            "__rootConnectionNames": ["source_trace_4"]
           }
         ],
         "availableZ": [0]
@@ -1957,28 +1957,28 @@
             "y": -2.4250585000000786,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 15.70003399999996,
             "y": -2.2500590000000784,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 15.52503443999996,
             "y": -1.5000605000000786,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 15.70003399999996,
             "y": -2.2500590000000784,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -1997,14 +1997,14 @@
             "y": -7.065025549999953,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           },
           {
             "x": 15.70003399999996,
             "y": -7.749941000000035,
             "z": 0,
             "connectionName": "source_trace_6",
-            "rootConnectionName": "source_trace_6"
+            "__rootConnectionNames": ["source_trace_6"]
           }
         ],
         "availableZ": [0]
@@ -2023,14 +2023,14 @@
             "y": -12.425058500000079,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 15.70003399999996,
             "y": -12.250059000000078,
             "z": 0,
             "connectionName": "source_net_1_mst0",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2049,14 +2049,14 @@
             "y": 2.0750594999999645,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           },
           {
             "x": -15.700034000000073,
             "y": 2.2500589999999647,
             "z": 0,
             "connectionName": "source_trace_8",
-            "rootConnectionName": "source_trace_8"
+            "__rootConnectionNames": ["source_trace_8"]
           }
         ],
         "availableZ": [0]
@@ -2075,28 +2075,28 @@
             "y": -3.0000575000000786,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.700034000000073,
             "y": -2.2500590000000784,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -16.800031800000074,
             "y": -2.4250585000000786,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.700034000000073,
             "y": -2.2500590000000784,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2115,14 +2115,14 @@
             "y": -7.065025550000128,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           },
           {
             "x": -15.700034000000073,
             "y": -7.749941000000035,
             "z": 0,
             "connectionName": "source_trace_10",
-            "rootConnectionName": "source_trace_10"
+            "__rootConnectionNames": ["source_trace_10"]
           }
         ],
         "availableZ": [0]
@@ -2141,14 +2141,14 @@
             "y": -12.425058500000079,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.700034000000073,
             "y": -12.250059000000078,
             "z": 0,
             "connectionName": "source_net_1_mst2",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2167,14 +2167,14 @@
             "y": 11.500060499999964,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           },
           {
             "x": -15.700034000000073,
             "y": 12.250058999999965,
             "z": 0,
             "connectionName": "source_trace_12",
-            "rootConnectionName": "source_trace_12"
+            "__rootConnectionNames": ["source_trace_12"]
           }
         ],
         "availableZ": [0]
@@ -2193,28 +2193,28 @@
             "y": 7.574979833333307,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.700034000000073,
             "y": 7.749940999999922,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.875033560000073,
             "y": 8.499939499999922,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": -15.700034000000073,
             "y": 7.749940999999922,
             "z": 0,
             "connectionName": "source_net_1_mst3",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2233,14 +2233,14 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 3.81,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -2259,28 +2259,28 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 1.27,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 1.27,
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 1.27,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2299,14 +2299,14 @@
             "y": 14.899999999999999,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -1.27,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -2325,14 +2325,14 @@
             "y": 14,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -3.81,
             "y": 14,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -2351,14 +2351,14 @@
             "y": 12.44625,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 32.73,
             "y": 12.700000000000001,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -2377,14 +2377,14 @@
             "y": 10.16,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 31.729999999999997,
             "y": 10.90625,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -2403,14 +2403,14 @@
             "y": 5.080000000000002,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.73,
             "y": 4.826250000000002,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2429,14 +2429,14 @@
             "y": -1.793749999999999,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 32.73,
             "y": -2.539999999999999,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2455,14 +2455,14 @@
             "y": -4.333749999999998,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 32.73,
             "y": -5.079999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2481,14 +2481,14 @@
             "y": -10.16,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 31.730000000000004,
             "y": -9.41375,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2507,14 +2507,14 @@
             "y": -18.78,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 32.730000000000004,
             "y": -17.78,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -2533,14 +2533,14 @@
             "y": 10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 30.189999999999998,
             "y": 10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2559,14 +2559,14 @@
             "y": 7.620000000000001,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           },
           {
             "x": 29.189999999999998,
             "y": 7.8100000000000005,
             "z": 0,
             "connectionName": "source_net_0",
-            "rootConnectionName": "source_net_0"
+            "__rootConnectionNames": ["source_net_0"]
           }
         ],
         "availableZ": [0]
@@ -2585,14 +2585,14 @@
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 29.19,
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2611,14 +2611,14 @@
             "y": -10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 29.19,
             "y": -10.16,
             "z": 0,
             "connectionName": "source_net_1_mst5",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2637,14 +2637,14 @@
             "y": -17.78,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 30.19,
             "y": -17.78,
             "z": 0,
             "connectionName": "source_net_1_mst1",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]
@@ -2663,14 +2663,14 @@
             "y": 17.78,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -37.74188985339222,
             "y": 18.78,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]
@@ -2689,14 +2689,14 @@
             "y": 17.78,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -35.269999999999996,
             "y": 18.78,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -2715,14 +2715,14 @@
             "y": -7.809971250000018,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           },
           {
             "x": -30.19,
             "y": -7.620000000000001,
             "z": 0,
             "connectionName": "source_net_2",
-            "rootConnectionName": "source_net_2"
+            "__rootConnectionNames": ["source_net_2"]
           }
         ],
         "availableZ": [0]
@@ -2741,14 +2741,14 @@
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           },
           {
             "x": -30.19,
             "y": -2.220446049250313e-16,
             "z": 0,
             "connectionName": "source_net_3",
-            "rootConnectionName": "source_net_3"
+            "__rootConnectionNames": ["source_net_3"]
           }
         ],
         "availableZ": [0]

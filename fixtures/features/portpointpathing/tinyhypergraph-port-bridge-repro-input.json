@@ -1039,7 +1039,7 @@
       },
       "simpleRouteConnection": {
         "name": "bridge-repro",
-        "rootConnectionName": "bridge-repro",
+        "__rootConnectionNames": ["bridge-repro"],
         "pointsToConnect": [
           { "x": -4, "y": -3, "layer": "top" },
           { "x": 4, "y": -3, "layer": "top" }
