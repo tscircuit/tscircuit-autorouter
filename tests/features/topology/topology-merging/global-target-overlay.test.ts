@@ -41,8 +41,7 @@ test("topology merging keeps component under-layers below a global target", (): 
     _containsTarget: true,
     _targetConnectionName: "target-connection",
   })
-  expect(nodes.find((node) => node.availableZ[0] === 1)).toMatchObject({
-    _containsObstacle: undefined,
-    _containsTarget: undefined,
-  })
+  const componentUnderLayer = nodes.find((node) => node.availableZ[0] === 1)
+  expect(componentUnderLayer?._containsObstacle).toBeUndefined()
+  expect(componentUnderLayer?._containsTarget).toBeUndefined()
 })

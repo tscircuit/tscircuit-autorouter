@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import {
   getBoundsIntersection,
   getCapacityMeshNodeBounds,
@@ -11,7 +12,7 @@ export async function assertPipeline7DatasetSrj21TopologyMerging({
   expectedComponentKinds,
 }: {
   sampleNumber: number
-  expectedComponentKinds: string[]
+  expectedComponentKinds: ComponentKind[]
 }): Promise<void> {
   const { scenario } = await loadScenarioBySampleNumber(
     "srj21",

@@ -689,10 +689,17 @@ export class TopologyMergingSolver extends BaseSolver {
         ({ groupIndex }) =>
           this.inputProblem.nodeGroups[groupIndex]!.isComponent,
       )
-      const metadata = getRegionMetadata({
-        sourceNodes,
-        isComponentTopologyNode,
-      })
+      const metadata: RegionMetadata =
+        sourceNodes.length === 1
+          ? {
+              _isComponentTopologyNode: isComponentTopologyNode
+                ? true
+                : sourceNodes[0]!._isComponentTopologyNode,
+            }
+          : getRegionMetadata({
+              sourceNodes,
+              isComponentTopologyNode,
+            })
       const preservedSourceNode =
         preserveSourceIds && sourcePreparedNodes.length === 1
           ? sourcePreparedNodes[0]!.node
