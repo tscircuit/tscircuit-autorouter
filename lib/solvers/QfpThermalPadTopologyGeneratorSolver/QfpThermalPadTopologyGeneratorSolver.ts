@@ -1,7 +1,10 @@
 import { getBoundingBox } from "@tscircuit/math-utils"
 import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { getLayerRange } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
+import {
+  getLayerRange,
+  getObstacleAvailableZ,
+} from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
@@ -26,7 +29,7 @@ type QfpThermalPadRoutingRegion = {
   bounds: Bounds
   regionType: "pad" | "pad-gap" | "corner"
   isNarrowPadGap?: boolean
-  containsObstacle?: boolean
+  obstacleZ?: number[]
 }
 
 export interface QfpThermalPadTopologyGeneratorSolverParams
@@ -144,7 +147,7 @@ function createMeshNodesForRegion({
   multiLayerThreshold,
   regionType,
   isNarrowPadGap = false,
-  containsObstacle = false,
+  obstacleZ = [],
 }: {
   nodeId: string
   bounds: Bounds
@@ -152,7 +155,7 @@ function createMeshNodesForRegion({
   multiLayerThreshold: number
   regionType: QfpThermalPadRoutingRegion["regionType"]
   isNarrowPadGap?: boolean
-  containsObstacle?: boolean
+  obstacleZ?: number[]
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -160,50 +163,55 @@ function createMeshNodesForRegion({
   const isLargeEnoughForMultiZ =
     Math.min(region.width, region.height) > multiLayerThreshold
 
-  if (isLargeEnoughForMultiZ) {
-    return [
-      {
-        capacityMeshNodeId: nodeId,
-        center: region.center,
-        width: region.width,
-        height: region.height,
-        layer: `z${availableZ.join(",")}`,
-        availableZ: [...availableZ],
-        _qfpRegionType: regionType,
-        _isNarrowQfpPadGap: isNarrowPadGap,
-        _containsObstacle: containsObstacle,
-      },
-    ]
-  }
+  const layerGroups = isLargeEnoughForMultiZ
+    ? [
+        {
+          availableZ: availableZ.filter((z) => !obstacleZ.includes(z)),
+          containsObstacle: false,
+        },
+        {
+          availableZ: availableZ.filter((z) => obstacleZ.includes(z)),
+          containsObstacle: true,
+        },
+      ].filter((group) => group.availableZ.length > 0)
+    : availableZ.map((z) => ({
+        availableZ: [z],
+        containsObstacle: obstacleZ.includes(z),
+      }))
 
-  return availableZ.map((z) => ({
-    capacityMeshNodeId: `${nodeId}:z${z}`,
+  return layerGroups.map((group) => ({
+    capacityMeshNodeId:
+      layerGroups.length === 1
+        ? nodeId
+        : isLargeEnoughForMultiZ
+          ? `${nodeId}:${group.containsObstacle ? "obstacle" : "free"}`
+          : `${nodeId}:z${group.availableZ[0]}`,
     center: region.center,
     width: region.width,
     height: region.height,
-    layer: `z${z}`,
-    availableZ: [z],
+    layer: `z${group.availableZ.join(",")}`,
+    availableZ: group.availableZ,
     _qfpRegionType: regionType,
     _isNarrowQfpPadGap: isNarrowPadGap,
-    _containsObstacle: containsObstacle,
+    _containsObstacle: group.containsObstacle,
   }))
 }
 
-function getPadRegions(obstacles: Obstacle[]) {
+function getPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    containsObstacle: true,
+    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
   }))
 }
 
-function getThermalPadRegions(obstacles: Obstacle[]) {
+function getThermalPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `thermal-pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    containsObstacle: true,
+    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
   }))
 }
 
@@ -770,8 +778,8 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     const narrowPadGapThreshold =
       this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
     const regions: QfpThermalPadRoutingRegion[] = [
-      ...getPadRegions(padRingObstacles),
-      ...getThermalPadRegions(thermalPadObstacles),
+      ...getPadRegions(padRingObstacles, layerCount),
+      ...getThermalPadRegions(thermalPadObstacles, layerCount),
       ...createOuterGapRegionsForSide({
         side: "top",
         sideObstacles: sideGroups.top,
@@ -839,7 +847,7 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
         multiLayerThreshold,
         regionType: region.regionType,
         isNarrowPadGap: region.isNarrowPadGap,
-        containsObstacle: region.containsObstacle,
+        obstacleZ: region.obstacleZ,
       }),
     )
 

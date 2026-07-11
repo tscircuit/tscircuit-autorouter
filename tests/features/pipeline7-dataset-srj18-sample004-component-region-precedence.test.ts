@@ -17,9 +17,9 @@ test("pipeline7 dataset-srj18 sample004 uses merged topology for port point path
       .flat()
       .map((node) => node.capacityMeshNodeId),
   )
-  const mergedNodeIds = topologyOutput.mergedMeshNodes.map(
-    (node) => node.capacityMeshNodeId,
-  )
+  const mergedNodeIds = solver
+    .topologyMergingSolver!.getOutput()
+    .map((node) => node.capacityMeshNodeId)
 
   expect(solver.capacityNodes?.map((node) => node.capacityMeshNodeId)).toEqual(
     mergedNodeIds,

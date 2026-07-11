@@ -4,6 +4,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import {
   clusterAxisValues,
   getLayerRange,
+  getObstacleAvailableZ,
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
 import {
   TopologyGenerator,
@@ -29,7 +30,7 @@ type SoicRoutingRegion = {
   key: string
   bounds: Bounds
   regionType: "center" | "pad" | "pad-gap"
-  containsObstacle?: boolean
+  obstacleZ?: number[]
 }
 
 export interface SoicTopologyGeneratorSolverParams
@@ -65,14 +66,14 @@ function createMeshNodesForRegion({
   availableZ,
   multiLayerThreshold,
   regionType,
-  containsObstacle = false,
+  obstacleZ = [],
 }: {
   nodeId: string
   bounds: Bounds
   availableZ: number[]
   multiLayerThreshold: number
   regionType: SoicRoutingRegion["regionType"]
-  containsObstacle?: boolean
+  obstacleZ?: number[]
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -80,30 +81,36 @@ function createMeshNodesForRegion({
   const isLargeEnoughForMultiZ =
     Math.min(region.width, region.height) > multiLayerThreshold
 
-  if (isLargeEnoughForMultiZ) {
-    return [
-      {
-        capacityMeshNodeId: nodeId,
-        center: region.center,
-        width: region.width,
-        height: region.height,
-        layer: `z${availableZ.join(",")}`,
-        availableZ: [...availableZ],
-        _soicRegionType: regionType,
-        _containsObstacle: containsObstacle,
-      },
-    ]
-  }
+  const layerGroups = isLargeEnoughForMultiZ
+    ? [
+        {
+          availableZ: availableZ.filter((z) => !obstacleZ.includes(z)),
+          containsObstacle: false,
+        },
+        {
+          availableZ: availableZ.filter((z) => obstacleZ.includes(z)),
+          containsObstacle: true,
+        },
+      ].filter((group) => group.availableZ.length > 0)
+    : availableZ.map((z) => ({
+        availableZ: [z],
+        containsObstacle: obstacleZ.includes(z),
+      }))
 
-  return availableZ.map((z) => ({
-    capacityMeshNodeId: `${nodeId}:z${z}`,
+  return layerGroups.map((group) => ({
+    capacityMeshNodeId:
+      layerGroups.length === 1
+        ? nodeId
+        : isLargeEnoughForMultiZ
+          ? `${nodeId}:${group.containsObstacle ? "obstacle" : "free"}`
+          : `${nodeId}:z${group.availableZ[0]}`,
     center: region.center,
     width: region.width,
     height: region.height,
-    layer: `z${z}`,
-    availableZ: [z],
+    layer: `z${group.availableZ.join(",")}`,
+    availableZ: group.availableZ,
     _soicRegionType: regionType,
-    _containsObstacle: containsObstacle,
+    _containsObstacle: group.containsObstacle,
   }))
 }
 
@@ -212,12 +219,12 @@ function getInnerSoicBounds({
   }
 }
 
-function getPadRegions(obstacles: Obstacle[]) {
+function getPadRegions(obstacles: Obstacle[], layerCount: number) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    containsObstacle: true,
+    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
   }))
 }
 
@@ -333,7 +340,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(soicObstacles),
+      ...getPadRegions(soicObstacles, layerCount),
       ...activeSides.flatMap((side) =>
         createGapRegionsForSide({
           side,
@@ -350,7 +357,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
-        containsObstacle: region.containsObstacle,
+        obstacleZ: region.obstacleZ,
       }),
     )
 

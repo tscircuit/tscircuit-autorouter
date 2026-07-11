@@ -1,4 +1,7 @@
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  getUniqueValidZLayers,
+  getUniqueValidZLayersFromLayerNames,
+} from "lib/utils/mapLayerNameToZ"
 
 type LayerMappedObject = {
   zLayers?: number[]
@@ -19,14 +22,14 @@ export const createObjectsWithZLayers = <T extends LayerMappedObject>(
   const allZLayers = Array.from({ length: layerCount }, (_, i) => i)
 
   return objects.map((object) => {
-    const rawZLayers =
+    const candidateZLayers =
       object.zLayers ??
-      object.layers?.map((layer) => mapLayerNameToZ(layer, layerCount)) ??
+      (object.layers
+        ? getUniqueValidZLayersFromLayerNames(object.layers, layerCount)
+        : undefined) ??
       allZLayers
 
-    const zLayers = Array.from(
-      new Set(rawZLayers.filter((z) => z >= 0 && z < layerCount)),
-    )
+    const zLayers = getUniqueValidZLayers(candidateZLayers, layerCount)
 
     return { ...object, zLayers: zLayers.length > 0 ? zLayers : allZLayers }
   })

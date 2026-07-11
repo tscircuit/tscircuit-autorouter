@@ -7,18 +7,15 @@ import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detecto
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { mergeMeshNodes } from "./merge-mesh-nodes"
+import { getGlobalMeshNodesForTopologyMerging } from "./get-global-mesh-nodes-for-topology-merging"
 import {
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
   type NormalizedTopologyPlannerInput,
   createComponentSrj,
-  filterMeshNodesInsideComponentAreas,
   filterRectDiffNodeRectsInsideComponentAreas,
   normalizeInput,
 } from "./topologyPlanningShared"
-
-export type TopologyMeshMergeStrategy = "concat"
 
 export interface SerializedTopologyComponentInput {
   componentId: string
@@ -46,12 +43,11 @@ export interface MultiGraphTopologyPlannerSolverOutput {
   componentNoConnectionSrjs: SimpleRouteJson[]
   globalMeshNodes: CapacityMeshNode[]
   componentMeshNodes: CapacityMeshNode[][]
-  mergedMeshNodes: CapacityMeshNode[]
 }
 
 /**
- * Produces a merged routing topology where component replacement regions from
- * the global solve are substituted with component-local routing regions.
+ * Produces the global and component-local topology groups consumed by the
+ * Pipeline 7 topology merging stage.
  */
 export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams> {
   globalTopologySolver?: RectDiffPipeline
@@ -96,15 +92,15 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
   }
 
   /**
-   * Returns the global solve, the per-component solves, and the merged routing
-   * regions used by downstream stages.
+   * Returns the global solve and the independently generated component-local
+   * topology groups.
    */
   override getOutput(): MultiGraphTopologyPlannerSolverOutput {
     const rawGlobalMeshNodes =
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
       )?.meshNodes ?? []
-    const globalMeshNodes = filterMeshNodesInsideComponentAreas({
+    const globalMeshNodes = getGlobalMeshNodesForTopologyMerging({
       meshNodes: rawGlobalMeshNodes,
       components: this.normalizedInput.components,
     })
@@ -119,12 +115,6 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       componentNoConnectionSrjs,
       globalMeshNodes,
       componentMeshNodes,
-      mergedMeshNodes: mergeMeshNodes({
-        globalMeshNodes: rawGlobalMeshNodes,
-        components: this.normalizedInput.components,
-        componentMeshNodes,
-        mergeStrategy: "concat",
-      }),
     }
   }
 
@@ -149,27 +139,30 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
     )
 
     return {
-      title: "Topology Planning: merged mesh",
+      title: "Topology Planning: generated topology groups",
       rects: [
         ...componentObstacleRects,
-        ...output.mergedMeshNodes.map((node) => {
-          const component = this.normalizedInput.components.find((candidate) =>
-            node.capacityMeshNodeId.includes(candidate.componentId),
-          )
-          const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
-          return {
-            ...rect,
-            fill: node._containsObstacle
-              ? safeTransparentize("red", 0.82)
-              : "rgba(0, 120, 255, 0.12)",
-            stroke: node._containsObstacle
-              ? safeTransparentize("red", 0.3)
-              : "rgba(0, 120, 255, 0.55)",
-            label: component
-              ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
-              : node.capacityMeshNodeId,
-          }
-        }),
+        ...[...output.globalMeshNodes, ...output.componentMeshNodes.flat()].map(
+          (node) => {
+            const component = this.normalizedInput.components.find(
+              (candidate) =>
+                node.capacityMeshNodeId.includes(candidate.componentId),
+            )
+            const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
+            return {
+              ...rect,
+              fill: node._containsObstacle
+                ? safeTransparentize("red", 0.82)
+                : "rgba(0, 120, 255, 0.12)",
+              stroke: node._containsObstacle
+                ? safeTransparentize("red", 0.3)
+                : "rgba(0, 120, 255, 0.55)",
+              label: component
+                ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
+                : node.capacityMeshNodeId,
+            }
+          },
+        ),
       ],
       lines: [],
       points: [],

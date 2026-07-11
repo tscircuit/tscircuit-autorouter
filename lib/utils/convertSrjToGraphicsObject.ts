@@ -11,6 +11,26 @@ import {
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import type { LayerName } from "lib/utils/mapZToLayerName"
+
+const TRACE_LAYER_COLORS = {
+  top: "red",
+  bottom: "blue",
+  inner1: "green",
+  inner2: "yellow",
+  inner3: "orange",
+  inner4: "purple",
+  inner5: "cyan",
+  inner6: "magenta",
+} satisfies Record<LayerName, string>
+
+function getTraceLayerColor(layerName: string): string {
+  if (!Object.hasOwn(TRACE_LAYER_COLORS, layerName)) {
+    throw new Error(`No trace visualization color for layer "${layerName}"`)
+  }
+
+  return TRACE_LAYER_COLORS[layerName as LayerName]
+}
 
 export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
   const lines: Line[] = []
@@ -193,17 +213,8 @@ export const convertSrjToGraphicsObject = (srj: SimpleRouteJson) => {
           }
 
           traceWidth = routePoint.width
-          // Get the connection color, fallback to layer-based color
-          const connectionColor = colorMap[trace.connection_name]
           const isTopLayer = routePoint.layer === "top"
-          const baseColor =
-            connectionColor ??
-            {
-              top: "red",
-              bottom: "blue",
-              inner1: "green",
-              inner2: "yellow",
-            }[routePoint.layer]!
+          const baseColor = getTraceLayerColor(routePoint.layer)
 
           // Create a line between consecutive wire segments on the same layer
           lines.push({

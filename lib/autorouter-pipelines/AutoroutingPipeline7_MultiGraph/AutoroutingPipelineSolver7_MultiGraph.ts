@@ -11,6 +11,7 @@ import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivi
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -28,6 +29,7 @@ import {
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -84,14 +86,16 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
  * Collects the capacity mesh node ids produced by component-local topology
  * generation.
  *
- * @param capacityMeshNodes Component-local capacity mesh nodes.
+ * @param capacityMeshNodes Capacity mesh nodes after topology merging and subdivision.
  * @returns A set of component-local capacity mesh node ids.
  */
 function getComponentCapacityMeshNodeIds(
   capacityMeshNodes: CapacityMeshNode[] | null | undefined,
 ) {
   return new Set(
-    (capacityMeshNodes ?? []).map((node) => node.capacityMeshNodeId),
+    (capacityMeshNodes ?? [])
+      .filter((node) => node._isComponentTopologyNode)
+      .map((node) => node.capacityMeshNodeId),
   )
 }
 
@@ -196,6 +200,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
+  topologyMergingSolver?: TopologyMergingSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
@@ -307,11 +312,40 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         onSolved: (cms) => {
           const output = cms.topologyPlanningSolver!.getOutput()
 
-          cms.capacityNodes = output.mergedMeshNodes
           cms.globalTopologyGeneratorSolver =
             cms.topologyPlanningSolver!.globalTopologySolver
           cms.componentTopologyGeneratorSolver =
             new MergedComponentTopologyView(cms.topologyPlanningSolver!)
+        },
+      },
+    ),
+    definePipelineStep(
+      "topologyMergingSolver",
+      TopologyMergingSolver,
+      (cms) => {
+        const topologyOutput = cms.topologyPlanningSolver!.getOutput()
+
+        return [
+          {
+            layerCount: cms.srj.layerCount,
+            nodeGroups: [
+              {
+                groupId: "global",
+                nodes: topologyOutput.globalMeshNodes,
+                isComponent: false,
+              },
+              ...topologyOutput.componentMeshNodes.map((nodes, index) => ({
+                groupId: `component-${index}`,
+                nodes,
+                isComponent: true,
+              })),
+            ],
+          },
+        ]
+      },
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.topologyMergingSolver!.getOutput()
         },
       },
     ),
@@ -359,7 +393,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       MultiTargetNecessaryCrampedPortPointSolver,
       (cms) => {
         const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-          cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
+          cms.capacityNodes,
         )
 
         return [
@@ -383,7 +417,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-            cms.topologyPlanningSolver?.getOutput().componentMeshNodes.flat(),
+            cms.capacityNodes,
           )
 
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
@@ -594,7 +628,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.originalSrj = srj
+    const srjWithBoardValidObstacleLayers =
+      createSrjWithBoardValidObstacleLayers(srj)
+    this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -603,7 +639,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
-    this.setSimpleRouteJson(srj)
+    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
@@ -696,6 +732,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.componentTopologyGeneratorSolver?.visualize()
     const globalTopologyGeneratorViz =
       this.globalTopologyGeneratorSolver?.visualize()
+    const topologyMergingViz = this.topologyMergingSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
@@ -809,6 +846,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       escapeViaLocationViz,
       netToPPSolver,
       globalTopologyGeneratorViz,
+      topologyMergingViz,
       nodeSubdivisionViz,
       nodeTargetMergerViz,
       singleLayerNodeMergerViz,

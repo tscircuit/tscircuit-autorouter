@@ -123,6 +123,11 @@ type SolverSvgFramesParams = {
   frames: SolverSvgFrame[]
 } & SvgFramesOptions
 
+type SolverGraphicsFramesParams = Pick<
+  SolverSvgFramesParams,
+  "solver" | "frames"
+>
+
 type GraphicsSvgFramesParams = {
   /** Ordered graphics frames to render into the SVG sheet. */
   frames: GraphicsSvgFrame[]
@@ -148,13 +153,7 @@ export function getSolverSvgFrames({
   cellHeight,
   backgroundColor,
 }: SolverSvgFramesParams): string {
-  if (frames.length === 0) {
-    throw new Error("getSolverSvgFrames requires at least one frame")
-  }
-
-  const graphicsFrames = frames.map((frame) =>
-    captureSolverFrame({ solver, frame }),
-  )
+  const graphicsFrames = getSolverGraphicsFrames({ solver, frames })
 
   return getGraphicsSvgFrames({
     frames: graphicsFrames,
@@ -164,6 +163,17 @@ export function getSolverSvgFrames({
     cellHeight,
     backgroundColor,
   })
+}
+
+export function getSolverGraphicsFrames({
+  solver,
+  frames,
+}: SolverGraphicsFramesParams): GraphicsSvgFrame[] {
+  if (frames.length === 0) {
+    throw new Error("getSolverGraphicsFrames requires at least one frame")
+  }
+
+  return frames.map((frame) => captureSolverFrame({ solver, frame }))
 }
 
 export function getGraphicsSvgFrames({
