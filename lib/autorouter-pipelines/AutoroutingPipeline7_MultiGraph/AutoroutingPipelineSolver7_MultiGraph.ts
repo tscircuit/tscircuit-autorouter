@@ -29,6 +29,7 @@ import {
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -627,7 +628,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.originalSrj = srj
+    const srjWithBoardValidObstacleLayers =
+      createSrjWithBoardValidObstacleLayers(srj)
+    this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -636,7 +639,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
-    this.setSimpleRouteJson(srj)
+    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX

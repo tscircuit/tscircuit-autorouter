@@ -5,6 +5,7 @@ import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 
@@ -17,11 +18,17 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   }
 
   override _step() {
+    const inputSrjWithBoardValidObstacleLayers =
+      createSrjWithBoardValidObstacleLayers(this.inputSrj)
     const srjWithPreloadedRouteObstacles =
-      convertSrjTracesToObstacles(this.inputSrj) ?? this.inputSrj
+      convertSrjTracesToObstacles(inputSrjWithBoardValidObstacleLayers) ??
+      inputSrjWithBoardValidObstacleLayers
 
-    this.outputSrj = addApproximatingRectsToSrj(
+    const srjWithApproximatingRects = addApproximatingRectsToSrj(
       filterObstaclesOutsideBoard(srjWithPreloadedRouteObstacles),
+    )
+    this.outputSrj = createSrjWithBoardValidObstacleLayers(
+      srjWithApproximatingRects,
     )
     this.solved = true
   }

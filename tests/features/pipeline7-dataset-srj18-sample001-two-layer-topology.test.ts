@@ -20,4 +20,11 @@ test("pipeline7 dataset-srj18 sample001 keeps topology within its two board laye
   expect(solver.failed).toBe(false)
   expect(solver.topologyMergingSolver?.solved).toBe(true)
   expect(usedZLayers).toEqual([0, 1])
+  expect(
+    solver.originalSrj.obstacles.every(
+      (obstacle) =>
+        obstacle.layers.every((layer) => ["top", "bottom"].includes(layer)) &&
+        obstacle.zLayers?.every((z) => z === 0 || z === 1),
+    ),
+  ).toBe(true)
 })
