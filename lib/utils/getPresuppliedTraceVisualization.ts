@@ -29,10 +29,13 @@ export const getPresuppliedTraceVisualization = ({
   opacity = 0.25,
   visualizationOptions = {},
 }: PresuppliedTraceVisualizationParams): GraphicsObject => {
-  const traceVisualization = convertSrjToGraphicsObject({
-    ...srj,
-    obstacles: [],
-  }, visualizationOptions)
+  const traceVisualization = convertSrjToGraphicsObject(
+    {
+      ...srj,
+      obstacles: [],
+    },
+    visualizationOptions,
+  )
 
   return {
     ...traceVisualization,

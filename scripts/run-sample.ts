@@ -1,6 +1,12 @@
 #!/usr/bin/env bun
 
-import { appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import {
+  appendFile,
+  mkdir,
+  readFile,
+  readdir,
+  writeFile,
+} from "node:fs/promises"
 import path from "node:path"
 import {
   getPngBufferFromGraphicsObject,
@@ -487,7 +493,9 @@ const main = async () => {
   if (options.netColors && result.solved && !result.failed) {
     const graphics = pipelineSolver.visualizeFinalOutput?.()
     if (!graphics) {
-      throw new Error("Pipeline 7 does not provide a final-output visualization")
+      throw new Error(
+        "Pipeline 7 does not provide a final-output visualization",
+      )
     }
     const basePath = path.join(resolvedOutputDir, "final-net-colors")
     netColorArtifactPath = `${basePath}.png`
@@ -503,7 +511,10 @@ const main = async () => {
       `${basePath}.svg`,
       getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
     )
-    await writeFile(`${basePath}.graphics.json`, JSON.stringify(graphics, null, 2))
+    await writeFile(
+      `${basePath}.graphics.json`,
+      JSON.stringify(graphics, null, 2),
+    )
   }
   let relaxedDrcPassed: boolean | null = null
   let drcErrors: Array<Record<string, unknown>> = []
@@ -570,7 +581,9 @@ const main = async () => {
   console.log(`Logs: ${toRelativePath(result.logsPath)}`)
   console.log(`Stage PNGs: ${result.stageArtifacts.length}`)
   if (netColorArtifactPath) {
-    console.log(`Net-colored final PNG: ${toRelativePath(netColorArtifactPath)}`)
+    console.log(
+      `Net-colored final PNG: ${toRelativePath(netColorArtifactPath)}`,
+    )
   }
   if (result.stoppedAfterStage) {
     console.log(`Stopped after stage: ${result.stoppedAfterStage}`)

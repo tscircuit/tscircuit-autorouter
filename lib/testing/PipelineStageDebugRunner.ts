@@ -195,7 +195,8 @@ export class PipelineStageDebugRunner<
       `stage${String(stageNumber).padStart(2, "0")}-${this.getSafeStageName(stageName)}.png`,
     )
     const basePath = pngPath.slice(0, -".png".length)
-    const graphics = this.pipelineSolver.visualizeStage?.(stageSolver) ??
+    const graphics =
+      this.pipelineSolver.visualizeStage?.(stageSolver) ??
       this.getStageGraphics(stageSolver)
 
     const png = await getPngBufferFromGraphicsObject(graphics, {

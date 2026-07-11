@@ -256,7 +256,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
-      (cms) => [cms.originalSrj, { traceColorMode: cms.visualizationTraceColorMode }],
+      (cms) => [
+        cms.originalSrj,
+        { traceColorMode: cms.visualizationTraceColorMode },
+      ],
       {
         onSolved: (cms) => {
           cms.setSimpleRouteJson(
@@ -898,7 +901,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       : graphics
   }
 
-  visualizeStage(stageSolver: { visualize: () => GraphicsObject }): GraphicsObject {
+  visualizeStage(stageSolver: {
+    visualize: () => GraphicsObject
+  }): GraphicsObject {
     const graphics = stageSolver.visualize()
     return this.visualizationTraceColorMode === "net"
       ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
