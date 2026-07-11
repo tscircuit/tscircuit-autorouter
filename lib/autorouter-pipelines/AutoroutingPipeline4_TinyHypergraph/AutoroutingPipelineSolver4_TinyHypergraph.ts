@@ -638,7 +638,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       ],
       lines: problemLines,
     } as GraphicsObject
-    const routeViz = getPresuppliedTraceVisualization(srjToVisualize)
+    const routeViz = getPresuppliedTraceVisualization({ srj: srjToVisualize })
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
     const visualizations = [
       problemViz,
@@ -666,7 +666,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       this.solved
         ? combineVisualizations(
             problemBaseViz,
-            getPresuppliedTraceVisualization(this.originalSrj),
+            getPresuppliedTraceVisualization({ srj: this.originalSrj }),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,

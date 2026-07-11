@@ -477,7 +477,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
 
     if (!includeRoutes) return problemBaseViz
 
-    const routeViz = getPresuppliedTraceVisualization(srjToVisualize)
+    const routeViz = getPresuppliedTraceVisualization({ srj: srjToVisualize })
 
     return combineVisualizations(problemBaseViz, routeViz)
   }
@@ -520,7 +520,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         this.solved
           ? combineVisualizations(
               problemBaseViz,
-              getPresuppliedTraceVisualization(this.originalSrj),
+              getPresuppliedTraceVisualization({ srj: this.originalSrj }),
               convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
             )
           : null,

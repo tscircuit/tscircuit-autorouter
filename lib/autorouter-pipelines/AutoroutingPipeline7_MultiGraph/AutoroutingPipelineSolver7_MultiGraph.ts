@@ -27,8 +27,12 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import {
+  convertSrjToGraphicsObject,
+  type TraceColorMode,
+} from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -70,6 +74,7 @@ interface CapacityMeshSolverOptions {
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
+  visualizationTraceColorMode?: TraceColorMode
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -229,6 +234,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
+  visualizationTraceColorMode: TraceColorMode
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -250,7 +256,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
-      (cms) => [cms.originalSrj],
+      (cms) => [cms.originalSrj, { traceColorMode: cms.visualizationTraceColorMode }],
       {
         onSolved: (cms) => {
           cms.setSimpleRouteJson(
@@ -639,6 +645,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
+    this.visualizationTraceColorMode =
+      mutableOpts.visualizationTraceColorMode ?? "layer"
     this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
@@ -723,7 +731,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   visualize(): GraphicsObject {
     if (!this.solved && this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.visualizeStage(this.activeSubSolver)
     }
     const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
@@ -832,7 +840,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       lines: problemLines,
     } as GraphicsObject
-    const routeViz = getPresuppliedTraceVisualization(srjToVisualize)
+    const visualizationOptions = {
+      traceColorMode: this.visualizationTraceColorMode,
+    } as const
+    const routeViz = getPresuppliedTraceVisualization({
+      srj: srjToVisualize,
+      visualizationOptions,
+    })
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
     const processedProblemViz =
       this.preprocessSimpleRouteJsonSolver?.visualize()
@@ -870,12 +884,34 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.solved
         ? combineVisualizations(
             problemBaseViz,
-            getPresuppliedTraceVisualization(this.originalSrj),
-            convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
+            getPresuppliedTraceVisualization({
+              srj: this.originalSrj,
+              visualizationOptions,
+            }),
+            this.visualizeFinalOutput(),
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-    return combineVisualizations(...visualizations)
+    const graphics = combineVisualizations(...visualizations)
+    return this.visualizationTraceColorMode === "net"
+      ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
+      : graphics
+  }
+
+  visualizeStage(stageSolver: { visualize: () => GraphicsObject }): GraphicsObject {
+    const graphics = stageSolver.visualize()
+    return this.visualizationTraceColorMode === "net"
+      ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
+      : graphics
+  }
+
+  visualizeFinalOutput(): GraphicsObject {
+    const traceColorMode = this.visualizationTraceColorMode
+    const outputSrj = this.getOutputSimpleRouteJson()
+    const graphics = convertSrjToGraphicsObject(outputSrj, {
+      traceColorMode,
+    })
+    return graphics
   }
 
   preview(): GraphicsObject {

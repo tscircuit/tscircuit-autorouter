@@ -135,6 +135,9 @@ Use helper functions instead of hand-mapping layer strings:
 
 Connection colors come from `getColorMap(srj)` when available. Preserve per-connection colors; use layer styling through dash, opacity, and `layer`, not by replacing a known connection color.
 
+For Pipeline 7 visuals colored by net instead of layer, use
+`bun scripts/run-sample.ts ... --net-colors`.
+
 Fallback layer colors for final routed output:
 
 - `top`: red

@@ -6,6 +6,8 @@ import {
 } from "graphics-debug"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
+import type { TraceColorMode } from "lib/utils/convertSrjToGraphicsObject"
 
 type PipelineStepLike = {
   solverName: string
@@ -22,6 +24,9 @@ export type StageDebuggablePipelineSolver = BaseSolver & {
   currentPipelineStepIndex: number
   getCurrentPhase: () => string
   timeSpentOnPhase?: Record<string, number>
+  visualizationTraceColorMode?: TraceColorMode
+  colorMap?: Record<string, string>
+  visualizeStage?: (stageSolver: VisualizingSolver) => GraphicsObject
 }
 
 export type PipelineStageArtifact = {
@@ -190,7 +195,8 @@ export class PipelineStageDebugRunner<
       `stage${String(stageNumber).padStart(2, "0")}-${this.getSafeStageName(stageName)}.png`,
     )
     const basePath = pngPath.slice(0, -".png".length)
-    const graphics = stageSolver.visualize()
+    const graphics = this.pipelineSolver.visualizeStage?.(stageSolver) ??
+      this.getStageGraphics(stageSolver)
 
     const png = await getPngBufferFromGraphicsObject(graphics, {
       backgroundColor: "white",
@@ -258,6 +264,14 @@ export class PipelineStageDebugRunner<
     }
 
     return stepPngPaths
+  }
+
+  private getStageGraphics(stageSolver: VisualizingSolver): GraphicsObject {
+    const graphics = stageSolver.visualize()
+    return this.pipelineSolver.visualizationTraceColorMode === "net" &&
+      this.pipelineSolver.colorMap
+      ? applyNetColorsToGraphicsObject(graphics, this.pipelineSolver.colorMap)
+      : graphics
   }
 
   private getObjectSteps(graphics: GraphicsObject): number[] {

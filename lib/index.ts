@@ -37,7 +37,11 @@ export * from "./cache/LocalStorageCache"
 export * from "./cache/setupGlobalCaches"
 export * from "./cache/types"
 export * from "./autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver"
-export { convertSrjToGraphicsObject } from "./utils/convertSrjToGraphicsObject"
+export {
+  convertSrjToGraphicsObject,
+  type ConvertSrjToGraphicsObjectOptions,
+  type TraceColorMode,
+} from "./utils/convertSrjToGraphicsObject"
 export {
   getRerouteSimpleRouteJson,
   reconnectReroutedSimpleRouteJsonRegion,
