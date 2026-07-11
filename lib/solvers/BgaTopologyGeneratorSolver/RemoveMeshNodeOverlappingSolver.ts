@@ -1,12 +1,15 @@
 import {
-  doBoundsOverlap,
+  boundsAreaOverlap,
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
+import { splitCapacityNodeAroundCutouts } from "lib/solvers/TopologyPlanningSolver/split-capacity-node-around-cutouts"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+
+const MIN_OVERLAP_AREA = 1e-9
 
 export type RemoveMeshNodeOverlappingSolverInput = {
   meshNodes: CapacityMeshNode[]
@@ -41,6 +44,15 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
     const obstacleAvailableZ: number[] = obstacle.layers.map((layerName) =>
       mapLayerNameToZ(layerName, this.inputProblem.layerCount),
     )
+    const obstacleCutoutNode: CapacityMeshNode = {
+      capacityMeshNodeId: `unmarked-obstacle-cutout-${this.obstacleQueueIndex}`,
+      center: obstacle.center,
+      width: obstacle.width,
+      height: obstacle.height,
+      availableZ: obstacleAvailableZ,
+      layer: `z${obstacleAvailableZ.join(",")}`,
+      _containsObstacle: true,
+    }
     const nextMeshNodes: CapacityMeshNode[] = []
 
     for (const node of this.meshNodes) {
@@ -58,22 +70,21 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
         continue
       }
 
-      const overlapsObstacle: boolean = doBoundsOverlap(
+      const overlapArea: number = boundsAreaOverlap(
         getBoundFromCenteredRect(node),
         getBoundFromCenteredRect(obstacle),
       )
 
-      if (!overlapsObstacle) {
+      if (overlapArea <= MIN_OVERLAP_AREA) {
         nextMeshNodes.push(node)
-        continue
-      }
-
-      if (node.availableZ.length === 1) {
         continue
       }
 
       const nodeFreeLayers: number[] = node.availableZ.filter(
         (z) => !obstacleAvailableZ.includes(z),
+      )
+      const nodeBlockedLayers: number[] = node.availableZ.filter((z) =>
+        obstacleAvailableZ.includes(z),
       )
 
       for (const z of nodeFreeLayers) {
@@ -85,6 +96,19 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
         }
         nextMeshNodes.push(nextMeshNode)
       }
+
+      const nodeOnBlockedLayers: CapacityMeshNode = {
+        ...node,
+        capacityMeshNodeId: `${node.capacityMeshNodeId}:cut-${this.obstacleQueueIndex}`,
+        availableZ: nodeBlockedLayers,
+        layer: `z${nodeBlockedLayers.join(",")}`,
+      }
+      nextMeshNodes.push(
+        ...splitCapacityNodeAroundCutouts({
+          node: nodeOnBlockedLayers,
+          cutoutNodes: [obstacleCutoutNode],
+        }),
+      )
     }
 
     this.meshNodes = nextMeshNodes

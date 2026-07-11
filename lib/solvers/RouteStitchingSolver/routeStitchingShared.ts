@@ -17,6 +17,12 @@ export const MAX_STITCH_GAP_DISTANCE_3 = 1
  */
 export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 
+/**
+ * XY tolerance used when a stitch joins fragments on different layers.
+ * Layer changes must be effectively coincident at this scale.
+ */
+export const STITCH_GEOMETRIC_TOLERANCE = 1e-3
+
 export const compareNumbers = (a: number, b: number) => {
   if (a < b) return -1
   if (a > b) return 1

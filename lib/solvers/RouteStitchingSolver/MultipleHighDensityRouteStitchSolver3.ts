@@ -1,9 +1,9 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
@@ -16,10 +16,45 @@ import {
   selectRoutesAlongEndpointPath,
   snapIslandEndpointToNearestTerminal,
 } from "./routeStitchingEndpointHelpers"
-import {
-  compareRoutes,
-  MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
-} from "./routeStitchingShared"
+import { compareRoutes } from "./routeStitchingShared"
+
+const TERMINAL_MATCH_TOLERANCE = 1e-3
+
+const getTerminalLayerPoints = (
+  point: ConnectionPoint,
+  layerCount: number,
+): Point3[] => {
+  const layers = getConnectionPointLayers(point)
+  if (layers.length === 0) {
+    throw new Error("Connection terminal has no available layers")
+  }
+  return layers.map((layer) => ({
+    x: point.x,
+    y: point.y,
+    z: mapLayerNameToZ(layer, layerCount),
+  }))
+}
+
+const selectSupportedTerminalPoint = (params: {
+  point: ConnectionPoint
+  layerCount: number
+  routeEndpoints: Point3[]
+}): Point3 => {
+  const terminalPoints = getTerminalLayerPoints(params.point, params.layerCount)
+  const nearestSupportedRouteEndpoint = [...params.routeEndpoints]
+    .sort(
+      (left, right) =>
+        distance(left, params.point) - distance(right, params.point) ||
+        left.z - right.z,
+    )
+    .find((endpoint) =>
+      terminalPoints.some((terminalPoint) => terminalPoint.z === endpoint.z),
+    )
+  if (!nearestSupportedRouteEndpoint) return terminalPoints[0]!
+  return terminalPoints.find(
+    (point) => point.z === nearestSupportedRouteEndpoint.z,
+  )!
+}
 
 export type UnsolvedRoute3 = {
   connectionName: string
@@ -67,7 +102,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       stitchSolver.step()
     }
 
-    if (stitchSolver.failed) return false
+    if (
+      stitchSolver.failed ||
+      !stitchSolver.solved ||
+      stitchSolver.remainingHdRoutes.length > 0
+    ) {
+      return false
+    }
 
     const routeStart = stitchSolver.mergedHdRoute.route[0]
     const routeEnd =
@@ -75,15 +116,18 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         stitchSolver.mergedHdRoute.route.length - 1
       ]
 
-    const directDistance =
-      distance(routeStart, params.start) + distance(routeEnd, params.end)
-    const swappedDistance =
-      distance(routeStart, params.end) + distance(routeEnd, params.start)
+    const directMatch =
+      routeStart.z === params.start.z &&
+      routeEnd.z === params.end.z &&
+      distance(routeStart, params.start) < TERMINAL_MATCH_TOLERANCE &&
+      distance(routeEnd, params.end) < TERMINAL_MATCH_TOLERANCE
+    const swappedMatch =
+      routeStart.z === params.end.z &&
+      routeEnd.z === params.start.z &&
+      distance(routeStart, params.end) < TERMINAL_MATCH_TOLERANCE &&
+      distance(routeEnd, params.start) < TERMINAL_MATCH_TOLERANCE
 
-    return (
-      Math.min(directDistance, swappedDistance) <=
-      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-    )
+    return directMatch || swappedMatch
   }
 
   private getSharedRootPathRoutes(params: {
@@ -113,16 +157,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       hdRoutes: sameRootRoutes,
       start: params.start,
       end: params.end,
-      endpointIndex: this.endpointIndex,
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
+      allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
     })
 
     const includesSharedRootBridge = pathRoutes.some(
       (route) => !currentRouteSet.has(route),
     )
-    // The endpoint path helper returns all candidate routes as a fallback when
-    // no path is found, so only accept a strict same-root subset.
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
@@ -190,7 +232,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       const connection = params.connections.find(
         (c) => c.name === hdRoutes[0].connectionName,
-      )!
+      )
+      if (!connection) {
+        throw new Error(
+          `Cannot stitch unknown connection "${hdRoutes[0].connectionName}"`,
+        )
+      }
 
       const possibleEndpoints1 = hdRoutes.flatMap((r) => [
         r.route[0],
@@ -226,22 +273,28 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       let start: Point3
       let end: Point3
+      const globalStart = selectSupportedTerminalPoint({
+        point: connection.pointsToConnect[0],
+        layerCount: params.layerCount,
+        routeEndpoints: candidateEndpoints,
+      })
+      const globalEnd = selectSupportedTerminalPoint({
+        point: connection.pointsToConnect[1],
+        layerCount: params.layerCount,
+        routeEndpoints: candidateEndpoints,
+      })
+      const terminalLayerPoints = [
+        ...getTerminalLayerPoints(
+          connection.pointsToConnect[0],
+          params.layerCount,
+        ),
+        ...getTerminalLayerPoints(
+          connection.pointsToConnect[1],
+          params.layerCount,
+        ),
+      ]
 
       if (candidateEndpoints.length >= 2) {
-        const globalStart = {
-          ...connection.pointsToConnect[0],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[0]),
-            params.layerCount,
-          ),
-        }
-        const globalEnd = {
-          ...connection.pointsToConnect[1],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[1]),
-            params.layerCount,
-          ),
-        }
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
@@ -257,38 +310,35 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminals: terminalLayerPoints,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminals: terminalLayerPoints,
         })
       } else {
-        start = {
-          ...connection.pointsToConnect[0],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[0]),
-            params.layerCount,
-          ),
-        }
-        end = {
-          ...connection.pointsToConnect[1],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[1]),
-            params.layerCount,
-          ),
-        }
+        start = globalStart
+        end = globalEnd
       }
 
-      const selectedHdRoutes = selectRoutesAlongEndpointPath({
-        connectionName: hdRoutes[0].connectionName,
-        hdRoutes,
-        start,
-        end,
-        endpointIndex: this.endpointIndex,
-        canStitchBetweenTerminals: (selection) =>
-          this.canStitchBetweenTerminals(selection),
-      })
+      const containsDegenerateFragment = hdRoutes.some(
+        (route) => route.route.length < 2,
+      )
+      // A one-point fragment is not an edge. Preserve its whole local island
+      // so the connection-level pass below can select a proven path across
+      // every island; hasDegenerateRoute makes that pass mandatory.
+      const selectedHdRoutes = containsDegenerateFragment
+        ? hdRoutes
+        : selectRoutesAlongEndpointPath({
+            connectionName: hdRoutes[0].connectionName,
+            hdRoutes,
+            start,
+            end,
+            canStitchBetweenTerminals: (selection) =>
+              this.canStitchBetweenTerminals(selection),
+            allowedLayerTransitionPointKeys:
+              this.allowedLayerTransitionPointKeys,
+          })
 
       this.unsolvedRoutes.push({
         connectionName: hdRoutes[0].connectionName,
@@ -325,26 +375,27 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         unsolvedRoutes.length > 1 &&
         hasStitchableGapBetweenUnsolvedRoutes(unsolvedRoutes)
 
-      if (!connection) return unsolvedRoutes
-
-      const start = {
-        ...connection.pointsToConnect[0],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[0]),
-          params.layerCount,
-        ),
-      }
-      const end = {
-        ...connection.pointsToConnect[1],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[1]),
-          params.layerCount,
-        ),
+      if (!connection) {
+        throw new Error(`Cannot stitch unknown connection "${connectionName}"`)
       }
 
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
+      const routeEndpoints = hdRoutes.flatMap((route) => [
+        route.route[0],
+        route.route[route.route.length - 1],
+      ])
+      const start = selectSupportedTerminalPoint({
+        point: connection.pointsToConnect[0],
+        layerCount: params.layerCount,
+        routeEndpoints,
+      })
+      const end = selectSupportedTerminalPoint({
+        point: connection.pointsToConnect[1],
+        layerCount: params.layerCount,
+        routeEndpoints,
+      })
       const sharedRootPathRoutes =
         unsolvedRoutes.length > 1
           ? this.getSharedRootPathRoutes({
@@ -373,9 +424,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               hdRoutes,
               start,
               end,
-              endpointIndex: this.endpointIndex,
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
+              allowedLayerTransitionPointKeys:
+                this.allowedLayerTransitionPointKeys,
             }),
           start,
           end,

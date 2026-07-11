@@ -25,6 +25,7 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { attachRouteEndpointIdentities } from "lib/utils/attach-route-endpoint-identities"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -486,7 +487,10 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: attachRouteEndpointIdentities(
+            cms.srjWithPointPairs!,
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          ),
           effort: cms.effort,
         },
       ],

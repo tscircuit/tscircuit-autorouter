@@ -25,6 +25,7 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { attachRouteEndpointIdentities } from "lib/utils/attach-route-endpoint-identities"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -424,6 +425,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
+              USE_CONFLICT_AWARE_ROUTING: true,
             },
             weights: {
               SHUFFLE_SEED: 0,
@@ -579,7 +581,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: attachRouteEndpointIdentities(
+            cms.srjWithPointPairs!,
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          ),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,

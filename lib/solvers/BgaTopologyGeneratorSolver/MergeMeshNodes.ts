@@ -50,6 +50,11 @@ type OrderedCell = {
   row: number
 }
 
+type YInterval = {
+  minY: number
+  maxY: number
+}
+
 type MergeMeshNodesStats = {
   lastAction: string
   totalGroupCount: number
@@ -144,6 +149,65 @@ function createMergedNode(sourceNodes: CapacityMeshNode[]): CapacityMeshNode {
     width: maxX - minX,
     height: maxY - minY,
   }
+}
+
+function doesNodeUnionFillBoundingBox(
+  sourceNodes: CapacityMeshNode[],
+): boolean {
+  const sourceBounds: Bounds[] = sourceNodes.map(
+    (sourceNode: CapacityMeshNode): Bounds =>
+      getBoundFromCenteredRect(sourceNode),
+  )
+  const xBreaks: number[] = [
+    ...new Set(
+      sourceBounds.flatMap((bounds: Bounds): number[] => [
+        bounds.minX,
+        bounds.maxX,
+      ]),
+    ),
+  ].sort((a: number, b: number): number => a - b)
+  const minY: number = Math.min(
+    ...sourceBounds.map((bounds: Bounds): number => bounds.minY),
+  )
+  const maxY: number = Math.max(
+    ...sourceBounds.map((bounds: Bounds): number => bounds.maxY),
+  )
+
+  for (let i: number = 0; i < xBreaks.length - 1; i += 1) {
+    const minX: number = xBreaks[i]!
+    const maxX: number = xBreaks[i + 1]!
+    if (maxX - minX <= EDGE_EPSILON) continue
+
+    const xMidpoint: number = (minX + maxX) / 2
+    const yIntervals: YInterval[] = sourceBounds
+      .filter(
+        (bounds: Bounds): boolean =>
+          bounds.minX <= xMidpoint + EDGE_EPSILON &&
+          bounds.maxX >= xMidpoint - EDGE_EPSILON,
+      )
+      .map(
+        (bounds: Bounds): YInterval => ({
+          minY: bounds.minY,
+          maxY: bounds.maxY,
+        }),
+      )
+      .sort(
+        (a: YInterval, b: YInterval): number =>
+          a.minY - b.minY || a.maxY - b.maxY,
+      )
+
+    let coveredThroughY: number = minY
+    for (const interval of yIntervals) {
+      if (interval.maxY <= coveredThroughY + EDGE_EPSILON) continue
+      if (interval.minY > coveredThroughY + EDGE_EPSILON) return false
+      coveredThroughY = interval.maxY
+      if (coveredThroughY >= maxY - EDGE_EPSILON) break
+    }
+
+    if (coveredThroughY < maxY - EDGE_EPSILON) return false
+  }
+
+  return true
 }
 
 function buildMergedNodesForGroup(
@@ -287,6 +351,22 @@ function buildMergedNodesForGroup(
       if (passthroughNode) {
         outputNodes.push(passthroughNode)
       }
+      continue
+    }
+
+    if (!doesNodeUnionFillBoundingBox(sourceNodes)) {
+      const rejectedNodeIds: Set<string> = new Set(
+        sourceNodes.map(
+          (sourceNode: CapacityMeshNode): string =>
+            sourceNode.capacityMeshNodeId,
+        ),
+      )
+      for (const [cellKey, cellNode] of nodeByCellKey.entries()) {
+        if (rejectedNodeIds.has(cellNode.capacityMeshNodeId)) {
+          visitedCellKeys.add(cellKey)
+        }
+      }
+      outputNodes.push(...sourceNodes)
       continue
     }
 

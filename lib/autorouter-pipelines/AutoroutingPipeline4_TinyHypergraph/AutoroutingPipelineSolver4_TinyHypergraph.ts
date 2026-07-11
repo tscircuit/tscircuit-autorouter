@@ -2,9 +2,9 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { DrcMonotonicGlobalDrcForceImproveSolver } from "lib/solvers/GlobalDrcForceImproveSolver/drc-monotonic-global-drc-force-improve-solver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -23,6 +23,7 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { attachRouteEndpointIdentities } from "lib/utils/attach-route-endpoint-identities"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -110,7 +111,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
-  globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
+  globalDrcForceImproveSolver?: DrcMonotonicGlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -426,11 +427,14 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
     ]),
     definePipelineStep(
       "globalDrcForceImproveSolver",
-      GlobalDrcForceImproveSolver,
+      DrcMonotonicGlobalDrcForceImproveSolver,
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: attachRouteEndpointIdentities(
+            cms.srjWithPointPairs!,
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          ),
           effort: cms.effort,
         },
       ],

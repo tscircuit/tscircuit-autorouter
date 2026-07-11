@@ -1,3 +1,8 @@
+import {
+  type Bounds,
+  doBoundsOverlap,
+  getBoundFromCenteredRect,
+} from "@tscircuit/math-utils"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
@@ -47,6 +52,34 @@ export interface MultiGraphTopologyPlannerSolverOutput {
   globalMeshNodes: CapacityMeshNode[]
   componentMeshNodes: CapacityMeshNode[][]
   mergedMeshNodes: CapacityMeshNode[]
+}
+
+/**
+ * RectDiff has one clearance value for every obstacle. Component replacement
+ * obstacles must keep their exact boundary so the global and component-local
+ * meshes still meet, so expand only obstacles owned by the global topology.
+ */
+function createGlobalRectDiffSrjWithSelectiveClearance(params: {
+  simpleRouteJson: SimpleRouteJson
+  componentBounds: Bounds[]
+  obstacleClearance: number
+}): SimpleRouteJson {
+  return {
+    ...params.simpleRouteJson,
+    obstacles: params.simpleRouteJson.obstacles.map((obstacle) => {
+      const obstacleBounds = getBoundFromCenteredRect(obstacle)
+      const isOwnedByComponentTopology = params.componentBounds.some((bounds) =>
+        doBoundsOverlap(obstacleBounds, bounds),
+      )
+      if (isOwnedByComponentTopology) return obstacle
+
+      return {
+        ...obstacle,
+        width: obstacle.width + params.obstacleClearance * 2,
+        height: obstacle.height + params.obstacleClearance * 2,
+      }
+    }),
+  }
 }
 
 /**
@@ -202,9 +235,23 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
 
   /** Adapts the global no-connection SRJ into the RectDiffPipeline input shape. */
   private getGlobalTopologySolverInput() {
+    const obstacleClearance = this.inputProblem.obstacleMargin ?? 0
+    const hasComponentTopology = this.normalizedInput.components.length > 0
+    const simpleRouteJson =
+      hasComponentTopology && obstacleClearance > 0
+        ? createGlobalRectDiffSrjWithSelectiveClearance({
+            simpleRouteJson: this.normalizedInput.globalNoConnectionSrj,
+            componentBounds: this.getComponentNoConnectionSrjs().map(
+              (componentSrj) => componentSrj.bounds,
+            ),
+            obstacleClearance,
+          })
+        : this.normalizedInput.globalNoConnectionSrj
+
     return {
-      simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
+      simpleRouteJson: simpleRouteJson as any,
       maxGapFillPasses: 4,
+      obstacleClearance: hasComponentTopology ? 0 : obstacleClearance,
     }
   }
 

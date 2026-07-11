@@ -25,6 +25,7 @@ import {
 } from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { ConflictAwareTinyHyperGraphSolver } from "./conflict-aware-tiny-hyper-graph-solver"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 
 type RouteMetadata = {
@@ -112,7 +113,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST: Number.POSITIVE_INFINITY,
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
-const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const CONFLICT_AWARE_CRAMPED_PORT_TRAVERSAL_PENALTY = 0
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
@@ -529,7 +531,10 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
   }
 }
 
-const applyPortMetadataPenalties = (loaded: LoadedTinyGraph) => {
+const applyPortMetadataPenalties = (
+  loaded: LoadedTinyGraph,
+  crampedPortTraversalPenalty: number,
+) => {
   let duplicatePortPenaltyCount = 0
   let crampedPortPenaltyCount = 0
   const portPenalty = loaded.problem.portPenalty
@@ -542,8 +547,8 @@ const applyPortMetadataPenalties = (loaded: LoadedTinyGraph) => {
       portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
       duplicatePortPenaltyCount++
     }
-    if (metadata?.cramped) {
-      portPenalty[portId] += CRAMPED_PORT_TRAVERSAL_PENALTY
+    if (metadata?.cramped && crampedPortTraversalPenalty > 0) {
+      portPenalty[portId] += crampedPortTraversalPenalty
       crampedPortPenaltyCount++
     }
   }
@@ -590,9 +595,29 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
   crampedPortPenaltyCount = 0
+  readonly crampedPortTraversalPenalty: number
+  readonly useConflictAwareRouting: boolean
 
-  constructor(inputProblem: TinyHyperGraphSectionPipelineInput) {
+  constructor(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useConflictAwareRouting: boolean,
+  ) {
     super(inputProblem)
+    this.useConflictAwareRouting = useConflictAwareRouting
+    this.crampedPortTraversalPenalty = useConflictAwareRouting
+      ? CONFLICT_AWARE_CRAMPED_PORT_TRAVERSAL_PENALTY
+      : DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
+    if (useConflictAwareRouting) {
+      const solveGraphStep = this.pipelineDef.find(
+        (pipelineStep) => pipelineStep.solverName === "solveGraph",
+      )
+      if (!solveGraphStep) {
+        throw new Error(
+          "Tiny hypergraph pipeline is missing the solveGraph stage",
+        )
+      }
+      solveGraphStep.solverClass = ConflictAwareTinyHyperGraphSolver
+    }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
 
@@ -600,7 +625,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     const loaded = super.loadHyperGraph(serializedHyperGraph)
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
-      applyPortMetadataPenalties(loaded)
+      applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
     applyTerminalRegionNetIds(loaded)
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
@@ -618,17 +643,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
-    try {
-      super._step()
-    } catch (error) {
-      if (this.tryAcceptSolveGraphWithoutSerializedOutput(error)) {
-        return
-      }
-      if (this.trySkipOptimizeSection(error)) {
-        return
-      }
-      throw error
-    }
+    super._step()
     this.configureSolver(this.activeSubSolver)
   }
 
@@ -639,6 +654,15 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
+    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (
+      this.useConflictAwareRouting &&
+      solveGraphSolver?.solved &&
+      !solveGraphSolver.failed
+    ) {
+      return solveGraphSolver
+    }
+
     const optimizeSectionSolver =
       this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
 
@@ -646,7 +670,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       return optimizeSectionSolver.getSolvedSolver()
     }
 
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
       return solveGraphSolver
     }
@@ -671,58 +694,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     }
 
     this.configuredSolvers.add(solver)
-  }
-
-  private trySkipOptimizeSection(error: unknown) {
-    if (this.getCurrentStageName() !== "optimizeSection") {
-      return false
-    }
-
-    const solveGraphOutput =
-      this.getStageOutput<SerializedHyperGraph>("solveGraph")
-
-    if (!solveGraphOutput) {
-      return false
-    }
-
-    this.pipelineOutputs.optimizeSection = solveGraphOutput
-    this.finishWithExistingSolverState({
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private tryAcceptSolveGraphWithoutSerializedOutput(error: unknown) {
-    if (this.getCurrentStageName() !== "solveGraph") {
-      return false
-    }
-
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (!solveGraphSolver?.solved || solveGraphSolver.failed) {
-      return false
-    }
-
-    this.finishWithExistingSolverState({
-      solveGraphSerializationSkipped: true,
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private finishWithExistingSolverState(extraStats: Record<string, unknown>) {
-    this.currentPipelineStageIndex = this.pipelineDef.length
-    this.activeSubSolver = null
-    this.solved = true
-    this.failed = false
-    this.error = null
-    this.stats = {
-      ...this.stats,
-      ...extraStats,
-    }
   }
 }
 
@@ -788,7 +759,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput)
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+        tinyPipelineInput,
+        params.flags.USE_CONFLICT_AWARE_ROUTING === true,
+      )
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput)
 
@@ -819,6 +793,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
+    const solveGraphSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+    const solveGraphOutput =
+      this.tinyPipelineSolver.getStageOutput<SerializedHyperGraph>("solveGraph")
     const currentTinySolver = this.getCurrentTinySolver()
 
     this.solved = this.tinyPipelineSolver.solved
@@ -842,7 +820,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver.duplicatePortPenaltyCount,
       metadataPortPenaltyCount:
         this.tinyPipelineSolver.metadataPortPenaltyCount,
-      crampedPortPenalty: CRAMPED_PORT_TRAVERSAL_PENALTY,
+      solveGraphRouteCount: solveGraphSolver?.problem.routeCount ?? 0,
+      solveGraphSolvedRouteCount: solveGraphOutput?.solvedRoutes?.length ?? 0,
+      solveGraphStats: solveGraphSolver?.stats ?? {},
+      crampedPortPenalty: this.tinyPipelineSolver.crampedPortTraversalPenalty,
       crampedPortPenaltyCount: this.tinyPipelineSolver.crampedPortPenaltyCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
       ...(this.tinyPipelineSolver.stats ?? {}),

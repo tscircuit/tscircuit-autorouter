@@ -9,6 +9,7 @@ import {
 type NodeFragment = {
   bounds: Bounds
   suffix: string
+  availableZ: number[]
 }
 
 export function splitCapacityNodeAroundCutouts({
@@ -18,34 +19,36 @@ export function splitCapacityNodeAroundCutouts({
   node: CapacityMeshNode
   cutoutNodes: CapacityMeshNode[]
 }): CapacityMeshNode[] {
-  const nodeAvailableZ = new Set(node.availableZ)
-  const layerRelevantCutoutNodes = cutoutNodes.filter((cutoutNode) =>
-    cutoutNode.availableZ.some((z) => nodeAvailableZ.has(z)),
-  )
+  if (node._containsObstacle || cutoutNodes.length === 0) return [node]
 
-  if (node._containsObstacle || layerRelevantCutoutNodes.length === 0) {
-    return [node]
-  }
+  const nodeBounds = getCapacityMeshNodeBounds(node)
+  const spatiallyRelevantCutoutNodes = cutoutNodes.filter((cutoutNode) =>
+    Boolean(
+      getBoundsIntersection(nodeBounds, getCapacityMeshNodeBounds(cutoutNode)),
+    ),
+  )
+  if (spatiallyRelevantCutoutNodes.length === 0) return [node]
 
   let fragments: NodeFragment[] = [
     {
-      bounds: getCapacityMeshNodeBounds(node),
+      bounds: nodeBounds,
       suffix: "",
+      availableZ: [...node.availableZ],
     },
   ]
 
   for (
     let cutoutIndex = 0;
-    cutoutIndex < layerRelevantCutoutNodes.length;
+    cutoutIndex < spatiallyRelevantCutoutNodes.length;
     cutoutIndex++
   ) {
-    const cutoutBounds = getCapacityMeshNodeBounds(
-      layerRelevantCutoutNodes[cutoutIndex]!,
-    )
+    const cutoutNode = spatiallyRelevantCutoutNodes[cutoutIndex]!
+    const cutoutBounds = getCapacityMeshNodeBounds(cutoutNode)
     fragments = fragments.flatMap((fragment) =>
-      subtractBoundsFromFragment({
+      partitionFragmentAroundCutout({
         fragment,
         cutoutBounds,
+        cutoutAvailableZ: cutoutNode.availableZ,
         cutoutIndex,
       }),
     )
@@ -58,21 +61,35 @@ export function splitCapacityNodeAroundCutouts({
       sourceNode: node,
       bounds: fragment.bounds,
       capacityMeshNodeId: `${node.capacityMeshNodeId}__merge_${index}${fragment.suffix}`,
+      availableZ: fragment.availableZ,
     }),
   )
 }
 
-function subtractBoundsFromFragment({
+/**
+ * Partitions one spatial fragment without separating layers that remain
+ * jointly routable. Outer pieces keep every source layer, while the overlap
+ * keeps only layers not occupied by the cutout.
+ */
+function partitionFragmentAroundCutout({
   fragment,
   cutoutBounds,
+  cutoutAvailableZ,
   cutoutIndex,
 }: {
   fragment: NodeFragment
   cutoutBounds: Bounds
+  cutoutAvailableZ: number[]
   cutoutIndex: number
 }): NodeFragment[] {
   const intersection = getBoundsIntersection(fragment.bounds, cutoutBounds)
   if (!intersection) return [fragment]
+  const blockedAvailableZ = new Set(
+    fragment.availableZ.filter((z: number): boolean =>
+      cutoutAvailableZ.includes(z),
+    ),
+  )
+  if (blockedAvailableZ.size === 0) return [fragment]
 
   const candidateFragments: NodeFragment[] = [
     {
@@ -83,6 +100,7 @@ function subtractBoundsFromFragment({
         maxY: intersection.minY,
       },
       suffix: `${fragment.suffix}__cut_${cutoutIndex}_top`,
+      availableZ: fragment.availableZ,
     },
     {
       bounds: {
@@ -92,6 +110,7 @@ function subtractBoundsFromFragment({
         maxY: fragment.bounds.maxY,
       },
       suffix: `${fragment.suffix}__cut_${cutoutIndex}_bottom`,
+      availableZ: fragment.availableZ,
     },
     {
       bounds: {
@@ -101,6 +120,7 @@ function subtractBoundsFromFragment({
         maxY: intersection.maxY,
       },
       suffix: `${fragment.suffix}__cut_${cutoutIndex}_left`,
+      availableZ: fragment.availableZ,
     },
     {
       bounds: {
@@ -110,11 +130,25 @@ function subtractBoundsFromFragment({
         maxY: intersection.maxY,
       },
       suffix: `${fragment.suffix}__cut_${cutoutIndex}_right`,
+      availableZ: fragment.availableZ,
     },
   ]
 
-  return candidateFragments.filter((candidate) =>
-    isValidCapacityBounds(candidate.bounds),
+  const unblockedIntersectionLayers = fragment.availableZ.filter(
+    (z: number): boolean => !blockedAvailableZ.has(z),
+  )
+  if (unblockedIntersectionLayers.length > 0) {
+    candidateFragments.push({
+      bounds: intersection,
+      suffix: `${fragment.suffix}__cut_${cutoutIndex}_remaining_layers`,
+      availableZ: unblockedIntersectionLayers,
+    })
+  }
+
+  return candidateFragments.filter(
+    (candidate) =>
+      isValidCapacityBounds(candidate.bounds) &&
+      candidate.availableZ.length > 0,
   )
 }
 
@@ -122,10 +156,12 @@ function createCapacityMeshNodeFromBounds({
   sourceNode,
   bounds,
   capacityMeshNodeId,
+  availableZ,
 }: {
   sourceNode: CapacityMeshNode
   bounds: Bounds
   capacityMeshNodeId: string
+  availableZ: number[]
 }): CapacityMeshNode {
   return {
     ...sourceNode,
@@ -136,6 +172,7 @@ function createCapacityMeshNodeFromBounds({
     },
     width: bounds.maxX - bounds.minX,
     height: bounds.maxY - bounds.minY,
-    availableZ: [...sourceNode.availableZ],
+    availableZ: [...availableZ],
+    layer: `z${availableZ.join(",")}`,
   }
 }

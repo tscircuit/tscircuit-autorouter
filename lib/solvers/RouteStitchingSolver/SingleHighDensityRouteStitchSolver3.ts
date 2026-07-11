@@ -10,11 +10,12 @@ import {
   DISTANCE_TIE_TOLERANCE,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+  STITCH_GEOMETRIC_TOLERANCE,
 } from "./routeStitchingShared"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
-const GEOMETRIC_TOLERANCE = 1e-3
+const COORDINATE_EPSILON = 1e-9
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 export {
   MAX_STITCH_GAP_DISTANCE_3,
@@ -71,37 +72,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
       this.end = opts.end
-      const routePoints = [
-        { x: opts.start.x, y: opts.start.y, z: opts.start.z },
-      ]
-      const vias = []
-
-      if (opts.start.z !== opts.end.z) {
-        if (
-          opts.allowedLayerTransitionPointKeys &&
-          !opts.allowedLayerTransitionPointKeys.has(getXyPointKey(opts.start))
-        ) {
-          this.failed = true
-          this.error = `Layer transition at ${getXyPointKey(
-            opts.start,
-          )} is not allowed`
-          return
-        }
-        routePoints.push({ x: opts.start.x, y: opts.start.y, z: opts.end.z })
-        vias.push({ x: opts.start.x, y: opts.start.y })
-      }
-      routePoints.push({ x: opts.end.x, y: opts.end.y, z: opts.end.z })
-
-      this.mergedHdRoute = {
-        connectionName: opts.connectionName,
-        rootConnectionName: canonicalHdRoutes[0]?.rootConnectionName,
-        route: routePoints,
-        vias,
-        jumpers: [],
-        viaDiameter: opts.defaultViaDiameter ?? 0.3,
-        traceThickness: opts.defaultTraceThickness ?? 0.15,
-      }
-      this.solved = true
+      this.failed = true
+      this.error = `Cannot stitch connection "${opts.connectionName}" without any high-density route fragments`
       return
     }
 
@@ -157,17 +129,6 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.end = opts.start
     }
 
-    const firstRouteFirstPoint = firstRoute.route[0]
-    const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
-        ? firstRouteFirstPoint
-        : firstRouteLastPoint
-
     this.mergedHdRoute = {
       connectionName: opts.connectionName,
       rootConnectionName: firstRoute.rootConnectionName,
@@ -175,7 +136,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         {
           x: this.start.x,
           y: this.start.y,
-          z: closestFirstRoutePoint.z,
+          z: this.start.z,
         },
       ],
       vias: [],
@@ -185,8 +146,106 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
   }
 
+  private failStitch(reason: string): false {
+    this.solved = false
+    this.failed = true
+    this.error = `Cannot stitch connection "${this.mergedHdRoute.connectionName}": ${reason}`
+    return false
+  }
+
+  private appendLayerTransition(
+    transitionPoint: RoutePoint,
+    targetZ: number,
+  ): boolean {
+    const lastPoint =
+      this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+    if (lastPoint.z === targetZ) return true
+
+    const transitionKey = getXyPointKey(transitionPoint)
+    if (
+      this.allowedLayerTransitionPointKeys &&
+      !this.allowedLayerTransitionPointKeys.has(transitionKey)
+    ) {
+      return this.failStitch(
+        `layer transition at ${transitionKey} is not allowed`,
+      )
+    }
+
+    if (distance(lastPoint, transitionPoint) >= STITCH_GEOMETRIC_TOLERANCE) {
+      return this.failStitch(
+        `layer transition from z${lastPoint.z} to z${targetZ} is not coincident`,
+      )
+    }
+
+    if (distance(lastPoint, transitionPoint) > COORDINATE_EPSILON) {
+      this.mergedHdRoute.route.push({
+        x: transitionPoint.x,
+        y: transitionPoint.y,
+        z: lastPoint.z,
+      })
+    }
+    this.mergedHdRoute.route.push({
+      ...transitionPoint,
+      z: targetZ,
+    })
+    if (
+      !this.mergedHdRoute.vias.some(
+        (via) => distance(via, transitionPoint) < STITCH_GEOMETRIC_TOLERANCE,
+      )
+    ) {
+      this.mergedHdRoute.vias.push({
+        x: transitionPoint.x,
+        y: transitionPoint.y,
+      })
+    }
+    return true
+  }
+
+  private validateCompletedRoute(): boolean {
+    const route = this.mergedHdRoute.route
+    const firstPoint = route[0]
+    const lastPoint = route[route.length - 1]
+    if (
+      firstPoint.z !== this.start.z ||
+      distance(firstPoint, this.start) >= STITCH_GEOMETRIC_TOLERANCE
+    ) {
+      return this.failStitch("stitched route does not start at its terminal")
+    }
+    if (
+      lastPoint.z !== this.end.z ||
+      distance(lastPoint, this.end) >= STITCH_GEOMETRIC_TOLERANCE
+    ) {
+      return this.failStitch("stitched route does not end at its terminal")
+    }
+
+    return true
+  }
+
+  private finishAtTerminal(): void {
+    const lastPoint =
+      this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+    const terminalGap = distance(lastPoint, this.end)
+    if (terminalGap > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) {
+      this.failStitch(
+        `terminal gap ${terminalGap.toFixed(3)}mm exceeds ${MAX_TERMINAL_STITCH_GAP_DISTANCE_3}mm`,
+      )
+      return
+    }
+
+    if (terminalGap > COORDINATE_EPSILON) {
+      this.mergedHdRoute.route.push({
+        x: this.end.x,
+        y: this.end.y,
+        z: lastPoint.z,
+      })
+    }
+    if (!this.appendLayerTransition(this.end, this.end.z)) return
+    if (!this.validateCompletedRoute()) return
+    this.solved = true
+  }
+
   getDisjointedRoute() {
-    const TOL = GEOMETRIC_TOLERANCE
+    const TOL = STITCH_GEOMETRIC_TOLERANCE
 
     for (const candidate of this.remainingHdRoutes) {
       const candidateEnds = [
@@ -217,22 +276,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   _step() {
     if (this.remainingHdRoutes.length === 0) {
-      const lastMergedPoint =
-        this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
-
-      if (
-        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
-        distance(lastMergedPoint, this.end) <=
-          MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-      ) {
-        this.mergedHdRoute.route.push({
-          x: this.end.x,
-          y: this.end.y,
-          z: lastMergedPoint.z,
-        })
-      }
-
-      this.solved = true
+      this.finishAtTerminal()
       return
     }
 
@@ -253,13 +297,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       let scoreFirst = Infinity
       if (lastMergedPoint.z === firstPointInCandidate.z) {
-        if (distToFirst < GEOMETRIC_TOLERANCE) {
+        if (distToFirst < STITCH_GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreFirst = GAP_PENALTY + distToFirst
         }
       } else if (
-        distToFirst < GEOMETRIC_TOLERANCE &&
+        distToFirst < STITCH_GEOMETRIC_TOLERANCE &&
         (!this.allowedLayerTransitionPointKeys ||
           this.allowedLayerTransitionPointKeys.has(
             getXyPointKey(firstPointInCandidate),
@@ -276,13 +320,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       let scoreLast = Infinity
       if (lastMergedPoint.z === lastPointInCandidate.z) {
-        if (distToLast < GEOMETRIC_TOLERANCE) {
+        if (distToLast < STITCH_GEOMETRIC_TOLERANCE) {
           scoreLast = distToLast
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
           scoreLast = GAP_PENALTY + distToLast
         }
       } else if (
-        distToLast < GEOMETRIC_TOLERANCE &&
+        distToLast < STITCH_GEOMETRIC_TOLERANCE &&
         (!this.allowedLayerTransitionPointKeys ||
           this.allowedLayerTransitionPointKeys.has(
             getXyPointKey(lastPointInCandidate),
@@ -299,7 +343,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
-      this.remainingHdRoutes = []
+      this.failStitch(
+        `no stitchable fragment remains near (${lastMergedPoint.x.toFixed(3)}, ${lastMergedPoint.y.toFixed(3)}, z${lastMergedPoint.z}); ${this.remainingHdRoutes.length} fragment(s) remain`,
+      )
       return
     }
 
@@ -313,20 +359,42 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
+    const firstPointToAdd = pointsToAdd[0]
+    if (!firstPointToAdd) {
+      this.failStitch("encountered an empty high-density route fragment")
+      return
+    }
+
     if (
-      pointsToAdd.length > 0 &&
-      distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
-      lastMergedPoint.z === pointsToAdd[0].z
+      lastMergedPoint.z !== firstPointToAdd.z &&
+      !this.appendLayerTransition(firstPointToAdd, firstPointToAdd.z)
+    ) {
+      return
+    }
+
+    const pointBeforeAppend =
+      this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+    if (
+      distance(pointBeforeAppend, firstPointToAdd) <= COORDINATE_EPSILON &&
+      pointBeforeAppend.z === firstPointToAdd.z
     ) {
       if (pointsToAdd[0].toNextSegmentType) {
-        lastMergedPoint.toNextSegmentType = pointsToAdd[0].toNextSegmentType
+        pointBeforeAppend.toNextSegmentType = pointsToAdd[0].toNextSegmentType
       }
       this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
     } else {
       this.mergedHdRoute.route.push(...pointsToAdd)
     }
 
-    this.mergedHdRoute.vias.push(...hdRouteToMerge.vias)
+    for (const via of hdRouteToMerge.vias) {
+      if (
+        !this.mergedHdRoute.vias.some(
+          (mergedVia) => distance(mergedVia, via) < STITCH_GEOMETRIC_TOLERANCE,
+        )
+      ) {
+        this.mergedHdRoute.vias.push(via)
+      }
+    }
 
     if (hdRouteToMerge.jumpers) {
       this.mergedHdRoute.jumpers!.push(...hdRouteToMerge.jumpers)
