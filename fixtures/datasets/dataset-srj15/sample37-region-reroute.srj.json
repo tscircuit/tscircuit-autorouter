@@ -59418,7 +59418,7 @@
   "connections": [
     {
       "name": "source_net_7_reroute_source_net_7_0_0",
-      "rootConnectionName": "source_net_7",
+      "__rootConnectionNames": ["source_net_7"],
       "pointsToConnect": [
         {
           "x": -20.271476382829483,
@@ -59434,7 +59434,7 @@
     },
     {
       "name": "source_trace_263__source_trace_264_reroute_source_trace_263__source_trace_264_mst0_0_0",
-      "rootConnectionName": "source_trace_263__source_trace_264",
+      "__rootConnectionNames": ["source_trace_263__source_trace_264"],
       "pointsToConnect": [
         {
           "x": -30.578,
@@ -59450,7 +59450,7 @@
     },
     {
       "name": "source_trace_262__source_trace_265_reroute_source_trace_262__source_trace_265_mst0_0_0",
-      "rootConnectionName": "source_trace_262__source_trace_265",
+      "__rootConnectionNames": ["source_trace_262__source_trace_265"],
       "pointsToConnect": [
         {
           "x": -30.578,
@@ -59466,7 +59466,7 @@
     },
     {
       "name": "source_trace_260_reroute_source_trace_260_0_0",
-      "rootConnectionName": "source_trace_260",
+      "__rootConnectionNames": ["source_trace_260"],
       "pointsToConnect": [
         {
           "x": -16.15,
@@ -59482,7 +59482,7 @@
     },
     {
       "name": "source_trace_256__source_trace_257_reroute_source_trace_256__source_trace_257_mst0_0_0",
-      "rootConnectionName": "source_trace_256__source_trace_257",
+      "__rootConnectionNames": ["source_trace_256__source_trace_257"],
       "pointsToConnect": [
         {
           "x": -29,
@@ -59498,7 +59498,7 @@
     },
     {
       "name": "source_trace_256__source_trace_257_reroute_source_trace_256__source_trace_257_mst1_0_0",
-      "rootConnectionName": "source_trace_256__source_trace_257",
+      "__rootConnectionNames": ["source_trace_256__source_trace_257"],
       "pointsToConnect": [
         {
           "x": -29,
@@ -59514,7 +59514,7 @@
     },
     {
       "name": "source_trace_255__source_trace_258_reroute_source_trace_255__source_trace_258_mst0_0_0",
-      "rootConnectionName": "source_trace_255__source_trace_258",
+      "__rootConnectionNames": ["source_trace_255__source_trace_258"],
       "pointsToConnect": [
         {
           "x": -29,
@@ -59530,7 +59530,7 @@
     },
     {
       "name": "source_trace_255__source_trace_258_reroute_source_trace_255__source_trace_258_mst1_0_0",
-      "rootConnectionName": "source_trace_255__source_trace_258",
+      "__rootConnectionNames": ["source_trace_255__source_trace_258"],
       "pointsToConnect": [
         {
           "x": -29,
@@ -59546,7 +59546,7 @@
     },
     {
       "name": "source_trace_253_reroute_source_trace_253_0_0",
-      "rootConnectionName": "source_trace_253",
+      "__rootConnectionNames": ["source_trace_253"],
       "pointsToConnect": [
         {
           "x": -16.15,
@@ -59562,7 +59562,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst28_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,
@@ -59578,7 +59578,7 @@
     },
     {
       "name": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst30_0_0",
-      "rootConnectionName": "source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0",
+      "__rootConnectionNames": ["source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0"],
       "pointsToConnect": [
         {
           "x": -18.000132999999998,

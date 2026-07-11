@@ -286,7 +286,7 @@ test("createSectionSimpleRouteJson includes cut paths with low expansion degrees
   for (const cutConn of cutConnections) {
     expect(cutConn.name).toMatch(/^__cut__/)
     expect(cutConn.pointsToConnect.length).toBe(2)
-    expect(cutConn.rootConnectionName).toBeDefined()
+    expect(cutConn.__rootConnectionNames).toBeDefined()
   }
 
   // Visualize the section to verify cut paths are shown

@@ -2718,7 +2718,7 @@
   "connections": [
     {
       "name": "source_net_20_reroute_source_net_20_mst2_0_0",
-      "rootConnectionName": "source_net_20",
+      "__rootConnectionNames": ["source_net_20"],
       "pointsToConnect": [
         {
           "x": -20.142,

@@ -2700,7 +2700,7 @@
           "pcb_port_id": "pcb_port_38"
         }
       ],
-      "rootConnectionName": "source_net_11"
+      "__rootConnectionNames": ["source_net_11"]
     }
   ],
   "layerCount": 4,

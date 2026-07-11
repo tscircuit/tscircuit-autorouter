@@ -15,14 +15,14 @@
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           },
           {
             "x": 1.27,
             "y": 13.099999999999998,
             "z": 0,
             "connectionName": "source_net_1_mst4",
-            "rootConnectionName": "source_net_1"
+            "__rootConnectionNames": ["source_net_1"]
           }
         ],
         "availableZ": [0]

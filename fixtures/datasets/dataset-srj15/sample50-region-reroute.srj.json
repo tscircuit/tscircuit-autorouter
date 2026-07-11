@@ -38258,7 +38258,7 @@
   "connections": [
     {
       "name": "source_net_8_reroute_source_net_8_mst1_0_0",
-      "rootConnectionName": "source_net_8",
+      "__rootConnectionNames": ["source_net_8"],
       "pointsToConnect": [
         {
           "x": 29.24644881422959,
@@ -38274,7 +38274,7 @@
     },
     {
       "name": "source_net_5_reroute_source_net_5_mst2_0_0",
-      "rootConnectionName": "source_net_5",
+      "__rootConnectionNames": ["source_net_5"],
       "pointsToConnect": [
         {
           "x": 27.46118453712764,
@@ -38290,7 +38290,7 @@
     },
     {
       "name": "source_net_2_reroute_source_net_2_mst28_0_0",
-      "rootConnectionName": "source_net_2",
+      "__rootConnectionNames": ["source_net_2"],
       "pointsToConnect": [
         {
           "x": 30.142533001784173,
@@ -38306,7 +38306,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst0_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 28.975094,
@@ -38322,7 +38322,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst9_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 27.94995,
@@ -38338,7 +38338,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst15_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 27.100065999999998,
@@ -38354,7 +38354,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst17_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 28.999986,
@@ -38370,7 +38370,7 @@
     },
     {
       "name": "source_net_0_reroute_source_net_0_mst18_0_0",
-      "rootConnectionName": "source_net_0",
+      "__rootConnectionNames": ["source_net_0"],
       "pointsToConnect": [
         {
           "x": 28.975094,

@@ -182,7 +182,7 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
 
 const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
-  routeMetadata.simpleRouteConnection?.rootConnectionName ??
+  routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   routeMetadata.mutuallyConnectedNetworkId
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>

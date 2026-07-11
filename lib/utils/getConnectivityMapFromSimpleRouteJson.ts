@@ -8,19 +8,12 @@ const pointHash = (point: { x: number; y: number }) =>
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
   for (const connection of srj.connections) {
-    if (connection.rootConnectionName) {
-      connMap.addConnections([[connection.name, connection.rootConnectionName]])
+    for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
+      connMap.addConnections([[connection.name, rootConnectionName]])
     }
     // Also link the connection name to its overall netConnectionName if available
     if (connection.netConnectionName) {
       connMap.addConnections([[connection.name, connection.netConnectionName]])
-    }
-
-    // Link to all merged connection names (original names before merge)
-    if (connection.mergedConnectionNames) {
-      for (const mergedName of connection.mergedConnectionNames) {
-        connMap.addConnections([[connection.name, mergedName]])
-      }
     }
 
     for (const point of connection.pointsToConnect) {

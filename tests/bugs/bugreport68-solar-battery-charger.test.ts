@@ -8,7 +8,7 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const simpleRouteJson = srj as SimpleRouteJson
 
-test.failing(
+test(
   "bugreport68-solar-battery-charger.srj.json",
   () => {
     const solver = new AutoroutingPipelineSolver7_MultiGraph(simpleRouteJson)

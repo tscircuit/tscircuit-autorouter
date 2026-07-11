@@ -853,7 +853,7 @@ export class PortPointPathingSolver extends BaseSolver {
     hasTouchedOffBoardNode?: boolean,
   ) {
     const currentRootConnectionName =
-      this.currentConnection?.connection.rootConnectionName
+      this.currentConnection?.connection.__rootConnectionNames?.[0]
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
 
     const availablePortPoints: InputPortPoint[] = []
@@ -893,7 +893,7 @@ export class PortPointPathingSolver extends BaseSolver {
     const portPoints = this.nodePortPointsMap.get(nodeId) ?? []
     // const currentNode = this.nodeMap.get(nodeId)
     const currentRootConnectionName =
-      this.currentConnection?.connection.rootConnectionName
+      this.currentConnection?.connection.__rootConnectionNames?.[0]
 
     // Group by "other side node" + z
     const portsOnSameEdgeMap = new Map<string, InputPortPoint[]>()
@@ -987,7 +987,7 @@ export class PortPointPathingSolver extends BaseSolver {
     const currentNode = this.nodeMap.get(nodeId)
     if (!currentNode) return []
     const currentRootConnectionName =
-      this.currentConnection?.connection.rootConnectionName
+      this.currentConnection?.connection.__rootConnectionNames?.[0]
     const availablePortPoints: (InputPortPoint & {
       throughNodeId: CapacityMeshNodeId
     })[] = []
@@ -1226,7 +1226,7 @@ export class PortPointPathingSolver extends BaseSolver {
         y: startPoint.y,
         z: startCandidate.z,
         connectionName: connection.name,
-        rootConnectionName: connection.rootConnectionName,
+        rootConnectionName: connection.__rootConnectionNames?.[0],
       })
       this.nodeAssignedPortPoints.set(
         startCandidate.currentNodeId,
@@ -1242,7 +1242,7 @@ export class PortPointPathingSolver extends BaseSolver {
         y: endPoint.y,
         z: endCandidate.z,
         connectionName: connection.name,
-        rootConnectionName: connection.rootConnectionName,
+        rootConnectionName: connection.__rootConnectionNames?.[0],
       })
       this.nodeAssignedPortPoints.set(endCandidate.currentNodeId, endPortPoints)
     }
@@ -1336,7 +1336,8 @@ export class PortPointPathingSolver extends BaseSolver {
     }
 
     const connectionName = nextConnection.connection.name
-    const rootConnectionName = nextConnection.connection.rootConnectionName
+    const rootConnectionName =
+      nextConnection.connection.__rootConnectionNames?.[0]
     const startPoint = nextConnection.connection.pointsToConnect[0]
 
     if (!this.candidates) {
