@@ -1,8 +1,13 @@
 import { expect, test } from "bun:test"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { getSolverSvgFrames } from "../../../fixtures/solver-svg-frames"
+import {
+  getGraphicsSvgFrames,
+  getSolverGraphicsFrames,
+} from "../../../fixtures/solver-svg-frames"
+import {
+  createTopologyMergingSolverFromPlanning,
+  createTopologyPlanningSolverForMerging,
+} from "../../../fixtures/topology-merging-test-utils"
 
 type RectSpec = {
   id: string
@@ -89,29 +94,34 @@ function createBgaMergedTopologySrj(): SimpleRouteJson {
   }
 }
 
-function createMergedTopologySolver(
-  inputSrj: SimpleRouteJson,
-): MultiGraphTopologyPlannerSolver {
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
-
-  return new MultiGraphTopologyPlannerSolver({
-    inputSrj,
-    componentDetectionOutput: componentDetectionSolver.getOutput(),
-    viaDiameter: inputSrj.minViaPadDiameter,
-    obstacleMargin: inputSrj.defaultObstacleMargin,
-  })
-}
-
 test("merged topology preserves inner targets in BGA grid", async (): Promise<void> => {
+  const inputSrj = createBgaMergedTopologySrj()
+  const topologyPlanningSolver =
+    createTopologyPlanningSolverForMerging(inputSrj)
+  const planningFrames = getSolverGraphicsFrames({
+    solver: topologyPlanningSolver,
+    frames: [
+      { type: "solver", solverName: "globalTopologySolver" },
+      { type: "solver", solverName: "componentTopologyBatchSolver" },
+      { type: "pipeline", step: "end" },
+    ],
+  })
+  const topologyMergingSolver = createTopologyMergingSolverFromPlanning({
+    inputSrj,
+    topologyPlanningSolver,
+  })
+  const mergingFrames = getSolverGraphicsFrames({
+    solver: topologyMergingSolver,
+    frames: [{ type: "pipeline", step: "end" }],
+  })
+
+  expect(topologyPlanningSolver.getOutput().componentMeshNodes).toHaveLength(1)
+  expect(topologyMergingSolver.solved).toBe(true)
+  expect(topologyMergingSolver.failed).toBe(false)
+  expect(topologyMergingSolver.getOutput().length).toBeGreaterThan(0)
   await expect(
-    getSolverSvgFrames({
-      solver: createMergedTopologySolver(createBgaMergedTopologySrj()),
-      frames: [
-        { type: "solver", solverName: "globalTopologySolver" },
-        { type: "solver", solverName: "componentTopologyBatchSolver" },
-        { type: "pipeline", step: "end" },
-      ],
+    getGraphicsSvgFrames({
+      frames: [...planningFrames, ...mergingFrames],
       columns: 3,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
