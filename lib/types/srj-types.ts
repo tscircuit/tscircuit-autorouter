@@ -92,8 +92,7 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
-  rootConnectionName?: string
-  mergedConnectionNames?: string[]
+  __rootConnectionNames?: string[]
   isOffBoard?: boolean
   netConnectionName?: string
   nominalTraceWidth?: number

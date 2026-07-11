@@ -683,8 +683,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     const connectedOffboardObstacles: Record<ObstacleId, RootConnectionName> =
       {}
     const rootConnectionNames = new Set(
-      this.srj.connections.map(
-        (connection) => connection.rootConnectionName ?? connection.name,
+      this.srj.connections.flatMap(
+        (connection) => connection.__rootConnectionNames ?? [connection.name],
       ),
     )
 
@@ -741,7 +741,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ??
-            connection.rootConnectionName ??
+            connection.__rootConnectionNames?.[0] ??
             connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
         }

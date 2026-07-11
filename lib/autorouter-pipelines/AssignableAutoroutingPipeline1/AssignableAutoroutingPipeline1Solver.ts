@@ -720,7 +720,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
 
     for (const connection of connections) {
       const netConnectionName = connection.netConnectionName
-      const rootConnectionName = connection.rootConnectionName
+      const rootConnectionName = connection.__rootConnectionNames?.[0]
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(

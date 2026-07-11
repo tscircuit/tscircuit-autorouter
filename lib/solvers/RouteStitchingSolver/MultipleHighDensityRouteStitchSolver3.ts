@@ -350,7 +350,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ? this.getSharedRootPathRoutes({
               connectionName,
               rootConnectionName:
-                connection.rootConnectionName ??
+                connection.__rootConnectionNames?.[0] ??
                 hdRoutes[0]?.rootConnectionName,
               hdRoutes,
               allHdRoutes: canonicalHdRoutes,

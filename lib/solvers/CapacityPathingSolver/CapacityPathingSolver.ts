@@ -210,7 +210,7 @@ export class CapacityPathingSolver extends BaseSolver {
         capacityPaths.push({
           capacityPathId: connection.connection.name,
           connectionName: connection.connection.name,
-          rootConnectionName: connection.connection.rootConnectionName,
+          rootConnectionName: connection.connection.__rootConnectionNames?.[0],
           nodeIds: path.map((node) => node.capacityMeshNodeId),
         })
       }

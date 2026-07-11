@@ -59,43 +59,38 @@ export const createObstacleLabelFormatter = (srj: SimpleRouteJson) => {
   const rootConnectionIndex = new Map<string, string[]>()
 
   for (const connection of srj.connections) {
-    const rootConnectionName = connection.rootConnectionName ?? connection.name
-
-    addRootConnectionMapping(
-      rootConnectionIndex,
+    const rootConnectionNames = connection.__rootConnectionNames ?? [
       connection.name,
-      rootConnectionName,
-    )
-    addRootConnectionMapping(
-      rootConnectionIndex,
-      connection.rootConnectionName,
-      rootConnectionName,
-    )
-    addRootConnectionMapping(
-      rootConnectionIndex,
-      connection.netConnectionName,
-      rootConnectionName,
-    )
+    ]
+    for (const rootConnectionName of rootConnectionNames) {
+      addRootConnectionMapping(
+        rootConnectionIndex,
+        connection.name,
+        rootConnectionName,
+      )
+      addRootConnectionMapping(
+        rootConnectionIndex,
+        rootConnectionName,
+        rootConnectionName,
+      )
+      addRootConnectionMapping(
+        rootConnectionIndex,
+        connection.netConnectionName,
+        rootConnectionName,
+      )
 
-    for (const mergedConnectionName of connection.mergedConnectionNames ?? []) {
-      addRootConnectionMapping(
-        rootConnectionIndex,
-        mergedConnectionName,
-        rootConnectionName,
-      )
-    }
-
-    for (const point of connection.pointsToConnect) {
-      addRootConnectionMapping(
-        rootConnectionIndex,
-        point.pointId,
-        rootConnectionName,
-      )
-      addRootConnectionMapping(
-        rootConnectionIndex,
-        point.pcb_port_id,
-        rootConnectionName,
-      )
+      for (const point of connection.pointsToConnect) {
+        addRootConnectionMapping(
+          rootConnectionIndex,
+          point.pointId,
+          rootConnectionName,
+        )
+        addRootConnectionMapping(
+          rootConnectionIndex,
+          point.pcb_port_id,
+          rootConnectionName,
+        )
+      }
     }
   }
 

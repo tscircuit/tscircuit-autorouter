@@ -14,7 +14,7 @@ export function getObstacleTargetConnectionName(input: {
           layerCount: input.srj.layerCount,
         })
       ) {
-        return connection.rootConnectionName ?? connection.name
+        return connection.__rootConnectionNames?.[0] ?? connection.name
       }
     }
   }

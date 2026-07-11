@@ -11,7 +11,7 @@ const baseSrj = {
   connections: [
     {
       name: "reroute_a",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
       pointsToConnect: [
         { x: 0, y: 0, layer: "top" },
         { x: 1, y: 0, layer: "top" },
@@ -19,7 +19,7 @@ const baseSrj = {
     },
     {
       name: "reroute_b",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
       pointsToConnect: [
         { x: 1, y: 0, layer: "top" },
         { x: 2, y: 0, layer: "top" },
@@ -35,16 +35,16 @@ test("NetToPointPairsSolver preserves existing reroute root connection names", (
   expect(
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
       name: conn.name,
-      rootConnectionName: conn.rootConnectionName,
+      __rootConnectionNames: conn.__rootConnectionNames,
     })),
   ).toEqual([
     {
       name: "reroute_a__reroute_b_mst0",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
     },
     {
       name: "reroute_a__reroute_b_mst1",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
     },
   ])
 })
@@ -58,16 +58,16 @@ test("NetToPointPairsSolver2_OffBoardConnection preserves existing reroute root 
   expect(
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
       name: conn.name,
-      rootConnectionName: conn.rootConnectionName,
+      __rootConnectionNames: conn.__rootConnectionNames,
     })),
   ).toEqual([
     {
       name: "reroute_a__reroute_b_mst0",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
     },
     {
       name: "reroute_a__reroute_b_mst1",
-      rootConnectionName: "source_net_1",
+      __rootConnectionNames: ["source_net_1"],
     },
   ])
 })
