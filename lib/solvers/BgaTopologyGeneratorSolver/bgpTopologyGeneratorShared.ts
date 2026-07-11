@@ -5,7 +5,10 @@ import {
 } from "@tscircuit/math-utils"
 import type { Bounds } from "@tscircuit/math-utils"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  getUniqueValidZLayers,
+  getUniqueValidZLayersFromLayerNames,
+} from "lib/utils/mapLayerNameToZ"
 
 const CORNER_SPLIT_RATIO = 0.25
 const MIN_AXIS_EPSILON = 1e-6
@@ -60,8 +63,8 @@ export function getObstacleAvailableZ(
   layerCount: number,
 ): number[] {
   return obstacle.zLayers && obstacle.zLayers.length > 0
-    ? obstacle.zLayers
-    : obstacle.layers.map((layerName) => mapLayerNameToZ(layerName, layerCount))
+    ? getUniqueValidZLayers(obstacle.zLayers, layerCount)
+    : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
 }
 
 /**
