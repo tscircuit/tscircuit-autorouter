@@ -113,7 +113,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+// Dense BGA topologies can produce 200-300 MST routes that share escape ports.
+const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 300
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
