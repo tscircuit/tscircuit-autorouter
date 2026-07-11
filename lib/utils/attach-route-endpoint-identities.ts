@@ -39,9 +39,7 @@ const pointIsInsideTerminalObstacle = (
   const connectedIds = [
     ...terminalIds,
     ...(allowConnectionIdentity
-      ? [connection.name, connection.rootConnectionName].filter(
-          (connectionId): connectionId is string => connectionId !== undefined,
-        )
+      ? [connection.name, ...(connection.__rootConnectionNames ?? [])]
       : []),
   ]
   if (connectedIds.length === 0) return false

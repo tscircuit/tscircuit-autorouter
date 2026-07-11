@@ -3,6 +3,7 @@ import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSol
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 
 const replacementObstacle: Obstacle & { obstacleId: string } = {
+  type: "rect",
   obstacleId: "component-bounds",
   componentId: "component-1",
   center: { x: 0, y: 0 },
@@ -14,6 +15,7 @@ const replacementObstacle: Obstacle & { obstacleId: string } = {
 
 test("global topology leaves component-owned obstacles exact while expanding ordinary obstacles", (): void => {
   const overlappingObstacle: Obstacle = {
+    type: "rect",
     obstacleId: "overlapping-pad",
     center: { x: 0.8, y: 0 },
     width: 0.5,
@@ -22,6 +24,7 @@ test("global topology leaves component-owned obstacles exact while expanding ord
     connectedTo: [],
   }
   const ordinaryObstacle: Obstacle = {
+    type: "rect",
     obstacleId: "ordinary-pad",
     center: { x: 4, y: 0 },
     width: 0.5,
@@ -55,8 +58,8 @@ test("global topology leaves component-owned obstacles exact while expanding ord
 
   const rectDiffInput = solver.globalTopologySolver!.inputProblem
   const obstacleById = new Map(
-    rectDiffInput.simpleRouteJson.obstacles.map((obstacle) => [
-      obstacle.obstacleId,
+    rectDiffInput.simpleRouteJson.obstacles.map((obstacle, index) => [
+      inputSrj.obstacles[index]!.obstacleId,
       obstacle,
     ]),
   )

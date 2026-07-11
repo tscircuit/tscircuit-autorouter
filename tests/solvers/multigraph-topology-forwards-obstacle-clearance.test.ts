@@ -9,6 +9,7 @@ test("multigraph topology forwards obstacle clearance to the global rectdiff sol
     minTraceWidth: 0.15,
     obstacles: [
       {
+        type: "rect",
         center: { x: 0, y: 0 },
         width: 1,
         height: 1,
