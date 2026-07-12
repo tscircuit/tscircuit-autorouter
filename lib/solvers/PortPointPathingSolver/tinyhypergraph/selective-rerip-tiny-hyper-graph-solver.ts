@@ -38,6 +38,8 @@ type RelaxedSearchHopData = {
   resources: SelectiveReripBlockerResource[]
 }
 
+const MAX_SELECTIVE_RERIP_CONGESTION_UPDATES = 1
+
 export type FailedOwnerPairCount = {
   failedRouteId: RouteId
   ownerRouteId: RouteId
@@ -111,6 +113,8 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
   >()
 
   private readonly selectiveReripStats = createInitialSelectiveReripStats()
+
+  private selectiveReripCongestionUpdateCount = 0
 
   constructor(
     topology: TinyHyperGraphTopology,
@@ -221,7 +225,13 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
       (routeId) => routeId !== failedRouteId && !rippedRouteIds.has(routeId),
     )
 
-    this.addCongestionCostForSelectiveRerip()
+    if (
+      this.selectiveReripCongestionUpdateCount <
+      MAX_SELECTIVE_RERIP_CONGESTION_UPDATES
+    ) {
+      this.addCongestionCostForSelectiveRerip()
+      this.selectiveReripCongestionUpdateCount += 1
+    }
     this.rebuildCommittedState(rippedRouteIds)
     this.state.ripCount += 1
     this.state.currentRouteId = undefined
