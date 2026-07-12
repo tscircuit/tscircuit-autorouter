@@ -47,8 +47,6 @@ export type FailedOwnerPairCount = {
 export type SelectiveReripTinyHyperGraphStats = {
   selectiveRipCount: number
   selectivelyRippedRouteCount: number
-  globalReripCount: number
-  globalReripReason?: "no_path" | "expansion_limit" | "no_blocker_path"
   alternateBlockerSearchCount: number
   alternateOwnerCount: number
   failedOwnerPairCount: number
@@ -63,22 +61,22 @@ export type SelectiveReripTinyHyperGraphStats = {
   lastAlternateSearchExpandedLabelCount: number
 }
 
-const createInitialSelectiveReripStats = (): SelectiveReripTinyHyperGraphStats => ({
-  selectiveRipCount: 0,
-  selectivelyRippedRouteCount: 0,
-  globalReripCount: 0,
-  alternateBlockerSearchCount: 0,
-  alternateOwnerCount: 0,
-  failedOwnerPairCount: 0,
-  maxFailedOwnerPairCount: 0,
-  failedOwnerPairs: [],
-  lastDirectOwnerRouteIds: [],
-  lastRepeatedOwnerRouteIds: [],
-  lastAlternateOwnerRouteIds: [],
-  lastRippedRouteIds: [],
-  lastRelaxedSearchExpandedLabelCount: 0,
-  lastAlternateSearchExpandedLabelCount: 0,
-})
+const createInitialSelectiveReripStats =
+  (): SelectiveReripTinyHyperGraphStats => ({
+    selectiveRipCount: 0,
+    selectivelyRippedRouteCount: 0,
+    alternateBlockerSearchCount: 0,
+    alternateOwnerCount: 0,
+    failedOwnerPairCount: 0,
+    maxFailedOwnerPairCount: 0,
+    failedOwnerPairs: [],
+    lastDirectOwnerRouteIds: [],
+    lastRepeatedOwnerRouteIds: [],
+    lastAlternateOwnerRouteIds: [],
+    lastRippedRouteIds: [],
+    lastRelaxedSearchExpandedLabelCount: 0,
+    lastAlternateSearchExpandedLabelCount: 0,
+  })
 
 export function selectOwnerRouteIdsToRip(params: {
   failedRouteId: RouteId
@@ -122,9 +120,11 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
   getSelectiveReripStats(): SelectiveReripTinyHyperGraphStats {
     return {
       ...this.selectiveReripStats,
-      failedOwnerPairs: this.selectiveReripStats.failedOwnerPairs.map((pair) => ({
-        ...pair,
-      })),
+      failedOwnerPairs: this.selectiveReripStats.failedOwnerPairs.map(
+        (pair) => ({
+          ...pair,
+        }),
+      ),
       lastDirectOwnerRouteIds: [
         ...this.selectiveReripStats.lastDirectOwnerRouteIds,
       ],
@@ -147,24 +147,15 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
     }
 
     const directPath = this.findRelaxedBlockerPath()
-    if (!directPath.found || directPath.owners.size === 0) {
-      this.selectiveReripStats.globalReripCount += 1
-      this.selectiveReripStats.globalReripReason = !directPath.found
-        ? directPath.reason
-        : "no_blocker_path"
-      this.selectiveReripStats.lastFailedRouteId = failedRouteId
-      this.selectiveReripStats.lastDirectOwnerRouteIds = directPath.found
-        ? []
-        : []
-      this.selectiveReripStats.lastRepeatedOwnerRouteIds = []
-      this.selectiveReripStats.lastAlternateOwnerRouteIds = []
-      this.selectiveReripStats.lastRippedRouteIds = []
-      this.selectiveReripStats.lastRelaxedSearchExpandedLabelCount =
-        directPath.expandedLabelCount
-      this.selectiveReripStats.lastAlternateSearchExpandedLabelCount = 0
-      super.onOutOfCandidates()
-      this.publishSelectiveReripStats()
-      return
+    if (!directPath.found) {
+      throw new Error(
+        `SelectiveReripTinyHyperGraphSolver: route ${this.describeRoute(failedRouteId)} exhausted candidates, but blocker search found no path (${directPath.reason}, ${directPath.expandedLabelCount} labels expanded)`,
+      )
+    }
+    if (directPath.owners.size === 0) {
+      throw new Error(
+        `SelectiveReripTinyHyperGraphSolver: route ${this.describeRoute(failedRouteId)} exhausted candidates despite a blocker-free path (${directPath.expandedLabelCount} labels expanded)`,
+      )
     }
 
     const directOwnerRouteIds = [...directPath.owners]
@@ -187,21 +178,9 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
         new Set(repeatedOwnerRouteIds),
       )
       if (!alternatePath.found) {
-        this.selectiveReripStats.globalReripCount += 1
-        this.selectiveReripStats.globalReripReason = alternatePath.reason
-        this.selectiveReripStats.lastFailedRouteId = failedRouteId
-        this.selectiveReripStats.lastDirectOwnerRouteIds = directOwnerRouteIds
-        this.selectiveReripStats.lastRepeatedOwnerRouteIds =
-          repeatedOwnerRouteIds
-        this.selectiveReripStats.lastAlternateOwnerRouteIds = []
-        this.selectiveReripStats.lastRippedRouteIds = []
-        this.selectiveReripStats.lastRelaxedSearchExpandedLabelCount =
-          directPath.expandedLabelCount
-        this.selectiveReripStats.lastAlternateSearchExpandedLabelCount =
-          alternatePath.expandedLabelCount
-        super.onOutOfCandidates()
-        this.publishSelectiveReripStats()
-        return
+        throw new Error(
+          `SelectiveReripTinyHyperGraphSolver: route ${this.describeRoute(failedRouteId)} repeated blocker owner(s) ${repeatedOwnerRouteIds.join(", ")}, but no alternate blocker path exists (${alternatePath.reason}, ${alternatePath.expandedLabelCount} labels expanded)`,
+        )
       }
     }
 
@@ -360,9 +339,7 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
         const [firstRegionId, secondRegionId] =
           this.topology.incidentPortRegion[neighborPortId] ?? []
         nextRegionId =
-          firstRegionId === state.nextRegionId
-            ? secondRegionId
-            : firstRegionId
+          firstRegionId === state.nextRegionId ? secondRegionId : firstRegionId
         if (
           nextRegionId === undefined ||
           this.isRegionReservedForDifferentNet(nextRegionId)

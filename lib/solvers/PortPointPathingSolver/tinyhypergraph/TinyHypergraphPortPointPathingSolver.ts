@@ -612,7 +612,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
       if (!solveGraphStep) {
-        throw new Error("Tiny hypergraph pipeline is missing the solveGraph stage")
+        throw new Error(
+          "Tiny hypergraph pipeline is missing the solveGraph stage",
+        )
       }
       solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
     }
