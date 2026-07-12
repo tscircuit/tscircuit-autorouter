@@ -17,7 +17,7 @@ test("pipeline7 dataset-srj23 sample015 skips connections with preexisting trace
   expect(solver.failed).toBe(false)
   expect(scenario.connections).toHaveLength(5)
   expect(scenario.traces).toHaveLength(4)
-  expect(solver.srjWithPointPairs?.connections.map(({ name }) => name)).toEqual([
-    "source_net_1",
-  ])
+  expect(solver.srjWithPointPairs?.connections.map(({ name }) => name)).toEqual(
+    ["source_net_1"],
+  )
 })
