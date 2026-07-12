@@ -177,11 +177,6 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
       alternatePath = this.findRelaxedBlockerPath(
         new Set(repeatedOwnerRouteIds),
       )
-      if (!alternatePath.found) {
-        throw new Error(
-          `SelectiveReripTinyHyperGraphSolver: route ${this.describeRoute(failedRouteId)} repeated blocker owner(s) ${repeatedOwnerRouteIds.join(", ")}, but no alternate blocker path exists (${alternatePath.reason}, ${alternatePath.expandedLabelCount} labels expanded)`,
-        )
-      }
     }
 
     const alternateOwnerRouteIds = alternatePath?.found
