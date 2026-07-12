@@ -5,8 +5,7 @@ import {
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
 import {
-  areExternallyConnected,
-  getExternalConnectionState,
+  getPreconnectedPointGroups,
   NetToPointPairsSolver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
@@ -124,17 +123,16 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+    const preconnectedPointGroups = getPreconnectedPointGroups(
       currentConnection,
       this.ogSrj,
     )
 
     if (currentConnection.pointsToConnect.length === 2) {
+      const [startPoint, endPoint] = currentConnection.pointsToConnect
       if (
-        areExternallyConnected(
-          pointIdToGroup,
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
+        preconnectedPointGroups.some(
+          (group) => group.includes(startPoint) && group.includes(endPoint),
         )
       ) {
         return
@@ -156,15 +154,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+      { preconnectedGroups: preconnectedPointGroups },
     )
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
-      if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
-        continue
-      }
-
       const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
         mstEdge.from,
         mstEdge.to,

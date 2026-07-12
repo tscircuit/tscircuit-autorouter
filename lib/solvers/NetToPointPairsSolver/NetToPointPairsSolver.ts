@@ -2,105 +2,66 @@ import {
   ConnectionPoint,
   SimpleRouteConnection,
   SimpleRouteJson,
+  SimplifiedPcbTrace,
 } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
-import { DSU } from "lib/utils/dsu"
 
 const MIN_TRACE_ENDPOINT_MATCH_TOLERANCE = 0.001
+type WireRoutePoint = Extract<
+  SimplifiedPcbTrace["route"][number],
+  { route_type: "wire" }
+>
 
-export const getExternalConnectionState = (
-  connection: SimpleRouteConnection,
-  srj?: SimpleRouteJson,
-): {
-  pointIdToGroup: Map<string, number>
-  zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }>
-} => {
-  const externalGroups = connection.externallyConnectedPointIds ?? []
-  const routedTraceGroups = getTraceConnectedPointGroups(connection, srj)
-  const allExternalGroups = [...externalGroups, ...routedTraceGroups]
-  const pointIdToGroup = new Map<string, number>()
-  const pointById = new Map<string, ConnectionPoint>()
+const getConnectionPointAtTraceEndpoint = (
+  endpoint: WireRoutePoint,
+  connectionPoints: ConnectionPoint[],
+): ConnectionPoint | undefined => {
+  const tolerance = Math.max(
+    MIN_TRACE_ENDPOINT_MATCH_TOLERANCE,
+    endpoint.width / 2,
+  )
+  let bestPoint: ConnectionPoint | undefined
+  let bestPointUsesEndpointLayer = false
+  let bestDistance = Infinity
 
-  for (const point of connection.pointsToConnect) {
-    if (point.pointId) {
-      pointById.set(point.pointId, point)
+  for (const point of connectionPoints) {
+    const pointUsesEndpointLayer =
+      "layers" in point
+        ? point.layers.includes(endpoint.layer)
+        : point.layer === endpoint.layer
+    const pointDistance = Math.hypot(point.x - endpoint.x, point.y - endpoint.y)
+    if (pointDistance > tolerance) continue
+    if (
+      !bestPoint ||
+      (pointUsesEndpointLayer && !bestPointUsesEndpointLayer) ||
+      (pointUsesEndpointLayer === bestPointUsesEndpointLayer &&
+        pointDistance < bestDistance)
+    ) {
+      bestPoint = point
+      bestPointUsesEndpointLayer = pointUsesEndpointLayer
+      bestDistance = pointDistance
     }
   }
 
-  const zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }> = []
-
-  const connectionPointIds = [...pointById.keys()]
-  const externallyConnectedPointDsu = new DSU(connectionPointIds)
-  for (const group of allExternalGroups) {
-    const groupPointIds = group.filter((pointId) => pointById.has(pointId))
-    const representativePointId = groupPointIds[0]
-    if (!representativePointId) continue
-
-    for (let i = 1; i < groupPointIds.length; i++) {
-      externallyConnectedPointDsu.union(
-        representativePointId,
-        groupPointIds[i]!,
-      )
-    }
-  }
-
-  const connectedGroupsByRoot = new Map<string, ConnectionPoint[]>()
-  for (const pointId of connectionPointIds) {
-    const root = externallyConnectedPointDsu.find(pointId)
-    const groupPoints = connectedGroupsByRoot.get(root) ?? []
-    groupPoints.push(pointById.get(pointId)!)
-    connectedGroupsByRoot.set(root, groupPoints)
-  }
-
-  let groupIndex = 0
-  for (const groupPoints of connectedGroupsByRoot.values()) {
-    if (groupPoints.length < 2) continue
-
-    for (const point of groupPoints) {
-      pointIdToGroup.set(point.pointId!, groupIndex)
-    }
-
-    const representativePoint = groupPoints[0]
-    for (let i = 1; i < groupPoints.length; i++) {
-      zeroWeightEdges.push({
-        from: representativePoint!,
-        to: groupPoints[i]!,
-        weight: 0,
-      })
-    }
-    groupIndex++
-  }
-
-  return { pointIdToGroup, zeroWeightEdges }
+  return bestPoint
 }
 
 const getTraceConnectedPointGroups = (
   connection: SimpleRouteConnection,
   srj: SimpleRouteJson | undefined,
-): string[][] => {
+): ConnectionPoint[][] => {
   if (!srj?.traces?.length) return []
 
-  const connectionPointIds = new Set(
-    connection.pointsToConnect
-      .map((point) => point.pointId)
-      .filter((pointId): pointId is string => Boolean(pointId)),
+  const pointById = new Map(
+    connection.pointsToConnect.flatMap((point) =>
+      point.pointId ? [[point.pointId, point] as const] : [],
+    ),
   )
-
-  if (connectionPointIds.size === 0) return []
-
-  const routedTraceGroups: string[][] = []
+  const routedTraceGroups: ConnectionPoint[][] = []
   const rootConnectionNames = new Set([
     connection.name,
     ...(connection.__rootConnectionNames ?? []),
@@ -109,10 +70,12 @@ const getTraceConnectedPointGroups = (
     const traceConnectsTo = trace.connectsTo ?? []
     if (traceConnectsTo.length > 0) {
       const connectedPointIds = traceConnectsTo.filter((connectsTo) =>
-        connectionPointIds.has(connectsTo),
+        pointById.has(connectsTo),
       )
       if (connectedPointIds.length >= 2) {
-        routedTraceGroups.push(connectedPointIds)
+        routedTraceGroups.push(
+          connectedPointIds.map((pointId) => pointById.get(pointId)!),
+        )
       }
       continue
     }
@@ -124,64 +87,46 @@ const getTraceConnectedPointGroups = (
     const wireRoutePoints = trace.route.filter(
       (routePoint) => routePoint.route_type === "wire",
     )
-    const traceEndpoints = [wireRoutePoints[0], wireRoutePoints.at(-1)]
-    const inferredPointIds: string[] = []
-
-    for (const endpoint of traceEndpoints) {
-      if (!endpoint) continue
-      const tolerance = Math.max(
-        MIN_TRACE_ENDPOINT_MATCH_TOLERANCE,
-        endpoint.width / 2,
-      )
-      let bestPoint: ConnectionPoint | undefined
-      let bestPointUsesEndpointLayer = false
-      let bestDistance = Infinity
-
-      for (const point of connection.pointsToConnect) {
-        if (!point.pointId) continue
-        const pointUsesEndpointLayer =
-          "layers" in point
-            ? point.layers.includes(endpoint.layer)
-            : point.layer === endpoint.layer
-        const pointDistance = Math.hypot(
-          point.x - endpoint.x,
-          point.y - endpoint.y,
+    const startPoint = wireRoutePoints[0]
+      ? getConnectionPointAtTraceEndpoint(
+          wireRoutePoints[0],
+          connection.pointsToConnect,
         )
-        if (pointDistance > tolerance) continue
-        if (
-          !bestPoint ||
-          (pointUsesEndpointLayer && !bestPointUsesEndpointLayer) ||
-          (pointUsesEndpointLayer === bestPointUsesEndpointLayer &&
-            pointDistance < bestDistance)
-        ) {
-          bestPoint = point
-          bestPointUsesEndpointLayer = pointUsesEndpointLayer
-          bestDistance = pointDistance
-        }
-      }
+      : undefined
+    const endPoint = wireRoutePoints.at(-1)
+      ? getConnectionPointAtTraceEndpoint(
+          wireRoutePoints.at(-1)!,
+          connection.pointsToConnect,
+        )
+      : undefined
 
-      if (bestPoint?.pointId && !inferredPointIds.includes(bestPoint.pointId)) {
-        inferredPointIds.push(bestPoint.pointId)
-      }
-    }
-
-    if (inferredPointIds.length >= 2) {
-      routedTraceGroups.push(inferredPointIds)
+    if (startPoint && endPoint && startPoint !== endPoint) {
+      routedTraceGroups.push([startPoint, endPoint])
     }
   }
 
   return routedTraceGroups
 }
 
-export const areExternallyConnected = (
-  pointIdToGroup: Map<string, number>,
-  a: { pointId?: string },
-  b: { pointId?: string },
-) => {
-  if (!a.pointId || !b.pointId) return false
-  const g1 = pointIdToGroup.get(a.pointId)
-  const g2 = pointIdToGroup.get(b.pointId)
-  return g1 !== undefined && g1 === g2
+export const getPreconnectedPointGroups = (
+  connection: SimpleRouteConnection,
+  srj?: SimpleRouteJson,
+): ConnectionPoint[][] => {
+  const pointById = new Map(
+    connection.pointsToConnect.flatMap((point) =>
+      point.pointId ? [[point.pointId, point] as const] : [],
+    ),
+  )
+  const externalGroups = (connection.externallyConnectedPointIds ?? [])
+    .map((group) =>
+      group.flatMap((pointId) => {
+        const point = pointById.get(pointId)
+        return point ? [point] : []
+      }),
+    )
+    .filter((group) => group.length >= 2)
+
+  return [...externalGroups, ...getTraceConnectedPointGroups(connection, srj)]
 }
 
 /**
@@ -224,17 +169,16 @@ export class NetToPointPairsSolver extends BaseSolver {
     // ----------------------------------------------
     // 1.  Detect externally-connected point groups
     // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+    const preconnectedPointGroups = getPreconnectedPointGroups(
       connection,
       this.ogSrj,
     )
 
     if (connection.pointsToConnect.length === 2) {
+      const [startPoint, endPoint] = connection.pointsToConnect
       if (
-        areExternallyConnected(
-          pointIdToGroup,
-          connection.pointsToConnect[0],
-          connection.pointsToConnect[1],
+        preconnectedPointGroups.some(
+          (group) => group.includes(startPoint) && group.includes(endPoint),
         )
       ) {
         // No routing required – they are already connected off-board
@@ -250,12 +194,11 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
+      preconnectedGroups: preconnectedPointGroups,
     })
 
     let mstIdx = 0
     for (const edge of edges) {
-      if (areExternallyConnected(pointIdToGroup, edge.from, edge.to)) continue
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
