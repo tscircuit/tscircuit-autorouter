@@ -221,6 +221,7 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
       (routeId) => routeId !== failedRouteId && !rippedRouteIds.has(routeId),
     )
 
+    this.addCongestionCostForSelectiveRerip()
     this.rebuildCommittedState(rippedRouteIds)
     this.state.ripCount += 1
     this.state.currentRouteId = undefined
@@ -249,6 +250,15 @@ export class SelectiveReripTinyHyperGraphSolver extends CostConsistentTinyHyperG
     this.selectiveReripStats.lastAlternateSearchExpandedLabelCount =
       alternatePath?.expandedLabelCount ?? 0
     this.publishSelectiveReripStats()
+  }
+
+  private addCongestionCostForSelectiveRerip(): void {
+    for (let regionId = 0; regionId < this.topology.regionCount; regionId++) {
+      const regionCost =
+        this.state.regionIntersectionCaches[regionId]?.existingRegionCost ?? 0
+      this.state.regionCongestionCost[regionId] +=
+        regionCost * this.RIP_CONGESTION_REGION_COST_FACTOR
+    }
   }
 
   protected findRelaxedBlockerPath(
