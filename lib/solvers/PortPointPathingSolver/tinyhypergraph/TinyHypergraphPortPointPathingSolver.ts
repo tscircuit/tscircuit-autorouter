@@ -15,6 +15,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
+  SelectiveReripTinyHyperGraphSolver,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -26,7 +27,6 @@ import {
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolver } from "./selective-rerip-tiny-hyper-graph-solver"
 
 type RouteMetadata = {
   connectionId: string
