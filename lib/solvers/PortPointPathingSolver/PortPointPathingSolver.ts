@@ -48,6 +48,7 @@ export interface PortPointPathingHyperParameters {
 
   FORCE_OFF_BOARD_FREQUENCY?: number
   FORCE_OFF_BOARD_SEED?: number
+  FORCE_OFF_BOARD_CONNECTION_NAMES?: string[]
 
   RIPPING_ENABLED?: boolean
   RIPPING_PF_THRESHOLD?: number
@@ -239,6 +240,10 @@ export class PortPointPathingSolver extends BaseSolver {
 
   get FORCE_OFF_BOARD_SEED() {
     return this.hyperParameters.FORCE_OFF_BOARD_SEED ?? 0
+  }
+
+  get FORCE_OFF_BOARD_CONNECTION_NAMES(): string[] {
+    return this.hyperParameters.FORCE_OFF_BOARD_CONNECTION_NAMES ?? []
   }
 
   get NODE_MAX_PF() {
@@ -1344,8 +1349,18 @@ export class PortPointPathingSolver extends BaseSolver {
       // New connection search: clear caches (base costs depend on committed state)
       this.clearCostCaches()
 
-      // Determine if this connection should route off-board based on frequency and seed
-      if (this.FORCE_OFF_BOARD_FREQUENCY > 0) {
+      // Explicit connection selection takes precedence over randomized forcing.
+      const connectionIds = [
+        connectionName,
+        ...(nextConnection.connection.__rootConnectionNames ?? []),
+      ]
+      if (
+        connectionIds.some((connectionId) =>
+          this.FORCE_OFF_BOARD_CONNECTION_NAMES.includes(connectionId),
+        )
+      ) {
+        this.currentConnectionShouldRouteOffBoard = true
+      } else if (this.FORCE_OFF_BOARD_FREQUENCY > 0) {
         const random = seededRandom(
           (this.hyperParameters.SHUFFLE_SEED ?? 0) * 17 +
             this.FORCE_OFF_BOARD_SEED +

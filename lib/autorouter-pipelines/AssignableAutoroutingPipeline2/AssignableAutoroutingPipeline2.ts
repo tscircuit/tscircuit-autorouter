@@ -60,12 +60,16 @@ import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFrag
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
 import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
 import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
+import { getObstaclesWithDerivedOffboardConnections } from "./get-obstacles-with-derived-offboard-connections"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  forceOffBoardFrequency?: number
+  forceOffBoardSeed?: number
+  forceOffBoardConnectionNames?: string[]
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -282,7 +286,11 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
               // MIN_ALLOWED_BOARD_SCORE: -1,
-              // FORCE_OFF_BOARD_FREQUENCY: 0, // 0.3,
+              FORCE_OFF_BOARD_FREQUENCY:
+                cms.opts.forceOffBoardFrequency ?? 0,
+              FORCE_OFF_BOARD_SEED: cms.opts.forceOffBoardSeed ?? 0,
+              FORCE_OFF_BOARD_CONNECTION_NAMES:
+                cms.opts.forceOffBoardConnectionNames ?? [],
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
               FORCE_CENTER_FIRST: true,
             },
@@ -688,7 +696,10 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       ),
     )
 
-    for (const [index, obstacle] of this.srj.obstacles.entries()) {
+    const offboardObstacles = getObstaclesWithDerivedOffboardConnections(
+      this.srj.obstacles,
+    )
+    for (const [index, obstacle] of offboardObstacles.entries()) {
       if (!obstacle.offBoardConnectsTo?.length) continue
       const obstacleId = obstacle.obstacleId ?? `__obs${index}`
 

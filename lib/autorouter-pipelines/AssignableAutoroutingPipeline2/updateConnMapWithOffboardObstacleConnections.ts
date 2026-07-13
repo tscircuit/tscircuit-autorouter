@@ -1,5 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson } from "lib/types"
+import { getObstaclesWithDerivedOffboardConnections } from "./get-obstacles-with-derived-offboard-connections"
 
 export const updateConnMapWithOffboardObstacleConnections = ({
   connMap,
@@ -18,9 +19,9 @@ export const updateConnMapWithOffboardObstacleConnections = ({
   }>
   obstacles: SimpleRouteJson["obstacles"]
 }) => {
-  const offBoardObstacles = obstacles.filter(
-    (obstacle) => obstacle.offBoardConnectsTo?.length,
-  )
+  const offBoardObstacles = getObstaclesWithDerivedOffboardConnections(
+    obstacles,
+  ).filter((obstacle) => obstacle.offBoardConnectsTo?.length)
   if (offBoardObstacles.length === 0) return
 
   const offBoardConnMap = new ConnectivityMap({})

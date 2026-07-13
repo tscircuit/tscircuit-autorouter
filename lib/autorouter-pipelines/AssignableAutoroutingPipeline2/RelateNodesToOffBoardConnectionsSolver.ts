@@ -11,6 +11,7 @@ import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { getStringColor } from "lib/solvers/colors"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getObstaclesWithDerivedOffboardConnections } from "./get-obstacles-with-derived-offboard-connections"
 
 /**
  * This solver looks at every obstacle with off board connections (one per step),
@@ -40,7 +41,7 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     super()
 
     this.unprocessedObstacles = createObjectsWithZLayers(
-      this.input.srj.obstacles,
+      getObstaclesWithDerivedOffboardConnections(this.input.srj.obstacles),
       this.input.srj.layerCount,
     ).filter(
       (obstacle) =>

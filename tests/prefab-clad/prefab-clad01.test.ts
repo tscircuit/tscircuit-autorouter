@@ -5,7 +5,7 @@ import { convertSrjToGraphicsObject } from "lib"
 import srjJson from "../../fixtures/prefab-clad/prefab-clad01.srj.json"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 
-test("prefab-clad01 preserves paired-hole metadata and snapshots routed output", () => {
+test("prefab-clad01 routes through assignable plated-hole pairs", () => {
   const srj = srjJson as SimpleRouteJson
   const assignableObstacles = srj.obstacles.filter(
     (obstacle) => obstacle.netIsAssignable === true,
@@ -44,11 +44,30 @@ test("prefab-clad01 preserves paired-hole metadata and snapshots routed output",
   )
   expect(preassignedCladEndpoints).toHaveLength(0)
 
-  const solver = new AssignableAutoroutingPipeline2(srj)
+  const solver = new AssignableAutoroutingPipeline2(srj, {
+    forceOffBoardConnectionNames: ["sample_connection_usb_dm_a"],
+  })
   solver.solve()
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  expect(solver.relateNodesToOffBoardConnections?.nodesInNet.size).toBe(40)
+
+  const pathsUsingPrefabConnections =
+    solver.portPointPathingSolver?.connectionsWithResults.filter(({ path }) =>
+      path?.some((step) => step.throughNodeId),
+    ) ?? []
+  expect(
+    pathsUsingPrefabConnections.map(({ connection }) => connection.name),
+  ).toEqual(["sample_connection_usb_dm_a"])
+
+  const connectedPrefabObstacles = solver.getConnectedOffboardObstacles()
+  expect(Object.keys(connectedPrefabObstacles)).toHaveLength(2)
+  expect(
+    Object.keys(connectedPrefabObstacles).every((obstacleId) =>
+      obstacleId.startsWith("obstacle_hole_"),
+    ),
+  ).toBe(true)
   expect(
     getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(solver.getOutputSimpleRouteJson()),

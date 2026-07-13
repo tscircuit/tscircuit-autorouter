@@ -9,6 +9,7 @@ import {
   createColorMapFromStrings,
   safeTransparentize,
 } from "../../solvers/colors"
+import { getObstaclesWithDerivedOffboardConnections } from "./get-obstacles-with-derived-offboard-connections"
 
 export interface OffboardPortPoint {
   portPointId: string
@@ -42,10 +43,10 @@ interface PendingFragment {
 }
 
 /**
- * PortPointOffboardPathFragmentSolver finds obstacles with offBoardConnectsTo
- * defined and creates port points at their centers. It then creates path
- * fragments (edges) connecting port points that share the same offBoardConnectsTo
- * ids.
+ * PortPointOffboardPathFragmentSolver finds obstacles with explicit or derived
+ * off-board connections and creates port points at their centers. It then
+ * creates path fragments (edges) connecting port points that share the same
+ * connection ids.
  *
  * This enables routing through off-board connections like flex cables or
  * external connectors.
@@ -117,7 +118,9 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
     this.colorMap = colorMap ?? {}
 
     // Precompute obstacles with offBoardConnectsTo and collect unique ids
-    const obstacles = this.srj.obstacles ?? []
+    const obstacles = getObstaclesWithDerivedOffboardConnections(
+      this.srj.obstacles ?? [],
+    )
     const uniqueOffBoardIds = new Set<string>()
 
     for (let i = 0; i < obstacles.length; i++) {
