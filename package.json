@@ -41,6 +41,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
+    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#8c1d219",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#a26f062441ed6baa679655fe10374b01017dcf98",
     "@tscircuit/solver-utils": "^0.0.16",
