@@ -1,0 +1,3623 @@
+{
+  "layerCount": 1,
+  "minTraceWidth": 0.35,
+  "nominalTraceWidth": 0.35,
+  "defaultObstacleMargin": 0.15,
+  "minTraceToPadEdgeClearance": 0.15,
+  "bounds": {
+    "minX": -49.5,
+    "maxX": 49.5,
+    "minY": -34.5,
+    "maxY": 34.5
+  },
+  "obstacles": [
+    {
+      "obstacleId": "obstacle_U1_pad_1",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 3.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_2",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 2.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_3",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 2.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_4",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 1.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_5",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 1.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_6",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 0.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_7",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": 0.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_8",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -0.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_9",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -0.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_10",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -1.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_11",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -1.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_12",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -2.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_13",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -2.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_14",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.75,
+        "y": -3.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_15",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_16",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_17",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_18",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -11.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_19",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -11.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_20",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_21",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_22",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -9.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_23",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -9.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_24",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -8.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_25",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -8.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_26",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_27",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.25,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_28",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.75,
+        "y": -3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_29",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -3.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_30",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -2.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_31",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -2.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_32",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -1.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_33",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -1.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_34",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -0.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_35",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": -0.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_36",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 0.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_37",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 0.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_38",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 1.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_39",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 1.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_40",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 2.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_41",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 2.75
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_42",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.25,
+        "y": 3.25
+      },
+      "width": 0.9,
+      "height": 0.25,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_43",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -6.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_44",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_45",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_46",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -8.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_usb_dm_b",
+        "USB_DM_B"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_47",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -8.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_usb_dp_b",
+        "USB_DP_B"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_48",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -9.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_49",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -9.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_50",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_51",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_52",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -11.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_53",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -11.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_54",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_55",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.75,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_56",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -13.25,
+        "y": 3.75
+      },
+      "width": 0.25,
+      "height": 0.9,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U1_pad_57",
+      "componentId": "pcb_component_sample_U1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10,
+        "y": 0
+      },
+      "width": 5.2,
+      "height": 5.2,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_1",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": 3.2
+      },
+      "width": 1.5,
+      "height": 0.6,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_2",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": 2.1
+      },
+      "width": 1.5,
+      "height": 0.5,
+      "connectedTo": [
+        "sample_connection_usb_cc1",
+        "USB_CC1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_3",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": 1.05
+      },
+      "width": 1.5,
+      "height": 0.5,
+      "connectedTo": [
+        "sample_connection_usb_dm_a",
+        "USB_DM_A"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_4",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": -1.05
+      },
+      "width": 1.5,
+      "height": 0.5,
+      "connectedTo": [
+        "sample_connection_usb_dp_a",
+        "USB_DP_A"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_5",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": -2.1
+      },
+      "width": 1.5,
+      "height": 0.5,
+      "connectedTo": [
+        "sample_connection_usb_cc2",
+        "USB_CC2"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_pad_6",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.6,
+        "y": -3.2
+      },
+      "width": 1.5,
+      "height": 0.6,
+      "connectedTo": [
+        "sample_connection_gnd_00",
+        "GND",
+        "sample_connection_gnd_04",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_J1_shell_top",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -46,
+        "y": 4.6
+      },
+      "width": 2.4,
+      "height": 1.8,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_J1_shell_bottom",
+      "componentId": "pcb_component_sample_J1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -46,
+        "y": -4.6
+      },
+      "width": 2.4,
+      "height": 1.8,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_1",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -28,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_2",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -27,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_gnd_02",
+        "GND",
+        "sample_connection_gnd_03",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_3",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -26,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_4",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -26,
+        "y": -7.8
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_5",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -28,
+        "y": -7.8
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R1_pad_1",
+      "componentId": "pcb_component_sample_R1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.4,
+        "y": 5.4
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_dm_b",
+        "USB_DM_B"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R1_pad_2",
+      "componentId": "pcb_component_sample_R1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.4,
+        "y": 7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_dm_a",
+        "USB_DM_A"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R2_pad_1",
+      "componentId": "pcb_component_sample_R2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.3,
+        "y": 5.4
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_dp_b",
+        "USB_DP_B"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R2_pad_2",
+      "componentId": "pcb_component_sample_R2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10.3,
+        "y": 7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_dp_a",
+        "USB_DP_A"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R3_pad_1",
+      "componentId": "pcb_component_sample_R3",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -36,
+        "y": 5.2
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_cc1",
+        "USB_CC1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R3_pad_2",
+      "componentId": "pcb_component_sample_R3",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -36,
+        "y": 6.8
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_04",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R4_pad_1",
+      "componentId": "pcb_component_sample_R4",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -36,
+        "y": -6.8
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_00",
+        "GND",
+        "sample_connection_gnd_01",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_R4_pad_2",
+      "componentId": "pcb_component_sample_R4",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -36,
+        "y": -5.2
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_cc2",
+        "USB_CC2"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C1_pad_1",
+      "componentId": "pcb_component_sample_C1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -35.8,
+        "y": -10
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C1_pad_2",
+      "componentId": "pcb_component_sample_C1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -34.2,
+        "y": -10
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_gnd_01",
+        "GND",
+        "sample_connection_gnd_02",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C2_pad_1",
+      "componentId": "pcb_component_sample_C2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -23.3,
+        "y": -9
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C2_pad_2",
+      "componentId": "pcb_component_sample_C2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -21.7,
+        "y": -9
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_gnd_03",
+        "GND",
+        "sample_connection_gnd_05",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C3_pad_1",
+      "componentId": "pcb_component_sample_C3",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": 5.7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C3_pad_2",
+      "componentId": "pcb_component_sample_C3",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": 7.3
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_07",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C4_pad_1",
+      "componentId": "pcb_component_sample_C4",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -3.8,
+        "y": 1.7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C4_pad_2",
+      "componentId": "pcb_component_sample_C4",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -3.8,
+        "y": 3.3
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_06",
+        "GND",
+        "sample_connection_gnd_07",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C5_pad_1",
+      "componentId": "pcb_component_sample_C5",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": -3.3
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C5_pad_2",
+      "componentId": "pcb_component_sample_C5",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": -1.7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_05",
+        "GND",
+        "sample_connection_gnd_06",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -40,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_031"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -35,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_017"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -30,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_030"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -25,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_035"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -20,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_002"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -15,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_034"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_028"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_007",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -5,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_016"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_008",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 0,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_028"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_009",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 5,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_025"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_010",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 10,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_006"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_011",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 15,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_014"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_012",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 20,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_033"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_013",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 25,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_011"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_014",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 30,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_011"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_015",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 35,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_003"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r0_016",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 40,
+        "y": -25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_022"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -40,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_004"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -35,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_010"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -30,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_000"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -25,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_037"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -20,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_026"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -15,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_000"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -10,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_038"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_007",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -5,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_038"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_008",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 0,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_036"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_009",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 5,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_005"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_010",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 10,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_036"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_011",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 15,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_023"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_012",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 20,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_020"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_013",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 25,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_032"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_014",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 30,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_019"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_015",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 35,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_019"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r0_016",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 40,
+        "y": 25
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_009"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_033"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": -15
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_007"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": -10
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_018"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": -5
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_021"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": 0
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_018"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": 5
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_012"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": 10
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_022"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_007",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": 15
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_009"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r0_008",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 38,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_032"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -37.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_035"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -32.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_034"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -27.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_031"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -22.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_007"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -17.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_025"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_017"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_030"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_007",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -2.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_002"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_008",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 2.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_029"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_009",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 7.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_006"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_010",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 12.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_039"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_011",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 17.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_016"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_012",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 22.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_039"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_013",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 27.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_003"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_bottom_r1_014",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 32.5,
+        "y": -20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_014"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -37.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_015"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -32.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_015"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -27.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_024"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -22.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_024"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -17.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_013"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -12.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_001"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -7.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_004"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_007",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -2.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_037"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_008",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 2.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_013"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_009",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 7.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_026"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_010",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 12.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_027"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_011",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 17.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_027"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_012",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 22.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_010"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_013",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 27.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_005"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_top_r1_014",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 32.5,
+        "y": 20
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_023"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_000",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": -15
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_029"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_001",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": -10
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_021"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_002",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": -5
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_012"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_003",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": 0
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_008"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_004",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": 5
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_008"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_005",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": 10
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_020"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_hole_right_r1_006",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 33,
+        "y": 15
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": [
+        "connection_001"
+      ],
+      "netIsAssignable": true
+    },
+    {
+      "obstacleId": "obstacle_test_short_top_left_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -45,
+        "y": 28.585786
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_top_left",
+        "test_short_top_left_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_top_left_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -43.585786,
+        "y": 30
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_top_left",
+        "test_short_top_left_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_top_right_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 45,
+        "y": 28.585786
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_top_right",
+        "test_short_top_right_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_top_right_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 43.585786,
+        "y": 30
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_top_right",
+        "test_short_top_right_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_bottom_right_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 43.585786,
+        "y": -30
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_bottom_right",
+        "test_short_bottom_right_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_bottom_right_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 45,
+        "y": -28.585786
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_bottom_right",
+        "test_short_bottom_right_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_bottom_left_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -43.585786,
+        "y": -30
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_bottom_left",
+        "test_short_bottom_left_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_test_short_bottom_left_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -45,
+        "y": -28.585786
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": [
+        "test_short_bottom_left",
+        "test_short_bottom_left_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_00",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": 8.89
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_bottom_left_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_01",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": 6.35
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_bottom_left_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_02",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": 3.81
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_top_right_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_03",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": 1.27
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_top_right_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_04",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": -1.27
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_bottom_right_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_05",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": -3.81
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_bottom_right_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_06",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": -6.35
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_top_left_contact_b"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_contact_hole_07",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 47.5,
+        "y": -8.89
+      },
+      "width": 1.8,
+      "height": 1.8,
+      "connectedTo": [
+        "test_short_top_left_contact_a"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_top_left_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -43.398026,
+        "y": 26.601974
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_top_left_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.601974,
+        "y": 28.398026
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_top_right_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 43.398026,
+        "y": 26.601974
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_top_right_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 41.601974,
+        "y": 28.398026
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_bottom_right_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 41.601974,
+        "y": -28.398026
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_bottom_right_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 43.398026,
+        "y": -26.601974
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_bottom_left_hole_a",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -41.601974,
+        "y": -28.398026
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_placement_pair_bottom_left_hole_b",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -43.398026,
+        "y": -26.601974
+      },
+      "width": 1.6,
+      "height": 1.6,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_existing_top_trace_test_short_top_left_top_trace_1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -44.292893,
+        "y": 29.292893
+      },
+      "width": 2.000000618897906,
+      "height": 1,
+      "ccwRotationDegrees": 45,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_existing_top_trace_test_short_top_right_top_trace_1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 44.292893,
+        "y": 29.292893
+      },
+      "width": 2.000000618897906,
+      "height": 1,
+      "ccwRotationDegrees": 135,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_existing_top_trace_test_short_bottom_right_top_trace_1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 44.292893,
+        "y": -29.292893
+      },
+      "width": 2.000000618897906,
+      "height": 1,
+      "ccwRotationDegrees": 45,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_existing_top_trace_test_short_bottom_left_top_trace_1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -44.292893,
+        "y": -29.292893
+      },
+      "width": 2.000000618897906,
+      "height": 1,
+      "ccwRotationDegrees": 135,
+      "connectedTo": []
+    }
+  ],
+  "connections": [
+    {
+      "name": "sample_connection_usb_dm_a",
+      "netConnectionName": "USB_DM_A",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": 1.05,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_3"
+        },
+        {
+          "x": -7.4,
+          "y": 7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R1_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_usb_dm_b",
+      "netConnectionName": "USB_DM_B",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -7.4,
+          "y": 5.4,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R1_pad_1"
+        },
+        {
+          "x": -8.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_46"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_usb_dp_a",
+      "netConnectionName": "USB_DP_A",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": -1.05,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_4"
+        },
+        {
+          "x": -10.3,
+          "y": 7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R2_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_usb_dp_b",
+      "netConnectionName": "USB_DP_B",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -10.3,
+          "y": 5.4,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R2_pad_1"
+        },
+        {
+          "x": -8.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_47"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_usb_cc1",
+      "netConnectionName": "USB_CC1",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": 2.1,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_2"
+        },
+        {
+          "x": -36,
+          "y": 5.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R3_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_usb_cc2",
+      "netConnectionName": "USB_CC2",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": -2.1,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_5"
+        },
+        {
+          "x": -36,
+          "y": -5.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R4_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_vbus",
+      "netConnectionName": "VBUS",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": 3.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_1"
+        },
+        {
+          "x": -28,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_1"
+        },
+        {
+          "x": -26,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_3"
+        },
+        {
+          "x": -35.8,
+          "y": -10,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C1_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_3v3",
+      "netConnectionName": "3V3",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -28,
+          "y": -7.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_5"
+        },
+        {
+          "x": -23.3,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_1"
+        },
+        {
+          "x": -7.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_44"
+        },
+        {
+          "x": -9.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_48"
+        },
+        {
+          "x": -9.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_49"
+        },
+        {
+          "x": -4,
+          "y": 5.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C3_pad_1"
+        },
+        {
+          "x": -4,
+          "y": -3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_1v1",
+      "netConnectionName": "1V1",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -7.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_45"
+        },
+        {
+          "x": -10.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_50"
+        },
+        {
+          "x": -3.8,
+          "y": 1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_00",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": -3.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_6"
+        },
+        {
+          "x": -36,
+          "y": -6.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R4_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_01",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -36,
+          "y": -6.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R4_pad_1"
+        },
+        {
+          "x": -34.2,
+          "y": -10,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C1_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_02",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -34.2,
+          "y": -10,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C1_pad_2"
+        },
+        {
+          "x": -27,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_03",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -27,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_2"
+        },
+        {
+          "x": -21.7,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_04",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": -3.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_6"
+        },
+        {
+          "x": -36,
+          "y": 6.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R3_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_05",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -21.7,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_2"
+        },
+        {
+          "x": -4,
+          "y": -1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_06",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -4,
+          "y": -1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_2"
+        },
+        {
+          "x": -3.8,
+          "y": 3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_07",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -3.8,
+          "y": 3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_2"
+        },
+        {
+          "x": -4,
+          "y": 7.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C3_pad_2"
+        }
+      ]
+    }
+  ]
+}
