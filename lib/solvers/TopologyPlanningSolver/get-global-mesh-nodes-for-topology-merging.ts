@@ -1,12 +1,23 @@
 import type { CapacityMeshNode } from "lib/types"
 import type { SerializedTopologyComponentInput } from "./MultiGraphTopologyPlannerSolver"
-import { GEOMETRY_EPSILON } from "./capacity-node-geometry"
+import {
+  GEOMETRY_EPSILON,
+  getCapacityMeshNodeBounds,
+  isValidCapacityBounds,
+} from "./capacity-node-geometry"
 
 /**
  * Retains the global topology as an input to common refinement. RectDiff marks
  * synthetic component replacement regions as obstacles and targets; those
  * flags describe the temporary global solve, not physical copper keepouts, so
  * they are cleared before the component-local topology groups are overlaid.
+ *
+ * Degenerate (zero-area or non-finite) nodes are dropped. The RectDiff global
+ * solve only filters exactly-zero rect sizes, so near-zero sliver nodes (e.g.
+ * from float-dust obstacle dimensions) can reach this stage. Such a node
+ * carries no routing capacity — it cannot contain a port point and topology
+ * merging samples node interiors, so it would never contribute a region — and
+ * letting it through crashes TopologyMergingSolver input validation.
  */
 export function getGlobalMeshNodesForTopologyMerging({
   meshNodes,
@@ -15,9 +26,13 @@ export function getGlobalMeshNodesForTopologyMerging({
   meshNodes: CapacityMeshNode[]
   components: SerializedTopologyComponentInput[]
 }): CapacityMeshNode[] {
-  if (components.length === 0) return meshNodes
+  const routableMeshNodes = meshNodes.filter((node) =>
+    isValidCapacityBounds(getCapacityMeshNodeBounds(node)),
+  )
 
-  return meshNodes.map((node) => {
+  if (components.length === 0) return routableMeshNodes
+
+  return routableMeshNodes.map((node) => {
     const isSyntheticComponentRegion = components.some((component) =>
       isReplacementRegionNode({ node, component }),
     )
