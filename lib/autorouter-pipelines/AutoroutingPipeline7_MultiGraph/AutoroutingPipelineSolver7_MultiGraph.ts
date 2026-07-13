@@ -987,6 +987,23 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         (r) => r.connectionName === connection.name,
       )
 
+      if (connection.pointsToConnect.length !== 2) {
+        throw new Error(
+          `Expected Pipeline7 output connection "${connection.name}" to have two points, got ${connection.pointsToConnect.length}`,
+        )
+      }
+
+      const [startPoint, endPoint] = connection.pointsToConnect
+      const connectsTo: string[] = []
+
+      if (startPoint?.pointId) {
+        connectsTo.push(startPoint.pointId)
+      }
+
+      if (endPoint?.pointId) {
+        connectsTo.push(endPoint.pointId)
+      }
+
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
@@ -996,6 +1013,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
+          connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
             defaultViaHoleDiameter: this.viaHoleDiameter,
