@@ -15,12 +15,14 @@ export function selectConnectionPointRegion({
   point,
   layerCount,
 }: SelectConnectionPointRegionParams): RegionHg | undefined {
-  const candidates = graph.regions.filter((region) =>
-    checkIfConnectionPointIsInRegion({
-      point,
-      region,
-      layerCount,
-    }),
+  const candidates = graph.regions.filter(
+    (region) =>
+      !region.d._offBoardConnectionId &&
+      checkIfConnectionPointIsInRegion({
+        point,
+        region,
+        layerCount,
+      }),
   )
   const pointZLayers = getConnectionPointZLayers({ point, layerCount })
 

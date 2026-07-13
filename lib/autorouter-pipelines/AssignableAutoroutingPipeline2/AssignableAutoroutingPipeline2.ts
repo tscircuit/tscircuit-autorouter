@@ -4,21 +4,17 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import {
-  HyperPortPointPathingSolver,
-  HyperPortPointPathingSolverParams,
-} from "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver"
-import {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
 } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -34,7 +30,6 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
-  PortPointPathingSolver,
 } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
@@ -56,11 +51,15 @@ import type {
 import { combineVisualizations } from "../../utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "../../utils/getTunedTotalCapacity1"
 import { JumperHighDensitySolver } from "./JumperHighDensitySolver"
+import {
+  AssignablePortPointPathingSolver,
+  type AssignablePortPointPathingSolverParams,
+} from "./AssignablePortPointPathingSolver"
 import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFragmentSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
 import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
-import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
 import { getObstaclesWithDerivedOffboardConnections } from "./get-obstacles-with-derived-offboard-connections"
+import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -128,7 +127,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   traceKeepoutSolver?: TraceKeepoutSolver
   traceWidthSolver?: TraceWidthSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: PortPointPathingSolver
+  portPointPathingSolver?: AssignablePortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   viaDiameter: number
   minTraceWidth: number
@@ -150,7 +149,11 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver,
-      (cms) => [cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srj,
+        cms.colorMap,
+        { avoidNonAdjacentSameComponentPadPairs: cms.srj.layerCount === 1 },
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
@@ -217,7 +220,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      HyperPortPointPathingSolver,
+      AssignablePortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
         const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
@@ -273,6 +276,11 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
+            segmentPortPoints: segmentPointSolver
+              .getOutput()
+              .flatMap((segment) => segment.portPoints),
+            layerCount: cms.srj.layerCount,
+            effort: cms.effort,
             numShuffleSeeds: 100 * cms.effort,
             // minAllowedBoardScore: -1,
             hyperParameters: {
@@ -286,15 +294,14 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               NODE_PF_FACTOR: 100,
               NODE_PF_MAX_PENALTY: 100,
               // MIN_ALLOWED_BOARD_SCORE: -1,
-              FORCE_OFF_BOARD_FREQUENCY:
-                cms.opts.forceOffBoardFrequency ?? 0,
+              FORCE_OFF_BOARD_FREQUENCY: cms.opts.forceOffBoardFrequency ?? 0,
               FORCE_OFF_BOARD_SEED: cms.opts.forceOffBoardSeed ?? 0,
               FORCE_OFF_BOARD_CONNECTION_NAMES:
                 cms.opts.forceOffBoardConnectionNames ?? [],
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
               FORCE_CENTER_FIRST: true,
             },
-          } as HyperPortPointPathingSolverParams,
+          } as AssignablePortPointPathingSolverParams,
         ]
       },
       {

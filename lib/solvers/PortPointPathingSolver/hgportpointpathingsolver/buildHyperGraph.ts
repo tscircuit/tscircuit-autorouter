@@ -1,21 +1,21 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
+import {
+  getAssignableViaAvailableZ,
+  getAssignableViaId,
+  isAssignableViaObstacle,
+} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   CapacityMeshNode,
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
-import {
-  getAssignableViaAvailableZ,
-  getAssignableViaId,
-  isAssignableViaObstacle,
-} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
-  RawPort,
   ConnectionHg,
   HyperGraphHg,
+  RawPort,
   RegionHg,
   RegionPortHg,
 } from "./types"
@@ -154,23 +154,83 @@ export function buildHyperGraph(params: {
     regions: [],
   }
   const connections: ConnectionHg[] = []
+  const regionByCapacityMeshNodeId = new Map<string, RegionHg>()
+  const offBoardRegionByConnectionId = new Map<string, RegionHg>()
+  const hasOffBoardCapacityNodes = params.capacityMeshNodes.some((node) =>
+    Boolean(node._offBoardConnectionId),
+  )
 
   for (const cmnNode of params.capacityMeshNodes) {
-    graph.regions.push({
-      regionId: cmnNode.capacityMeshNodeId,
-      d: cmnNode,
-      ports: [],
-    })
+    if (!hasOffBoardCapacityNodes) {
+      graph.regions.push({
+        regionId: cmnNode.capacityMeshNodeId,
+        d: cmnNode,
+        ports: [],
+      })
+      continue
+    }
+
+    const offBoardConnectionId = cmnNode._offBoardConnectionId
+    if (!offBoardConnectionId) {
+      const region: RegionHg = {
+        regionId: cmnNode.capacityMeshNodeId,
+        d: cmnNode,
+        ports: [],
+      }
+      graph.regions.push(region)
+      regionByCapacityMeshNodeId.set(cmnNode.capacityMeshNodeId, region)
+      continue
+    }
+
+    let offBoardRegion = offBoardRegionByConnectionId.get(offBoardConnectionId)
+    if (!offBoardRegion) {
+      offBoardRegion = {
+        regionId: `offboard:${offBoardConnectionId}`,
+        d: {
+          ...cmnNode,
+          capacityMeshNodeId: `offboard:${offBoardConnectionId}`,
+          _containsObstacle: false,
+          _completelyInsideObstacle: false,
+        },
+        ports: [],
+      }
+      offBoardRegionByConnectionId.set(offBoardConnectionId, offBoardRegion)
+      graph.regions.push(offBoardRegion)
+    } else {
+      const minX = Math.min(
+        offBoardRegion.d.center.x - offBoardRegion.d.width / 2,
+        cmnNode.center.x - cmnNode.width / 2,
+      )
+      const maxX = Math.max(
+        offBoardRegion.d.center.x + offBoardRegion.d.width / 2,
+        cmnNode.center.x + cmnNode.width / 2,
+      )
+      const minY = Math.min(
+        offBoardRegion.d.center.y - offBoardRegion.d.height / 2,
+        cmnNode.center.y - cmnNode.height / 2,
+      )
+      const maxY = Math.max(
+        offBoardRegion.d.center.y + offBoardRegion.d.height / 2,
+        cmnNode.center.y + cmnNode.height / 2,
+      )
+      offBoardRegion.d.center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+      offBoardRegion.d.width = maxX - minX
+      offBoardRegion.d.height = maxY - minY
+      offBoardRegion.d.availableZ = [
+        ...new Set([...offBoardRegion.d.availableZ, ...cmnNode.availableZ]),
+      ].sort((a, b) => a - b)
+    }
+    regionByCapacityMeshNodeId.set(cmnNode.capacityMeshNodeId, offBoardRegion)
   }
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-    const region1 = graph.regions.find(
-      (region) => region.regionId === region1Id,
-    )
-    const region2 = graph.regions.find(
-      (region) => region.regionId === region2Id,
-    )
+    const region1 = hasOffBoardCapacityNodes
+      ? regionByCapacityMeshNodeId.get(region1Id)
+      : graph.regions.find((region) => region.regionId === region1Id)
+    const region2 = hasOffBoardCapacityNodes
+      ? regionByCapacityMeshNodeId.get(region2Id)
+      : graph.regions.find((region) => region.regionId === region2Id)
 
     assertDefined(
       region1,
@@ -180,6 +240,8 @@ export function buildHyperGraph(params: {
       region2,
       `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
     )
+
+    if (region1 === region2) continue
 
     for (const z of spp.availableZ) {
       const port: RawPort = {

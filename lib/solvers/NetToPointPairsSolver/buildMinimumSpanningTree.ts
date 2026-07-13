@@ -241,7 +241,7 @@ export class DisjointSet {
 }
 
 // Edge representation for Kruskal's algorithm
-interface Edge<T extends Point> {
+export interface Edge<T extends Point> {
   from: T
   to: T
   weight: number

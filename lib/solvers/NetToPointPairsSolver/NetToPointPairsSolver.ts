@@ -1,13 +1,13 @@
+import { GraphicsObject } from "graphics-debug"
 import {
   ConnectionPoint,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
-import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
-import { GraphicsObject } from "graphics-debug"
-import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { BaseSolver } from "../BaseSolver"
+import { type Edge, buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { mergeConnections } from "./mergeConnections"
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
@@ -127,12 +127,28 @@ export class NetToPointPairsSolver extends BaseSolver {
 
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
+  componentPadPoints = new Map<string, ConnectionPoint[]>()
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
+    public opts: {
+      avoidNonAdjacentSameComponentPadPairs?: boolean
+    } = {},
   ) {
     super()
+    for (const connection of ogSrj.connections) {
+      for (const point of connection.pointsToConnect) {
+        const componentPad = this.getComponentPad(point)
+        if (!componentPad) continue
+        const componentPoints =
+          this.componentPadPoints.get(componentPad.componentId) ?? []
+        if (!componentPoints.some(({ pointId }) => pointId === point.pointId)) {
+          componentPoints.push(point)
+          this.componentPadPoints.set(componentPad.componentId, componentPoints)
+        }
+      }
+    }
     this.unprocessedConnections = mergeConnections([...ogSrj.connections])
     this.newConnections = []
   }
@@ -172,9 +188,16 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
+    let edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
     })
+    if (this.opts.avoidNonAdjacentSameComponentPadPairs) {
+      edges = this.replaceNonAdjacentSameComponentPadSpans({
+        points: connection.pointsToConnect,
+        edges,
+        pointIdToGroup,
+      })
+    }
 
     let mstIdx = 0
     for (const edge of edges) {
@@ -188,6 +211,114 @@ export class NetToPointPairsSolver extends BaseSolver {
         netConnectionName: connection.netConnectionName,
       })
     }
+  }
+
+  private replaceNonAdjacentSameComponentPadSpans({
+    points,
+    edges,
+    pointIdToGroup,
+  }: {
+    points: ConnectionPoint[]
+    edges: Edge<ConnectionPoint>[]
+    pointIdToGroup: Map<string, number>
+  }): Edge<ConnectionPoint>[] {
+    const repairedEdges = [...edges]
+
+    for (let edgeIndex = 0; edgeIndex < repairedEdges.length; edgeIndex++) {
+      const edge = repairedEdges[edgeIndex]
+      if (!this.isNonAdjacentSameComponentPadSpan(edge.from, edge.to)) {
+        continue
+      }
+
+      const adjacency = new Map<ConnectionPoint, ConnectionPoint[]>()
+      for (let i = 0; i < repairedEdges.length; i++) {
+        if (i === edgeIndex) continue
+        const candidate = repairedEdges[i]
+        adjacency.set(candidate.from, [
+          ...(adjacency.get(candidate.from) ?? []),
+          candidate.to,
+        ])
+        adjacency.set(candidate.to, [
+          ...(adjacency.get(candidate.to) ?? []),
+          candidate.from,
+        ])
+      }
+
+      const reachable = new Set<ConnectionPoint>([edge.from])
+      const queue = [edge.from]
+      while (queue.length > 0) {
+        const current = queue.shift()!
+        for (const next of adjacency.get(current) ?? []) {
+          if (reachable.has(next)) continue
+          reachable.add(next)
+          queue.push(next)
+        }
+      }
+
+      let replacement: Edge<ConnectionPoint> | null = null
+      for (const from of points) {
+        if (!reachable.has(from)) continue
+        for (const to of points) {
+          if (reachable.has(to)) continue
+          if (this.isNonAdjacentSameComponentPadSpan(from, to)) continue
+          const weight = areExternallyConnected(pointIdToGroup, from, to)
+            ? 0
+            : Math.hypot(from.x - to.x, from.y - to.y)
+          if (!replacement || weight < replacement.weight) {
+            replacement = { from, to, weight }
+          }
+        }
+      }
+
+      if (replacement) repairedEdges[edgeIndex] = replacement
+    }
+
+    return repairedEdges
+  }
+
+  private isNonAdjacentSameComponentPadSpan(
+    from: ConnectionPoint,
+    to: ConnectionPoint,
+  ): boolean {
+    const fromPad = this.getComponentPad(from)
+    const toPad = this.getComponentPad(to)
+    if (!fromPad || !toPad) return false
+    if (fromPad.componentId !== toPad.componentId) return false
+
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared === 0) return false
+
+    const interveningPadCount = (
+      this.componentPadPoints.get(fromPad.componentId) ?? []
+    ).filter((candidate) => {
+      if (
+        candidate.pointId === from.pointId ||
+        candidate.pointId === to.pointId
+      ) {
+        return false
+      }
+      const projection =
+        ((candidate.x - from.x) * dx + (candidate.y - from.y) * dy) /
+        lengthSquared
+      if (projection <= 0 || projection >= 1) return false
+
+      const closestX = from.x + projection * dx
+      const closestY = from.y + projection * dy
+      return Math.hypot(candidate.x - closestX, candidate.y - closestY) < 1e-6
+    }).length
+
+    // A single intervening pad can be escaped around the end of the component.
+    // Spanning several pads fences off their escapes and creates an inherently
+    // interleaved single-layer topology.
+    return interveningPadCount >= 2
+  }
+
+  private getComponentPad(point: ConnectionPoint) {
+    const match = point.pointId?.match(/^(.*)_pad_(\d+)$/)
+    if (!match) return null
+    return { componentId: match[1], padNumber: Number(match[2]) }
   }
 
   getNewSimpleRouteJson(): SimpleRouteJson {

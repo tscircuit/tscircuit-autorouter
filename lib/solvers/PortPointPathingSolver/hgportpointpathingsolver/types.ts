@@ -90,6 +90,13 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
+    MAX_OFF_BOARD_CONNECTIONS_PER_PATH?: number
+    /** Use an admissible region-hop heuristic instead of geometric distance. */
+    USE_TOPOLOGY_ONLY_HEURISTIC?: boolean
+    /** Never commit a physical intersection; conflicting routes must be ripped. */
+    ALWAYS_RIP_INTERSECTIONS?: boolean
+    /** Treat same-net chord intersections as conflicts instead of junctions. */
+    ALWAYS_RIP_SAME_NET_INTERSECTIONS?: boolean
   }
   weights: {
     /** Seed used for deterministic shuffling in rip-selection ordering. */
@@ -112,6 +119,16 @@ export interface HgPortPointPathingSolverParams {
     MEMORY_PF_FACTOR: number
     /** Base geometric transition multiplier used by auxiliary step penalties. */
     BASE_CANDIDATE_COST: number
+    /** Uniform cost per hypergraph transition; independent of XY distance. */
+    TOPOLOGY_STEP_COST?: number
+    /** Topology-hop A* ordering cost; independent of XY distance. */
+    TOPOLOGY_HEURISTIC_COST?: number
+    /** Fixed cost per different-net chord intersection in a physical region. */
+    CROSSING_PENALTY?: number
+    /** Negotiated-congestion cost each time the same two routes conflict. */
+    CONFLICT_HISTORY_COST?: number
+    /** Cost per prior rip at a port; breaks repeated rip-and-reroute cycles. */
+    RIP_HISTORY_COST?: number
     /** Soft board-score guard for candidate filtering; more negative allows riskier paths. */
     MIN_ALLOWED_BOARD_SCORE: number
     /** Per-connection candidate queue cap (0 means use default queue size). */

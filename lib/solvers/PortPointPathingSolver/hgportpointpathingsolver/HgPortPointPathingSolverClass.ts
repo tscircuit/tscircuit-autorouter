@@ -1,36 +1,33 @@
-import { HyperGraphSolver, RegionPortAssignment } from "@tscircuit/hypergraph"
-import {
-  distance,
-  doSegmentsIntersect,
-  pointToSegmentDistance,
-} from "@tscircuit/math-utils"
 import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
-import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import type { CapacityMeshNodeId } from "lib/types"
+import { HyperGraphSolver, RegionPortAssignment } from "@tscircuit/hypergraph"
+import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
+import type { GraphicsObject } from "graphics-debug"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import type { GraphicsObject } from "graphics-debug"
+import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
+import type { CapacityMeshNodeId } from "lib/types"
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { assertDefined } from "./assertDefined"
+import { doRegionPortPairsCross } from "./doRegionPortPairsCross"
 import { mergeGraphicsArray } from "./mergeGraphicsArray"
 import type {
-  HgPortPointPathingSolverParams,
-  RegionId,
-  RegionMemoryPfMap,
-  RegionRipCountMap,
   CandidateHg,
   ConnectionHg,
+  HgPortPointPathingSolverParams,
   RegionHg,
+  RegionId,
+  RegionMemoryPfMap,
   RegionPortHg,
+  RegionRipCountMap,
   SolvedRoutesHg,
 } from "./types"
 import { visualizeCandidate } from "./visualize/visualizeCandidate"
-import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
 import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
+import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
@@ -41,6 +38,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   private baseRegionFailureCostMap: Map<RegionId, number>
   private regionRipCountMap: RegionRipCountMap
   private totalRipCount: number
+  private hasOffBoardRegions: boolean
+  private topologyHopDistanceByRegionId = new Map<RegionId, number>()
+  private topologyHopDistanceEndRegionId?: RegionId
+  private bestQueuedGByVisitedKey = new Map<string, number>()
+  private queuedStateConnection?: ConnectionHg
+  private ripHistoryByConnectionPortKey = new Map<string, number>()
+  private conflictHistoryByConnectionPairKey = new Map<string, number>()
   constructor(private params: HgPortPointPathingSolverParams) {
     super({
       inputConnections: params.connections,
@@ -54,9 +58,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.baseRegionFailureCostMap = new Map()
     this.regionRipCountMap = new Map()
     this.totalRipCount = 0
+    this.hasOffBoardRegions = params.graph.regions.some((region) =>
+      Boolean(region.d._offBoardConnectionId),
+    )
     if (params.weights.MAX_ITERATIONS_PER_PATH > 0) {
       this.MAX_ITERATIONS =
-        params.weights.MAX_ITERATIONS_PER_PATH * params.effort
+        params.weights.MAX_ITERATIONS_PER_PATH *
+        params.effort *
+        Math.max(1, params.connections.length)
     }
   }
 
@@ -67,6 +76,15 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override computeH(candidate: CandidateHg): number {
+    if (this.params.flags.USE_TOPOLOGY_ONLY_HEURISTIC) {
+      return (
+        this.getTopologyHopDistanceToEnd(candidate.nextRegion) *
+        (this.params.weights.TOPOLOGY_HEURISTIC_COST ??
+          this.params.weights.TOPOLOGY_STEP_COST ??
+          0)
+      )
+    }
+
     const hgCandidate = candidate as CandidateHg
     const distanceTraveled = this.computeDistanceTraveled(hgCandidate)
     if (
@@ -100,6 +118,39 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
+  private getTopologyHopDistanceToEnd(region?: RegionHg): number {
+    const endRegion = this.currentEndRegion
+    assertDefined(endRegion, "Current end region is undefined")
+    if (!region) return 0
+
+    if (this.topologyHopDistanceEndRegionId !== endRegion.regionId) {
+      this.topologyHopDistanceByRegionId.clear()
+      this.topologyHopDistanceEndRegionId = endRegion.regionId
+      this.topologyHopDistanceByRegionId.set(endRegion.regionId, 0)
+      const queue: RegionHg[] = [endRegion]
+
+      while (queue.length > 0) {
+        const currentRegion = queue.shift()!
+        const currentDistance =
+          this.topologyHopDistanceByRegionId.get(currentRegion.regionId) ?? 0
+        for (const port of currentRegion.ports) {
+          const adjacentRegion =
+            port.region1 === currentRegion ? port.region2 : port.region1
+          if (this.topologyHopDistanceByRegionId.has(adjacentRegion.regionId)) {
+            continue
+          }
+          this.topologyHopDistanceByRegionId.set(
+            adjacentRegion.regionId,
+            currentDistance + 1,
+          )
+          queue.push(adjacentRegion)
+        }
+      }
+    }
+
+    return this.topologyHopDistanceByRegionId.get(region.regionId) ?? 0
+  }
+
   override computeIncreasedRegionCostIfPortsAreUsed(
     region: RegionHg,
     port1: RegionPortHg,
@@ -108,6 +159,27 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const currentConnection = this.currentConnection
     assertDefined(currentConnection, "Current connection is undefined")
 
+    const crossingAssignments = this.getRipsRequiredForPortUsage(
+      region,
+      port1,
+      port2,
+    )
+    if (
+      !region.d._offBoardConnectionId &&
+      this.params.weights.CROSSING_PENALTY !== undefined
+    ) {
+      return crossingAssignments.reduce((cost, assignment) => {
+        const conflictCount = this.getConnectionPairConflictCount(
+          currentConnection.connectionId,
+          assignment.connection.connectionId,
+        )
+        return (
+          cost +
+          this.params.weights.CROSSING_PENALTY! +
+          conflictCount * (this.params.weights.CONFLICT_HISTORY_COST ?? 0)
+        )
+      }, 0)
+    }
     const baseCost = this.getBaseRegionFailureCost(region)
     const pfAfter = this.computeRegionPfWithAdditionalSegment(
       region,
@@ -129,7 +201,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
   override computeG(candidate: CandidateHg): number {
     const hgCandidate = candidate
-    let baseCost = super.computeG(candidate)
+    let baseCost =
+      super.computeG(candidate) + (this.params.weights.TOPOLOGY_STEP_COST ?? 0)
     if (
       hgCandidate.lastPort &&
       hgCandidate.lastPort.d.z !== hgCandidate.port.d.z
@@ -142,19 +215,145 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return baseCost + this.computeEndRegionCloseCost(hgCandidate)
   }
 
+  private getCandidateVisitedKey(candidate: CandidateHg): string {
+    const offBoardConnectionCount =
+      this.getCandidateOffBoardConnectionIds(candidate).size
+    return `${candidate.port.portId}:offboard-count=${offBoardConnectionCount}`
+  }
+
+  private getCandidateOffBoardConnectionIds(
+    candidate: CandidateHg,
+  ): Set<string> {
+    const offBoardConnectionIds = new Set<string>()
+    let cursor: CandidateHg | undefined = candidate
+    while (cursor) {
+      const offBoardConnectionId = cursor.lastRegion?.d._offBoardConnectionId
+      if (offBoardConnectionId) {
+        offBoardConnectionIds.add(offBoardConnectionId)
+      }
+      cursor = cursor.parent
+    }
+    return offBoardConnectionIds
+  }
+
+  /**
+   * The base hypergraph solver closes a port after its first visit. A prefab
+   * connection changes the routing state, so the same physical port must be
+   * explored separately for each amount of prefab-connection budget used.
+   * The identity of a previously used portal does not affect future moves once
+   * two paths reach the same port, so retaining it would duplicate equivalent
+   * states for every assignable plated-hole pair.
+   */
+  override _step(): void {
+    if (!this.hasOffBoardRegions) {
+      super._step()
+      return
+    }
+
+    if (this.queuedStateConnection !== this.currentConnection) {
+      this.bestQueuedGByVisitedKey.clear()
+      this.queuedStateConnection = this.currentConnection ?? undefined
+    }
+
+    let currentCandidate = this.candidateQueue.dequeue() as CandidateHg | null
+    if (!currentCandidate) {
+      this.failed = true
+      this.error = "Ran out of candidates"
+      return
+    }
+
+    let visitedKey = this.getCandidateVisitedKey(currentCandidate)
+    let visitedPointGScore =
+      this.visitedPointsForCurrentConnection.get(visitedKey)
+    while (currentCandidate && visitedPointGScore !== undefined) {
+      if (currentCandidate.g < visitedPointGScore) break
+      currentCandidate = this.candidateQueue.dequeue() as CandidateHg | null
+      if (!currentCandidate) break
+      visitedKey = this.getCandidateVisitedKey(currentCandidate)
+      visitedPointGScore =
+        this.visitedPointsForCurrentConnection.get(visitedKey)
+    }
+
+    if (!currentCandidate) {
+      this.failed = true
+      this.error = "Ran out of candidates"
+      return
+    }
+
+    this.lastCandidate = currentCandidate
+    this.visitedPointsForCurrentConnection.set(visitedKey, currentCandidate.g)
+    if (currentCandidate.nextRegion === this.currentEndRegion) {
+      this.processSolvedRoute(currentCandidate)
+      if (this.unprocessedConnections.length === 0) {
+        this.solved = true
+        return
+      }
+      this.beginNewConnection()
+      return
+    }
+
+    const nextCandidates = this.getNextCandidates(currentCandidate)
+    for (const nextCandidate of nextCandidates) {
+      const nextVisitedKey = this.getCandidateVisitedKey(nextCandidate)
+      const visitedG =
+        this.visitedPointsForCurrentConnection.get(nextVisitedKey)
+      if (visitedG !== undefined && visitedG <= nextCandidate.g) continue
+      const queuedG = this.bestQueuedGByVisitedKey.get(nextVisitedKey)
+      if (queuedG !== undefined && queuedG <= nextCandidate.g) continue
+      this.bestQueuedGByVisitedKey.set(nextVisitedKey, nextCandidate.g)
+      this.candidateQueue.enqueue(nextCandidate)
+    }
+  }
+
   override getPortUsagePenalty(port: RegionPortHg): number {
+    const currentConnectionId = this.currentConnection?.connectionId ?? ""
+    const ripHistoryPenalty =
+      (this.ripHistoryByConnectionPortKey.get(
+        `${currentConnectionId}:${port.portId}`,
+      ) ?? 0) * (this.params.weights.RIP_HISTORY_COST ?? 0)
     const assignment = port.assignment
-    if (!assignment) return 0
+    if (!assignment) return ripHistoryPenalty
 
     const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
     if (assignment.connection.mutuallyConnectedNetworkId === currentNetId) {
-      return 0
+      return ripHistoryPenalty
     }
 
     // Discourage reusing a port that is already occupied by a different net.
     return (
+      ripHistoryPenalty +
       Math.max(1, this.params.weights.NODE_PF_FACTOR) * 0.5 +
       this.params.weights.BASE_CANDIDATE_COST
+    )
+  }
+
+  override ripSolvedRoute(solvedRoute: SolvedRoutesHg): void {
+    const connectionId = solvedRoute.connection.connectionId
+    for (const candidate of solvedRoute.path) {
+      const key = `${connectionId}:${candidate.port.portId}`
+      this.ripHistoryByConnectionPortKey.set(
+        key,
+        (this.ripHistoryByConnectionPortKey.get(key) ?? 0) + 1,
+      )
+    }
+    super.ripSolvedRoute(solvedRoute)
+  }
+
+  private getConnectionPairKey(
+    connectionId1: string,
+    connectionId2: string,
+  ): string {
+    return [connectionId1, connectionId2].sort().join("::")
+  }
+
+  private getConnectionPairConflictCount(
+    connectionId1: string,
+    connectionId2: string,
+  ): number {
+    return (
+      this.conflictHistoryByConnectionPairKey.get(
+        this.getConnectionPairKey(connectionId1, connectionId2),
+      ) ?? 0
     )
   }
 
@@ -166,11 +365,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const assignment: RegionPortAssignment[] = region.assignments ?? []
     if (assignment.length === 0) return []
 
+    if (region.d._offBoardConnectionId) {
+      return assignment.filter(
+        (assignment) =>
+          assignment.connection.mutuallyConnectedNetworkId !==
+          this.currentConnection?.mutuallyConnectedNetworkId,
+      )
+    }
+
     const ripsRequired: RegionPortAssignment[] = assignment.filter(
       (assignment) => {
         if (
+          !this.params.flags.ALWAYS_RIP_SAME_NET_INTERSECTIONS &&
           assignment.connection.mutuallyConnectedNetworkId ===
-          this.currentConnection?.mutuallyConnectedNetworkId
+            this.currentConnection?.mutuallyConnectedNetworkId
         ) {
           return false
         }
@@ -189,16 +397,26 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           return false
         }
 
-        return doSegmentsIntersect(
-          assignment.regionPort1.d,
-          assignment.regionPort2.d,
-          port1.d,
-          port2.d,
+        return doRegionPortPairsCross(
+          region,
+          port1,
+          port2,
+          assignment.regionPort1,
+          assignment.regionPort2,
         )
       },
     )
 
     return ripsRequired
+  }
+
+  override isRipRequiredForPortUsage(
+    region: RegionHg,
+    port1: RegionPortHg,
+    port2: RegionPortHg,
+  ): boolean {
+    if (!region.d._offBoardConnectionId) return false
+    return this.getRipsRequiredForPortUsage(region, port1, port2).length > 0
   }
 
   override selectCandidatesForEnteringRegion(
@@ -214,6 +432,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const filterCandidates = candidates.filter((candidate) => {
       const nextRegion = candidate.nextRegion
+      if (
+        nextRegion &&
+        this.candidateAlreadyVisitedRegion(candidate, nextRegion)
+      ) {
+        return false
+      }
+      const maxOffBoardConnections =
+        this.params.flags.MAX_OFF_BOARD_CONNECTIONS_PER_PATH ?? Infinity
+      if (
+        this.getCandidateOffBoardConnectionIds(candidate).size >
+        maxOffBoardConnections
+      ) {
+        return false
+      }
       if (!nextRegion?.d._containsObstacle) {
         return true
       }
@@ -235,6 +467,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     }
 
     return centerFirstCandidates
+  }
+
+  private candidateAlreadyVisitedRegion(
+    candidate: CandidateHg,
+    region: RegionHg,
+  ): boolean {
+    let cursor = candidate.parent
+    while (cursor) {
+      if (cursor.lastRegion === region || cursor.nextRegion === region) {
+        return true
+      }
+      cursor = cursor.parent
+    }
+    return false
   }
 
   override routeSolvedHook(solvedRoute: SolvedRoutesHg): void {
@@ -263,7 +509,28 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     const portOverlapRoutesToRip = super.computePortOverlapRoutes(
       newlySolvedRoute,
     )
-    const routesToRip = new Set<SolvedRoutesHg>(portOverlapRoutesToRip)
+    const crossingRoutesToRip = this.params.flags.ALWAYS_RIP_INTERSECTIONS
+      ? super.computeCrossingRoutes(newlySolvedRoute)
+      : new Set<SolvedRoutesHg>()
+    const requiredRoutesToRip = new Set<SolvedRoutesHg>([
+      ...portOverlapRoutesToRip,
+      ...crossingRoutesToRip,
+    ])
+    for (const routeToRip of crossingRoutesToRip) {
+      const pairKey = this.getConnectionPairKey(
+        newlySolvedRoute.connection.connectionId,
+        routeToRip.connection.connectionId,
+      )
+      this.conflictHistoryByConnectionPairKey.set(
+        pairKey,
+        (this.conflictHistoryByConnectionPairKey.get(pairKey) ?? 0) + 1,
+      )
+    }
+    const routesToRip = new Set<SolvedRoutesHg>(requiredRoutesToRip)
+
+    if (this.params.weights.CROSSING_PENALTY !== undefined) {
+      return routesToRip
+    }
 
     const crossingRoutesByRegion: Map<RegionHg, Set<SolvedRoutesHg>> = new Map()
     newlySolvedRoute.path.map((candidate) => {
@@ -367,7 +634,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         this.regionMemoryPfMap.set(region.regionId, currentPf)
       }
     }
-    const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size
+    const didRipAnyLoop = routesToRip.size > requiredRoutesToRip.size
     if (didRipAnyLoop) {
       if (this.totalRipCount >= this.params.weights.MAX_RIPS) return routesToRip
 
@@ -541,6 +808,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private computeRegionPfFromAssignments(region: RegionHg): number {
+    if (region.d._offBoardConnectionId) return 0
+
     const existingPortPoints = this.getRegionAssignedPortPoints(region)
 
     const nodeWithPortPoints: NodeWithPortPoints = {
@@ -585,8 +854,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     return baseCost
   }
 
-  private getRegionAssignedPortPoints(region: RegionHg): PortPoint[] {
-    const existingAssignments = region.assignments ?? []
+  private getRegionAssignedPortPoints(
+    region: RegionHg,
+    routesToExclude: Set<SolvedRoutesHg> = new Set(),
+  ): PortPoint[] {
+    const existingAssignments = (region.assignments ?? []).filter(
+      (assignment) =>
+        !routesToExclude.has(assignment.solvedRoute as SolvedRoutesHg),
+    )
     return existingAssignments.flatMap((assignment) => {
       const region1PortPoint = assignment.regionPort1.d
       const region2PortPoint = assignment.regionPort2.d
@@ -618,8 +893,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     port2: RegionPortHg,
     connectionName: string,
     rootConnectionName?: string,
+    routesToExclude: Set<SolvedRoutesHg> = new Set(),
   ): number {
-    const existingPortPoints = this.getRegionAssignedPortPoints(region)
+    if (region.d._offBoardConnectionId) return 0
+
+    const existingPortPoints = this.getRegionAssignedPortPoints(
+      region,
+      routesToExclude,
+    )
     const additionalPortPoints: PortPoint[] = [
       {
         x: port1.d.x,
@@ -677,6 +958,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     newlySolvedRoute: SolvedRoutesHg
     routesToRip: Set<SolvedRoutesHg>
   }): number {
+    if (region.d._offBoardConnectionId) return 0
+
     const existingAssignments = (region.assignments ?? []).filter(
       (assignment) => !routesToRip.has(assignment.solvedRoute),
     )
@@ -789,6 +1072,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       endpointRegionIds.add(connection.endRegion.regionId)
     }
     const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>()
+    const endpointTargetByRegionConnectionKey = new Map<
+      string,
+      { x: number; y: number }
+    >()
     for (const route of this.solvedRoutes) {
       const path = route.path as CandidateHg[]
       if (path.length === 0) continue
@@ -801,6 +1088,21 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
       const startRegionId = route.connection.startRegion.regionId
       const endRegionId = route.connection.endRegion.regionId
+      const [startTarget, endTarget] =
+        (route.connection as ConnectionHg).simpleRouteConnection
+          ?.pointsToConnect ?? []
+      if (startTarget) {
+        endpointTargetByRegionConnectionKey.set(
+          `${startRegionId}::${connectionName}::${rootConnectionName}`,
+          startTarget,
+        )
+      }
+      if (endTarget) {
+        endpointTargetByRegionConnectionKey.set(
+          `${endRegionId}::${connectionName}::${rootConnectionName}`,
+          endTarget,
+        )
+      }
 
       const startPortPoints =
         endpointPortPointsByRegion.get(startRegionId) ?? []
@@ -890,10 +1192,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           const [connectionName, rootConnectionName = ""] = key.split("::")
           const firstPoint = points[0]
           if (!firstPoint) continue
+          const endpointTarget = endpointTargetByRegionConnectionKey.get(
+            `${region.regionId}::${connectionName}::${rootConnectionName}`,
+          )
           const centerPortPoint: PortPoint = {
             portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
-            x: region.d.center.x,
-            y: region.d.center.y,
+            x: endpointTarget?.x ?? region.d.center.x,
+            y: endpointTarget?.y ?? region.d.center.y,
             z: firstPoint.z,
             connectionName,
             rootConnectionName: rootConnectionName || undefined,
@@ -978,10 +1283,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         this.params.connections,
         this.params.colorMap ?? {},
       ),
-      visualizeCandidate(
-        this.candidateQueue.peekMany(100) as CandidateHg[] | undefined,
-        this.currentConnection?.startRegion.d.center,
-      ),
+      this.solved
+        ? null
+        : visualizeCandidate(
+            this.candidateQueue.peekMany(100) as CandidateHg[] | undefined,
+            this.currentConnection?.startRegion.d.center,
+          ),
       visualizeSolvedRoute(this.solvedRoutes, this.params.colorMap ?? {}),
     ])
   }
