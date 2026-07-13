@@ -15,6 +15,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
+  SelectiveReripTinyHyperGraphSolver,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -112,7 +113,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST: Number.POSITIVE_INFINITY,
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
-const CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const SELECTIVE_RERIP_CRAMPED_PORT_TRAVERSAL_PENALTY = 0
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
@@ -529,7 +531,10 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
   }
 }
 
-const applyPortMetadataPenalties = (loaded: LoadedTinyGraph) => {
+const applyPortMetadataPenalties = (
+  loaded: LoadedTinyGraph,
+  crampedPortTraversalPenalty: number,
+) => {
   let duplicatePortPenaltyCount = 0
   let crampedPortPenaltyCount = 0
   const portPenalty = loaded.problem.portPenalty
@@ -542,8 +547,8 @@ const applyPortMetadataPenalties = (loaded: LoadedTinyGraph) => {
       portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
       duplicatePortPenaltyCount++
     }
-    if (metadata?.cramped) {
-      portPenalty[portId] += CRAMPED_PORT_TRAVERSAL_PENALTY
+    if (metadata?.cramped && crampedPortTraversalPenalty > 0) {
+      portPenalty[portId] += crampedPortTraversalPenalty
       crampedPortPenaltyCount++
     }
   }
@@ -590,9 +595,29 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
   crampedPortPenaltyCount = 0
+  readonly crampedPortTraversalPenalty: number
+  readonly useSelectiveReripRouting: boolean
 
-  constructor(inputProblem: TinyHyperGraphSectionPipelineInput) {
+  constructor(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ) {
     super(inputProblem)
+    this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.crampedPortTraversalPenalty = useSelectiveReripRouting
+      ? SELECTIVE_RERIP_CRAMPED_PORT_TRAVERSAL_PENALTY
+      : DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
+    if (useSelectiveReripRouting) {
+      const solveGraphStep = this.pipelineDef.find(
+        (pipelineStep) => pipelineStep.solverName === "solveGraph",
+      )
+      if (!solveGraphStep) {
+        throw new Error(
+          "Tiny hypergraph pipeline is missing the solveGraph stage",
+        )
+      }
+      solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
+    }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
 
@@ -600,7 +625,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     const loaded = super.loadHyperGraph(serializedHyperGraph)
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
-      applyPortMetadataPenalties(loaded)
+      applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
     applyTerminalRegionNetIds(loaded)
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
@@ -633,6 +658,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override getInitialVisualizationSolver() {
+    if (this.useSelectiveReripRouting && !this.initialVisualizationSolver) {
+      const { topology, problem } = this.loadHyperGraph(
+        this.inputProblem.serializedHyperGraph,
+      )
+      this.initialVisualizationSolver = new SelectiveReripTinyHyperGraphSolver(
+        topology,
+        problem,
+        this.getSolveGraphOptions(),
+      )
+    }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
     return solver
@@ -788,7 +823,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput)
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+        tinyPipelineInput,
+        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+      )
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput)
 
@@ -842,7 +880,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver.duplicatePortPenaltyCount,
       metadataPortPenaltyCount:
         this.tinyPipelineSolver.metadataPortPenaltyCount,
-      crampedPortPenalty: CRAMPED_PORT_TRAVERSAL_PENALTY,
+      crampedPortPenalty: this.tinyPipelineSolver.crampedPortTraversalPenalty,
       crampedPortPenaltyCount: this.tinyPipelineSolver.crampedPortPenaltyCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
       ...(this.tinyPipelineSolver.stats ?? {}),
