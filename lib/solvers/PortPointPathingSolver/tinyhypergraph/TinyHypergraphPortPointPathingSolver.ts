@@ -185,9 +185,7 @@ const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   routeMetadata.mutuallyConnectedNetworkId
 
-const getTinyRouteConnectionNetId = (
-  connection: TinyRouteConnection,
-): string =>
+const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.mutuallyConnectedNetworkId ??
   connection.connectionId
@@ -808,8 +806,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       : params.connections
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
-      connections.length <=
-      MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
+      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
