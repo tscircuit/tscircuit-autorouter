@@ -1,4 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -220,6 +221,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -605,9 +607,21 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+    definePipelineStep("lengthMatchingSolver", LengthMatchingSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        originalConnections: cms.srj.connections,
+        differentialPairs: cms.srj.differentialPairs,
+        obstacles: cms.srj.obstacles,
+        bounds: cms.srj.bounds,
+        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        layerCount: cms.srj.layerCount,
+        colorMap: cms.colorMap,
+      },
+    ]),
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+      {
+        hdRoutes: cms.lengthMatchingSolver!.getOutput().matchedHdRoutes,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
@@ -763,6 +777,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const lengthMatchingViz = this.lengthMatchingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -883,6 +898,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       highDensityRepairViz,
       highDensityStitchViz,
       traceSimplificationViz,
+      lengthMatchingViz,
       traceWidthViz,
       globalDrcForceImproveViz,
       this.solved
@@ -964,6 +980,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return (
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
+      this.lengthMatchingSolver?.getOutput().matchedHdRoutes ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
