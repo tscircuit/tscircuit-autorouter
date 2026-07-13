@@ -38,8 +38,5 @@ test("Pipeline7 emits each solved point pair in connectsTo", () => {
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(output.traces).toHaveLength(1)
-  expect(output.traces?.[0]?.connectsTo).toEqual([
-    "pcb_port_a",
-    "pcb_port_b",
-  ])
+  expect(output.traces?.[0]?.connectsTo).toEqual(["pcb_port_a", "pcb_port_b"])
 })
