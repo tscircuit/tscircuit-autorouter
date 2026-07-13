@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
+import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
+import { convertSrjToGraphicsObject } from "lib"
 import srjJson from "../../fixtures/prefab-clad/prefab-clad01.srj.json"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 
-test("prefab-clad01 preserves assignable paired-hole metadata", () => {
+test("prefab-clad01 preserves paired-hole metadata and snapshots routed output", () => {
   const srj = srjJson as SimpleRouteJson
   const assignableObstacles = srj.obstacles.filter(
     (obstacle) => obstacle.netIsAssignable === true,
@@ -40,4 +43,16 @@ test("prefab-clad01 preserves assignable paired-hole metadata", () => {
     ),
   )
   expect(preassignedCladEndpoints).toHaveLength(0)
+
+  const solver = new AssignableAutoroutingPipeline2(srj)
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(
+    getSvgFromGraphicsObject(
+      convertSrjToGraphicsObject(solver.getOutputSimpleRouteJson()),
+      { backgroundColor: "white" },
+    ),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
