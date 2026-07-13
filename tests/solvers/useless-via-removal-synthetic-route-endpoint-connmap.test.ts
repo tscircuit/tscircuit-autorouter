@@ -22,7 +22,7 @@ test("uses connMap to prove endpoint layer support for synthetic route ids", () 
   const endpointObstacle: Obstacle = {
     type: "rect",
     layers: ["top", "bottom"],
-    zLayers: [0, 1],
+    __zLayers: [0, 1],
     center: { x: -6.175, y: -4 },
     width: 0.8,
     height: 0.95,

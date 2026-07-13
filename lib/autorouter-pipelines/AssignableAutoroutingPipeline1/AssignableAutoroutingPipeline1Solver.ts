@@ -719,7 +719,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     const connections = this.srjWithPointPairs?.connections ?? []
 
     for (const connection of connections) {
-      const netConnectionName = connection.netConnectionName
+      const netConnectionName = connection.__netConnectionName
       const rootConnectionName = connection.__rootConnectionNames?.[0]
 
       // Find all the hdRoutes that correspond to this connection

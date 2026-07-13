@@ -24,7 +24,7 @@
             "pcb_smtpad_0",
             "pcb_port_0"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -62,7 +62,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -80,7 +80,7 @@
             "pcb_smtpad_2",
             "pcb_port_2"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -118,7 +118,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -136,7 +136,7 @@
             "pcb_smtpad_4",
             "pcb_port_4"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -174,7 +174,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -192,7 +192,7 @@
             "pcb_smtpad_6",
             "pcb_port_6"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -230,7 +230,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -248,7 +248,7 @@
             "pcb_smtpad_8",
             "pcb_port_8"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -286,7 +286,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -308,7 +308,7 @@
             "pcb_smtpad_13",
             "pcb_port_13"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -326,7 +326,7 @@
             "pcb_smtpad_11",
             "pcb_port_11"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -364,7 +364,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -386,7 +386,7 @@
             "pcb_smtpad_13",
             "pcb_port_13"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         }
       ],
       "connections": [

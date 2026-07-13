@@ -10,7 +10,7 @@ function getObstacleZLayersOnBoard(
   layerCount: number,
 ): number[] {
   const explicitZLayers = getUniqueValidZLayers(
-    obstacle.zLayers ?? [],
+    obstacle.__zLayers ?? [],
     layerCount,
   )
   if (explicitZLayers.length > 0) return explicitZLayers
@@ -35,7 +35,7 @@ function createObstacleWithBoardValidLayers(
   return {
     ...obstacle,
     layers: zLayers.map((z) => mapZToLayerName(z, layerCount)),
-    zLayers,
+    __zLayers: zLayers,
   }
 }
 

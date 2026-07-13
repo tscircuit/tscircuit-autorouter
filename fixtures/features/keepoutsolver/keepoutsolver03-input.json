@@ -702,7 +702,7 @@
           "pcb_smtpad_0",
           "pcb_port_0"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -726,7 +726,7 @@
           "pcb_plated_hole_0",
           "pcb_port_43"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -770,7 +770,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -788,7 +788,7 @@
           "pcb_smtpad_3",
           "pcb_port_3"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -806,7 +806,7 @@
           "pcb_smtpad_4",
           "pcb_port_4"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -828,7 +828,7 @@
           "pcb_smtpad_27",
           "pcb_port_27"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -850,7 +850,7 @@
           "pcb_smtpad_23",
           "pcb_port_23"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -868,7 +868,7 @@
           "pcb_smtpad_7",
           "pcb_port_7"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -886,7 +886,7 @@
           "pcb_smtpad_8",
           "pcb_port_8"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -910,7 +910,7 @@
           "pcb_plated_hole_3",
           "pcb_port_46"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -934,7 +934,7 @@
           "pcb_plated_hole_2",
           "pcb_port_45"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -952,7 +952,7 @@
           "pcb_smtpad_11",
           "pcb_port_11"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -974,7 +974,7 @@
           "pcb_smtpad_36",
           "pcb_port_36"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -996,7 +996,7 @@
           "pcb_smtpad_40",
           "pcb_port_40"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1014,7 +1014,7 @@
           "pcb_smtpad_14",
           "pcb_port_14"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1032,7 +1032,7 @@
           "pcb_smtpad_15",
           "pcb_port_15"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1054,7 +1054,7 @@
           "pcb_smtpad_32",
           "pcb_port_32"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1072,7 +1072,7 @@
           "pcb_smtpad_17",
           "pcb_port_17"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1090,7 +1090,7 @@
           "pcb_smtpad_18",
           "pcb_port_18"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1108,7 +1108,7 @@
           "pcb_smtpad_19",
           "pcb_port_19"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1126,7 +1126,7 @@
           "pcb_smtpad_20",
           "pcb_port_20"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1144,7 +1144,7 @@
           "pcb_smtpad_21",
           "pcb_port_21"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1162,7 +1162,7 @@
           "pcb_smtpad_22",
           "pcb_port_22"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1184,7 +1184,7 @@
           "pcb_smtpad_23",
           "pcb_port_23"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1202,7 +1202,7 @@
           "pcb_smtpad_24",
           "pcb_port_24"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1246,7 +1246,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1264,7 +1264,7 @@
           "pcb_smtpad_26",
           "pcb_port_26"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1286,7 +1286,7 @@
           "pcb_smtpad_27",
           "pcb_port_27"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1304,7 +1304,7 @@
           "pcb_smtpad_28",
           "pcb_port_28"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1348,7 +1348,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1366,7 +1366,7 @@
           "pcb_smtpad_30",
           "pcb_port_30"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1384,7 +1384,7 @@
           "pcb_smtpad_31",
           "pcb_port_31"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1406,7 +1406,7 @@
           "pcb_smtpad_32",
           "pcb_port_32"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1424,7 +1424,7 @@
           "pcb_smtpad_33",
           "pcb_port_33"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1468,7 +1468,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1486,7 +1486,7 @@
           "pcb_smtpad_35",
           "pcb_port_35"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1508,7 +1508,7 @@
           "pcb_smtpad_36",
           "pcb_port_36"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1526,7 +1526,7 @@
           "pcb_smtpad_37",
           "pcb_port_37"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1570,7 +1570,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1588,7 +1588,7 @@
           "pcb_smtpad_39",
           "pcb_port_39"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1610,7 +1610,7 @@
           "pcb_smtpad_40",
           "pcb_port_40"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1628,7 +1628,7 @@
           "pcb_smtpad_41",
           "pcb_port_41"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1672,7 +1672,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1696,7 +1696,7 @@
           "pcb_plated_hole_0",
           "pcb_port_43"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1740,7 +1740,7 @@
           "pcb_plated_hole_1",
           "pcb_port_44"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1764,7 +1764,7 @@
           "pcb_plated_hole_2",
           "pcb_port_45"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1788,7 +1788,7 @@
           "pcb_plated_hole_3",
           "pcb_port_46"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1808,7 +1808,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_0"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs0"
       },
       {
@@ -1829,7 +1829,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_1"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs1"
       },
       {
@@ -1850,7 +1850,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_2"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs2"
       },
       {
@@ -1871,7 +1871,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_3"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs3"
       },
       {
@@ -1892,7 +1892,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_0"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs4"
       },
       {
@@ -1913,7 +1913,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_4"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs5"
       },
       {
@@ -1934,7 +1934,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_5"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs6"
       },
       {
@@ -1955,7 +1955,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_1"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs7"
       },
       {
@@ -1976,7 +1976,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_4"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs8"
       },
       {
@@ -1997,7 +1997,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_1"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs9"
       },
       {
@@ -2018,7 +2018,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_6"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs10"
       },
       {
@@ -2039,7 +2039,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_7"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs11"
       },
       {
@@ -2060,7 +2060,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_8"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs12"
       },
       {
@@ -2081,7 +2081,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_9"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs13"
       },
       {
@@ -2102,7 +2102,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_2"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs14"
       },
       {
@@ -2123,7 +2123,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_9"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs15"
       },
       {
@@ -2144,7 +2144,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_6"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs16"
       },
       {
@@ -2165,7 +2165,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_10"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs17"
       },
       {
@@ -2186,7 +2186,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_7"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs18"
       },
       {
@@ -2207,7 +2207,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_11"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs19"
       },
       {
@@ -2228,7 +2228,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_12"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs20"
       },
       {
@@ -2249,7 +2249,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_3"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs21"
       },
       {
@@ -2270,7 +2270,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_2"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs22"
       },
       {
@@ -2291,7 +2291,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_10"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs23"
       },
       {
@@ -2312,7 +2312,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_8"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs24"
       },
       {
@@ -2333,7 +2333,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_3"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs25"
       },
       {
@@ -2354,7 +2354,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_13"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs26"
       },
       {
@@ -2375,7 +2375,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_5"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs27"
       },
       {
@@ -2396,7 +2396,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_14"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs28"
       },
       {
@@ -2417,7 +2417,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_0"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs29"
       },
       {
@@ -2438,7 +2438,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_6"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs30"
       },
       {
@@ -2459,7 +2459,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_4"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs31"
       },
       {
@@ -2480,7 +2480,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_0"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs32"
       },
       {
@@ -2501,7 +2501,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_12"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs33"
       },
       {
@@ -2522,7 +2522,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_6"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs34"
       },
       {
@@ -2543,7 +2543,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_5"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs35"
       },
       {
@@ -2564,7 +2564,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_9"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs36"
       },
       {
@@ -2585,7 +2585,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_13"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs37"
       },
       {
@@ -2606,7 +2606,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_11"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs38"
       },
       {
@@ -2627,7 +2627,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_2"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs39"
       },
       {
@@ -2648,7 +2648,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_14"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs40"
       },
       {
@@ -2669,7 +2669,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_1"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs41"
       },
       {
@@ -2690,7 +2690,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_10"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs42"
       },
       {
@@ -2711,7 +2711,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_7"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs43"
       },
       {
@@ -2732,7 +2732,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_12"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs44"
       },
       {
@@ -2753,7 +2753,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_14"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs45"
       },
       {
@@ -2774,7 +2774,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_13"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs46"
       },
       {
@@ -2795,7 +2795,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_8"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs47"
       },
       {
@@ -2816,7 +2816,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_5"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs48"
       },
       {
@@ -2837,7 +2837,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_0"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs49"
       },
       {
@@ -2858,7 +2858,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_6"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs50"
       },
       {
@@ -2879,7 +2879,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_7"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs51"
       },
       {
@@ -2900,7 +2900,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_2"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs52"
       },
       {
@@ -2921,7 +2921,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_12"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs53"
       },
       {
@@ -2942,7 +2942,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_10"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs54"
       },
       {
@@ -2963,7 +2963,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_9"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs55"
       },
       {
@@ -2984,7 +2984,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_11"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs56"
       },
       {
@@ -3005,7 +3005,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_3"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs57"
       },
       {
@@ -3026,7 +3026,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_4"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs58"
       },
       {
@@ -3047,7 +3047,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_1"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs59"
       },
       {
@@ -3068,7 +3068,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_15"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs60"
       },
       {
@@ -3089,7 +3089,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_16"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs61"
       },
       {
@@ -3110,7 +3110,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_17"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs62"
       },
       {
@@ -3131,7 +3131,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_18"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs63"
       },
       {
@@ -3152,7 +3152,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_15"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs64"
       },
       {
@@ -3173,7 +3173,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_19"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs65"
       },
       {
@@ -3194,7 +3194,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_20"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs66"
       },
       {
@@ -3215,7 +3215,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_16"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs67"
       },
       {
@@ -3236,7 +3236,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_19"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs68"
       },
       {
@@ -3257,7 +3257,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_16"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs69"
       },
       {
@@ -3278,7 +3278,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_21"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs70"
       },
       {
@@ -3299,7 +3299,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_22"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs71"
       },
       {
@@ -3320,7 +3320,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_23"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs72"
       },
       {
@@ -3341,7 +3341,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_24"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs73"
       },
       {
@@ -3362,7 +3362,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_17"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs74"
       },
       {
@@ -3383,7 +3383,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_24"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs75"
       },
       {
@@ -3404,7 +3404,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_21"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs76"
       },
       {
@@ -3425,7 +3425,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_25"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs77"
       },
       {
@@ -3446,7 +3446,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_22"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs78"
       },
       {
@@ -3467,7 +3467,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_26"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs79"
       },
       {
@@ -3488,7 +3488,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_27"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs80"
       },
       {
@@ -3509,7 +3509,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_18"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs81"
       },
       {
@@ -3530,7 +3530,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_17"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs82"
       },
       {
@@ -3551,7 +3551,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_25"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs83"
       },
       {
@@ -3572,7 +3572,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_23"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs84"
       },
       {
@@ -3593,7 +3593,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_18"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs85"
       },
       {
@@ -3614,7 +3614,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_28"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs86"
       },
       {
@@ -3635,7 +3635,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_20"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs87"
       },
       {
@@ -3656,7 +3656,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_29"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs88"
       },
       {
@@ -3677,7 +3677,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_15"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs89"
       },
       {
@@ -3698,7 +3698,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_21"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs90"
       },
       {
@@ -3719,7 +3719,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_19"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs91"
       },
       {
@@ -3740,7 +3740,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_15"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs92"
       },
       {
@@ -3761,7 +3761,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_27"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs93"
       },
       {
@@ -3782,7 +3782,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_21"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs94"
       },
       {
@@ -3803,7 +3803,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_20"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs95"
       },
       {
@@ -3824,7 +3824,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_24"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs96"
       },
       {
@@ -3845,7 +3845,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_28"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs97"
       },
       {
@@ -3866,7 +3866,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_26"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs98"
       },
       {
@@ -3887,7 +3887,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_17"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs99"
       },
       {
@@ -3908,7 +3908,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_29"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs100"
       },
       {
@@ -3929,7 +3929,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_16"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs101"
       },
       {
@@ -3950,7 +3950,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_25"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs102"
       },
       {
@@ -3971,7 +3971,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_22"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs103"
       },
       {
@@ -3992,7 +3992,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_27"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs104"
       },
       {
@@ -4013,7 +4013,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_29"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs105"
       },
       {
@@ -4034,7 +4034,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_28"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs106"
       },
       {
@@ -4055,7 +4055,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_23"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs107"
       },
       {
@@ -4076,7 +4076,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_20"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs108"
       },
       {
@@ -4097,7 +4097,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_15"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs109"
       },
       {
@@ -4118,7 +4118,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_21"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs110"
       },
       {
@@ -4139,7 +4139,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_22"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs111"
       },
       {
@@ -4160,7 +4160,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_17"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs112"
       },
       {
@@ -4181,7 +4181,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_27"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs113"
       },
       {
@@ -4202,7 +4202,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_25"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs114"
       },
       {
@@ -4223,7 +4223,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_24"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs115"
       },
       {
@@ -4244,7 +4244,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_26"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs116"
       },
       {
@@ -4265,7 +4265,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_18"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs117"
       },
       {
@@ -4286,7 +4286,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_19"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs118"
       },
       {
@@ -4307,7 +4307,7 @@
         ],
         "netIsAssignable": true,
         "offBoardConnectsTo": ["source_component_internal_connection_16"],
-        "zLayers": [0],
+        "__zLayers": [0],
         "obstacleId": "__obs119"
       },
       {
@@ -4320,7 +4320,7 @@
         "height": 24,
         "layers": ["top", "inner1", "inner2", "bottom"],
         "connectedTo": [],
-        "zLayers": [0]
+        "__zLayers": [0]
       }
     ],
     "connMap": {
@@ -7422,7 +7422,7 @@
             "pcb_smtpad_0",
             "pcb_port_0"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7446,7 +7446,7 @@
             "pcb_plated_hole_0",
             "pcb_port_43"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7490,7 +7490,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7508,7 +7508,7 @@
             "pcb_smtpad_3",
             "pcb_port_3"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7526,7 +7526,7 @@
             "pcb_smtpad_4",
             "pcb_port_4"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7548,7 +7548,7 @@
             "pcb_smtpad_27",
             "pcb_port_27"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7570,7 +7570,7 @@
             "pcb_smtpad_23",
             "pcb_port_23"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7588,7 +7588,7 @@
             "pcb_smtpad_7",
             "pcb_port_7"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7606,7 +7606,7 @@
             "pcb_smtpad_8",
             "pcb_port_8"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7630,7 +7630,7 @@
             "pcb_plated_hole_3",
             "pcb_port_46"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7654,7 +7654,7 @@
             "pcb_plated_hole_2",
             "pcb_port_45"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7672,7 +7672,7 @@
             "pcb_smtpad_11",
             "pcb_port_11"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7694,7 +7694,7 @@
             "pcb_smtpad_36",
             "pcb_port_36"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7716,7 +7716,7 @@
             "pcb_smtpad_40",
             "pcb_port_40"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7734,7 +7734,7 @@
             "pcb_smtpad_14",
             "pcb_port_14"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7752,7 +7752,7 @@
             "pcb_smtpad_15",
             "pcb_port_15"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7774,7 +7774,7 @@
             "pcb_smtpad_32",
             "pcb_port_32"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7792,7 +7792,7 @@
             "pcb_smtpad_17",
             "pcb_port_17"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7810,7 +7810,7 @@
             "pcb_smtpad_18",
             "pcb_port_18"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7828,7 +7828,7 @@
             "pcb_smtpad_19",
             "pcb_port_19"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7846,7 +7846,7 @@
             "pcb_smtpad_20",
             "pcb_port_20"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7864,7 +7864,7 @@
             "pcb_smtpad_21",
             "pcb_port_21"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7882,7 +7882,7 @@
             "pcb_smtpad_22",
             "pcb_port_22"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7904,7 +7904,7 @@
             "pcb_smtpad_23",
             "pcb_port_23"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7922,7 +7922,7 @@
             "pcb_smtpad_24",
             "pcb_port_24"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7966,7 +7966,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -7984,7 +7984,7 @@
             "pcb_smtpad_26",
             "pcb_port_26"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8006,7 +8006,7 @@
             "pcb_smtpad_27",
             "pcb_port_27"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8024,7 +8024,7 @@
             "pcb_smtpad_28",
             "pcb_port_28"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8068,7 +8068,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8086,7 +8086,7 @@
             "pcb_smtpad_30",
             "pcb_port_30"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8104,7 +8104,7 @@
             "pcb_smtpad_31",
             "pcb_port_31"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8126,7 +8126,7 @@
             "pcb_smtpad_32",
             "pcb_port_32"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8144,7 +8144,7 @@
             "pcb_smtpad_33",
             "pcb_port_33"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8188,7 +8188,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8206,7 +8206,7 @@
             "pcb_smtpad_35",
             "pcb_port_35"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8228,7 +8228,7 @@
             "pcb_smtpad_36",
             "pcb_port_36"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8246,7 +8246,7 @@
             "pcb_smtpad_37",
             "pcb_port_37"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8290,7 +8290,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8308,7 +8308,7 @@
             "pcb_smtpad_39",
             "pcb_port_39"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8330,7 +8330,7 @@
             "pcb_smtpad_40",
             "pcb_port_40"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8348,7 +8348,7 @@
             "pcb_smtpad_41",
             "pcb_port_41"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8392,7 +8392,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -8416,7 +8416,7 @@
             "pcb_plated_hole_0",
             "pcb_port_43"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -8460,7 +8460,7 @@
             "pcb_plated_hole_1",
             "pcb_port_44"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -8484,7 +8484,7 @@
             "pcb_plated_hole_2",
             "pcb_port_45"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -8508,7 +8508,7 @@
             "pcb_plated_hole_3",
             "pcb_port_46"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -8528,7 +8528,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_0"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs0"
         },
         {
@@ -8549,7 +8549,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_1"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs1"
         },
         {
@@ -8570,7 +8570,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_2"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs2"
         },
         {
@@ -8591,7 +8591,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_3"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs3"
         },
         {
@@ -8612,7 +8612,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_0"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs4"
         },
         {
@@ -8633,7 +8633,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_4"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs5"
         },
         {
@@ -8654,7 +8654,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_5"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs6"
         },
         {
@@ -8675,7 +8675,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_1"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs7"
         },
         {
@@ -8696,7 +8696,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_4"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs8"
         },
         {
@@ -8717,7 +8717,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_1"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs9"
         },
         {
@@ -8738,7 +8738,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_6"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs10"
         },
         {
@@ -8759,7 +8759,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_7"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs11"
         },
         {
@@ -8780,7 +8780,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_8"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs12"
         },
         {
@@ -8801,7 +8801,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_9"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs13"
         },
         {
@@ -8822,7 +8822,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_2"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs14"
         },
         {
@@ -8843,7 +8843,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_9"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs15"
         },
         {
@@ -8864,7 +8864,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_6"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs16"
         },
         {
@@ -8885,7 +8885,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_10"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs17"
         },
         {
@@ -8906,7 +8906,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_7"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs18"
         },
         {
@@ -8927,7 +8927,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_11"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs19"
         },
         {
@@ -8948,7 +8948,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_12"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs20"
         },
         {
@@ -8969,7 +8969,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_3"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs21"
         },
         {
@@ -8990,7 +8990,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_2"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs22"
         },
         {
@@ -9011,7 +9011,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_10"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs23"
         },
         {
@@ -9032,7 +9032,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_8"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs24"
         },
         {
@@ -9053,7 +9053,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_3"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs25"
         },
         {
@@ -9074,7 +9074,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_13"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs26"
         },
         {
@@ -9095,7 +9095,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_5"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs27"
         },
         {
@@ -9116,7 +9116,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_14"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs28"
         },
         {
@@ -9137,7 +9137,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_0"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs29"
         },
         {
@@ -9158,7 +9158,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_6"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs30"
         },
         {
@@ -9179,7 +9179,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_4"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs31"
         },
         {
@@ -9200,7 +9200,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_0"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs32"
         },
         {
@@ -9221,7 +9221,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_12"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs33"
         },
         {
@@ -9242,7 +9242,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_6"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs34"
         },
         {
@@ -9263,7 +9263,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_5"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs35"
         },
         {
@@ -9284,7 +9284,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_9"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs36"
         },
         {
@@ -9305,7 +9305,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_13"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs37"
         },
         {
@@ -9326,7 +9326,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_11"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs38"
         },
         {
@@ -9347,7 +9347,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_2"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs39"
         },
         {
@@ -9368,7 +9368,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_14"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs40"
         },
         {
@@ -9389,7 +9389,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_1"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs41"
         },
         {
@@ -9410,7 +9410,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_10"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs42"
         },
         {
@@ -9431,7 +9431,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_7"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs43"
         },
         {
@@ -9452,7 +9452,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_12"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs44"
         },
         {
@@ -9473,7 +9473,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_14"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs45"
         },
         {
@@ -9494,7 +9494,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_13"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs46"
         },
         {
@@ -9515,7 +9515,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_8"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs47"
         },
         {
@@ -9536,7 +9536,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_5"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs48"
         },
         {
@@ -9557,7 +9557,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_0"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs49"
         },
         {
@@ -9578,7 +9578,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_6"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs50"
         },
         {
@@ -9599,7 +9599,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_7"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs51"
         },
         {
@@ -9620,7 +9620,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_2"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs52"
         },
         {
@@ -9641,7 +9641,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_12"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs53"
         },
         {
@@ -9662,7 +9662,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_10"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs54"
         },
         {
@@ -9683,7 +9683,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_9"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs55"
         },
         {
@@ -9704,7 +9704,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_11"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs56"
         },
         {
@@ -9725,7 +9725,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_3"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs57"
         },
         {
@@ -9746,7 +9746,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_4"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs58"
         },
         {
@@ -9767,7 +9767,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_1"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs59"
         },
         {
@@ -9788,7 +9788,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_15"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs60"
         },
         {
@@ -9809,7 +9809,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_16"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs61"
         },
         {
@@ -9830,7 +9830,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_17"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs62"
         },
         {
@@ -9851,7 +9851,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_18"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs63"
         },
         {
@@ -9872,7 +9872,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_15"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs64"
         },
         {
@@ -9893,7 +9893,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_19"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs65"
         },
         {
@@ -9914,7 +9914,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_20"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs66"
         },
         {
@@ -9935,7 +9935,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_16"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs67"
         },
         {
@@ -9956,7 +9956,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_19"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs68"
         },
         {
@@ -9977,7 +9977,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_16"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs69"
         },
         {
@@ -9998,7 +9998,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_21"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs70"
         },
         {
@@ -10019,7 +10019,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_22"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs71"
         },
         {
@@ -10040,7 +10040,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_23"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs72"
         },
         {
@@ -10061,7 +10061,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_24"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs73"
         },
         {
@@ -10082,7 +10082,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_17"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs74"
         },
         {
@@ -10103,7 +10103,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_24"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs75"
         },
         {
@@ -10124,7 +10124,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_21"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs76"
         },
         {
@@ -10145,7 +10145,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_25"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs77"
         },
         {
@@ -10166,7 +10166,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_22"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs78"
         },
         {
@@ -10187,7 +10187,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_26"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs79"
         },
         {
@@ -10208,7 +10208,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_27"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs80"
         },
         {
@@ -10229,7 +10229,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_18"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs81"
         },
         {
@@ -10250,7 +10250,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_17"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs82"
         },
         {
@@ -10271,7 +10271,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_25"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs83"
         },
         {
@@ -10292,7 +10292,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_23"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs84"
         },
         {
@@ -10313,7 +10313,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_18"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs85"
         },
         {
@@ -10334,7 +10334,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_28"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs86"
         },
         {
@@ -10355,7 +10355,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_20"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs87"
         },
         {
@@ -10376,7 +10376,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_29"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs88"
         },
         {
@@ -10397,7 +10397,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_15"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs89"
         },
         {
@@ -10418,7 +10418,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_21"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs90"
         },
         {
@@ -10439,7 +10439,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_19"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs91"
         },
         {
@@ -10460,7 +10460,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_15"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs92"
         },
         {
@@ -10481,7 +10481,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_27"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs93"
         },
         {
@@ -10502,7 +10502,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_21"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs94"
         },
         {
@@ -10523,7 +10523,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_20"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs95"
         },
         {
@@ -10544,7 +10544,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_24"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs96"
         },
         {
@@ -10565,7 +10565,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_28"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs97"
         },
         {
@@ -10586,7 +10586,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_26"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs98"
         },
         {
@@ -10607,7 +10607,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_17"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs99"
         },
         {
@@ -10628,7 +10628,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_29"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs100"
         },
         {
@@ -10649,7 +10649,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_16"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs101"
         },
         {
@@ -10670,7 +10670,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_25"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs102"
         },
         {
@@ -10691,7 +10691,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_22"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs103"
         },
         {
@@ -10712,7 +10712,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_27"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs104"
         },
         {
@@ -10733,7 +10733,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_29"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs105"
         },
         {
@@ -10754,7 +10754,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_28"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs106"
         },
         {
@@ -10775,7 +10775,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_23"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs107"
         },
         {
@@ -10796,7 +10796,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_20"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs108"
         },
         {
@@ -10817,7 +10817,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_15"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs109"
         },
         {
@@ -10838,7 +10838,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_21"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs110"
         },
         {
@@ -10859,7 +10859,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_22"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs111"
         },
         {
@@ -10880,7 +10880,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_17"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs112"
         },
         {
@@ -10901,7 +10901,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_27"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs113"
         },
         {
@@ -10922,7 +10922,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_25"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs114"
         },
         {
@@ -10943,7 +10943,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_24"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs115"
         },
         {
@@ -10964,7 +10964,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_26"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs116"
         },
         {
@@ -10985,7 +10985,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_18"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs117"
         },
         {
@@ -11006,7 +11006,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_19"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs118"
         },
         {
@@ -11027,7 +11027,7 @@
           ],
           "netIsAssignable": true,
           "offBoardConnectsTo": ["source_component_internal_connection_16"],
-          "zLayers": [0],
+          "__zLayers": [0],
           "obstacleId": "__obs119"
         },
         {
@@ -11040,7 +11040,7 @@
           "height": 24,
           "layers": ["top", "inner1", "inner2", "bottom"],
           "connectedTo": [],
-          "zLayers": [0]
+          "__zLayers": [0]
         }
       ],
       "layerCount": 1,

@@ -20,8 +20,8 @@ export const getGraphicsLayerForObstacle = (
   layerCount: number,
 ) => {
   const zLayers =
-    obstacle.zLayers && obstacle.zLayers.length > 0
-      ? getUniqueValidZLayers(obstacle.zLayers, layerCount)
+    obstacle.__zLayers && obstacle.__zLayers.length > 0
+      ? getUniqueValidZLayers(obstacle.__zLayers, layerCount)
       : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
 
   return `z${zLayers.join(",")}`

@@ -22,7 +22,7 @@ test("normalizes obstacle layers to the board layer count", (): void => {
   ])
   expect(getObstacleAvailableZ(obstacle, 2)).toEqual([0, 1])
   expect(getGraphicsLayerForObstacle(obstacle, 2)).toBe("z0,1")
-  expect(createObjectsWithZLayers([obstacle], 2)[0]!.zLayers).toEqual([0, 1])
+  expect(createObjectsWithZLayers([obstacle], 2)[0]!.__zLayers).toEqual([0, 1])
 
   const srj: SimpleRouteJson = {
     layerCount: 2,
@@ -35,5 +35,5 @@ test("normalizes obstacle layers to the board layer count", (): void => {
     createSrjWithBoardValidObstacleLayers(srj).obstacles[0]!
 
   expect(outputObstacle.layers).toEqual(["top", "bottom"])
-  expect(outputObstacle.zLayers).toEqual([0, 1])
+  expect(outputObstacle.__zLayers).toEqual([0, 1])
 })

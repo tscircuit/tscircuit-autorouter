@@ -358,7 +358,7 @@
       },
       {
         "name": "source_net_0",
-        "netConnectionName": "net.VCC",
+        "__netConnectionName": "net.VCC",
         "pointsToConnect": [
           {
             "x": -2.15,
@@ -392,7 +392,7 @@
       },
       {
         "name": "source_net_1",
-        "netConnectionName": "net.GND",
+        "__netConnectionName": "net.GND",
         "pointsToConnect": [
           {
             "x": -2.15,

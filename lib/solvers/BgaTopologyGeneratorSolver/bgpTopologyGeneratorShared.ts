@@ -62,8 +62,8 @@ export function getObstacleAvailableZ(
   obstacle: Obstacle,
   layerCount: number,
 ): number[] {
-  return obstacle.zLayers && obstacle.zLayers.length > 0
-    ? getUniqueValidZLayers(obstacle.zLayers, layerCount)
+  return obstacle.__zLayers && obstacle.__zLayers.length > 0
+    ? getUniqueValidZLayers(obstacle.__zLayers, layerCount)
     : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
 }
 

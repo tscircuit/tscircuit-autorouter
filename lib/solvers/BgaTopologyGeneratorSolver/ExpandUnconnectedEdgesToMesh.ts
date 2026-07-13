@@ -66,7 +66,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
 
   private getObstacleAvailableZ(obstacle: Obstacle): number[] {
     return (
-      obstacle.zLayers ??
+      obstacle.__zLayers ??
       obstacle.layers.map((layerName) =>
         mapLayerNameToZ(layerName, this.inputProblem.layerCount),
       )

@@ -601,9 +601,9 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
       const netConnectionName =
-        connection.netConnectionName ??
+        connection.__netConnectionName ??
         this.originalSrj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+          ?.__netConnectionName
 
       const hdRoutes = allHdRoutes.filter(
         (route) => route.connectionName === connection.name,

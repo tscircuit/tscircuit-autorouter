@@ -128,7 +128,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       [
         connection.name,
         ...(connection.__rootConnectionNames ?? []),
-        connection.netConnectionName,
+        connection.__netConnectionName,
       ].filter((id): id is string => Boolean(id)),
     )
   }
@@ -141,8 +141,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
   }
 
   private getObstacleZs(obstacle: Obstacle): number[] {
-    if (obstacle.zLayers && obstacle.zLayers.length > 0) {
-      return obstacle.zLayers
+    if (obstacle.__zLayers && obstacle.__zLayers.length > 0) {
+      return obstacle.__zLayers
     }
     return obstacle.layers.map((layer) =>
       mapLayerNameToZ(layer, this.ogSrj.layerCount),
@@ -154,7 +154,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     targetLayer: string,
   ): {
     layers: string[]
-    zLayers: number[]
+    __zLayers: number[]
   } {
     const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
@@ -166,7 +166,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     )
 
     return {
-      zLayers,
+      __zLayers: zLayers,
       layers: zLayers.map((z) => mapZToLayerName(z, this.ogSrj.layerCount)),
     }
   }
@@ -176,7 +176,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     connectionNetIds: Set<string>
   }): Obstacle {
     const { escapeVia, connectionNetIds } = params
-    const { layers, zLayers } = this.getViaSpanLayers(
+    const { layers, __zLayers } = this.getViaSpanLayers(
       escapeVia.sourceLayer,
       escapeVia.targetLayer,
     )
@@ -185,7 +185,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
       type: "rect",
       layers,
-      zLayers,
+      __zLayers,
       center: {
         x: escapeVia.x,
         y: escapeVia.y,

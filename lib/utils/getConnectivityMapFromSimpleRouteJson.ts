@@ -12,8 +12,10 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
       connMap.addConnections([[connection.name, rootConnectionName]])
     }
     // Also link the connection name to its overall netConnectionName if available
-    if (connection.netConnectionName) {
-      connMap.addConnections([[connection.name, connection.netConnectionName]])
+    if (connection.__netConnectionName) {
+      connMap.addConnections([
+        [connection.name, connection.__netConnectionName],
+      ])
     }
 
     for (const point of connection.pointsToConnect) {

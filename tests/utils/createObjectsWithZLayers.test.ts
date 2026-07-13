@@ -27,5 +27,5 @@ test("preserves obstacle ccwRotationDegrees while normalizing zLayers", () => {
   )
 
   expect(normalizedObstacle.ccwRotationDegrees).toBe(45)
-  expect(normalizedObstacle.zLayers).toEqual([0])
+  expect(normalizedObstacle.__zLayers).toEqual([0])
 })

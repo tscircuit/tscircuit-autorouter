@@ -3250,7 +3250,7 @@
   "connections": [
     {
       "name": "sample_connection_usb_dm_a",
-      "netConnectionName": "USB_DM_A",
+      "__netConnectionName": "USB_DM_A",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3269,7 +3269,7 @@
     },
     {
       "name": "sample_connection_usb_dm_b",
-      "netConnectionName": "USB_DM_B",
+      "__netConnectionName": "USB_DM_B",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3288,7 +3288,7 @@
     },
     {
       "name": "sample_connection_usb_dp_a",
-      "netConnectionName": "USB_DP_A",
+      "__netConnectionName": "USB_DP_A",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3307,7 +3307,7 @@
     },
     {
       "name": "sample_connection_usb_dp_b",
-      "netConnectionName": "USB_DP_B",
+      "__netConnectionName": "USB_DP_B",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3326,7 +3326,7 @@
     },
     {
       "name": "sample_connection_usb_cc1",
-      "netConnectionName": "USB_CC1",
+      "__netConnectionName": "USB_CC1",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3345,7 +3345,7 @@
     },
     {
       "name": "sample_connection_usb_cc2",
-      "netConnectionName": "USB_CC2",
+      "__netConnectionName": "USB_CC2",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3364,7 +3364,7 @@
     },
     {
       "name": "sample_connection_vbus",
-      "netConnectionName": "VBUS",
+      "__netConnectionName": "VBUS",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3395,7 +3395,7 @@
     },
     {
       "name": "sample_connection_3v3",
-      "netConnectionName": "3V3",
+      "__netConnectionName": "3V3",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3444,7 +3444,7 @@
     },
     {
       "name": "sample_connection_1v1",
-      "netConnectionName": "1V1",
+      "__netConnectionName": "1V1",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3469,7 +3469,7 @@
     },
     {
       "name": "sample_connection_gnd_00",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3488,7 +3488,7 @@
     },
     {
       "name": "sample_connection_gnd_01",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3507,7 +3507,7 @@
     },
     {
       "name": "sample_connection_gnd_02",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3526,7 +3526,7 @@
     },
     {
       "name": "sample_connection_gnd_03",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3545,7 +3545,7 @@
     },
     {
       "name": "sample_connection_gnd_04",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3564,7 +3564,7 @@
     },
     {
       "name": "sample_connection_gnd_05",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3583,7 +3583,7 @@
     },
     {
       "name": "sample_connection_gnd_06",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
@@ -3602,7 +3602,7 @@
     },
     {
       "name": "sample_connection_gnd_07",
-      "netConnectionName": "GND",
+      "__netConnectionName": "GND",
       "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {

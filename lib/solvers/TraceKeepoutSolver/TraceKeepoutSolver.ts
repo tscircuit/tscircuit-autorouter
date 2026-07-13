@@ -156,7 +156,7 @@ export class TraceKeepoutSolver extends BaseSolver {
     )) {
       const obstacles = this.obstacleSHI
         .searchArea(endpoint.x, endpoint.y, 0.01, 0.01)
-        .filter((o) => o.zLayers?.includes(endpoint.z))
+        .filter((o) => o.__zLayers?.includes(endpoint.z))
       if (obstacles.length === 0) continue
       const obstacle = obstacles[0]!
 
@@ -189,7 +189,7 @@ export class TraceKeepoutSolver extends BaseSolver {
       for (const pad of jumper.pads) {
         obstacles.push({
           ...pad,
-          zLayers: [0], // Jumper pads are on layer 0 (top)
+          __zLayers: [0], // Jumper pads are on layer 0 (top)
         })
       }
     }
@@ -576,12 +576,12 @@ export class TraceKeepoutSolver extends BaseSolver {
     // Check for obstacles within the keepout radius
     const nearbyObstacles = this.obstacleSHI
       .searchArea(position.x, position.y, searchRadius, searchRadius)
-      .filter((e) => e.zLayers?.includes(position.z))
+      .filter((e) => e.__zLayers?.includes(position.z))
 
     // Filter to non-connected obstacles on the same layer and convert to segments
     for (const obstacle of nearbyObstacles) {
       // Check if obstacle is on the same layer
-      if (obstacle.zLayers && !obstacle.zLayers.includes(position.z)) {
+      if (obstacle.__zLayers && !obstacle.__zLayers.includes(position.z)) {
         continue
       }
 
@@ -990,8 +990,8 @@ export class TraceKeepoutSolver extends BaseSolver {
     // Visualize obstacles
     for (const obstacle of this.input.obstacles) {
       let fillColor = "rgba(128, 128, 128, 0.2)"
-      const isOnLayer0 = obstacle.zLayers?.includes(0)
-      const isOnLayer1 = obstacle.zLayers?.includes(1)
+      const isOnLayer0 = obstacle.__zLayers?.includes(0)
+      const isOnLayer1 = obstacle.__zLayers?.includes(1)
 
       if (isOnLayer0 && isOnLayer1) {
         fillColor = "rgba(128, 0, 128, 0.2)"
@@ -1006,7 +1006,7 @@ export class TraceKeepoutSolver extends BaseSolver {
         width: obstacle.width,
         height: obstacle.height,
         fill: fillColor,
-        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+        label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
     }
 

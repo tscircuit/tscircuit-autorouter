@@ -56,7 +56,7 @@ export class CapacityNodeTargetMerger extends BaseSolver {
 
       const implicitlyConnected =
         doRectsOverlap(n, obstacle) &&
-        obstacle.zLayers?.includes(n.availableZ?.[0])
+        obstacle.__zLayers?.includes(n.availableZ?.[0])
 
       return implicitlyConnected
     })

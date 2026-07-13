@@ -107,7 +107,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     for (const [index, obstacle] of this.srj.obstacles.entries()) {
       this.obstacleZLayersByObstacle.set(
         obstacle,
-        normalizedObstacles[index].zLayers,
+        normalizedObstacles[index].__zLayers,
       )
     }
     this.obstacleTree = new ObstacleSpatialHashIndex(

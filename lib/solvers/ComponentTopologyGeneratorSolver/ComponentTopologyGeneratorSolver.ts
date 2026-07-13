@@ -44,7 +44,7 @@ export function createReplacementObstacleForComponent({
     componentId: detectedComponent.componentId,
     type: "rect",
     layers,
-    zLayers,
+    __zLayers: zLayers,
     center: {
       x: (bounds.minX + bounds.maxX) / 2,
       y: (bounds.minY + bounds.maxY) / 2,

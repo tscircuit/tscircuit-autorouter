@@ -24,7 +24,7 @@ test("pipeline7 dataset-srj18 sample001 keeps topology within its two board laye
     solver.originalSrj.obstacles.every(
       (obstacle) =>
         obstacle.layers.every((layer) => ["top", "bottom"].includes(layer)) &&
-        obstacle.zLayers?.every((z) => z === 0 || z === 1),
+        obstacle.__zLayers?.every((z) => z === 0 || z === 1),
     ),
   ).toBe(true)
 })

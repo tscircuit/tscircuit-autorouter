@@ -9,7 +9,7 @@ export default () => {
         ...bugReportJson,
         obstacles: bugReportJson.obstacles.map((o) => ({
           ...o,
-          zLayers: [0],
+          __zLayers: [0],
           layers: ["top"],
         })),
         layerCount: 1,

@@ -25,7 +25,7 @@ const simpleRouteJson: SimpleRouteJson = {
         "pcb_smtpad_0",
         "pcb_port_0",
       ],
-      zLayers: [0],
+      __zLayers: [0],
     },
     {
       type: "rect",
@@ -47,7 +47,7 @@ const simpleRouteJson: SimpleRouteJson = {
         "pcb_smtpad_3",
         "pcb_port_3",
       ],
-      zLayers: [0],
+      __zLayers: [0],
     },
     {
       type: "rect",
@@ -65,7 +65,7 @@ const simpleRouteJson: SimpleRouteJson = {
         "pcb_smtpad_2",
         "pcb_port_2",
       ],
-      zLayers: [0],
+      __zLayers: [0],
     },
     {
       type: "rect",
@@ -87,7 +87,7 @@ const simpleRouteJson: SimpleRouteJson = {
         "pcb_smtpad_3",
         "pcb_port_3",
       ],
-      zLayers: [0],
+      __zLayers: [0],
     },
   ],
   connections: [

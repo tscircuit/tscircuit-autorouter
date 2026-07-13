@@ -75,7 +75,7 @@ export const createObstacleLabelFormatter = (srj: SimpleRouteJson) => {
       )
       addRootConnectionMapping(
         rootConnectionIndex,
-        connection.netConnectionName,
+        connection.__netConnectionName,
         rootConnectionName,
       )
 

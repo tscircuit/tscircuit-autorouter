@@ -1576,7 +1576,7 @@
           "pcb_plated_hole_8",
           "pcb_port_8"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1598,7 +1598,7 @@
           "pcb_plated_hole_9",
           "pcb_port_9"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1620,7 +1620,7 @@
           "pcb_plated_hole_10",
           "pcb_port_10"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1642,7 +1642,7 @@
           "pcb_plated_hole_11",
           "pcb_port_11"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1664,7 +1664,7 @@
           "pcb_plated_hole_12",
           "pcb_port_12"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1686,7 +1686,7 @@
           "pcb_plated_hole_13",
           "pcb_port_13"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1708,7 +1708,7 @@
           "pcb_plated_hole_14",
           "pcb_port_14"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1730,7 +1730,7 @@
           "pcb_plated_hole_15",
           "pcb_port_15"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1752,7 +1752,7 @@
           "pcb_plated_hole_8",
           "pcb_port_8"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1774,7 +1774,7 @@
           "pcb_plated_hole_9",
           "pcb_port_9"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1796,7 +1796,7 @@
           "pcb_plated_hole_10",
           "pcb_port_10"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1818,7 +1818,7 @@
           "pcb_plated_hole_11",
           "pcb_port_11"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1840,7 +1840,7 @@
           "pcb_plated_hole_12",
           "pcb_port_12"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1862,7 +1862,7 @@
           "pcb_plated_hole_13",
           "pcb_port_13"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1884,7 +1884,7 @@
           "pcb_plated_hole_14",
           "pcb_port_14"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "oval",
@@ -1906,7 +1906,7 @@
           "pcb_plated_hole_15",
           "pcb_port_15"
         ],
-        "zLayers": [0]
+        "__zLayers": [0]
       }
     ],
     "connMap": {
@@ -2072,7 +2072,7 @@
             "pcb_plated_hole_8",
             "pcb_port_8"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2094,7 +2094,7 @@
             "pcb_plated_hole_9",
             "pcb_port_9"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2116,7 +2116,7 @@
             "pcb_plated_hole_10",
             "pcb_port_10"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2138,7 +2138,7 @@
             "pcb_plated_hole_11",
             "pcb_port_11"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2160,7 +2160,7 @@
             "pcb_plated_hole_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2182,7 +2182,7 @@
             "pcb_plated_hole_13",
             "pcb_port_13"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2204,7 +2204,7 @@
             "pcb_plated_hole_14",
             "pcb_port_14"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2226,7 +2226,7 @@
             "pcb_plated_hole_15",
             "pcb_port_15"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2248,7 +2248,7 @@
             "pcb_plated_hole_8",
             "pcb_port_8"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2270,7 +2270,7 @@
             "pcb_plated_hole_9",
             "pcb_port_9"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2292,7 +2292,7 @@
             "pcb_plated_hole_10",
             "pcb_port_10"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2314,7 +2314,7 @@
             "pcb_plated_hole_11",
             "pcb_port_11"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2336,7 +2336,7 @@
             "pcb_plated_hole_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2358,7 +2358,7 @@
             "pcb_plated_hole_13",
             "pcb_port_13"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2380,7 +2380,7 @@
             "pcb_plated_hole_14",
             "pcb_port_14"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -2402,7 +2402,7 @@
             "pcb_plated_hole_15",
             "pcb_port_15"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         }
       ],
       "layerCount": 1,

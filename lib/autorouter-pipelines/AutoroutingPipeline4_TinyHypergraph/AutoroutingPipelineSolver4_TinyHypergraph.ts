@@ -727,9 +727,9 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
       const netConnectionName =
-        connection.netConnectionName ??
+        connection.__netConnectionName ??
         this.originalSrj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+          ?.__netConnectionName
 
       const hdRoutes = allHdRoutes.filter(
         (r) => r.connectionName === connection.name,

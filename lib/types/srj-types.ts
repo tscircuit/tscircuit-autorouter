@@ -78,7 +78,7 @@ export interface Obstacle {
   componentId?: string
   type: "rect"
   layers: string[]
-  zLayers?: number[]
+  __zLayers?: number[]
   center: { x: number; y: number }
   width: number
   height: number
@@ -94,7 +94,7 @@ export interface SimpleRouteConnection {
   name: string
   __rootConnectionNames?: string[]
   isOffBoard?: boolean
-  netConnectionName?: string
+  __netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
 
