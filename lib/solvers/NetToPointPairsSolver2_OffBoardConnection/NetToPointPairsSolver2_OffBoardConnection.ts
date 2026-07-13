@@ -4,11 +4,9 @@ import {
   ConnectionPoint,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
-import {
-  getPreconnectedPointGroups,
-  NetToPointPairsSolver,
-} from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import { getPreconnectedPointGroups } from "../NetToPointPairsSolver/get-preconnected-point-groups"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
