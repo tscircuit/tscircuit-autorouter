@@ -40,7 +40,6 @@ type SerializedTinyConnection = NonNullable<
 type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
-type TinyRouteConnection = HgPortPointPathingSolverParams["connections"][number]
 
 type TinyBounds = {
   minX: number
@@ -184,34 +183,6 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   routeMetadata.mutuallyConnectedNetworkId
-
-const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
-  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
-  connection.mutuallyConnectedNetworkId ??
-  connection.connectionId
-
-const orderSelectiveReripConnections = (
-  connections: readonly TinyRouteConnection[],
-): TinyRouteConnection[] => {
-  const routeCountByNetId = new Map<string, number>()
-  for (const connection of connections) {
-    const netId = getTinyRouteConnectionNetId(connection)
-    routeCountByNetId.set(netId, (routeCountByNetId.get(netId) ?? 0) + 1)
-  }
-
-  return connections
-    .map((connection, index) => ({
-      connection,
-      index,
-      routeCount:
-        routeCountByNetId.get(getTinyRouteConnectionNetId(connection)) ?? 0,
-    }))
-    .sort(
-      (left, right) =>
-        right.routeCount - left.routeCount || left.index - right.index,
-    )
-    .map(({ connection }) => connection)
-}
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
@@ -801,12 +772,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderSelectiveReripConnections(params.connections)
-      : params.connections
-    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const serializedGraph = buildSerializedTinyGraph(params)
     const shouldRunDuplicateCongestedPortPrepass =
-      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
+      params.connections.length <=
+      MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
@@ -835,7 +804,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         graphForTiny = duplicateCongestedPortSolver.getOutput()
       }
     } else {
-      this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
+      this.duplicateCongestedPortError = `Skipped for ${params.connections.length} connections`
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
