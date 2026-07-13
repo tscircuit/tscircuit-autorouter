@@ -243,7 +243,7 @@ test("component detection only creates regions for BGA-like components", () => {
     "inner2",
     "bottom",
   ])
-  expect(replacementObstacle?.zLayers).toEqual([0, 1, 2, 3])
+  expect(replacementObstacle?.__zLayers).toEqual([0, 1, 2, 3])
 })
 
 test("component detection accepts larger BGA-like components", () => {

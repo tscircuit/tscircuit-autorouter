@@ -116,7 +116,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
 
   private getObstacleLayer(edgeWithObstacle: EdgeSegmentWithObstacle): string {
     const availableZ =
-      edgeWithObstacle.obstacle.zLayers ??
+      edgeWithObstacle.obstacle.__zLayers ??
       edgeWithObstacle.obstacle.layers.map((layerName) =>
         mapLayerNameToZ(layerName, this.inputProblem.layerCount),
       )
@@ -128,7 +128,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
     return this.inputProblem.unmarkedComponentObstacles.map(
       (obstacle): Rect => {
         const availableZ =
-          obstacle.zLayers ??
+          obstacle.__zLayers ??
           obstacle.layers.map((layerName) =>
             mapLayerNameToZ(layerName, this.inputProblem.layerCount),
           )

@@ -52,7 +52,7 @@ const pointInsideObstacle = (
 ) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,

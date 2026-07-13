@@ -121,8 +121,8 @@ export function mergeConnections(
       }
 
       // Collect netConnectionNames (deduplicate)
-      if (simpleRouteConnection.netConnectionName) {
-        mergedNetConnectionNames.add(simpleRouteConnection.netConnectionName)
+      if (simpleRouteConnection.__netConnectionName) {
+        mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
 
       // Take the nominalTraceWidth from the first connection for now
@@ -147,7 +147,7 @@ export function mergeConnections(
         mergedExternallyConnectedPointIds.length > 0
           ? mergedExternallyConnectedPointIds
           : undefined,
-      netConnectionName:
+      __netConnectionName:
         mergedNetConnectionNames.size > 0
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,

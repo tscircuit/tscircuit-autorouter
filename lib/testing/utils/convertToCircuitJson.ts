@@ -231,7 +231,7 @@ function createSourceTraces(
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
     const netConnectionName =
-      connection.netConnectionName ||
+      connection.__netConnectionName ||
       connection.__rootConnectionNames?.[0] ||
       connection.name
 
@@ -671,7 +671,7 @@ export function convertToCircuitJson(
   srjWithPointPairs.connections.forEach((conn) => {
     connectionMap.set(
       conn.name,
-      conn.netConnectionName || conn.__rootConnectionNames?.[0] || conn.name,
+      conn.__netConnectionName || conn.__rootConnectionNames?.[0] || conn.name,
     )
   })
 

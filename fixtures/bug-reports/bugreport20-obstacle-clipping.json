@@ -22,7 +22,7 @@
         "pcb_smtpad_0",
         "pcb_port_0"
       ],
-      "zLayers": [0]
+      "__zLayers": [0]
     },
     {
       "type": "rect",
@@ -40,7 +40,7 @@
         "pcb_smtpad_1",
         "pcb_port_1"
       ],
-      "zLayers": [0]
+      "__zLayers": [0]
     },
     {
       "type": "rect",
@@ -61,7 +61,7 @@
         "pcb_smtpad_2",
         "pcb_port_3"
       ],
-      "zLayers": [0]
+      "__zLayers": [0]
     },
     {
       "type": "rect",
@@ -79,7 +79,7 @@
         "pcb_smtpad_3",
         "pcb_port_4"
       ],
-      "zLayers": [0]
+      "__zLayers": [0]
     }
   ],
   "connections": [

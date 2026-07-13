@@ -16,7 +16,7 @@ type Route = {
   connectionName: string
   rootConnectionName?: string
 }
-type LayeredObstacle = Obstacle & { zLayers: number[] }
+type LayeredObstacle = Obstacle & { __zLayers: number[] }
 
 const CONTAINS_POINT_TOLERANCE = 1e-6
 
@@ -198,10 +198,13 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
 
     return (
       this.obstacles.find((obstacle) => {
-        if (obstacle.zLayers.length < 2) {
+        if (obstacle.__zLayers.length < 2) {
           return false
         }
-        if (!obstacle.zLayers.includes(zA) || !obstacle.zLayers.includes(zB)) {
+        if (
+          !obstacle.__zLayers.includes(zA) ||
+          !obstacle.__zLayers.includes(zB)
+        ) {
           return false
         }
         if (
@@ -240,7 +243,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
         height: obstacle.height,
         fill: "rgba(128, 0, 128, 0.2)",
         stroke: "rgba(128, 0, 128, 0.6)",
-        label: `through obstacle candidate\nz: ${obstacle.zLayers.join(",")}`,
+        label: `through obstacle candidate\nz: ${obstacle.__zLayers.join(",")}`,
       })
     }
 

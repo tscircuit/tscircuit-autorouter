@@ -41,7 +41,7 @@ export const canEndpointConnectOnLayer = ({
 
   if (connectedObstacles.length > 0) {
     return connectedObstacles.some((obstacle) =>
-      obstacle.zLayers?.includes(targetZ),
+      obstacle.__zLayers?.includes(targetZ),
     )
   }
 

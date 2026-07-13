@@ -4,12 +4,12 @@ import {
 } from "lib/utils/mapLayerNameToZ"
 
 type LayerMappedObject = {
-  zLayers?: number[]
+  __zLayers?: number[]
   layers?: string[]
 }
 
 /**
- * Produces a derived object array where every item has a valid `zLayers` array.
+ * Produces a derived object array where every item has a valid `__zLayers` array.
  *
  * This centralizes layer normalization for inputs that may only provide
  * string-based `layers`, so downstream solvers can safely use z-layer logic
@@ -18,12 +18,12 @@ type LayerMappedObject = {
 export const createObjectsWithZLayers = <T extends LayerMappedObject>(
   objects: ReadonlyArray<T>,
   layerCount: number = 2,
-): Array<T & { zLayers: number[] }> => {
+): Array<T & { __zLayers: number[] }> => {
   const allZLayers = Array.from({ length: layerCount }, (_, i) => i)
 
   return objects.map((object) => {
     const candidateZLayers =
-      object.zLayers ??
+      object.__zLayers ??
       (object.layers
         ? getUniqueValidZLayersFromLayerNames(object.layers, layerCount)
         : undefined) ??
@@ -31,6 +31,6 @@ export const createObjectsWithZLayers = <T extends LayerMappedObject>(
 
     const zLayers = getUniqueValidZLayers(candidateZLayers, layerCount)
 
-    return { ...object, zLayers: zLayers.length > 0 ? zLayers : allZLayers }
+    return { ...object, __zLayers: zLayers.length > 0 ? zLayers : allZLayers }
   })
 }

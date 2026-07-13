@@ -345,7 +345,7 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
       // Otherwise check for overlap with node
       return (
         doRectsOverlap(node, obstacle) &&
-        obstacle.zLayers?.some((z) => node.availableZ.includes(z))
+        obstacle.__zLayers?.some((z) => node.availableZ.includes(z))
       )
     })
 

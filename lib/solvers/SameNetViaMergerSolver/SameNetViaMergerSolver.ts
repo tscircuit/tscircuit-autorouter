@@ -134,12 +134,12 @@ const canMoveViaTo = (
     )
 
     for (const obstacle of obstacles) {
-      if (!obstacle.zLayers) {
+      if (!obstacle.__zLayers) {
         throw new Error(
           `SameNetViaMergerSolver found obstacle without zLayers near via at (${viaToRemove.x}, ${viaToRemove.y})`,
         )
       }
-      if (!obstacle.zLayers.includes(z)) continue
+      if (!obstacle.__zLayers.includes(z)) continue
       if (obstacleIsSameNet(context.connMap, obstacle, viaToRemove)) continue
       if (segmentToBoxMinDistance(start, end, obstacle) < searchMargin) {
         return false
@@ -467,7 +467,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
     // Visualize obstacles
     for (const obstacle of this.input.obstacles) {
-      if (!obstacle.zLayers) {
+      if (!obstacle.__zLayers) {
         throw new Error(
           `SameNetViaMergerSolver found obstacle without zLayers while visualizing`,
         )
@@ -475,8 +475,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
       let fillColor = "rgba(128, 128, 128, 0.2)" // Default faded gray
       const strokeColor = "rgba(128, 128, 128, 0.5)"
-      const isOnLayer0 = obstacle.zLayers.includes(0)
-      const isOnLayer1 = obstacle.zLayers.includes(1)
+      const isOnLayer0 = obstacle.__zLayers.includes(0)
+      const isOnLayer1 = obstacle.__zLayers.includes(1)
 
       if (isOnLayer0 && isOnLayer1) {
         fillColor = "rgba(128, 0, 128, 0.2)" // Faded purple for both layers
@@ -491,7 +491,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         width: obstacle.width,
         height: obstacle.height,
         fill: fillColor,
-        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+        label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
     }
 

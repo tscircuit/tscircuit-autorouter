@@ -83,7 +83,7 @@ export const canSectionMoveToLayer = ({
       )
       if (obstacleIsSameNet) continue
 
-      if (obstacle.zLayers?.includes(targetZ)) {
+      if (obstacle.__zLayers?.includes(targetZ)) {
         const isAtObstacle =
           (Math.abs(A.x - obstacle.center.x) < 0.01 &&
             Math.abs(A.y - obstacle.center.y) < 0.01) ||

@@ -362,7 +362,7 @@ export class TraceWidthSolver extends BaseSolver {
       )
 
       for (const obstacle of nearbyObstacles) {
-        if (obstacle.zLayers && !obstacle.zLayers.includes(position.z)) {
+        if (obstacle.__zLayers && !obstacle.__zLayers.includes(position.z)) {
           continue
         }
 
@@ -461,7 +461,7 @@ export class TraceWidthSolver extends BaseSolver {
   }
 
   private isObstacleOnPointLayer(obstacle: Obstacle, point: Point3D): boolean {
-    return !obstacle.zLayers || obstacle.zLayers.includes(point.z)
+    return !obstacle.__zLayers || obstacle.__zLayers.includes(point.z)
   }
 
   private getAdjacentNonCoincidentRoutePoint(
@@ -833,8 +833,8 @@ export class TraceWidthSolver extends BaseSolver {
     // Draw all obstacles (faded, with colliding ones highlighted)
     for (const obstacle of this.obstacles) {
       const isColliding = collidingObstacleIds.has(obstacle.obstacleId)
-      const isOnLayer0 = obstacle.zLayers?.includes(0)
-      const isOnLayer1 = obstacle.zLayers?.includes(1)
+      const isOnLayer0 = obstacle.__zLayers?.includes(0)
+      const isOnLayer1 = obstacle.__zLayers?.includes(1)
 
       let fillColor: string
       if (isColliding) {
@@ -857,7 +857,7 @@ export class TraceWidthSolver extends BaseSolver {
         stroke: isColliding ? "red" : undefined,
         label: isColliding
           ? `COLLIDING: ${obstacle.obstacleId ?? "obstacle"}`
-          : `${obstacle.obstacleId ?? "obstacle"} (Z: ${obstacle.zLayers?.join(", ")})`,
+          : `${obstacle.obstacleId ?? "obstacle"} (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
     }
 

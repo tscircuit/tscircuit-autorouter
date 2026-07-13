@@ -15,7 +15,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_0"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -29,7 +29,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_0"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -43,7 +43,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -57,7 +57,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -71,7 +71,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -85,7 +85,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -99,7 +99,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_3"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -113,7 +113,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_3"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -127,7 +127,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_4"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -141,7 +141,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_4"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -155,7 +155,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_5"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -169,7 +169,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_5"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -183,7 +183,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_6"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -197,7 +197,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_6"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -211,7 +211,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -225,7 +225,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -239,7 +239,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_8"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -253,7 +253,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_8"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -267,7 +267,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_9"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -281,7 +281,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_9"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -295,7 +295,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_10"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -309,7 +309,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_10"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -323,7 +323,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_11"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -337,7 +337,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_11"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -351,7 +351,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_12"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -365,7 +365,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_12"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -379,7 +379,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_13"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -393,7 +393,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_13"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -407,7 +407,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_14"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -421,7 +421,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_14"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -435,7 +435,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_15"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -449,7 +449,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_15"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -463,7 +463,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_16"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -477,7 +477,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_16"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -491,7 +491,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_17"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -505,7 +505,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_17"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -519,7 +519,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_18"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -533,7 +533,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_18"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -547,7 +547,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_19"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -561,7 +561,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_19"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -575,7 +575,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_20"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -589,7 +589,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_20"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -603,7 +603,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_21"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -617,7 +617,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_21"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -631,7 +631,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_22"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -645,7 +645,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_22"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -659,7 +659,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_23"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -673,7 +673,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_23"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -687,7 +687,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_24"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -701,7 +701,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_24"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -715,7 +715,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_25"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -729,7 +729,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_25"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -743,7 +743,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_26"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -757,7 +757,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_26"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -771,7 +771,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_27"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -785,7 +785,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_27"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -799,7 +799,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_28"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -813,7 +813,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_28"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -827,7 +827,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_29"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -841,7 +841,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_29"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -855,7 +855,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_30"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -869,7 +869,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_30"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -883,7 +883,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_31"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -897,7 +897,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_31"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -911,7 +911,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_32"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -925,7 +925,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_32"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -939,7 +939,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_33"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -953,7 +953,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_33"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -967,7 +967,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_34"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -981,7 +981,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_34"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -995,7 +995,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_35"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1009,7 +1009,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_35"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1023,7 +1023,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_36"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1037,7 +1037,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_36"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1051,7 +1051,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_37"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1065,7 +1065,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_37"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1079,7 +1079,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_38"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1093,7 +1093,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_38"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1107,7 +1107,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_39"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1121,7 +1121,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_39"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1135,7 +1135,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_40"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1149,7 +1149,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_40"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1163,7 +1163,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_41"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1177,7 +1177,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_41"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1191,7 +1191,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_42"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1205,7 +1205,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_42"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1219,7 +1219,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_43"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1233,7 +1233,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_43"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1247,7 +1247,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_44"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1261,7 +1261,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_44"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1275,7 +1275,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_45"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1289,7 +1289,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_45"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1303,7 +1303,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_46"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1317,7 +1317,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_46"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1331,7 +1331,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_47"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1345,7 +1345,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_47"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1359,7 +1359,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_48"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1373,7 +1373,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_48"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1387,7 +1387,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_49"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1401,7 +1401,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_49"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1415,7 +1415,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_50"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1429,7 +1429,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_50"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1443,7 +1443,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_51"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1457,7 +1457,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_51"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1471,7 +1471,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_52"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1485,7 +1485,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_52"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1499,7 +1499,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_53"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1513,7 +1513,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_53"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1527,7 +1527,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_54"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1541,7 +1541,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_54"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1555,7 +1555,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_55"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1569,7 +1569,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_55"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1583,7 +1583,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_56"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1597,7 +1597,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_56"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1611,7 +1611,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_57"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1625,7 +1625,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_57"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1639,7 +1639,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_58"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1653,7 +1653,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_58"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1667,7 +1667,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_59"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1681,7 +1681,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_59"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1695,7 +1695,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_60"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1709,7 +1709,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_60"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1723,7 +1723,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_61"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1737,7 +1737,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_61"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1751,7 +1751,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_62"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1765,7 +1765,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_62"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1779,7 +1779,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_63"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1793,7 +1793,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_63"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1807,7 +1807,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_64"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1821,7 +1821,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_64"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1835,7 +1835,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_65"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1849,7 +1849,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_65"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1863,7 +1863,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_66"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1877,7 +1877,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_66"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1891,7 +1891,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_67"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1905,7 +1905,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_67"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1919,7 +1919,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_68"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1933,7 +1933,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_68"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1947,7 +1947,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_69"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1961,7 +1961,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_69"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1975,7 +1975,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_70"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -1989,7 +1989,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_70"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2003,7 +2003,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_71"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2017,7 +2017,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_71"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2031,7 +2031,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_72"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2045,7 +2045,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_72"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2059,7 +2059,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_73"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2073,7 +2073,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_73"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2087,7 +2087,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_74"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2101,7 +2101,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_74"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2115,7 +2115,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_75"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2129,7 +2129,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_75"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2143,7 +2143,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_76"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2157,7 +2157,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_76"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2171,7 +2171,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_77"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2185,7 +2185,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_77"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2199,7 +2199,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_78"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2213,7 +2213,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_78"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2227,7 +2227,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_79"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2241,7 +2241,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_79"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2255,7 +2255,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_80"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2269,7 +2269,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_80"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2283,7 +2283,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_81"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2297,7 +2297,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_81"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2311,7 +2311,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_82"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2325,7 +2325,7 @@
         "height": 0.95,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_82"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2339,7 +2339,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_83"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2353,7 +2353,7 @@
         "height": 0.8,
         "connectedTo": [],
         "offBoardConnectsTo": ["jumper_conn_83"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2366,7 +2366,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_6"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2379,7 +2379,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_6"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2392,7 +2392,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_2_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2405,7 +2405,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_2_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2418,7 +2418,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_15"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2431,7 +2431,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_15"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2444,7 +2444,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_4"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2457,7 +2457,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_4"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2470,7 +2470,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_3_mst1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2483,7 +2483,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_3_mst1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2496,7 +2496,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_3_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2509,7 +2509,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_3_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2522,7 +2522,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_2_mst1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2535,7 +2535,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_2_mst1"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2548,7 +2548,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_0_mst7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2561,7 +2561,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_0_mst7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2574,7 +2574,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2587,7 +2587,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_7"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2600,7 +2600,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_1_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2613,7 +2613,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_1_mst2"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2626,7 +2626,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_5"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2639,7 +2639,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_5"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2652,7 +2652,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_9"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2665,7 +2665,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_9"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2678,7 +2678,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_11"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2691,7 +2691,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_11"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2704,7 +2704,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_0_mst8"],
-        "zLayers": [0]
+        "__zLayers": [0]
       },
       {
         "type": "rect",
@@ -2717,7 +2717,7 @@
         "width": 0.3,
         "height": 0.3,
         "connectedTo": ["source_net_0_mst8"],
-        "zLayers": [0]
+        "__zLayers": [0]
       }
     ],
     "connections": [

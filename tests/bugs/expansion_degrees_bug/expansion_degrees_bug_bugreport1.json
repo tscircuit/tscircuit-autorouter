@@ -50,7 +50,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -82,7 +82,7 @@
             "pcb_plated_hole_5",
             "pcb_port_19"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -104,7 +104,7 @@
             "pcb_plated_hole_1",
             "pcb_port_15"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -126,7 +126,7 @@
             "pcb_smtpad_18",
             "pcb_port_23"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -150,7 +150,7 @@
             "pcb_plated_hole_2",
             "pcb_port_16"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -174,7 +174,7 @@
             "pcb_plated_hole_3",
             "pcb_port_17"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -192,7 +192,7 @@
             "pcb_smtpad_6",
             "pcb_port_6"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -236,7 +236,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -254,7 +254,7 @@
             "pcb_smtpad_8",
             "pcb_port_8"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -272,7 +272,7 @@
             "pcb_smtpad_9",
             "pcb_port_9"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -304,7 +304,7 @@
             "pcb_plated_hole_5",
             "pcb_port_19"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -326,7 +326,7 @@
             "pcb_smtpad_19",
             "pcb_port_25"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -344,7 +344,7 @@
             "pcb_smtpad_12",
             "pcb_port_12"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -362,7 +362,7 @@
             "pcb_smtpad_13",
             "pcb_port_13"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -406,7 +406,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [1]
+          "__zLayers": [1]
         },
         {
           "type": "rect",
@@ -450,7 +450,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [1]
+          "__zLayers": [1]
         },
         {
           "type": "rect",
@@ -494,7 +494,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [1]
+          "__zLayers": [1]
         },
         {
           "type": "rect",
@@ -538,7 +538,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -560,7 +560,7 @@
             "pcb_smtpad_18",
             "pcb_port_23"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "rect",
@@ -582,7 +582,7 @@
             "pcb_smtpad_19",
             "pcb_port_25"
           ],
-          "zLayers": [0]
+          "__zLayers": [0]
         },
         {
           "type": "oval",
@@ -614,7 +614,7 @@
             "pcb_plated_hole_5",
             "pcb_port_19"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "oval",
@@ -636,7 +636,7 @@
             "pcb_plated_hole_1",
             "pcb_port_15"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "oval",
@@ -660,7 +660,7 @@
             "pcb_plated_hole_2",
             "pcb_port_16"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "oval",
@@ -684,7 +684,7 @@
             "pcb_plated_hole_3",
             "pcb_port_17"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "oval",
@@ -728,7 +728,7 @@
             "pcb_smtpad_17",
             "pcb_port_24"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "oval",
@@ -760,7 +760,7 @@
             "pcb_plated_hole_5",
             "pcb_port_19"
           ],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "rect",
@@ -772,7 +772,7 @@
           "height": 3.302,
           "layers": ["top", "inner1", "inner2", "bottom"],
           "connectedTo": [],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         },
         {
           "type": "rect",
@@ -784,7 +784,7 @@
           "height": 3.302,
           "layers": ["top", "inner1", "inner2", "bottom"],
           "connectedTo": [],
-          "zLayers": [0, 1]
+          "__zLayers": [0, 1]
         }
       ],
       "layerCount": 2,

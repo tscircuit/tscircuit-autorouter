@@ -185,7 +185,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         __rootConnectionNames: connection.__rootConnectionNames ?? [
           connection.name,
         ],
-        netConnectionName: connection.netConnectionName,
+        __netConnectionName: connection.__netConnectionName,
       })
     }
   }

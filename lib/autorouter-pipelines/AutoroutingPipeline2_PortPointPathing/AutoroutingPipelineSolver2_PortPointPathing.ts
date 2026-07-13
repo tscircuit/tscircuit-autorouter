@@ -673,9 +673,9 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
       const netConnectionName =
-        connection.netConnectionName ??
+        connection.__netConnectionName ??
         this.srj.connections.find((c) => c.name === connection.name)
-          ?.netConnectionName
+          ?.__netConnectionName
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(

@@ -23,7 +23,7 @@ const pointInsideObstacle = (
     obstacle.height / 2 + VIA_INSIDE_OBSTACLE_TOLERANCE
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
@@ -298,8 +298,8 @@ export class TraceSimplificationSolver extends BaseSolver {
     // Visualize obstacles
     for (const obstacle of this.simplificationConfig.obstacles) {
       let fillColor = "rgba(128, 128, 128, 0.2)"
-      const isOnLayer0 = obstacle.zLayers?.includes(0)
-      const isOnLayer1 = obstacle.zLayers?.includes(1)
+      const isOnLayer0 = obstacle.__zLayers?.includes(0)
+      const isOnLayer1 = obstacle.__zLayers?.includes(1)
 
       if (isOnLayer0 && isOnLayer1) {
         fillColor = "rgba(128, 0, 128, 0.2)"
@@ -314,7 +314,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         width: obstacle.width,
         height: obstacle.height,
         fill: fillColor,
-        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+        label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
     }
 

@@ -16,7 +16,7 @@ import type {
 
 type AnyObstacle = Omit<Obstacle, "type"> & {
   type: string
-  zLayers?: number[]
+  __zLayers?: number[]
   isCopperPour?: boolean
 }
 
@@ -84,7 +84,7 @@ export const getPolyGraphRectsFromSrj = (srj: SimpleRouteJson): Rect[] =>
       height: obstacle.height,
       ccwRotation: getRotationRadians(obstacle),
       layers: obstacle.layers,
-      zLayers: obstacle.zLayers,
+      zLayers: obstacle.__zLayers,
       isCopperPour: obstacle.isCopperPour,
     }))
 
@@ -94,7 +94,7 @@ export const getPolyGraphPolygonsFromSrj = (srj: SimpleRouteJson): Polygon[] =>
     .map((obstacle) => ({
       points: getOvalPoints(obstacle),
       layers: obstacle.layers,
-      zLayers: obstacle.zLayers,
+      zLayers: obstacle.__zLayers,
       isCopperPour: obstacle.isCopperPour,
     }))
 
@@ -125,7 +125,7 @@ export const getConnectedObstacleRegionsFromSrj = (
         polygon: {
           points: getOvalPoints(obstacle),
           layers: obstacle.layers,
-          zLayers: obstacle.zLayers,
+          zLayers: obstacle.__zLayers,
           isCopperPour: obstacle.isCopperPour,
         },
         clearance,

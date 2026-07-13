@@ -170,7 +170,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
     // Compute available Z from obstacle layers
     const availableZ =
-      obstacle.zLayers ?? obstacle.layers.map((layer) => this.layerToZ(layer))
+      obstacle.__zLayers ?? obstacle.layers.map((layer) => this.layerToZ(layer))
 
     const portPoint: OffboardPortPoint = {
       portPointId: `offboard_pp_${index}`,

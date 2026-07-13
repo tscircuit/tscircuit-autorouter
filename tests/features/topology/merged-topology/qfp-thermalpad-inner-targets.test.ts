@@ -33,7 +33,7 @@ function createObstacle({
     componentId,
     type: "rect",
     layers: ["top"],
-    zLayers: [0],
+    __zLayers: [0],
     center: { x, y },
     width,
     height,

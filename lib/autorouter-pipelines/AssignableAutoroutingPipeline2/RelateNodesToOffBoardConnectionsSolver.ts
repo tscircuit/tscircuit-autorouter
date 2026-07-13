@@ -75,7 +75,7 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     )!
     const nodesNearObstacle = this.nodeTree
       .getNodesInArea(obstacle.center.x, obstacle.center.y, 0.01, 0.01)
-      .filter((n) => n.availableZ.some((z) => obstacle.zLayers?.includes(z)))
+      .filter((n) => n.availableZ.some((z) => obstacle.__zLayers?.includes(z)))
       .filter(
         (n) =>
           Math.abs(n.center.x - obstacle.center.x) < 0.01 &&

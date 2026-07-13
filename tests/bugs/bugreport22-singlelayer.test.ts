@@ -14,7 +14,7 @@ test("bugreport22 - singlelayer (subset)", () => {
   // Filter obstacle zLayers to only include layer 0 for single layer boards
   const filteredObstacles = srj.obstacles.map((obstacle) => ({
     ...obstacle,
-    zLayers: obstacle.zLayers?.filter((z) => z === 0) ?? [0],
+    __zLayers: obstacle.__zLayers?.filter((z) => z === 0) ?? [0],
   }))
   // Use only a small subset of connections to make the test faster
   const connectionSubset = srj.connections.slice(0, 8)

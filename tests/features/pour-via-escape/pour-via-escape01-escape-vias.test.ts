@@ -118,7 +118,7 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
       },
       (_, index) => Math.min(sourceZ, targetZ) + index,
     )
-    expect(escapeViaObstacle?.zLayers).toEqual(expectedZLayers)
+    expect(escapeViaObstacle?.__zLayers).toEqual(expectedZLayers)
   }
 })
 

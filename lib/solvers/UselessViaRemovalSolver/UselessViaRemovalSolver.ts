@@ -100,8 +100,8 @@ export class UselessViaRemovalSolver extends BaseSolver {
     for (const obstacle of this.input.obstacles) {
       let fillColor = "rgba(128, 128, 128, 0.2)" // Default faded gray
       const strokeColor = "rgba(128, 128, 128, 0.5)"
-      const isOnLayer0 = obstacle.zLayers?.includes(0)
-      const isOnLayer1 = obstacle.zLayers?.includes(1)
+      const isOnLayer0 = obstacle.__zLayers?.includes(0)
+      const isOnLayer1 = obstacle.__zLayers?.includes(1)
 
       if (isOnLayer0 && isOnLayer1) {
         fillColor = "rgba(128, 0, 128, 0.2)" // Faded purple for both layers
@@ -116,7 +116,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
         width: obstacle.width,
         height: obstacle.height,
         fill: fillColor,
-        label: `Obstacle (Z: ${obstacle.zLayers?.join(", ")})`,
+        label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
     }
 

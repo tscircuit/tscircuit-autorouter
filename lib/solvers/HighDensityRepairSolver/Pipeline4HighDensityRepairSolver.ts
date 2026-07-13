@@ -69,7 +69,7 @@ const isPointInsideObstacle = (
 }
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
 const isObstacleConnectedToRoute = (
   obstacle: Obstacle,

@@ -40,7 +40,7 @@ test("removes the first-section via when a connected endpoint obstacle supports 
   const multilayerEndpointObstacle: Obstacle = {
     type: "rect",
     layers: ["top", "bottom"],
-    zLayers: [0, 1],
+    __zLayers: [0, 1],
     center: { x: 0, y: 0 },
     width: 0.4,
     height: 0.4,
