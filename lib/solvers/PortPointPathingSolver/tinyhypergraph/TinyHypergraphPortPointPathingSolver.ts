@@ -15,7 +15,6 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
-  SelectiveReripTinyHyperGraphSolver,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -26,6 +25,7 @@ import {
 } from "tiny-hypergraph/lib/index"
 import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { GreedyConflictRepairSelectiveReripTinyHyperGraphSolver } from "./greedy-conflict-repair-selective-rerip-tiny-hypergraph-solver"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 
 type RouteMetadata = {
@@ -185,9 +185,7 @@ const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   routeMetadata.mutuallyConnectedNetworkId
 
-const getTinyRouteConnectionNetId = (
-  connection: TinyRouteConnection,
-): string =>
+const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.mutuallyConnectedNetworkId ??
   connection.connectionId
@@ -644,7 +642,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
+      solveGraphStep.solverClass =
+        GreedyConflictRepairSelectiveReripTinyHyperGraphSolver
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -690,11 +689,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver = new SelectiveReripTinyHyperGraphSolver(
-        topology,
-        problem,
-        this.getSolveGraphOptions(),
-      )
+      this.initialVisualizationSolver =
+        new GreedyConflictRepairSelectiveReripTinyHyperGraphSolver(
+          topology,
+          problem,
+          this.getSolveGraphOptions(),
+        )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
@@ -808,8 +808,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       : params.connections
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
-      connections.length <=
-      MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
+      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
