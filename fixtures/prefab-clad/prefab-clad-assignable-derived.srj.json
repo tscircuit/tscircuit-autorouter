@@ -1,9 +1,9 @@
 {
   "layerCount": 1,
-  "minTraceWidth": 0.30000000000000004,
-  "nominalTraceWidth": 0.30000000000000004,
-  "defaultObstacleMargin": 0.1,
-  "minTraceToPadEdgeClearance": 0.1,
+  "minTraceWidth": 0.35,
+  "nominalTraceWidth": 0.35,
+  "defaultObstacleMargin": 0.15,
+  "minTraceToPadEdgeClearance": 0.15,
   "bounds": {
     "minX": -49.5,
     "maxX": 49.5,
@@ -22,10 +22,9 @@
         "x": -13.75,
         "y": 3.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_2",
@@ -38,10 +37,9 @@
         "x": -13.75,
         "y": 2.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_3",
@@ -54,10 +52,9 @@
         "x": -13.75,
         "y": 2.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_4",
@@ -70,10 +67,9 @@
         "x": -13.75,
         "y": 1.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_5",
@@ -86,10 +82,9 @@
         "x": -13.75,
         "y": 1.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_6",
@@ -102,10 +97,9 @@
         "x": -13.75,
         "y": 0.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_7",
@@ -118,10 +112,9 @@
         "x": -13.75,
         "y": 0.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_8",
@@ -134,10 +127,9 @@
         "x": -13.75,
         "y": -0.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_9",
@@ -150,10 +142,9 @@
         "x": -13.75,
         "y": -0.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_10",
@@ -166,10 +157,9 @@
         "x": -13.75,
         "y": -1.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_11",
@@ -182,10 +172,9 @@
         "x": -13.75,
         "y": -1.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_12",
@@ -198,10 +187,9 @@
         "x": -13.75,
         "y": -2.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_13",
@@ -214,10 +202,9 @@
         "x": -13.75,
         "y": -2.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_14",
@@ -230,10 +217,9 @@
         "x": -13.75,
         "y": -3.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_15",
@@ -247,9 +233,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_16",
@@ -263,9 +248,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_17",
@@ -279,9 +263,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_18",
@@ -295,9 +278,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_19",
@@ -311,9 +293,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_20",
@@ -327,9 +308,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_21",
@@ -343,9 +323,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_22",
@@ -359,9 +338,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_23",
@@ -375,9 +353,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_24",
@@ -391,9 +368,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_25",
@@ -407,9 +383,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_26",
@@ -423,9 +398,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_27",
@@ -439,9 +413,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_28",
@@ -455,9 +428,8 @@
         "y": -3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_29",
@@ -470,10 +442,9 @@
         "x": -6.25,
         "y": -3.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_30",
@@ -486,10 +457,9 @@
         "x": -6.25,
         "y": -2.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_31",
@@ -502,10 +472,9 @@
         "x": -6.25,
         "y": -2.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_32",
@@ -518,10 +487,9 @@
         "x": -6.25,
         "y": -1.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_33",
@@ -534,10 +502,9 @@
         "x": -6.25,
         "y": -1.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_34",
@@ -550,10 +517,9 @@
         "x": -6.25,
         "y": -0.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_35",
@@ -566,10 +532,9 @@
         "x": -6.25,
         "y": -0.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_36",
@@ -582,10 +547,9 @@
         "x": -6.25,
         "y": 0.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_37",
@@ -598,10 +562,9 @@
         "x": -6.25,
         "y": 0.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_38",
@@ -614,10 +577,9 @@
         "x": -6.25,
         "y": 1.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_39",
@@ -630,10 +592,9 @@
         "x": -6.25,
         "y": 1.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_40",
@@ -646,10 +607,9 @@
         "x": -6.25,
         "y": 2.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_41",
@@ -662,10 +622,9 @@
         "x": -6.25,
         "y": 2.75
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_42",
@@ -678,10 +637,9 @@
         "x": -6.25,
         "y": 3.25
       },
-      "width": 0.55,
+      "width": 0.9,
       "height": 0.25,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_43",
@@ -695,9 +653,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_44",
@@ -711,9 +668,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_45",
@@ -727,9 +686,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_46",
@@ -743,12 +704,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
+      "height": 0.9,
       "connectedTo": [
         "sample_connection_usb_dm_b",
         "USB_DM_B"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_47",
@@ -762,12 +722,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
+      "height": 0.9,
       "connectedTo": [
         "sample_connection_usb_dp_b",
         "USB_DP_B"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_48",
@@ -781,12 +740,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
+      "height": 0.9,
       "connectedTo": [
         "sample_connection_3v3",
         "3V3"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_49",
@@ -800,9 +758,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_50",
@@ -816,9 +776,11 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
     },
     {
       "obstacleId": "obstacle_U1_pad_51",
@@ -832,9 +794,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_52",
@@ -848,9 +809,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_53",
@@ -864,9 +824,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_54",
@@ -880,9 +839,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_55",
@@ -896,9 +854,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_56",
@@ -912,9 +869,8 @@
         "y": 3.75
       },
       "width": 0.25,
-      "height": 0.55,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "height": 0.9,
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_U1_pad_57",
@@ -929,8 +885,7 @@
       },
       "width": 5.2,
       "height": 5.2,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_J1_pad_1",
@@ -945,8 +900,10 @@
       },
       "width": 1.5,
       "height": 0.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
     },
     {
       "obstacleId": "obstacle_J1_pad_2",
@@ -964,8 +921,7 @@
       "connectedTo": [
         "sample_connection_usb_cc1",
         "USB_CC1"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_J1_pad_3",
@@ -983,8 +939,7 @@
       "connectedTo": [
         "sample_connection_usb_dm_a",
         "USB_DM_A"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_J1_pad_4",
@@ -1002,8 +957,7 @@
       "connectedTo": [
         "sample_connection_usb_dp_a",
         "USB_DP_A"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_J1_pad_5",
@@ -1021,8 +975,7 @@
       "connectedTo": [
         "sample_connection_usb_cc2",
         "USB_CC2"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_J1_pad_6",
@@ -1039,9 +992,10 @@
       "height": 0.6,
       "connectedTo": [
         "sample_connection_gnd_00",
+        "GND",
+        "sample_connection_gnd_04",
         "GND"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_J1_shell_top",
@@ -1056,8 +1010,7 @@
       },
       "width": 2.4,
       "height": 1.8,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_J1_shell_bottom",
@@ -1072,8 +1025,96 @@
       },
       "width": 2.4,
       "height": 1.8,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_1",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -28,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_2",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -27,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_gnd_02",
+        "GND",
+        "sample_connection_gnd_03",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_3",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -26,
+        "y": -10.2
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_4",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -26,
+        "y": -7.8
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "obstacle_U2_pad_5",
+      "componentId": "pcb_component_sample_U2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -28,
+        "y": -7.8
+      },
+      "width": 0.7,
+      "height": 1,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
     },
     {
       "obstacleId": "obstacle_R1_pad_1",
@@ -1091,8 +1132,7 @@
       "connectedTo": [
         "sample_connection_usb_dm_b",
         "USB_DM_B"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R1_pad_2",
@@ -1110,8 +1150,7 @@
       "connectedTo": [
         "sample_connection_usb_dm_a",
         "USB_DM_A"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R2_pad_1",
@@ -1129,8 +1168,7 @@
       "connectedTo": [
         "sample_connection_usb_dp_b",
         "USB_DP_B"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R2_pad_2",
@@ -1148,8 +1186,7 @@
       "connectedTo": [
         "sample_connection_usb_dp_a",
         "USB_DP_A"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R3_pad_1",
@@ -1159,16 +1196,15 @@
         "top"
       ],
       "center": {
-        "x": -38.8,
-        "y": 2.1
+        "x": -36,
+        "y": 5.2
       },
-      "width": 0.7,
-      "height": 0.8,
+      "width": 0.8,
+      "height": 0.7,
       "connectedTo": [
         "sample_connection_usb_cc1",
         "USB_CC1"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R3_pad_2",
@@ -1178,18 +1214,15 @@
         "top"
       ],
       "center": {
-        "x": -37.2,
-        "y": 2.1
+        "x": -36,
+        "y": 6.8
       },
-      "width": 0.7,
-      "height": 0.8,
+      "width": 0.8,
+      "height": 0.7,
       "connectedTo": [
-        "sample_connection_gnd_00",
-        "GND",
-        "sample_connection_gnd_01",
+        "sample_connection_gnd_04",
         "GND"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R4_pad_1",
@@ -1199,18 +1232,17 @@
         "top"
       ],
       "center": {
-        "x": -38.8,
-        "y": -2.1
+        "x": -36,
+        "y": -6.8
       },
-      "width": 0.7,
-      "height": 0.8,
+      "width": 0.8,
+      "height": 0.7,
       "connectedTo": [
-        "sample_connection_gnd_01",
+        "sample_connection_gnd_00",
         "GND",
-        "sample_connection_gnd_02",
+        "sample_connection_gnd_01",
         "GND"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_R4_pad_2",
@@ -1220,16 +1252,91 @@
         "top"
       ],
       "center": {
-        "x": -37.2,
-        "y": -2.1
+        "x": -36,
+        "y": -5.2
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_usb_cc2",
+        "USB_CC2"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C1_pad_1",
+      "componentId": "pcb_component_sample_C1",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -35.8,
+        "y": -10
       },
       "width": 0.7,
       "height": 0.8,
       "connectedTo": [
-        "sample_connection_usb_cc2",
-        "USB_CC2"
+        "sample_connection_vbus",
+        "VBUS"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C1_pad_2",
+      "componentId": "pcb_component_sample_C1",
+      "type": "rect",
+      "layers": [
+        "top"
       ],
-      "netIsAssignable": false
+      "center": {
+        "x": -34.2,
+        "y": -10
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_gnd_01",
+        "GND",
+        "sample_connection_gnd_02",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C2_pad_1",
+      "componentId": "pcb_component_sample_C2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -23.3,
+        "y": -9
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C2_pad_2",
+      "componentId": "pcb_component_sample_C2",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -21.7,
+        "y": -9
+      },
+      "width": 0.7,
+      "height": 0.8,
+      "connectedTo": [
+        "sample_connection_gnd_03",
+        "GND",
+        "sample_connection_gnd_05",
+        "GND"
+      ]
     },
     {
       "obstacleId": "obstacle_C3_pad_1",
@@ -1239,16 +1346,15 @@
         "top"
       ],
       "center": {
-        "x": -9.2,
-        "y": 4.7
+        "x": -4,
+        "y": 5.7
       },
       "width": 0.8,
       "height": 0.7,
       "connectedTo": [
         "sample_connection_3v3",
         "3V3"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_C3_pad_2",
@@ -1258,16 +1364,91 @@
         "top"
       ],
       "center": {
-        "x": -9.2,
-        "y": 6.3
+        "x": -4,
+        "y": 7.3
       },
       "width": 0.8,
       "height": 0.7,
       "connectedTo": [
-        "sample_connection_gnd_02",
+        "sample_connection_gnd_07",
         "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C4_pad_1",
+      "componentId": "pcb_component_sample_C4",
+      "type": "rect",
+      "layers": [
+        "top"
       ],
-      "netIsAssignable": false
+      "center": {
+        "x": -3.8,
+        "y": 1.7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_1v1",
+        "1V1"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C4_pad_2",
+      "componentId": "pcb_component_sample_C4",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -3.8,
+        "y": 3.3
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_06",
+        "GND",
+        "sample_connection_gnd_07",
+        "GND"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C5_pad_1",
+      "componentId": "pcb_component_sample_C5",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": -3.3
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_3v3",
+        "3V3"
+      ]
+    },
+    {
+      "obstacleId": "obstacle_C5_pad_2",
+      "componentId": "pcb_component_sample_C5",
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": -4,
+        "y": -1.7
+      },
+      "width": 0.8,
+      "height": 0.7,
+      "connectedTo": [
+        "sample_connection_gnd_05",
+        "GND",
+        "sample_connection_gnd_06",
+        "GND"
+      ]
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_000",
@@ -1282,13 +1463,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_031",
-        "hole_bottom_r0_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_031"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_001",
@@ -1303,13 +1480,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_017",
-        "hole_bottom_r0_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_017"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_002",
@@ -1324,13 +1497,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_030",
-        "hole_bottom_r0_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_030"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_003",
@@ -1345,13 +1514,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_035",
-        "hole_bottom_r0_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_035"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_004",
@@ -1366,13 +1531,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_002",
-        "hole_bottom_r0_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_002"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_005",
@@ -1387,13 +1548,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_034",
-        "hole_bottom_r0_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_034"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_006",
@@ -1408,13 +1565,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_028",
-        "hole_bottom_r0_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_028"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_007",
@@ -1429,13 +1582,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_016",
-        "hole_bottom_r0_007"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_016"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_008",
@@ -1450,13 +1599,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_028",
-        "hole_bottom_r0_008"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_028"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_009",
@@ -1471,13 +1616,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_025",
-        "hole_bottom_r0_009"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_025"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_010",
@@ -1492,13 +1633,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_006",
-        "hole_bottom_r0_010"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_006"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_011",
@@ -1513,13 +1650,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_014",
-        "hole_bottom_r0_011"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_014"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_012",
@@ -1534,13 +1667,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_033",
-        "hole_bottom_r0_012"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_033"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_013",
@@ -1555,13 +1684,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_011",
-        "hole_bottom_r0_013"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_011"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_014",
@@ -1576,13 +1701,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_011",
-        "hole_bottom_r0_014"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_011"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_015",
@@ -1597,13 +1718,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_003",
-        "hole_bottom_r0_015"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_003"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r0_016",
@@ -1618,13 +1735,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_022",
-        "hole_bottom_r0_016"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_022"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_000",
@@ -1639,13 +1752,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_004",
-        "hole_top_r0_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_004"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_001",
@@ -1660,13 +1769,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_010",
-        "hole_top_r0_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_010"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_002",
@@ -1681,13 +1786,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_000",
-        "hole_top_r0_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_000"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_003",
@@ -1702,13 +1803,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_037",
-        "hole_top_r0_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_037"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_004",
@@ -1723,13 +1820,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_026",
-        "hole_top_r0_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_026"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_005",
@@ -1744,13 +1837,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_000",
-        "hole_top_r0_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_000"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_006",
@@ -1765,13 +1854,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_038",
-        "hole_top_r0_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_038"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_007",
@@ -1786,13 +1871,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_038",
-        "hole_top_r0_007"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_038"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_008",
@@ -1807,13 +1888,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_036",
-        "hole_top_r0_008"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_036"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_009",
@@ -1828,13 +1905,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_005",
-        "hole_top_r0_009"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_005"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_010",
@@ -1849,13 +1922,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_036",
-        "hole_top_r0_010"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_036"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_011",
@@ -1870,13 +1939,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_023",
-        "hole_top_r0_011"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_023"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_012",
@@ -1891,13 +1956,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_020",
-        "hole_top_r0_012"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_020"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_013",
@@ -1912,13 +1973,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_032",
-        "hole_top_r0_013"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_032"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_014",
@@ -1933,13 +1990,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_019",
-        "hole_top_r0_014"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_019"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_015",
@@ -1954,13 +2007,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_019",
-        "hole_top_r0_015"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_019"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r0_016",
@@ -1975,13 +2024,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_009",
-        "hole_top_r0_016"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_009"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_000",
@@ -1996,13 +2041,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_033",
-        "hole_right_r0_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_033"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_001",
@@ -2017,13 +2058,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_007",
-        "hole_right_r0_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_007"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_002",
@@ -2038,13 +2075,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_018",
-        "hole_right_r0_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_018"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_003",
@@ -2059,13 +2092,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_021",
-        "hole_right_r0_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_021"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_004",
@@ -2080,13 +2109,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_018",
-        "hole_right_r0_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_018"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_005",
@@ -2101,13 +2126,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_012",
-        "hole_right_r0_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_012"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_006",
@@ -2122,13 +2143,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_022",
-        "hole_right_r0_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_022"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_007",
@@ -2143,13 +2160,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_009",
-        "hole_right_r0_007"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_009"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r0_008",
@@ -2164,13 +2177,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_032",
-        "hole_right_r0_008"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_032"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_000",
@@ -2185,13 +2194,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_035",
-        "hole_bottom_r1_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_035"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_001",
@@ -2206,13 +2211,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_034",
-        "hole_bottom_r1_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_034"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_002",
@@ -2227,13 +2228,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_031",
-        "hole_bottom_r1_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_031"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_003",
@@ -2248,13 +2245,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_007",
-        "hole_bottom_r1_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_007"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_004",
@@ -2269,13 +2262,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_025",
-        "hole_bottom_r1_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_025"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_005",
@@ -2290,13 +2279,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_017",
-        "hole_bottom_r1_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_017"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_006",
@@ -2311,13 +2296,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_030",
-        "hole_bottom_r1_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_030"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_007",
@@ -2332,13 +2313,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_002",
-        "hole_bottom_r1_007"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_002"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_008",
@@ -2353,13 +2330,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_029",
-        "hole_bottom_r1_008"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_029"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_009",
@@ -2374,13 +2347,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_006",
-        "hole_bottom_r1_009"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_006"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_010",
@@ -2395,13 +2364,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_039",
-        "hole_bottom_r1_010"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_039"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_011",
@@ -2416,13 +2381,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_016",
-        "hole_bottom_r1_011"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_016"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_012",
@@ -2437,13 +2398,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_039",
-        "hole_bottom_r1_012"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_039"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_013",
@@ -2458,13 +2415,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_003",
-        "hole_bottom_r1_013"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_003"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_bottom_r1_014",
@@ -2479,13 +2432,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_014",
-        "hole_bottom_r1_014"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_014"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_000",
@@ -2500,13 +2449,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_015",
-        "hole_top_r1_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_015"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_001",
@@ -2521,13 +2466,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_015",
-        "hole_top_r1_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_015"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_002",
@@ -2542,13 +2483,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_024",
-        "hole_top_r1_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_024"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_003",
@@ -2563,13 +2500,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_024",
-        "hole_top_r1_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_024"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_004",
@@ -2584,13 +2517,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_013",
-        "hole_top_r1_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_013"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_005",
@@ -2605,13 +2534,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_001",
-        "hole_top_r1_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_001"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_006",
@@ -2626,13 +2551,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_004",
-        "hole_top_r1_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_004"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_007",
@@ -2647,13 +2568,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_037",
-        "hole_top_r1_007"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_037"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_008",
@@ -2668,13 +2585,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_013",
-        "hole_top_r1_008"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_013"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_009",
@@ -2689,13 +2602,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_026",
-        "hole_top_r1_009"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_026"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_010",
@@ -2710,13 +2619,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_027",
-        "hole_top_r1_010"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_027"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_011",
@@ -2731,13 +2636,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_027",
-        "hole_top_r1_011"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_027"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_012",
@@ -2752,13 +2653,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_010",
-        "hole_top_r1_012"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_010"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_013",
@@ -2773,13 +2670,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_005",
-        "hole_top_r1_013"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_005"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_top_r1_014",
@@ -2794,13 +2687,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_023",
-        "hole_top_r1_014"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_023"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_000",
@@ -2815,13 +2704,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_029",
-        "hole_right_r1_000"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_029"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_001",
@@ -2836,13 +2721,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_021",
-        "hole_right_r1_001"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_021"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_002",
@@ -2857,13 +2738,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_012",
-        "hole_right_r1_002"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_012"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_003",
@@ -2878,13 +2755,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_008",
-        "hole_right_r1_003"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_008"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_004",
@@ -2899,13 +2772,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_008",
-        "hole_right_r1_004"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_008"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_005",
@@ -2920,13 +2789,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_020",
-        "hole_right_r1_005"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_020"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_hole_right_r1_006",
@@ -2941,13 +2806,9 @@
       "width": 1.6,
       "height": 1.6,
       "connectedTo": [
-        "connection_001",
-        "hole_right_r1_006"
-      ],
-      "netIsAssignable": true,
-      "offBoardConnectsTo": [
         "connection_001"
-      ]
+      ],
+      "netIsAssignable": true
     },
     {
       "obstacleId": "obstacle_test_short_top_left_hole_a",
@@ -2964,8 +2825,7 @@
       "connectedTo": [
         "test_short_top_left",
         "test_short_top_left_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_top_left_hole_b",
@@ -2982,8 +2842,7 @@
       "connectedTo": [
         "test_short_top_left",
         "test_short_top_left_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_top_right_hole_a",
@@ -3000,8 +2859,7 @@
       "connectedTo": [
         "test_short_top_right",
         "test_short_top_right_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_top_right_hole_b",
@@ -3018,8 +2876,7 @@
       "connectedTo": [
         "test_short_top_right",
         "test_short_top_right_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_bottom_right_hole_a",
@@ -3036,8 +2893,7 @@
       "connectedTo": [
         "test_short_bottom_right",
         "test_short_bottom_right_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_bottom_right_hole_b",
@@ -3054,8 +2910,7 @@
       "connectedTo": [
         "test_short_bottom_right",
         "test_short_bottom_right_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_bottom_left_hole_a",
@@ -3072,8 +2927,7 @@
       "connectedTo": [
         "test_short_bottom_left",
         "test_short_bottom_left_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_test_short_bottom_left_hole_b",
@@ -3090,8 +2944,7 @@
       "connectedTo": [
         "test_short_bottom_left",
         "test_short_bottom_left_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_00",
@@ -3107,8 +2960,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_bottom_left_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_01",
@@ -3124,8 +2976,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_bottom_left_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_02",
@@ -3141,8 +2992,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_top_right_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_03",
@@ -3158,8 +3008,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_top_right_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_04",
@@ -3175,8 +3024,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_bottom_right_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_05",
@@ -3192,8 +3040,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_bottom_right_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_06",
@@ -3209,8 +3056,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_top_left_contact_b"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_contact_hole_07",
@@ -3226,8 +3072,7 @@
       "height": 1.8,
       "connectedTo": [
         "test_short_top_left_contact_a"
-      ],
-      "netIsAssignable": false
+      ]
     },
     {
       "obstacleId": "obstacle_placement_pair_top_left_hole_a",
@@ -3241,8 +3086,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_top_left_hole_b",
@@ -3256,8 +3100,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_top_right_hole_a",
@@ -3271,8 +3114,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_top_right_hole_b",
@@ -3286,8 +3128,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_bottom_right_hole_a",
@@ -3301,8 +3142,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_bottom_right_hole_b",
@@ -3316,8 +3156,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_bottom_left_hole_a",
@@ -3331,8 +3170,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_placement_pair_bottom_left_hole_b",
@@ -3346,8 +3184,7 @@
       },
       "width": 1.6,
       "height": 1.6,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_existing_top_trace_test_short_top_left_top_trace_1",
@@ -3362,8 +3199,7 @@
       "width": 2.000000618897906,
       "height": 1,
       "ccwRotationDegrees": 45,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_existing_top_trace_test_short_top_right_top_trace_1",
@@ -3378,8 +3214,7 @@
       "width": 2.000000618897906,
       "height": 1,
       "ccwRotationDegrees": 135,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_existing_top_trace_test_short_bottom_right_top_trace_1",
@@ -3394,8 +3229,7 @@
       "width": 2.000000618897906,
       "height": 1,
       "ccwRotationDegrees": 45,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     },
     {
       "obstacleId": "obstacle_existing_top_trace_test_short_bottom_left_top_trace_1",
@@ -3410,53 +3244,14 @@
       "width": 2.000000618897906,
       "height": 1,
       "ccwRotationDegrees": 135,
-      "connectedTo": [],
-      "netIsAssignable": false
+      "connectedTo": []
     }
   ],
   "connections": [
     {
-      "name": "sample_connection_usb_dp_b",
-      "netConnectionName": "USB_DP_B",
-      "nominalTraceWidth": 0.30000000000000004,
-      "pointsToConnect": [
-        {
-          "x": -10.3,
-          "y": 5.4,
-          "layer": "top",
-          "pointId": "pcb_port_sample_R2_pad_1"
-        },
-        {
-          "x": -8.75,
-          "y": 3.75,
-          "layer": "top",
-          "pointId": "pcb_port_sample_U1_pad_47"
-        }
-      ]
-    },
-    {
-      "name": "sample_connection_usb_dm_b",
-      "netConnectionName": "USB_DM_B",
-      "nominalTraceWidth": 0.30000000000000004,
-      "pointsToConnect": [
-        {
-          "x": -7.4,
-          "y": 5.4,
-          "layer": "top",
-          "pointId": "pcb_port_sample_R1_pad_1"
-        },
-        {
-          "x": -8.25,
-          "y": 3.75,
-          "layer": "top",
-          "pointId": "pcb_port_sample_U1_pad_46"
-        }
-      ]
-    },
-    {
       "name": "sample_connection_usb_dm_a",
       "netConnectionName": "USB_DM_A",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
           "x": -41.6,
@@ -3473,9 +3268,28 @@
       ]
     },
     {
+      "name": "sample_connection_usb_dm_b",
+      "netConnectionName": "USB_DM_B",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -7.4,
+          "y": 5.4,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R1_pad_1"
+        },
+        {
+          "x": -8.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_46"
+        }
+      ]
+    },
+    {
       "name": "sample_connection_usb_dp_a",
       "netConnectionName": "USB_DP_A",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
           "x": -41.6,
@@ -3492,9 +3306,28 @@
       ]
     },
     {
+      "name": "sample_connection_usb_dp_b",
+      "netConnectionName": "USB_DP_B",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -10.3,
+          "y": 5.4,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R2_pad_1"
+        },
+        {
+          "x": -8.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_47"
+        }
+      ]
+    },
+    {
       "name": "sample_connection_usb_cc1",
       "netConnectionName": "USB_CC1",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
           "x": -41.6,
@@ -3503,8 +3336,8 @@
           "pointId": "pcb_port_sample_J1_pad_2"
         },
         {
-          "x": -38.8,
-          "y": 2.1,
+          "x": -36,
+          "y": 5.2,
           "layer": "top",
           "pointId": "pcb_port_sample_R3_pad_1"
         }
@@ -3513,7 +3346,7 @@
     {
       "name": "sample_connection_usb_cc2",
       "netConnectionName": "USB_CC2",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
           "x": -41.6,
@@ -3522,18 +3355,67 @@
           "pointId": "pcb_port_sample_J1_pad_5"
         },
         {
-          "x": -37.2,
-          "y": -2.1,
+          "x": -36,
+          "y": -5.2,
           "layer": "top",
           "pointId": "pcb_port_sample_R4_pad_2"
         }
       ]
     },
     {
+      "name": "sample_connection_vbus",
+      "netConnectionName": "VBUS",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": 3.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_1"
+        },
+        {
+          "x": -28,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_1"
+        },
+        {
+          "x": -26,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_3"
+        },
+        {
+          "x": -35.8,
+          "y": -10,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C1_pad_1"
+        }
+      ]
+    },
+    {
       "name": "sample_connection_3v3",
       "netConnectionName": "3V3",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
+        {
+          "x": -28,
+          "y": -7.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_5"
+        },
+        {
+          "x": -23.3,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_1"
+        },
+        {
+          "x": -7.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_44"
+        },
         {
           "x": -9.25,
           "y": 3.75,
@@ -3541,17 +3423,54 @@
           "pointId": "pcb_port_sample_U1_pad_48"
         },
         {
-          "x": -9.2,
-          "y": 4.7,
+          "x": -9.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_49"
+        },
+        {
+          "x": -4,
+          "y": 5.7,
           "layer": "top",
           "pointId": "pcb_port_sample_C3_pad_1"
+        },
+        {
+          "x": -4,
+          "y": -3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_1"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_1v1",
+      "netConnectionName": "1V1",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -7.75,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_45"
+        },
+        {
+          "x": -10.25,
+          "y": 3.75,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U1_pad_50"
+        },
+        {
+          "x": -3.8,
+          "y": 1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_1"
         }
       ]
     },
     {
       "name": "sample_connection_gnd_00",
       "netConnectionName": "GND",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
           "x": -41.6,
@@ -3560,46 +3479,141 @@
           "pointId": "pcb_port_sample_J1_pad_6"
         },
         {
-          "x": -37.2,
-          "y": 2.1,
+          "x": -36,
+          "y": -6.8,
           "layer": "top",
-          "pointId": "pcb_port_sample_R3_pad_2"
+          "pointId": "pcb_port_sample_R4_pad_1"
         }
       ]
     },
     {
       "name": "sample_connection_gnd_01",
       "netConnectionName": "GND",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
-          "x": -37.2,
-          "y": 2.1,
-          "layer": "top",
-          "pointId": "pcb_port_sample_R3_pad_2"
-        },
-        {
-          "x": -38.8,
-          "y": -2.1,
+          "x": -36,
+          "y": -6.8,
           "layer": "top",
           "pointId": "pcb_port_sample_R4_pad_1"
+        },
+        {
+          "x": -34.2,
+          "y": -10,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C1_pad_2"
         }
       ]
     },
     {
       "name": "sample_connection_gnd_02",
       "netConnectionName": "GND",
-      "nominalTraceWidth": 0.30000000000000004,
+      "nominalTraceWidth": 0.35,
       "pointsToConnect": [
         {
-          "x": -38.8,
-          "y": -2.1,
+          "x": -34.2,
+          "y": -10,
           "layer": "top",
-          "pointId": "pcb_port_sample_R4_pad_1"
+          "pointId": "pcb_port_sample_C1_pad_2"
         },
         {
-          "x": -9.2,
-          "y": 6.3,
+          "x": -27,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_03",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -27,
+          "y": -10.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_U2_pad_2"
+        },
+        {
+          "x": -21.7,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_04",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -41.6,
+          "y": -3.2,
+          "layer": "top",
+          "pointId": "pcb_port_sample_J1_pad_6"
+        },
+        {
+          "x": -36,
+          "y": 6.8,
+          "layer": "top",
+          "pointId": "pcb_port_sample_R3_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_05",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -21.7,
+          "y": -9,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C2_pad_2"
+        },
+        {
+          "x": -4,
+          "y": -1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_06",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -4,
+          "y": -1.7,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C5_pad_2"
+        },
+        {
+          "x": -3.8,
+          "y": 3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_2"
+        }
+      ]
+    },
+    {
+      "name": "sample_connection_gnd_07",
+      "netConnectionName": "GND",
+      "nominalTraceWidth": 0.35,
+      "pointsToConnect": [
+        {
+          "x": -3.8,
+          "y": 3.3,
+          "layer": "top",
+          "pointId": "pcb_port_sample_C4_pad_2"
+        },
+        {
+          "x": -4,
+          "y": 7.3,
           "layer": "top",
           "pointId": "pcb_port_sample_C3_pad_2"
         }

@@ -114,6 +114,8 @@ export interface SimplifiedPcbTrace {
         y: number
         width: number
         layer: string
+        start_pcb_port_id?: PointId
+        end_pcb_port_id?: PointId
       }
     | {
         route_type: "via"

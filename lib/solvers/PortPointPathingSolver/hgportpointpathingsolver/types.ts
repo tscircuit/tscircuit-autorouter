@@ -23,6 +23,8 @@ export type RawPort = {
   cramped?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
+  /** Physical prefab endpoint adjacent to this port before endpoints are collapsed. */
+  offBoardEndpointCapacityMeshNodeId?: CapacityMeshNodeId
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {
@@ -91,6 +93,8 @@ export interface HgPortPointPathingSolverParams {
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
     MAX_OFF_BOARD_CONNECTIONS_PER_PATH?: number
+    /** Connections that must traverse one prefab/off-board region. */
+    FORCE_OFF_BOARD_CONNECTION_NAMES?: string[]
     /** Use an admissible region-hop heuristic instead of geometric distance. */
     USE_TOPOLOGY_ONLY_HEURISTIC?: boolean
     /** Never commit a physical intersection; conflicting routes must be ripped. */

@@ -1,31 +1,37 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
 import {
-  doPointPairsCrossInRegion,
-  doRegionPortPairsCross,
-} from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/doRegionPortPairsCross"
+  checkEachPcbTraceNonOverlapping,
+  checkPadPadClearance,
+  checkPadTraceClearance,
+} from "@tscircuit/checks"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { AssignableAutoroutingPipeline2 } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2"
+import { doRegionPortPairsCross } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/doRegionPortPairsCross"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import srjJson from "../../fixtures/prefab-clad/prefab-clad01.srj.json"
 
-test("prefab-clad01 hypergraph is planar and uses assignable plated-hole pairs", () => {
+const forcedPrefabConnectionNames = [
+  "sample_connection_usb_dm_a",
+  "sample_connection_gnd_00__sample_connection_gnd_01__sample_connection_gnd_02_mst1",
+]
+
+test("prefab-clad01 routes the clad1 single-layer validation workload", () => {
   const srj = srjJson as SimpleRouteJson
   const assignableObstacles = srj.obstacles.filter(
     (obstacle) => obstacle.netIsAssignable === true,
   )
   const obstaclesByPrefabConnection = new Map<string, Obstacle[]>()
 
+  expect(srj.connections).toHaveLength(10)
   expect(assignableObstacles).toHaveLength(80)
   for (const obstacle of assignableObstacles) {
-    const prefabConnectionIds = obstacle.connectedTo.filter((connectionId) =>
-      connectionId.startsWith("connection_"),
-    )
     expect(obstacle.obstacleId?.startsWith("obstacle_hole_")).toBe(true)
     expect(obstacle.layers).toEqual(["top"])
-    expect(prefabConnectionIds).toHaveLength(1)
-    expect(obstacle.offBoardConnectsTo).toBeUndefined()
+    expect(obstacle.offBoardConnectsTo).toHaveLength(1)
+    const prefabConnectionId = obstacle.offBoardConnectsTo![0]!
+    expect(obstacle.connectedTo).toContain(prefabConnectionId)
 
-    const prefabConnectionId = prefabConnectionIds[0]
     const pairedObstacles =
       obstaclesByPrefabConnection.get(prefabConnectionId) ?? []
     pairedObstacles.push(obstacle)
@@ -35,73 +41,60 @@ test("prefab-clad01 hypergraph is planar and uses assignable plated-hole pairs",
   expect(obstaclesByPrefabConnection.size).toBe(40)
   for (const pairedObstacles of obstaclesByPrefabConnection.values()) {
     expect(pairedObstacles).toHaveLength(2)
-    expect(pairedObstacles[0].obstacleId).not.toBe(
-      pairedObstacles[1].obstacleId,
+    expect(pairedObstacles[0]!.obstacleId).not.toBe(
+      pairedObstacles[1]!.obstacleId,
     )
   }
 
-  const preassignedCladEndpoints = srj.connections.flatMap((connection) =>
-    connection.pointsToConnect.filter((point) =>
-      point.pointId?.startsWith("pcb_port_hole_"),
-    ),
-  )
-  expect(preassignedCladEndpoints).toHaveLength(0)
-
-  const capacityPipeline = new AssignableAutoroutingPipeline2(srj, {
+  const pipeline = new AssignableAutoroutingPipeline2(srj, {
     cacheProvider: null,
+    effort: 1,
+    forceOffBoardConnectionNames: forcedPrefabConnectionNames,
   })
-  capacityPipeline.solveUntilPhase("portPointPathingSolver")
+  pipeline.solveUntilPhase("portPointPathingSolver")
 
-  expect(capacityPipeline.failed).toBe(false)
-  expect(
-    capacityPipeline.relateNodesToOffBoardConnections?.nodesInNet.size,
-  ).toBe(40)
+  expect(pipeline.failed).toBe(false)
+  expect(pipeline.relateNodesToOffBoardConnections?.nodesInNet.size).toBe(40)
+  expect(pipeline.srjWithPointPairs?.connections).toHaveLength(10)
 
-  const getPointPairIds = (rootConnectionName: string) =>
-    capacityPipeline
-      .srjWithPointPairs!.connections.filter((connection) =>
-        connection.__rootConnectionNames?.includes(rootConnectionName),
-      )
-      .map((connection) =>
-        connection.pointsToConnect.map((point) => point.pointId),
-      )
-  expect(getPointPairIds("sample_connection_1v1")).toEqual([
-    ["pcb_port_sample_U1_pad_50", "pcb_port_sample_C4_pad_1"],
-    ["pcb_port_sample_U1_pad_45", "pcb_port_sample_C4_pad_1"],
-  ])
-  expect(getPointPairIds("sample_connection_3v3")).toContainEqual([
-    "pcb_port_sample_U1_pad_48",
-    "pcb_port_sample_C3_pad_1",
-  ])
-
-  capacityPipeline.solveUntilPhase("multiSectionPortPointOptimizer")
-  const pathingAdapter = capacityPipeline.portPointPathingSolver!
+  pipeline.solveUntilPhase("multiSectionPortPointOptimizer")
+  const pathingAdapter = pipeline.portPointPathingSolver!
   const solver = pathingAdapter.hypergraphSolver!
   const graph = solver.graph
-  const connections = solver.connections
 
   expect(pathingAdapter.usesHypergraph).toBe(true)
-  expect(capacityPipeline.failed).toBe(false)
+  expect(pipeline.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.solvedRoutes).toHaveLength(connections.length)
-
-  const offBoardRegions = graph.regions.filter(
-    (region) => region.d._offBoardConnectionId,
-  )
-  expect(offBoardRegions).toHaveLength(40)
-
-  const routesUsingPrefabConnections = solver.solvedRoutes.filter((route) =>
-    route.path.some((candidate) =>
-      Boolean(candidate.lastRegion?.d._offBoardConnectionId),
-    ),
-  )
-  expect(routesUsingPrefabConnections.length).toBeGreaterThan(0)
+  expect(solver.solvedRoutes).toHaveLength(10)
   expect(
-    routesUsingPrefabConnections.some(
-      (route) => route.connection.connectionId === "sample_connection_usb_dm_a",
-    ),
-  ).toBe(true)
+    graph.regions.filter((region) => region.d._offBoardConnectionId),
+  ).toHaveLength(40)
+
+  const prefabTransitions = solver.solvedRoutes.flatMap((route) =>
+    route.path.flatMap((candidate) => {
+      const prefabConnectionId = candidate.lastRegion?.d._offBoardConnectionId
+      if (!prefabConnectionId || !candidate.lastPort) return []
+      return [
+        {
+          connectionName: route.connection.connectionId,
+          prefabConnectionId,
+          entranceNodeId:
+            candidate.lastPort.d.offBoardEndpointCapacityMeshNodeId,
+          exitNodeId: candidate.port.d.offBoardEndpointCapacityMeshNodeId,
+        },
+      ]
+    }),
+  )
+  expect(prefabTransitions).toHaveLength(2)
+  expect(
+    prefabTransitions.map((transition) => transition.connectionName).sort(),
+  ).toEqual([...forcedPrefabConnectionNames].sort())
+  for (const transition of prefabTransitions) {
+    expect(transition.entranceNodeId).toBeDefined()
+    expect(transition.exitNodeId).toBeDefined()
+    expect(transition.entranceNodeId).not.toBe(transition.exitNodeId)
+  }
 
   const downstreamNodes = pathingAdapter.getNodesWithPortPoints()
   expect(
@@ -109,27 +102,17 @@ test("prefab-clad01 hypergraph is planar and uses assignable plated-hole pairs",
       node.capacityMeshNodeId.startsWith("offboard:"),
     ),
   ).toBe(false)
-  const physicalPortalNodeIds = new Set(
-    capacityPipeline
-      .capacityNodes!.filter((node) => node._offBoardConnectionId)
-      .map((node) => node.capacityMeshNodeId),
-  )
-  const usedPhysicalPortalNodes = downstreamNodes.filter((node) =>
-    physicalPortalNodeIds.has(node.capacityMeshNodeId),
-  )
-  const usedPrefabPortalIds = new Set(
-    routesUsingPrefabConnections.flatMap((route) =>
-      route.path.flatMap((candidate) =>
-        candidate.lastRegion?.d._offBoardConnectionId
-          ? [candidate.lastRegion.d._offBoardConnectionId]
-          : [],
+  for (const transition of prefabTransitions) {
+    const physicalEndpointIds = new Set([
+      transition.entranceNodeId,
+      transition.exitNodeId,
+    ])
+    expect(
+      downstreamNodes.filter((node) =>
+        physicalEndpointIds.has(node.capacityMeshNodeId),
       ),
-    ),
-  )
-  expect(usedPhysicalPortalNodes).toHaveLength(usedPrefabPortalIds.size * 2)
-  expect(
-    usedPhysicalPortalNodes.every((node) => node.portPoints.length >= 2),
-  ).toBe(true)
+    ).toHaveLength(2)
+  }
 
   const differentNetCrossings = graph.regions.flatMap((region) => {
     if (region.d._offBoardConnectionId) return []
@@ -158,59 +141,90 @@ test("prefab-clad01 hypergraph is planar and uses assignable plated-hole pairs",
   })
   expect(differentNetCrossings).toEqual([])
 
-  const outputDifferentNetCrossings = solver
-    .getOutput()
-    .nodesWithPortPoints.filter(
-      (node) => !node.capacityMeshNodeId.startsWith("offboard:"),
+  pipeline.solve()
+  expect(pipeline.solved).toBe(true)
+  expect(pipeline.failed).toBe(false)
+
+  const outputTraces = pipeline.getOutputSimplifiedPcbTraces()
+  expect(outputTraces).toHaveLength(
+    pipeline.srjWithPointPairs!.connections.length + prefabTransitions.length,
+  )
+  expect(outputTraces).toHaveLength(
+    pipeline.highDensityStitchSolver!.mergedHdRoutes.length,
+  )
+  expect(outputTraces.every((trace) => trace.connectsTo?.length === 2)).toBe(
+    true,
+  )
+
+  const outputConnectivityIds = new Set(
+    outputTraces.flatMap((trace) => trace.connectsTo ?? []),
+  )
+  const expectedTerminalIds = new Set(
+    pipeline.srjWithPointPairs!.connections.flatMap((connection) =>
+      connection.pointsToConnect.flatMap((point) => {
+        const id = point.pcb_port_id ?? point.pointId
+        return id ? [id] : []
+      }),
+    ),
+  )
+  expect(
+    [...expectedTerminalIds].filter((id) => !outputConnectivityIds.has(id)),
+  ).toEqual([])
+
+  const usedPortalObstacleIds = new Set(
+    [...outputConnectivityIds].filter((id) => id.startsWith("obstacle_hole_")),
+  )
+  expect(usedPortalObstacleIds).toHaveLength(prefabTransitions.length * 2)
+  expect([...usedPortalObstacleIds].sort()).toEqual(
+    [
+      "obstacle_hole_top_r0_000",
+      "obstacle_hole_top_r1_000",
+      "obstacle_hole_top_r1_001",
+      "obstacle_hole_top_r1_006",
+    ].sort(),
+  )
+  for (const pairedObstacles of obstaclesByPrefabConnection.values()) {
+    const usedObstacles = pairedObstacles.filter((obstacle) =>
+      usedPortalObstacleIds.has(obstacle.obstacleId!),
     )
-    .flatMap((node) => {
-      const pairs = Array.from(
-        Map.groupBy(
-          node.portPoints,
-          (point) =>
-            `${point.connectionName}::${point.rootConnectionName ?? point.connectionName}`,
-        ),
-      ).flatMap(([key, points]) =>
-        points.length >= 2
-          ? [
-              {
-                key,
-                rootConnectionName: points[0]!.rootConnectionName,
-                point1: points[0]!,
-                point2: points[1]!,
-              },
-            ]
-          : [],
-      )
-      return pairs.flatMap((pair, pairIndex) =>
-        pairs.slice(pairIndex + 1).flatMap((otherPair) => {
-          if (pair.rootConnectionName === otherPair.rootConnectionName) {
-            return []
-          }
-          return doPointPairsCrossInRegion(
-            node,
-            pair.point1,
-            pair.point2,
-            otherPair.point1,
-            otherPair.point2,
-          )
-            ? [`${node.capacityMeshNodeId}:${pair.key}:${otherPair.key}`]
-            : []
-        }),
-      )
-    })
-  expect(outputDifferentNetCrossings).toEqual([])
+    expect([0, 2]).toContain(usedObstacles.length)
+  }
 
+  const circuitJson = convertToCircuitJson(
+    pipeline.srjWithPointPairs!,
+    outputTraces,
+    {
+      minTraceWidth: srj.minTraceWidth,
+      originalSrj: srj,
+    },
+  )
   expect(
-    getSvgFromGraphicsObject(solver.visualize(), {
-      backgroundColor: "white",
+    circuitJson.filter(
+      (element) =>
+        element.type === "pcb_plated_hole" &&
+        element.pcb_plated_hole_id.startsWith("pcb_plated_hole_obstacle_hole_"),
+    ),
+  ).toHaveLength(80)
+
+  // The SRJ width is the clearance-inflated routing envelope (0.20 mm copper
+  // plus 0.10 mm clearance), so a second clearance here would double-count it.
+  const physicalDrcErrors = [
+    ...checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0 }),
+    ...checkPadTraceClearance(circuitJson, { minClearance: 0 }),
+    ...checkPadPadClearance(circuitJson, { minClearance: 0 }),
+  ]
+  expect(physicalDrcErrors).toEqual([])
+
+  // Snapshot the actual stitched PCB output, not the abstract hypergraph.
+  expect(
+    convertCircuitJsonToPcbSvg(circuitJson, {
+      width: 1400,
+      height: 980,
+      matchBoardAspectRatio: true,
+      backgroundColor: "#101216",
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
-
-  capacityPipeline.solve()
-  expect(capacityPipeline.solved).toBe(true)
-  expect(capacityPipeline.failed).toBe(false)
-  expect(
-    capacityPipeline.getOutputSimplifiedPcbTraces().length,
-  ).toBeGreaterThan(0)
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "routed-output",
+    tolerance: 0.02,
+  })
 }, 20_000)

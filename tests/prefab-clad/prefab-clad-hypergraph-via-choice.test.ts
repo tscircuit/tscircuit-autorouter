@@ -49,6 +49,11 @@ const connectRegions = (
       z: 0,
       distToCentermostPortOnZ: 0,
       regions: [region1, region2],
+      offBoardEndpointCapacityMeshNodeId: region1.d._offBoardConnectionId
+        ? `${region2.regionId}-physical-endpoint`
+        : region2.d._offBoardConnectionId
+          ? `${region1.regionId}-physical-endpoint`
+          : undefined,
     },
   }
   graph.ports.push(port)

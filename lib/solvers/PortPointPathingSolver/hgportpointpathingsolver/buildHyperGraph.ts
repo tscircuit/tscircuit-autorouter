@@ -154,6 +154,9 @@ export function buildHyperGraph(params: {
     regions: [],
   }
   const connections: ConnectionHg[] = []
+  const capacityMeshNodeById = new Map(
+    params.capacityMeshNodes.map((node) => [node.capacityMeshNodeId, node]),
+  )
   const regionByCapacityMeshNodeId = new Map<string, RegionHg>()
   const offBoardRegionByConnectionId = new Map<string, RegionHg>()
   const hasOffBoardCapacityNodes = params.capacityMeshNodes.some((node) =>
@@ -225,6 +228,14 @@ export function buildHyperGraph(params: {
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
+    const capacityMeshNode1 = capacityMeshNodeById.get(region1Id)
+    const capacityMeshNode2 = capacityMeshNodeById.get(region2Id)
+    const offBoardEndpointCapacityMeshNodeId =
+      capacityMeshNode1?._offBoardConnectionId
+        ? capacityMeshNode1.capacityMeshNodeId
+        : capacityMeshNode2?._offBoardConnectionId
+          ? capacityMeshNode2.capacityMeshNodeId
+          : undefined
     const region1 = hasOffBoardCapacityNodes
       ? regionByCapacityMeshNodeId.get(region1Id)
       : graph.regions.find((region) => region.regionId === region1Id)
@@ -253,6 +264,7 @@ export function buildHyperGraph(params: {
         cramped: spp.cramped,
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
+        offBoardEndpointCapacityMeshNodeId,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

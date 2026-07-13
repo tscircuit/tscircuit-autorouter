@@ -43,6 +43,7 @@ import type {
   CapacityMeshNode,
   ObstacleId,
   RootConnectionName,
+  SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
@@ -740,6 +741,39 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
     const traces: SimplifiedPcbTraces = []
     const allHdRoutes = this._getOutputHdRoutes()
+    const viaDimensions = getViaDimensions(this.srj)
+
+    const getEndpointConnectivityId = (
+      point: { x: number; y: number },
+      connection: SimpleRouteConnection,
+    ): string | undefined => {
+      const connectionPoint = connection.pointsToConnect.find(
+        (candidate) =>
+          Math.hypot(candidate.x - point.x, candidate.y - point.y) <= 1e-3,
+      )
+      if (connectionPoint) {
+        return connectionPoint.pcb_port_id ?? connectionPoint.pointId
+      }
+
+      // Off-board/prefab paths are emitted as separate physical trace
+      // fragments. Their inner endpoints terminate on the assignable obstacle
+      // that represents the plated hole, so retain that obstacle identity in
+      // the output instead of leaving a floating fragment endpoint.
+      return this.srj.obstacles
+        .filter(
+          (obstacle) =>
+            obstacle.netIsAssignable &&
+            obstacle.obstacleId &&
+            Math.abs(point.x - obstacle.center.x) <=
+              obstacle.width / 2 + 1e-3 &&
+            Math.abs(point.y - obstacle.center.y) <= obstacle.height / 2 + 1e-3,
+        )
+        .sort(
+          (a, b) =>
+            Math.hypot(point.x - a.center.x, point.y - a.center.y) -
+            Math.hypot(point.x - b.center.x, point.y - b.center.y),
+        )[0]?.obstacleId
+    }
 
     for (const connection of this.netToPointPairsSolver?.newConnections ?? []) {
       const netConnectionName =
@@ -754,6 +788,38 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+        const route = convertHdRouteToSimplifiedRoute(
+          hdRoute,
+          this.srj.layerCount,
+          {
+            connectionPoints: connection.pointsToConnect,
+            defaultViaHoleDiameter: viaDimensions.holeDiameter,
+            obstacles: this.srj.obstacles,
+            connMap: this.connMap,
+          },
+        )
+        const wireSegments = route.filter(
+          (segment) => segment.route_type === "wire",
+        )
+        const startConnectivityId = getEndpointConnectivityId(
+          hdRoute.route[0]!,
+          connection,
+        )
+        const endConnectivityId = getEndpointConnectivityId(
+          hdRoute.route[hdRoute.route.length - 1]!,
+          connection,
+        )
+
+        if (wireSegments.length > 0) {
+          if (startConnectivityId) {
+            wireSegments[0]!.start_pcb_port_id = startConnectivityId
+          }
+          if (endConnectivityId) {
+            wireSegments[wireSegments.length - 1]!.end_pcb_port_id =
+              endConnectivityId
+          }
+        }
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -761,7 +827,10 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          connectsTo: [startConnectivityId, endConnectivityId].filter(
+            (id): id is string => Boolean(id),
+          ),
+          route,
         }
 
         traces.push(simplifiedPcbTrace)

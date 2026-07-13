@@ -69,6 +69,8 @@ export class AssignablePortPointPathingSolver extends BaseSolver {
         FORCE_CENTER_FIRST: false,
         RIPPING_ENABLED: true,
         MAX_OFF_BOARD_CONNECTIONS_PER_PATH: 1,
+        FORCE_OFF_BOARD_CONNECTION_NAMES:
+          params.hyperParameters?.FORCE_OFF_BOARD_CONNECTION_NAMES ?? [],
         USE_TOPOLOGY_ONLY_HEURISTIC: true,
         ALWAYS_RIP_INTERSECTIONS: true,
         // Same-net branches are legal junctions, not shorts.
@@ -89,14 +91,14 @@ export class AssignablePortPointPathingSolver extends BaseSolver {
         CROSSING_PENALTY: 4,
         CONFLICT_HISTORY_COST: 10,
         RIP_HISTORY_COST: 0.034,
-        MAX_ITERATIONS_PER_PATH: 20_000,
+        MAX_ITERATIONS_PER_PATH: 30_000,
         RANDOM_WALK_DISTANCE: 0,
         START_RIPPING_PF_THRESHOLD: 0.3,
         END_RIPPING_PF_THRESHOLD: 1,
         MAX_RIPS: 1_000,
         RANDOM_RIP_FRACTION: 0.3,
         STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
-        GREEDY_MULTIPLIER: 0.55,
+        GREEDY_MULTIPLIER: 1,
         MIN_ALLOWED_BOARD_SCORE: 0,
       },
     })
@@ -192,7 +194,11 @@ export class AssignablePortPointPathingSolver extends BaseSolver {
     port: RegionPortHg,
     route: SolvedRoutesHg,
   ): void {
-    const physicalNode = this.findClosestPhysicalPortalNode(portalId, port.d)
+    const physicalNode = this.findClosestPhysicalPortalNode(
+      portalId,
+      port.d,
+      port.d.offBoardEndpointCapacityMeshNodeId,
+    )
     if (!physicalNode) return
 
     const node =
@@ -247,10 +253,19 @@ export class AssignablePortPointPathingSolver extends BaseSolver {
   private findClosestPhysicalPortalNode(
     portalId: string,
     point: { x: number; y: number },
+    capacityMeshNodeId?: CapacityMeshNodeId,
   ): CapacityMeshNode | undefined {
-    return this.params.capacityMeshNodes
-      .filter((node) => node._offBoardConnectionId === portalId)
-      .sort((a, b) => distance(a.center, point) - distance(b.center, point))[0]
+    const physicalNodes = this.params.capacityMeshNodes.filter(
+      (node) => node._offBoardConnectionId === portalId,
+    )
+    const matchingNode = physicalNodes.find(
+      (node) => node.capacityMeshNodeId === capacityMeshNodeId,
+    )
+    if (matchingNode) return matchingNode
+
+    return physicalNodes.sort(
+      (a, b) => distance(a.center, point) - distance(b.center, point),
+    )[0]
   }
 
   private convertSolvedRoute(route: SolvedRoutesHg): ConnectionPathResult {
@@ -259,7 +274,11 @@ export class AssignablePortPointPathingSolver extends BaseSolver {
     const path = route.path.map((candidate) => {
       const portalId = candidate.lastRegion?.d._offBoardConnectionId
       const physicalPortalNode = portalId
-        ? this.findClosestPhysicalPortalNode(portalId, candidate.port.d)
+        ? this.findClosestPhysicalPortalNode(
+            portalId,
+            candidate.port.d,
+            candidate.port.d.offBoardEndpointCapacityMeshNodeId,
+          )
         : undefined
       const converted: PortPointCandidate = {
         prevCandidate: previousCandidate,

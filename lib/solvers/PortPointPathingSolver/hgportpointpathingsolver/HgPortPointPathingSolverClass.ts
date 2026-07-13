@@ -218,7 +218,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   private getCandidateVisitedKey(candidate: CandidateHg): string {
     const offBoardConnectionCount =
       this.getCandidateOffBoardConnectionIds(candidate).size
-    return `${candidate.port.portId}:offboard-count=${offBoardConnectionCount}`
+    return `${candidate.port.d.portId}:next=${candidate.nextRegion?.regionId ?? "none"}:offboard-count=${offBoardConnectionCount}`
   }
 
   private getCandidateOffBoardConnectionIds(
@@ -239,7 +239,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   /**
    * The base hypergraph solver closes a port after its first visit. A prefab
    * connection changes the routing state, so the same physical port must be
-   * explored separately for each amount of prefab-connection budget used.
+   * explored separately for each direction and amount of prefab-connection
+   * budget used. A port approached from its opposite region has different
+   * legal next moves and is therefore not the same search state.
    * The identity of a previously used portal does not affect future moves once
    * two paths reach the same port, so retaining it would duplicate equivalent
    * states for every assignable plated-hole pair.
@@ -327,6 +329,22 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     )
   }
 
+  override isTransitionAllowed(
+    region: RegionHg,
+    port1: RegionPortHg,
+    port2: RegionPortHg,
+  ): boolean {
+    if (!region.d._offBoardConnectionId) return true
+
+    const endpoint1 = port1.d.offBoardEndpointCapacityMeshNodeId
+    const endpoint2 = port2.d.offBoardEndpointCapacityMeshNodeId
+
+    // A collapsed prefab region represents the copper connection between its
+    // physical plated holes. Entering and leaving through the same hole is a
+    // zero-length loop, not use of that prefab connection.
+    return Boolean(endpoint1 && endpoint2 && endpoint1 !== endpoint2)
+  }
+
   override ripSolvedRoute(solvedRoute: SolvedRoutesHg): void {
     const connectionId = solvedRoute.connection.connectionId
     for (const candidate of solvedRoute.path) {
@@ -335,8 +353,39 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         key,
         (this.ripHistoryByConnectionPortKey.get(key) ?? 0) + 1,
       )
+
+      const port = candidate.port
+      port.ripCount = (port.ripCount ?? 0) + 1
+      for (const region of [port.region1, port.region2]) {
+        region.assignments = region.assignments?.filter(
+          (assignment) => assignment.solvedRoute !== solvedRoute,
+        )
+      }
+
+      if (port.assignment?.solvedRoute === solvedRoute) {
+        const remainingAssignment = [
+          ...(port.region1.assignments ?? []),
+          ...(port.region2.assignments ?? []),
+        ].find(
+          (assignment) =>
+            assignment.regionPort1 === port || assignment.regionPort2 === port,
+        )
+        port.assignment = remainingAssignment
+          ? {
+              solvedRoute: remainingAssignment.solvedRoute,
+              connection: remainingAssignment.connection,
+            }
+          : undefined
+      }
     }
-    super.ripSolvedRoute(solvedRoute)
+
+    // HyperGraphSolver's default rip removes every assignment that uses a
+    // shared port. Same-net prefab branches are allowed to share ports, so
+    // ripping one branch must remove only that branch's assignments.
+    this.solvedRoutes = this.solvedRoutes.filter(
+      (route) => route !== solvedRoute,
+    )
+    this.unprocessedConnections.push(solvedRoute.connection)
   }
 
   private getConnectionPairKey(
@@ -432,6 +481,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
 
     const filterCandidates = candidates.filter((candidate) => {
       const nextRegion = candidate.nextRegion
+      const mustUseOffBoardConnection =
+        this.params.flags.FORCE_OFF_BOARD_CONNECTION_NAMES?.includes(
+          this.currentConnection?.connectionId ?? "",
+        ) ?? false
+      if (
+        mustUseOffBoardConnection &&
+        nextRegion === endRegion &&
+        this.getCandidateOffBoardConnectionIds(candidate).size === 0
+      ) {
+        return false
+      }
       if (
         nextRegion &&
         this.candidateAlreadyVisitedRegion(candidate, nextRegion)
