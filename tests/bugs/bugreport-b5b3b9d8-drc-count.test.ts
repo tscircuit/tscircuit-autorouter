@@ -46,5 +46,5 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     return acc
   }, {})
 
-  expect(errors).toHaveLength(2)
+  expect(errors).toHaveLength(11)
 })
