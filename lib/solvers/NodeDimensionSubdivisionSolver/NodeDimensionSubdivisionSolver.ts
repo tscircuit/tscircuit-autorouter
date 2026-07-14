@@ -1,8 +1,11 @@
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
+// Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
+const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
@@ -69,7 +72,32 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       return true
     }
 
-    return hasMinAreaLimit && node.width * node.height < this.minNodeArea
+    if (!hasMinAreaLimit || node.width * node.height >= this.minNodeArea) {
+      return false
+    }
+
+    if (Math.min(node.width, node.height) < MIN_CONNECTIVITY_BRIDGE_DIMENSION) {
+      return true
+    }
+
+    if (node._containsTarget) return false
+
+    // Rect decomposition can produce low-area slices that still connect larger
+    // regions. Removing such a slice changes reachability, so retain bridges.
+    let borderingNodeCount = 0
+    for (const candidate of this.nodes) {
+      if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue
+      if (!node.availableZ.some((z) => candidate.availableZ.includes(z))) {
+        continue
+      }
+      if (!areNodesBordering(node, candidate)) continue
+
+      if (candidate._containsTarget) return false
+      borderingNodeCount++
+      if (borderingNodeCount >= 2) return false
+    }
+
+    return true
   }
 
   private subdivideNode(node: CapacityMeshNode): CapacityMeshNode[] {
