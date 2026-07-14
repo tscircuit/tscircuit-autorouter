@@ -134,7 +134,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `## 🏃 Benchmark command rejected\n\n❌ ${message}`,
+                body: `## Benchmark command rejected\n\n${message}`,
               })
               throw error
             }
@@ -155,7 +155,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: context.issue.number,
-                  body: `## 🏃 ${dataset.label}\n\n⏳ Queued on \`${ref.slice(0, 7)}\`.\n\n🔗 Workflow: [View benchmark workflows](${workflowsUrl})`,
+                  body: `## ${dataset.label}\n\nQueued on \`${ref.slice(0, 7)}\`.\n\nWorkflow: [View benchmark workflows](${workflowsUrl})`,
                 })
                 statusCommentId = statusComment.data.id
                 await github.rest.actions.createWorkflowDispatch({
@@ -179,7 +179,7 @@ jobs:
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       comment_id: statusCommentId,
-                      body: `## 🏃 ${dataset.label}\n\n❌ The benchmark workflow could not be dispatched.\n\n🔗 Workflow: [View benchmark workflows](${workflowsUrl})`,
+                      body: `## ${dataset.label}\n\nThe benchmark workflow could not be dispatched.\n\nWorkflow: [View benchmark workflows](${workflowsUrl})`,
                     })
                   } catch {
                     core.warning(`Could not update the failed ${dataset.label} dispatch comment`)

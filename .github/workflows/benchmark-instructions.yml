@@ -20,7 +20,7 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const body = [
-              "## 🏃 Benchmark This PR",
+              "## Benchmark This PR",
               "",
               "Run benchmarks by commenting on this PR:",
               "",

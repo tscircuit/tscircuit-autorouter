@@ -415,13 +415,13 @@ jobs:
               return value.toFixed(2)
             }
             const getStatus = (test) => {
-              if (test.didTimeout) return '❌'
-              if (test.didSolve) return '✅'
-              return '❌'
+              if (test.didTimeout) return 'Timeout'
+              if (test.didSolve) return 'Solved'
+              return 'Failed'
             }
             const getDrc = (test) => {
-              if (!test.didSolve) return '❌'
-              return test.relaxedDrcPassed ? '✅' : '❌'
+              if (!test.didSolve) return 'Failed'
+              return test.relaxedDrcPassed ? 'Passed' : 'Failed'
             }
             const escapeHtml = (value) =>
               String(value ?? '')
@@ -523,8 +523,8 @@ jobs:
               if (!mainTest) return ''
               const prScore = getOutcomeScore(test)
               const mainScore = getOutcomeScore(mainTest)
-              if (prScore > mainScore) return '✅'
-              if (prScore < mainScore) return '❌'
+              if (prScore > mainScore) return 'Improved'
+              if (prScore < mainScore) return 'Regressed'
               return ''
             }
             const getViaCell = (test, viaCellIndex, datasetName) => {
@@ -656,16 +656,16 @@ jobs:
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : process.env.BENCHMARK_DATASET
 
             const renderBody = (options = {}) => [
-              `## 🏃 ${benchmarkLabel} Results`,
+              `## ${benchmarkLabel} Results`,
               '',
               ...(profileEnabled
                 ? [
-                    '🧭 **Profile Solvers:** running. Benchmark results are ready; profile comparison tables will be added when profiling finishes.',
+                    '**Profile Solvers:** running. Benchmark results are ready; profile comparison tables will be added when profiling finishes.',
                     '',
                   ]
                 : []),
               '<details>',
-              '<summary>📊 Main Branch Results</summary>',
+              '<summary>Main Branch Results</summary>',
               '',
               ...renderReportCollection(mainReport, mainText, {
                 forceCombinedSummary: true,
@@ -673,7 +673,7 @@ jobs:
               '</details>',
               '',
               '<details open>',
-              '<summary>📊 PR Results</summary>',
+              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
@@ -684,13 +684,13 @@ jobs:
               ...(profileEnabled
                 ? [
                     '',
-                    '⏳ Profile solver comparison is still running.',
+                    'Profile solver comparison is still running.',
                   ]
                 : []),
               '</details>',
               '',
-              `🔗 Workflow: [View run](${runUrl})`,
-              `📦 Artifact: ${runUrl}`,
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: ${runUrl}`,
             ].join('\n')
             const fullBody = renderBody()
             const filteredBody =
@@ -926,13 +926,13 @@ jobs:
               return value.toFixed(2)
             }
             const getStatus = (test) => {
-              if (test.didTimeout) return '❌'
-              if (test.didSolve) return '✅'
-              return '❌'
+              if (test.didTimeout) return 'Timeout'
+              if (test.didSolve) return 'Solved'
+              return 'Failed'
             }
             const getDrc = (test) => {
-              if (!test.didSolve) return '❌'
-              return test.relaxedDrcPassed ? '✅' : '❌'
+              if (!test.didSolve) return 'Failed'
+              return test.relaxedDrcPassed ? 'Passed' : 'Failed'
             }
             const escapeHtml = (value) =>
               String(value ?? '')
@@ -1034,8 +1034,8 @@ jobs:
               if (!mainTest) return ''
               const prScore = getOutcomeScore(test)
               const mainScore = getOutcomeScore(mainTest)
-              if (prScore > mainScore) return '✅'
-              if (prScore < mainScore) return '❌'
+              if (prScore > mainScore) return 'Improved'
+              if (prScore < mainScore) return 'Regressed'
               return ''
             }
             const getViaCell = (test, viaCellIndex, datasetName) => {
@@ -1179,8 +1179,8 @@ jobs:
               const delta = prRow.scenarioSuccessRate - mainRow.scenarioSuccessRate
               if (!Number.isFinite(delta)) return 'n/a'
               const label = `${delta > 0 ? '+' : ''}${delta.toFixed(0)}%`
-              if (delta > 0) return `${label} ✅`
-              if (delta < 0) return `${label} ❌`
+              if (delta > 0) return `${label} (improved)`
+              if (delta < 0) return `${label} (regressed)`
               return label
             }
             const renderProfileRunSummary = (report) => {
@@ -1247,7 +1247,7 @@ jobs:
             const renderProfileSolversDetails = (lines) => [
               '',
               '<details>',
-              '<summary>🧭 Profile Solvers</summary>',
+              '<summary>Profile Solvers</summary>',
               '',
               ...lines,
               '</details>',
@@ -1278,26 +1278,26 @@ jobs:
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : process.env.BENCHMARK_DATASET
 
             const renderBody = (options = {}) => [
-              benchmarkFailed ? `## 🏃 ${benchmarkLabel} Failed` : `## 🏃 ${benchmarkLabel} Results`,
+              benchmarkFailed ? `## ${benchmarkLabel} Failed` : `## ${benchmarkLabel} Results`,
               '',
               ...(profileEnabled
                 ? [
                     hasProfileSolvers
-                      ? '✅ **Profile Solvers:** completed. Comparison tables are included below.'
-                      : '⚠️ **Profile Solvers:** requested, but profile output was not produced.',
+                      ? '**Profile Solvers:** completed. Comparison tables are included below.'
+                      : '**Profile Solvers:** requested, but profile output was not produced.',
                     '',
                   ]
                 : []),
               ...(benchmarkFailed
                 ? [
-                    `❌ Benchmark workflow ended with **${jobStatus}** before completion.`,
+                    `Benchmark workflow ended with **${jobStatus}** before completion.`,
                     '',
                     'This can happen during setup, dependency installation, or benchmark execution.',
                     '',
                   ]
                 : []),
               '<details>',
-              '<summary>📊 Main Branch Results</summary>',
+              '<summary>Main Branch Results</summary>',
               '',
               ...renderReportCollection(mainReport, mainText, {
                 forceCombinedSummary: true,
@@ -1310,7 +1310,7 @@ jobs:
               '</details>',
               '',
               '<details open>',
-              '<summary>📊 PR Results</summary>',
+              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
@@ -1328,8 +1328,8 @@ jobs:
                 : []),
               '</details>',
               '',
-              `🔗 Workflow: [View run](${runUrl})`,
-              `📦 Artifact: ${runUrl}`,
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: ${runUrl}`,
             ].join('\n')
 
             const fullBody = renderBody()
