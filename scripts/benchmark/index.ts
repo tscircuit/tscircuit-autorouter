@@ -120,14 +120,14 @@ export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
     /\bheight=["']100%["']/i.test(rootBackgroundMatch[2])
   ) {
     const [x, y, width, height] = viewBoxValues
-    const normalizedBackground = rootBackgroundMatch[2]
+    const backgroundRectWithViewBoxBounds = rootBackgroundMatch[2]
       .replace(/\s+(?:x|y)=["'][^"']*["']/gi, "")
       .replace(/\bwidth=["']100%["']/i, `x="${x}" y="${y}" width="${width}"`)
       .replace(/\bheight=["']100%["']/i, `height="${height}"`)
     const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length
     sanitizedSvg =
       sanitizedSvg.slice(0, backgroundStart) +
-      normalizedBackground +
+      backgroundRectWithViewBoxBounds +
       sanitizedSvg.slice(backgroundStart + rootBackgroundMatch[2].length)
   }
   sanitizedSvg = sanitizedSvg.replace(
