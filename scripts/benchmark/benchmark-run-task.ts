@@ -372,6 +372,7 @@ const createBenchmarkSnapshot = async ({
     sampleNumber: task.sampleNumber,
     label: `${task.datasetName} sample ${task.sampleNumber} - ${task.solverName}`,
     elapsedTimeMs,
+    traceCount: traces.length,
     viaCount,
     relaxedDrcPassed,
     drcErrorCount,
