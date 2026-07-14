@@ -638,7 +638,7 @@ jobs:
             const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
-            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : process.env.BENCHMARK_DATASET
+            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
 
             const renderBody = (options = {}) => [
               `## ${benchmarkLabel} Results`,
@@ -1260,7 +1260,7 @@ jobs:
                 prProfileSolversText ||
                 prProfileSolversReport,
             )
-            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : process.env.BENCHMARK_DATASET
+            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
 
             const renderBody = (options = {}) => [
               benchmarkFailed ? `## ${benchmarkLabel} Failed` : `## ${benchmarkLabel} Results`,
