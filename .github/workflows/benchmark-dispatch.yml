@@ -13,17 +13,16 @@ jobs:
   dispatch:
     if: |
       github.event.issue.pull_request &&
-      github.event.comment.body == '/benchmark' &&
+      (
+        github.event.comment.body == '/benchmark' ||
+        github.event.comment.body == '/benchmark-all'
+      ) &&
       github.event.comment.user.type != 'Bot' &&
       (
         github.event.comment.author_association == 'OWNER' ||
         github.event.comment.author_association == 'MEMBER' ||
         github.event.comment.author_association == 'COLLABORATOR'
       )
-    strategy:
-      fail-fast: false
-      matrix:
-        dataset: [dataset01, srj18, srj19, srj20, srj21, srj23]
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch benchmark
@@ -31,19 +30,24 @@ jobs:
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
+            const datasets = context.payload.comment.body === '/benchmark-all'
+              ? ['dataset01', 'srj18', 'srj19', 'srj20', 'srj21', 'srj23']
+              : ['dataset01']
             const pr = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
             })
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'benchmark.yml',
-              ref: context.payload.repository.default_branch,
-              inputs: {
-                dataset_name: '${{ matrix.dataset }}',
-                ref: pr.data.head.sha,
-                pr_number: String(context.issue.number),
-              },
-            })
+            for (const dataset of datasets) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'benchmark.yml',
+                ref: context.payload.repository.default_branch,
+                inputs: {
+                  dataset_name: dataset,
+                  ref: pr.data.head.sha,
+                  pr_number: String(context.issue.number),
+                },
+              })
+            }

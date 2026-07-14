@@ -1,8 +1,8 @@
 import { type DatasetName, parseDatasetName } from "./scenarios"
 
 // Edit this list to choose which datasets main branch benchmark artifacts publish.
-// PR /benchmark comments use these artifacts for the "Main Branch Results" table.
-// The command dispatches independent default, srj18, srj19, srj20, srj21, and srj23 runs.
+// PR /benchmark and /benchmark-all comments use these artifacts for the
+// "Main Branch Results" table. /benchmark-all dispatches every listed dataset.
 export const MAIN_BRANCH_BENCHMARK_DATASET_INPUTS = [
   "dataset1",
   "dataset18",
