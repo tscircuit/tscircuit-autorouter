@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type {
   HighDensityIntraNodeRoute,
@@ -22,8 +22,8 @@ const createCrossingNode = (): NodeWithPortPoints => ({
   ],
 })
 
-const createHyperSolver = () =>
-  new HyperSingleIntraNodeSolver({
+const createPortfolioSolver = () =>
+  new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: createCrossingNode(),
     traceWidth: 0.15,
     viaDiameter: 0.3,
@@ -182,8 +182,8 @@ const solvingCases = [
 
 for (const { name, hyperParameters } of solvingCases) {
   test(`${name} solves X-crossing node using only z=0 and z=3`, () => {
-    const hyperSolver = createHyperSolver()
-    const solver = hyperSolver.generateSolver(hyperParameters as any)
+    const portfolioSolver = createPortfolioSolver()
+    const solver = portfolioSolver.generateSolver(hyperParameters as any)
 
     solver.solve()
 
@@ -193,8 +193,8 @@ for (const { name, hyperParameters } of solvingCases) {
   })
 }
 
-test("HyperSingleIntraNodeSolver solves the X-crossing node without z=1 segments", () => {
-  const solver = createHyperSolver()
+test("PortfolioSingleIntraNodeSolver solves the X-crossing node without z=1 segments", () => {
+  const solver = createPortfolioSolver()
 
   solver.solve()
 
@@ -204,8 +204,8 @@ test("HyperSingleIntraNodeSolver solves the X-crossing node without z=1 segments
 })
 
 test("SingleTransitionIntraNodeSolver candidate rejects the X-crossing node", () => {
-  const hyperSolver = createHyperSolver()
-  const solver = hyperSolver.generateSolver({
+  const portfolioSolver = createPortfolioSolver()
+  const solver = portfolioSolver.generateSolver({
     CLOSED_FORM_SINGLE_TRANSITION: true,
   } as any)
 
@@ -216,9 +216,9 @@ test("SingleTransitionIntraNodeSolver candidate rejects the X-crossing node", ()
   expect(String(solver.error)).toContain("Expected 1 route")
 })
 
-test("HyperSingleIntraNodeSolver does not apply the single-layer candidate to a multilayer node", () => {
-  const hyperSolver = createHyperSolver()
-  const solver = hyperSolver.generateSolver({
+test("PortfolioSingleIntraNodeSolver does not apply the single-layer candidate to a multilayer node", () => {
+  const portfolioSolver = createPortfolioSolver()
+  const solver = portfolioSolver.generateSolver({
     SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS: true,
   } as any)
 

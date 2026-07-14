@@ -32,7 +32,7 @@ test("HighDensitySolver draws an origin guide to failed nodes", () => {
       ],
     },
     status: "failed",
-    solverType: "HyperSingleIntraNodeSolver",
+    solverType: "PortfolioSingleIntraNodeSolver",
     iterations: 123,
     routeCount: 0,
     nodePf: 0.2,

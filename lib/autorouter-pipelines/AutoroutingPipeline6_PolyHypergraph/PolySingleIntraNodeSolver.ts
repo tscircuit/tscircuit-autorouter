@@ -1,7 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -21,7 +21,7 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
     return "PolySingleIntraNodeSolver"
   }
 
-  highDensitySolver: HyperSingleIntraNodeSolver
+  highDensitySolver: PortfolioSingleIntraNodeSolver
   projectedNode: NodeWithPortPoints
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   projectedPorts: ProjectedPortRecord[]
@@ -65,7 +65,7 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       availableZ: nodeWithPortPoints.availableZ,
       portPoints: this.projectedPorts.map(({ projected }) => projected),
     }
-    this.highDensitySolver = new HyperSingleIntraNodeSolver({
+    this.highDensitySolver = new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints: this.projectedNode,
       colorMap: params.colorMap,
       connMap: params.connMap,

@@ -5,7 +5,7 @@ import node from "../../fixtures/legacy/assets/cn11081-nodeWithPortPoints.json" 
   type: "json",
 }
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 
@@ -13,7 +13,7 @@ const nodeWithPortPoints = (node as any).nodeWithPortPoints
 
 test("cn11081 single transition solver records current DRC errors", () => {
   const srj = createSrjFromNodeWithPortPoints(nodeWithPortPoints)
-  const solver = new HyperSingleIntraNodeSolver({
+  const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints,
     viaDiameter: 0.6,
   })

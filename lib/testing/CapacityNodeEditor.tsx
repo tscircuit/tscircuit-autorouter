@@ -1,4 +1,4 @@
-import type { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import type { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import { CapacityMeshNode } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
@@ -33,7 +33,7 @@ function assert(condition: unknown, message: string): asserts condition {
 
 export interface CapacityNodeEditorProps {
   onNodeChange?: (node: NodeWithPortPoints) => void
-  solver?: HyperSingleIntraNodeSolver
+  solver?: PortfolioSingleIntraNodeSolver
   initialNode?: NodeWithPortPoints
 }
 

@@ -1,6 +1,6 @@
 import { InteractiveGraphics } from "graphics-debug/react"
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { useEffect, useState, useMemo } from "react"
 import type { NodeWithPortPoints } from "../types/high-density-types"
@@ -26,7 +26,7 @@ export const HyperHighDensityDebugger = ({
   onActionComplete,
 }: HyperHighDensityDebuggerProps) => {
   const solver = useMemo(() => {
-    return new HyperSingleIntraNodeSolver({
+    return new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints,
       connMap,
       colorMap:

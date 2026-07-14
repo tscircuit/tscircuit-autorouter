@@ -5,21 +5,21 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
-import { HyperSingleIntraNodeSolver } from "../HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
 
-type HyperSingleIntraNodeSolverParams = ConstructorParameters<
-  typeof HyperSingleIntraNodeSolver
+type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
+  typeof PortfolioSingleIntraNodeSolver
 >[0]
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
-  HyperSingleIntraNodeSolverParams & {
+  PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
@@ -104,9 +104,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   constructorParams: GrowShrinkHighDensityIntraNodeSolverParams
   nodeWithPortPoints: NodeWithPortPoints
   solvedRoutes: HighDensityIntraNodeRoute[] = []
-  failedSolvers: HyperSingleIntraNodeSolver[] = []
-  activeSubSolver: HyperSingleIntraNodeSolver | null = null
-  winningSolver?: HyperSingleIntraNodeSolver
+  failedSolvers: PortfolioSingleIntraNodeSolver[] = []
+  activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
+  winningSolver?: PortfolioSingleIntraNodeSolver
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
@@ -140,7 +140,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    this.activeSubSolver = new HyperSingleIntraNodeSolver({
+    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...this.constructorParams,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
@@ -153,7 +153,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
   }
 
-  private acceptSolution(solver: HyperSingleIntraNodeSolver) {
+  private acceptSolution(solver: PortfolioSingleIntraNodeSolver) {
     this.winningSolver = solver
     this.solvedRoutes =
       this.scaleFactor === 1

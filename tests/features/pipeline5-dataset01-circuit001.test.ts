@@ -86,12 +86,12 @@ test.skip(
       if (metadata.resolution === "local") {
         expect(shouldAttemptRemoteSolve(metadata)).toBe(false)
         expect(metadata.remoteAttempt.attempted).toBe(false)
-        expect(metadata.supervisorType).toBe("HyperSingleIntraNodeSolver")
+        expect(metadata.supervisorType).toBe("PortfolioSingleIntraNodeSolver")
       } else if (metadata.resolution === "local-fallback") {
         expect(shouldAttemptRemoteSolve(metadata)).toBe(true)
         expect(metadata.remoteAttempt.attempted).toBe(true)
         expect(metadata.remoteAttempt.error).toBeTruthy()
-        expect(metadata.supervisorType).toBe("HyperSingleIntraNodeSolver")
+        expect(metadata.supervisorType).toBe("PortfolioSingleIntraNodeSolver")
       } else {
         expect(metadata.resolution).toBe("remote")
         expect(shouldAttemptRemoteSolve(metadata)).toBe(true)

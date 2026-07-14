@@ -14,14 +14,14 @@ import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "../HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
-  | HyperSingleIntraNodeSolver
+  | PortfolioSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
 
 const connectionLabel = (
@@ -152,7 +152,10 @@ export class HighDensitySolver extends BaseSolver {
     ) {
       return this.getSolvedNodeSolverType(solver.winningSolver)
     }
-    if (solver instanceof HyperSingleIntraNodeSolver && solver.winningSolver) {
+    if (
+      solver instanceof PortfolioSingleIntraNodeSolver &&
+      solver.winningSolver
+    ) {
       return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
     }
     return this.getConcreteSolverTypeName(solver)
@@ -327,7 +330,7 @@ export class HighDensitySolver extends BaseSolver {
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new HyperSingleIntraNodeSolver(intraNodeSolverParams)
+      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }
 
