@@ -7,11 +7,13 @@ import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
+const snapshotPath =
+  process.platform === "linux"
+    ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+    : import.meta.path
 
 test("bugreport51-7db9f8.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 }, 120_000)

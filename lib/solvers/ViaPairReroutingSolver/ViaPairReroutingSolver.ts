@@ -73,8 +73,7 @@ export class ViaPairReroutingSolver extends BaseSolver {
       throw new Error("viaDistanceCost must be non-negative")
     }
 
-    this.viaDistanceCost =
-      input.viaDistanceCost ?? DEFAULT_VIA_DISTANCE_COST
+    this.viaDistanceCost = input.viaDistanceCost ?? DEFAULT_VIA_DISTANCE_COST
     this.input = {
       connMap: input.connMap,
       layerCount: input.layerCount,
@@ -326,8 +325,7 @@ export class ViaPairReroutingSolver extends BaseSolver {
       rootConnectionName: route.rootConnectionName,
       obstacleRoutes,
       minDistBetweenEnteringPoints: Math.max(
-        route.traceThickness +
-          (this.input.minTraceToPadEdgeClearance ?? 0.1),
+        route.traceThickness + (this.input.minTraceToPadEdgeClearance ?? 0.1),
         0.2,
       ),
       bounds: this.getRerouteBounds(route, candidate, obstacleRoutes),
@@ -398,10 +396,12 @@ export class ViaPairReroutingSolver extends BaseSolver {
     if (!solvedPath || solvedPath.vias.length > 0) return
 
     const candidatePath = this.simplifyPath(solvedPath.route)
-    const candidateLength = candidatePath.slice(1).reduce(
-      (total, point, index) => total + distance(candidatePath[index], point),
-      0,
-    )
+    const candidateLength = candidatePath
+      .slice(1)
+      .reduce(
+        (total, point, index) => total + distance(candidatePath[index], point),
+        0,
+      )
     const currentCost =
       activeReroute.candidate.originalSpanLength +
       this.viaDistanceCost * activeReroute.candidate.viaLocations.length
