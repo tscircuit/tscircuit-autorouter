@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import sample002LargeNode from "../fixtures/srj18-sample002-large-node.json"
 
@@ -15,7 +15,7 @@ const solverParams = {
 }
 
 test("the supervisor derives its limit without advancing candidates", () => {
-  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  const solver = new PortfolioSingleIntraNodeSolver(solverParams)
   solver.initializeSolvers()
 
   const getA01Solvers = () =>
@@ -33,7 +33,7 @@ test("the supervisor derives its limit without advancing candidates", () => {
 })
 
 test("the portfolio expands when every initial candidate is exhausted", () => {
-  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  const solver = new PortfolioSingleIntraNodeSolver(solverParams)
   solver.initializeSolvers()
   for (const { solver: candidate } of solver.supervisedSolvers!) {
     candidate.failed = true
@@ -55,7 +55,7 @@ test("the portfolio expands when every initial candidate is exhausted", () => {
 })
 
 test("the portfolio expands after a dynamically sized exploration budget", () => {
-  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  const solver = new PortfolioSingleIntraNodeSolver(solverParams)
   solver.initializeSolvers()
   const activeCandidate = solver.supervisedSolvers!.find(
     ({ solver }) => solver.getSolverName() === "HighDensitySolverA01",
@@ -82,7 +82,7 @@ test("the portfolio expands after a dynamically sized exploration budget", () =>
 })
 
 test("an early solution does not expand the portfolio", () => {
-  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  const solver = new PortfolioSingleIntraNodeSolver(solverParams)
   solver.initializeSolvers()
   const initialSolverCount = solver.supervisedSolvers!.length
   const immediateWinner = solver.supervisedSolvers!.find(

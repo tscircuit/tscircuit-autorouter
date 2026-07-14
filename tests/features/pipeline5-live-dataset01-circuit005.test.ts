@@ -95,11 +95,11 @@ test.skip(
       expect(remoteNodeMetadata.remoteAttempt.durationMs).toBeGreaterThan(0)
       expect(remoteNodeMetadata.solverType).not.toContain("hd-cache")
       expect(remoteNodeMetadata.supervisorType).toBe(
-        "HyperSingleIntraNodeSolver",
+        "PortfolioSingleIntraNodeSolver",
       )
       expect(remoteNodeMarkerLabel).toContain("resolution: local-fallback")
       expect(remoteNodeMarkerLabel).toContain(
-        "supervisor: HyperSingleIntraNodeSolver",
+        "supervisor: PortfolioSingleIntraNodeSolver",
       )
       expect(remoteNodeMarkerLabel).toContain("remoteSource: error")
       expect(remoteNodeMarkerLabel).toContain("remoteError: ")

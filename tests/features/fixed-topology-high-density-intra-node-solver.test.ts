@@ -4,7 +4,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import input03 from "../../fixtures/features/via-high-density/via-high-density03-input.json" with {
   type: "json",

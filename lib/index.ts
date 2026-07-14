@@ -57,6 +57,8 @@ export type {
   Jumper,
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
+export { PortfolioSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+/** @deprecated Use `PortfolioSingleIntraNodeSolver` instead. */
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 export { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"

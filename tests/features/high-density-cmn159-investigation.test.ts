@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { CurvyTraceSolver } from "@tscircuit/curvy-trace-solver"
-import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
@@ -62,7 +62,7 @@ test("cmn_159 is solved directly by the single-layer no-different-root-intersect
     "source_net_3_mst1",
   ])
 
-  const hyperSolver = new HyperSingleIntraNodeSolver({
+  const portfolioSolver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: node,
     effort: 1,
     traceWidth: 0.15,
@@ -70,15 +70,15 @@ test("cmn_159 is solved directly by the single-layer no-different-root-intersect
     cacheProvider: null,
   })
 
-  hyperSolver.solve()
+  portfolioSolver.solve()
 
-  expect(hyperSolver.solved).toBe(true)
-  expect(hyperSolver.failed).toBe(false)
-  expect(hyperSolver.error).toBeNull()
-  expect(hyperSolver.winningSolver?.getSolverName()).toBe(
+  expect(portfolioSolver.solved).toBe(true)
+  expect(portfolioSolver.failed).toBe(false)
+  expect(portfolioSolver.error).toBeNull()
+  expect(portfolioSolver.winningSolver?.getSolverName()).toBe(
     "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver",
   )
-  expect(hyperSolver.solvedRoutes).toHaveLength(5)
+  expect(portfolioSolver.solvedRoutes).toHaveLength(5)
 }, 60_000)
 
 test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {

@@ -5,7 +5,7 @@ import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { BaseSolver, type PendingEffect } from "../../solvers/BaseSolver"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
-import { HyperSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../../solvers/colors"
 import type {
   HighDensityIntraNodeRoute,
@@ -244,7 +244,7 @@ const getConcreteSolverTypeName = (solver: unknown): string => {
   return "unknown"
 }
 
-const getSolvedNodeSolverType = (solver: HyperSingleIntraNodeSolver) => {
+const getSolvedNodeSolverType = (solver: PortfolioSingleIntraNodeSolver) => {
   if (solver.winningSolver) {
     return getConcreteSolverTypeName(solver.winningSolver)
   }
@@ -366,7 +366,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       remoteDurationMs?: number
     } = {},
   ) {
-    const localSolver = new HyperSingleIntraNodeSolver({
+    const localSolver = new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
