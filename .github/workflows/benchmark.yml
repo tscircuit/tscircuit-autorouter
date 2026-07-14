@@ -43,16 +43,8 @@ on:
         description: Git ref (branch, tag, or SHA) to benchmark
         required: false
         type: string
-      benchmark_args_json:
-        description: JSON-encoded benchmark.sh arguments (used by the PR command dispatcher)
-        required: false
-        type: string
       pr_number:
-        description: Pull request number whose benchmark status comment should be updated
-        required: false
-        type: string
-      status_comment_id:
-        description: Existing pull request comment to update with this benchmark result
+        description: Pull request number where this benchmark posts its result
         required: false
         type: string
 
@@ -88,18 +80,6 @@ jobs:
             let profileSolvers = false
             let ref = context.sha
             let statusCommentId = ''
-
-            const stripProfileSolversFlag = (args) => {
-              const stripped = []
-              for (const arg of args) {
-                if (arg === '--profile-solvers' || arg === '--show-profile-solvers') {
-                  profileSolvers = true
-                  continue
-                }
-                stripped.push(arg)
-              }
-              return stripped
-            }
 
             const buildProfileSolversArgs = (args) => {
               const profileArgs = []
@@ -152,49 +132,54 @@ jobs:
 
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
-              const dispatchedArgsJson = (inputs.benchmark_args_json || '').trim()
-              if (dispatchedArgsJson) {
-                const dispatchedArgs = JSON.parse(dispatchedArgsJson)
-                if (!Array.isArray(dispatchedArgs) || !dispatchedArgs.every((arg) => typeof arg === 'string')) {
-                  throw new Error('benchmark_args_json must be a JSON array of strings')
+              const requestedSolver = (inputs.solver_name || '').trim()
+              if (requestedSolver) {
+                if (allSolversAliases.has(requestedSolver.toLowerCase())) {
+                  benchmarkArgs.push('all')
+                } else {
+                  benchmarkArgs.push('--solver', requestedSolver)
                 }
-                benchmarkArgs = stripProfileSolversFlag(dispatchedArgs)
-              } else {
-                const requestedSolver = (inputs.solver_name || '').trim()
-                if (requestedSolver) {
-                  if (allSolversAliases.has(requestedSolver.toLowerCase())) {
-                    benchmarkArgs.push('all')
-                  } else {
-                    benchmarkArgs.push('--solver', requestedSolver)
-                  }
-                }
+              }
 
-                const scenarioLimit = (inputs.scenario_limit || '').trim()
-                const effort = (inputs.effort || '').trim()
-                const concurrency = (inputs.concurrency || '').trim()
-                const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
-                if (scenarioLimit) {
-                  benchmarkArgs.push('--scenario-limit', scenarioLimit)
-                }
-                if (effort) {
-                  benchmarkArgs.push('--effort', effort)
-                }
-                if (includeAssignable) {
-                  benchmarkArgs.push('--include-assignable')
-                }
-                if (concurrency && concurrency.toLowerCase() !== 'auto') {
-                  benchmarkConcurrency = concurrency
-                  benchmarkArgs.push('--concurrency', concurrency)
-                }
+              const scenarioLimit = (inputs.scenario_limit || '').trim()
+              const effort = (inputs.effort || '').trim()
+              const concurrency = (inputs.concurrency || '').trim()
+              const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+              if (scenarioLimit) {
+                benchmarkArgs.push('--scenario-limit', scenarioLimit)
+              }
+              if (effort) {
+                benchmarkArgs.push('--effort', effort)
+              }
+              if (includeAssignable) {
+                benchmarkArgs.push('--include-assignable')
+              }
+              if (concurrency && concurrency.toLowerCase() !== 'auto') {
+                benchmarkConcurrency = concurrency
+                benchmarkArgs.push('--concurrency', concurrency)
               }
 
               const datasetName = (inputs.dataset_name || '').trim()
               if (datasetName) {
                 benchmarkArgs.push('--dataset', datasetName)
               }
-              profileSolvers = profileSolvers || inputs.profile_solvers === true || inputs.profile_solvers === 'true'
+              profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
               ref = (inputs.ref || '').trim() || ref
-              statusCommentId = (inputs.status_comment_id || '').trim()
+              const prNumber = (inputs.pr_number || '').trim()
+              if (prNumber) {
+                const issueNumber = Number(prNumber)
+                if (!Number.isInteger(issueNumber) || issueNumber < 1) {
+                  throw new Error(`Invalid pull request number: ${prNumber}`)
+                }
+                const benchmarkLabel = datasetName === 'dataset01' ? 'Default Benchmark' : datasetName
+                const statusComment = await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `## ${benchmarkLabel}\n\nQueued on \`${ref.slice(0, 7)}\`.\n\nWorkflow: [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+                })
+                statusCommentId = String(statusComment.data.id)
+              }
             }
 
             if (context.eventName === 'pull_request') {
