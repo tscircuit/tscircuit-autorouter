@@ -32,7 +32,7 @@
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#52c45500b04d0380aa2a1be9b4c6f32d9b138553",
-    "@tscircuit/checks": "^0.0.141",
+    "@tscircuit/checks": "^0.0.143",
     "@tscircuit/circuit-json-util": "^0.0.94",
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
