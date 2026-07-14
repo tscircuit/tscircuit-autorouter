@@ -22,6 +22,11 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
+// Match the existing six-ordering portfolio used by the other intra-node
+// solver. The first ordering remains in the normal portfolio; the remaining
+// orderings are introduced only after that portfolio is exhausted.
+const A01_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
@@ -40,6 +45,30 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  adaptiveSearchExpanded = false
+
+  private getSolvedSegmentCount(solver: IntraNodeRouteSolver): number | null {
+    const solvedConnectionsMap = (solver as any).solvedConnectionsMap
+    if (!(solvedConnectionsMap instanceof Map)) return null
+
+    let solvedSegmentCount = 0
+    for (const routes of solvedConnectionsMap.values()) {
+      if (Array.isArray(routes)) solvedSegmentCount += routes.length
+    }
+    return solvedSegmentCount
+  }
+
+  private getNodeSegmentCount(): number {
+    return Math.max(
+      1,
+      this.nodeWithPortPoints.portPointsInPairs?.length ??
+        new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (portPoint) => portPoint.connectionName,
+          ),
+        ).size,
+    )
+  }
 
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
@@ -212,6 +241,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         possibleValues: [
           {
             HIGH_DENSITY_A01: true,
+            SHUFFLE_SEED: A01_SHUFFLE_SEEDS[0],
           },
         ],
       },
@@ -224,6 +254,88 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         ],
       },
     ]
+  }
+
+  /**
+   * Some external solvers expose an idempotent setup phase that calculates
+   * their natural iteration budget from the problem. Running setup here does
+   * not advance the solver or give it preference in the portfolio.
+   */
+  private initializeCandidateBudget(solver: unknown) {
+    const setup = (solver as any).setup
+    if (typeof setup === "function") setup.call(solver)
+  }
+
+  private refreshDynamicIterationLimit() {
+    const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
+      (total, { solver }) => {
+        if (solver.solved || solver.failed) return total
+        const remainingCandidateIterations = Math.max(
+          0,
+          solver.MAX_ITERATIONS - solver.iterations + 1,
+        )
+        return (
+          total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
+        )
+      },
+      0,
+    )
+
+    // Keep one supervisor step available to observe that the current
+    // portfolio is exhausted and expand it before BaseSolver can fail.
+    this.MAX_ITERATIONS = Math.max(
+      this.iterations + 1,
+      this.iterations + remainingSupervisorIterations,
+    )
+    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
+  }
+
+  override initializeSolvers() {
+    super.initializeSolvers()
+    for (const { solver } of this.supervisedSolvers ?? []) {
+      this.initializeCandidateBudget(solver)
+    }
+    this.refreshDynamicIterationLimit()
+  }
+
+  private addSupervisedCandidate(hyperParameters: Record<string, any>) {
+    const solver = this.generateSolver(hyperParameters)
+    this.initializeCandidateBudget(solver)
+    const g = this.computeG(solver)
+    this.supervisedSolvers!.push({
+      hyperParameters,
+      solver,
+      h: 0,
+      g,
+      f: g,
+    })
+  }
+
+  private expandAdaptiveSearch() {
+    if (this.adaptiveSearchExpanded) return
+
+    this.adaptiveSearchExpanded = true
+    for (const shuffleSeed of A01_SHUFFLE_SEEDS.slice(1)) {
+      this.addSupervisedCandidate({
+        HIGH_DENSITY_A01: true,
+        SHUFFLE_SEED: shuffleSeed,
+      })
+    }
+    this.refreshDynamicIterationLimit()
+    this.stats.adaptiveSearchExpanded = true
+  }
+
+  override _step() {
+    if (!this.supervisedSolvers) this.initializeSolvers()
+
+    if (
+      !this.adaptiveSearchExpanded &&
+      !this.getSupervisedSolverWithBestFitness()
+    ) {
+      this.expandAdaptiveSearch()
+    }
+
+    super._step()
   }
 
   computeG(solver: IntraNodeRouteSolver) {
@@ -247,6 +359,12 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   }
 
   computeH(solver: IntraNodeRouteSolver) {
+    if (this.adaptiveSearchExpanded) {
+      const solvedSegmentCount = this.getSolvedSegmentCount(solver)
+      if (solvedSegmentCount !== null) {
+        return Math.max(0, 1 - solvedSegmentCount / this.getNodeSegmentCount())
+      }
+    }
     return 1 - (solver.progress || 0)
   }
 
