@@ -26,6 +26,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // solver. Sequential seeds make the search policy deterministic and avoid
 // selecting orderings for a specific reproduction.
 const A01_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const INITIAL_PORTFOLIO_ITERATION_BUDGET = 8_000
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -45,6 +46,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  adaptiveSearchExpanded = false
 
   private getA0xSolvedSegmentCount(
     solver: HighDensitySolverA01 | HighDensityA03Solver,
@@ -241,10 +243,12 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "highDensityA01",
-        possibleValues: A01_SHUFFLE_SEEDS.map((shuffleSeed) => ({
-          HIGH_DENSITY_A01: true,
-          SHUFFLE_SEED: shuffleSeed,
-        })),
+        possibleValues: [
+          {
+            HIGH_DENSITY_A01: true,
+            SHUFFLE_SEED: A01_SHUFFLE_SEEDS[0],
+          },
+        ],
       },
       {
         name: "highDensityA03",
@@ -257,17 +261,39 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     ]
   }
 
-  override initializeSolvers() {
-    super.initializeSolvers()
+  private addA01Seed(shuffleSeed: number) {
+    const hyperParameters = {
+      HIGH_DENSITY_A01: true,
+      SHUFFLE_SEED: shuffleSeed,
+    }
+    const solver = this.generateSolver(hyperParameters)
+    const g = this.computeG(solver)
+    this.supervisedSolvers!.push({
+      hyperParameters,
+      solver,
+      h: 0,
+      g,
+      f: g,
+    })
+  }
+
+  private expandAdaptiveSearch() {
+    if (this.adaptiveSearchExpanded) return
+
+    this.adaptiveSearchExpanded = true
+    for (const shuffleSeed of A01_SHUFFLE_SEEDS.slice(1)) {
+      this.addA01Seed(shuffleSeed)
+    }
 
     // A01/A03 replace their broad constructor defaults with budgets derived
     // from the initialized grid size, layer count, connection count and
-    // effort. Initialize them once so the supervisor can use those real
-    // budgets instead of imposing an unrelated outer limit.
+    // effort. Initialize any untouched A0x candidates once so the supervisor
+    // can extend its own limit from their real remaining budgets.
     for (const { solver } of this.supervisedSolvers ?? []) {
       if (
-        solver instanceof HighDensitySolverA01 ||
-        solver instanceof HighDensityA03Solver
+        solver.iterations === 0 &&
+        (solver instanceof HighDensitySolverA01 ||
+          solver instanceof HighDensityA03Solver)
       ) {
         solver.step()
       }
@@ -281,14 +307,37 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         0,
         solver.MAX_ITERATIONS - solver.iterations + 1,
       )
-      return (
-        total +
-        Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
-      )
+      return total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
     }, 0)
 
-    this.MAX_ITERATIONS = Math.max(1, dynamicSupervisorIterationBudget)
-    this.stats.dynamicSupervisorIterationBudget = this.MAX_ITERATIONS
+    this.MAX_ITERATIONS = Math.max(
+      this.iterations + 1,
+      this.iterations + dynamicSupervisorIterationBudget,
+    )
+    this.stats.adaptiveSearchExpanded = true
+    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
+  }
+
+  override _step() {
+    if (!this.supervisedSolvers) this.initializeSolvers()
+
+    if (
+      !this.adaptiveSearchExpanded &&
+      !this.getSupervisedSolverWithBestFitness()
+    ) {
+      this.expandAdaptiveSearch()
+    }
+
+    super._step()
+
+    if (
+      !this.solved &&
+      !this.failed &&
+      !this.adaptiveSearchExpanded &&
+      this.iterations > INITIAL_PORTFOLIO_ITERATION_BUDGET
+    ) {
+      this.expandAdaptiveSearch()
+    }
   }
 
   computeG(solver: IntraNodeRouteSolver) {
@@ -313,6 +362,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
   computeH(solver: IntraNodeRouteSolver) {
     if (
+      this.adaptiveSearchExpanded &&
       ((solver as any) instanceof HighDensitySolverA01 ||
         (solver as any) instanceof HighDensityA03Solver)
     ) {
