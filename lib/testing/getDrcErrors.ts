@@ -5,6 +5,7 @@ import {
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
   checkViaTraceClearance,
+  dedupePcbDrcErrors,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
@@ -98,13 +99,13 @@ export const getDrcErrors = (
     }),
   ]
 
-  const errors: DrcError[] = [
+  const errors = dedupePcbDrcErrors<DrcError>([
     ...traceErrors,
     ...checkTracesAreContiguous(circuitJson),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
-  ]
+  ])
 
   const vias = circuitJson.filter(
     (
