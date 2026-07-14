@@ -540,7 +540,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
-          growShrinkMaxInnerIterationsPerGrowthAttempt: 8_000,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
         },
       ]
