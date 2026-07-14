@@ -79,24 +79,6 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
-const DEFAULT_MAX_NODE_DIMENSION = 16
-const MIN_ADAPTIVE_MAX_NODE_DIMENSION = 10
-const CONNECTIONS_AT_DEFAULT_NODE_DIMENSION = 160
-
-/**
- * Large connection sets need finer topology cells so a single high-density
- * node does not accumulate more routes than its intra-node solver can place.
- */
-const getDefaultMaxNodeDimension = (connectionCount: number): number =>
-  Math.max(
-    MIN_ADAPTIVE_MAX_NODE_DIMENSION,
-    Math.min(
-      DEFAULT_MAX_NODE_DIMENSION,
-      (DEFAULT_MAX_NODE_DIMENSION * CONNECTIONS_AT_DEFAULT_NODE_DIMENSION) /
-        Math.max(1, connectionCount),
-    ),
-  )
-
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
@@ -560,6 +542,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           useGrowShrinkHighDensityIntraNodeSolver: true,
           growShrinkMaxInnerIterationsPerGrowthAttempt: 8_000,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
+          growShrinkEnableExpandedOriginalSizeSearch: true,
         },
       ]
     }),
@@ -678,11 +661,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
-    this.maxNodeDimension =
-      mutableOpts.maxNodeDimension ??
-      getDefaultMaxNodeDimension(
-        srjWithBoardValidObstacleLayers.connections.length,
-      )
+    this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =

@@ -22,6 +22,10 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
+// Use a small, deterministic spread so the fallback explores meaningfully
+// different connection orderings without replacing the rest of the portfolio.
+const EXPANDED_A01_SHUFFLE_SEEDS = [0, 2, 5, 14]
+
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
@@ -40,10 +44,39 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  expandedSearch: boolean
+
+  private getA0xSolvedSegmentCount(
+    solver: HighDensitySolverA01 | HighDensityA03Solver,
+  ): number {
+    if (solver.failed) return 0
+    const solvedConnectionsMap = solver.solvedConnectionsMap as
+      | Map<number, unknown[]>
+      | undefined
+    if (!solvedConnectionsMap) return 0
+    let solvedSegmentCount = 0
+    for (const routes of solvedConnectionsMap.values()) {
+      solvedSegmentCount += routes.length
+    }
+    return solvedSegmentCount
+  }
+
+  private getNodeSegmentCount(): number {
+    return Math.max(
+      1,
+      this.nodeWithPortPoints.portPointsInPairs?.length ??
+        new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (portPoint) => portPoint.connectionName,
+          ),
+        ).size,
+    )
+  }
 
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      expandedSearch?: boolean
     },
   ) {
     super()
@@ -51,6 +84,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.expandedSearch = opts.expandedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -209,11 +243,13 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "highDensityA01",
-        possibleValues: [
-          {
-            HIGH_DENSITY_A01: true,
-          },
-        ],
+        possibleValues: (this.expandedSearch
+          ? EXPANDED_A01_SHUFFLE_SEEDS
+          : [0]
+        ).map((shuffleSeed) => ({
+          HIGH_DENSITY_A01: true,
+          SHUFFLE_SEED: shuffleSeed,
+        })),
       },
       {
         name: "highDensityA03",
@@ -247,6 +283,18 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   }
 
   computeH(solver: IntraNodeRouteSolver) {
+    if (
+      this.expandedSearch &&
+      ((solver as any) instanceof HighDensitySolverA01 ||
+        (solver as any) instanceof HighDensityA03Solver)
+    ) {
+      return Math.max(
+        0,
+        1 -
+          this.getA0xSolvedSegmentCount(solver as any) /
+            this.getNodeSegmentCount(),
+      )
+    }
     return 1 - (solver.progress || 0)
   }
 
