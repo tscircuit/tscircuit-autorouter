@@ -23,10 +23,9 @@ import {
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
-// solver. Sequential seeds make the search policy deterministic and avoid
-// selecting orderings for a specific reproduction.
+// solver. The first ordering remains in the normal portfolio; the remaining
+// orderings are introduced only after that portfolio is exhausted.
 const A01_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
-const INITIAL_PORTFOLIO_ITERATION_BUDGET = 8_000
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -48,17 +47,13 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   effort: number
   adaptiveSearchExpanded = false
 
-  private getA0xSolvedSegmentCount(
-    solver: HighDensitySolverA01 | HighDensityA03Solver,
-  ): number {
-    if (solver.failed) return 0
-    const solvedConnectionsMap = solver.solvedConnectionsMap as
-      | Map<number, unknown[]>
-      | undefined
-    if (!solvedConnectionsMap) return 0
+  private getSolvedSegmentCount(solver: IntraNodeRouteSolver): number | null {
+    const solvedConnectionsMap = (solver as any).solvedConnectionsMap
+    if (!(solvedConnectionsMap instanceof Map)) return null
+
     let solvedSegmentCount = 0
     for (const routes of solvedConnectionsMap.values()) {
-      solvedSegmentCount += routes.length
+      if (Array.isArray(routes)) solvedSegmentCount += routes.length
     }
     return solvedSegmentCount
   }
@@ -261,12 +256,51 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     ]
   }
 
-  private addA01Seed(shuffleSeed: number) {
-    const hyperParameters = {
-      HIGH_DENSITY_A01: true,
-      SHUFFLE_SEED: shuffleSeed,
+  /**
+   * Some external solvers expose an idempotent setup phase that calculates
+   * their natural iteration budget from the problem. Running setup here does
+   * not advance the solver or give it preference in the portfolio.
+   */
+  private initializeCandidateBudget(solver: unknown) {
+    const setup = (solver as any).setup
+    if (typeof setup === "function") setup.call(solver)
+  }
+
+  private refreshDynamicIterationLimit() {
+    const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
+      (total, { solver }) => {
+        if (solver.solved || solver.failed) return total
+        const remainingCandidateIterations = Math.max(
+          0,
+          solver.MAX_ITERATIONS - solver.iterations + 1,
+        )
+        return (
+          total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
+        )
+      },
+      0,
+    )
+
+    // Keep one supervisor step available to observe that the current
+    // portfolio is exhausted and expand it before BaseSolver can fail.
+    this.MAX_ITERATIONS = Math.max(
+      this.iterations + 1,
+      this.iterations + remainingSupervisorIterations,
+    )
+    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
+  }
+
+  override initializeSolvers() {
+    super.initializeSolvers()
+    for (const { solver } of this.supervisedSolvers ?? []) {
+      this.initializeCandidateBudget(solver)
     }
+    this.refreshDynamicIterationLimit()
+  }
+
+  private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
+    this.initializeCandidateBudget(solver)
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,
@@ -282,40 +316,13 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
     this.adaptiveSearchExpanded = true
     for (const shuffleSeed of A01_SHUFFLE_SEEDS.slice(1)) {
-      this.addA01Seed(shuffleSeed)
+      this.addSupervisedCandidate({
+        HIGH_DENSITY_A01: true,
+        SHUFFLE_SEED: shuffleSeed,
+      })
     }
-
-    // A01/A03 replace their broad constructor defaults with budgets derived
-    // from the initialized grid size, layer count, connection count and
-    // effort. Initialize any untouched A0x candidates once so the supervisor
-    // can extend its own limit from their real remaining budgets.
-    for (const { solver } of this.supervisedSolvers ?? []) {
-      if (
-        solver.iterations === 0 &&
-        (solver instanceof HighDensitySolverA01 ||
-          solver instanceof HighDensityA03Solver)
-      ) {
-        solver.step()
-      }
-    }
-
-    const dynamicSupervisorIterationBudget = (
-      this.supervisedSolvers ?? []
-    ).reduce((total, { solver }) => {
-      if (solver.solved || solver.failed) return total
-      const remainingCandidateIterations = Math.max(
-        0,
-        solver.MAX_ITERATIONS - solver.iterations + 1,
-      )
-      return total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
-    }, 0)
-
-    this.MAX_ITERATIONS = Math.max(
-      this.iterations + 1,
-      this.iterations + dynamicSupervisorIterationBudget,
-    )
+    this.refreshDynamicIterationLimit()
     this.stats.adaptiveSearchExpanded = true
-    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
   override _step() {
@@ -329,15 +336,6 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     }
 
     super._step()
-
-    if (
-      !this.solved &&
-      !this.failed &&
-      !this.adaptiveSearchExpanded &&
-      this.iterations > INITIAL_PORTFOLIO_ITERATION_BUDGET
-    ) {
-      this.expandAdaptiveSearch()
-    }
   }
 
   computeG(solver: IntraNodeRouteSolver) {
@@ -361,17 +359,11 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   }
 
   computeH(solver: IntraNodeRouteSolver) {
-    if (
-      this.adaptiveSearchExpanded &&
-      ((solver as any) instanceof HighDensitySolverA01 ||
-        (solver as any) instanceof HighDensityA03Solver)
-    ) {
-      return Math.max(
-        0,
-        1 -
-          this.getA0xSolvedSegmentCount(solver as any) /
-            this.getNodeSegmentCount(),
-      )
+    if (this.adaptiveSearchExpanded) {
+      const solvedSegmentCount = this.getSolvedSegmentCount(solver)
+      if (solvedSegmentCount !== null) {
+        return Math.max(0, 1 - solvedSegmentCount / this.getNodeSegmentCount())
+      }
     }
     return 1 - (solver.progress || 0)
   }
