@@ -50,4 +50,4 @@ Primary goal: lower **P50** and **P95** on `<chosen-dataset>`. Decision ladder f
 - Output: stdout table + `benchmark-result.txt` / `benchmark-result.json` (+ HTML snapshot) at repo root.
 - Metric map: **P50** → `P50 Time` (`summary[].p50TimeMs`); **P95** → `P95 Time` (`summary[].p95TimeMs`); **solve rate** → `Completed %` (`summary[].completedRateLabel`); **DRC** → `Relaxed DRC Pass %` (`summary[].relaxedDrcRateLabel`).
 - No average-solve-time column exists — the only avg shown is `Avg Via` (via count, a quality metric). Derive avg time by averaging `tests[].elapsedTimeMs` from `benchmark-result.json` over succeeded samples.
-- Blacksmith only: in a PR, `/benchmark <args>` forwards `<args>` straight to `./benchmark.sh` on a cloud runner.
+- Blacksmith only: in a PR, exact `/benchmark` runs dataset01, while exact `/benchmark-all` dispatches separate cloud runs for dataset01, srj18, srj19, srj20, srj21, and srj23. PR comment arguments are unsupported.

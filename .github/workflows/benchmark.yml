@@ -1,8 +1,6 @@
 name: Autorouting Benchmark
 
 on:
-  issue_comment:
-    types: [created]
   pull_request:
     types: [opened, reopened, synchronize, edited]
   push:
@@ -33,7 +31,7 @@ on:
         default: false
         type: boolean
       dataset_name:
-        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, srj18, srj21, or srj23)"
+        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, srj18, srj19, srj20, srj21, or srj23)"
         required: false
         type: string
       profile_solvers:
@@ -45,11 +43,14 @@ on:
         description: Git ref (branch, tag, or SHA) to benchmark
         required: false
         type: string
+      pr_number:
+        description: Pull request number where this benchmark posts its result
+        required: false
+        type: string
 
 permissions:
   contents: read
   issues: write
-  pull-requests: write
 
 jobs:
   benchmark:
@@ -61,16 +62,6 @@ jobs:
       ) || (
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
-      ) || (
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request &&
-        github.event.comment.user.type != 'Bot' &&
-        startsWith(github.event.comment.body, '/benchmark') &&
-        (
-          github.event.comment.author_association == 'OWNER' ||
-          github.event.comment.author_association == 'MEMBER' ||
-          github.event.comment.author_association == 'COLLABORATOR'
-        )
       )
     runs-on: ${{ vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
     timeout-minutes: 60
@@ -82,109 +73,13 @@ jobs:
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
-            const isComment = context.eventName === 'issue_comment'
             const allSolversAliases = new Set(['all', '_'])
-            const splitShellArgs = (input) => {
-              const args = []
-              let current = ''
-              let quote = null
-              let escaping = false
-              let tokenStarted = false
-
-              const pushCurrent = () => {
-                if (!tokenStarted) return
-                args.push(current)
-                current = ''
-                tokenStarted = false
-              }
-
-              for (const char of input) {
-                if (escaping) {
-                  if (quote === '"' && char === '\n') {
-                    escaping = false
-                    continue
-                  }
-                  if (quote === '"' && !['"', '\\', '$', '`'].includes(char)) {
-                    current += '\\'
-                  }
-                  current += char
-                  tokenStarted = true
-                  escaping = false
-                  continue
-                }
-
-                if (quote === "'") {
-                  if (char === "'") {
-                    quote = null
-                  } else {
-                    current += char
-                  }
-                  tokenStarted = true
-                  continue
-                }
-
-                if (quote === '"') {
-                  if (char === '"') {
-                    quote = null
-                  } else if (char === '\\') {
-                    escaping = true
-                  } else {
-                    current += char
-                  }
-                  tokenStarted = true
-                  continue
-                }
-
-                if (/\s/.test(char)) {
-                  pushCurrent()
-                  continue
-                }
-
-                if (char === "'" || char === '"') {
-                  quote = char
-                  tokenStarted = true
-                  continue
-                }
-
-                if (char === '\\') {
-                  escaping = true
-                  tokenStarted = true
-                  continue
-                }
-
-                current += char
-                tokenStarted = true
-              }
-
-              if (escaping) {
-                current += '\\'
-              }
-
-              if (quote !== null) {
-                throw new Error('Unterminated quote in /benchmark command')
-              }
-
-              pushCurrent()
-              return args
-            }
 
             let benchmarkArgs = []
             let benchmarkConcurrency = ''
             let profileSolvers = false
             let ref = context.sha
             let statusCommentId = ''
-
-            const stripProfileSolversFlag = (args) => {
-              const stripped = []
-              for (const arg of args) {
-                if (arg === '--profile-solvers' || arg === '--show-profile-solvers') {
-                  profileSolvers = true
-                  continue
-                }
-                stripped.push(arg)
-              }
-              return stripped
-            }
 
             const buildProfileSolversArgs = (args) => {
               const profileArgs = []
@@ -235,28 +130,6 @@ jobs:
               return profileArgs
             }
 
-            if (isComment) {
-              const body = context.payload.comment.body.trim()
-              const commentArgs = body.replace(/^\/benchmark\b/, '').trim()
-              benchmarkArgs = stripProfileSolversFlag(splitShellArgs(commentArgs))
-
-              const pr = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.issue.number,
-              })
-              ref = pr.data.head.sha
-
-              const statusComment = await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `## 🏃 Autorouting Benchmark\n\n⏳ Running benchmark on \`${ref.slice(0, 7)}\`...\n\n🔗 Workflow: [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
-              })
-
-              statusCommentId = String(statusComment.data.id)
-            }
-
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
               const requestedSolver = (inputs.solver_name || '').trim()
@@ -272,9 +145,6 @@ jobs:
               const effort = (inputs.effort || '').trim()
               const concurrency = (inputs.concurrency || '').trim()
               const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
-              const datasetName = (inputs.dataset_name || '').trim()
-              profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
-
               if (scenarioLimit) {
                 benchmarkArgs.push('--scenario-limit', scenarioLimit)
               }
@@ -284,14 +154,32 @@ jobs:
               if (includeAssignable) {
                 benchmarkArgs.push('--include-assignable')
               }
-              if (datasetName) {
-                benchmarkArgs.push('--dataset', datasetName)
-              }
               if (concurrency && concurrency.toLowerCase() !== 'auto') {
                 benchmarkConcurrency = concurrency
                 benchmarkArgs.push('--concurrency', concurrency)
               }
+
+              const datasetName = (inputs.dataset_name || '').trim()
+              if (datasetName) {
+                benchmarkArgs.push('--dataset', datasetName)
+              }
+              profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
               ref = (inputs.ref || '').trim() || ref
+              const prNumber = (inputs.pr_number || '').trim()
+              if (prNumber) {
+                const issueNumber = Number(prNumber)
+                if (!Number.isInteger(issueNumber) || issueNumber < 1) {
+                  throw new Error(`Invalid pull request number: ${prNumber}`)
+                }
+                const benchmarkLabel = datasetName === 'dataset01' ? 'Default Benchmark' : datasetName
+                const statusComment = await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `## ${benchmarkLabel}\n\nQueued on \`${ref.slice(0, 7)}\`.\n\nWorkflow: [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+                })
+                statusCommentId = String(statusComment.data.id)
+              }
             }
 
             if (context.eventName === 'pull_request') {
@@ -309,6 +197,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.parse.outputs.ref }}
+          persist-credentials: false
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -456,7 +345,7 @@ jobs:
           cp benchmark-result.json benchmark-result-pr.json
 
       - name: Download main branch benchmark result
-        if: github.event_name == 'issue_comment'
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
         run: |
@@ -487,8 +376,11 @@ jobs:
           bun scripts/benchmark/best-via-counts.ts write-cells --best-vias benchmark-best-vias-main.json --report benchmark-result-pr.json --out benchmark-via-cells.json
 
       - name: Post benchmark result comment before profile-solvers
-        if: github.event_name == 'issue_comment' && steps.parse.outputs.status_comment_id != ''
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && steps.parse.outputs.status_comment_id != ''
         uses: actions/github-script@v7
+        env:
+          STATUS_COMMENT_ID: ${{ steps.parse.outputs.status_comment_id }}
+          BENCHMARK_DATASET: ${{ inputs.dataset_name }}
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
@@ -508,13 +400,13 @@ jobs:
               return value.toFixed(2)
             }
             const getStatus = (test) => {
-              if (test.didTimeout) return '❌'
-              if (test.didSolve) return '✅'
-              return '❌'
+              if (test.didTimeout) return 'Timeout'
+              if (test.didSolve) return 'Solved'
+              return 'Failed'
             }
             const getDrc = (test) => {
-              if (!test.didSolve) return '❌'
-              return test.relaxedDrcPassed ? '✅' : '❌'
+              if (!test.didSolve) return 'Failed'
+              return test.relaxedDrcPassed ? 'Passed' : 'Failed'
             }
             const escapeHtml = (value) =>
               String(value ?? '')
@@ -616,8 +508,8 @@ jobs:
               if (!mainTest) return ''
               const prScore = getOutcomeScore(test)
               const mainScore = getOutcomeScore(mainTest)
-              if (prScore > mainScore) return '✅'
-              if (prScore < mainScore) return '❌'
+              if (prScore > mainScore) return 'Improved'
+              if (prScore < mainScore) return 'Regressed'
               return ''
             }
             const getViaCell = (test, viaCellIndex, datasetName) => {
@@ -746,18 +638,19 @@ jobs:
             const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
+            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
 
             const renderBody = (options = {}) => [
-              '## 🏃 Autorouting Benchmark Results',
+              `## ${benchmarkLabel} Results`,
               '',
               ...(profileEnabled
                 ? [
-                    '🧭 **Profile Solvers:** running. Benchmark results are ready; profile comparison tables will be added when profiling finishes.',
+                    '**Profile Solvers:** running. Benchmark results are ready; profile comparison tables will be added when profiling finishes.',
                     '',
                   ]
                 : []),
               '<details>',
-              '<summary>📊 Main Branch Results</summary>',
+              '<summary>Main Branch Results</summary>',
               '',
               ...renderReportCollection(mainReport, mainText, {
                 forceCombinedSummary: true,
@@ -765,7 +658,7 @@ jobs:
               '</details>',
               '',
               '<details open>',
-              '<summary>📊 PR Results</summary>',
+              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
@@ -776,13 +669,13 @@ jobs:
               ...(profileEnabled
                 ? [
                     '',
-                    '⏳ Profile solver comparison is still running.',
+                    'Profile solver comparison is still running.',
                   ]
                 : []),
               '</details>',
               '',
-              `🔗 Workflow: [View run](${runUrl})`,
-              `📦 Artifact: ${runUrl}`,
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: ${runUrl}`,
             ].join('\n')
             const fullBody = renderBody()
             const filteredBody =
@@ -793,7 +686,7 @@ jobs:
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              comment_id: Number('${{ steps.parse.outputs.status_comment_id }}'),
+              comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: filteredBody,
             })
 
@@ -876,25 +769,25 @@ jobs:
           NODE
 
       - name: Checkout main for profile-solvers
-        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'issue_comment'
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         uses: actions/checkout@v4
         with:
           ref: main
           path: main-profile
 
       - name: Copy profile-solvers runner into main checkout
-        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'issue_comment'
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         run: |
           cp scripts/profile-solvers.ts main-profile/scripts/profile-solvers.ts
           cp scripts/benchmark/scenarios.ts main-profile/scripts/benchmark/scenarios.ts
 
       - name: Install main dependencies for profile-solvers
-        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'issue_comment'
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         working-directory: main-profile
         run: bun install
 
       - name: Run profile-solvers (main)
-        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'issue_comment'
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         env:
           PROFILE_SOLVERS_ARGS_JSON: ${{ steps.parse.outputs.profile_solvers_args_json }}
           PROFILE_SOLVERS_HEARTBEAT_INTERVAL_MS: ${{ vars.PROFILE_SOLVERS_HEARTBEAT_INTERVAL_MS || '30000' }}
@@ -994,8 +887,11 @@ jobs:
           overwrite: true
 
       - name: Post benchmark result comment
-        if: always() && github.event_name == 'issue_comment' && steps.parse.outputs.status_comment_id != ''
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && steps.parse.outputs.status_comment_id != ''
         uses: actions/github-script@v7
+        env:
+          STATUS_COMMENT_ID: ${{ steps.parse.outputs.status_comment_id }}
+          BENCHMARK_DATASET: ${{ inputs.dataset_name }}
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
@@ -1015,13 +911,13 @@ jobs:
               return value.toFixed(2)
             }
             const getStatus = (test) => {
-              if (test.didTimeout) return '❌'
-              if (test.didSolve) return '✅'
-              return '❌'
+              if (test.didTimeout) return 'Timeout'
+              if (test.didSolve) return 'Solved'
+              return 'Failed'
             }
             const getDrc = (test) => {
-              if (!test.didSolve) return '❌'
-              return test.relaxedDrcPassed ? '✅' : '❌'
+              if (!test.didSolve) return 'Failed'
+              return test.relaxedDrcPassed ? 'Passed' : 'Failed'
             }
             const escapeHtml = (value) =>
               String(value ?? '')
@@ -1123,8 +1019,8 @@ jobs:
               if (!mainTest) return ''
               const prScore = getOutcomeScore(test)
               const mainScore = getOutcomeScore(mainTest)
-              if (prScore > mainScore) return '✅'
-              if (prScore < mainScore) return '❌'
+              if (prScore > mainScore) return 'Improved'
+              if (prScore < mainScore) return 'Regressed'
               return ''
             }
             const getViaCell = (test, viaCellIndex, datasetName) => {
@@ -1268,8 +1164,8 @@ jobs:
               const delta = prRow.scenarioSuccessRate - mainRow.scenarioSuccessRate
               if (!Number.isFinite(delta)) return 'n/a'
               const label = `${delta > 0 ? '+' : ''}${delta.toFixed(0)}%`
-              if (delta > 0) return `${label} ✅`
-              if (delta < 0) return `${label} ❌`
+              if (delta > 0) return `${label} (improved)`
+              if (delta < 0) return `${label} (regressed)`
               return label
             }
             const renderProfileRunSummary = (report) => {
@@ -1336,7 +1232,7 @@ jobs:
             const renderProfileSolversDetails = (lines) => [
               '',
               '<details>',
-              '<summary>🧭 Profile Solvers</summary>',
+              '<summary>Profile Solvers</summary>',
               '',
               ...lines,
               '</details>',
@@ -1364,28 +1260,29 @@ jobs:
                 prProfileSolversText ||
                 prProfileSolversReport,
             )
+            const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
 
             const renderBody = (options = {}) => [
-              benchmarkFailed ? '## 🏃 Autorouting Benchmark Failed' : '## 🏃 Autorouting Benchmark Results',
+              benchmarkFailed ? `## ${benchmarkLabel} Failed` : `## ${benchmarkLabel} Results`,
               '',
               ...(profileEnabled
                 ? [
                     hasProfileSolvers
-                      ? '✅ **Profile Solvers:** completed. Comparison tables are included below.'
-                      : '⚠️ **Profile Solvers:** requested, but profile output was not produced.',
+                      ? '**Profile Solvers:** completed. Comparison tables are included below.'
+                      : '**Profile Solvers:** requested, but profile output was not produced.',
                     '',
                   ]
                 : []),
               ...(benchmarkFailed
                 ? [
-                    `❌ Benchmark workflow ended with **${jobStatus}** before completion.`,
+                    `Benchmark workflow ended with **${jobStatus}** before completion.`,
                     '',
                     'This can happen during setup, dependency installation, or benchmark execution.',
                     '',
                   ]
                 : []),
               '<details>',
-              '<summary>📊 Main Branch Results</summary>',
+              '<summary>Main Branch Results</summary>',
               '',
               ...renderReportCollection(mainReport, mainText, {
                 forceCombinedSummary: true,
@@ -1398,7 +1295,7 @@ jobs:
               '</details>',
               '',
               '<details open>',
-              '<summary>📊 PR Results</summary>',
+              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 includeDelta: true,
@@ -1416,8 +1313,8 @@ jobs:
                 : []),
               '</details>',
               '',
-              `🔗 Workflow: [View run](${runUrl})`,
-              `📦 Artifact: ${runUrl}`,
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: ${runUrl}`,
             ].join('\n')
 
             const fullBody = renderBody()
@@ -1430,6 +1327,6 @@ jobs:
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              comment_id: Number('${{ steps.parse.outputs.status_comment_id }}'),
+              comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: finalBody,
             })

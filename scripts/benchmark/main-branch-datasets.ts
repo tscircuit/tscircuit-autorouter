@@ -1,13 +1,15 @@
 import { type DatasetName, parseDatasetName } from "./scenarios"
 
 // Edit this list to choose which datasets main branch benchmark artifacts publish.
-// PR /benchmark comments use these artifacts for the "Main Branch Results" table,
-// but /benchmark itself still runs only the requested dataset or dataset01 by default.
+// PR /benchmark and /benchmark-all comments use these artifacts for the
+// "Main Branch Results" table. /benchmark-all dispatches every listed dataset.
 export const MAIN_BRANCH_BENCHMARK_DATASET_INPUTS = [
   "dataset1",
-  "dataset15",
-  "dataset16",
   "dataset18",
+  "dataset19",
+  "dataset20",
+  "dataset21",
+  "dataset23",
 ] as const
 
 export const getMainBranchBenchmarkDatasets = (): DatasetName[] => {

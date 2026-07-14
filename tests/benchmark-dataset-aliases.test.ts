@@ -1,0 +1,28 @@
+import { expect, test } from "bun:test"
+import { parseDatasetName } from "../scripts/benchmark/scenarios"
+
+test("benchmark dataset aliases resolve to canonical dataset names", () => {
+  expect(parseDatasetName("1")).toBe("dataset01")
+  expect(parseDatasetName("dataset01")).toBe("dataset01")
+  expect(parseDatasetName("11")).toBe("srj11")
+  expect(parseDatasetName("dataset-srj11-45-degree")).toBe("srj11")
+  expect(parseDatasetName("12")).toBe("srj12")
+  expect(parseDatasetName("dataset-srj12-bus-routing")).toBe("srj12")
+  expect(parseDatasetName("13")).toBe("srj13")
+  expect(parseDatasetName("dataset-srj13")).toBe("srj13")
+  expect(parseDatasetName("15")).toBe("srj15")
+  expect(parseDatasetName("dataset15")).toBe("srj15")
+  expect(parseDatasetName("dataset-srj15")).toBe("srj15")
+  expect(parseDatasetName("16")).toBe("srj16")
+  expect(parseDatasetName("dataset16")).toBe("srj16")
+  expect(parseDatasetName("dataset-srj16-bga-breakouts")).toBe("srj16")
+  expect(parseDatasetName("19")).toBe("srj19")
+  expect(parseDatasetName("dataset19")).toBe("srj19")
+  expect(parseDatasetName("dataset-srj19-bga-passive-overlays")).toBe("srj19")
+  expect(parseDatasetName("20")).toBe("srj20")
+  expect(parseDatasetName("dataset20")).toBe("srj20")
+  expect(parseDatasetName("dataset-srj20-partial-bga-breakouts")).toBe("srj20")
+  expect(parseDatasetName("23")).toBe("srj23")
+  expect(parseDatasetName("dataset23")).toBe("srj23")
+  expect(parseDatasetName("45-degree-trace-srj23")).toBe("srj23")
+})
