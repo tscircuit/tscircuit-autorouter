@@ -34,10 +34,7 @@ test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   ).toBe(true)
   expect(
     (highDensityParams as any).growShrinkMaxInnerIterationsPerGrowthAttempt,
-  ).toBe(8_000)
-  expect(
-    (highDensityParams as any).growShrinkEnableExpandedOriginalSizeSearch,
-  ).toBe(true)
+  ).toBeUndefined()
 })
 
 test("Pipeline7 caps expensive post-processing stages for benchmark completion", () => {

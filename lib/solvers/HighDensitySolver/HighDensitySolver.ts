@@ -60,7 +60,6 @@ export class HighDensitySolver extends BaseSolver {
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
-  growShrinkEnableExpandedOriginalSizeSearch: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -93,7 +92,6 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
-    growShrinkEnableExpandedOriginalSizeSearch,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -107,7 +105,6 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
-    growShrinkEnableExpandedOriginalSizeSearch?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -130,8 +127,6 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
-    this.growShrinkEnableExpandedOriginalSizeSearch =
-      growShrinkEnableExpandedOriginalSizeSearch ?? false
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -329,8 +324,6 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
-      enableExpandedOriginalSizeSearch:
-        this.growShrinkEnableExpandedOriginalSizeSearch,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

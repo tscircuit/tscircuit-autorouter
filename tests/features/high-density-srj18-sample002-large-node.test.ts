@@ -14,43 +14,36 @@ const solverParams = {
   effort: 1,
 }
 
-test("expanded search broadens the portfolio without batching one solver", () => {
-  const ordinarySolver = new HyperSingleIntraNodeSolver(solverParams)
-  ordinarySolver.initializeSolvers()
-  const expandedSolver = new HyperSingleIntraNodeSolver({
-    ...solverParams,
-    expandedSearch: true,
-  })
-  expandedSolver.initializeSolvers()
+test("the default portfolio derives its budget from deterministic candidates", () => {
+  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  solver.initializeSolvers()
 
-  const ordinaryA01Solvers = ordinarySolver.supervisedSolvers!.filter(
-    ({ solver }) => solver.getSolverName() === "HighDensitySolverA01",
-  )
-  const expandedA01Solvers = expandedSolver.supervisedSolvers!.filter(
+  const a01Solvers = solver.supervisedSolvers!.filter(
     ({ solver }) => solver.getSolverName() === "HighDensitySolverA01",
   )
 
-  expect(ordinaryA01Solvers).toHaveLength(1)
-  expect(expandedA01Solvers).toHaveLength(4)
+  expect(a01Solvers).toHaveLength(6)
   expect(
-    expandedA01Solvers.every(
+    a01Solvers.map(
+      ({ solver }) => (solver as any).hyperParameters.shuffleSeed,
+    ),
+  ).toEqual([0, 1, 2, 3, 4, 5])
+  expect(
+    a01Solvers.every(
       ({ solver }) => (solver as any).stepMultiplier === 1,
     ),
   ).toBe(true)
-  expect(
-    expandedSolver.supervisedSolvers!.some(
-      ({ solver }) => solver.getSolverName() !== "HighDensitySolverA01",
-    ),
-  ).toBe(true)
+  expect(solver.MAX_ITERATIONS).toBe(
+    solver.stats.dynamicSupervisorIterationBudget,
+  )
+  expect(solver.MAX_ITERATIONS).toBeGreaterThan(8_000)
 })
 
 test("the srj18 sample002 large node is solved at its physical size", () => {
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     ...solverParams,
     maxGrowthAttempts: 3,
-    maxInnerIterationsPerGrowthAttempt: 8_000,
     fallbackToInvalidGeometryOnFailure: false,
-    enableExpandedOriginalSizeSearch: true,
   })
 
   solver.solve()
@@ -59,10 +52,9 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.failed).toBe(false)
   expect(solver.growthAttempts).toBe(0)
   expect(solver.scaleFactor).toBe(1)
-  expect(solver.expandedOriginalSizeSearchAttempted).toBe(true)
-  expect(solver.stats.expandedOriginalSizeSearch).toBe(true)
-  expect(solver.winningSolver?.expandedSearch).toBe(true)
   expect(solver.stats.invalidGeometryFallback).not.toBe(true)
-  expect(solver.winningSolver?.iterations).toBeLessThanOrEqual(40_000)
+  expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
+    solver.winningSolver!.MAX_ITERATIONS,
+  )
   expect(solver.solvedRoutes).toHaveLength(19)
 }, 10_000)

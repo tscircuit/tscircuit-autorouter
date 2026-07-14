@@ -17,16 +17,12 @@ type HyperSingleIntraNodeSolverParams = ConstructorParameters<
 >[0]
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
-// The expanded portfolio is only entered after the ordinary capped search
-// fails, and needs enough rounds for several deterministic candidates.
-const EXPANDED_ORIGINAL_SIZE_BUDGET_MULTIPLIER = 5
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   HyperSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
-    enableExpandedOriginalSizeSearch?: boolean
   }
 
 const scalePoint = <T extends { x: number; y: number }>(
@@ -114,8 +110,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
-  expandedOriginalSizeSearchAttempted = false
-  activeSearchIsExpanded = false
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -148,7 +142,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     this.activeSubSolver = new HyperSingleIntraNodeSolver({
       ...this.constructorParams,
-      expandedSearch: this.activeSearchIsExpanded,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
@@ -156,10 +149,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
-        this.constructorParams.maxInnerIterationsPerGrowthAttempt *
-        (this.activeSearchIsExpanded
-          ? EXPANDED_ORIGINAL_SIZE_BUDGET_MULTIPLIER
-          : 1)
+        this.constructorParams.maxInnerIterationsPerGrowthAttempt
     }
   }
 
@@ -177,12 +167,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           )
     this.solved = true
     this.failed = false
-    if (this.activeSearchIsExpanded) {
-      this.stats = {
-        ...this.stats,
-        expandedOriginalSizeSearch: true,
-      }
-    }
   }
 
   computeProgress() {
@@ -213,18 +197,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
-
-    if (
-      this.scaleFactor === 1 &&
-      !this.expandedOriginalSizeSearchAttempted &&
-      this.constructorParams.enableExpandedOriginalSizeSearch === true
-    ) {
-      this.expandedOriginalSizeSearchAttempted = true
-      this.activeSearchIsExpanded = true
-      return
-    }
-
-    this.activeSearchIsExpanded = false
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {

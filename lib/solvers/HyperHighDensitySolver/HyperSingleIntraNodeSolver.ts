@@ -22,9 +22,10 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
-// Use a small, deterministic spread so the fallback explores meaningfully
-// different connection orderings without replacing the rest of the portfolio.
-const EXPANDED_A01_SHUFFLE_SEEDS = [0, 2, 5, 14]
+// Match the existing six-ordering portfolio used by the other intra-node
+// solver. Sequential seeds make the search policy deterministic and avoid
+// selecting orderings for a specific reproduction.
+const A01_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -44,7 +45,6 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
-  expandedSearch: boolean
 
   private getA0xSolvedSegmentCount(
     solver: HighDensitySolverA01 | HighDensityA03Solver,
@@ -76,7 +76,6 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      expandedSearch?: boolean
     },
   ) {
     super()
@@ -84,7 +83,6 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.expandedSearch = opts.expandedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -243,10 +241,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "highDensityA01",
-        possibleValues: (this.expandedSearch
-          ? EXPANDED_A01_SHUFFLE_SEEDS
-          : [0]
-        ).map((shuffleSeed) => ({
+        possibleValues: A01_SHUFFLE_SEEDS.map((shuffleSeed) => ({
           HIGH_DENSITY_A01: true,
           SHUFFLE_SEED: shuffleSeed,
         })),
@@ -260,6 +255,40 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         ],
       },
     ]
+  }
+
+  override initializeSolvers() {
+    super.initializeSolvers()
+
+    // A01/A03 replace their broad constructor defaults with budgets derived
+    // from the initialized grid size, layer count, connection count and
+    // effort. Initialize them once so the supervisor can use those real
+    // budgets instead of imposing an unrelated outer limit.
+    for (const { solver } of this.supervisedSolvers ?? []) {
+      if (
+        solver instanceof HighDensitySolverA01 ||
+        solver instanceof HighDensityA03Solver
+      ) {
+        solver.step()
+      }
+    }
+
+    const dynamicSupervisorIterationBudget = (
+      this.supervisedSolvers ?? []
+    ).reduce((total, { solver }) => {
+      if (solver.solved || solver.failed) return total
+      const remainingCandidateIterations = Math.max(
+        0,
+        solver.MAX_ITERATIONS - solver.iterations + 1,
+      )
+      return (
+        total +
+        Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
+      )
+    }, 0)
+
+    this.MAX_ITERATIONS = Math.max(1, dynamicSupervisorIterationBudget)
+    this.stats.dynamicSupervisorIterationBudget = this.MAX_ITERATIONS
   }
 
   computeG(solver: IntraNodeRouteSolver) {
@@ -284,7 +313,6 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
   computeH(solver: IntraNodeRouteSolver) {
     if (
-      this.expandedSearch &&
       ((solver as any) instanceof HighDensitySolverA01 ||
         (solver as any) instanceof HighDensityA03Solver)
     ) {
