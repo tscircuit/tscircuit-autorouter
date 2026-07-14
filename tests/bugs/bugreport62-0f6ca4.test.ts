@@ -16,7 +16,7 @@ test("bugreport62-0f6ca4.json", () => {
     .flatMap((trace) => trace.route)
     .filter((routeElement) => routeElement.route_type === "via").length
 
-  expect(viaCount).toBe(16)
+  expect(viaCount).toBe(22)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

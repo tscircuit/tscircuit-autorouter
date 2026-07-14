@@ -35,7 +35,7 @@ export interface ViaPairReroutingSolverInput {
   viaDistanceCost?: number
 }
 
-const DEFAULT_VIA_DISTANCE_COST = 20
+const DEFAULT_VIA_DISTANCE_COST = 40
 const POINT_EPSILON = 1e-6
 
 /**

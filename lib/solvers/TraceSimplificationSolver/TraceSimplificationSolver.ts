@@ -81,7 +81,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
-   *   - viaDistanceCost: Distance-equivalent cost of each via (default: 20mm)
+   *   - viaDistanceCost: Distance-equivalent cost of each via (default: 40mm)
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(

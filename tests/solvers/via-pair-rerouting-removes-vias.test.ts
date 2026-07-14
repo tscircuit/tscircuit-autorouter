@@ -47,7 +47,7 @@ test("reroutes between vias on one layer and leaves other routes unchanged", () 
 
   const [rerouted, preserved] = solver.optimizedHdRoutes
   expect(solver.failed).toBe(false)
-  expect(solver.viaDistanceCost).toBe(20)
+  expect(solver.viaDistanceCost).toBe(40)
   expect(rerouted.vias).toHaveLength(0)
   expect(rerouted.route.every((point) => point.z === 0)).toBe(true)
   expect(rerouted.route.some((point) => Math.abs(point.y) > 1)).toBe(true)
