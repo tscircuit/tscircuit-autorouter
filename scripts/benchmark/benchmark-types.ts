@@ -15,6 +15,7 @@ export type BenchmarkSnapshot = {
   sampleNumber: number
   label: string
   elapsedTimeMs: number
+  traceCount: number
   viaCount: number
   relaxedDrcPassed: boolean
   drcErrorCount?: number

@@ -94,14 +94,14 @@ const escapeHtml = (value: unknown): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 
-const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
+export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
   let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "")
   sanitizedSvg = sanitizedSvg.replace(
     /<g\b[^>]*\bid=["']crosshair["'][\s\S]*?<\/g>/gi,
     "",
   )
   sanitizedSvg = sanitizedSvg.replace(
-    /<g>\s*<circle\b(?=[^>]*\bdata-type=["']point["'])(?=[^>]*\bdata-label=["']Cursor["'])[^>]*\/>\s*<\/g>/gi,
+    /<g\b[^>]*>\s*<circle\b(?=[^>]*\bdata-type=["']point["'])[^>]*(?:\/>|>\s*<\/circle>)\s*<\/g>/gi,
     "",
   )
   sanitizedSvg = sanitizedSvg.replace(
@@ -111,7 +111,7 @@ const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
   return sanitizedSvg
 }
 
-const createSnapshotCardHtml = (
+export const createSnapshotCardHtml = (
   snapshot: BenchmarkSnapshotWithImage,
   snapshotIndex: number,
 ): string => {
@@ -127,14 +127,16 @@ const createSnapshotCardHtml = (
     <div><dt>Sample</dt><dd>${escapeHtml(snapshot.sampleNumber)}</dd></div>
     <div><dt>Scenario</dt><dd>${escapeHtml(snapshot.scenarioName)}</dd></div>
     <div><dt>Time</dt><dd>${escapeHtml(formatTime(snapshot.elapsedTimeMs))}</dd></div>
+    <div><dt>Trace Count</dt><dd>${escapeHtml(snapshot.traceCount)}</dd></div>
     <div><dt>Via</dt><dd>${escapeHtml(snapshot.viaCount)}</dd></div>
+    <div><dt>DRC Issue Count</dt><dd>${escapeHtml(snapshot.drcErrorCount ?? "n/a")}</dd></div>
     <div><dt>Relaxed DRC</dt><dd>${snapshot.relaxedDrcPassed ? "passed" : "failed"}</dd></div>
   </dl>
   <div class="snapshot-viewer" data-snapshot-viewer>
     <div class="viewer-toolbar" role="toolbar" aria-label="Snapshot View Controls">
       <p class="viewer-hint">Scroll to zoom. Zoom, then drag to pan.</p>
       <button type="button" data-viewer-action="reset" aria-label="Reset View">Reset</button>
-      <button type="button" data-viewer-action="fullscreen" aria-label="Enter Fullscreen">Enter Fullscreen</button>
+      <button type="button" data-viewer-action="fullscreen" aria-label="Enter Fullscreen" aria-pressed="false">Enter Fullscreen</button>
     </div>
     <div id="${snapshotDescriptionId}" class="sr-only">Scroll or use the plus and minus keys to zoom. After zooming, drag or use arrow keys to pan ${snapshotLabel}.</div>
     <div class="snapshot-image" data-viewer-viewport tabindex="0" role="img" aria-label="${snapshotLabel}" aria-describedby="${snapshotDescriptionId}">${sanitizedImageSvg}</div>
@@ -175,10 +177,12 @@ const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
     .snapshot-image { display: grid; place-items: start; width: 100%; min-height: 320px; max-height: 72vh; aspect-ratio: 1 / 1; overflow: hidden; background: #fbfbfa; cursor: grab; touch-action: pan-y pinch-zoom; user-select: none; -webkit-tap-highlight-color: transparent; }
     .snapshot-image.is-zoomed { touch-action: none; }
     .snapshot-image.is-panning { cursor: grabbing; }
-    .snapshot-image svg { display: block; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
-    .snapshot-viewer:fullscreen { display: flex; flex-direction: column; width: 100vw; height: 100vh; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: #f5f5f4; }
-    .snapshot-viewer:fullscreen .viewer-toolbar { flex: 0 0 auto; border: 1px solid #d4d4d4; border-radius: 8px 8px 0 0; }
-    .snapshot-viewer:fullscreen .snapshot-image { flex: 1 1 auto; min-height: 0; max-height: none; aspect-ratio: auto; border: 1px solid #d4d4d4; border-top: 0; border-radius: 0 0 8px 8px; }
+    .snapshot-image svg { display: block; width: 100%; height: 100%; }
+    body.has-full-size-viewer { overflow: hidden; }
+    .snapshot.has-full-size-viewer { content-visibility: visible; contain: none; }
+    .snapshot-viewer.is-full-size { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; border: 0; border-radius: 0; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: #f5f5f4; }
+    .snapshot-viewer.is-full-size .viewer-toolbar { flex: 0 0 auto; border: 1px solid #d4d4d4; border-radius: 8px 8px 0 0; }
+    .snapshot-viewer.is-full-size .snapshot-image { flex: 1 1 auto; min-height: 0; max-height: none; aspect-ratio: auto; border: 1px solid #d4d4d4; border-top: 0; border-radius: 0 0 8px 8px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     @media (max-width: 720px) {
       body { padding: 16px; }
@@ -207,27 +211,72 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
       const getButton = (viewer, action) =>
         viewer.querySelector('[data-viewer-action="' + action + '"]')
 
+      const updateFullSizeButton = (viewer, isFullSize) => {
+        const button = getButton(viewer, "fullscreen")
+        if (!button) return
+        button.textContent = isFullSize ? "Exit Fullscreen" : "Enter Fullscreen"
+        button.setAttribute(
+          "aria-label",
+          isFullSize ? "Exit Fullscreen" : "Enter Fullscreen",
+        )
+        button.setAttribute("aria-pressed", String(isFullSize))
+      }
+
+      const setViewerFullSize = (viewer, isFullSize) => {
+        const currentViewer = document.querySelector(
+          "[data-snapshot-viewer].is-full-size",
+        )
+        if (isFullSize && currentViewer && currentViewer !== viewer) {
+          currentViewer.classList.remove("is-full-size")
+          currentViewer
+            .closest(".snapshot")
+            ?.classList.remove("has-full-size-viewer")
+          updateFullSizeButton(currentViewer, false)
+        }
+        viewer.classList.toggle("is-full-size", isFullSize)
+        viewer
+          .closest(".snapshot")
+          ?.classList.toggle("has-full-size-viewer", isFullSize)
+        document.body.classList.toggle("has-full-size-viewer", isFullSize)
+        updateFullSizeButton(viewer, isFullSize)
+      }
+
       const applyView = (state) => {
         const boundedScale = clamp(state.scale, minScale, maxScale)
         state.scale = boundedScale
         if (boundedScale === minScale) {
-          state.x = 0
-          state.y = 0
+          state.viewBox = { ...state.baseViewBox }
         }
         state.viewport.classList.toggle("is-zoomed", boundedScale > minScale)
-        state.svg.style.transform =
-          "translate(" + state.x + "px, " + state.y + "px) scale(" + state.scale + ")"
+        state.svg.setAttribute(
+          "viewBox",
+          [
+            state.viewBox.x,
+            state.viewBox.y,
+            state.viewBox.width,
+            state.viewBox.height,
+          ].join(" "),
+        )
       }
 
       const zoomAt = (state, clientX, clientY, nextScale) => {
-        const rect = state.viewport.getBoundingClientRect()
-        const pointX = clientX - rect.left
-        const pointY = clientY - rect.top
+        const matrix = state.svg.getScreenCTM()
+        if (!matrix) return
+        const screenPoint = state.svg.createSVGPoint()
+        screenPoint.x = clientX
+        screenPoint.y = clientY
+        const point = screenPoint.matrixTransform(matrix.inverse())
+        const ratioX = (point.x - state.viewBox.x) / state.viewBox.width
+        const ratioY = (point.y - state.viewBox.y) / state.viewBox.height
         const scale = clamp(nextScale, minScale, maxScale)
-        const contentX = (pointX - state.x) / state.scale
-        const contentY = (pointY - state.y) / state.scale
-        state.x = pointX - contentX * scale
-        state.y = pointY - contentY * scale
+        const width = state.baseViewBox.width / scale
+        const height = state.baseViewBox.height / scale
+        state.viewBox = {
+          x: point.x - ratioX * width,
+          y: point.y - ratioY * height,
+          width,
+          height,
+        }
         state.scale = scale
         applyView(state)
       }
@@ -244,9 +293,17 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
 
       const resetView = (state) => {
         state.scale = 1
-        state.x = 0
-        state.y = 0
+        state.viewBox = { ...state.baseViewBox }
         applyView(state)
+      }
+
+      const getScreenScale = (svg) => {
+        const matrix = svg.getScreenCTM()
+        if (!matrix) return { x: 1, y: 1 }
+        return {
+          x: Math.hypot(matrix.a, matrix.b),
+          y: Math.hypot(matrix.c, matrix.d),
+        }
       }
 
       const getPointerDistance = (pointers) => {
@@ -271,6 +328,15 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
         const svg = viewport?.querySelector("svg")
         if (!viewport || !svg) return
 
+        const svgViewBox = svg.viewBox.baseVal
+        if (svgViewBox.width <= 0 || svgViewBox.height <= 0) return
+        const baseViewBox = {
+          x: svgViewBox.x,
+          y: svgViewBox.y,
+          width: svgViewBox.width,
+          height: svgViewBox.height,
+        }
+
         svg.querySelector("#crosshair")?.remove()
         svg.querySelectorAll("script").forEach((script) => script.remove())
 
@@ -278,9 +344,9 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
           viewer,
           viewport,
           svg,
+          baseViewBox,
+          viewBox: { ...baseViewBox },
           scale: 1,
-          x: 0,
-          y: 0,
           pointers: new Map(),
           dragStart: null,
           pinchStart: null,
@@ -291,17 +357,9 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
         getButton(viewer, "reset")?.addEventListener("click", () => {
           resetView(state)
         })
-        if (!document.fullscreenEnabled || !viewer.requestFullscreen) {
-          fullscreenButton?.setAttribute("hidden", "")
-        } else {
-          fullscreenButton?.addEventListener("click", async () => {
-            if (document.fullscreenElement === viewer) {
-              await document.exitFullscreen()
-              return
-            }
-            await viewer.requestFullscreen()
-          })
-        }
+        fullscreenButton?.addEventListener("click", () => {
+          setViewerFullSize(viewer, !viewer.classList.contains("is-full-size"))
+        })
 
         viewport.addEventListener(
           "wheel",
@@ -332,22 +390,22 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
           }
           if (state.scale > minScale && event.key === "ArrowLeft") {
             event.preventDefault()
-            state.x += panStep
+            state.viewBox.x -= panStep / getScreenScale(svg).x
             applyView(state)
           }
           if (state.scale > minScale && event.key === "ArrowRight") {
             event.preventDefault()
-            state.x -= panStep
+            state.viewBox.x += panStep / getScreenScale(svg).x
             applyView(state)
           }
           if (state.scale > minScale && event.key === "ArrowUp") {
             event.preventDefault()
-            state.y += panStep
+            state.viewBox.y -= panStep / getScreenScale(svg).y
             applyView(state)
           }
           if (state.scale > minScale && event.key === "ArrowDown") {
             event.preventDefault()
-            state.y -= panStep
+            state.viewBox.y += panStep / getScreenScale(svg).y
             applyView(state)
           }
         })
@@ -359,8 +417,9 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
             state.dragStart = {
               clientX: event.clientX,
               clientY: event.clientY,
-              x: state.x,
-              y: state.y,
+              viewBoxX: state.viewBox.x,
+              viewBoxY: state.viewBox.y,
+              screenScale: getScreenScale(svg),
             }
             viewport.classList.add("is-panning")
           }
@@ -389,8 +448,14 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
             return
           }
           if (state.dragStart && state.scale > minScale) {
-            state.x = state.dragStart.x + event.clientX - state.dragStart.clientX
-            state.y = state.dragStart.y + event.clientY - state.dragStart.clientY
+            state.viewBox.x =
+              state.dragStart.viewBoxX -
+              (event.clientX - state.dragStart.clientX) /
+                state.dragStart.screenScale.x
+            state.viewBox.y =
+              state.dragStart.viewBoxY -
+              (event.clientY - state.dragStart.clientY) /
+                state.dragStart.screenScale.y
             applyView(state)
           }
         })
@@ -405,8 +470,9 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
               state.dragStart = {
                 clientX: pointer.clientX,
                 clientY: pointer.clientY,
-                x: state.x,
-                y: state.y,
+                viewBoxX: state.viewBox.x,
+                viewBoxY: state.viewBox.y,
+                screenScale: getScreenScale(svg),
               }
             }
           }
@@ -423,17 +489,12 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
       }
 
       document.querySelectorAll("[data-snapshot-viewer]").forEach(initViewer)
-      document.addEventListener("fullscreenchange", () => {
-        document.querySelectorAll("[data-snapshot-viewer]").forEach((viewer) => {
-          const button = getButton(viewer, "fullscreen")
-          const isFullscreen = document.fullscreenElement === viewer
-          if (!button) return
-          button.textContent = isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"
-          button.setAttribute(
-            "aria-label",
-            isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
-          )
-        })
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return
+        const viewer = document.querySelector(
+          "[data-snapshot-viewer].is-full-size",
+        )
+        if (viewer) setViewerFullSize(viewer, false)
       })
     })()
   </script>
@@ -441,7 +502,7 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
 </html>
 `
 
-const createBenchmarkSnapshotWriter = async (
+export const createBenchmarkSnapshotWriter = async (
   htmlPath: string,
 ): Promise<BenchmarkSnapshotWriter> => {
   let snapshotCount = 0
@@ -1519,8 +1580,10 @@ const main = async () => {
   )
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error)
-  console.error(`Benchmark failed: ${message}`)
-  process.exit(1)
-})
+if (import.meta.main) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`Benchmark failed: ${message}`)
+    process.exit(1)
+  })
+}
