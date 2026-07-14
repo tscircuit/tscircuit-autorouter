@@ -76,9 +76,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       return false
     }
 
-    if (
-      Math.min(node.width, node.height) < MIN_CONNECTIVITY_BRIDGE_DIMENSION
-    ) {
+    if (Math.min(node.width, node.height) < MIN_CONNECTIVITY_BRIDGE_DIMENSION) {
       return true
     }
 
