@@ -109,9 +109,7 @@ export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
     : -1
   const rootBackgroundMatch =
     svgContentsStart >= 0
-      ? sanitizedSvg
-          .slice(svgContentsStart)
-          .match(/^(\s*)(<rect\b[^>]*\/?>)/i)
+      ? sanitizedSvg.slice(svgContentsStart).match(/^(\s*)(<rect\b[^>]*\/?>)/i)
       : null
 
   if (
@@ -124,10 +122,7 @@ export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
     const [x, y, width, height] = viewBoxValues
     const normalizedBackground = rootBackgroundMatch[2]
       .replace(/\s+(?:x|y)=["'][^"']*["']/gi, "")
-      .replace(
-        /\bwidth=["']100%["']/i,
-        `x="${x}" y="${y}" width="${width}"`,
-      )
+      .replace(/\bwidth=["']100%["']/i, `x="${x}" y="${y}" width="${width}"`)
       .replace(/\bheight=["']100%["']/i, `height="${height}"`)
     const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length
     sanitizedSvg =
