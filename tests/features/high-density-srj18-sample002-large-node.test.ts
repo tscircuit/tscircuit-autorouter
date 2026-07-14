@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { HyperSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import sample002LargeNode from "../fixtures/srj18-sample002-large-node.json"
@@ -31,14 +32,14 @@ test("the supervisor derives its limit without advancing candidates", () => {
   expect(solver.MAX_ITERATIONS).toBeGreaterThan(1)
 })
 
-test("the portfolio expands only after every initial candidate is exhausted", () => {
+test("the portfolio expands when every initial candidate is exhausted", () => {
   const solver = new HyperSingleIntraNodeSolver(solverParams)
   solver.initializeSolvers()
   for (const { solver: candidate } of solver.supervisedSolvers!) {
     candidate.failed = true
   }
 
-  solver._step()
+  solver.step()
 
   const a01Solvers = solver.supervisedSolvers!.filter(
     ({ solver }) => solver.getSolverName() === "HighDensitySolverA01",
@@ -51,6 +52,33 @@ test("the portfolio expands only after every initial candidate is exhausted", ()
   expect(solver.MAX_ITERATIONS).toBe(
     solver.stats.dynamicSupervisorIterationLimit,
   )
+})
+
+test("the portfolio expands after a dynamically sized exploration budget", () => {
+  const solver = new HyperSingleIntraNodeSolver(solverParams)
+  solver.initializeSolvers()
+  const activeCandidate = solver.supervisedSolvers!.find(
+    ({ solver }) => solver.getSolverName() === "HighDensitySolverA01",
+  )!.solver
+  for (const { solver: candidate } of solver.supervisedSolvers!) {
+    if (candidate !== activeCandidate) candidate.failed = true
+  }
+  activeCandidate.iterations = solver.stats.dynamicExpansionWorkBudget
+  ;(activeCandidate as any).step = () => {
+    activeCandidate.iterations++
+  }
+
+  expect(solver.stats.dynamicExpansionWorkBudget).toBe(
+    Math.max(
+      ...solver.supervisedSolvers!.map(({ solver }) => solver.MAX_ITERATIONS),
+    ),
+  )
+
+  solver.step()
+
+  expect(solver.adaptiveSearchExpanded).toBe(true)
+  expect(solver.stats.adaptiveSearchExpandedAtIteration).toBe(1)
+  expect(solver.stats.dynamicExpansionWorkBudget).toBeGreaterThan(0)
 })
 
 test("an early solution does not expand the portfolio", () => {
@@ -69,3 +97,24 @@ test("an early solution does not expand the portfolio", () => {
   expect(solver.adaptiveSearchExpanded).toBe(false)
   expect(solver.supervisedSolvers).toHaveLength(initialSolverCount)
 })
+
+test("the srj18 sample002 large node is solved at its physical size", () => {
+  const solver = new GrowShrinkHighDensityIntraNodeSolver({
+    ...solverParams,
+    maxGrowthAttempts: 3,
+    fallbackToInvalidGeometryOnFailure: false,
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.growthAttempts).toBe(0)
+  expect(solver.scaleFactor).toBe(1)
+  expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(true)
+  expect(solver.stats.invalidGeometryFallback).not.toBe(true)
+  expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
+    solver.winningSolver!.MAX_ITERATIONS,
+  )
+  expect(solver.solvedRoutes).toHaveLength(19)
+}, 60_000)

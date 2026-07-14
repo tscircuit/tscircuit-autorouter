@@ -24,8 +24,9 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
-// orderings are introduced only after that portfolio is exhausted.
-const A01_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+// orderings are introduced only after that portfolio spends its dynamically
+// derived exploration budget or exhausts all of its candidates.
+const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
 export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -47,7 +48,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   effort: number
   adaptiveSearchExpanded = false
 
-  private getSolvedSegmentCount(solver: IntraNodeRouteSolver): number | null {
+  private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
     if (!(solvedConnectionsMap instanceof Map)) return null
 
@@ -67,6 +68,34 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
             (portPoint) => portPoint.connectionName,
           ),
         ).size,
+    )
+  }
+
+  private getCandidateProgress(solver: { progress: number }): number {
+    const solvedSegmentCount = this.getSolvedSegmentCount(solver)
+    if (solvedSegmentCount !== null) {
+      return Math.min(1, solvedSegmentCount / this.getNodeSegmentCount())
+    }
+    return Math.max(0, Math.min(1, solver.progress || 0))
+  }
+
+  private getTotalCandidateWork(): number {
+    return (this.supervisedSolvers ?? []).reduce(
+      (total, { solver }) => total + solver.iterations,
+      0,
+    )
+  }
+
+  private getDynamicExpansionWorkBudget(): number {
+    // Give the initial portfolio as much aggregate work as its most expensive
+    // candidate could consume alone. This scales with the candidate's own
+    // problem- and effort-derived budget without waiting for every candidate
+    // to fail or introducing a wall-clock iteration constant.
+    return Math.max(
+      1,
+      ...(this.supervisedSolvers ?? []).map(
+        ({ solver }) => solver.MAX_ITERATIONS,
+      ),
     )
   }
 
@@ -137,26 +166,9 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
       },
       {
         name: "orderings6",
-        possibleValues: [
-          {
-            SHUFFLE_SEED: 0,
-          },
-          {
-            SHUFFLE_SEED: 1,
-          },
-          {
-            SHUFFLE_SEED: 2,
-          },
-          {
-            SHUFFLE_SEED: 3,
-          },
-          {
-            SHUFFLE_SEED: 4,
-          },
-          {
-            SHUFFLE_SEED: 5,
-          },
-        ],
+        possibleValues: ORDERING_SHUFFLE_SEEDS.map((shuffleSeed) => ({
+          SHUFFLE_SEED: shuffleSeed,
+        })),
       },
       {
         name: "cellSizeFactor",
@@ -241,7 +253,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
         possibleValues: [
           {
             HIGH_DENSITY_A01: true,
-            SHUFFLE_SEED: A01_SHUFFLE_SEEDS[0],
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
           },
         ],
       },
@@ -295,6 +307,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
     }
+    this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
     this.refreshDynamicIterationLimit()
   }
 
@@ -315,7 +328,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     if (this.adaptiveSearchExpanded) return
 
     this.adaptiveSearchExpanded = true
-    for (const shuffleSeed of A01_SHUFFLE_SEEDS.slice(1)) {
+    for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
       this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
         SHUFFLE_SEED: shuffleSeed,
@@ -323,6 +336,22 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     }
     this.refreshDynamicIterationLimit()
     this.stats.adaptiveSearchExpanded = true
+    this.stats.adaptiveSearchExpandedAtIteration = this.iterations
+    this.stats.candidateWorkAtExpansion = this.getTotalCandidateWork()
+    this.stats.bestProgressAtExpansion = Math.max(
+      0,
+      ...(this.supervisedSolvers ?? []).map(({ solver }) =>
+        this.getCandidateProgress(solver),
+      ),
+    )
+  }
+
+  private shouldExpandPortfolio(): boolean {
+    if (this.adaptiveSearchExpanded) return false
+
+    const expansionWorkBudget = this.getDynamicExpansionWorkBudget()
+    this.stats.dynamicExpansionWorkBudget = expansionWorkBudget
+    return this.getTotalCandidateWork() >= expansionWorkBudget
   }
 
   override _step() {
@@ -336,6 +365,10 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
     }
 
     super._step()
+
+    if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
+      this.expandAdaptiveSearch()
+    }
   }
 
   computeG(solver: IntraNodeRouteSolver) {
@@ -360,10 +393,7 @@ export class HyperSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
 
   computeH(solver: IntraNodeRouteSolver) {
     if (this.adaptiveSearchExpanded) {
-      const solvedSegmentCount = this.getSolvedSegmentCount(solver)
-      if (solvedSegmentCount !== null) {
-        return Math.max(0, 1 - solvedSegmentCount / this.getNodeSegmentCount())
-      }
+      return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)
   }
