@@ -49,6 +49,7 @@ interface CapacityMeshSolverOptions {
   polyConcavityTolerance?: number
   polyPortSpacing?: number
   polyPortMarginFromSegmentEndpoint?: number
+  viaDistanceCost?: number
 }
 
 export type AutoroutingPipelineSolver6Options = CapacityMeshSolverOptions
@@ -268,6 +269,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
+          viaDistanceCost: cms.opts.viaDistanceCost,
           iterations: 2,
         },
       ],

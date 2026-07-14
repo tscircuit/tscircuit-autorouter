@@ -62,6 +62,7 @@ interface CapacityMeshSolverOptions {
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
+  viaDistanceCost?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -408,6 +409,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          viaDistanceCost: cms.opts.viaDistanceCost,
           iterations: 2,
         },
       ],

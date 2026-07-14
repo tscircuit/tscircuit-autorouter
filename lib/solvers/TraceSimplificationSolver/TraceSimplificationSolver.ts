@@ -8,8 +8,13 @@ import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameN
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { ViaPairReroutingSolver } from "lib/solvers/ViaPairReroutingSolver/ViaPairReroutingSolver"
 
-type Phase = "via_removal" | "via_merging" | "path_simplification"
+type Phase =
+  | "via_pair_rerouting"
+  | "via_removal"
+  | "via_merging"
+  | "path_simplification"
 
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
 
@@ -48,9 +53,14 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
 
-  PHASE_ORDER: Phase[] = ["via_removal", "via_merging", "path_simplification"]
+  PHASE_ORDER: Phase[] = [
+    "via_pair_rerouting",
+    "via_removal",
+    "via_merging",
+    "path_simplification",
+  ]
 
-  currentPhase: Phase = "via_removal"
+  currentPhase: Phase = "via_pair_rerouting"
 
   /** Callback to extract results from the active sub-solver */
   extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null = null
@@ -71,6 +81,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
+   *   - viaDistanceCost: Distance-equivalent cost of each via (default: 20mm)
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -83,6 +94,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly viaDistanceCost?: number
     },
   ) {
     super()
@@ -197,12 +209,14 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.extractResult = null
 
         // Advance phase
-        if (this.currentPhase === "via_removal") {
+        if (this.currentPhase === "via_pair_rerouting") {
+          this.currentPhase = "via_removal"
+        } else if (this.currentPhase === "via_removal") {
           this.currentPhase = "via_merging"
         } else if (this.currentPhase === "via_merging") {
           this.currentPhase = "path_simplification"
         } else {
-          this.currentPhase = "via_removal"
+          this.currentPhase = "via_pair_rerouting"
           this.simplificationPipelineLoops++
         }
 
@@ -226,6 +240,22 @@ export class TraceSimplificationSolver extends BaseSolver {
     // No active sub-solver, start the next one
     if (!this.activeSubSolver && !this.solved) {
       switch (this.currentPhase) {
+        case "via_pair_rerouting":
+          this.activeSubSolver = new ViaPairReroutingSolver({
+            hdRoutes: this.hdRoutes,
+            obstacles: [...this.simplificationConfig.obstacles],
+            connMap: this.simplificationConfig.connMap,
+            layerCount: this.simplificationConfig.layerCount,
+            outline: this.simplificationConfig.outline,
+            defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
+            viaDistanceCost: this.simplificationConfig.viaDistanceCost,
+          })
+          this.extractResult = (s) =>
+            (s as ViaPairReroutingSolver).optimizedHdRoutes
+          break
+
         case "via_removal":
           this.activeSubSolver = new UselessViaRemovalSolver({
             unsimplifiedHdRoutes: this.hdRoutes,

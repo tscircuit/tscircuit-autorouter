@@ -66,6 +66,7 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  viaDistanceCost?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -374,6 +375,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
+          viaDistanceCost: cms.opts.viaDistanceCost,
           iterations: 2,
         },
       ],

@@ -65,6 +65,7 @@ interface CapacityMeshSolverOptions {
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
+  viaDistanceCost?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -349,6 +350,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
+          viaDistanceCost: cms.opts.viaDistanceCost,
         },
       ],
     ),
