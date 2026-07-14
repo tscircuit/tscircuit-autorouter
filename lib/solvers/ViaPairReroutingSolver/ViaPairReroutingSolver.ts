@@ -14,6 +14,7 @@ type ViaPairCandidate = {
   secondTransitionIndex: number
   start: RoutePoint
   end: RoutePoint
+  viaLocations: Array<{ x: number; y: number }>
   originalSpanLength: number
 }
 
@@ -38,9 +39,10 @@ const DEFAULT_VIA_DISTANCE_COST = 20
 const POINT_EPSILON = 1e-6
 
 /**
- * Attempts to replace the portion of a trace enclosed by two vias with a
- * single-layer path. Other traces are supplied to the pathfinder as immutable
- * obstacles, so a successful attempt only changes the trace being simplified.
+ * Attempts to replace the portion of a trace from one via to any later via
+ * that returns to the starting layer with a single-layer path. Other traces
+ * are supplied to the pathfinder as immutable obstacles, so a successful
+ * attempt only changes the trace being simplified.
  */
 export class ViaPairReroutingSolver extends BaseSolver {
   override getSolverName(): string {
@@ -57,7 +59,8 @@ export class ViaPairReroutingSolver extends BaseSolver {
 
   readonly optimizedHdRoutes: HighDensityRoute[]
   private currentRouteIndex = 0
-  private transitionScanIndex = 0
+  private candidateQueue: ViaPairCandidate[] = []
+  private candidateQueueInitialized = false
   private activeReroute: ActiveReroute | null = null
   private rerouteAttempts = 0
 
@@ -109,56 +112,77 @@ export class ViaPairReroutingSolver extends BaseSolver {
 
   private getNextCandidate(route: HighDensityRoute): ViaPairCandidate | null {
     const transitions: number[] = []
-    for (let i = this.transitionScanIndex; i < route.route.length - 1; i++) {
+    for (let i = 0; i < route.route.length - 1; i++) {
       if (route.route[i].z !== route.route[i + 1].z) transitions.push(i)
     }
 
-    for (let pairIndex = 0; pairIndex < transitions.length - 1; pairIndex++) {
-      const firstTransitionIndex = transitions[pairIndex]
-      const secondTransitionIndex = transitions[pairIndex + 1]
-      const start = route.route[firstTransitionIndex]
-      const pointAfterFirstVia = route.route[firstTransitionIndex + 1]
-      const pointBeforeSecondVia = route.route[secondTransitionIndex]
-      const end = route.route[secondTransitionIndex + 1]
-
-      this.transitionScanIndex = firstTransitionIndex + 1
-      const returnsToStartingLayer = start.z === end.z
-      const transitionsOccurAtViaLocations =
-        this.pointsShareLocation(start, pointAfterFirstVia) &&
-        this.pointsShareLocation(pointBeforeSecondVia, end)
-      const containsJumperPad = route.route
-        .slice(firstTransitionIndex, secondTransitionIndex + 2)
-        .some((point) => point.insideJumperPad)
-      const containsThroughObstacleTransition =
-        start.toNextSegmentType === "through_obstacle" ||
-        pointBeforeSecondVia.toNextSegmentType === "through_obstacle"
-
-      if (
-        !returnsToStartingLayer ||
-        !transitionsOccurAtViaLocations ||
-        containsJumperPad ||
-        containsThroughObstacleTransition ||
-        !this.routeHasViaAt(route, start) ||
-        !this.routeHasViaAt(route, end)
+    if (!this.candidateQueueInitialized) {
+      this.candidateQueueInitialized = true
+      for (
+        let firstTransitionPosition = 0;
+        firstTransitionPosition < transitions.length - 1;
+        firstTransitionPosition++
       ) {
-        continue
-      }
+        for (
+          let secondTransitionPosition = transitions.length - 1;
+          secondTransitionPosition > firstTransitionPosition;
+          secondTransitionPosition--
+        ) {
+          const firstTransitionIndex = transitions[firstTransitionPosition]
+          const secondTransitionIndex = transitions[secondTransitionPosition]
+          const start = route.route[firstTransitionIndex]
+          const end = route.route[secondTransitionIndex + 1]
+          if (start.z !== end.z) continue
 
-      let originalSpanLength = 0
-      for (let i = firstTransitionIndex; i <= secondTransitionIndex; i++) {
-        originalSpanLength += distance(route.route[i], route.route[i + 1])
-      }
+          const transitionIndices = transitions.slice(
+            firstTransitionPosition,
+            secondTransitionPosition + 1,
+          )
+          const viaLocations: Array<{ x: number; y: number }> = []
+          const hasInvalidTransition = transitionIndices.some(
+            (transitionIndex) => {
+              const beforeVia = route.route[transitionIndex]
+              const afterVia = route.route[transitionIndex + 1]
+              if (
+                !this.pointsShareLocation(beforeVia, afterVia) ||
+                beforeVia.toNextSegmentType === "through_obstacle" ||
+                !this.routeHasViaAt(route, beforeVia)
+              ) {
+                return true
+              }
+              if (
+                !viaLocations.some((via) =>
+                  this.pointsShareLocation(via, beforeVia),
+                )
+              ) {
+                viaLocations.push({ x: beforeVia.x, y: beforeVia.y })
+              }
+              return false
+            },
+          )
+          const containsJumperPad = route.route
+            .slice(firstTransitionIndex, secondTransitionIndex + 2)
+            .some((point) => point.insideJumperPad)
+          if (hasInvalidTransition || containsJumperPad) continue
 
-      return {
-        firstTransitionIndex,
-        secondTransitionIndex,
-        start,
-        end,
-        originalSpanLength,
+          let originalSpanLength = 0
+          for (let i = firstTransitionIndex; i <= secondTransitionIndex; i++) {
+            originalSpanLength += distance(route.route[i], route.route[i + 1])
+          }
+
+          this.candidateQueue.push({
+            firstTransitionIndex,
+            secondTransitionIndex,
+            start,
+            end,
+            viaLocations,
+            originalSpanLength,
+          })
+        }
       }
     }
 
-    return null
+    return this.candidateQueue.shift() ?? null
   }
 
   private obstacleIsSameNet(
@@ -259,7 +283,8 @@ export class ViaPairReroutingSolver extends BaseSolver {
       { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
     )
     const maximumAcceptedLength =
-      candidate.originalSpanLength + this.viaDistanceCost * 2
+      candidate.originalSpanLength +
+      this.viaDistanceCost * candidate.viaLocations.length
     const searchMargin = Math.max(maximumAcceptedLength, 1)
 
     return {
@@ -378,7 +403,8 @@ export class ViaPairReroutingSolver extends BaseSolver {
       0,
     )
     const currentCost =
-      activeReroute.candidate.originalSpanLength + this.viaDistanceCost * 2
+      activeReroute.candidate.originalSpanLength +
+      this.viaDistanceCost * activeReroute.candidate.viaLocations.length
     if (candidateLength >= currentCost) return
 
     const { firstTransitionIndex, secondTransitionIndex, start, end } =
@@ -393,8 +419,10 @@ export class ViaPairReroutingSolver extends BaseSolver {
     replacementPath[0] = firstPoint
     replacementPath[replacementPath.length - 1] = { ...end }
 
-    let vias = this.removeViaOnce(route.vias, start)
-    vias = this.removeViaOnce(vias, end)
+    let vias = route.vias
+    for (const viaLocation of activeReroute.candidate.viaLocations) {
+      vias = this.removeViaOnce(vias, viaLocation)
+    }
     this.optimizedHdRoutes[this.currentRouteIndex] = {
       ...route,
       route: route.route
@@ -402,7 +430,8 @@ export class ViaPairReroutingSolver extends BaseSolver {
         .concat(replacementPath, route.route.slice(secondTransitionIndex + 2)),
       vias,
     }
-    this.transitionScanIndex = 0
+    this.candidateQueue = []
+    this.candidateQueueInitialized = false
   }
 
   _step(): void {
@@ -430,7 +459,8 @@ export class ViaPairReroutingSolver extends BaseSolver {
     }
 
     this.currentRouteIndex++
-    this.transitionScanIndex = 0
+    this.candidateQueue = []
+    this.candidateQueueInitialized = false
   }
 
   visualize(): GraphicsObject {
