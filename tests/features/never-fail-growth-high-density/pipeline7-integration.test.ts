@@ -58,4 +58,24 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
   } as any)
   expect((globalDrcParams as any).maxIterations).toBe(16)
   expect((globalDrcParams as any).enableLargeBoardBroadFallback).toBe(false)
+
+  const exactGeometryDrcStep = solver.pipelineDef.find(
+    (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
+  )
+  expect(exactGeometryDrcStep).toBeDefined()
+  const [exactGeometryDrcParams] = exactGeometryDrcStep!.getConstructorParams({
+    ...solver,
+    srjWithPointPairs: solver.srj,
+    globalDrcForceImproveSolver: { getOutput: () => [] },
+    netToPointPairsSolver: { newConnections: [] },
+  } as any)
+  expect((exactGeometryDrcParams as any).maxIterations).toBe(32)
+  expect((exactGeometryDrcParams as any).drcEvaluator).toBeFunction()
+  expect((exactGeometryDrcParams as any).enableTargetedErrorSweep).toBe(true)
+  expect((exactGeometryDrcParams as any).enableLargeBoardBroadFallback).toBe(
+    false,
+  )
+  expect(
+    (exactGeometryDrcParams as any).enablePostSolveClearanceRelaxation,
+  ).toBe(false)
 })

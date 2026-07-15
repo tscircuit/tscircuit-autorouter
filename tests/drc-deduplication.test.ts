@@ -50,3 +50,38 @@ test("getDrcErrors emits typed pad/via clearance errors without generic duplicat
     ),
   ).toHaveLength(0)
 })
+
+test("getDrcErrors can return only exact movable geometry errors", () => {
+  const circuitJson: AnyCircuitElement[] = [
+    {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "pad1",
+      shape: "rect",
+      x: 0,
+      y: 0.2,
+      width: 0.2,
+      height: 0.2,
+      layer: "top",
+    },
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "trace1",
+      route: [
+        { route_type: "wire", x: -1, y: 0, width: 0.1, layer: "top" },
+        { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
+      ],
+    },
+  ]
+
+  const { errors } = getDrcErrors(circuitJson, {
+    traceClearance: 0.1,
+    includeTraceContinuity: false,
+    includeTypedTraceClearance: false,
+  })
+
+  expect(errors).toHaveLength(1)
+  expect(errors[0]).toMatchObject({
+    type: "pcb_trace_error",
+    pcb_trace_error_id: "overlap_trace1_pad1",
+  })
+})
