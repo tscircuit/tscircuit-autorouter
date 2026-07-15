@@ -96,6 +96,40 @@ const escapeHtml = (value: unknown): string =>
 
 export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
   let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "")
+  // Keep the generated root background in the same user-space coordinates as
+  // the circuit so changing the root viewBox pans and zooms them together.
+  const openingSvgTag = sanitizedSvg.match(/<svg\b[^>]*>/i)?.[0]
+  const viewBoxValues = openingSvgTag
+    ?.match(/\bviewBox=["']([^"']+)["']/i)?.[1]
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number)
+  const svgContentsStart = openingSvgTag
+    ? sanitizedSvg.indexOf(openingSvgTag) + openingSvgTag.length
+    : -1
+  const rootBackgroundMatch =
+    svgContentsStart >= 0
+      ? sanitizedSvg.slice(svgContentsStart).match(/^(\s*)(<rect\b[^>]*\/?>)/i)
+      : null
+
+  if (
+    viewBoxValues?.length === 4 &&
+    viewBoxValues.every(Number.isFinite) &&
+    rootBackgroundMatch &&
+    /\bwidth=["']100%["']/i.test(rootBackgroundMatch[2]) &&
+    /\bheight=["']100%["']/i.test(rootBackgroundMatch[2])
+  ) {
+    const [x, y, width, height] = viewBoxValues
+    const backgroundRectWithViewBoxBounds = rootBackgroundMatch[2]
+      .replace(/\s+(?:x|y)=["'][^"']*["']/gi, "")
+      .replace(/\bwidth=["']100%["']/i, `x="${x}" y="${y}" width="${width}"`)
+      .replace(/\bheight=["']100%["']/i, `height="${height}"`)
+    const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length
+    sanitizedSvg =
+      sanitizedSvg.slice(0, backgroundStart) +
+      backgroundRectWithViewBoxBounds +
+      sanitizedSvg.slice(backgroundStart + rootBackgroundMatch[2].length)
+  }
   sanitizedSvg = sanitizedSvg.replace(
     /<g\b[^>]*\bid=["']crosshair["'][\s\S]*?<\/g>/gi,
     "",
