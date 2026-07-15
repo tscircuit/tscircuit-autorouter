@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
+import type { LayerName } from "lib/utils/mapZToLayerName"
 
 test("pipeline 7 routes, visualizes, and exports a trace on inner8", () => {
   const srj: SimpleRouteJson = {
@@ -35,7 +36,8 @@ test("pipeline 7 routes, visualizes, and exports a trace on inner8", () => {
     output.traces?.some((trace) =>
       trace.route.some(
         (routePoint) =>
-          routePoint.route_type === "wire" && routePoint.layer === "inner8",
+          routePoint.route_type === "wire" &&
+          (routePoint.layer as LayerName) === "inner8",
       ),
     ),
   ).toBe(true)
@@ -57,7 +59,8 @@ test("pipeline 7 routes, visualizes, and exports a trace on inner8", () => {
     exportedTrace?.type === "pcb_trace" &&
       exportedTrace.route.some(
         (routePoint) =>
-          routePoint.route_type === "wire" && routePoint.layer === "inner8",
+          routePoint.route_type === "wire" &&
+          (routePoint.layer as LayerName) === "inner8",
       ),
   ).toBe(true)
 })

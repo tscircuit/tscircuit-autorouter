@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { LayerName } from "lib/utils/mapZToLayerName"
 
 test("converts ten-layer high-density routes and vias to circuit json", () => {
   const srj: SimpleRouteJson = {
@@ -44,9 +45,13 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
     trace?.type === "pcb_trace" &&
       trace.route.some(
         (routePoint) =>
-          routePoint.route_type === "wire" && routePoint.layer === "inner8",
+          routePoint.route_type === "wire" &&
+          (routePoint.layer as LayerName) === "inner8",
       ),
   ).toBe(true)
   expect(via?.type).toBe("pcb_via")
-  expect(via?.type === "pcb_via" && via.layers).toEqual(["inner8", "bottom"])
+  expect(via?.type === "pcb_via" && (via.layers as LayerName[])).toEqual([
+    "inner8",
+    "bottom",
+  ])
 })
