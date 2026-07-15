@@ -233,6 +233,15 @@ export class TraceSimplificationSolver extends BaseSolver {
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
             connMap: this.simplificationConfig.connMap,
+            outline: this.simplificationConfig.outline
+              ? [...this.simplificationConfig.outline]
+              : undefined,
+            geometryShortcutTraceMargin: 0.1,
+            geometryShortcutObstacleMargin:
+              this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
+            // Delay the quadratic anchor search until the first path pass has
+            // reduced the route point count.
+            enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
