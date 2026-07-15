@@ -13,10 +13,7 @@ jobs:
   dispatch:
     if: |
       github.event.issue.pull_request &&
-      (
-        github.event.comment.body == '/benchmark' ||
-        github.event.comment.body == '/benchmark-all'
-      ) &&
+      startsWith(github.event.comment.body, '/benchmark') &&
       github.event.comment.user.type != 'Bot' &&
       (
         github.event.comment.author_association == 'OWNER' ||
@@ -25,14 +22,25 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout command parser
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Dispatch benchmark
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
-            const datasets = context.payload.comment.body === '/benchmark-all'
+            const { pathToFileURL } = require('node:url')
+            const parserUrl = pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/pr-benchmark-command.js`,
+            ).href
+            const { parsePrBenchmarkCommand } = await import(parserUrl)
+            const command = parsePrBenchmarkCommand(context.payload.comment.body)
+            const datasets = command.kind === 'benchmark-all'
               ? ['dataset01', 'srj18', 'srj19', 'srj20', 'srj21', 'srj23']
-              : ['dataset01']
+              : [command.datasetName]
             const pr = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -48,6 +56,10 @@ jobs:
                   dataset_name: dataset,
                   ref: pr.data.head.sha,
                   pr_number: String(context.issue.number),
+                  profile_solvers: String(command.profileSolvers),
+                  ...(command.kind === 'benchmark'
+                    ? { benchmark_args_json: JSON.stringify(command.benchmarkArgs) }
+                    : {}),
                 },
               })
             }

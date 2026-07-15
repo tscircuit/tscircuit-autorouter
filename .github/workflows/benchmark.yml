@@ -47,6 +47,10 @@ on:
         description: Pull request number where this benchmark posts its result
         required: false
         type: string
+      benchmark_args_json:
+        description: JSON argument array forwarded from an authorized PR comment
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -132,36 +136,49 @@ jobs:
 
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
-              const requestedSolver = (inputs.solver_name || '').trim()
-              if (requestedSolver) {
-                if (allSolversAliases.has(requestedSolver.toLowerCase())) {
-                  benchmarkArgs.push('all')
-                } else {
-                  benchmarkArgs.push('--solver', requestedSolver)
-                }
-              }
-
-              const scenarioLimit = (inputs.scenario_limit || '').trim()
-              const effort = (inputs.effort || '').trim()
-              const concurrency = (inputs.concurrency || '').trim()
-              const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
-              if (scenarioLimit) {
-                benchmarkArgs.push('--scenario-limit', scenarioLimit)
-              }
-              if (effort) {
-                benchmarkArgs.push('--effort', effort)
-              }
-              if (includeAssignable) {
-                benchmarkArgs.push('--include-assignable')
-              }
-              if (concurrency && concurrency.toLowerCase() !== 'auto') {
-                benchmarkConcurrency = concurrency
-                benchmarkArgs.push('--concurrency', concurrency)
-              }
-
+              const forwardedArgsJson = (inputs.benchmark_args_json || '').trim()
               const datasetName = (inputs.dataset_name || '').trim()
-              if (datasetName) {
-                benchmarkArgs.push('--dataset', datasetName)
+
+              if (forwardedArgsJson) {
+                const forwardedArgs = JSON.parse(forwardedArgsJson)
+                if (
+                  !Array.isArray(forwardedArgs) ||
+                  forwardedArgs.some((arg) => typeof arg !== 'string')
+                ) {
+                  throw new Error('benchmark_args_json must be a JSON array of strings')
+                }
+                benchmarkArgs.push(...forwardedArgs)
+              } else {
+                const requestedSolver = (inputs.solver_name || '').trim()
+                if (requestedSolver) {
+                  if (allSolversAliases.has(requestedSolver.toLowerCase())) {
+                    benchmarkArgs.push('all')
+                  } else {
+                    benchmarkArgs.push('--solver', requestedSolver)
+                  }
+                }
+
+                const scenarioLimit = (inputs.scenario_limit || '').trim()
+                const effort = (inputs.effort || '').trim()
+                const concurrency = (inputs.concurrency || '').trim()
+                const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
+                if (scenarioLimit) {
+                  benchmarkArgs.push('--scenario-limit', scenarioLimit)
+                }
+                if (effort) {
+                  benchmarkArgs.push('--effort', effort)
+                }
+                if (includeAssignable) {
+                  benchmarkArgs.push('--include-assignable')
+                }
+                if (concurrency && concurrency.toLowerCase() !== 'auto') {
+                  benchmarkConcurrency = concurrency
+                  benchmarkArgs.push('--concurrency', concurrency)
+                }
+
+                if (datasetName) {
+                  benchmarkArgs.push('--dataset', datasetName)
+                }
               }
               profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
               ref = (inputs.ref || '').trim() || ref
