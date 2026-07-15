@@ -63,8 +63,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.connMap = params.connMap
     this.outline = params.outline
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
-      params.geometryShortcutTraceMargin ??
-      this.GEOMETRY_SHORTCUT_TRACE_MARGIN
+      params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
@@ -383,8 +382,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       connMap: this.connMap,
       outline: this.outline,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
-      geometryShortcutObstacleMargin:
-        this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+      geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
     }
   }

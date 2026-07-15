@@ -59,10 +59,7 @@ export const canSectionMoveToLayer = ({
         conflictingRoute.traceThickness ?? defaultTraceThickness
       const otherCopperRadius =
         minTraceMargin > 0
-          ? Math.max(
-              otherTraceThickness / 2,
-              conflictingRoute.viaDiameter / 2,
-            )
+          ? Math.max(otherTraceThickness / 2, conflictingRoute.viaDiameter / 2)
           : otherTraceThickness / 2
       const minDistance =
         currentTraceThickness / 2 + otherCopperRadius + minTraceMargin

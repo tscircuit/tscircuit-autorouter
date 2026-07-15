@@ -86,8 +86,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       connMap: this.input.connMap,
       outline: this.input.outline,
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
-      geometryShortcutObstacleMargin:
-        this.input.geometryShortcutObstacleMargin,
+      geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
     })
   }

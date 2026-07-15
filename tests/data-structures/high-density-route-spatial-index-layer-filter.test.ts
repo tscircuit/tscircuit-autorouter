@@ -23,10 +23,7 @@ test("segment conflicts ignore copper on other layers but still include vias", (
     ],
     vias: [{ x: 1, y: 1 }],
   }
-  const spatialIndex = new HighDensityRouteSpatialIndex([
-    bottomRoute,
-    viaRoute,
-  ])
+  const spatialIndex = new HighDensityRouteSpatialIndex([bottomRoute, viaRoute])
 
   const conflicts = spatialIndex.getConflictingRoutesForSegment(
     { x: 0, y: 0, z: 0 },
@@ -34,6 +31,7 @@ test("segment conflicts ignore copper on other layers but still include vias", (
     1,
   )
 
-  expect(conflicts.map(({ conflictingRoute }) => conflictingRoute.connectionName))
-    .toEqual(["via_route"])
+  expect(
+    conflicts.map(({ conflictingRoute }) => conflictingRoute.connectionName),
+  ).toEqual(["via_route"])
 })
