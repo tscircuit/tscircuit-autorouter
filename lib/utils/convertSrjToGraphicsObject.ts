@@ -22,6 +22,8 @@ const TRACE_LAYER_COLORS = {
   inner4: "purple",
   inner5: "cyan",
   inner6: "magenta",
+  inner7: "lime",
+  inner8: "brown",
 } satisfies Record<LayerName, string>
 
 export type TraceColorMode = "layer" | "net"

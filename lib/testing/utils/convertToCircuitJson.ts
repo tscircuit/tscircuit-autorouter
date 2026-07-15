@@ -72,6 +72,7 @@ function convertHdRouteToCircuitJsonTraces(
   hdRoute: HighDensityRoute,
   baseId: string,
   connectionName: string,
+  layerCount: number,
   width = 0.1,
 ): PcbTrace[] {
   const traces: PcbTrace[] = []
@@ -91,7 +92,7 @@ function convertHdRouteToCircuitJsonTraces(
             x: point.x,
             y: point.y,
             width: point.traceThickness ?? width,
-            layer: mapZToLayerName(point.z, 2),
+            layer: mapZToLayerName(point.z, layerCount),
             ...(isFirstPoint && (point as any).pcb_port_id
               ? { start_pcb_port_id: (point as any).pcb_port_id }
               : {}),
@@ -164,7 +165,7 @@ function convertHdRouteToCircuitJsonTraces(
               x: point.x,
               y: point.y,
               width: point.traceThickness ?? width,
-              layer: mapZToLayerName(point.z, 2),
+              layer: mapZToLayerName(point.z, layerCount),
               ...(isFirstPoint && (point as any).pcb_port_id
                 ? { start_pcb_port_id: (point as any).pcb_port_id }
                 : {}),
@@ -195,7 +196,7 @@ function convertHdRouteToCircuitJsonTraces(
             x: point.x,
             y: point.y,
             width: point.traceThickness ?? width,
-            layer: mapZToLayerName(point.z, 2),
+            layer: mapZToLayerName(point.z, layerCount),
             ...(isLastPoint && (point as any).pcb_port_id
               ? { end_pcb_port_id: (point as any).pcb_port_id }
               : {}),
@@ -376,6 +377,8 @@ const layerNames = new Set<string>([
   "inner4",
   "inner5",
   "inner6",
+  "inner7",
+  "inner8",
 ])
 
 const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
@@ -536,6 +539,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  */
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
+  layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
 ): PcbVia[] {
@@ -584,8 +588,8 @@ function extractViasFromRoutes(
             Math.abs(prevPoint.x - currPoint.x) < 0.01 &&
             Math.abs(prevPoint.y - currPoint.y) < 0.01
           ) {
-            const fromLayer = mapZToLayerName(prevPoint.z, 2)
-            const toLayer = mapZToLayerName(currPoint.z, 2)
+            const fromLayer = mapZToLayerName(prevPoint.z, layerCount)
+            const toLayer = mapZToLayerName(currPoint.z, layerCount)
             const locationKey = `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
 
             if (!viaLocations.has(locationKey)) {
@@ -661,6 +665,7 @@ export function convertToCircuitJson(
   circuitJson.push(
     ...extractViasFromRoutes(
       routes,
+      srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
     ),
@@ -696,6 +701,7 @@ export function convertToCircuitJson(
           route,
           `trace_${index}`,
           connectionMap.get(connectionName) || connectionName,
+          srjWithPointPairs.layerCount,
           minTraceWidth,
         )
         circuitJson.push(...(traces as AnyCircuitElement[]))
