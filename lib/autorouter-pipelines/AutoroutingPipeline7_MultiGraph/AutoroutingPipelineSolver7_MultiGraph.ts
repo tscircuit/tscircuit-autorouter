@@ -3,7 +3,10 @@ import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import {
+  GlobalDrcBranchPortfolioSolver,
+  GlobalDrcForceImproveSolver,
+} from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -217,7 +220,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
-  exactGeometryDrcForceImproveSolver?: GlobalDrcForceImproveSolver
+  exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -647,7 +650,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
-      GlobalDrcForceImproveSolver,
+      GlobalDrcBranchPortfolioSolver,
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
@@ -668,6 +671,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enableLargeBoardBroadFallback: false,
           enableTargetedErrorSweep: true,
           enablePostSolveClearanceRelaxation: false,
+          broadMaxIterations: 8,
+          broadPassMultiplier: 3,
         },
       ],
     ),

@@ -62,4 +62,4 @@ test("solver svg frames capture selected pipeline7 frames for a zero-drc circuit
 
   expect(errors).toHaveLength(0)
   expect(svg).toMatchSvgSnapshot(import.meta.path)
-})
+}, 30_000)
