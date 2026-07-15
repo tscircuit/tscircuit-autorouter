@@ -937,8 +937,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-    const benchmarkDrcTopologyViz =
-      this.benchmarkDrcTopologySolver?.visualize()
+    const benchmarkDrcTopologyViz = this.benchmarkDrcTopologySolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
