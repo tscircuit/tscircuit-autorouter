@@ -71,6 +71,7 @@ import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline
 import { createPipeline7BenchmarkDrcEvaluator } from "./createPipeline7BenchmarkDrcEvaluator"
 import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
 import { lockPipeline7HdRouteTerminals } from "./lockPipeline7HdRouteTerminals"
+import { maskPipeline7UndersizedViaInPadTargets } from "./mask-pipeline7-undersized-via-in-pad-targets"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -687,7 +688,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
+          srj: maskPipeline7UndersizedViaInPadTargets(
+            cms.srjWithPointPairs!,
+            cms.viaDiameter,
+          ) as any,
           hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           effort: cms.effort,
