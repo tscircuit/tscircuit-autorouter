@@ -17,6 +17,16 @@ test("bugreport74-8499df fanout board routing", (): void => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  const exactDrcSolver = solver.exactGeometryDrcForceImproveSolver
+  if (!exactDrcSolver) {
+    throw new Error("Pipeline did not create the exact-geometry DRC solver")
+  }
+  expect(exactDrcSolver.stats.globalDrcForceImproveBroadForceAccepted).toBe(
+    false,
+  )
+  expect(exactDrcSolver.stats.globalDrcForceImproveBestDrcIssueScoreSeen).toBe(
+    0.066,
+  )
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

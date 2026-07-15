@@ -15,6 +15,23 @@
 - Use Blacksmith only for benchmark runs unless the user explicitly asks to use
   Blacksmith for another validation task.
 
+## Debugging Git Dependencies Locally
+
+When a bug may be inside a Git dependency, clone that dependency locally and
+temporarily replace its existing Git package spec in `package.json` with a path:
+
+```json
+{
+  "package-name": "path/to/local/clone"
+}
+```
+
+Then run `bun install` so imports resolve to the local clone. Keep the dependency
+name unchanged. This direct Git-spec-to-path substitution is intended for
+packages already installed from Git; do not assume it works for registry or
+other non-Git dependencies. Restore the pinned Git commit before finishing
+unless the task explicitly requires keeping the local link.
+
 ## Visualization Debugging
 
 When changing or reviewing solver `visualize()` / `preview()` output, use the
@@ -41,6 +58,32 @@ bun scripts/run-sample.ts \
   --net-colors \
   --out-dir /tmp/pipeline7-visuals
 ```
+
+## Exact-Geometry DRC Candidate Ranking
+
+When debugging `exactGeometryDrcForceImproveSolver`, do not treat a lower DRC
+issue count as proof that a candidate is better. Compare the error categories,
+`issueScore`, and the geometry before and after the accepted candidate.
+
+`fixtures/bug-reports/bugreport74-8499df` demonstrates the failure mode. At the
+reported iteration 4030 to 4031 transition (4058 to 4059 when reproduced without
+cache), the baseline `GlobalDrcForceImproveSolver` previously accepted a
+broad-repulsion candidate because `isBetterDrcSnapshot` prioritized issue
+count. The candidate changed two trace-clearance errors with a combined
+`issueScore` of `0.066` into one accidental trace-to-trace contact with an
+`issueScore` of `1`. The count dropped from two to one while the geometry and
+severity became much worse.
+
+The relevant diagnostic stats are
+`globalDrcForceImproveBroadForceAccepted: true` and
+`globalDrcForceImproveTargetedForceAccepted: false`. Inspect the broad-force
+candidate and every comparison that selects it. Before the fix, both the inner
+solver and the branch portfolio could admit the same destructive candidate. A
+DRC candidate must never be considered improved merely because it replaces
+several clearance violations with fewer overlaps, shorts, or accidental
+contacts. Rank maximum per-error severity before aggregate `issueScore`; using
+only the aggregate can still prefer one contact over many tiny clearances whose
+combined score exceeds the contact's score.
 
 ## Fallback Logic
 
