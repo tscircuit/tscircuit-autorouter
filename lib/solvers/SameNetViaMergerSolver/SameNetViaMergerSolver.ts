@@ -30,7 +30,7 @@ type Via = {
   layers: number[]
 }
 
-const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 1.5
+const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
 
 const getNetForRoute = (
