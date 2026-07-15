@@ -19,49 +19,49 @@ export const combineVisualizations = (
     if (viz.lines) {
       combined.lines = [
         ...(combined.lines || []),
-        ...viz.lines.map((l) => ({ ...l, step: i })),
+        ...viz.lines.map((l) => ({ ...l, step: l.step ?? i })),
       ]
     }
     if (viz.points) {
       combined.points = [
         ...(combined.points || []),
-        ...viz.points.map((p) => ({ ...p, step: i })),
+        ...viz.points.map((p) => ({ ...p, step: p.step ?? i })),
       ]
     }
     if (viz.circles) {
       combined.circles = [
         ...(combined.circles || []),
-        ...viz.circles.map((c) => ({ ...c, step: i })),
+        ...viz.circles.map((c) => ({ ...c, step: c.step ?? i })),
       ]
     }
     if (viz.rects) {
       combined.rects = [
         ...(combined.rects || []),
-        ...viz.rects.map((r) => ({ ...r, step: i })),
+        ...viz.rects.map((r) => ({ ...r, step: r.step ?? i })),
       ]
     }
     if (viz.polygons) {
       combined.polygons = [
         ...(combined.polygons || []),
-        ...viz.polygons.map((p) => ({ ...p, step: i })),
+        ...viz.polygons.map((p) => ({ ...p, step: p.step ?? i })),
       ]
     }
     if (viz.infiniteLines) {
       combined.infiniteLines = [
         ...(combined.infiniteLines || []),
-        ...viz.infiniteLines.map((l) => ({ ...l, step: i })),
+        ...viz.infiniteLines.map((l) => ({ ...l, step: l.step ?? i })),
       ]
     }
     if (viz.arrows) {
       combined.arrows = [
         ...(combined.arrows || []),
-        ...viz.arrows.map((a) => ({ ...a, step: i })),
+        ...viz.arrows.map((a) => ({ ...a, step: a.step ?? i })),
       ]
     }
     if (viz.texts) {
       combined.texts = [
         ...(combined.texts || []),
-        ...viz.texts.map((t) => ({ ...t, step: i })),
+        ...viz.texts.map((t) => ({ ...t, step: t.step ?? i })),
       ]
     }
   })

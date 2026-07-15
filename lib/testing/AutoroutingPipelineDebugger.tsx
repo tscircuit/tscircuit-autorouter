@@ -150,6 +150,35 @@ type AsyncPipelineDebuggerSolver = PipelineDebuggerSolver & {
   solveAsync?: () => Promise<void>
 }
 
+type GraphicsStepMode = "solver" | "graphics"
+
+const selectGraphicsStepMode = (
+  graphics: GraphicsObject,
+  stepMode: GraphicsStepMode,
+): GraphicsObject => {
+  if (stepMode === "solver") return graphics
+
+  const useGraphicsStep = (objects?: Array<{ step?: number }>) =>
+    objects?.map((object) => ({
+      ...object,
+      step: (object as { graphicsStep?: number }).graphicsStep ?? object.step,
+    }))
+
+  return {
+    ...graphics,
+    lines: useGraphicsStep(graphics.lines) as typeof graphics.lines,
+    points: useGraphicsStep(graphics.points) as typeof graphics.points,
+    circles: useGraphicsStep(graphics.circles) as typeof graphics.circles,
+    rects: useGraphicsStep(graphics.rects) as typeof graphics.rects,
+    polygons: useGraphicsStep(graphics.polygons) as typeof graphics.polygons,
+    infiniteLines: useGraphicsStep(
+      graphics.infiniteLines,
+    ) as typeof graphics.infiniteLines,
+    arrows: useGraphicsStep(graphics.arrows) as typeof graphics.arrows,
+    texts: useGraphicsStep(graphics.texts) as typeof graphics.texts,
+  }
+}
+
 const getOutputViaCount = (solver: PipelineDebuggerSolver): number | null => {
   if (!solver.solved || solver.failed) return null
   if (typeof solver.getOutputSimplifiedPcbTraces !== "function") return null
@@ -303,6 +332,8 @@ export const AutoroutingPipelineDebugger = ({
     () => getGlobalCacheProviderFromName(cacheProviderName),
     [cacheProviderName],
   )
+  const [graphicsStepMode, setGraphicsStepMode] =
+    useState<GraphicsStepMode>("solver")
 
   const [selectedPipelineId, setSelectedPipelineIdState] = useState<PipelineId>(
     () =>
@@ -1134,6 +1165,10 @@ export const AutoroutingPipelineDebugger = ({
     () => getOutputViaCount(solver as PipelineDebuggerSolver),
     [solver, solver.iterations, solver.solved, solver.failed],
   )
+  const stepModeVisualization = useMemo(
+    () => selectGraphicsStepMode(visualization, graphicsStepMode),
+    [visualization, graphicsStepMode],
+  )
 
   return (
     <div className="p-4">
@@ -1355,9 +1390,41 @@ export const AutoroutingPipelineDebugger = ({
           </div>
         ) : (
           <>
+            <div className="mb-2 flex gap-3 text-sm">
+              <label>
+                <input
+                  type="radio"
+                  name="graphicsStepMode"
+                  className="mr-1"
+                  checked={graphicsStepMode === "solver"}
+                  onChange={() => setGraphicsStepMode("solver")}
+                />
+                Solver Steps
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="graphicsStepMode"
+                  className="mr-1"
+                  checked={graphicsStepMode === "graphics"}
+                  onChange={() => setGraphicsStepMode("graphics")}
+                />
+                Graphics Steps
+              </label>
+              <button
+                className="underline"
+                onClick={() => {
+                  const storageKey = `saved-camera-position-${window.location.pathname}${window.location.search}`
+                  window.localStorage.removeItem(storageKey)
+                  window.location.reload()
+                }}
+              >
+                Reset Graphics View
+              </button>
+            </div>
             {canSelectObjects || renderer === "vector" ? (
               <InteractiveGraphics
-                graphics={visualization}
+                graphics={stepModeVisualization}
                 onObjectClicked={({ object }) => {
                   if (!canSelectObjects) return
                   const objectLabel = object.label ?? ""
@@ -1373,7 +1440,7 @@ export const AutoroutingPipelineDebugger = ({
               />
             ) : (
               <InteractiveGraphicsCanvas
-                graphics={visualization}
+                graphics={stepModeVisualization}
                 showLabelsByDefault={false}
               />
             )}

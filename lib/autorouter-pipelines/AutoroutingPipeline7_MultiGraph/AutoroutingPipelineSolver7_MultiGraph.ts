@@ -42,7 +42,6 @@ import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
-import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
@@ -89,6 +88,35 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
+}
+
+type PipelineVisualization = {
+  solverName: string
+  graphics: GraphicsObject | undefined
+}
+
+function assignSolverStep(
+  graphics: GraphicsObject,
+  solverStep: number,
+): GraphicsObject {
+  const assign = (objects?: Array<{ step?: number }>) =>
+    objects?.map((object) => ({
+      ...object,
+      graphicsStep: object.step,
+      step: solverStep,
+    }))
+
+  return {
+    ...graphics,
+    lines: assign(graphics.lines),
+    points: assign(graphics.points),
+    circles: assign(graphics.circles),
+    rects: assign(graphics.rects),
+    polygons: assign(graphics.polygons),
+    infiniteLines: assign(graphics.infiniteLines),
+    arrows: assign(graphics.arrows),
+    texts: assign(graphics.texts),
+  } as GraphicsObject
 }
 
 /**
@@ -785,21 +813,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const componentDetectionViz = this.componentDetectionSolver?.visualize()
-    const componentTopologyGeneratorViz =
-      this.componentTopologyGeneratorSolver?.visualize()
-    const globalTopologyGeneratorViz =
-      this.globalTopologyGeneratorSolver?.visualize()
+    const topologyPlanningViz = this.topologyPlanningSolver?.visualize()
     const topologyMergingViz = this.topologyMergingSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
-    const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
-    const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
-    const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
-    const deadEndViz = this.deadEndSolver?.visualize()
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
-    const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
@@ -812,7 +832,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
-    const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const srjToVisualize = this.originalSrj
     const problemOutline = srjToVisualize.outline
     const problemLines: Line[] = []
@@ -890,63 +909,108 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       lines: problemLines,
     } as GraphicsObject
-    const visualizationOptions = {
-      traceColorMode: this.visualizationTraceColorMode,
-    } as const
-    const routeViz = getPresuppliedTraceVisualization({
-      srj: srjToVisualize,
-      visualizationOptions,
-    })
-    const problemViz = combineVisualizations(problemBaseViz, routeViz)
     const processedProblemViz =
       this.preprocessSimpleRouteJsonSolver?.visualize()
     const globalDrcForceImproveViz =
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-    const visualizations = [
-      problemViz,
-      processedProblemViz,
-      componentDetectionViz,
-      componentTopologyGeneratorViz,
-      escapeViaLocationViz,
-      netToPPSolver,
-      globalTopologyGeneratorViz,
-      topologyMergingViz,
-      nodeSubdivisionViz,
-      nodeTargetMergerViz,
-      singleLayerNodeMergerViz,
-      strawSolverViz,
-      edgeViz,
-      deadEndViz,
-      availableSegmentPointViz,
-      necessaryCrampedPortPointSolverViz,
-      portPointPathingViz,
-      multiSectionOptViz,
-      uniformPortDistributionViz,
-      highDensityViz
-        ? combineVisualizations(problemBaseViz, highDensityViz)
-        : null,
-      highDensityForceImproveViz,
-      highDensityRepairViz,
-      highDensityStitchViz,
-      traceSimplificationViz,
-      lengthMatchingViz,
-      traceWidthViz,
-      globalDrcForceImproveViz,
-      exactGeometryDrcForceImproveViz,
-      this.solved
-        ? combineVisualizations(
-            problemBaseViz,
-            getPresuppliedTraceVisualization({
-              srj: this.originalSrj,
-              visualizationOptions,
-            }),
-            this.visualizeFinalOutput(),
-          )
-        : null,
-    ].filter(Boolean) as GraphicsObject[]
-    const graphics = combineVisualizations(...visualizations)
+    const visualizations: PipelineVisualization[] = [
+      {
+        solverName: "preprocessSimpleRouteJsonSolver",
+        graphics: processedProblemViz,
+      },
+      {
+        solverName: "componentDetectionSolver",
+        graphics: componentDetectionViz,
+      },
+      { solverName: "escapeViaLocationSolver", graphics: escapeViaLocationViz },
+      { solverName: "netToPointPairsSolver", graphics: netToPPSolver },
+      { solverName: "topologyPlanningSolver", graphics: topologyPlanningViz },
+      { solverName: "topologyMergingSolver", graphics: topologyMergingViz },
+      {
+        solverName: "nodeDimensionSubdivisionSolver",
+        graphics: nodeSubdivisionViz,
+      },
+      { solverName: "edgeSolver", graphics: edgeViz },
+      {
+        solverName: "availableSegmentPointSolver",
+        graphics: availableSegmentPointViz,
+      },
+      {
+        solverName: "necessaryCrampedPortPointSolver",
+        graphics: necessaryCrampedPortPointSolverViz,
+      },
+      {
+        solverName: "portPointPathingSolver",
+        graphics: portPointPathingViz,
+      },
+      {
+        solverName: "uniformPortDistributionSolver",
+        graphics: uniformPortDistributionViz,
+      },
+      {
+        solverName: "highDensityRouteSolver",
+        graphics: highDensityViz
+          ? combineVisualizations(problemBaseViz, highDensityViz)
+          : undefined,
+      },
+      {
+        solverName: "highDensityForceImproveSolver",
+        graphics: highDensityForceImproveViz,
+      },
+      { solverName: "highDensityRepairSolver", graphics: highDensityRepairViz },
+      { solverName: "highDensityStitchSolver", graphics: highDensityStitchViz },
+      {
+        solverName: "traceSimplificationSolver",
+        graphics: traceSimplificationViz,
+      },
+      { solverName: "lengthMatchingSolver", graphics: lengthMatchingViz },
+      { solverName: "traceWidthSolver", graphics: traceWidthViz },
+      {
+        solverName: "globalDrcForceImproveSolver",
+        graphics: globalDrcForceImproveViz,
+      },
+      {
+        solverName: "exactGeometryDrcForceImproveSolver",
+        graphics: combineVisualizations(
+          exactGeometryDrcForceImproveViz ?? {},
+          this.visualizeFinalOutput(),
+        ),
+      },
+    ]
+    const pipelineStepNumbers = new Map(
+      this.pipelineDef.map((pipelineStep, index) => [
+        pipelineStep.solverName,
+        index + 1,
+      ]),
+    )
+    const graphics = combineVisualizations(
+      ...visualizations.flatMap(({ solverName, graphics }) => {
+        if (!graphics) return []
+
+        const stepNumber = pipelineStepNumbers.get(solverName)
+        if (stepNumber === undefined) {
+          throw new Error(`Missing Pipeline 7 stage number for ${solverName}`)
+        }
+
+        return [assignSolverStep(graphics, stepNumber)]
+      }),
+    )
+    // NOTE: The graphics viewer discovers available steps from rendered
+    // objects. Empty stage markers preserve a selectable step for solvers
+    // whose visualization intentionally contains no geometry.
+    graphics.texts = [
+      ...(graphics.texts ?? []),
+      ...this.pipelineDef.map((pipelineStep, index) => ({
+        x: this.srj.bounds.minX,
+        y: this.srj.bounds.minY,
+        text: "",
+        fontSize: 0,
+        step: index + 1,
+        label: pipelineStep.solverName,
+      })),
+    ]
     return this.visualizationTraceColorMode === "net"
       ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
       : graphics
