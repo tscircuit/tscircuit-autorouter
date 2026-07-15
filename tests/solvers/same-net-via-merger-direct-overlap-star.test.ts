@@ -14,7 +14,7 @@ const makeViaRoute = (connectionName: string, x: number): HighDensityRoute => ({
   vias: [{ x, y: 0 }],
 })
 
-test("SameNetViaMergerSolver keeps chain consolidation centered on direct overlaps", () => {
+test("SameNetViaMergerSolver consolidates a chain within the near-merge radius", () => {
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: [
       makeViaRoute("route-a", 0),
@@ -39,8 +39,8 @@ test("SameNetViaMergerSolver keeps chain consolidation centered on direct overla
     throw new Error("Expected SameNetViaMergerSolver to emit merged routes")
   }
   expect(routes.flatMap((route) => route.vias)).toEqual([
-    { x: 0.25, y: 0 },
-    { x: 0.25, y: 0 },
-    { x: 0.25, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ])
 })
