@@ -643,12 +643,6 @@ jobs:
               '',
               ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
               '',
-              '### PR run',
-              '',
-              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                omitDetails: true,
-              }),
-              '',
               ...renderReport(mainDatasetReport, '', {
                 detailsLabel: 'Previous main run details',
                 omitSummary: true,
@@ -1251,12 +1245,6 @@ jobs:
               '### Previous main run',
               '',
               ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
-              '',
-              '### PR run',
-              '',
-              ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                omitDetails: true,
-              }),
               '',
               ...renderReport(mainDatasetReport, '', {
                 detailsLabel: 'Previous main run details',
