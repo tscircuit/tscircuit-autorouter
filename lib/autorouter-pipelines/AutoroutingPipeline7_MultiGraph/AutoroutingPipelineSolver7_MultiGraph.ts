@@ -84,6 +84,32 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
+export type Pipeline7PostProcessingEffortConfig = {
+  traceSimplificationPipelineLoops: number
+  globalDrcMaxIterations: number
+  exactGeometryDrcMaxIterations: number
+  exactGeometryDrcBroadMaxIterations: number
+}
+
+export const getPipeline7PostProcessingEffortConfig = (
+  effort: number,
+): Pipeline7PostProcessingEffortConfig => {
+  const effortScale = Number.isFinite(effort) ? Math.max(1, effort) : 1
+
+  return {
+    traceSimplificationPipelineLoops: Math.max(
+      2,
+      Math.ceil(2 * effortScale),
+    ),
+    globalDrcMaxIterations: Math.max(16, Math.ceil(16 * effortScale)),
+    exactGeometryDrcMaxIterations: Math.max(32, Math.ceil(32 * effortScale)),
+    exactGeometryDrcBroadMaxIterations: Math.max(
+      8,
+      Math.ceil(8 * effortScale),
+    ),
+  }
+}
+
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
@@ -239,6 +265,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   viaHoleDiameter!: number
   minTraceWidth!: number
   effort: number
+  postProcessingEffortConfig: Pipeline7PostProcessingEffortConfig
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -608,7 +635,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          iterations: 2,
+          effort: cms.effort,
+          maxSimplificationPipelineLoops:
+            cms.postProcessingEffortConfig.traceSimplificationPipelineLoops,
         },
       ],
     ),
@@ -648,7 +677,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           ),
           connMap: cms.connMap,
           effort: cms.effort,
-          maxIterations: 16,
+          maxIterations:
+            cms.postProcessingEffortConfig.globalDrcMaxIterations,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
         },
@@ -684,13 +714,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srjWithPointPairs: cms.srjWithPointPairs!,
             originalSrj: cms.originalSrj,
           }),
-          maxIterations: 32,
+          maxIterations:
+            cms.postProcessingEffortConfig.exactGeometryDrcMaxIterations,
           enableLargeBoardBroadFallback: false,
           enableTargetedErrorSweep: true,
           enablePostSolveClearanceRelaxation: false,
           enableViaInPadLayerMoves: true,
-          viaInPadMaxIterations: 32,
-          broadMaxIterations: 8,
+          viaInPadMaxIterations:
+            cms.postProcessingEffortConfig.exactGeometryDrcMaxIterations,
+          broadMaxIterations:
+            cms.postProcessingEffortConfig.exactGeometryDrcBroadMaxIterations,
           broadPassMultiplier: 3,
         },
       ],
@@ -708,6 +741,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
+    this.postProcessingEffortConfig =
+      getPipeline7PostProcessingEffortConfig(this.effort)
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
