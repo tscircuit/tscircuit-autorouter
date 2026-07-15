@@ -645,6 +645,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           effort: cms.effort,
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
+          enablePostSolveClearanceRelaxation: false,
         },
       ],
     ),
