@@ -22,6 +22,11 @@ type ViaPairShortcut = {
   savedLength: number
 }
 
+type MultilayerSectionCollapse = {
+  targetZ: number
+  mergeWith: "previous" | "next"
+}
+
 export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleRouteUselessViaRemovalSolver"
@@ -44,6 +49,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   ENABLE_GEOMETRY_SHORTCUTS = true
 
   geometryShortcutsApplied = 0
+  multilayerSectionsCollapsed = 0
 
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
@@ -228,6 +234,106 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.currentSectionIndex = Math.max(0, this.currentSectionIndex - 1)
   }
 
+  private findMultilayerSectionCollapse(
+    previousSection: RouteSection,
+    currentSection: RouteSection,
+    nextSection: RouteSection,
+  ): MultilayerSectionCollapse | null {
+    if (
+      previousSection.z === nextSection.z ||
+      this.unsimplifiedRoute.jumpers?.length
+    ) {
+      return null
+    }
+
+    const previousTransitionPoint =
+      previousSection.points[previousSection.points.length - 1]
+    if (
+      previousTransitionPoint?.insideJumperPad ||
+      previousTransitionPoint?.toNextSegmentType ||
+      currentSection.points.some(
+        (point) => point.insideJumperPad || point.toNextSegmentType,
+      )
+    ) {
+      return null
+    }
+
+    const candidates: MultilayerSectionCollapse[] = [
+      { targetZ: previousSection.z, mergeWith: "previous" },
+      { targetZ: nextSection.z, mergeWith: "next" },
+    ]
+    for (const candidate of candidates) {
+      if (
+        candidate.targetZ !== currentSection.z &&
+        canSectionMoveToLayer({
+          currentSection,
+          targetZ: candidate.targetZ,
+          route: this.unsimplifiedRoute,
+          hdRouteSHI: this.hdRouteSHI,
+          obstacleSHI: this.obstacleSHI,
+          connMap: this.connMap,
+          defaultTraceThickness: this.TRACE_THICKNESS,
+          obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+          traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+        })
+      ) {
+        return candidate
+      }
+    }
+
+    return null
+  }
+
+  private applyMultilayerSectionCollapse(
+    collapse: MultilayerSectionCollapse,
+  ): void {
+    const previousSection = this.routeSections[this.currentSectionIndex - 1]
+    const currentSection = this.routeSections[this.currentSectionIndex]
+    const nextSection = this.routeSections[this.currentSectionIndex + 1]
+    const movedPoints = currentSection.points.map((point) => ({
+      ...point,
+      z: collapse.targetZ,
+    }))
+    const removeConsecutiveDuplicates = (points: RoutePoint[]) =>
+      points.filter((point, index) => {
+        const previousPoint = points[index - 1]
+        return (
+          !previousPoint ||
+          point.x !== previousPoint.x ||
+          point.y !== previousPoint.y ||
+          point.z !== previousPoint.z
+        )
+      })
+
+    if (collapse.mergeWith === "previous") {
+      this.routeSections.splice(this.currentSectionIndex - 1, 2, {
+        startIndex: previousSection.startIndex,
+        endIndex: currentSection.endIndex,
+        z: collapse.targetZ,
+        points: removeConsecutiveDuplicates([
+          ...previousSection.points,
+          ...movedPoints,
+        ]),
+      })
+    } else {
+      this.routeSections.splice(this.currentSectionIndex, 2, {
+        startIndex: currentSection.startIndex,
+        endIndex: nextSection.endIndex,
+        z: collapse.targetZ,
+        points: removeConsecutiveDuplicates([
+          ...movedPoints,
+          ...nextSection.points,
+        ]),
+      })
+    }
+
+    this.multilayerSectionsCollapsed++
+    this.stats.multilayerSectionsCollapsed = this.multilayerSectionsCollapsed
+    this.stats.viasRemovedByMultilayerSectionCollapses =
+      this.multilayerSectionsCollapsed
+    this.currentSectionIndex = Math.max(0, this.currentSectionIndex - 1)
+  }
+
   _step() {
     if (this.currentSectionIndex >= this.routeSections.length) {
       this.solved = true
@@ -330,9 +436,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const nextSection = this.routeSections[this.currentSectionIndex + 1]
 
     if (prevSection.z !== nextSection.z) {
-      // We only remove vias where there is a middle section that can be
-      // replaced by the layer of adjacent sections, if the adjacent sections
-      // don't have matching layers, a more complex algo is needed
+      const multilayerCollapse = this.findMultilayerSectionCollapse(
+        prevSection,
+        currentSection,
+        nextSection,
+      )
+      if (multilayerCollapse) {
+        this.applyMultilayerSectionCollapse(multilayerCollapse)
+        return
+      }
+
       this.currentSectionIndex++
       return
     }
