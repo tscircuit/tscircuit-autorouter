@@ -68,7 +68,9 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createPipeline7BenchmarkDrcEvaluator } from "./createPipeline7BenchmarkDrcEvaluator"
 import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
+import { lockPipeline7HdRouteTerminals } from "./lockPipeline7HdRouteTerminals"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -221,6 +223,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  benchmarkDrcTopologySolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -640,7 +643,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: lockPipeline7HdRouteTerminals(
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            cms.netToPointPairsSolver?.newConnections ?? [],
+          ),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,
@@ -673,6 +679,33 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enablePostSolveClearanceRelaxation: false,
           broadMaxIterations: 8,
           broadPassMultiplier: 3,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "benchmarkDrcTopologySolver",
+      GlobalDrcForceImproveSolver,
+      (cms) => [
+        {
+          srj: cms.srjWithPointPairs! as any,
+          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          connMap: cms.connMap,
+          effort: cms.effort,
+          drcEvaluator: createPipeline7BenchmarkDrcEvaluator({
+            connections: cms.netToPointPairsSolver?.newConnections ?? [],
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+          maxIterations: 32,
+          enableLargeBoardBroadFallback: false,
+          enableTargetedErrorSweep: false,
+          enablePostSolveClearanceRelaxation: false,
+          enableViaInPadLayerMoves: true,
         },
       ],
     ),
@@ -904,6 +937,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const benchmarkDrcTopologyViz =
+      this.benchmarkDrcTopologySolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -935,6 +970,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      benchmarkDrcTopologyViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1012,6 +1048,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.benchmarkDrcTopologySolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
