@@ -71,7 +71,8 @@ const splitShellArgs = (input) => {
   }
 
   if (escaping) current += "\\"
-  if (quote !== null) throw new Error("Unterminated quote in /benchmark command")
+  if (quote !== null)
+    throw new Error("Unterminated quote in /benchmark command")
   pushCurrent()
   return args
 }

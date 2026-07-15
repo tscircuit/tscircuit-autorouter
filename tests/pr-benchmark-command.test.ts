@@ -39,9 +39,9 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     profileSolvers: false,
   })
   expect(() => parsePrBenchmarkCommand("/benchmark-all --dataset 18")).toThrow()
-  expect(() => parsePrBenchmarkCommand('/benchmark --solver "unterminated')).toThrow(
-    "Unterminated quote",
-  )
+  expect(() =>
+    parsePrBenchmarkCommand('/benchmark --solver "unterminated'),
+  ).toThrow("Unterminated quote")
 
   const dispatchWorkflow = readFileSync(
     new URL("../.github/workflows/benchmark-dispatch.yml", import.meta.url),
