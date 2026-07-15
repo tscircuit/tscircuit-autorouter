@@ -14,6 +14,7 @@ export const canSectionMoveToLayer = ({
   connMap,
   defaultTraceThickness,
   obstacleMargin,
+  traceMargin,
 }: {
   currentSection: RouteSection
   targetZ: number
@@ -23,8 +24,10 @@ export const canSectionMoveToLayer = ({
   connMap: ConnectivityMap
   defaultTraceThickness: number
   obstacleMargin: number
+  traceMargin?: number
 }): boolean => {
   const currentTraceThickness = route.traceThickness ?? defaultTraceThickness
+  const minTraceMargin = traceMargin ?? 0
   const routeIds = [route.connectionName, route.rootConnectionName].filter(
     (id): id is string => id !== undefined,
   )
@@ -35,7 +38,7 @@ export const canSectionMoveToLayer = ({
     const conflictingRoutes = hdRouteSHI.getConflictingRoutesForSegment(
       A,
       B,
-      currentTraceThickness / 2,
+      currentTraceThickness / 2 + minTraceMargin,
     )
 
     for (const { conflictingRoute, distance } of conflictingRoutes) {
@@ -54,7 +57,15 @@ export const canSectionMoveToLayer = ({
 
       const otherTraceThickness =
         conflictingRoute.traceThickness ?? defaultTraceThickness
-      const minDistance = currentTraceThickness / 2 + otherTraceThickness / 2
+      const otherCopperRadius =
+        minTraceMargin > 0
+          ? Math.max(
+              otherTraceThickness / 2,
+              conflictingRoute.viaDiameter / 2,
+            )
+          : otherTraceThickness / 2
+      const minDistance =
+        currentTraceThickness / 2 + otherCopperRadius + minTraceMargin
       if (distance < minDistance) return false
     }
 

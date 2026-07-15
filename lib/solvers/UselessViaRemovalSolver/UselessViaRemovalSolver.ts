@@ -17,6 +17,10 @@ export interface UselessViaRemovalSolverInput {
   colorMap: Record<string, string>
   layerCount: number
   connMap: ConnectivityMap
+  outline?: Array<{ x: number; y: number }>
+  geometryShortcutTraceMargin?: number
+  geometryShortcutObstacleMargin?: number
+  enableGeometryShortcuts?: boolean
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -57,7 +61,10 @@ export class UselessViaRemovalSolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.optimizedHdRoutes.push(this.activeSubSolver.getOptimizedHdRoute())
+        const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute()
+        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName)
+        this.hdRouteSHI!.addRoute(optimizedRoute)
+        this.optimizedHdRoutes.push(optimizedRoute)
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed || this.activeSubSolver.error) {
         this.error = this.activeSubSolver.error
@@ -77,6 +84,11 @@ export class UselessViaRemovalSolver extends BaseSolver {
       obstacleSHI: this.obstacleSHI!,
       unsimplifiedRoute: unprocessedRoute,
       connMap: this.input.connMap,
+      outline: this.input.outline,
+      geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
+      geometryShortcutObstacleMargin:
+        this.input.geometryShortcutObstacleMargin,
+      enableGeometryShortcuts: this.input.enableGeometryShortcuts,
     })
   }
 
