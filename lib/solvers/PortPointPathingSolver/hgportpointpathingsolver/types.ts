@@ -86,6 +86,8 @@ export interface HgPortPointPathingSolverParams {
   layerCount: number
   effort: number
   minViaPadDiameter?: number
+  minTraceWidth?: number
+  minTraceClearance?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
