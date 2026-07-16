@@ -68,10 +68,9 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { createPipeline7BenchmarkDrcEvaluator } from "./createPipeline7BenchmarkDrcEvaluator"
+import { createViaInPadDrcEvaluator } from "./create-via-in-pad-drc-evaluator"
 import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
-import { lockPipeline7HdRouteTerminals } from "./lockPipeline7HdRouteTerminals"
-import { maskPipeline7UndersizedViaInPadTargets } from "./mask-pipeline7-undersized-via-in-pad-targets"
+import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -643,7 +642,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockPipeline7HdRouteTerminals(
+          hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
           ),
@@ -661,10 +660,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          viaInPadSrj: maskPipeline7UndersizedViaInPadTargets(
-            cms.srjWithPointPairs!,
-            cms.viaDiameter,
-          ) as any,
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           effort: cms.effort,
@@ -678,7 +673,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srjWithPointPairs: cms.srjWithPointPairs!,
             originalSrj: cms.originalSrj,
           }),
-          viaInPadDrcEvaluator: createPipeline7BenchmarkDrcEvaluator({
+          viaInPadDrcEvaluator: createViaInPadDrcEvaluator({
             connections: cms.netToPointPairsSolver?.newConnections ?? [],
             originalConnections: cms.originalSrj.connections,
             layerCount: cms.srj.layerCount,

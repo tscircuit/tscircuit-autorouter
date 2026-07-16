@@ -2,12 +2,12 @@ import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 /**
- * Restores stitched Pipeline7 route endpoints to their authoritative PCB port
- * positions and marks them as fixed. Earlier geometric cleanup can slide an
- * endpoint within a pad's axis-aligned obstacle bounds, which is unsafe for a
- * rotated pad.
+ * Restores stitched route endpoints to their authoritative PCB port positions
+ * and marks them as fixed. Earlier geometric cleanup can slide an endpoint
+ * within a pad's axis-aligned obstacle bounds, which is unsafe for a rotated
+ * pad.
  */
-export const lockPipeline7HdRouteTerminals = (
+export const lockHdRouteTerminals = (
   hdRoutes: ReadonlyArray<HighDensityRoute>,
   connections: ReadonlyArray<SimpleRouteConnection>,
 ): HighDensityRoute[] => {

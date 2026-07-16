@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { lockPipeline7HdRouteTerminals } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/lockPipeline7HdRouteTerminals"
+import { lockHdRouteTerminals } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -35,7 +35,7 @@ test("Pipeline7 locks direct and reversed PCB terminal endpoints", () => {
     vias: [],
   })
 
-  const [direct, reversed] = lockPipeline7HdRouteTerminals(
+  const [direct, reversed] = lockHdRouteTerminals(
     [makeRoute("direct", 0.03, 1.96), makeRoute("reversed", 11.97, 10.04)],
     connections,
   )
