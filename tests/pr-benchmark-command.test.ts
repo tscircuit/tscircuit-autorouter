@@ -77,5 +77,5 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   )
   expect(benchmarkWorkflow).toContain("benchmark_args_json:")
   expect(benchmarkWorkflow).toContain("blacksmith-8vcpu-ubuntu-2404-arm")
-  expect(benchmarkWorkflow).toContain("inputs.long_benchmark && 240 || 120")
+  expect(benchmarkWorkflow).toContain("inputs.long_benchmark && 480 || 120")
 })

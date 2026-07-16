@@ -52,7 +52,7 @@ on:
         required: false
         type: string
       long_benchmark:
-        description: Run on 8 vCPUs with a four-hour timeout
+        description: Run on 8 vCPUs with an eight-hour timeout
         required: false
         default: false
         type: boolean
