@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 
-test("getDrcErrors classifies pad/via pairs without generic duplicates", () => {
+test("checks classifies pad/via pairs once through getDrcErrors", () => {
   const circuitJson: AnyCircuitElement[] = [
     {
       type: "pcb_smtpad",
