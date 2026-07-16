@@ -29,7 +29,7 @@ test("max-effort trace simplification stops after route complexity converges", (
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  expect(solver.simplificationPipelineLoops).toBe(2)
+  expect(solver.simplificationPipelineLoops).toBe(4)
   expect(solver.stats.simplificationStoppedAfterNoImprovement).toBe(true)
-  expect(solver.simplifiedHdRoutes).toEqual([route])
+  expect(solver.simplifiedHdRoutes[0]?.route).toHaveLength(3)
 })

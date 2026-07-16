@@ -25,6 +25,8 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   defaultViaDiameter: number
+  maxStepSize: number
+  tailJumpRatio: number
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -33,8 +35,24 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     defaultViaDiameter?: number
+    maxStepSize?: number
+    tailJumpRatio?: number
   }) {
     super()
+    if (
+      params.maxStepSize !== undefined &&
+      (!Number.isFinite(params.maxStepSize) || params.maxStepSize <= 0)
+    ) {
+      throw new Error("maxStepSize must be a finite positive number")
+    }
+    if (
+      params.tailJumpRatio !== undefined &&
+      (!Number.isFinite(params.tailJumpRatio) ||
+        params.tailJumpRatio <= 0 ||
+        params.tailJumpRatio >= 1)
+    ) {
+      throw new Error("tailJumpRatio must be between zero and one")
+    }
     this.MAX_ITERATIONS = 100e6
 
     this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
@@ -53,6 +71,8 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
+    this.maxStepSize = params.maxStepSize ?? 4
+    this.tailJumpRatio = params.tailJumpRatio ?? 0.8
 
     this.simplifiedHdRoutes = []
   }
@@ -66,7 +86,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         return
       }
 
-      this.activeSubSolver = new SingleSimplifiedPathSolver5({
+      const pathSolver = new SingleSimplifiedPathSolver5({
         inputRoute: hdRoute,
         otherHdRoutes: this.unsimplifiedHdRoutes
           .slice(this.currentUnsimplifiedHdRouteIndex + 1)
@@ -76,6 +96,10 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         colorMap: this.colorMap,
         outline: this.outline,
       })
+      pathSolver.maxStepSize = this.maxStepSize
+      pathSolver.currentStepSize = this.maxStepSize
+      pathSolver.TAIL_JUMP_RATIO = this.tailJumpRatio
+      this.activeSubSolver = pathSolver
       this.currentUnsimplifiedHdRouteIndex++
       return
     }
