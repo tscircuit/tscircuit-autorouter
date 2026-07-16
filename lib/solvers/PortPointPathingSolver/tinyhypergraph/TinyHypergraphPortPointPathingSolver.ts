@@ -165,6 +165,21 @@ export const getTinyHyperGraphSectionSolverOptions = (
   }
 }
 
+export const getDuplicateCongestedPortSolveOptions = (
+  effort: number,
+  minViaPadDiameter?: number,
+): TinyHyperGraphSolverOptions => ({
+  ...getTinyViaSizeOptions(minViaPadDiameter),
+  USE_SPARSE_CANDIDATE_STORAGE: true,
+  ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+  GREEDY_FINAL_ROUTE_ITERS: 4,
+  MAX_ITERATIONS: Math.ceil(
+    2_000_000 * Math.min(getEffortScale(effort), 1),
+  ),
+  RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+  STATIC_REACHABILITY_PRECHECK: true,
+})
+
 const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
@@ -821,17 +836,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         serializedGraph,
         {
           duplicatePortProximity: 0.05,
-          routeSolveOptions: {
-            ...getTinyViaSizeOptions(params.minViaPadDiameter),
-            USE_SPARSE_CANDIDATE_STORAGE: true,
-            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-            GREEDY_FINAL_ROUTE_ITERS: 4,
-            MAX_ITERATIONS: Math.ceil(
-              2_000_000 * getEffortScale(params.effort),
-            ),
-            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-            STATIC_REACHABILITY_PRECHECK: true,
-          },
+          routeSolveOptions: getDuplicateCongestedPortSolveOptions(
+            params.effort,
+            params.minViaPadDiameter,
+          ),
         },
       )
       duplicateCongestedPortSolver.solve()
