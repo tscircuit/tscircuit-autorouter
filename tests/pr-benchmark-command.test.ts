@@ -38,9 +38,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     datasetName: "srj18",
     profileSolvers: false,
   })
-  expect(
-    parsePrBenchmarkCommand("/benchmark-long --concurrency 6"),
-  ).toEqual({
+  expect(parsePrBenchmarkCommand("/benchmark-long --concurrency 6")).toEqual({
     kind: "benchmark-long",
     benchmarkArgs: ["--concurrency", "6"],
     datasetName: "dataset01",
@@ -78,10 +76,6 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     "long_benchmark: String(command.kind === 'benchmark-long')",
   )
   expect(benchmarkWorkflow).toContain("benchmark_args_json:")
-  expect(benchmarkWorkflow).toContain(
-    "blacksmith-8vcpu-ubuntu-2404-arm",
-  )
-  expect(benchmarkWorkflow).toContain(
-    "inputs.long_benchmark && 240 || 120",
-  )
+  expect(benchmarkWorkflow).toContain("blacksmith-8vcpu-ubuntu-2404-arm")
+  expect(benchmarkWorkflow).toContain("inputs.long_benchmark && 240 || 120")
 })
