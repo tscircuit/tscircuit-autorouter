@@ -4,7 +4,7 @@ import {
   getTinyHyperGraphSolveGraphOptions,
 } from "../lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
-test("higher effort extends tiny-hypergraph budgets without repeating rip ramps", () => {
+test("higher effort preserves tiny-hypergraph fallback timing", () => {
   const lowSolve = getTinyHyperGraphSolveGraphOptions(0.1)
   const normalSolve = getTinyHyperGraphSolveGraphOptions(1)
   const highSolve = getTinyHyperGraphSolveGraphOptions(5)
@@ -15,10 +15,12 @@ test("higher effort extends tiny-hypergraph budgets without repeating rip ramps"
   expect(lowSolve.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(1)
   expect(normalSolve.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(10)
   expect(highSolve.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(10)
-  expect(highSolve.MAX_ITERATIONS).toBe(5 * normalSolve.MAX_ITERATIONS!)
+  expect(lowSolve.MAX_ITERATIONS).toBe(200_000)
+  expect(highSolve.MAX_ITERATIONS).toBe(normalSolve.MAX_ITERATIONS)
 
   expect(lowSection.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(2)
   expect(normalSection.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(16)
   expect(highSection.RIP_THRESHOLD_RAMP_ATTEMPTS).toBe(16)
-  expect(highSection.MAX_ITERATIONS).toBe(5 * normalSection.MAX_ITERATIONS!)
+  expect(lowSection.MAX_ITERATIONS).toBe(100_000)
+  expect(highSection.MAX_ITERATIONS).toBe(normalSection.MAX_ITERATIONS)
 })

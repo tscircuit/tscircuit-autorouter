@@ -147,7 +147,7 @@ export const getTinyHyperGraphSolveGraphOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * Math.min(effortScale, 1)),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(2_000_000 * Math.min(effortScale, 1)),
   }
 }
 
@@ -161,7 +161,7 @@ export const getTinyHyperGraphSectionSolverOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * Math.min(effortScale, 1)),
-    MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(1_000_000 * Math.min(effortScale, 1)),
   }
 }
 
