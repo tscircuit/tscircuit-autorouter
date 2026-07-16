@@ -104,6 +104,20 @@ export const getPipeline7PostProcessingEffortConfig = (
   }
 }
 
+const createExactGeometryDrcEvaluatorForPipeline = (
+  cms: AutoroutingPipelineSolver7_MultiGraph,
+): ReturnType<typeof createPipeline7ExactGeometryDrcEvaluator> =>
+  createPipeline7ExactGeometryDrcEvaluator({
+    connections: cms.netToPointPairsSolver?.newConnections ?? [],
+    originalConnections: cms.originalSrj.connections,
+    layerCount: cms.srj.layerCount,
+    obstacles: cms.srj.obstacles,
+    defaultViaHoleDiameter: cms.viaHoleDiameter,
+    connMap: cms.connMap,
+    srjWithPointPairs: cms.srjWithPointPairs!,
+    originalSrj: cms.originalSrj,
+  })
+
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
@@ -632,7 +646,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           effort: cms.effort,
           maxSimplificationPipelineLoops:
             cms.postProcessingEffortConfig.traceSimplificationPipelineLoops,
-          drcEvaluator: cms.createExactGeometryDrcEvaluator(),
+          drcEvaluator: createExactGeometryDrcEvaluatorForPipeline(cms),
         },
       ],
     ),
@@ -688,7 +702,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           effort: cms.effort,
           viaHoleDiameter: cms.viaHoleDiameter,
-          drcEvaluator: cms.createExactGeometryDrcEvaluator(),
+          drcEvaluator: createExactGeometryDrcEvaluatorForPipeline(cms),
           viaInPadDrcEvaluator: createViaInPadDrcEvaluator({
             connections: cms.netToPointPairsSolver?.newConnections ?? [],
             originalConnections: cms.originalSrj.connections,
@@ -699,9 +713,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srjWithPointPairs: cms.srjWithPointPairs!,
             originalSrj: cms.originalSrj,
           }),
-          additionalCandidateHdRoutes: [
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          ],
+          additionalCandidateHdRoutes:
+            cms.effort > 1
+              ? [cms.traceWidthSolver!.getHdRoutesWithWidths()]
+              : undefined,
           maxIterations:
             cms.postProcessingEffortConfig.exactGeometryDrcMaxIterations,
           enableLargeBoardBroadFallback: false,
@@ -771,21 +786,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.minTraceWidth = this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
-  }
-
-  private createExactGeometryDrcEvaluator(): ReturnType<
-    typeof createPipeline7ExactGeometryDrcEvaluator
-  > {
-    return createPipeline7ExactGeometryDrcEvaluator({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
-      originalConnections: this.originalSrj.connections,
-      layerCount: this.srj.layerCount,
-      obstacles: this.srj.obstacles,
-      defaultViaHoleDiameter: this.viaHoleDiameter,
-      connMap: this.connMap,
-      srjWithPointPairs: this.srjWithPointPairs!,
-      originalSrj: this.originalSrj,
-    })
   }
 
   getConstructorParams() {

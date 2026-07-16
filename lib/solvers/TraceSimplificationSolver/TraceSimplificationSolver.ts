@@ -383,17 +383,20 @@ export class TraceSimplificationSolver extends BaseSolver {
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
     return routes.map((route) => {
-      const vias = route.route.flatMap((point, index, points) => {
-        const nextPoint = points[index + 1]
-        if (!nextPoint || point.z === nextPoint.z) return []
-        if (
-          Math.abs(point.x - nextPoint.x) > 1e-3 ||
-          Math.abs(point.y - nextPoint.y) > 1e-3
-        ) {
-          return []
-        }
-        return [{ x: point.x, y: point.y }]
-      })
+      const vias =
+        (this.simplificationConfig.effort ?? 1) > 1
+          ? route.route.flatMap((point, index, points) => {
+              const nextPoint = points[index + 1]
+              if (!nextPoint || point.z === nextPoint.z) return []
+              if (
+                Math.abs(point.x - nextPoint.x) > 1e-3 ||
+                Math.abs(point.y - nextPoint.y) > 1e-3
+              ) {
+                return []
+              }
+              return [{ x: point.x, y: point.y }]
+            })
+          : route.vias
 
       return {
         ...route,
