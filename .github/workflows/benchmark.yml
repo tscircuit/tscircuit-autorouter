@@ -73,7 +73,7 @@ jobs:
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
       )
     runs-on: ${{ inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
-    timeout-minutes: ${{ inputs.long_benchmark && 240 || 120 }}
+    timeout-minutes: ${{ inputs.long_benchmark && 480 || 120 }}
 
     steps:
       - name: Parse benchmark command
