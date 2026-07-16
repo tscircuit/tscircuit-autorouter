@@ -51,6 +51,11 @@ on:
         description: JSON argument array forwarded from an authorized PR comment
         required: false
         type: string
+      long_benchmark:
+        description: Run on 8 vCPUs with a four-hour timeout
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -67,8 +72,8 @@ jobs:
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
       )
-    runs-on: ${{ vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
-    timeout-minutes: 120
+    runs-on: ${{ inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
+    timeout-minutes: ${{ inputs.long_benchmark && 240 || 120 }}
 
     steps:
       - name: Parse benchmark command
