@@ -663,6 +663,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           effort: cms.effort,
+          viaHoleDiameter: cms.viaHoleDiameter,
           drcEvaluator: createPipeline7ExactGeometryDrcEvaluator({
             connections: cms.netToPointPairsSolver?.newConnections ?? [],
             originalConnections: cms.originalSrj.connections,
