@@ -32,6 +32,7 @@ test("SameNetViaMergerSolver consolidates a chain within the near-merge radius",
   solver.solve()
 
   expect(solver.failed).toBe(false)
+  expect(solver.MAX_ITERATIONS).toBe(4)
   expect(solver.iterations).toBeLessThan(10)
 
   const routes = solver.getMergedViaHdRoutes()
@@ -43,4 +44,37 @@ test("SameNetViaMergerSolver consolidates a chain within the near-merge radius",
     { x: 0, y: 0 },
     { x: 0, y: 0 },
   ])
+})
+
+test("SameNetViaMergerSolver stops and restores a batch that does not reduce physical vias", () => {
+  const inputHdRoutes = [
+    makeViaRoute("route-a", 0),
+    makeViaRoute("route-b", 0.25),
+  ]
+  const solver = new SameNetViaMergerSolver({
+    inputHdRoutes,
+    obstacles: [],
+    colorMap: {},
+    layerCount: 2,
+    connMap: new ConnectivityMap({
+      net0: ["route-a", "route-b"],
+    }),
+  })
+  const [viaA, viaB] = (solver as any).vias
+
+  // Reproduce the old cyclic failure mode: two co-located representatives
+  // could participate in different groups and swap their destinations while
+  // preserving the same number of physical vias forever.
+  ;(solver as any).getOffendingViaGroupsBatch = () => [
+    { keep: viaB, remove: [viaA] },
+    { keep: viaA, remove: [viaB] },
+  ]
+
+  solver.step()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.iterations).toBe(1)
+  expect(solver.stats.stoppedAfterNoPhysicalViaReduction).toBe(true)
+  expect(solver.getMergedViaHdRoutes()).toEqual(inputHdRoutes)
 })

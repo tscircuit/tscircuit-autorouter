@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { createPipeline7ExactGeometryDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/createPipeline7ExactGeometryDrcEvaluator"
+import {
+  createPipeline7ExactGeometryDrcEvaluator,
+  createPipeline7RelaxedDrcEvaluator,
+} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/createPipeline7ExactGeometryDrcEvaluator"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
@@ -129,4 +132,62 @@ test("Pipeline7 exact cleanup includes typed trace clearance errors", () => {
   expect(errors[0]?.type).toBe("pcb_pad_trace_clearance_error")
   expect(errorsWithCenters).toHaveLength(1)
   expect(errorsWithCenters?.[0]?.center).toEqual({ x: 0, y: 0.2 })
+})
+
+test("Pipeline7 checkpoint validation includes benchmark typed clearance errors", () => {
+  const srj = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 0.2,
+        height: 0.2,
+        connectedTo: ["pcb_smtpad_foreign"],
+      },
+    ],
+    connections: [
+      {
+        name: "trace",
+        pointsToConnect: [
+          { x: -1, y: 0.2, layer: "top", pointId: "start" },
+          { x: 1, y: 0.2, layer: "top", pointId: "end" },
+        ],
+      },
+    ],
+  } as any
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  const evaluator = createPipeline7RelaxedDrcEvaluator({
+    connections: srj.connections,
+    originalConnections: srj.connections,
+    layerCount: srj.layerCount,
+    obstacles: srj.obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+    srjWithPointPairs: srj,
+    originalSrj: srj,
+  })
+  const result = evaluator({
+    traces: [],
+    routes: [
+      {
+        connectionName: "trace",
+        route: [
+          { x: -1, y: 0.2, z: 0 },
+          { x: 1, y: 0.2, z: 0 },
+        ],
+        vias: [],
+        traceThickness: 0.1,
+        viaDiameter: 0.3,
+      },
+    ],
+  })
+  const errors = Array.isArray(result) ? result : result.errors
+
+  expect(
+    errors.some((error) => error.type === "pcb_pad_trace_clearance_error"),
+  ).toBe(true)
 })

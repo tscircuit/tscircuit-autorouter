@@ -69,7 +69,10 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createViaInPadDrcEvaluator } from "./create-via-in-pad-drc-evaluator"
-import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
+import {
+  createPipeline7ExactGeometryDrcEvaluator,
+  createPipeline7RelaxedDrcEvaluator,
+} from "./createPipeline7ExactGeometryDrcEvaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -104,19 +107,32 @@ export const getPipeline7PostProcessingEffortConfig = (
   }
 }
 
+const getDrcEvaluatorConversionOptionsForPipeline = (
+  cms: AutoroutingPipelineSolver7_MultiGraph,
+) => ({
+  connections: cms.netToPointPairsSolver?.newConnections ?? [],
+  originalConnections: cms.originalSrj.connections,
+  layerCount: cms.srj.layerCount,
+  obstacles: cms.srj.obstacles,
+  defaultViaHoleDiameter: cms.viaHoleDiameter,
+  connMap: cms.connMap,
+  srjWithPointPairs: cms.srjWithPointPairs!,
+  originalSrj: cms.originalSrj,
+})
+
 const createExactGeometryDrcEvaluatorForPipeline = (
   cms: AutoroutingPipelineSolver7_MultiGraph,
 ): ReturnType<typeof createPipeline7ExactGeometryDrcEvaluator> =>
-  createPipeline7ExactGeometryDrcEvaluator({
-    connections: cms.netToPointPairsSolver?.newConnections ?? [],
-    originalConnections: cms.originalSrj.connections,
-    layerCount: cms.srj.layerCount,
-    obstacles: cms.srj.obstacles,
-    defaultViaHoleDiameter: cms.viaHoleDiameter,
-    connMap: cms.connMap,
-    srjWithPointPairs: cms.srjWithPointPairs!,
-    originalSrj: cms.originalSrj,
-  })
+  createPipeline7ExactGeometryDrcEvaluator(
+    getDrcEvaluatorConversionOptionsForPipeline(cms),
+  )
+
+const createRelaxedDrcEvaluatorForPipeline = (
+  cms: AutoroutingPipelineSolver7_MultiGraph,
+): ReturnType<typeof createPipeline7RelaxedDrcEvaluator> =>
+  createPipeline7RelaxedDrcEvaluator(
+    getDrcEvaluatorConversionOptionsForPipeline(cms),
+  )
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
@@ -646,7 +662,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           effort: cms.effort,
           maxSimplificationPipelineLoops:
             cms.postProcessingEffortConfig.traceSimplificationPipelineLoops,
-          drcEvaluator: createExactGeometryDrcEvaluatorForPipeline(cms),
+          drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
         },
       ],
     ),
@@ -713,6 +729,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srjWithPointPairs: cms.srjWithPointPairs!,
             originalSrj: cms.originalSrj,
           }),
+          validationDrcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
           additionalCandidateHdRoutes:
             cms.effort > 1
               ? [cms.traceWidthSolver!.getHdRoutesWithWidths()]

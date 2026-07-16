@@ -191,7 +191,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
       ...input,
       obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
     }
-    this.MAX_ITERATIONS = 1e6
     this.inputHdRoutes = this.input.inputHdRoutes
     this.mergedViaHdRoutes = structuredClone(this.inputHdRoutes)
     this.unprocessedRoutes = [...this.input.inputHdRoutes]
@@ -214,6 +213,11 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.viasByNet = new Map<string, Via[]>()
 
     this.rebuildVias()
+    const initialPhysicalViaCount = this.getPhysicalViaCount()
+    // Every successful pass must remove at least one physical same-net via
+    // location. Leave one extra step for the final no-candidates check.
+    this.MAX_ITERATIONS = Math.max(1, initialPhysicalViaCount + 1)
+    this.stats.initialPhysicalViaCount = initialPhysicalViaCount
   }
 
   private rebuildVias(): void {
@@ -247,10 +251,23 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
   }
 
-  private getViaKey(via: Via): string {
-    return [via.routeIndex, via.x, via.y, via.layers.join(","), via.net].join(
-      ":",
-    )
+  private getPhysicalViaKey(via: Via): string {
+    return [via.net, via.x, via.y].join(":")
+  }
+
+  private getPhysicalViaCount(): number {
+    return new Set(this.vias.map((via) => this.getPhysicalViaKey(via))).size
+  }
+
+  private getViasByPhysicalLocation(): Map<string, Via[]> {
+    const viasByPhysicalLocation = new Map<string, Via[]>()
+    for (const via of this.vias) {
+      const key = this.getPhysicalViaKey(via)
+      const viasAtLocation = viasByPhysicalLocation.get(key)
+      if (viasAtLocation) viasAtLocation.push(via)
+      else viasByPhysicalLocation.set(key, [via])
+    }
+    return viasByPhysicalLocation
   }
 
   private dedupeRouteVias(route: HighDensityRoute): void {
@@ -265,8 +282,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
   private getOffendingViaGroupsBatch(): Array<{ keep: Via; remove: Via[] }> {
     const groups: Array<{ keep: Via; remove: Via[] }> = []
-    const touchedViaKeys = new Set<string>()
+    const touchedPhysicalViaKeys = new Set<string>()
     const candidateGroups: Array<{ keep: Via; remove: Via[] }> = []
+    const viasByPhysicalLocation = this.getViasByPhysicalLocation()
 
     for (const viasInNet of this.viasByNet.values()) {
       if (viasInNet.length < 2) continue
@@ -297,7 +315,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const neighborCellRadius = Math.ceil(
           this.nearViaMergeDistanceMultiplier,
         )
-        const remove: Via[] = []
+        const removeByPhysicalViaKey = new Map<string, Via>()
 
         for (let dx = -neighborCellRadius; dx <= neighborCellRadius; dx++) {
           for (let dy = -neighborCellRadius; dy <= neighborCellRadius; dy++) {
@@ -323,25 +341,35 @@ export class SameNetViaMergerSolver extends BaseSolver {
                 squaredDistance <=
                 directOverlapDistance * directOverlapDistance
               ) {
-                remove.push(candidate)
+                removeByPhysicalViaKey.set(
+                  this.getPhysicalViaKey(candidate),
+                  candidate,
+                )
                 continue
               }
 
+              const candidatePhysicalViaKey = this.getPhysicalViaKey(candidate)
+              const coLocatedCandidateVias = viasByPhysicalLocation.get(
+                candidatePhysicalViaKey,
+              ) ?? [candidate]
               if (
                 squaredDistance <= nearMergeDistance * nearMergeDistance &&
-                canMoveViaTo(candidate, keep, {
-                  connMap: this.connMap,
-                  mergedViaHdRoutes: this.mergedViaHdRoutes,
-                  hdRouteSHI: this.hdRouteSHI,
-                  obstacleSHI: this.obstacleSHI,
-                })
+                coLocatedCandidateVias.every((coLocatedCandidateVia) =>
+                  canMoveViaTo(coLocatedCandidateVia, keep, {
+                    connMap: this.connMap,
+                    mergedViaHdRoutes: this.mergedViaHdRoutes,
+                    hdRouteSHI: this.hdRouteSHI,
+                    obstacleSHI: this.obstacleSHI,
+                  }),
+                )
               ) {
-                remove.push(candidate)
+                removeByPhysicalViaKey.set(candidatePhysicalViaKey, candidate)
               }
             }
           }
         }
 
+        const remove = [...removeByPhysicalViaKey.values()]
         if (remove.length > 0) candidateGroups.push({ keep, remove })
       }
     }
@@ -358,18 +386,29 @@ export class SameNetViaMergerSolver extends BaseSolver {
     })
 
     for (const candidateGroup of candidateGroups) {
-      const keepKey = this.getViaKey(candidateGroup.keep)
-      if (touchedViaKeys.has(keepKey)) continue
+      const keepKey = this.getPhysicalViaKey(candidateGroup.keep)
+      if (touchedPhysicalViaKeys.has(keepKey)) continue
 
-      const remove = candidateGroup.remove.filter(
-        (viaToRemove) => !touchedViaKeys.has(this.getViaKey(viaToRemove)),
+      const removeLocations = candidateGroup.remove.filter(
+        (viaToRemove) =>
+          !touchedPhysicalViaKeys.has(this.getPhysicalViaKey(viaToRemove)),
       )
-      if (remove.length === 0) continue
+      if (removeLocations.length === 0) continue
+
+      // A physical same-net via can be represented by transitions on several
+      // route fragments. Move the whole co-located cluster atomically so one
+      // pass cannot split it and another pass move it back.
+      const remove = removeLocations.flatMap(
+        (viaToRemove) =>
+          viasByPhysicalLocation.get(this.getPhysicalViaKey(viaToRemove)) ?? [
+            viaToRemove,
+          ],
+      )
 
       groups.push({ keep: candidateGroup.keep, remove })
-      touchedViaKeys.add(keepKey)
-      for (const viaToRemove of remove) {
-        touchedViaKeys.add(this.getViaKey(viaToRemove))
+      touchedPhysicalViaKeys.add(keepKey)
+      for (const viaToRemove of removeLocations) {
+        touchedPhysicalViaKeys.add(this.getPhysicalViaKey(viaToRemove))
       }
     }
 
@@ -448,10 +487,13 @@ export class SameNetViaMergerSolver extends BaseSolver {
     const groups = this.getOffendingViaGroupsBatch()
 
     if (groups.length === 0) {
+      this.stats.finalPhysicalViaCount = this.getPhysicalViaCount()
       this.solved = true
       return
     }
 
+    const routesBeforeMerge = structuredClone(this.mergedViaHdRoutes)
+    const physicalViaCountBeforeMerge = this.getPhysicalViaCount()
     let mergedViaCount = 0
     for (const group of groups) {
       for (const viaToRemove of group.remove) {
@@ -461,8 +503,24 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
     this.rebuildVias()
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.mergedViaHdRoutes)
+    const physicalViaCountAfterMerge = this.getPhysicalViaCount()
+
+    if (physicalViaCountAfterMerge >= physicalViaCountBeforeMerge) {
+      // This is a convergence guard, not a successful optimization. Restore
+      // the checkpoint so a cyclic batch can never consume the outer solver's
+      // iteration budget or perturb routing geometry without reducing vias.
+      this.mergedViaHdRoutes = routesBeforeMerge
+      this.rebuildVias()
+      this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.mergedViaHdRoutes)
+      this.stats.stoppedAfterNoPhysicalViaReduction = true
+      this.stats.finalPhysicalViaCount = physicalViaCountBeforeMerge
+      this.solved = true
+      return
+    }
+
     this.stats.mergedViaGroups = groups.length
     this.stats.mergedViaCount = mergedViaCount
+    this.stats.finalPhysicalViaCount = physicalViaCountAfterMerge
   }
 
   getMergedViaHdRoutes(): HighDensityRoute[] | null {
