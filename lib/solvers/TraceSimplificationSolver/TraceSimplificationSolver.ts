@@ -420,9 +420,7 @@ export class TraceSimplificationSolver extends BaseSolver {
   }
 
   _step() {
-    if (
-      this.simplificationPipelineLoops >= this.getEffectiveStrategyLimit()
-    ) {
+    if (this.simplificationPipelineLoops >= this.getEffectiveStrategyLimit()) {
       this.finishSimplification(false)
       return
     }
@@ -505,16 +503,14 @@ export class TraceSimplificationSolver extends BaseSolver {
               ) &&
             this.simplificationPipelineLoops <
               this.getEffectiveStrategyLimit() &&
-            this.nonImprovingStrategyCount >=
-              MAX_NON_IMPROVING_STRATEGIES
+            this.nonImprovingStrategyCount >= MAX_NON_IMPROVING_STRATEGIES
           ) {
             this.finishSimplification(true)
             return
           }
 
           if (
-            this.simplificationPipelineLoops >=
-            MIN_LOOPS_BEFORE_CONVERGENCE
+            this.simplificationPipelineLoops >= MIN_LOOPS_BEFORE_CONVERGENCE
           ) {
             this.hdRoutes = structuredClone(this.bestHdRoutes)
           }
@@ -522,8 +518,7 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         // Check if all iterations are complete
         if (
-          this.simplificationPipelineLoops >=
-          this.getEffectiveStrategyLimit()
+          this.simplificationPipelineLoops >= this.getEffectiveStrategyLimit()
         ) {
           this.finishSimplification(false)
           return
@@ -552,8 +547,7 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
-            geometryShortcutTraceMargin:
-              strategy.geometryShortcutTraceMargin,
+            geometryShortcutTraceMargin: strategy.geometryShortcutTraceMargin,
             geometryShortcutObstacleMargin:
               (this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15) *
               strategy.geometryShortcutObstacleMarginScale,

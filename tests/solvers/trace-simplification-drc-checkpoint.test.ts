@@ -16,18 +16,20 @@ test("higher effort never replaces the 1x checkpoint with a dirtier route", () =
   }
   const createSolver = (
     effort: number,
-    drcEvaluator?: ConstructorParameters<typeof TraceSimplificationSolver>[0]["drcEvaluator"],
+    drcEvaluator?: ConstructorParameters<
+      typeof TraceSimplificationSolver
+    >[0]["drcEvaluator"],
   ) =>
     new TraceSimplificationSolver({
-    hdRoutes: [route],
-    obstacles: [],
-    connMap: new ConnectivityMap({ net0: [route.connectionName] }),
-    colorMap: {},
-    defaultViaDiameter: route.viaDiameter,
-    layerCount: 2,
+      hdRoutes: [route],
+      obstacles: [],
+      connMap: new ConnectivityMap({ net0: [route.connectionName] }),
+      colorMap: {},
+      defaultViaDiameter: route.viaDiameter,
+      layerCount: 2,
       effort,
       drcEvaluator,
-  })
+    })
 
   const oneX = createSolver(1)
   oneX.solve()
