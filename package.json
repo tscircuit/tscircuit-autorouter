@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "bunx esbuild node_modules/@tscircuit/checks/index.ts --bundle --format=esm --platform=node --packages=external --alias:lib=./node_modules/@tscircuit/checks/lib --alias:@tscircuit/jlcpcb-manufacturing-specs=./node_modules/@tscircuit/jlcpcb-manufacturing-specs/index.ts --outfile=node_modules/@tscircuit/checks/dist/index.js",
+    "prepare": "bunx esbuild node_modules/@tscircuit/checks/index.ts --bundle --format=esm --platform=node --packages=external --alias:lib=./node_modules/@tscircuit/checks/lib --alias:@tscircuit/jlcpcb-manufacturing-specs=./node_modules/@tscircuit/jlcpcb-manufacturing-specs/index.ts --outfile=node_modules/@tscircuit/checks/dist/index.js && bun -e \"await Bun.write('node_modules/@tscircuit/checks/dist/index.d.ts', Bun.file('types/checks-preview.d.ts'))\"",
     "start": "cosmos",
     "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
