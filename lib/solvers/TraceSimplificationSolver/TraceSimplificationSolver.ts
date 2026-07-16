@@ -274,12 +274,18 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (
       simplificationConfig.maxSimplificationPipelineLoops !== undefined &&
       (!Number.isInteger(simplificationConfig.maxSimplificationPipelineLoops) ||
-        simplificationConfig.maxSimplificationPipelineLoops < 1)
+        simplificationConfig.maxSimplificationPipelineLoops < 0)
     ) {
       throw new Error(
-        "maxSimplificationPipelineLoops must be a positive integer",
+        "maxSimplificationPipelineLoops must be a non-negative integer",
       )
     }
+    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
+      simplificationConfig.maxSimplificationPipelineLoops ??
+      Math.max(
+        BASE_SIMPLIFICATION_PIPELINE_LOOPS,
+        Math.ceil(BASE_SIMPLIFICATION_PIPELINE_LOOPS * effortScale),
+      )
     this.simplificationConfig = {
       ...simplificationConfig,
       obstacles: createObjectsWithZLayers(
@@ -287,9 +293,10 @@ export class TraceSimplificationSolver extends BaseSolver {
         simplificationConfig.layerCount,
       ),
     }
-    this.hdRoutes = this.markThroughObstacleSegments(
-      simplificationConfig.hdRoutes,
-    )
+    this.hdRoutes =
+      this.MAX_SIMPLIFICATION_PIPELINE_LOOPS === 0
+        ? simplificationConfig.hdRoutes.map((route) => structuredClone(route))
+        : this.markThroughObstacleSegments(simplificationConfig.hdRoutes)
     this.bestRouteComplexity = getRouteComplexity(
       this.hdRoutes,
       this.simplificationConfig.connMap,
@@ -302,12 +309,6 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.bestDrcIssueCount = initialDrcQuality.issueCount
     this.bestDrcIssueScore = initialDrcQuality.issueScore
     this.initialDrcIssueCount = initialDrcQuality.issueCount
-    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
-      simplificationConfig.maxSimplificationPipelineLoops ??
-      Math.max(
-        BASE_SIMPLIFICATION_PIPELINE_LOOPS,
-        Math.ceil(BASE_SIMPLIFICATION_PIPELINE_LOOPS * effortScale),
-      )
     this.effortStrategyLimit = Math.min(
       SIMPLIFICATION_STRATEGIES.length,
       2 + Math.ceil(Math.log2(effortScale)),

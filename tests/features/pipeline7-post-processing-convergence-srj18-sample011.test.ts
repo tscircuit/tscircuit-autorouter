@@ -5,7 +5,7 @@ import {
 } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("pipeline7 effort-50 simplification converges on srj18 sample011", async () => {
+test("pipeline7 effort-50 post-processing converges and cleans post-DRC vias on srj18 sample011", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 11, 0.1)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     effort: 0.1,
@@ -27,4 +27,20 @@ test("pipeline7 effort-50 simplification converges on srj18 sample011", async ()
     solver.traceSimplificationSolver?.simplificationPipelineLoops,
   ).toBeLessThanOrEqual(6)
   expect(solver.traceSimplificationSolver?.iterations).toBeLessThan(100_000)
-}, 180_000)
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.postDrcTraceSimplificationSolver?.solved).toBe(true)
+  expect(
+    solver.postDrcTraceSimplificationSolver?.stats
+      .simplificationInitialDrcIssueCount,
+  ).toBe(5)
+  expect(
+    solver.postDrcTraceSimplificationSolver?.stats
+      .simplificationFinalDrcIssueCount,
+  ).toBe(3)
+  expect(
+    solver.postDrcTraceSimplificationSolver?.simplificationPipelineLoops,
+  ).toBeLessThanOrEqual(6)
+}, 240_000)

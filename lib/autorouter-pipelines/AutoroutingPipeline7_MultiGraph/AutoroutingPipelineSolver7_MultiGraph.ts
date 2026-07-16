@@ -277,6 +277,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  postDrcTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -748,6 +749,28 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep(
+      "postDrcTraceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          defaultViaDiameter: cms.viaDiameter,
+          layerCount: cms.srj.layerCount,
+          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          effort: cms.effort,
+          maxSimplificationPipelineLoops:
+            cms.effort > 1
+              ? cms.postProcessingEffortConfig.traceSimplificationPipelineLoops
+              : 0,
+          drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -883,6 +906,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const postDrcTraceSimplificationViz =
+      this.postDrcTraceSimplificationSolver?.visualize()
     const lengthMatchingViz = this.lengthMatchingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
@@ -1010,6 +1035,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      postDrcTraceSimplificationViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1087,6 +1113,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.postDrcTraceSimplificationSolver?.simplifiedHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
