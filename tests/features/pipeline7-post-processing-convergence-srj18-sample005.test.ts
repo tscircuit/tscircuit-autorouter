@@ -36,10 +36,10 @@ test("pipeline7 max-effort post-processing converges on srj18 sample005", async 
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  expect(getViaCount(solver._getOutputHdRoutes())).toBeLessThan(stitchedViaCount)
-  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(
-    4,
+  expect(getViaCount(solver._getOutputHdRoutes())).toBeLessThan(
+    stitchedViaCount,
   )
+  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(4)
   expect(
     solver.traceSimplificationSolver?.stats
       .simplificationStoppedAfterNoImprovement,
@@ -47,10 +47,8 @@ test("pipeline7 max-effort post-processing converges on srj18 sample005", async 
   expect(solver.globalDrcForceImproveSolver?.iterations).toBeLessThan(1600)
   expect(
     solver.globalDrcForceImproveSolver?.stats.finalDrcIssueCount,
-  ).toBeLessThan(
-    solver.globalDrcForceImproveSolver?.stats.initialDrcIssueCount,
+  ).toBeLessThan(solver.globalDrcForceImproveSolver?.stats.initialDrcIssueCount)
+  expect(solver.exactGeometryDrcForceImproveSolver?.iterations).toBeLessThan(
+    3200,
   )
-  expect(
-    solver.exactGeometryDrcForceImproveSolver?.iterations,
-  ).toBeLessThan(3200)
 })

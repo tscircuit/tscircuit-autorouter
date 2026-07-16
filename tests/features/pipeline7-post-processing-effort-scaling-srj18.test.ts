@@ -4,10 +4,7 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("pipeline7 scales post-processing effort for selected srj18 samples", async () => {
   for (const sampleNumber of [1, 10, 13]) {
-    const { scenario } = await loadScenarioBySampleNumber(
-      "srj18",
-      sampleNumber,
-    )
+    const { scenario } = await loadScenarioBySampleNumber("srj18", sampleNumber)
     const baselineSolver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
       effort: 1,
       cacheProvider: null,

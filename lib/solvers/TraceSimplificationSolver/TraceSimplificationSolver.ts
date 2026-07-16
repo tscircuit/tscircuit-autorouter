@@ -151,9 +151,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       : 1
     if (
       simplificationConfig.maxSimplificationPipelineLoops !== undefined &&
-      (!Number.isInteger(
-        simplificationConfig.maxSimplificationPipelineLoops,
-      ) ||
+      (!Number.isInteger(simplificationConfig.maxSimplificationPipelineLoops) ||
         simplificationConfig.maxSimplificationPipelineLoops < 1)
     ) {
       throw new Error(
@@ -184,8 +182,7 @@ export class TraceSimplificationSolver extends BaseSolver {
   private finishSimplification(stoppedAfterNoImprovement: boolean): void {
     this.stats = {
       simplificationPipelineLoops: this.simplificationPipelineLoops,
-      maxSimplificationPipelineLoops:
-        this.MAX_SIMPLIFICATION_PIPELINE_LOOPS,
+      maxSimplificationPipelineLoops: this.MAX_SIMPLIFICATION_PIPELINE_LOOPS,
       simplificationStoppedAfterNoImprovement: stoppedAfterNoImprovement,
     }
     this.solved = true
@@ -309,8 +306,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           }
 
           if (
-            this.simplificationPipelineLoops >=
-              MIN_LOOPS_BEFORE_CONVERGENCE &&
+            this.simplificationPipelineLoops >= MIN_LOOPS_BEFORE_CONVERGENCE &&
             this.simplificationPipelineLoops <
               this.MAX_SIMPLIFICATION_PIPELINE_LOOPS &&
             !loopImprovedRouteComplexity

@@ -97,16 +97,10 @@ export const getPipeline7PostProcessingEffortConfig = (
   const effortScale = Number.isFinite(effort) ? Math.max(1, effort) : 1
 
   return {
-    traceSimplificationPipelineLoops: Math.max(
-      2,
-      Math.ceil(2 * effortScale),
-    ),
+    traceSimplificationPipelineLoops: Math.max(2, Math.ceil(2 * effortScale)),
     globalDrcMaxIterations: Math.max(16, Math.ceil(16 * effortScale)),
     exactGeometryDrcMaxIterations: Math.max(32, Math.ceil(32 * effortScale)),
-    exactGeometryDrcBroadMaxIterations: Math.max(
-      8,
-      Math.ceil(8 * effortScale),
-    ),
+    exactGeometryDrcBroadMaxIterations: Math.max(8, Math.ceil(8 * effortScale)),
   }
 }
 
@@ -677,8 +671,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           ),
           connMap: cms.connMap,
           effort: cms.effort,
-          maxIterations:
-            cms.postProcessingEffortConfig.globalDrcMaxIterations,
+          maxIterations: cms.postProcessingEffortConfig.globalDrcMaxIterations,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
         },
@@ -741,8 +734,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
-    this.postProcessingEffortConfig =
-      getPipeline7PostProcessingEffortConfig(this.effort)
+    this.postProcessingEffortConfig = getPipeline7PostProcessingEffortConfig(
+      this.effort,
+    )
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
