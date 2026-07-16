@@ -88,12 +88,19 @@ export const parsePrBenchmarkCommand = (body) => {
     }
   }
 
-  if (!/^\/benchmark(?:\s|$)/.test(command)) {
-    throw new Error("Expected /benchmark [args...] or /benchmark-all")
+  const isLongBenchmark = /^\/benchmark-long(?:\s|$)/.test(command)
+  const commandPrefix = isLongBenchmark ? "/benchmark-long" : "/benchmark"
+  if (!isLongBenchmark && !/^\/benchmark(?:\s|$)/.test(command)) {
+    throw new Error(
+      "Expected /benchmark [args...], /benchmark-long [args...], or /benchmark-all",
+    )
   }
 
-  const parsedArgs = splitShellArgs(command.slice("/benchmark".length).trim())
-  const benchmarkArgs = []
+  const parsedArgs = splitShellArgs(command.slice(commandPrefix.length).trim())
+  const benchmarkArgs =
+    isLongBenchmark && !parsedArgs.includes("--concurrency")
+      ? ["--concurrency", "8"]
+      : []
   let datasetName = "dataset01"
   let profileSolvers = false
 
@@ -110,7 +117,7 @@ export const parsePrBenchmarkCommand = (body) => {
   }
 
   return {
-    kind: "benchmark",
+    kind: isLongBenchmark ? "benchmark-long" : "benchmark",
     benchmarkArgs,
     datasetName,
     profileSolvers,
