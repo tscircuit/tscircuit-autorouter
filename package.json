@@ -7,6 +7,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "bunx esbuild node_modules/@tscircuit/checks/index.ts --bundle --format=esm --platform=node --packages=external --alias:lib=./node_modules/@tscircuit/checks/lib --alias:@tscircuit/jlcpcb-manufacturing-specs=./node_modules/@tscircuit/jlcpcb-manufacturing-specs/index.ts --outfile=node_modules/@tscircuit/checks/dist/index.js",
     "start": "cosmos",
     "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
@@ -32,13 +33,14 @@
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#52c45500b04d0380aa2a1be9b4c6f32d9b138553",
-    "@tscircuit/checks": "^0.0.144",
+    "@tscircuit/checks": "git+https://github.com/tscircuit/checks.git#e81272afbe7b610ed1c0a13c2bdcdd5421eccfe6",
     "@tscircuit/circuit-json-util": "^0.0.94",
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
     "@tscircuit/fixed-via-hypergraph-solver": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
     "@tscircuit/hypergraph": "^0.0.71",
+    "@tscircuit/jlcpcb-manufacturing-specs": "git+https://github.com/tscircuit/jlcpcb-manufacturing-specs#e08af159db01a37db007e33f0a7268d0e4a279a5",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#28275c7",
