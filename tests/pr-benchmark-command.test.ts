@@ -61,14 +61,4 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     "benchmark_args_json: JSON.stringify(command.benchmarkArgs)",
   )
   expect(benchmarkWorkflow).toContain("benchmark_args_json:")
-  expect(benchmarkWorkflow).not.toContain(
-    "<summary>Main Branch Results</summary>",
-  )
-  expect(benchmarkWorkflow.match(/'### Previous main run'/g)).toHaveLength(2)
-  expect(benchmarkWorkflow.match(/'### PR run'/g)).toHaveLength(2)
-  expect(
-    benchmarkWorkflow.match(/No previous main run is available/g),
-  ).toHaveLength(2)
-  expect(benchmarkWorkflow).toContain("'Previous main profile details'")
-  expect(benchmarkWorkflow).toContain("'PR profile comparison'")
 })

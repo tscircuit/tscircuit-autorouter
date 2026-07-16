@@ -224,7 +224,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
-  benchmarkDrcTopologySolver?: GlobalDrcForceImproveSolver
+  viaInPadDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -652,6 +652,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           effort: cms.effort,
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
+          enablePostSolveClearanceRelaxation: false,
         },
       ],
     ),
@@ -684,7 +685,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "benchmarkDrcTopologySolver",
+      "viaInPadDrcForceImproveSolver",
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
@@ -941,7 +942,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-    const benchmarkDrcTopologyViz = this.benchmarkDrcTopologySolver?.visualize()
+    const viaInPadDrcForceImproveViz =
+      this.viaInPadDrcForceImproveSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -973,7 +975,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      benchmarkDrcTopologyViz,
+      viaInPadDrcForceImproveViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1051,7 +1053,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
-      this.benchmarkDrcTopologySolver?.getOutput() ??
+      this.viaInPadDrcForceImproveSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
