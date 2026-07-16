@@ -43,6 +43,8 @@ export type HighDensityIntraNodeRoute = {
     y: number
     z: number
     traceThickness?: number
+    /** Keeps routed terminals fixed during post-route DRC optimization. */
+    pcb_port_id?: string
     insideJumperPad?: boolean
     toNextSegmentType?: "through_obstacle"
   }>
