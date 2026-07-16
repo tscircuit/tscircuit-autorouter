@@ -68,7 +68,9 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createViaInPadDrcEvaluator } from "./create-via-in-pad-drc-evaluator"
 import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
+import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -640,7 +642,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: lockHdRouteTerminals(
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            cms.netToPointPairsSolver?.newConnections ?? [],
+          ),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,
@@ -658,7 +663,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           effort: cms.effort,
+          viaHoleDiameter: cms.viaHoleDiameter,
           drcEvaluator: createPipeline7ExactGeometryDrcEvaluator({
+            connections: cms.netToPointPairsSolver?.newConnections ?? [],
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+          viaInPadDrcEvaluator: createViaInPadDrcEvaluator({
             connections: cms.netToPointPairsSolver?.newConnections ?? [],
             originalConnections: cms.originalSrj.connections,
             layerCount: cms.srj.layerCount,
@@ -672,6 +688,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enableLargeBoardBroadFallback: false,
           enableTargetedErrorSweep: true,
           enablePostSolveClearanceRelaxation: false,
+          enableViaInPadLayerMoves: true,
+          viaInPadMaxIterations: 32,
           broadMaxIterations: 8,
           broadPassMultiplier: 3,
         },
