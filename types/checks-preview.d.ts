@@ -41,4 +41,6 @@ export function checkViaTraceClearance(
   options?: ClearanceCheckOptions,
 ): PcbViaTraceClearanceError[]
 
-export function dedupePcbDrcErrors<T extends AnyCircuitElement>(errors: T[]): T[]
+export function dedupePcbDrcErrors<T extends AnyCircuitElement>(
+  errors: T[],
+): T[]
