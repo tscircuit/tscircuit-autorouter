@@ -311,6 +311,8 @@ export class TraceSimplificationSolver extends BaseSolver {
           if (
             this.simplificationPipelineLoops >=
               MIN_LOOPS_BEFORE_CONVERGENCE &&
+            this.simplificationPipelineLoops <
+              this.MAX_SIMPLIFICATION_PIPELINE_LOOPS &&
             !loopImprovedRouteComplexity
           ) {
             this.hdRoutes = this.bestHdRoutes

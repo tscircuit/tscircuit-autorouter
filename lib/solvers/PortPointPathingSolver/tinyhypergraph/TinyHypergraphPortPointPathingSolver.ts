@@ -137,7 +137,7 @@ const getTinyViaSizeOptions = (
     ? { minViaPadDiameter: minViaPadDiameter }
     : {}
 
-const getTinyHyperGraphSolveGraphOptions = (
+export const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSolverOptions => {
@@ -146,12 +146,14 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
-    RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
+    RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(
+      10 * Math.min(effortScale, 1),
+    ),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
 }
 
-const getTinyHyperGraphSectionSolverOptions = (
+export const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSectionSolverOptions => {
@@ -160,7 +162,9 @@ const getTinyHyperGraphSectionSolverOptions = (
     ...TINY_SECTION_SOLVER_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
-    RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
+    RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(
+      16 * Math.min(effortScale, 1),
+    ),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
 }
