@@ -173,9 +173,7 @@ export const getDuplicateCongestedPortSolveOptions = (
   USE_SPARSE_CANDIDATE_STORAGE: true,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   GREEDY_FINAL_ROUTE_ITERS: 4,
-  MAX_ITERATIONS: Math.ceil(
-    2_000_000 * Math.min(getEffortScale(effort), 1),
-  ),
+  MAX_ITERATIONS: Math.ceil(2_000_000 * Math.min(getEffortScale(effort), 1)),
   RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
   STATIC_REACHABILITY_PRECHECK: true,
 })
