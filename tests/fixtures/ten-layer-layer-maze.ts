@@ -3,37 +3,29 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 const LAYER_COUNT = 10
 const ALL_Z_LAYERS = Array.from({ length: LAYER_COUNT }, (_, z) => z)
-const GATE_X_POSITIONS = [-6, -3, 0, 3, 6]
+const GATE_Y_POSITIONS = Array.from(
+  { length: LAYER_COUNT },
+  (_, index) => 9 - index * 2,
+)
+const CONNECTION_NAME = "ten-layer-maze"
 
-export function createTenLayerLayerMaze(
-  passableZLayers: readonly number[],
-): SimpleRouteJson {
-  if (passableZLayers.length !== GATE_X_POSITIONS.length) {
-    throw new Error(
-      `Expected ${GATE_X_POSITIONS.length} passable layers, received ${passableZLayers.length}`,
-    )
-  }
-
-  const obstacles: Obstacle[] = GATE_X_POSITIONS.map((x, index) => {
-    const passableZ = passableZLayers[index]!
+export function createTenLayerLayerMaze(): SimpleRouteJson {
+  const gates: Obstacle[] = GATE_Y_POSITIONS.map((y, passableZ) => {
     const blockedZLayers = ALL_Z_LAYERS.filter((z) => z !== passableZ)
 
-    // Each gate spans the board height and blocks every copper layer except
-    // its assigned one, so a route cannot bypass the required layer in 2D.
+    // Each gate spans the board width and blocks every copper layer except
+    // its assigned one, so crossing all ten gates requires all ten layers.
     return {
-      obstacleId: `gate-${index + 1}-only-z${passableZ}`,
+      obstacleId: `gate-${passableZ + 1}-only-z${passableZ}`,
       type: "rect",
-      center: { x, y: 0 },
-      width: 0.8,
-      height: 8,
+      center: { x: 0, y },
+      width: 8,
+      height: 0.8,
       layers: blockedZLayers.map((z) => mapZToLayerName(z, LAYER_COUNT)),
       __zLayers: blockedZLayers,
       connectedTo: [],
     }
   })
-
-  const endpointZ = passableZLayers[0]!
-  const endpointLayer = mapZToLayerName(endpointZ, LAYER_COUNT)
 
   return {
     layerCount: LAYER_COUNT,
@@ -42,14 +34,36 @@ export function createTenLayerLayerMaze(
     minViaPadDiameter: 0.4,
     defaultObstacleMargin: 0.05,
     minTraceToPadEdgeClearance: 0.05,
-    bounds: { minX: -9, maxX: 9, minY: -4, maxY: 4 },
-    obstacles,
+    bounds: { minX: -4, maxX: 4, minY: -12, maxY: 12 },
+    obstacles: [
+      {
+        obstacleId: "start-pad-top",
+        type: "rect",
+        center: { x: 0, y: 11 },
+        width: 1,
+        height: 1,
+        layers: ["top"],
+        __zLayers: [0],
+        connectedTo: [CONNECTION_NAME, "start-pad"],
+      },
+      ...gates,
+      {
+        obstacleId: "end-pad-bottom",
+        type: "rect",
+        center: { x: 0, y: -11 },
+        width: 1,
+        height: 1,
+        layers: ["bottom"],
+        __zLayers: [LAYER_COUNT - 1],
+        connectedTo: [CONNECTION_NAME, "end-pad"],
+      },
+    ],
     connections: [
       {
-        name: `maze-${passableZLayers.join("-")}`,
+        name: CONNECTION_NAME,
         pointsToConnect: [
-          { x: -8, y: 0, layer: endpointLayer, pointId: "start" },
-          { x: 8, y: 0, layer: endpointLayer, pointId: "end" },
+          { x: 0, y: 11, layer: "top", pointId: "start-pad" },
+          { x: 0, y: -11, layer: "bottom", pointId: "end-pad" },
         ],
       },
     ],
