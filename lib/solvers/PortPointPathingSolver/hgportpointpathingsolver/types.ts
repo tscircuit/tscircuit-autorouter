@@ -46,6 +46,10 @@ export type ConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
   simpleRouteConnection?: SimpleRouteConnection
 }
 
+export type ConnectionHgWithSimpleRouteConnection = ConnectionHg & {
+  simpleRouteConnection: SimpleRouteConnection
+}
+
 export type CandidateHg = Omit<
   Candidate,
   "port" | "parent" | "lastPort" | "lastRegion" | "nextRegion"
