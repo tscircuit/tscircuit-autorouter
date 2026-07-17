@@ -159,7 +159,7 @@ function createMeshNodesForRegion({
     _qfpRegionType: regionType,
     _isNarrowQfpPadGap: isNarrowPadGap,
     _containsObstacle: group.containsObstacle,
-    _connectedTo: connectedTo,
+    _connectedTo: group.containsObstacle ? connectedTo : undefined,
   }))
 }
 
