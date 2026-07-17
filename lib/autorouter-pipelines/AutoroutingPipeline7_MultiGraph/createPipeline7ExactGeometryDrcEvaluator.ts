@@ -9,8 +9,9 @@ import {
 
 /**
  * Scores only exact, movable copper-geometry violations for Pipeline7's final
- * cleanup pass. Connectivity and parallel typed reporters are intentionally
- * excluded from this optimizer target.
+ * cleanup pass. Connectivity errors are excluded, while overlap and typed
+ * clearance reporters are both included because checks classifies each
+ * trace-obstacle pair into exactly one category.
  */
 export const createPipeline7ExactGeometryDrcEvaluator = (
   conversionOptions: Omit<ConvertPipeline7HdRoutesOptions, "hdRoutes"> & {
@@ -40,7 +41,6 @@ export const createPipeline7ExactGeometryDrcEvaluator = (
     const { errors, errorsWithCenters } = getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       includeTraceContinuity: false,
-      includeTypedTraceClearance: false,
     })
 
     return {
