@@ -41,14 +41,11 @@ test("pipeline7 max-effort post-processing converges on srj18 sample005", async 
   )
   expect(
     solver.traceSimplificationSolver?.simplificationPipelineLoops,
-  ).toBeGreaterThanOrEqual(3)
-  expect(
-    solver.traceSimplificationSolver?.simplificationPipelineLoops,
-  ).toBeLessThanOrEqual(6)
+  ).toBe(2)
   expect(
     solver.traceSimplificationSolver?.stats
       .simplificationStoppedAfterNoImprovement,
-  ).toBe(true)
+  ).toBe(false)
   expect(solver.globalDrcForceImproveSolver?.iterations).toBeLessThan(1600)
   expect(
     solver.globalDrcForceImproveSolver?.stats.finalDrcIssueCount,

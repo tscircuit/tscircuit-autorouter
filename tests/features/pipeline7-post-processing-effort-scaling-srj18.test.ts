@@ -26,5 +26,16 @@ test("pipeline7 scales post-processing effort for selected srj18 samples", async
       exactGeometryDrcMaxIterations: 3200,
       exactGeometryDrcBroadMaxIterations: 800,
     })
+    expect(baselineSolver.baselineEffortConfig).toEqual({
+      routingEffort: 1,
+      highDensityForceStepsPerNode: 20,
+      traceSimplificationPipelineLoops: 2,
+      globalDrcMaxIterations: 16,
+      exactGeometryDrcMaxIterations: 32,
+      exactGeometryDrcBroadMaxIterations: 8,
+    })
+    expect(maxEffortSolver.baselineEffortConfig).toEqual(
+      baselineSolver.baselineEffortConfig,
+    )
   }
 })

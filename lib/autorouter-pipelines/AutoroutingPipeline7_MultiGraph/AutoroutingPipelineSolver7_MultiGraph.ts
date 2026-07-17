@@ -94,6 +94,15 @@ export type Pipeline7PostProcessingEffortConfig = {
   exactGeometryDrcBroadMaxIterations: number
 }
 
+export type Pipeline7BaselineEffortConfig = {
+  routingEffort: number
+  highDensityForceStepsPerNode: number
+  traceSimplificationPipelineLoops: number
+  globalDrcMaxIterations: number
+  exactGeometryDrcMaxIterations: number
+  exactGeometryDrcBroadMaxIterations: number
+}
+
 export const getPipeline7PostProcessingEffortConfig = (
   effort: number,
 ): Pipeline7PostProcessingEffortConfig => {
@@ -104,6 +113,31 @@ export const getPipeline7PostProcessingEffortConfig = (
     globalDrcMaxIterations: Math.max(16, Math.ceil(16 * effortScale)),
     exactGeometryDrcMaxIterations: Math.max(32, Math.ceil(32 * effortScale)),
     exactGeometryDrcBroadMaxIterations: Math.max(8, Math.ceil(8 * effortScale)),
+  }
+}
+
+export const getPipeline7BaselineEffortConfig = (
+  effort: number,
+): Pipeline7BaselineEffortConfig => {
+  const requestedEffort = Number.isFinite(effort) ? effort : 1
+  const routingEffort = Math.min(1, Math.max(0.01, requestedEffort))
+  const baselinePostProcessingConfig =
+    getPipeline7PostProcessingEffortConfig(1)
+
+  return {
+    routingEffort,
+    highDensityForceStepsPerNode: Math.max(
+      12,
+      Math.round(20 * routingEffort),
+    ),
+    traceSimplificationPipelineLoops:
+      baselinePostProcessingConfig.traceSimplificationPipelineLoops,
+    globalDrcMaxIterations:
+      baselinePostProcessingConfig.globalDrcMaxIterations,
+    exactGeometryDrcMaxIterations:
+      baselinePostProcessingConfig.exactGeometryDrcMaxIterations,
+    exactGeometryDrcBroadMaxIterations:
+      baselinePostProcessingConfig.exactGeometryDrcBroadMaxIterations,
   }
 }
 
@@ -291,6 +325,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   minTraceWidth!: number
   effort: number
   postProcessingEffortConfig: Pipeline7PostProcessingEffortConfig
+  baselineEffortConfig: Pipeline7BaselineEffortConfig
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -610,7 +645,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
+          totalStepsPerNode:
+            cms.baselineEffortConfig.highDensityForceStepsPerNode,
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -660,9 +696,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          effort: cms.effort,
+          effort: cms.baselineEffortConfig.routingEffort,
           maxSimplificationPipelineLoops:
-            cms.postProcessingEffortConfig.traceSimplificationPipelineLoops,
+            cms.baselineEffortConfig.traceSimplificationPipelineLoops,
           drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
         },
       ],
@@ -702,8 +738,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.netToPointPairsSolver?.newConnections ?? [],
           ),
           connMap: cms.connMap,
-          effort: cms.effort,
-          maxIterations: cms.postProcessingEffortConfig.globalDrcMaxIterations,
+          effort: cms.baselineEffortConfig.routingEffort,
+          maxIterations: cms.baselineEffortConfig.globalDrcMaxIterations,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
         },
@@ -745,6 +781,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.postProcessingEffortConfig.exactGeometryDrcMaxIterations,
           broadMaxIterations:
             cms.postProcessingEffortConfig.exactGeometryDrcBroadMaxIterations,
+          baselineMaxIterations:
+            cms.baselineEffortConfig.exactGeometryDrcMaxIterations,
+          baselineBroadMaxIterations:
+            cms.baselineEffortConfig.exactGeometryDrcBroadMaxIterations,
           broadPassMultiplier: 3,
         },
       ],
@@ -768,6 +808,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               ? cms.postProcessingEffortConfig.traceSimplificationPipelineLoops
               : 0,
           drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
+          preserveInitialDrcCheckpoint: true,
         },
       ],
     ),
@@ -787,6 +828,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.postProcessingEffortConfig = getPipeline7PostProcessingEffortConfig(
       this.effort,
     )
+    this.baselineEffortConfig = getPipeline7BaselineEffortConfig(this.effort)
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16

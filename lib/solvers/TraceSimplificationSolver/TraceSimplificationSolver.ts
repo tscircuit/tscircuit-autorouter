@@ -44,6 +44,7 @@ export interface TraceSimplificationSolverConfig {
   readonly effort?: number
   readonly maxSimplificationPipelineLoops?: number
   readonly drcEvaluator?: DrcEvaluator
+  readonly preserveInitialDrcCheckpoint?: boolean
 }
 
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
@@ -481,6 +482,7 @@ export class TraceSimplificationSolver extends BaseSolver {
               ) <= DRC_SCORE_IMPROVEMENT_TOLERANCE &&
               loopImprovedRouteComplexity)
           const completedBaselineCheckpoint =
+            !this.simplificationConfig.preserveInitialDrcCheckpoint &&
             this.simplificationPipelineLoops ===
             Math.min(
               MIN_LOOPS_BEFORE_CONVERGENCE,
