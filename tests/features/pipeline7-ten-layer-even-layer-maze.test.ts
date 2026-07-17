@@ -36,8 +36,7 @@ test("pipeline 7 routes a layer maze that requires more than four layers", () =>
         element.type === "pcb_trace" &&
         element.route.some(
           (routePoint) =>
-            routePoint.route_type === "wire" &&
-            routePoint.layer === "inner8",
+            routePoint.route_type === "wire" && routePoint.layer === "inner8",
         ),
     ),
   ).toBe(true)
