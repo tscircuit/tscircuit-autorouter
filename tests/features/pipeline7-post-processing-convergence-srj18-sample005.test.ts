@@ -39,9 +39,7 @@ test("pipeline7 max-effort post-processing converges on srj18 sample005", async 
   expect(getViaCount(solver._getOutputHdRoutes())).toBeLessThan(
     stitchedViaCount,
   )
-  expect(
-    solver.traceSimplificationSolver?.simplificationPipelineLoops,
-  ).toBe(2)
+  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
   expect(
     solver.traceSimplificationSolver?.stats
       .simplificationStoppedAfterNoImprovement,

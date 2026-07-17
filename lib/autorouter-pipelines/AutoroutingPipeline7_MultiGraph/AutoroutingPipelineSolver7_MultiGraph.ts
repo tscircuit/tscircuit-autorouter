@@ -121,19 +121,14 @@ export const getPipeline7BaselineEffortConfig = (
 ): Pipeline7BaselineEffortConfig => {
   const requestedEffort = Number.isFinite(effort) ? effort : 1
   const routingEffort = Math.min(1, Math.max(0.01, requestedEffort))
-  const baselinePostProcessingConfig =
-    getPipeline7PostProcessingEffortConfig(1)
+  const baselinePostProcessingConfig = getPipeline7PostProcessingEffortConfig(1)
 
   return {
     routingEffort,
-    highDensityForceStepsPerNode: Math.max(
-      12,
-      Math.round(20 * routingEffort),
-    ),
+    highDensityForceStepsPerNode: Math.max(12, Math.round(20 * routingEffort)),
     traceSimplificationPipelineLoops:
       baselinePostProcessingConfig.traceSimplificationPipelineLoops,
-    globalDrcMaxIterations:
-      baselinePostProcessingConfig.globalDrcMaxIterations,
+    globalDrcMaxIterations: baselinePostProcessingConfig.globalDrcMaxIterations,
     exactGeometryDrcMaxIterations:
       baselinePostProcessingConfig.exactGeometryDrcMaxIterations,
     exactGeometryDrcBroadMaxIterations:

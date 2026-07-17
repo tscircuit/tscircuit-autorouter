@@ -484,10 +484,10 @@ export class TraceSimplificationSolver extends BaseSolver {
           const completedBaselineCheckpoint =
             !this.simplificationConfig.preserveInitialDrcCheckpoint &&
             this.simplificationPipelineLoops ===
-            Math.min(
-              MIN_LOOPS_BEFORE_CONVERGENCE,
-              this.getEffectiveStrategyLimit(),
-            )
+              Math.min(
+                MIN_LOOPS_BEFORE_CONVERGENCE,
+                this.getEffectiveStrategyLimit(),
+              )
 
           if (completedBaselineCheckpoint || loopImprovedBestCandidate) {
             this.bestDrcIssueCount = completedLoopDrcQuality.issueCount
