@@ -31,6 +31,7 @@ type SoicRoutingRegion = {
   bounds: Bounds
   regionType: "center" | "pad" | "pad-gap"
   obstacleZ?: number[]
+  connectedTo?: string[]
 }
 
 export interface SoicTopologyGeneratorSolverParams
@@ -67,6 +68,7 @@ function createMeshNodesForRegion({
   multiLayerThreshold,
   regionType,
   obstacleZ = [],
+  connectedTo,
 }: {
   nodeId: string
   bounds: Bounds
@@ -74,6 +76,7 @@ function createMeshNodesForRegion({
   multiLayerThreshold: number
   regionType: SoicRoutingRegion["regionType"]
   obstacleZ?: number[]
+  connectedTo?: string[]
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -111,6 +114,7 @@ function createMeshNodesForRegion({
     availableZ: group.availableZ,
     _soicRegionType: regionType,
     _containsObstacle: group.containsObstacle,
+    _connectedTo: group.containsObstacle ? connectedTo : undefined,
   }))
 }
 
@@ -225,6 +229,7 @@ function getPadRegions(obstacles: Obstacle[], layerCount: number) {
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    connectedTo: [...obstacle.connectedTo],
   }))
 }
 
@@ -358,6 +363,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         multiLayerThreshold,
         regionType: region.regionType,
         obstacleZ: region.obstacleZ,
+        connectedTo: region.connectedTo,
       }),
     )
 
