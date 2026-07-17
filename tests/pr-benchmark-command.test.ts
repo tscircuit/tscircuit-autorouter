@@ -22,6 +22,12 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     datasetName: "18",
     profileSolvers: false,
   })
+  expect(parsePrBenchmarkCommand("/benchmark compat")).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: ["compat"],
+    datasetName: "srj24",
+    profileSolvers: false,
+  })
   expect(
     parsePrBenchmarkCommand(
       '/benchmark --solver "Solver With Spaces" --profile-solvers',

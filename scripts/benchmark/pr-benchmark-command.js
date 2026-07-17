@@ -101,7 +101,7 @@ export const parsePrBenchmarkCommand = (body) => {
     isLongBenchmark && !parsedArgs.includes("--concurrency")
       ? ["--concurrency", "8"]
       : []
-  let datasetName = "dataset01"
+  let datasetName = parsedArgs[0] === "compat" ? "srj24" : "dataset01"
   let profileSolvers = false
 
   for (let index = 0; index < parsedArgs.length; index += 1) {

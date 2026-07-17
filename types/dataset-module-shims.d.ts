@@ -13,6 +13,10 @@ declare module "@tscircuit/dataset-srj05" {
   export = dataset
 }
 
+declare module "@tscircuit/dataset-srj24" {
+  export const dataset: Record<string, any>
+}
+
 declare module "@tsci/seveibar.dataset-srj13" {
   const dataset: any
   export = dataset

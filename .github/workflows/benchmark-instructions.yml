@@ -31,6 +31,7 @@ jobs:
               "```",
               "",
               "Comment `/benchmark` to run the default dataset, or append any arguments accepted by `./benchmark.sh`.",
+              "Comment `/benchmark compat` to run the default solver against the SRJ24 compatibility dataset pinned by this repository.",
               "Comment `/benchmark-long` for an 8-vCPU run that defaults to 8 workers and has an eight-hour timeout.",
               "Comment exactly `/benchmark-all` to start separate workflow runs and result comments for the default dataset plus srj18, srj19, srj20, srj21, and srj23.",
               "",
