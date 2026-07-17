@@ -144,8 +144,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
-    this.preserveTerminalPcbPortIds =
-      params.preserveTerminalPcbPortIds ?? false
+    this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 

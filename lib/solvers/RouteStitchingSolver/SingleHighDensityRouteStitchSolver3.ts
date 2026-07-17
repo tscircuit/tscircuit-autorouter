@@ -117,9 +117,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       (opts.preserveTerminalPcbPortIds
         ? [opts.start.pcb_port_id, opts.end.pcb_port_id]
         : []
-      ).filter(
-        (pcbPortId): pcbPortId is string => pcbPortId !== undefined,
-      ),
+      ).filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined),
     )
     if (
       opts.preserveTerminalPcbPortIds &&
