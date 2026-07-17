@@ -25,7 +25,11 @@ import {
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
 } from "tiny-hypergraph/lib/index"
-import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
+import type {
+  ConnectionHg,
+  ConnectionHgWithSimpleRouteConnection,
+  HgPortPointPathingSolverParams,
+} from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 
@@ -41,7 +45,10 @@ type SerializedTinyConnection = NonNullable<
 type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
-type TinyRouteConnection = HgPortPointPathingSolverParams["connections"][number]
+type TinyRouteConnection = ConnectionHgWithSimpleRouteConnection
+type TinyHypergraphInput = Omit<HgPortPointPathingSolverParams, "connections"> & {
+  connections: TinyRouteConnection[]
+}
 
 type TinyBounds = {
   minX: number
@@ -269,8 +276,22 @@ const toSerializedPortData = (
   }
 }
 
+const getTinyRouteConnectionsOrThrow = (
+  connections: ConnectionHg[],
+): TinyRouteConnection[] => {
+  return connections.map((connection) => {
+    const simpleRouteConnection = connection.simpleRouteConnection
+    if (!simpleRouteConnection) {
+      throw new Error(
+        `TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for "${connection.connectionId}"`,
+      )
+    }
+    return { ...connection, simpleRouteConnection }
+  })
+}
+
 const buildSerializedTinyGraph = (
-  params: HgPortPointPathingSolverParams,
+  params: TinyHypergraphInput,
 ): SerializedHyperGraph => {
   const getNetIndex = createTinyRouteNetIndexer()
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
@@ -779,12 +800,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
+      params.connections,
+    )
     const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
       ? orderConnectionsByNetCardinality(
-          params.connections,
+          tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
-      : params.connections
+      : tinyRouteConnections
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
