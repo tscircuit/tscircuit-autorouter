@@ -15,6 +15,13 @@ type Bounds = {
   maxY: number
 }
 
+type RoutingObstacle = {
+  center: Point
+  width: number
+  height: number
+  connectedTo?: readonly string[]
+}
+
 type DrcError = Record<string, unknown>
 
 type DrcSnapshot = {
@@ -29,17 +36,46 @@ type DoglegStrategy = {
 }
 
 type LayerDetourStrategy = {
+  scope: "segment" | "route"
   targetZ: number
   span: number
 }
 
+type DirectedDoglegStrategy = {
+  distance: number
+  span: number
+}
+
+type DirectedSegmentShiftStrategy = {
+  distance: number
+}
+
 type CandidateStrategy =
   | ({ type: "dogleg" } & DoglegStrategy)
+  | ({ type: "directed_dogleg" } & DirectedDoglegStrategy)
+  | ({ type: "directed_pair_shift" } & DirectedSegmentShiftStrategy)
+  | ({ type: "directed_segment_shift" } & DirectedSegmentShiftStrategy)
+  | ({ type: "directed_via_shift" } & DirectedSegmentShiftStrategy)
   | ({ type: "layer_detour" } & LayerDetourStrategy)
 
 type CandidateTarget = {
   routeIndex: number
   center: Point
+  severity: number
+  errorType: string
+  moveDirection?: Point
+  otherRouteIndex?: number
+  sourceZ?: number
+  viaCenter?: Point
+  viaRouteIndexes?: readonly number[]
+}
+
+type RouteProjection = Point & { z: number }
+
+type MoveData = {
+  direction?: Point
+  otherRouteIndex?: number
+  sourceZ?: number
 }
 
 type CandidatePlanEntry = CandidateTarget &
@@ -52,6 +88,7 @@ export type ResidualLocalRerouteSolverConfig = {
   drcEvaluator: DrcEvaluator
   bounds: Bounds
   outline?: readonly Point[]
+  obstacles?: readonly RoutingObstacle[]
   layerCount: number
   effort: number
   maxCandidateAttempts: number
@@ -97,11 +134,58 @@ const SUPPORTED_ERROR_TYPES = new Set([
 
 const DEFAULT_TRACE_CLEARANCE = 0.1
 const LAYER_DETOUR_SPANS = [0.24, 0.4, 0.7, 1.2] as const
+const DIRECTED_DOGLEG_STRATEGIES: readonly DirectedDoglegStrategy[] = [
+  { distance: 0.2, span: 0.4 },
+  { distance: 0.12, span: 0.4 },
+  { distance: 0.08, span: 0.24 },
+  { distance: 0.04, span: 0.24 },
+  { distance: 0.02, span: 0.24 },
+  { distance: 0.01, span: 0.24 },
+]
+const DIRECTED_SEGMENT_SHIFT_STRATEGIES: readonly DirectedSegmentShiftStrategy[] =
+  [
+    { distance: 0.01 },
+    { distance: 0.02 },
+    { distance: 0.04 },
+    { distance: 0.08 },
+    { distance: 0.12 },
+    { distance: 0.2 },
+  ]
 
-const getCandidateStrategyKey = (strategy: CandidateStrategy): string =>
-  strategy.type === "layer_detour"
-    ? `${strategy.type}:${strategy.targetZ}:${strategy.span}`
-    : `${strategy.type}:${strategy.offset}:${strategy.span}`
+const getCandidateStrategyKey = (strategy: CandidateStrategy): string => {
+  if (strategy.type === "layer_detour") {
+    return `${strategy.type}:${strategy.scope}:${strategy.targetZ}:${strategy.span}`
+  }
+  if (strategy.type === "directed_dogleg") {
+    return `${strategy.type}:${strategy.distance}:${strategy.span}`
+  }
+  if (
+    strategy.type === "directed_segment_shift" ||
+    strategy.type === "directed_pair_shift" ||
+    strategy.type === "directed_via_shift"
+  ) {
+    return `${strategy.type}:${strategy.distance}`
+  }
+  return `${strategy.type}:${strategy.offset}:${strategy.span}`
+}
+
+const getCandidatePriority = (
+  target: CandidateTarget,
+  strategy: CandidateStrategy,
+): number => {
+  if (target.errorType === "pcb_via_trace_clearance_error") {
+    if (strategy.type === "directed_via_shift") return 0
+    if (strategy.type === "directed_segment_shift") return 1
+    if (strategy.type === "directed_dogleg") return 2
+    if (strategy.type === "layer_detour") return 3
+    return 4
+  }
+  if (strategy.type === "layer_detour") return 0
+  if (strategy.type === "directed_pair_shift") return 1
+  if (strategy.type === "directed_segment_shift") return 2
+  if (strategy.type === "directed_dogleg") return 3
+  return 4
+}
 
 const getDrcErrorSeverity = (error: DrcError): number => {
   const message = typeof error.message === "string" ? error.message : ""
@@ -232,12 +316,248 @@ const getTraceIdsForError = (error: DrcError): string[] => {
   return typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []
 }
 
+const getNearestRouteProjection = (
+  route: HighDensityRoute,
+  center: Point,
+): RouteProjection | undefined => {
+  let nearest: { point: RouteProjection; distance: number } | undefined
+  for (
+    let segmentIndex = 0;
+    segmentIndex + 1 < route.route.length;
+    segmentIndex += 1
+  ) {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    if (
+      start.z !== end.z ||
+      start.toNextSegmentType === "through_obstacle" ||
+      start.insideJumperPad ||
+      end.insideJumperPad
+    ) {
+      continue
+    }
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared <= 1e-8) continue
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
+          lengthSquared,
+      ),
+    )
+    const point = { x: start.x + dx * t, y: start.y + dy * t, z: start.z }
+    const distance = Math.hypot(center.x - point.x, center.y - point.y)
+    if (!nearest || distance < nearest.distance) nearest = { point, distance }
+  }
+  return nearest?.point
+}
+
+const getNearestSameLayerProjectionPair = (
+  route: HighDensityRoute,
+  otherRoute: HighDensityRoute,
+  center: Point,
+):
+  | { routePoint: RouteProjection; obstaclePoint: RouteProjection; score: number }
+  | undefined => {
+  let nearest:
+    | {
+        routePoint: RouteProjection
+        obstaclePoint: RouteProjection
+        score: number
+      }
+    | undefined
+  for (let routeIndex = 0; routeIndex + 1 < route.route.length; routeIndex += 1) {
+    const routeStart = route.route[routeIndex]!
+    const routeEnd = route.route[routeIndex + 1]!
+    if (routeStart.z !== routeEnd.z) continue
+    const routeDx = routeEnd.x - routeStart.x
+    const routeDy = routeEnd.y - routeStart.y
+    const routeLengthSquared = routeDx * routeDx + routeDy * routeDy
+    if (routeLengthSquared <= 1e-8) continue
+    const routeT = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - routeStart.x) * routeDx +
+          (center.y - routeStart.y) * routeDy) /
+          routeLengthSquared,
+      ),
+    )
+    const routePoint = {
+      x: routeStart.x + routeDx * routeT,
+      y: routeStart.y + routeDy * routeT,
+      z: routeStart.z,
+    }
+
+    for (
+      let otherIndex = 0;
+      otherIndex + 1 < otherRoute.route.length;
+      otherIndex += 1
+    ) {
+      const otherStart = otherRoute.route[otherIndex]!
+      const otherEnd = otherRoute.route[otherIndex + 1]!
+      if (otherStart.z !== otherEnd.z || otherStart.z !== routeStart.z) continue
+      const otherDx = otherEnd.x - otherStart.x
+      const otherDy = otherEnd.y - otherStart.y
+      const otherLengthSquared = otherDx * otherDx + otherDy * otherDy
+      if (otherLengthSquared <= 1e-8) continue
+      const otherT = Math.max(
+        0,
+        Math.min(
+          1,
+          ((center.x - otherStart.x) * otherDx +
+            (center.y - otherStart.y) * otherDy) /
+            otherLengthSquared,
+        ),
+      )
+      const obstaclePoint = {
+        x: otherStart.x + otherDx * otherT,
+        y: otherStart.y + otherDy * otherT,
+        z: otherStart.z,
+      }
+      const score =
+        Math.hypot(routePoint.x - center.x, routePoint.y - center.y) +
+        Math.hypot(obstaclePoint.x - center.x, obstaclePoint.y - center.y)
+      if (!nearest || score < nearest.score) {
+        nearest = { routePoint, obstaclePoint, score }
+      }
+    }
+  }
+  return nearest
+}
+
+const getLayerTransitionPoints = (routes: readonly HighDensityRoute[]): Point[] => {
+  const points: Point[] = []
+  const keys = new Set<string>()
+  for (const route of routes) {
+    for (let index = 0; index + 1 < route.route.length; index += 1) {
+      const current = route.route[index]!
+      const next = route.route[index + 1]!
+      if (
+        current.z === next.z ||
+        Math.hypot(current.x - next.x, current.y - next.y) > 1e-6
+      ) {
+        continue
+      }
+      const key = `${current.x.toFixed(6)}:${current.y.toFixed(6)}`
+      if (keys.has(key)) continue
+      keys.add(key)
+      points.push({ x: current.x, y: current.y })
+    }
+  }
+  return points
+}
+
+const getViaRouteIndexes = (
+  routes: readonly HighDensityRoute[],
+  center: Point,
+): number[] => {
+  const ownerNetKeys = new Set(
+    routes.flatMap((route) =>
+      route.vias.some(
+        (via) => Math.hypot(via.x - center.x, via.y - center.y) <= 1e-6,
+      )
+        ? [route.rootConnectionName ?? route.connectionName]
+        : [],
+    ),
+  )
+  return routes.flatMap((route, routeIndex) =>
+    ownerNetKeys.has(route.rootConnectionName ?? route.connectionName) &&
+    route.route.some(
+      (via) => Math.hypot(via.x - center.x, via.y - center.y) <= 1e-6,
+    )
+      ? [routeIndex]
+      : [],
+  )
+}
+
+const getMoveData = (
+  error: DrcError,
+  routeIndex: number,
+  errorRouteIndexes: readonly number[],
+  routes: readonly HighDensityRoute[],
+  transitionPoints: readonly Point[],
+  obstacles: readonly RoutingObstacle[],
+): MoveData => {
+  const center = getErrorCenter(error)
+  const route = routes[routeIndex]
+  if (!center || !route) return {}
+
+  let routePoint: RouteProjection | undefined
+  let obstaclePoint: RouteProjection | Point | undefined
+  let pairedRouteIndex: number | undefined
+  let pairScore = Number.POSITIVE_INFINITY
+  for (const otherRouteIndex of errorRouteIndexes) {
+    if (otherRouteIndex === routeIndex) continue
+    const otherRoute = routes[otherRouteIndex]
+    if (!otherRoute) continue
+    const candidate = getNearestSameLayerProjectionPair(
+      route,
+      otherRoute,
+      center,
+    )
+    if (candidate && candidate.score < pairScore) {
+      routePoint = candidate.routePoint
+      obstaclePoint = candidate.obstaclePoint
+      pairedRouteIndex = otherRouteIndex
+      pairScore = candidate.score
+    }
+  }
+
+  routePoint ??= getNearestRouteProjection(route, center)
+  if (!routePoint) return {}
+  if (!obstaclePoint && typeof error.message === "string") {
+    const obstaclePortId = error.message.match(
+      /pcb_port\[#(pcb_port_[^\]]+)\]/,
+    )?.[1]
+    const obstacle = obstaclePortId
+      ? obstacles.find((candidate) =>
+          candidate.connectedTo?.includes(obstaclePortId),
+        )
+      : undefined
+    if (obstacle) obstaclePoint = obstacle.center
+  }
+  if (!obstaclePoint && error.via_center && typeof error.via_center === "object") {
+    const viaCenter = error.via_center as Record<string, unknown>
+    if (typeof viaCenter.x === "number" && typeof viaCenter.y === "number") {
+      obstaclePoint = { x: viaCenter.x, y: viaCenter.y }
+    }
+  }
+  if (!obstaclePoint && typeof error.pcb_via_id === "string") {
+    obstaclePoint = transitionPoints.reduce<Point | undefined>(
+      (nearest, candidate) =>
+        !nearest ||
+        Math.hypot(candidate.x - center.x, candidate.y - center.y) <
+          Math.hypot(nearest.x - center.x, nearest.y - center.y)
+          ? candidate
+          : nearest,
+      undefined,
+    )
+  }
+  if (!obstaclePoint) return { sourceZ: routePoint.z }
+
+  const dx = routePoint.x - obstaclePoint.x
+  const dy = routePoint.y - obstaclePoint.y
+  const length = Math.hypot(dx, dy)
+  return {
+    direction:
+      length > 1e-6 ? { x: dx / length, y: dy / length } : undefined,
+    otherRouteIndex: pairedRouteIndex,
+    sourceZ: routePoint.z,
+  }
+}
+
 const insertDogleg = (
   routes: HighDensityRoute[],
   routeIndex: number,
   center: Point,
   strategy: DoglegStrategy,
   boardPolygon: readonly Point[],
+  moveDirection?: Point,
+  sourceZ?: number,
 ): boolean => {
   const route = routes[routeIndex]
   if (!route) return false
@@ -254,6 +574,7 @@ const insertDogleg = (
     const end = route.route[segmentIndex + 1]!
     if (
       start.z !== end.z ||
+      (sourceZ !== undefined && start.z !== sourceZ) ||
       start.toNextSegmentType === "through_obstacle" ||
       start.insideJumperPad ||
       end.insideJumperPad
@@ -293,18 +614,24 @@ const insertDogleg = (
   const dy = end.y - start.y
   const normalX = -dy / nearest.length
   const normalY = dx / nearest.length
+  const offsetX = moveDirection
+    ? moveDirection.x * Math.abs(strategy.offset)
+    : normalX * strategy.offset
+  const offsetY = moveDirection
+    ? moveDirection.y * Math.abs(strategy.offset)
+    : normalY * strategy.offset
   const halfSpanT = Math.min(0.45, strategy.span / nearest.length)
   const beforeT = Math.max(0.02, nearest.t - halfSpanT)
   const afterT = Math.min(0.98, nearest.t + halfSpanT)
   if (afterT - beforeT < 0.02) return false
 
   const beforePoint = {
-    x: start.x + dx * beforeT + normalX * strategy.offset,
-    y: start.y + dy * beforeT + normalY * strategy.offset,
+    x: start.x + dx * beforeT + offsetX,
+    y: start.y + dy * beforeT + offsetY,
   }
   const afterPoint = {
-    x: start.x + dx * afterT + normalX * strategy.offset,
-    y: start.y + dy * afterT + normalY * strategy.offset,
+    x: start.x + dx * afterT + offsetX,
+    y: start.y + dy * afterT + offsetY,
   }
   if (
     !doesDoglegStayInsideBoard(
@@ -331,11 +658,301 @@ const insertDogleg = (
   return true
 }
 
-const insertLayerDetour = (
+const shiftNearestSegment = (
+  routes: HighDensityRoute[],
+  routeIndex: number,
+  center: Point,
+  direction: Point,
+  distance: number,
+  boardPolygon: readonly Point[],
+  sourceZ?: number,
+): boolean => {
+  const route = routes[routeIndex]
+  if (!route) return false
+  let nearest: { segmentIndex: number; distance: number } | undefined
+
+  for (
+    let segmentIndex = 0;
+    segmentIndex + 1 < route.route.length;
+    segmentIndex += 1
+  ) {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    if (
+      start.z !== end.z ||
+      (sourceZ !== undefined && start.z !== sourceZ) ||
+      start.toNextSegmentType === "through_obstacle" ||
+      start.insideJumperPad ||
+      end.insideJumperPad
+    ) {
+      continue
+    }
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared <= 1e-8) continue
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
+          lengthSquared,
+      ),
+    )
+    const projected = { x: start.x + dx * t, y: start.y + dy * t }
+    const candidateDistance = Math.hypot(
+      center.x - projected.x,
+      center.y - projected.y,
+    )
+    if (!nearest || candidateDistance < nearest.distance) {
+      nearest = { segmentIndex, distance: candidateDistance }
+    }
+  }
+  if (!nearest) return false
+
+  const start = route.route[nearest.segmentIndex]!
+  const end = route.route[nearest.segmentIndex + 1]!
+  const matchesEndpoint = (point: Point): boolean =>
+    Math.hypot(point.x - start.x, point.y - start.y) <= 1e-6 ||
+    Math.hypot(point.x - end.x, point.y - end.y) <= 1e-6
+  const pointIndexes = route.route.flatMap((point, pointIndex) =>
+    matchesEndpoint(point) ? [pointIndex] : [],
+  )
+  if (
+    pointIndexes.includes(0) ||
+    pointIndexes.includes(route.route.length - 1) ||
+    pointIndexes.some((pointIndex) => {
+      const point = route.route[pointIndex]!
+      return Boolean(point.pcb_port_id || point.insideJumperPad)
+    })
+  ) {
+    return false
+  }
+
+  const offset = {
+    x: direction.x * distance,
+    y: direction.y * distance,
+  }
+  for (const pointIndex of pointIndexes) {
+    const point = route.route[pointIndex]!
+    point.x += offset.x
+    point.y += offset.y
+    if (
+      !isPointInsideBoard(
+        point,
+        boardPolygon,
+        (point.traceThickness ?? route.traceThickness ?? 0.1) / 2,
+      )
+    ) {
+      return false
+    }
+  }
+  for (const via of route.vias) {
+    if (matchesEndpoint(via)) {
+      via.x += offset.x
+      via.y += offset.y
+    }
+  }
+
+  const affectedSegments = new Set<number>()
+  for (const pointIndex of pointIndexes) {
+    if (pointIndex > 0) affectedSegments.add(pointIndex - 1)
+    if (pointIndex + 1 < route.route.length) affectedSegments.add(pointIndex)
+  }
+  for (const segmentIndex of affectedSegments) {
+    const segmentStart = route.route[segmentIndex]!
+    const segmentEnd = route.route[segmentIndex + 1]!
+    if (
+      !doesDoglegStayInsideBoard(
+        [segmentStart, segmentEnd],
+        boardPolygon,
+        (route.traceThickness ?? 0.1) / 2,
+      )
+    ) {
+      return false
+    }
+  }
+  return true
+}
+
+const shiftVia = (
+  routes: HighDensityRoute[],
+  viaRouteIndexes: readonly number[],
+  center: Point,
+  direction: Point,
+  distance: number,
+  boardPolygon: readonly Point[],
+): boolean => {
+  if (viaRouteIndexes.length === 0) return false
+  const matchesVia = (point: Point): boolean =>
+    Math.hypot(point.x - center.x, point.y - center.y) <= 1e-6
+  const offset = {
+    x: -direction.x * distance,
+    y: -direction.y * distance,
+  }
+  let movedVia = false
+
+  for (const routeIndex of viaRouteIndexes) {
+    const route = routes[routeIndex]
+    if (!route) return false
+    const pointIndexes = route.route.flatMap((point, pointIndex) =>
+      matchesVia(point) ? [pointIndex] : [],
+    )
+    const viaIndexes = route.vias.flatMap((via, viaIndex) =>
+      matchesVia(via) ? [viaIndex] : [],
+    )
+    if (pointIndexes.length === 0) return false
+    if (
+      pointIndexes.some((pointIndex) => {
+        const point = route.route[pointIndex]!
+        return Boolean(point.pcb_port_id || point.insideJumperPad)
+      })
+    ) {
+      return false
+    }
+
+    for (const pointIndex of pointIndexes) {
+      const point = route.route[pointIndex]!
+      point.x += offset.x
+      point.y += offset.y
+      if (
+        !isPointInsideBoard(
+          point,
+          boardPolygon,
+          Math.max(
+            route.viaDiameter / 2,
+            (point.traceThickness ?? route.traceThickness) / 2,
+          ),
+        )
+      ) {
+        return false
+      }
+    }
+    for (const viaIndex of viaIndexes) {
+      const via = route.vias[viaIndex]!
+      via.x += offset.x
+      via.y += offset.y
+      movedVia = true
+    }
+
+    const affectedSegments = new Set<number>()
+    for (const pointIndex of pointIndexes) {
+      if (pointIndex > 0) affectedSegments.add(pointIndex - 1)
+      if (pointIndex + 1 < route.route.length) affectedSegments.add(pointIndex)
+    }
+    for (const segmentIndex of affectedSegments) {
+      const segmentStart = route.route[segmentIndex]!
+      const segmentEnd = route.route[segmentIndex + 1]!
+      if (
+        !doesDoglegStayInsideBoard(
+          [segmentStart, segmentEnd],
+          boardPolygon,
+          route.traceThickness / 2,
+        )
+      ) {
+        return false
+      }
+    }
+  }
+
+  return movedVia
+}
+
+const insertSegmentLayerDetour = (
   routes: HighDensityRoute[],
   routeIndex: number,
   center: Point,
   strategy: LayerDetourStrategy,
+  sourceZ?: number,
+): boolean => {
+  const route = routes[routeIndex]
+  if (!route) return false
+  let nearest:
+    | { segmentIndex: number; t: number; distance: number; length: number }
+    | undefined
+  for (
+    let segmentIndex = 0;
+    segmentIndex + 1 < route.route.length;
+    segmentIndex += 1
+  ) {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    if (
+      start.z !== end.z ||
+      (sourceZ !== undefined && start.z !== sourceZ) ||
+      start.z === strategy.targetZ ||
+      start.toNextSegmentType === "through_obstacle" ||
+      start.insideJumperPad ||
+      end.insideJumperPad
+    ) {
+      continue
+    }
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared <= 1e-8) continue
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
+          lengthSquared,
+      ),
+    )
+    const projected = { x: start.x + dx * t, y: start.y + dy * t }
+    const distance = Math.hypot(center.x - projected.x, center.y - projected.y)
+    if (!nearest || distance < nearest.distance) {
+      nearest = {
+        segmentIndex,
+        t,
+        distance,
+        length: Math.sqrt(lengthSquared),
+      }
+    }
+  }
+  if (!nearest) return false
+
+  const start = route.route[nearest.segmentIndex]!
+  const end = route.route[nearest.segmentIndex + 1]!
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const halfSpanT = Math.min(0.48, strategy.span / nearest.length)
+  const beforeT = Math.max(0.01, nearest.t - halfSpanT)
+  const afterT = Math.min(0.99, nearest.t + halfSpanT)
+  if (afterT - beforeT < 0.02) return false
+  const {
+    pcb_port_id: _pcbPortId,
+    insideJumperPad: _insideJumperPad,
+    toNextSegmentType: _toNextSegmentType,
+    ...pointFields
+  } = start
+  const beforePoint = {
+    ...pointFields,
+    x: start.x + dx * beforeT,
+    y: start.y + dy * beforeT,
+  }
+  const afterPoint = {
+    ...pointFields,
+    x: start.x + dx * afterT,
+    y: start.y + dy * afterT,
+  }
+  route.route.splice(
+    nearest.segmentIndex + 1,
+    0,
+    beforePoint,
+    { ...beforePoint, z: strategy.targetZ },
+    { ...afterPoint, z: strategy.targetZ },
+    afterPoint,
+  )
+  return true
+}
+
+const insertRouteLayerDetour = (
+  routes: HighDensityRoute[],
+  routeIndex: number,
+  center: Point,
+  strategy: LayerDetourStrategy,
+  sourceZ?: number,
 ): boolean => {
   const route = routes[routeIndex]
   if (!route) return false
@@ -352,6 +969,7 @@ const insertLayerDetour = (
     const end = route.route[segmentIndex + 1]!
     if (
       start.z !== end.z ||
+      (sourceZ !== undefined && start.z !== sourceZ) ||
       start.z === strategy.targetZ ||
       start.toNextSegmentType === "through_obstacle" ||
       start.insideJumperPad ||
@@ -386,38 +1004,153 @@ const insertLayerDetour = (
   }
   if (!nearest) return false
 
-  const start = route.route[nearest.segmentIndex]!
-  const end = route.route[nearest.segmentIndex + 1]!
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  const halfSpanT = Math.min(0.48, strategy.span / nearest.length)
-  const beforeT = Math.max(0.01, nearest.t - halfSpanT)
-  const afterT = Math.min(0.99, nearest.t + halfSpanT)
-  if (afterT - beforeT < 0.02) return false
+  const selectedSourceZ = route.route[nearest.segmentIndex]!.z
+  let beforeSegmentIndex = nearest.segmentIndex
+  let beforeT = nearest.t
+  let remainingBefore = strategy.span
+  while (remainingBefore > 1e-9) {
+    const start = route.route[beforeSegmentIndex]
+    const end = route.route[beforeSegmentIndex + 1]
+    if (
+      !start ||
+      !end ||
+      start.z !== selectedSourceZ ||
+      end.z !== selectedSourceZ
+    ) {
+      return false
+    }
+    const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
+    if (segmentLength <= 1e-8) return false
+    const available = beforeT * segmentLength
+    if (remainingBefore <= available) {
+      beforeT -= remainingBefore / segmentLength
+      remainingBefore = 0
+      break
+    }
+    remainingBefore -= available
+    beforeSegmentIndex -= 1
+    if (beforeSegmentIndex < 0) {
+      if (!route.route[0]?.pcb_port_id) return false
+      beforeSegmentIndex = 0
+      beforeT = 0
+      remainingBefore = 0
+      break
+    }
+    beforeT = 1
+  }
 
-  const {
-    pcb_port_id: _pcbPortId,
-    insideJumperPad: _insideJumperPad,
-    toNextSegmentType: _toNextSegmentType,
-    ...insertedPointFields
-  } = start
-  const beforePoint = {
-    ...insertedPointFields,
-    x: start.x + dx * beforeT,
-    y: start.y + dy * beforeT,
+  let afterSegmentIndex = nearest.segmentIndex
+  let afterT = nearest.t
+  let remainingAfter = strategy.span
+  while (remainingAfter > 1e-9) {
+    const start = route.route[afterSegmentIndex]
+    const end = route.route[afterSegmentIndex + 1]
+    if (
+      !start ||
+      !end ||
+      start.z !== selectedSourceZ ||
+      end.z !== selectedSourceZ
+    ) {
+      return false
+    }
+    const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
+    if (segmentLength <= 1e-8) return false
+    const available = (1 - afterT) * segmentLength
+    if (remainingAfter <= available) {
+      afterT += remainingAfter / segmentLength
+      remainingAfter = 0
+      break
+    }
+    remainingAfter -= available
+    afterSegmentIndex += 1
+    if (afterSegmentIndex + 1 >= route.route.length) {
+      if (!route.route.at(-1)?.pcb_port_id) return false
+      afterSegmentIndex = route.route.length - 2
+      afterT = 1
+      remainingAfter = 0
+      break
+    }
+    afterT = 0
   }
-  const afterPoint = {
-    ...insertedPointFields,
-    x: start.x + dx * afterT,
-    y: start.y + dy * afterT,
+
+  const interiorPoints = route.route.slice(
+    beforeSegmentIndex + 1,
+    afterSegmentIndex + 1,
+  )
+  if (
+    interiorPoints.some(
+      (point) =>
+        point.z !== selectedSourceZ ||
+        point.pcb_port_id ||
+        point.insideJumperPad ||
+        point.toNextSegmentType === "through_obstacle",
+    )
+  ) {
+    return false
   }
-  route.route.splice(
-    nearest.segmentIndex + 1,
-    0,
+
+  const interpolatePoint = (segmentIndex: number, t: number) => {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    const {
+      pcb_port_id: _pcbPortId,
+      insideJumperPad: _insideJumperPad,
+      toNextSegmentType: _toNextSegmentType,
+      ...pointFields
+    } = start
+    return {
+      ...pointFields,
+      x: start.x + (end.x - start.x) * t,
+      y: start.y + (end.y - start.y) * t,
+      z: selectedSourceZ,
+    }
+  }
+  const beforePoint = interpolatePoint(beforeSegmentIndex, beforeT)
+  const afterPoint = interpolatePoint(afterSegmentIndex, afterT)
+  if (Math.hypot(afterPoint.x - beforePoint.x, afterPoint.y - beforePoint.y) < 0.02) {
+    return false
+  }
+
+  const replacement = [
     beforePoint,
     { ...beforePoint, z: strategy.targetZ },
+    ...interiorPoints.map((point) => ({
+      ...point,
+      z: strategy.targetZ,
+      pcb_port_id: undefined,
+      insideJumperPad: undefined,
+      toNextSegmentType: undefined,
+    })),
     { ...afterPoint, z: strategy.targetZ },
     afterPoint,
+  ]
+  const prefixPoint = route.route[beforeSegmentIndex]!
+  if (
+    prefixPoint.x === replacement[0]!.x &&
+    prefixPoint.y === replacement[0]!.y &&
+    prefixPoint.z === replacement[0]!.z
+  ) {
+    replacement.shift()
+  }
+  const suffixPoint = route.route[afterSegmentIndex + 1]!
+  if (
+    suffixPoint.x === replacement.at(-1)!.x &&
+    suffixPoint.y === replacement.at(-1)!.y &&
+    suffixPoint.z === replacement.at(-1)!.z
+  ) {
+    replacement.pop()
+  }
+  const dedupedReplacement = replacement.filter(
+    (point, index, points) =>
+      index === 0 ||
+      point.x !== points[index - 1]!.x ||
+      point.y !== points[index - 1]!.y ||
+      point.z !== points[index - 1]!.z,
+  )
+  route.route.splice(
+    beforeSegmentIndex + 1,
+    afterSegmentIndex - beforeSegmentIndex,
+    ...dedupedReplacement,
   )
   return true
 }
@@ -441,6 +1174,14 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private sweepsStarted = 0
   private currentTargetCount = 0
   private readonly attemptedCandidateKeys = new Set<string>()
+  private readonly routeRevisionByIndex: number[]
+  private readonly maxCandidatesBeforeRefinement: number
+  private candidateAttemptsSinceAccepted = 0
+  private pendingCandidate?: {
+    routes: HighDensityRoute[]
+    snapshot: DrcSnapshot
+    entry: CandidatePlanEntry
+  }
 
   constructor(private readonly config: ResidualLocalRerouteSolverConfig) {
     super()
@@ -464,7 +1205,14 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     }
     this.inputHdRoutes = config.hdRoutes
     this.bestRoutes = config.hdRoutes.map((route) => structuredClone(route))
+    this.routeRevisionByIndex = config.hdRoutes.map(() => 0)
     this.boardPolygon = getBoardPolygon(config.bounds, config.outline)
+    this.maxCandidatesBeforeRefinement = Math.max(
+      8,
+      Math.floor(
+        config.maxCandidateAttempts / Math.max(1, config.maxAcceptedMoves),
+      ),
+    )
     const strategyLimit = Math.min(
       ALL_DOGLEG_STRATEGIES.length,
       2 + Math.ceil(4.5 * Math.log2(Math.max(1, config.effort))),
@@ -473,19 +1221,49 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       { length: config.layerCount },
       (_, targetZ) => targetZ,
     ).flatMap((targetZ) =>
-      LAYER_DETOUR_SPANS.map((span) => ({
-        type: "layer_detour" as const,
-        targetZ,
-        span,
-      })),
+      LAYER_DETOUR_SPANS.flatMap((span) =>
+        (["segment", "route"] as const).map((scope) => ({
+          type: "layer_detour" as const,
+          scope,
+          targetZ,
+          span,
+        })),
+      ),
     )
     const doglegStrategies: CandidateStrategy[] = ALL_DOGLEG_STRATEGIES.slice(
       0,
       strategyLimit,
     ).map((strategy) => ({ type: "dogleg", ...strategy }))
-    this.strategies = [...layerDetourStrategies, ...doglegStrategies]
+    const directedDoglegStrategies: CandidateStrategy[] =
+      DIRECTED_DOGLEG_STRATEGIES.map((strategy) => ({
+        type: "directed_dogleg",
+        ...strategy,
+      }))
+    const directedSegmentShiftStrategies: CandidateStrategy[] =
+      DIRECTED_SEGMENT_SHIFT_STRATEGIES.map((strategy) => ({
+        type: "directed_segment_shift",
+        ...strategy,
+      }))
+    const directedPairShiftStrategies: CandidateStrategy[] =
+      DIRECTED_SEGMENT_SHIFT_STRATEGIES.map((strategy) => ({
+        type: "directed_pair_shift",
+        ...strategy,
+      }))
+    const directedViaShiftStrategies: CandidateStrategy[] =
+      DIRECTED_SEGMENT_SHIFT_STRATEGIES.map((strategy) => ({
+        type: "directed_via_shift",
+        ...strategy,
+      }))
+    this.strategies = [
+      ...directedViaShiftStrategies,
+      ...layerDetourStrategies,
+      ...directedPairShiftStrategies,
+      ...directedSegmentShiftStrategies,
+      ...directedDoglegStrategies,
+      ...doglegStrategies,
+    ]
     this.MAX_ITERATIONS =
-      (config.maxCandidateAttempts + 1) * (config.maxAcceptedMoves + 1) + 10
+      config.maxCandidateAttempts + config.maxAcceptedMoves + 10
   }
 
   override getSolverName(): string {
@@ -533,6 +1311,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     const routeIndexByTraceId = getTraceRouteIndexById(this.bestRoutes)
     const targets: CandidateTarget[] = []
     const targetKeys = new Set<string>()
+    const transitionPoints = getLayerTransitionPoints(this.bestRoutes)
 
     snapshot.errors.forEach((error) => {
       if (!SUPPORTED_ERROR_TYPES.has(String(error.type))) return
@@ -545,22 +1324,93 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         const targetKey = `${routeIndex}:${center.x.toFixed(4)}:${center.y.toFixed(4)}`
         if (targetKeys.has(targetKey)) continue
         targetKeys.add(targetKey)
-        targets.push({ routeIndex, center })
+        const moveData = getMoveData(
+          error,
+          routeIndex,
+          routeIndexes,
+          this.bestRoutes,
+          transitionPoints,
+          this.config.obstacles ?? [],
+        )
+        const viaCenter =
+          error.type === "pcb_via_trace_clearance_error" &&
+          error.via_center &&
+          typeof error.via_center === "object" &&
+          typeof (error.via_center as Record<string, unknown>).x === "number" &&
+          typeof (error.via_center as Record<string, unknown>).y === "number"
+            ? {
+                x: (error.via_center as { x: number }).x,
+                y: (error.via_center as { y: number }).y,
+              }
+            : undefined
+        targets.push({
+          routeIndex,
+          center,
+          severity: getDrcErrorSeverity(error),
+          errorType: String(error.type),
+          moveDirection: moveData.direction,
+          otherRouteIndex: moveData.otherRouteIndex,
+          sourceZ: moveData.sourceZ,
+          viaCenter,
+          viaRouteIndexes: viaCenter
+            ? getViaRouteIndexes(this.bestRoutes, viaCenter)
+            : undefined,
+        })
       }
     })
+
+    targets.sort((a, b) => a.severity - b.severity)
 
     // Breadth-first ordering gives every distinct violation one useful attempt
     // before spending more of the bounded budget on variants of an early
     // error. This matters on large boards where a full strategy sweep is much
     // larger than maxCandidateAttempts.
-    const plan = this.strategies.flatMap((strategy) =>
-      targets.flatMap((target) => {
-        const key = `${target.routeIndex}:${target.center.x.toFixed(4)}:${target.center.y.toFixed(4)}:${getCandidateStrategyKey(strategy)}`
+    const plan = this.strategies
+      .flatMap((strategy) =>
+        targets.flatMap((target) => {
+        if (
+          (strategy.type === "directed_dogleg" ||
+            strategy.type === "directed_segment_shift" ||
+            strategy.type === "directed_pair_shift" ||
+            strategy.type === "directed_via_shift") &&
+          !target.moveDirection
+        ) {
+          return []
+        }
+        if (
+          strategy.type === "directed_via_shift" &&
+          (!target.viaCenter || target.viaRouteIndexes?.length === 0)
+        ) {
+          return []
+        }
+        if (
+          strategy.type === "directed_pair_shift" &&
+          (target.otherRouteIndex === undefined ||
+            target.routeIndex > target.otherRouteIndex)
+        ) {
+          return []
+        }
+        const affectedRouteIndexes =
+          strategy.type === "directed_via_shift"
+            ? (target.viaRouteIndexes ?? [])
+            : [target.routeIndex]
+        const routeRevisions = affectedRouteIndexes
+          .map(
+            (routeIndex) =>
+              `${routeIndex}:${this.routeRevisionByIndex[routeIndex] ?? 0}`,
+          )
+          .join(",")
+        const key = `${routeRevisions}:${target.center.x.toFixed(4)}:${target.center.y.toFixed(4)}:${getCandidateStrategyKey(strategy)}`
         return this.attemptedCandidateKeys.has(key)
           ? []
           : [{ ...target, ...strategy, key }]
-      }),
-    )
+        }),
+      )
+      .sort(
+        (a, b) =>
+          getCandidatePriority(a, a) - getCandidatePriority(b, b) ||
+          a.severity - b.severity,
+      )
 
     this.candidatePlan = plan
     this.candidatePlanIndex = 0
@@ -600,6 +1450,147 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     this.solved = true
   }
 
+  private createCandidateRoutes(
+    candidatePlanEntry: CandidatePlanEntry,
+  ): HighDensityRoute[] | undefined {
+    const candidateRoutes = structuredClone(this.bestRoutes)
+    let changed = false
+    if (
+      candidatePlanEntry.type === "directed_via_shift" &&
+      candidatePlanEntry.moveDirection &&
+      candidatePlanEntry.viaCenter &&
+      candidatePlanEntry.viaRouteIndexes
+    ) {
+      changed = shiftVia(
+        candidateRoutes,
+        candidatePlanEntry.viaRouteIndexes,
+        candidatePlanEntry.viaCenter,
+        candidatePlanEntry.moveDirection,
+        candidatePlanEntry.distance,
+        this.boardPolygon,
+      )
+    } else if (candidatePlanEntry.type === "layer_detour") {
+      changed =
+        candidatePlanEntry.scope === "segment"
+          ? insertSegmentLayerDetour(
+              candidateRoutes,
+              candidatePlanEntry.routeIndex,
+              candidatePlanEntry.center,
+              candidatePlanEntry,
+              candidatePlanEntry.sourceZ,
+            )
+          : insertRouteLayerDetour(
+              candidateRoutes,
+              candidatePlanEntry.routeIndex,
+              candidatePlanEntry.center,
+              candidatePlanEntry,
+              candidatePlanEntry.sourceZ,
+            )
+    } else if (
+      candidatePlanEntry.type === "directed_pair_shift" &&
+      candidatePlanEntry.moveDirection &&
+      candidatePlanEntry.otherRouteIndex !== undefined
+    ) {
+      const halfDistance = candidatePlanEntry.distance / 2
+      const movedPrimary = shiftNearestSegment(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        candidatePlanEntry.moveDirection,
+        halfDistance,
+        this.boardPolygon,
+        candidatePlanEntry.sourceZ,
+      )
+      const movedOther = shiftNearestSegment(
+        candidateRoutes,
+        candidatePlanEntry.otherRouteIndex,
+        candidatePlanEntry.center,
+        {
+          x: -candidatePlanEntry.moveDirection.x,
+          y: -candidatePlanEntry.moveDirection.y,
+        },
+        halfDistance,
+        this.boardPolygon,
+        candidatePlanEntry.sourceZ,
+      )
+      changed = movedPrimary && movedOther
+    } else if (
+      candidatePlanEntry.type === "directed_segment_shift" &&
+      candidatePlanEntry.moveDirection
+    ) {
+      changed = shiftNearestSegment(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        candidatePlanEntry.moveDirection,
+        candidatePlanEntry.distance,
+        this.boardPolygon,
+        candidatePlanEntry.sourceZ,
+      )
+    } else if (
+      candidatePlanEntry.type === "directed_dogleg" ||
+      candidatePlanEntry.type === "dogleg"
+    ) {
+      changed = insertDogleg(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        candidatePlanEntry.type === "directed_dogleg"
+          ? {
+              offset: candidatePlanEntry.distance,
+              span: candidatePlanEntry.span,
+            }
+          : candidatePlanEntry,
+        this.boardPolygon,
+        candidatePlanEntry.type === "directed_dogleg"
+          ? candidatePlanEntry.moveDirection
+          : undefined,
+        candidatePlanEntry.sourceZ,
+      )
+    }
+    return changed ? candidateRoutes : undefined
+  }
+
+  private acceptCandidate(candidate: {
+    routes: HighDensityRoute[]
+    snapshot: DrcSnapshot
+    entry: CandidatePlanEntry
+  }): boolean {
+    this.bestRoutes = candidate.routes
+    this.bestSnapshot = candidate.snapshot
+    this.acceptedMoves += 1
+    this.candidateAttemptsSinceAccepted = 0
+    this.pendingCandidate = undefined
+    const changedRouteIndexes =
+      candidate.entry.type === "directed_via_shift"
+        ? (candidate.entry.viaRouteIndexes ?? [])
+        : [candidate.entry.routeIndex]
+    for (const routeIndex of changedRouteIndexes) {
+      this.routeRevisionByIndex[routeIndex] =
+        (this.routeRevisionByIndex[routeIndex] ?? 0) + 1
+    }
+    if (
+      candidate.entry.type === "directed_pair_shift" &&
+      candidate.entry.otherRouteIndex !== undefined
+    ) {
+      this.routeRevisionByIndex[candidate.entry.otherRouteIndex] =
+        (this.routeRevisionByIndex[candidate.entry.otherRouteIndex] ?? 0) + 1
+    }
+    if (candidate.snapshot.issueCount === 0) {
+      this.finish({ stoppedAfterNoImprovement: false })
+      return true
+    }
+    if (this.acceptedMoves >= this.config.maxAcceptedMoves) {
+      this.finish({
+        stoppedAfterNoImprovement: false,
+        hitAcceptedMoveLimit: true,
+      })
+      return true
+    }
+    this.buildCandidatePlan()
+    return false
+  }
+
   _step(): void {
     if (
       this.config.maxCandidateAttempts === 0 ||
@@ -620,57 +1611,63 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       this.buildCandidatePlan()
     }
 
+    let candidatePlanEntry: CandidatePlanEntry
+    let candidateRoutes: HighDensityRoute[] | undefined
+    do {
     if (this.candidateAttempts >= this.config.maxCandidateAttempts) {
+      if (this.pendingCandidate) {
+        if (this.acceptCandidate(this.pendingCandidate)) return
+      }
       this.finish({
         stoppedAfterNoImprovement: false,
         hitCandidateLimit: true,
-      })
-      return
-    }
-    const candidatePlanEntry = this.candidatePlan[this.candidatePlanIndex]
-    if (!candidatePlanEntry) {
-      this.finish({ stoppedAfterNoImprovement: true })
-      return
-    }
-    this.candidatePlanIndex += 1
-    this.attemptedCandidateKeys.add(candidatePlanEntry.key)
-
-    const candidateRoutes = structuredClone(this.bestRoutes)
-    const changed =
-      candidatePlanEntry.type === "layer_detour"
-        ? insertLayerDetour(
-            candidateRoutes,
-            candidatePlanEntry.routeIndex,
-            candidatePlanEntry.center,
-            candidatePlanEntry,
-          )
-        : insertDogleg(
-            candidateRoutes,
-            candidatePlanEntry.routeIndex,
-            candidatePlanEntry.center,
-            candidatePlanEntry,
-            this.boardPolygon,
-          )
-    if (!changed) return
-
-    this.candidateAttempts += 1
-    const candidateSnapshot = this.evaluate(candidateRoutes)
-    if (isBetterSnapshot(candidateSnapshot, this.bestSnapshot)) {
-      this.bestRoutes = candidateRoutes
-      this.bestSnapshot = candidateSnapshot
-      this.acceptedMoves += 1
-      if (candidateSnapshot.issueCount === 0) {
-        this.finish({ stoppedAfterNoImprovement: false })
-        return
-      }
-      if (this.acceptedMoves >= this.config.maxAcceptedMoves) {
-        this.finish({
-          stoppedAfterNoImprovement: false,
-          hitAcceptedMoveLimit: true,
         })
         return
       }
-      this.buildCandidatePlan()
+      const nextCandidate = this.candidatePlan[this.candidatePlanIndex]
+      if (!nextCandidate) {
+        if (this.pendingCandidate) {
+          this.acceptCandidate(this.pendingCandidate)
+          return
+        }
+        this.finish({ stoppedAfterNoImprovement: true })
+        return
+      }
+      candidatePlanEntry = nextCandidate
+      this.candidatePlanIndex += 1
+      this.attemptedCandidateKeys.add(candidatePlanEntry.key)
+      candidateRoutes = this.createCandidateRoutes(candidatePlanEntry)
+    } while (!candidateRoutes)
+
+    this.candidateAttempts += 1
+    this.candidateAttemptsSinceAccepted += 1
+    const candidateSnapshot = this.evaluate(candidateRoutes)
+    if (candidateSnapshot.issueCount < this.bestSnapshot.issueCount) {
+      this.acceptCandidate({
+        routes: candidateRoutes,
+        snapshot: candidateSnapshot,
+        entry: candidatePlanEntry,
+      })
+      return
+    }
+    if (
+      isBetterSnapshot(candidateSnapshot, this.bestSnapshot) &&
+      (!this.pendingCandidate ||
+        isBetterSnapshot(candidateSnapshot, this.pendingCandidate.snapshot))
+    ) {
+      this.pendingCandidate = {
+        routes: candidateRoutes,
+        snapshot: candidateSnapshot,
+        entry: candidatePlanEntry,
+      }
+    }
+    if (
+      this.pendingCandidate &&
+      this.candidateAttemptsSinceAccepted >=
+        this.maxCandidatesBeforeRefinement
+    ) {
+      this.acceptCandidate(this.pendingCandidate)
+      return
     }
 
     this.progress = Math.min(

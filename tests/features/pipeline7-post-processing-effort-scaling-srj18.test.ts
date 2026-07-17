@@ -30,8 +30,8 @@ test("pipeline7 scales post-processing effort for selected srj18 samples", async
       globalDrcMaxIterations: 1600,
       exactGeometryDrcMaxIterations: 3200,
       exactGeometryDrcBroadMaxIterations: 800,
-      residualLocalRerouteMaxCandidateAttempts: 213,
-      residualLocalRerouteMaxAcceptedMoves: 8,
+      residualLocalRerouteMaxCandidateAttempts: 638,
+      residualLocalRerouteMaxAcceptedMoves: 16,
     })
     expect(baselineSolver.baselineEffortConfig).toEqual({
       routingEffort: 1,
@@ -49,5 +49,5 @@ test("pipeline7 scales post-processing effort for selected srj18 samples", async
   expect(
     getPipeline7PostProcessingEffortConfig(1e9)
       .residualLocalRerouteMaxCandidateAttempts,
-  ).toBe(256)
+  ).toBe(768)
 })

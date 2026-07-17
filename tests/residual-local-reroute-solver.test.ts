@@ -70,7 +70,7 @@ test("residual local rerouting accepts only improvements and terminates at conve
 
   expect(convergedSolver.failed).toBe(false)
   expect(convergedSolver.getOutput()[0]!.route).toEqual(inputRoute.route)
-  expect(convergedSolver.stats.residualLocalRerouteCandidateAttempts).toBe(32)
+  expect(convergedSolver.stats.residualLocalRerouteCandidateAttempts).toBe(35)
   expect(
     convergedSolver.stats.residualLocalRerouteStoppedAfterNoImprovement,
   ).toBe(true)
@@ -196,7 +196,7 @@ test("residual local rerouting does not revisit failed candidates for an unchang
 
   expect(solver.failed).toBe(false)
   expect(solver.stats.residualLocalRerouteAcceptedMoves).toBe(1)
-  expect(solver.stats.residualLocalRerouteCandidateAttempts).toBe(33)
+  expect(solver.stats.residualLocalRerouteCandidateAttempts).toBe(36)
   expect(solver.stats.residualLocalRerouteStoppedAfterNoImprovement).toBe(true)
   expect(solver.stats.residualLocalRerouteHitCandidateLimit).toBe(false)
 })

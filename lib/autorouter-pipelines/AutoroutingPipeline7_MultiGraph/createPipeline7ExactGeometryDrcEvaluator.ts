@@ -38,14 +38,28 @@ const createPipeline7DrcEvaluator = (
       {
         minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
         minViaDiameter: conversionOptions.originalSrj.minViaDiameter,
-        originalSrj: conversionOptions.originalSrj,
       },
     )
     const { errors, errorsWithCenters } = getDrcErrors(circuitJson, drcOptions)
+    const viaCenterById = new Map(
+      circuitJson.flatMap((element) =>
+        element.type === "pcb_via"
+          ? [[element.pcb_via_id, { x: element.x, y: element.y }] as const]
+          : [],
+      ),
+    )
+    const locationAwareErrors = errorsWithCenters.map((error) => {
+      const candidate = error as unknown as Record<string, unknown>
+      const viaCenter =
+        typeof candidate.pcb_via_id === "string"
+          ? viaCenterById.get(candidate.pcb_via_id)
+          : undefined
+      return viaCenter ? { ...error, via_center: viaCenter } : error
+    })
 
     return {
       errors: errors as unknown as Record<string, unknown>[],
-      errorsWithCenters: errorsWithCenters as unknown as Record<
+      errorsWithCenters: locationAwareErrors as unknown as Record<
         string,
         unknown
       >[],
