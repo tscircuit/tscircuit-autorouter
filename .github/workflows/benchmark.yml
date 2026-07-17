@@ -51,6 +51,11 @@ on:
         description: JSON argument array forwarded from an authorized PR comment
         required: false
         type: string
+      long_benchmark:
+        description: Run on 8 vCPUs with an eight-hour timeout
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -67,8 +72,8 @@ jobs:
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
       )
-    runs-on: ${{ vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
-    timeout-minutes: 60
+    runs-on: ${{ inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
+    timeout-minutes: ${{ inputs.long_benchmark && 480 || 120 }}
 
     steps:
       - name: Parse benchmark command
@@ -478,23 +483,6 @@ jobs:
                 ),
               ]
             }
-            const renderCombinedSummary = (reports) => {
-              const rows = reports.flatMap((report) =>
-                Array.isArray(report?.summary)
-                  ? report.summary.map((row) => ({ report, row }))
-                  : [],
-              )
-              if (rows.length === 0) {
-                return []
-              }
-              return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
-                ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatAverage(row.avgVia))} |`,
-                ),
-              ]
-            }
             const getOutcomeScore = (test) => {
               if (!test?.didSolve) return 0
               if (test.relaxedDrcPassed) return 2
@@ -589,16 +577,21 @@ jobs:
             }
             const renderReport = (report, fallbackText, options = {}) => {
               if (!report) {
+                if (options.omitSummary) return []
                 return ['```', truncate(fallbackText, maxLength), '```']
               }
               return [
                 ...(options.omitSummary ? [] : renderSummary(report)),
-                '',
-                '<details>',
-                '<summary>Details</summary>',
-                '',
-                ...renderTests(report, options),
-                '</details>',
+                ...(options.omitDetails
+                  ? []
+                  : [
+                      '',
+                      '<details>',
+                      `<summary>${options.detailsLabel ?? 'Details'}</summary>`,
+                      '',
+                      ...renderTests(report, options),
+                      '</details>',
+                    ]),
               ]
             }
             const getBenchmarkReports = (report) => {
@@ -611,27 +604,12 @@ jobs:
               if (!datasetName) return null
               return getBenchmarkReports(mainReport).find((report) => report?.datasetName === datasetName) ?? null
             }
-            const renderReportCollection = (report, fallbackText, options = {}) => {
-              const reports = getBenchmarkReports(report)
-              if (reports.length === 0) {
-                return renderReport(null, fallbackText, options)
+            const renderPreviousMainSummary = (report, datasetName) => {
+              if (report) {
+                return renderReport(report, '', { omitDetails: true })
               }
-              if (reports.length === 1 && !options.forceCombinedSummary) {
-                return renderReport(reports[0], fallbackText, options)
-              }
-              return [
-                ...renderCombinedSummary(reports),
-                '',
-                ...reports.flatMap((datasetReport, index) => [
-                  ...(index === 0 ? [] : ['']),
-                  `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
-                  '',
-                  ...renderReport(datasetReport, fallbackText, {
-                    ...options,
-                    omitSummary: true,
-                  }),
-                ]),
-              ]
+              const datasetLabel = datasetName ? ` for \`${escapeHtml(datasetName)}\`` : ''
+              return [`_No previous main run is available${datasetLabel}._`]
             }
             const readJson = (path) => {
               if (!fs.existsSync(path)) return null
@@ -646,11 +624,11 @@ jobs:
             const readText = (path) => fs.existsSync(path) ? fs.readFileSync(path, 'utf8').trim() : null
 
             const prText = readText('benchmark-result-pr.txt') ?? readText('benchmark-result.txt')
-            const mainText = readText('benchmark-result-main.txt') ?? '(not available)'
             const prReport = readJson('benchmark-result-pr.json') ?? readJson('benchmark-result.json')
             const mainReport = readJson('benchmark-result-main.json')
             const viaCellReport = readJson('benchmark-via-cells.json')
-            const mainDatasetReport = getMainReportForDataset(mainReport, prReport?.datasetName)
+            const benchmarkDatasetName = prReport?.datasetName ?? process.env.BENCHMARK_DATASET
+            const mainDatasetReport = getMainReportForDataset(mainReport, benchmarkDatasetName)
             const mainIndex = buildMainIndex(mainDatasetReport)
             const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
@@ -666,18 +644,17 @@ jobs:
                     '',
                   ]
                 : []),
-              '<details>',
-              '<summary>Main Branch Results</summary>',
+              '### Previous main run',
               '',
-              ...renderReportCollection(mainReport, mainText, {
-                forceCombinedSummary: true,
+              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
+              '',
+              ...renderReport(mainDatasetReport, '', {
+                detailsLabel: 'Previous main run details',
+                omitSummary: true,
               }),
-              '</details>',
-              '',
-              '<details open>',
-              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
+                detailsLabel: 'PR run details',
                 includeDelta: true,
                 mainIndex,
                 viaCellIndex,
@@ -689,7 +666,6 @@ jobs:
                     'Profile solver comparison is still running.',
                   ]
                 : []),
-              '</details>',
               '',
               `Workflow: [View run](${runUrl})`,
               `Artifact: ${runUrl}`,
@@ -989,23 +965,6 @@ jobs:
                 ),
               ]
             }
-            const renderCombinedSummary = (reports) => {
-              const rows = reports.flatMap((report) =>
-                Array.isArray(report?.summary)
-                  ? report.summary.map((row) => ({ report, row }))
-                  : [],
-              )
-              if (rows.length === 0) {
-                return []
-              }
-              return [
-                '| Dataset | Scenarios | Solver | Completed % | Relaxed DRC Pass % | Timed Out | P50 Time | P95 Time | Avg Via |',
-                '| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
-                ...rows.map(({ report, row }) =>
-                  `| ${escapeHtml(report.datasetName ?? '')} | ${escapeHtml(report.scenarioCount ?? '')} | ${escapeHtml(formatSolverDisplayName(row.solverName, report.effortLabel))} | ${escapeHtml(row.completedRateLabel)} | ${escapeHtml(row.relaxedDrcRateLabel)} | ${escapeHtml(row.timedOutLabel)} | ${escapeHtml(formatTime(row.p50TimeMs))} | ${escapeHtml(formatTime(row.p95TimeMs))} | ${escapeHtml(formatAverage(row.avgVia))} |`,
-                ),
-              ]
-            }
             const getOutcomeScore = (test) => {
               if (!test?.didSolve) return 0
               if (test.relaxedDrcPassed) return 2
@@ -1100,17 +1059,22 @@ jobs:
             }
             const renderReport = (report, fallbackText, options = {}) => {
               if (!report) {
+                if (options.omitSummary) return []
                 return ['```', truncate(fallbackText, maxLength), '```']
               }
 
               return [
                 ...(options.omitSummary ? [] : renderSummary(report)),
-                '',
-                '<details>',
-                '<summary>Details</summary>',
-                '',
-                ...renderTests(report, options),
-                '</details>',
+                ...(options.omitDetails
+                  ? []
+                  : [
+                      '',
+                      '<details>',
+                      `<summary>${options.detailsLabel ?? 'Details'}</summary>`,
+                      '',
+                      ...renderTests(report, options),
+                      '</details>',
+                    ]),
               ]
             }
             const getBenchmarkReports = (report) => {
@@ -1123,27 +1087,12 @@ jobs:
               if (!datasetName) return null
               return getBenchmarkReports(mainReport).find((report) => report?.datasetName === datasetName) ?? null
             }
-            const renderReportCollection = (report, fallbackText, options = {}) => {
-              const reports = getBenchmarkReports(report)
-              if (reports.length === 0) {
-                return renderReport(null, fallbackText, options)
+            const renderPreviousMainSummary = (report, datasetName) => {
+              if (report) {
+                return renderReport(report, '', { omitDetails: true })
               }
-              if (reports.length === 1 && !options.forceCombinedSummary) {
-                return renderReport(reports[0], fallbackText, options)
-              }
-              return [
-                ...renderCombinedSummary(reports),
-                '',
-                ...reports.flatMap((datasetReport, index) => [
-                  ...(index === 0 ? [] : ['']),
-                  `### ${escapeHtml(datasetReport.datasetName ?? `Dataset ${index + 1}`)}`,
-                  '',
-                  ...renderReport(datasetReport, fallbackText, {
-                    ...options,
-                    omitSummary: true,
-                  }),
-                ]),
-              ]
+              const datasetLabel = datasetName ? ` for \`${escapeHtml(datasetName)}\`` : ''
+              return [`_No previous main run is available${datasetLabel}._`]
             }
             const readJson = (path) => {
               if (!fs.existsSync(path)) return null
@@ -1246,17 +1195,16 @@ jobs:
                 }),
               ]
             }
-            const renderProfileSolversDetails = (lines) => [
+            const renderProfileSolversDetails = (label, lines) => [
               '',
               '<details>',
-              '<summary>Profile Solvers</summary>',
+              `<summary>${label}</summary>`,
               '',
               ...lines,
               '</details>',
             ]
 
             const prText = readText('benchmark-result-pr.txt') ?? readText('benchmark-result.txt')
-            const mainText = readText('benchmark-result-main.txt') ?? '(not available)'
             const prProfileSolversText = readText('profile-solvers-pr.txt')
             const mainProfileSolversText = readText('profile-solvers-main.txt')
             const prProfileSolversReport = readJson('profile-solvers-pr.json')
@@ -1264,7 +1212,8 @@ jobs:
             const prReport = readJson('benchmark-result-pr.json') ?? readJson('benchmark-result.json')
             const mainReport = readJson('benchmark-result-main.json')
             const viaCellReport = readJson('benchmark-via-cells.json')
-            const mainDatasetReport = getMainReportForDataset(mainReport, prReport?.datasetName)
+            const benchmarkDatasetName = prReport?.datasetName ?? process.env.BENCHMARK_DATASET
+            const mainDatasetReport = getMainReportForDataset(mainReport, benchmarkDatasetName)
             const mainIndex = buildMainIndex(mainDatasetReport)
             const viaCellIndex = buildViaCellIndex(viaCellReport)
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
@@ -1298,23 +1247,23 @@ jobs:
                     '',
                   ]
                 : []),
-              '<details>',
-              '<summary>Main Branch Results</summary>',
+              '### Previous main run',
               '',
-              ...renderReportCollection(mainReport, mainText, {
-                forceCombinedSummary: true,
+              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
+              '',
+              ...renderReport(mainDatasetReport, '', {
+                detailsLabel: 'Previous main run details',
+                omitSummary: true,
               }),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
+                    'Previous main profile details',
                     renderMainProfileSolvers(mainProfileSolversReport),
                   )
                 : []),
-              '</details>',
-              '',
-              '<details open>',
-              '<summary>PR Results</summary>',
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
+                detailsLabel: 'PR run details',
                 includeDelta: true,
                 mainIndex,
                 viaCellIndex,
@@ -1322,13 +1271,13 @@ jobs:
               }),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
+                    'PR profile comparison',
                     renderProfileComparison(
                       mainProfileSolversReport,
                       prProfileSolversReport,
                     ),
                   )
                 : []),
-              '</details>',
               '',
               `Workflow: [View run](${runUrl})`,
               `Artifact: ${runUrl}`,

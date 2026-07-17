@@ -6,10 +6,26 @@ import {
 } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
+import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths"
 import { breakRouteIntoSections } from "./break-route-into-sections"
 import { canEndpointConnectOnLayer } from "./can-endpoint-connect-on-layer"
 import { canSectionMoveToLayer } from "./can-section-move-to-layer"
 import type { RouteSection } from "./route-section"
+
+type RoutePoint = HighDensityRoute["route"][number]
+
+type ViaPairShortcut = {
+  path: RoutePoint[]
+  previousPointIndex: number
+  nextPointIndex: number
+  savedLength: number
+}
+
+type MultilayerSectionCollapse = {
+  targetZ: number
+  mergeWith: "previous" | "next"
+}
 
 export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   override getSolverName(): string {
@@ -20,6 +36,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   hdRouteSHI: HighDensityRouteSpatialIndex
   unsimplifiedRoute: HighDensityRoute
   connMap: ConnectivityMap
+  outline?: Array<{ x: number; y: number }>
 
   routeSections: Array<RouteSection>
 
@@ -27,12 +44,22 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
+  GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
+  GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
+  ENABLE_GEOMETRY_SHORTCUTS = true
+
+  geometryShortcutsApplied = 0
+  multilayerSectionsCollapsed = 0
 
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
     hdRouteSHI: HighDensityRouteSpatialIndex
     unsimplifiedRoute: HighDensityRoute
     connMap: ConnectivityMap
+    outline?: Array<{ x: number; y: number }>
+    geometryShortcutTraceMargin?: number
+    geometryShortcutObstacleMargin?: number
+    enableGeometryShortcuts?: boolean
   }) {
     super()
     this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
@@ -40,8 +67,271 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.hdRouteSHI = params.hdRouteSHI
     this.unsimplifiedRoute = params.unsimplifiedRoute
     this.connMap = params.connMap
+    this.outline = params.outline
+    this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
+      params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
+    this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
+      params.geometryShortcutObstacleMargin ??
+      this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
+    this.ENABLE_GEOMETRY_SHORTCUTS = params.enableGeometryShortcuts ?? true
 
     this.routeSections = breakRouteIntoSections(this.unsimplifiedRoute)
+  }
+
+  private getPathLength(points: RoutePoint[]): number {
+    let length = 0
+    for (let index = 1; index < points.length; index++) {
+      length += Math.hypot(
+        points[index].x - points[index - 1].x,
+        points[index].y - points[index - 1].y,
+      )
+    }
+    return length
+  }
+
+  private normalizeShortcutPath(
+    path: Array<{ x: number; y: number }>,
+    start: RoutePoint,
+    end: RoutePoint,
+  ): RoutePoint[] {
+    const uniquePoints = path.filter((point, index) => {
+      const previousPoint = path[index - 1]
+      return (
+        !previousPoint ||
+        point.x !== previousPoint.x ||
+        point.y !== previousPoint.y
+      )
+    })
+
+    return uniquePoints.map((point, index): RoutePoint => {
+      if (index === 0) return { ...start }
+      if (index === uniquePoints.length - 1) return { ...end }
+      return { x: point.x, y: point.y, z: start.z }
+    })
+  }
+
+  private shortcutCrossesOutline(path: RoutePoint[]): boolean {
+    if (!this.outline || this.outline.length < 3) return false
+
+    for (let index = 1; index < path.length; index++) {
+      if (
+        doesSegmentCrossPolygonBoundary({
+          start: path[index - 1],
+          end: path[index],
+          polygon: this.outline,
+        })
+      ) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private findGeometryShortcut(
+    previousSection: RouteSection,
+    currentSection: RouteSection,
+    nextSection: RouteSection,
+  ): ViaPairShortcut | null {
+    if (
+      !this.ENABLE_GEOMETRY_SHORTCUTS ||
+      this.unsimplifiedRoute.jumpers?.length
+    ) {
+      return null
+    }
+
+    let bestShortcut: ViaPairShortcut | null = null
+    for (
+      let previousPointIndex = 0;
+      previousPointIndex < previousSection.points.length;
+      previousPointIndex++
+    ) {
+      const start = previousSection.points[previousPointIndex]
+      for (
+        let nextPointIndex = 0;
+        nextPointIndex < nextSection.points.length;
+        nextPointIndex++
+      ) {
+        const end = nextSection.points[nextPointIndex]
+        const replacedPoints = [
+          ...previousSection.points.slice(previousPointIndex),
+          ...currentSection.points,
+          ...nextSection.points.slice(0, nextPointIndex + 1),
+        ]
+        if (
+          replacedPoints.some(
+            (point) => point.insideJumperPad || point.toNextSegmentType,
+          )
+        ) {
+          continue
+        }
+
+        for (const possiblePath of calculate45DegreePaths(start, end)) {
+          const path = this.normalizeShortcutPath(possiblePath, start, end)
+          const savedLength =
+            this.getPathLength(replacedPoints) - this.getPathLength(path)
+          if (savedLength < -1e-6 || this.shortcutCrossesOutline(path)) continue
+
+          const candidateSection: RouteSection = {
+            startIndex: previousSection.startIndex + previousPointIndex,
+            endIndex: nextSection.startIndex + nextPointIndex,
+            z: previousSection.z,
+            points: path,
+          }
+          const pathIsClear = canSectionMoveToLayer({
+            currentSection: candidateSection,
+            targetZ: previousSection.z,
+            route: this.unsimplifiedRoute,
+            hdRouteSHI: this.hdRouteSHI,
+            obstacleSHI: this.obstacleSHI,
+            connMap: this.connMap,
+            defaultTraceThickness: this.TRACE_THICKNESS,
+            obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+            traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+          })
+          if (!pathIsClear) continue
+
+          if (!bestShortcut || savedLength > bestShortcut.savedLength) {
+            bestShortcut = {
+              path,
+              previousPointIndex,
+              nextPointIndex,
+              savedLength,
+            }
+          }
+        }
+      }
+    }
+    return bestShortcut
+  }
+
+  private applyGeometryShortcut(shortcut: ViaPairShortcut): void {
+    const previousSection = this.routeSections[this.currentSectionIndex - 1]
+    const nextSection = this.routeSections[this.currentSectionIndex + 1]
+    const combinedPoints = [
+      ...previousSection.points.slice(0, shortcut.previousPointIndex),
+      ...shortcut.path,
+      ...nextSection.points.slice(shortcut.nextPointIndex + 1),
+    ].filter((point, index, points) => {
+      const previousPoint = points[index - 1]
+      return (
+        !previousPoint ||
+        point.x !== previousPoint.x ||
+        point.y !== previousPoint.y ||
+        point.z !== previousPoint.z
+      )
+    })
+
+    this.routeSections.splice(this.currentSectionIndex - 1, 3, {
+      startIndex: previousSection.startIndex,
+      endIndex: nextSection.endIndex,
+      z: previousSection.z,
+      points: combinedPoints,
+    })
+    this.geometryShortcutsApplied++
+    this.stats.geometryShortcutsApplied = this.geometryShortcutsApplied
+    this.stats.viasRemovedByGeometryShortcuts =
+      this.geometryShortcutsApplied * 2
+    this.currentSectionIndex = Math.max(0, this.currentSectionIndex - 1)
+  }
+
+  private findMultilayerSectionCollapse(
+    previousSection: RouteSection,
+    currentSection: RouteSection,
+    nextSection: RouteSection,
+  ): MultilayerSectionCollapse | null {
+    if (
+      previousSection.z === nextSection.z ||
+      this.unsimplifiedRoute.jumpers?.length
+    ) {
+      return null
+    }
+
+    const previousTransitionPoint =
+      previousSection.points[previousSection.points.length - 1]
+    if (
+      previousTransitionPoint?.insideJumperPad ||
+      previousTransitionPoint?.toNextSegmentType ||
+      currentSection.points.some(
+        (point) => point.insideJumperPad || point.toNextSegmentType,
+      )
+    ) {
+      return null
+    }
+
+    const candidates: MultilayerSectionCollapse[] = [
+      { targetZ: previousSection.z, mergeWith: "previous" },
+      { targetZ: nextSection.z, mergeWith: "next" },
+    ]
+    for (const candidate of candidates) {
+      if (
+        candidate.targetZ !== currentSection.z &&
+        canSectionMoveToLayer({
+          currentSection,
+          targetZ: candidate.targetZ,
+          route: this.unsimplifiedRoute,
+          hdRouteSHI: this.hdRouteSHI,
+          obstacleSHI: this.obstacleSHI,
+          connMap: this.connMap,
+          defaultTraceThickness: this.TRACE_THICKNESS,
+          obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+          traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+        })
+      ) {
+        return candidate
+      }
+    }
+
+    return null
+  }
+
+  private applyMultilayerSectionCollapse(
+    collapse: MultilayerSectionCollapse,
+  ): void {
+    const previousSection = this.routeSections[this.currentSectionIndex - 1]
+    const currentSection = this.routeSections[this.currentSectionIndex]
+    const nextSection = this.routeSections[this.currentSectionIndex + 1]
+    const movedPoints = currentSection.points.map((point) => ({
+      ...point,
+      z: collapse.targetZ,
+    }))
+    const removeConsecutiveDuplicates = (points: RoutePoint[]) =>
+      points.filter((point, index) => {
+        const previousPoint = points[index - 1]
+        return (
+          !previousPoint ||
+          point.x !== previousPoint.x ||
+          point.y !== previousPoint.y ||
+          point.z !== previousPoint.z
+        )
+      })
+
+    if (collapse.mergeWith === "previous") {
+      this.routeSections.splice(this.currentSectionIndex - 1, 2, {
+        startIndex: previousSection.startIndex,
+        endIndex: currentSection.endIndex,
+        z: collapse.targetZ,
+        points: removeConsecutiveDuplicates([
+          ...previousSection.points,
+          ...movedPoints,
+        ]),
+      })
+    } else {
+      this.routeSections.splice(this.currentSectionIndex, 2, {
+        startIndex: currentSection.startIndex,
+        endIndex: nextSection.endIndex,
+        z: collapse.targetZ,
+        points: removeConsecutiveDuplicates([
+          ...movedPoints,
+          ...nextSection.points,
+        ]),
+      })
+    }
+
+    this.multilayerSectionsCollapsed++
+    this.stats.multilayerSectionsCollapsed = this.multilayerSectionsCollapsed
+    this.stats.viasRemovedByMultilayerSectionCollapses =
+      this.multilayerSectionsCollapsed
+    this.currentSectionIndex = Math.max(0, this.currentSectionIndex - 1)
   }
 
   _step() {
@@ -146,9 +436,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const nextSection = this.routeSections[this.currentSectionIndex + 1]
 
     if (prevSection.z !== nextSection.z) {
-      // We only remove vias where there is a middle section that can be
-      // replaced by the layer of adjacent sections, if the adjacent sections
-      // don't have matching layers, a more complex algo is needed
+      const multilayerCollapse = this.findMultilayerSectionCollapse(
+        prevSection,
+        currentSection,
+        nextSection,
+      )
+      if (multilayerCollapse) {
+        this.applyMultilayerSectionCollapse(multilayerCollapse)
+        return
+      }
+
       this.currentSectionIndex++
       return
     }
@@ -176,6 +473,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       return
     }
 
+    const geometryShortcut = this.findGeometryShortcut(
+      prevSection,
+      currentSection,
+      nextSection,
+    )
+    if (geometryShortcut) {
+      this.applyGeometryShortcut(geometryShortcut)
+      return
+    }
+
     this.currentSectionIndex++
     return
   }
@@ -186,6 +493,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       hdRouteSHI: this.hdRouteSHI,
       unsimplifiedRoute: this.unsimplifiedRoute,
       connMap: this.connMap,
+      outline: this.outline,
+      geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+      geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+      enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
     }
   }
 

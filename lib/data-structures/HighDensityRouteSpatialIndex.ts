@@ -239,6 +239,16 @@ export class HighDensityRouteSpatialIndex {
             const route = segmentInfo.parentRoute
             const [p1, p2] = segmentInfo.segment // Original points
 
+            // Copper traces only conflict on the same layer. Vias are checked
+            // separately below because they span every layer they connect.
+            if (
+              segmentStart.z !== segmentEnd.z ||
+              p1.z !== p2.z ||
+              p1.z !== segmentStart.z
+            ) {
+              continue
+            }
+
             // Required separation distance from query centerline to segment edge
             const requiredSeparation = margin + route.traceThickness / 2
             const requiredSeparationSq = requiredSeparation * requiredSeparation

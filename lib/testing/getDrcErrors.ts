@@ -5,7 +5,6 @@ import {
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
   checkViaTraceClearance,
-  dedupePcbDrcErrors,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
@@ -50,6 +49,8 @@ export interface GetDrcErrorsResult {
 export interface GetDrcErrorsOptions {
   viaClearance?: number
   traceClearance?: number
+  includeTraceContinuity?: boolean
+  includeTypedTraceClearance?: boolean
 }
 
 const createDrcConnectivityMap = (
@@ -80,14 +81,20 @@ export const getDrcErrors = (
     connMap,
     minClearance: options.traceClearance,
   })
-  const viaTraceErrors = checkViaTraceClearance(circuitJson, {
-    connMap,
-    minClearance: options.traceClearance,
-  })
-  const padTraceErrors = checkPadTraceClearance(circuitJson, {
-    connMap,
-    minClearance: options.traceClearance,
-  })
+  const includeTypedTraceClearance =
+    options.includeTypedTraceClearance !== false
+  const viaTraceErrors = includeTypedTraceClearance
+    ? checkViaTraceClearance(circuitJson, {
+        connMap,
+        minClearance: options.traceClearance,
+      })
+    : []
+  const padTraceErrors = includeTypedTraceClearance
+    ? checkPadTraceClearance(circuitJson, {
+        connMap,
+        minClearance: options.traceClearance,
+      })
+    : []
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
@@ -99,13 +106,15 @@ export const getDrcErrors = (
     }),
   ]
 
-  const errors = dedupePcbDrcErrors<DrcError>([
+  const errors: DrcError[] = [
     ...traceErrors,
-    ...checkTracesAreContiguous(circuitJson),
+    ...(options.includeTraceContinuity === false
+      ? []
+      : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
-  ])
+  ]
 
   const vias = circuitJson.filter(
     (

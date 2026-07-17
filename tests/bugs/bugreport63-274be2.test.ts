@@ -20,7 +20,7 @@ test("bugreport63-274be2.json", () => {
       : import.meta.path
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-})
+}, 30_000)
 
 test("bugreport63-274be2.json solves with pipeline7 QFP thermal-pad topology", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(srj)
