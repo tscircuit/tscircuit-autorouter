@@ -60,6 +60,7 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { ResidualLocalRerouteSolver } from "../../solvers/ResidualLocalRerouteSolver/ResidualLocalRerouteSolver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -92,6 +93,8 @@ export type Pipeline7PostProcessingEffortConfig = {
   globalDrcMaxIterations: number
   exactGeometryDrcMaxIterations: number
   exactGeometryDrcBroadMaxIterations: number
+  residualLocalRerouteMaxCandidateAttempts: number
+  residualLocalRerouteMaxAcceptedMoves: number
 }
 
 export type Pipeline7BaselineEffortConfig = {
@@ -107,12 +110,17 @@ export const getPipeline7PostProcessingEffortConfig = (
   effort: number,
 ): Pipeline7PostProcessingEffortConfig => {
   const effortScale = Number.isFinite(effort) ? Math.max(1, effort) : 1
+  const effortGrowth = Math.log2(effortScale)
 
   return {
     traceSimplificationPipelineLoops: Math.max(2, Math.ceil(2 * effortScale)),
     globalDrcMaxIterations: Math.max(16, Math.ceil(16 * effortScale)),
     exactGeometryDrcMaxIterations: Math.max(32, Math.ceil(32 * effortScale)),
     exactGeometryDrcBroadMaxIterations: Math.max(8, Math.ceil(8 * effortScale)),
+    residualLocalRerouteMaxCandidateAttempts:
+      effortScale > 1 ? Math.min(512, Math.ceil(32 * effortGrowth)) : 0,
+    residualLocalRerouteMaxAcceptedMoves:
+      effortScale > 1 ? Math.min(8, 1 + Math.ceil(effortGrowth)) : 0,
   }
 }
 
@@ -302,6 +310,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  residualLocalRerouteSolver?: ResidualLocalRerouteSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -807,6 +816,24 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep(
+      "residualLocalRerouteSolver",
+      ResidualLocalRerouteSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.postDrcTraceSimplificationSolver!.simplifiedHdRoutes,
+          drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
+          bounds: cms.srj.bounds,
+          outline: cms.srj.outline,
+          effort: cms.effort,
+          maxCandidateAttempts:
+            cms.postProcessingEffortConfig
+              .residualLocalRerouteMaxCandidateAttempts,
+          maxAcceptedMoves:
+            cms.postProcessingEffortConfig.residualLocalRerouteMaxAcceptedMoves,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -1150,6 +1177,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.residualLocalRerouteSolver?.getOutput() ??
       this.postDrcTraceSimplificationSolver?.simplifiedHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
