@@ -4,25 +4,8 @@ import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { LayerName, mapZToLayerName } from "lib/utils/mapZToLayerName"
-
-type CircuitJsonWireRoutePoint = Extract<
-  PcbTrace["route"][number],
-  { route_type: "wire" }
->
-type CircuitJsonViaRoutePoint = Extract<
-  PcbTrace["route"][number],
-  { route_type: "via" }
->
-
-// The released circuit-json layer union currently ends at inner6. Keep the
-// compatibility assertion at this boundary while inner7/inner8 are added in
-// https://github.com/tscircuit/circuit-json/pull/647.
-const asCircuitJsonLayer = (layer: LayerName) =>
-  layer as CircuitJsonWireRoutePoint["layer"]
-const asCircuitJsonViaLayer = (layer: LayerName) =>
-  layer as CircuitJsonViaRoutePoint["from_layer"]
-const asCircuitJsonLayers = (layers: LayerName[]) => layers as PcbVia["layers"]
+import type { LayerName } from "lib/utils/mapZToLayerName"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -54,7 +37,7 @@ function convertSimplifiedPcbTraceToCircuitJson(
             x: segment.x,
             y: segment.y,
             width: segment.width,
-            layer: asCircuitJsonLayer(segment.layer),
+            layer: segment.layer,
             ...(startPcbPortId ? { start_pcb_port_id: startPcbPortId } : {}),
             ...(endPcbPortId ? { end_pcb_port_id: endPcbPortId } : {}),
           }
@@ -69,8 +52,8 @@ function convertSimplifiedPcbTraceToCircuitJson(
             route_type: "via" as const,
             x: segment.x,
             y: segment.y,
-            from_layer: asCircuitJsonViaLayer(segment.from_layer),
-            to_layer: asCircuitJsonViaLayer(segment.to_layer),
+            from_layer: segment.from_layer,
+            to_layer: segment.to_layer,
           }
         } else {
           // jumper/through_obstacle - skip for now as circuit-json doesn't support these route types
@@ -110,7 +93,7 @@ function convertHdRouteToCircuitJsonTraces(
             x: point.x,
             y: point.y,
             width: point.traceThickness ?? width,
-            layer: asCircuitJsonLayer(mapZToLayerName(point.z, layerCount)),
+            layer: mapZToLayerName(point.z, layerCount),
             ...(isFirstPoint && (point as any).pcb_port_id
               ? { start_pcb_port_id: (point as any).pcb_port_id }
               : {}),
@@ -183,7 +166,7 @@ function convertHdRouteToCircuitJsonTraces(
               x: point.x,
               y: point.y,
               width: point.traceThickness ?? width,
-              layer: asCircuitJsonLayer(mapZToLayerName(point.z, layerCount)),
+              layer: mapZToLayerName(point.z, layerCount),
               ...(isFirstPoint && (point as any).pcb_port_id
                 ? { start_pcb_port_id: (point as any).pcb_port_id }
                 : {}),
@@ -214,7 +197,7 @@ function convertHdRouteToCircuitJsonTraces(
             x: point.x,
             y: point.y,
             width: point.traceThickness ?? width,
-            layer: asCircuitJsonLayer(mapZToLayerName(point.z, layerCount)),
+            layer: mapZToLayerName(point.z, layerCount),
             ...(isLastPoint && (point as any).pcb_port_id
               ? { end_pcb_port_id: (point as any).pcb_port_id }
               : {}),
@@ -469,7 +452,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           hole_offset_y: 0,
           x,
           y,
-          layers: asCircuitJsonLayers(layers),
+          layers,
           ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
         })
         continue
@@ -486,7 +469,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
           x,
           y,
-          layers: asCircuitJsonLayers(layers),
+          layers,
           ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
         })
         continue
@@ -521,7 +504,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       pads.push({
         type: "pcb_smtpad",
         pcb_smtpad_id: id,
-        layer: asCircuitJsonLayer(layers[0]),
+        layer: layers[0],
         shape: "rotated_rect",
         x,
         y,
@@ -589,10 +572,7 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: asCircuitJsonLayers([
-                  segment.from_layer,
-                  segment.to_layer,
-                ]),
+                layers: [segment.from_layer, segment.to_layer],
               })
               viaLocations.add(locationKey)
             }
@@ -628,7 +608,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: asCircuitJsonLayers([fromLayer, toLayer]),
+                layers: [fromLayer, toLayer],
               })
               viaLocations.add(locationKey)
             }
