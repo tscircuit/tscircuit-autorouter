@@ -46,7 +46,10 @@ type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
 type TinyRouteConnection = ConnectionHgWithSimpleRouteConnection
-type TinyHypergraphInput = Omit<HgPortPointPathingSolverParams, "connections"> & {
+type TinyHypergraphInput = Omit<
+  HgPortPointPathingSolverParams,
+  "connections"
+> & {
   connections: TinyRouteConnection[]
 }
 

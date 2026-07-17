@@ -148,7 +148,10 @@ export function buildHyperGraph(params: {
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
   assignableViaObstacles?: Obstacle[]
-}): { graph: HyperGraphHg; connections: ConnectionHgWithSimpleRouteConnection[] } {
+}): {
+  graph: HyperGraphHg
+  connections: ConnectionHgWithSimpleRouteConnection[]
+} {
   const graph: HyperGraphHg = {
     ports: [],
     regions: [],
