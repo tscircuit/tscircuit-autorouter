@@ -118,7 +118,7 @@ export const getPipeline7PostProcessingEffortConfig = (
     exactGeometryDrcMaxIterations: Math.max(32, Math.ceil(32 * effortScale)),
     exactGeometryDrcBroadMaxIterations: Math.max(8, Math.ceil(8 * effortScale)),
     residualLocalRerouteMaxCandidateAttempts:
-      effortScale > 1 ? Math.min(512, Math.ceil(32 * effortGrowth)) : 0,
+      effortScale > 1 ? Math.min(256, Math.ceil(32 * effortGrowth)) : 0,
     residualLocalRerouteMaxAcceptedMoves:
       effortScale > 1 ? Math.min(8, 1 + Math.ceil(effortGrowth)) : 0,
   }
@@ -825,6 +825,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
           bounds: cms.srj.bounds,
           outline: cms.srj.outline,
+          layerCount: cms.srj.layerCount,
           effort: cms.effort,
           maxCandidateAttempts:
             cms.postProcessingEffortConfig

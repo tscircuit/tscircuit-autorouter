@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import {
+  AutoroutingPipelineSolver7_MultiGraph,
+  getPipeline7PostProcessingEffortConfig,
+} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("pipeline7 scales post-processing effort for selected srj18 samples", async () => {
@@ -42,4 +45,9 @@ test("pipeline7 scales post-processing effort for selected srj18 samples", async
       baselineSolver.baselineEffortConfig,
     )
   }
+
+  expect(
+    getPipeline7PostProcessingEffortConfig(1e9)
+      .residualLocalRerouteMaxCandidateAttempts,
+  ).toBe(256)
 })

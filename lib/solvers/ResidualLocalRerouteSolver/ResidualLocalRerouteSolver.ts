@@ -28,16 +28,31 @@ type DoglegStrategy = {
   span: number
 }
 
-type CandidatePlanEntry = DoglegStrategy & {
+type LayerDetourStrategy = {
+  targetZ: number
+  span: number
+}
+
+type CandidateStrategy =
+  | ({ type: "dogleg" } & DoglegStrategy)
+  | ({ type: "layer_detour" } & LayerDetourStrategy)
+
+type CandidateTarget = {
   routeIndex: number
   center: Point
 }
+
+type CandidatePlanEntry = CandidateTarget &
+  CandidateStrategy & {
+    key: string
+  }
 
 export type ResidualLocalRerouteSolverConfig = {
   hdRoutes: readonly HighDensityRoute[]
   drcEvaluator: DrcEvaluator
   bounds: Bounds
   outline?: readonly Point[]
+  layerCount: number
   effort: number
   maxCandidateAttempts: number
   maxAcceptedMoves: number
@@ -68,6 +83,10 @@ const ALL_DOGLEG_STRATEGIES: readonly DoglegStrategy[] = [
   { offset: 0.48, span: 0.7 },
   { offset: -0.64, span: 0.7 },
   { offset: 0.64, span: 0.7 },
+  { offset: -0.08, span: 0.24 },
+  { offset: 0.08, span: 0.24 },
+  { offset: -0.04, span: 0.24 },
+  { offset: 0.04, span: 0.24 },
 ]
 
 const SUPPORTED_ERROR_TYPES = new Set([
@@ -75,6 +94,14 @@ const SUPPORTED_ERROR_TYPES = new Set([
   "pcb_via_trace_clearance_error",
   "pcb_pad_trace_clearance_error",
 ])
+
+const DEFAULT_TRACE_CLEARANCE = 0.1
+const LAYER_DETOUR_SPANS = [0.24, 0.4, 0.7, 1.2] as const
+
+const getCandidateStrategyKey = (strategy: CandidateStrategy): string =>
+  strategy.type === "layer_detour"
+    ? `${strategy.type}:${strategy.targetZ}:${strategy.span}`
+    : `${strategy.type}:${strategy.offset}:${strategy.span}`
 
 const getDrcErrorSeverity = (error: DrcError): number => {
   const message = typeof error.message === "string" ? error.message : ""
@@ -84,8 +111,11 @@ const getDrcErrorSeverity = (error: DrcError): number => {
   const required = Number.parseFloat(
     message.match(/required: (-?\d+(?:\.\d+)?)mm/)?.[1] ?? "",
   )
-  if (Number.isFinite(gap) && Number.isFinite(required)) {
-    return Math.max(0, required - gap)
+  if (Number.isFinite(gap)) {
+    return Math.max(
+      0,
+      (Number.isFinite(required) ? required : DEFAULT_TRACE_CLEARANCE) - gap,
+    )
   }
 
   const clearance = Number.parseFloat(
@@ -301,15 +331,107 @@ const insertDogleg = (
   return true
 }
 
+const insertLayerDetour = (
+  routes: HighDensityRoute[],
+  routeIndex: number,
+  center: Point,
+  strategy: LayerDetourStrategy,
+): boolean => {
+  const route = routes[routeIndex]
+  if (!route) return false
+  let nearest:
+    | { segmentIndex: number; t: number; distance: number; length: number }
+    | undefined
+
+  for (
+    let segmentIndex = 0;
+    segmentIndex + 1 < route.route.length;
+    segmentIndex += 1
+  ) {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    if (
+      start.z !== end.z ||
+      start.z === strategy.targetZ ||
+      start.toNextSegmentType === "through_obstacle" ||
+      start.insideJumperPad ||
+      end.insideJumperPad
+    ) {
+      continue
+    }
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared <= 1e-8) continue
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) / lengthSquared,
+      ),
+    )
+    const projectedPoint = { x: start.x + dx * t, y: start.y + dy * t }
+    const distance = Math.hypot(
+      center.x - projectedPoint.x,
+      center.y - projectedPoint.y,
+    )
+    if (!nearest || distance < nearest.distance) {
+      nearest = {
+        segmentIndex,
+        t,
+        distance,
+        length: Math.sqrt(lengthSquared),
+      }
+    }
+  }
+  if (!nearest) return false
+
+  const start = route.route[nearest.segmentIndex]!
+  const end = route.route[nearest.segmentIndex + 1]!
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const halfSpanT = Math.min(0.48, strategy.span / nearest.length)
+  const beforeT = Math.max(0.01, nearest.t - halfSpanT)
+  const afterT = Math.min(0.99, nearest.t + halfSpanT)
+  if (afterT - beforeT < 0.02) return false
+
+  const {
+    pcb_port_id: _pcbPortId,
+    insideJumperPad: _insideJumperPad,
+    toNextSegmentType: _toNextSegmentType,
+    ...insertedPointFields
+  } = start
+  const beforePoint = {
+    ...insertedPointFields,
+    x: start.x + dx * beforeT,
+    y: start.y + dy * beforeT,
+  }
+  const afterPoint = {
+    ...insertedPointFields,
+    x: start.x + dx * afterT,
+    y: start.y + dy * afterT,
+  }
+  route.route.splice(
+    nearest.segmentIndex + 1,
+    0,
+    beforePoint,
+    { ...beforePoint, z: strategy.targetZ },
+    { ...afterPoint, z: strategy.targetZ },
+    afterPoint,
+  )
+  return true
+}
+
 /**
- * Searches bounded local doglegs around residual, location-aware DRC errors.
- * Every candidate is validated against the complete DRC snapshot and accepted
- * only when issue count or severity strictly improves.
+ * Searches bounded local doglegs and layer detours around residual,
+ * location-aware DRC errors. Every candidate is validated against the complete
+ * DRC snapshot and accepted only when issue count or severity strictly
+ * improves.
  */
 export class ResidualLocalRerouteSolver extends BaseSolver {
   private readonly inputHdRoutes: readonly HighDensityRoute[]
   private readonly boardPolygon: readonly Point[]
-  private readonly strategies: readonly DoglegStrategy[]
+  private readonly strategies: readonly CandidateStrategy[]
   private bestRoutes: HighDensityRoute[]
   private bestSnapshot?: DrcSnapshot
   private candidatePlan: CandidatePlanEntry[] = []
@@ -317,11 +439,16 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private candidateAttempts = 0
   private acceptedMoves = 0
   private sweepsStarted = 0
+  private currentTargetCount = 0
+  private readonly attemptedCandidateKeys = new Set<string>()
 
   constructor(private readonly config: ResidualLocalRerouteSolverConfig) {
     super()
     if (!Number.isFinite(config.effort) || config.effort <= 0) {
       throw new Error("effort must be a positive finite number")
+    }
+    if (!Number.isInteger(config.layerCount) || config.layerCount < 1) {
+      throw new Error("layerCount must be a positive integer")
     }
     if (
       !Number.isInteger(config.maxCandidateAttempts) ||
@@ -340,9 +467,23 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     this.boardPolygon = getBoardPolygon(config.bounds, config.outline)
     const strategyLimit = Math.min(
       ALL_DOGLEG_STRATEGIES.length,
-      2 + Math.ceil(4 * Math.log2(Math.max(1, config.effort))),
+      2 + Math.ceil(4.5 * Math.log2(Math.max(1, config.effort))),
     )
-    this.strategies = ALL_DOGLEG_STRATEGIES.slice(0, strategyLimit)
+    const layerDetourStrategies: CandidateStrategy[] = Array.from(
+      { length: config.layerCount },
+      (_, targetZ) => targetZ,
+    ).flatMap((targetZ) =>
+      LAYER_DETOUR_SPANS.map((span) => ({
+        type: "layer_detour" as const,
+        targetZ,
+        span,
+      })),
+    )
+    const doglegStrategies: CandidateStrategy[] = ALL_DOGLEG_STRATEGIES.slice(
+      0,
+      strategyLimit,
+    ).map((strategy) => ({ type: "dogleg", ...strategy }))
+    this.strategies = [...layerDetourStrategies, ...doglegStrategies]
     this.MAX_ITERATIONS =
       (config.maxCandidateAttempts + 1) * (config.maxAcceptedMoves + 1) + 10
   }
@@ -390,7 +531,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       throw new Error("Cannot build reroute plan before DRC evaluation")
     }
     const routeIndexByTraceId = getTraceRouteIndexById(this.bestRoutes)
-    const plan: CandidatePlanEntry[] = []
+    const targets: CandidateTarget[] = []
+    const targetKeys = new Set<string>()
 
     snapshot.errors.forEach((error) => {
       if (!SUPPORTED_ERROR_TYPES.has(String(error.type))) return
@@ -400,14 +542,29 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         .map((traceId) => routeIndexByTraceId.get(traceId))
         .filter((routeIndex): routeIndex is number => routeIndex !== undefined)
       for (const routeIndex of new Set(routeIndexes)) {
-        for (const strategy of this.strategies) {
-          plan.push({ routeIndex, center, ...strategy })
-        }
+        const targetKey = `${routeIndex}:${center.x.toFixed(4)}:${center.y.toFixed(4)}`
+        if (targetKeys.has(targetKey)) continue
+        targetKeys.add(targetKey)
+        targets.push({ routeIndex, center })
       }
     })
 
+    // Breadth-first ordering gives every distinct violation one useful attempt
+    // before spending more of the bounded budget on variants of an early
+    // error. This matters on large boards where a full strategy sweep is much
+    // larger than maxCandidateAttempts.
+    const plan = this.strategies.flatMap((strategy) =>
+      targets.flatMap((target) => {
+        const key = `${target.routeIndex}:${target.center.x.toFixed(4)}:${target.center.y.toFixed(4)}:${getCandidateStrategyKey(strategy)}`
+        return this.attemptedCandidateKeys.has(key)
+          ? []
+          : [{ ...target, ...strategy, key }]
+      }),
+    )
+
     this.candidatePlan = plan
     this.candidatePlanIndex = 0
+    this.currentTargetCount = targets.length
     this.sweepsStarted += 1
   }
 
@@ -427,6 +584,9 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       residualLocalRerouteAcceptedMoves: this.acceptedMoves,
       residualLocalRerouteSweepsStarted: this.sweepsStarted,
       residualLocalRerouteStrategyCount: this.strategies.length,
+      residualLocalRerouteTargetCount: this.currentTargetCount,
+      residualLocalRerouteUniqueCandidatesVisited:
+        this.attemptedCandidateKeys.size,
       residualLocalRerouteStoppedAfterNoImprovement:
         params.stoppedAfterNoImprovement,
       residualLocalRerouteHitCandidateLimit: params.hitCandidateLimit ?? false,
@@ -473,15 +633,24 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       return
     }
     this.candidatePlanIndex += 1
+    this.attemptedCandidateKeys.add(candidatePlanEntry.key)
 
     const candidateRoutes = structuredClone(this.bestRoutes)
-    const changed = insertDogleg(
-      candidateRoutes,
-      candidatePlanEntry.routeIndex,
-      candidatePlanEntry.center,
-      candidatePlanEntry,
-      this.boardPolygon,
-    )
+    const changed =
+      candidatePlanEntry.type === "layer_detour"
+        ? insertLayerDetour(
+            candidateRoutes,
+            candidatePlanEntry.routeIndex,
+            candidatePlanEntry.center,
+            candidatePlanEntry,
+          )
+        : insertDogleg(
+            candidateRoutes,
+            candidatePlanEntry.routeIndex,
+            candidatePlanEntry.center,
+            candidatePlanEntry,
+            this.boardPolygon,
+          )
     if (!changed) return
 
     this.candidateAttempts += 1
