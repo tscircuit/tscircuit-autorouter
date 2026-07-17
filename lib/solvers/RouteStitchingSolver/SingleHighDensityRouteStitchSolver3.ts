@@ -16,6 +16,7 @@ const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
+type StitchTerminal = Point3 & { pcb_port_id?: string }
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -47,20 +48,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   mergedHdRoute!: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
 
   constructor(opts: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: StitchTerminal
+    end: StitchTerminal
     colorMap?: Record<string, string>
     defaultTraceThickness?: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
+    preserveTerminalPcbPortIds?: boolean
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
@@ -94,6 +96,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       this.mergedHdRoute = {
         connectionName: opts.connectionName,
+        ...(opts.preserveTerminalPcbPortIds && opts.start.pcb_port_id
+          ? { startPcbPortId: opts.start.pcb_port_id }
+          : {}),
+        ...(opts.preserveTerminalPcbPortIds && opts.end.pcb_port_id
+          ? { endPcbPortId: opts.end.pcb_port_id }
+          : {}),
         rootConnectionName: canonicalHdRoutes[0]?.rootConnectionName,
         route: routePoints,
         vias,
@@ -103,6 +111,48 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
       this.solved = true
       return
+    }
+
+    const expectedPcbPortIds = new Set(
+      (opts.preserveTerminalPcbPortIds
+        ? [opts.start.pcb_port_id, opts.end.pcb_port_id]
+        : []
+      ).filter(
+        (pcbPortId): pcbPortId is string => pcbPortId !== undefined,
+      ),
+    )
+    if (
+      opts.preserveTerminalPcbPortIds &&
+      opts.start.pcb_port_id &&
+      opts.start.pcb_port_id === opts.end.pcb_port_id
+    ) {
+      throw new Error(
+        `SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal "${opts.start.pcb_port_id}" for "${opts.connectionName}"`,
+      )
+    }
+
+    const taggedPcbPortIds = canonicalHdRoutes
+      .flatMap((route) => [route.startPcbPortId, route.endPcbPortId])
+      .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
+
+    if (expectedPcbPortIds.size > 0) {
+      for (const taggedPcbPortId of taggedPcbPortIds) {
+        if (!expectedPcbPortIds.has(taggedPcbPortId)) {
+          throw new Error(
+            `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}"`,
+          )
+        }
+      }
+      for (const expectedPcbPortId of expectedPcbPortIds) {
+        const matchCount = taggedPcbPortIds.filter(
+          (pcbPortId) => pcbPortId === expectedPcbPortId,
+        ).length
+        if (matchCount > 1) {
+          throw new Error(
+            `SingleHighDensityRouteStitchSolver3 found PCB terminal "${expectedPcbPortId}" on multiple route endpoints of "${opts.connectionName}"`,
+          )
+        }
+      }
     }
 
     let bestDist = Infinity
@@ -167,9 +217,28 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
         ? firstRouteFirstPoint
         : firstRouteLastPoint
+    const closestFirstRoutePcbPortId =
+      closestFirstRoutePoint === firstRouteFirstPoint
+        ? firstRoute.startPcbPortId
+        : firstRoute.endPcbPortId
+    if (
+      closestFirstRoutePcbPortId &&
+      this.start.pcb_port_id &&
+      closestFirstRoutePcbPortId !== this.start.pcb_port_id
+    ) {
+      throw new Error(
+        `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
+      )
+    }
 
     this.mergedHdRoute = {
       connectionName: opts.connectionName,
+      ...(opts.preserveTerminalPcbPortIds && this.start.pcb_port_id
+        ? { startPcbPortId: this.start.pcb_port_id }
+        : {}),
+      ...(opts.preserveTerminalPcbPortIds && this.end.pcb_port_id
+        ? { endPcbPortId: this.end.pcb_port_id }
+        : {}),
       rootConnectionName: firstRoute.rootConnectionName,
       route: [
         {

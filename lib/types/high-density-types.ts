@@ -2,6 +2,7 @@ export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
   portPointId?: string
+  pcb_port_id?: string
   x: number
   y: number
   z: number
@@ -36,6 +37,9 @@ export type NodeWithPortPoints = {
 export type HighDensityIntraNodeRoute = {
   connectionName: string
   rootConnectionName?: string
+  /** Terminal identities in route order, kept inert until terminal locking. */
+  startPcbPortId?: string
+  endPcbPortId?: string
   traceThickness: number
   viaDiameter: number
   route: Array<{
