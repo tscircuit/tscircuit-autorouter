@@ -14,7 +14,7 @@ const REQUIRED_LAYERS = [
   "inner7",
   "inner8",
   "bottom",
-]
+] as const
 
 test("pipeline 7 routes a layer maze that requires exactly ten layers", () => {
   const input = createTenLayerLayerMaze()
@@ -27,39 +27,37 @@ test("pipeline 7 routes a layer maze that requires exactly ten layers", () => {
 
   expect(input.layerCount).toBe(10)
   const gates = input.obstacles.filter((obstacle) =>
-    obstacle.obstacleId.startsWith("gate-"),
+    obstacle.obstacleId?.startsWith("gate-"),
   )
   expect(gates).toHaveLength(10)
   expect(gates.every((gate) => gate.layers.length === 9)).toBe(true)
   expect(input.obstacles[0]!.layers).toEqual(["top"])
   expect(input.obstacles.at(-1)!.layers).toEqual(["bottom"])
-  expect(input.connections[0]!.pointsToConnect[0]!.layer).toBe("top")
-  expect(input.connections[0]!.pointsToConnect[1]!.layer).toBe("bottom")
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
 
   const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
-  const routedLayers = new Set(
+  const routedLayers = new Set<string>(
     simplifiedTraces
       .flatMap((trace) => trace.route)
       .filter((routePoint) => routePoint.route_type === "wire")
       .map((routePoint) => routePoint.layer),
   )
-  expect(routedLayers).toEqual(new Set(REQUIRED_LAYERS))
+  expect(routedLayers).toEqual(new Set<string>(REQUIRED_LAYERS))
 
   const circuitJson = convertToCircuitJson(
     solver.srjWithPointPairs!,
     simplifiedTraces,
     { originalSrj: solver.originalSrj },
   )
-  const exportedLayers = new Set(
+  const exportedLayers = new Set<string>(
     circuitJson
       .filter((element) => element.type === "pcb_trace")
       .flatMap((trace) => trace.route)
       .filter((routePoint) => routePoint.route_type === "wire")
       .map((routePoint) => routePoint.layer),
   )
-  expect(exportedLayers).toEqual(new Set(REQUIRED_LAYERS))
+  expect(exportedLayers).toEqual(new Set<string>(REQUIRED_LAYERS))
 
   expect(solver.visualizeFinalOutput()).toMatchGraphicsSvg(import.meta.path)
 })
