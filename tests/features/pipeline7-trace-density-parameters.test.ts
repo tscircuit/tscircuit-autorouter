@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 
-const getPortPointPathingParams = (defaultObstacleMargin?: number) => {
+const getPortPointPathingParams = (
+  defaultObstacleMargin?: number,
+): HgPortPointPathingSolverParams => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -18,13 +21,13 @@ const getPortPointPathingParams = (defaultObstacleMargin?: number) => {
     throw new Error("Pipeline7 is missing the portPointPathingSolver stage")
   }
 
-  const [params] = portPointPathingStep.getConstructorParams({
-    ...solver,
+  const solverContext = Object.assign(solver, {
     capacityNodes: [],
     srjWithPointPairs: solver.srj,
     availableSegmentPointSolver: { getOutput: () => [] },
-  } as AutoroutingPipelineSolver7_MultiGraph)
-  return params
+  })
+  const [params] = portPointPathingStep.getConstructorParams(solverContext)
+  return params as HgPortPointPathingSolverParams
 }
 
 test("Pipeline7 passes trace density dimensions to tiny-hypergraph", () => {
