@@ -6,6 +6,9 @@ An MIT-licensed full-pipeline PCB autorouter for node.js and TypeScript projects
 
 Want to understand how the autorouter works? Read this [blog post](https://blog.autorouting.com/p/hypergraph-autorouting)
 
+For Pipeline 7 differential-pair routing, see
+[`docs/length-matching-pipeline7.md`](docs/length-matching-pipeline7.md).
+
 ## How to file a bug report
 
 1. You should have [created a bug report via the tscircuit errors tab](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
