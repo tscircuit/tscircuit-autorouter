@@ -54,10 +54,18 @@ type TerminalSnapStrategy = {
   type: "terminal_snap"
 }
 
+type ObstacleDetourStrategy = {
+  type: "obstacle_detour"
+  side: "top" | "right" | "bottom" | "left"
+  margin: number
+}
+
 type CandidateStrategy =
   | TerminalSnapStrategy
+  | ObstacleDetourStrategy
   | ({ type: "dogleg" } & DoglegStrategy)
   | ({ type: "directed_dogleg" } & DirectedDoglegStrategy)
+  | ({ type: "directed_pair_dogleg" } & DirectedDoglegStrategy)
   | ({ type: "directed_pair_shift" } & DirectedSegmentShiftStrategy)
   | ({ type: "directed_segment_shift" } & DirectedSegmentShiftStrategy)
   | ({ type: "directed_via_shift" } & DirectedSegmentShiftStrategy)
@@ -75,6 +83,7 @@ type CandidateTarget = {
   viaRouteIndexes?: readonly number[]
   terminalPoint?: Point
   terminalPortId?: string
+  obstacle?: RoutingObstacle
 }
 
 type RouteProjection = Point & { z: number }
@@ -83,6 +92,7 @@ type MoveData = {
   direction?: Point
   otherRouteIndex?: number
   sourceZ?: number
+  obstacle?: RoutingObstacle
 }
 
 type CandidatePlanEntry = CandidateTarget &
@@ -161,10 +171,16 @@ const DIRECTED_SEGMENT_SHIFT_STRATEGIES: readonly DirectedSegmentShiftStrategy[]
 
 const getCandidateStrategyKey = (strategy: CandidateStrategy): string => {
   if (strategy.type === "terminal_snap") return strategy.type
+  if (strategy.type === "obstacle_detour") {
+    return `${strategy.type}:${strategy.side}:${strategy.margin}`
+  }
   if (strategy.type === "layer_detour") {
     return `${strategy.type}:${strategy.scope}:${strategy.targetZ}:${strategy.span}`
   }
-  if (strategy.type === "directed_dogleg") {
+  if (
+    strategy.type === "directed_dogleg" ||
+    strategy.type === "directed_pair_dogleg"
+  ) {
     return `${strategy.type}:${strategy.distance}:${strategy.span}`
   }
   if (
@@ -185,6 +201,13 @@ const getCandidatePriority = (
     if (strategy.type === "terminal_snap") return 0
     return 1
   }
+  if (target.obstacle) {
+    if (strategy.type === "obstacle_detour") return 0
+    if (strategy.type === "directed_segment_shift") return 1
+    if (strategy.type === "directed_dogleg") return 2
+    if (strategy.type === "layer_detour") return 3
+    return 4
+  }
   if (target.viaCenter && target.viaRouteIndexes?.length) {
     if (strategy.type === "directed_via_shift") return 0
     if (strategy.type === "directed_segment_shift") return 1
@@ -194,6 +217,7 @@ const getCandidatePriority = (
   }
   if (target.otherRouteIndex !== undefined) {
     if (strategy.type === "directed_pair_shift") return 0
+    if (strategy.type === "directed_pair_dogleg") return 0.5
     if (strategy.type === "directed_segment_shift") return 1
     if (strategy.type === "directed_dogleg") return 2
     if (strategy.type === "layer_detour") return 3
@@ -214,6 +238,10 @@ const getCandidateStrategyVariantRank = (
   strategy: CandidateStrategy,
 ): number => {
   if (strategy.type === "terminal_snap") return 0
+  if (strategy.type === "obstacle_detour") {
+    const sideRank = ["top", "right", "bottom", "left"].indexOf(strategy.side)
+    return strategy.margin * 100 + sideRank
+  }
   if (strategy.type === "layer_detour") {
     const spanIndex = LAYER_DETOUR_SPANS.findIndex(
       (candidateSpan) => candidateSpan === strategy.span,
@@ -232,7 +260,9 @@ const getCandidateStrategyVariantRank = (
       ? distance - desiredDistance
       : 100 + desiredDistance - distance
   const spanRank =
-    strategy.type === "dogleg" || strategy.type === "directed_dogleg"
+    strategy.type === "dogleg" ||
+    strategy.type === "directed_dogleg" ||
+    strategy.type === "directed_pair_dogleg"
       ? strategy.span / 100
       : 0
   return distanceRank + spanRank
@@ -291,6 +321,11 @@ const isTraceViaOverlapError = (error: DrcError): boolean =>
   error.type === "pcb_trace_error" &&
   typeof error.message === "string" &&
   error.message.includes("overlaps with pcb_via")
+
+const isTracePadOverlapError = (error: DrcError): boolean =>
+  error.type === "pcb_trace_error" &&
+  typeof error.message === "string" &&
+  error.message.includes("overlaps with pcb_smtpad")
 
 const getNearestTransitionPoint = (
   center: Point,
@@ -566,6 +601,21 @@ const getViaRouteIndexes = (
   )
 }
 
+const getPointToObstacleDistance = (
+  point: Point,
+  obstacle: RoutingObstacle,
+): number => {
+  const dx = Math.max(
+    0,
+    Math.abs(point.x - obstacle.center.x) - obstacle.width / 2,
+  )
+  const dy = Math.max(
+    0,
+    Math.abs(point.y - obstacle.center.y) - obstacle.height / 2,
+  )
+  return Math.hypot(dx, dy)
+}
+
 const getMoveData = (
   error: DrcError,
   center: Point,
@@ -602,16 +652,27 @@ const getMoveData = (
   routePoint ??= getNearestRouteProjection(route, center)
   if (!routePoint) return {}
   obstaclePoint ??= getDrcPointField(error, "pad_center")
-  if (!obstaclePoint && typeof error.message === "string") {
-    const obstaclePortId = error.message.match(
+  let routingObstacle: RoutingObstacle | undefined
+  if (isTracePadOverlapError(error)) {
+    const obstaclePortId = String(error.message).match(
       /pcb_port\[#(pcb_port_[^\]]+)\]/,
     )?.[1]
-    const obstacle = obstaclePortId
-      ? obstacles.find((candidate) =>
-          candidate.connectedTo?.includes(obstaclePortId),
-        )
+    routingObstacle = obstaclePortId
+      ? obstacles
+          .filter((candidate) =>
+            candidate.connectedTo?.includes(obstaclePortId),
+          )
+          .sort(
+            (a, b) =>
+              getPointToObstacleDistance(center, a) -
+                getPointToObstacleDistance(center, b) ||
+              Math.hypot(center.x - a.center.x, center.y - a.center.y) -
+                Math.hypot(center.x - b.center.x, center.y - b.center.y),
+          )[0]
       : undefined
-    if (obstacle) obstaclePoint = obstacle.center
+    if (!obstaclePoint && routingObstacle) {
+      obstaclePoint = routingObstacle.center
+    }
   }
   if (
     !obstaclePoint &&
@@ -638,7 +699,164 @@ const getMoveData = (
     direction: length > 1e-6 ? { x: dx / length, y: dy / length } : undefined,
     otherRouteIndex: pairedRouteIndex,
     sourceZ: routePoint.z,
+    obstacle: routingObstacle,
   }
+}
+
+const insertObstacleDetour = (
+  routes: HighDensityRoute[],
+  routeIndex: number,
+  center: Point,
+  obstacle: RoutingObstacle,
+  strategy: ObstacleDetourStrategy,
+  boardPolygon: readonly Point[],
+  sourceZ?: number,
+): boolean => {
+  const route = routes[routeIndex]
+  if (!route) return false
+
+  let nearest:
+    | { segmentIndex: number; distance: number; sourceZ: number }
+    | undefined
+  for (
+    let segmentIndex = 0;
+    segmentIndex + 1 < route.route.length;
+    segmentIndex += 1
+  ) {
+    const start = route.route[segmentIndex]!
+    const end = route.route[segmentIndex + 1]!
+    if (
+      start.z !== end.z ||
+      (sourceZ !== undefined && start.z !== sourceZ) ||
+      start.toNextSegmentType === "through_obstacle" ||
+      start.insideJumperPad ||
+      end.insideJumperPad
+    ) {
+      continue
+    }
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared <= 1e-8) continue
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) / lengthSquared,
+      ),
+    )
+    const projected = { x: start.x + dx * t, y: start.y + dy * t }
+    const distance = Math.hypot(center.x - projected.x, center.y - projected.y)
+    if (!nearest || distance < nearest.distance) {
+      nearest = { segmentIndex, distance, sourceZ: start.z }
+    }
+  }
+  if (!nearest) return false
+
+  const traceRadius = (route.traceThickness ?? 0.1) / 2
+  const clearance = traceRadius + strategy.margin
+  const minX = obstacle.center.x - obstacle.width / 2 - clearance
+  const maxX = obstacle.center.x + obstacle.width / 2 + clearance
+  const minY = obstacle.center.y - obstacle.height / 2 - clearance
+  const maxY = obstacle.center.y + obstacle.height / 2 + clearance
+  const isInsideExpandedObstacle = (point: Point): boolean =>
+    point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY
+
+  let beforeIndex = nearest.segmentIndex
+  while (
+    beforeIndex > 0 &&
+    isInsideExpandedObstacle(route.route[beforeIndex]!)
+  ) {
+    beforeIndex -= 1
+  }
+  let afterIndex = nearest.segmentIndex + 1
+  while (
+    afterIndex + 1 < route.route.length &&
+    isInsideExpandedObstacle(route.route[afterIndex]!)
+  ) {
+    afterIndex += 1
+  }
+
+  const before = route.route[beforeIndex]!
+  const after = route.route[afterIndex]!
+  if (
+    isInsideExpandedObstacle(before) ||
+    isInsideExpandedObstacle(after) ||
+    before.z !== nearest.sourceZ ||
+    after.z !== nearest.sourceZ
+  ) {
+    return false
+  }
+  const removedPoints = route.route.slice(beforeIndex + 1, afterIndex)
+  if (
+    removedPoints.some(
+      (point) =>
+        point.z !== nearest.sourceZ ||
+        point.pcb_port_id ||
+        point.insideJumperPad ||
+        point.toNextSegmentType === "through_obstacle",
+    ) ||
+    route.vias.some((via) =>
+      removedPoints.some(
+        (point) => Math.hypot(via.x - point.x, via.y - point.y) <= 1e-6,
+      ),
+    )
+  ) {
+    return false
+  }
+
+  const boundaryPoints: Point[] =
+    strategy.side === "top"
+      ? [
+          { x: before.x, y: maxY },
+          { x: after.x, y: maxY },
+        ]
+      : strategy.side === "right"
+        ? [
+            { x: maxX, y: before.y },
+            { x: maxX, y: after.y },
+          ]
+        : strategy.side === "bottom"
+          ? [
+              { x: before.x, y: minY },
+              { x: after.x, y: minY },
+            ]
+          : [
+              { x: minX, y: before.y },
+              { x: minX, y: after.y },
+            ]
+  const doglegPoints = [before, ...boundaryPoints, after]
+  if (!doesDoglegStayInsideBoard(doglegPoints, boardPolygon, traceRadius)) {
+    return false
+  }
+
+  const {
+    pcb_port_id: _pcbPortId,
+    insideJumperPad: _insideJumperPad,
+    toNextSegmentType: _toNextSegmentType,
+    ...insertedPointFields
+  } = before
+  const replacement = boundaryPoints
+    .map((point) => ({
+      ...insertedPointFields,
+      ...point,
+      z: nearest.sourceZ,
+    }))
+    .filter(
+      (point, index, points) =>
+        Math.hypot(
+          point.x - (index === 0 ? before : points[index - 1]!).x,
+          point.y - (index === 0 ? before : points[index - 1]!).y,
+        ) > 1e-6 &&
+        (index + 1 < points.length ||
+          Math.hypot(point.x - after.x, point.y - after.y) > 1e-6),
+    )
+  route.route.splice(
+    beforeIndex + 1,
+    afterIndex - beforeIndex - 1,
+    ...replacement,
+  )
+  return replacement.length > 0
 }
 
 const insertDogleg = (
@@ -1320,15 +1538,19 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private readonly strategies: readonly CandidateStrategy[]
   private bestRoutes: HighDensityRoute[]
   private bestSnapshot?: DrcSnapshot
+  private initialIssueCount = Number.POSITIVE_INFINITY
   private candidatePlan: CandidatePlanEntry[] = []
   private candidatePlanIndex = 0
   private candidateAttempts = 0
   private acceptedMoves = 0
+  private acceptedCountReducingMoves = 0
+  private acceptedRefinementMoves = 0
   private sweepsStarted = 0
   private currentTargetCount = 0
   private readonly attemptedCandidateKeys = new Set<string>()
   private readonly routeRevisionByIndex: number[]
   private readonly maxCandidatesBeforeRefinement: number
+  private readonly maxTotalAcceptedMoves: number
   private candidateAttemptsSinceAccepted = 0
   private pendingCandidate?: {
     routes: HighDensityRoute[]
@@ -1366,6 +1588,12 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         config.maxCandidateAttempts / Math.max(1, config.maxAcceptedMoves),
       ),
     )
+    const extraAcceptedMoveAllowance = Math.min(
+      4,
+      Math.max(0, Math.ceil(Math.log2(config.effort))),
+    )
+    this.maxTotalAcceptedMoves =
+      config.maxAcceptedMoves + extraAcceptedMoveAllowance
     const strategyLimit = Math.min(
       ALL_DOGLEG_STRATEGIES.length,
       2 + Math.ceil(4.5 * Math.log2(Math.max(1, config.effort))),
@@ -1392,6 +1620,11 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         type: "directed_dogleg",
         ...strategy,
       }))
+    const directedPairDoglegStrategies: CandidateStrategy[] =
+      DIRECTED_DOGLEG_STRATEGIES.map((strategy) => ({
+        type: "directed_pair_dogleg",
+        ...strategy,
+      }))
     const directedSegmentShiftStrategies: CandidateStrategy[] =
       DIRECTED_SEGMENT_SHIFT_STRATEGIES.map((strategy) => ({
         type: "directed_segment_shift",
@@ -1407,17 +1640,28 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         type: "directed_via_shift",
         ...strategy,
       }))
+    const obstacleDetourMargins = config.effort > 1 ? [0.1] : []
+    const obstacleDetourStrategies: CandidateStrategy[] =
+      obstacleDetourMargins.flatMap((margin) =>
+        (["top", "right", "bottom", "left"] as const).map((side) => ({
+          type: "obstacle_detour" as const,
+          side,
+          margin,
+        })),
+      )
     this.strategies = [
       { type: "terminal_snap" },
       ...directedViaShiftStrategies,
+      ...obstacleDetourStrategies,
       ...layerDetourStrategies,
       ...directedPairShiftStrategies,
+      ...directedPairDoglegStrategies,
       ...directedSegmentShiftStrategies,
       ...directedDoglegStrategies,
       ...doglegStrategies,
     ]
     this.MAX_ITERATIONS =
-      config.maxCandidateAttempts + config.maxAcceptedMoves + 10
+      config.maxCandidateAttempts + this.maxTotalAcceptedMoves + 10
   }
 
   override getSolverName(): string {
@@ -1538,6 +1782,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
             : undefined,
           terminalPoint,
           terminalPortId,
+          obstacle: moveData.obstacle,
         })
       }
     })
@@ -1554,8 +1799,20 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
           if (strategy.type === "terminal_snap" && !target.terminalPoint) {
             return []
           }
+          if (strategy.type === "obstacle_detour" && !target.obstacle) {
+            return []
+          }
+          if (
+            (strategy.type === "obstacle_detour" ||
+              strategy.type === "directed_pair_dogleg") &&
+            this.initialIssueCount >
+              Math.max(2, Math.floor(this.config.maxAcceptedMoves / 2))
+          ) {
+            return []
+          }
           if (
             (strategy.type === "directed_dogleg" ||
+              strategy.type === "directed_pair_dogleg" ||
               strategy.type === "directed_segment_shift" ||
               strategy.type === "directed_pair_shift" ||
               strategy.type === "directed_via_shift") &&
@@ -1570,7 +1827,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
             return []
           }
           if (
-            strategy.type === "directed_pair_shift" &&
+            (strategy.type === "directed_pair_shift" ||
+              strategy.type === "directed_pair_dogleg") &&
             (target.otherRouteIndex === undefined ||
               target.routeIndex > target.otherRouteIndex)
           ) {
@@ -1579,7 +1837,11 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
           const affectedRouteIndexes =
             strategy.type === "directed_via_shift"
               ? (target.viaRouteIndexes ?? [])
-              : [target.routeIndex]
+              : (strategy.type === "directed_pair_shift" ||
+                    strategy.type === "directed_pair_dogleg") &&
+                  target.otherRouteIndex !== undefined
+                ? [target.routeIndex, target.otherRouteIndex]
+                : [target.routeIndex]
           const routeRevisions = affectedRouteIndexes
             .map(
               (routeIndex) =>
@@ -1620,6 +1882,9 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       residualLocalRerouteFinalDrcIssueScore: this.bestSnapshot?.issueScore,
       residualLocalRerouteCandidateAttempts: this.candidateAttempts,
       residualLocalRerouteAcceptedMoves: this.acceptedMoves,
+      residualLocalRerouteAcceptedCountReducingMoves:
+        this.acceptedCountReducingMoves,
+      residualLocalRerouteAcceptedRefinementMoves: this.acceptedRefinementMoves,
       residualLocalRerouteSweepsStarted: this.sweepsStarted,
       residualLocalRerouteStrategyCount: this.strategies.length,
       residualLocalRerouteTargetCount: this.currentTargetCount,
@@ -1633,6 +1898,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       residualLocalRerouteMaxCandidateAttempts:
         this.config.maxCandidateAttempts,
       residualLocalRerouteMaxAcceptedMoves: this.config.maxAcceptedMoves,
+      residualLocalRerouteMaxTotalAcceptedMoves: this.maxTotalAcceptedMoves,
     }
     this.progress = 1
     this.solved = true
@@ -1654,6 +1920,19 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         candidatePlanEntry.terminalPoint,
         candidatePlanEntry.terminalPortId,
         this.boardPolygon,
+      )
+    } else if (
+      candidatePlanEntry.type === "obstacle_detour" &&
+      candidatePlanEntry.obstacle
+    ) {
+      changed = insertObstacleDetour(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        candidatePlanEntry.obstacle,
+        candidatePlanEntry,
+        this.boardPolygon,
+        candidatePlanEntry.sourceZ,
       )
     } else if (
       candidatePlanEntry.type === "directed_via_shift" &&
@@ -1715,6 +1994,34 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       )
       changed = movedPrimary && movedOther
     } else if (
+      candidatePlanEntry.type === "directed_pair_dogleg" &&
+      candidatePlanEntry.moveDirection &&
+      candidatePlanEntry.otherRouteIndex !== undefined
+    ) {
+      const halfDistance = candidatePlanEntry.distance / 2
+      const movedPrimary = insertDogleg(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        { offset: halfDistance, span: candidatePlanEntry.span },
+        this.boardPolygon,
+        candidatePlanEntry.moveDirection,
+        candidatePlanEntry.sourceZ,
+      )
+      const movedOther = insertDogleg(
+        candidateRoutes,
+        candidatePlanEntry.otherRouteIndex,
+        candidatePlanEntry.center,
+        { offset: halfDistance, span: candidatePlanEntry.span },
+        this.boardPolygon,
+        {
+          x: -candidatePlanEntry.moveDirection.x,
+          y: -candidatePlanEntry.moveDirection.y,
+        },
+        candidatePlanEntry.sourceZ,
+      )
+      changed = movedPrimary && movedOther
+    } else if (
       candidatePlanEntry.type === "directed_segment_shift" &&
       candidatePlanEntry.moveDirection
     ) {
@@ -1756,9 +2063,14 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     snapshot: DrcSnapshot
     entry: CandidatePlanEntry
   }): boolean {
+    const reducedIssueCount =
+      candidate.snapshot.issueCount <
+      (this.bestSnapshot?.issueCount ?? Infinity)
     this.bestRoutes = candidate.routes
     this.bestSnapshot = candidate.snapshot
     this.acceptedMoves += 1
+    if (reducedIssueCount) this.acceptedCountReducingMoves += 1
+    else this.acceptedRefinementMoves += 1
     this.candidateAttemptsSinceAccepted = 0
     this.pendingCandidate = undefined
     const changedRouteIndexes =
@@ -1770,7 +2082,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         (this.routeRevisionByIndex[routeIndex] ?? 0) + 1
     }
     if (
-      candidate.entry.type === "directed_pair_shift" &&
+      (candidate.entry.type === "directed_pair_shift" ||
+        candidate.entry.type === "directed_pair_dogleg") &&
       candidate.entry.otherRouteIndex !== undefined
     ) {
       this.routeRevisionByIndex[candidate.entry.otherRouteIndex] =
@@ -1780,7 +2093,10 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       this.finish({ stoppedAfterNoImprovement: false })
       return true
     }
-    if (this.acceptedMoves >= this.config.maxAcceptedMoves) {
+    if (
+      this.acceptedCountReducingMoves >= this.config.maxAcceptedMoves ||
+      this.acceptedMoves >= this.maxTotalAcceptedMoves
+    ) {
       this.finish({
         stoppedAfterNoImprovement: false,
         hitAcceptedMoveLimit: true,
@@ -1802,6 +2118,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
 
     if (!this.bestSnapshot) {
       this.bestSnapshot = this.evaluate(this.bestRoutes)
+      this.initialIssueCount = this.bestSnapshot.issueCount
       this.stats.residualLocalRerouteInitialDrcIssueCount =
         this.bestSnapshot.issueCount
       if (this.bestSnapshot.issueCount === 0) {
