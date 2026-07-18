@@ -15,6 +15,7 @@ import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivi
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import { addConnectionNamesToFragmentedObstacleMeshNodes } from "lib/solvers/TopologyPlanningSolver/add-connection-names-to-fragmented-obstacle-mesh-nodes"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
@@ -377,8 +378,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes =
-            cms.nodeDimensionSubdivisionSolver?.outputNodes ?? []
+          cms.capacityNodes = addConnectionNamesToFragmentedObstacleMeshNodes({
+            meshNodes: cms.nodeDimensionSubdivisionSolver!.outputNodes,
+            obstacles: cms.srjWithPointPairs!.obstacles,
+            connections: cms.srjWithPointPairs!.connections,
+            layerCount: cms.srjWithPointPairs!.layerCount,
+          })
         },
       },
     ),
