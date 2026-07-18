@@ -71,13 +71,23 @@ const createPipeline7DrcEvaluator = (
     )
     const padCenterById = new Map<string, { x: number; y: number }>()
     for (const element of circuitJson) {
-      if (
-        element.type !== "pcb_smtpad" &&
-        element.type !== "pcb_plated_hole"
-      ) {
+      if (element.type !== "pcb_smtpad" && element.type !== "pcb_plated_hole") {
         continue
       }
-      const center = { x: element.x, y: element.y }
+      const center =
+        element.type === "pcb_smtpad" && element.shape === "polygon"
+          ? element.points.length > 0
+            ? {
+                x:
+                  element.points.reduce((sum, point) => sum + point.x, 0) /
+                  element.points.length,
+                y:
+                  element.points.reduce((sum, point) => sum + point.y, 0) /
+                  element.points.length,
+              }
+            : undefined
+          : { x: element.x, y: element.y }
+      if (!center) continue
       const elementId =
         element.type === "pcb_smtpad"
           ? element.pcb_smtpad_id

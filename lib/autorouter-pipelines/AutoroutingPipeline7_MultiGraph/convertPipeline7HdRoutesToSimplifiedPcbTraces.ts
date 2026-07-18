@@ -16,10 +16,7 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
-  routeConversionCache?: WeakMap<
-    HighDensityRoute,
-    SimplifiedPcbTrace["route"]
-  >
+  routeConversionCache?: WeakMap<HighDensityRoute, SimplifiedPcbTrace["route"]>
 }
 
 /** Converts Pipeline7 routes using the same net and terminal rules as final output. */
@@ -65,16 +62,12 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
       const hdRoute = connectionRoutes[index]!
       let simplifiedRoute = routeConversionCache?.get(hdRoute)
       if (!simplifiedRoute) {
-        simplifiedRoute = convertHdRouteToSimplifiedRoute(
-          hdRoute,
-          layerCount,
-          {
-            connectionPoints: connection.pointsToConnect,
-            defaultViaHoleDiameter,
-            obstacles,
-            connMap,
-          },
-        )
+        simplifiedRoute = convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
+          connectionPoints: connection.pointsToConnect,
+          defaultViaHoleDiameter,
+          obstacles,
+          connMap,
+        })
         routeConversionCache?.set(hdRoute, simplifiedRoute)
       }
       const simplifiedPcbTrace: SimplifiedPcbTrace = {

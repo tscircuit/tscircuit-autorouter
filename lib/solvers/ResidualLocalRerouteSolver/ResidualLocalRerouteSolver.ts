@@ -1925,8 +1925,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       residualLocalRerouteMaxTotalAcceptedMoves: this.maxTotalAcceptedMoves,
       residualLocalRerouteMaxCandidatesWithoutCountReduction:
         this.maxCandidatesWithoutCountReduction,
-      residualLocalRerouteCandidateDrcEvaluations:
-        this.candidateDrcEvaluations,
+      residualLocalRerouteCandidateDrcEvaluations: this.candidateDrcEvaluations,
       residualLocalRerouteValidationDrcEvaluations:
         this.validationDrcEvaluations,
     }
