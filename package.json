@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.694",
+  "version": "0.0.696",
   "type": "module",
   "files": [
     "dist"
@@ -55,12 +55,13 @@
     "@vitejs/plugin-react": "^4.3.4",
     "bun-match-svg": "^0.0.14",
     "circuit-json-to-connectivity-map": "^0.0.19",
-    "circuit-json": "^0.0.419",
+    "circuit-json": "^0.0.450",
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
     "dataset-srj18": "git+https://github.com/tscircuit/dataset-srj18.git#c0aad90256a95256fcac814f9f7da81a82a2fdea",
     "flatbush": "^4.4.0",
+    "format-si-unit": "0.0.10",
     "graphics-debug": "0.0.96",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
     "kicad-to-circuit-json": "0.0.77",
@@ -76,7 +77,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/AnasSarkiz/tiny-hypergraph.git#c7d8373458b2351d314f9c21c85c9c25b84f8e54",
+    "tiny-hypergraph": "git+https://github.com/AnasSarkiz/tiny-hypergraph.git#f4b157f57dd9c5f704f02cc936dffc749e9f0a4c",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",

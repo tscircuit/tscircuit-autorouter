@@ -25,7 +25,11 @@ import {
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
 } from "tiny-hypergraph/lib/index"
-import type { HgPortPointPathingSolverParams } from "../hgportpointpathingsolver/types"
+import type {
+  ConnectionHg,
+  ConnectionHgWithSimpleRouteConnection,
+  HgPortPointPathingSolverParams,
+} from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 
@@ -41,7 +45,13 @@ type SerializedTinyConnection = NonNullable<
 type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
-type TinyRouteConnection = HgPortPointPathingSolverParams["connections"][number]
+type TinyRouteConnection = ConnectionHgWithSimpleRouteConnection
+type TinyHypergraphInput = Omit<
+  HgPortPointPathingSolverParams,
+  "connections"
+> & {
+  connections: TinyRouteConnection[]
+}
 
 type TinyBounds = {
   minX: number
@@ -96,7 +106,9 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
     : {}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const TINY_TRACE_DENSITY_COST_FACTOR = 0.1
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
+  TRACE_DENSITY_COST_FACTOR: TINY_TRACE_DENSITY_COST_FACTOR,
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
@@ -105,6 +117,7 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   GREEDY_FINAL_ROUTE_ITERS: 4,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
+  TRACE_DENSITY_COST_FACTOR: TINY_TRACE_DENSITY_COST_FACTOR,
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
@@ -287,8 +300,22 @@ const toSerializedPortData = (
   }
 }
 
+const getTinyRouteConnectionsOrThrow = (
+  connections: ConnectionHg[],
+): TinyRouteConnection[] => {
+  return connections.map((connection) => {
+    const simpleRouteConnection = connection.simpleRouteConnection
+    if (!simpleRouteConnection) {
+      throw new Error(
+        `TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for "${connection.connectionId}"`,
+      )
+    }
+    return { ...connection, simpleRouteConnection }
+  })
+}
+
 const buildSerializedTinyGraph = (
-  params: HgPortPointPathingSolverParams,
+  params: TinyHypergraphInput,
 ): SerializedHyperGraph => {
   const getNetIndex = createTinyRouteNetIndexer()
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
@@ -797,12 +824,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
+      params.connections,
+    )
     const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
       ? orderConnectionsByNetCardinality(
-          params.connections,
+          tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
-      : params.connections
+      : tinyRouteConnections
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
@@ -814,6 +844,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           duplicatePortProximity: 0.05,
           routeSolveOptions: {
             ...getTinyRoutingDimensionOptions(params),
+            TRACE_DENSITY_COST_FACTOR: TINY_TRACE_DENSITY_COST_FACTOR,
             USE_SPARSE_CANDIDATE_STORAGE: true,
             ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
             GREEDY_FINAL_ROUTE_ITERS: 4,

@@ -14,7 +14,7 @@ import { assertDefined } from "./assertDefined"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
   RawPort,
-  ConnectionHg,
+  ConnectionHgWithSimpleRouteConnection,
   HyperGraphHg,
   RegionHg,
   RegionPortHg,
@@ -148,12 +148,15 @@ export function buildHyperGraph(params: {
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
   assignableViaObstacles?: Obstacle[]
-}): { graph: HyperGraphHg; connections: ConnectionHg[] } {
+}): {
+  graph: HyperGraphHg
+  connections: ConnectionHgWithSimpleRouteConnection[]
+} {
   const graph: HyperGraphHg = {
     ports: [],
     regions: [],
   }
-  const connections: ConnectionHg[] = []
+  const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
     graph.regions.push({

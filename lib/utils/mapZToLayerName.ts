@@ -7,6 +7,8 @@ export type LayerName =
   | "inner4"
   | "inner5"
   | "inner6"
+  | "inner7"
+  | "inner8"
 
 export const mapZToLayerName = (z: number, layerCount: number): LayerName => {
   if (z === 1 && layerCount === 1) return "inner1"

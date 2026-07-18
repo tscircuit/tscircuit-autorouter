@@ -1,6 +1,16 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+
+type InspectableTinyPipelineSolver = {
+  tinyPipelineSolver: {
+    inputProblem: {
+      solveGraphOptions?: { TRACE_DENSITY_COST_FACTOR?: number }
+      sectionSolverOptions?: { TRACE_DENSITY_COST_FACTOR?: number }
+    }
+  }
+}
 
 const getPortPointPathingParams = (
   defaultObstacleMargin?: number,
@@ -38,4 +48,16 @@ test("Pipeline7 passes trace density dimensions to tiny-hypergraph", () => {
   const defaultClearanceParams = getPortPointPathingParams()
   expect(defaultClearanceParams.minTraceWidth).toBe(0.15)
   expect(defaultClearanceParams.minTraceClearance).toBeUndefined()
+
+  const tinySolver = new TinyHypergraphPortPointPathingSolver(
+    explicitClearanceParams,
+  ) as unknown as InspectableTinyPipelineSolver
+  expect(
+    tinySolver.tinyPipelineSolver.inputProblem.solveGraphOptions
+      ?.TRACE_DENSITY_COST_FACTOR,
+  ).toBe(0.1)
+  expect(
+    tinySolver.tinyPipelineSolver.inputProblem.sectionSolverOptions
+      ?.TRACE_DENSITY_COST_FACTOR,
+  ).toBe(0.1)
 })
