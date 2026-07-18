@@ -18,6 +18,24 @@ type Pipeline7DrcEvaluatorConversionOptions = Omit<
   originalSrj: Parameters<typeof convertToCircuitJson>[0]
 }
 
+const getPadIdentifierFromDrcMessage = (
+  message: unknown,
+): string | undefined => {
+  if (typeof message !== "string") return undefined
+  const patterns = [
+    /pcb_smtpad "pcb_port\[#(pcb_port_[^\]]+)\]"/,
+    /Pad pcb_port\[#(pcb_port_[^\]]+)\]/,
+    /smtpad\[#(pcb_port_[^\]]+)\]/,
+    /pcb_plated_hole "pcb_plated_hole\[#(pcb_plated_hole_[^\]]+)\]"/,
+    /Pad pcb_plated_hole\[#(pcb_plated_hole_[^\]]+)\]/,
+  ]
+  for (const pattern of patterns) {
+    const identifier = message.match(pattern)?.[1]
+    if (identifier) return identifier
+  }
+  return undefined
+}
+
 const createPipeline7DrcEvaluator = (
   conversionOptions: Pipeline7DrcEvaluatorConversionOptions,
   drcOptions: GetDrcErrorsOptions,
@@ -48,13 +66,42 @@ const createPipeline7DrcEvaluator = (
           : [],
       ),
     )
+    const padCenterById = new Map<string, { x: number; y: number }>()
+    for (const element of circuitJson) {
+      if (
+        element.type !== "pcb_smtpad" &&
+        element.type !== "pcb_plated_hole"
+      ) {
+        continue
+      }
+      const center = { x: element.x, y: element.y }
+      const elementId =
+        element.type === "pcb_smtpad"
+          ? element.pcb_smtpad_id
+          : element.pcb_plated_hole_id
+      padCenterById.set(elementId, center)
+      if (element.pcb_port_id) padCenterById.set(element.pcb_port_id, center)
+    }
     const locationAwareErrors = errorsWithCenters.map((error) => {
       const candidate = error as unknown as Record<string, unknown>
       const viaCenter =
         typeof candidate.pcb_via_id === "string"
           ? viaCenterById.get(candidate.pcb_via_id)
           : undefined
-      return viaCenter ? { ...error, via_center: viaCenter } : error
+      const padIdentifier =
+        typeof candidate.pcb_pad_id === "string"
+          ? candidate.pcb_pad_id
+          : getPadIdentifierFromDrcMessage(candidate.message)
+      const padCenter = padIdentifier
+        ? padCenterById.get(padIdentifier)
+        : undefined
+      return viaCenter || padCenter
+        ? {
+            ...error,
+            ...(viaCenter ? { via_center: viaCenter } : {}),
+            ...(padCenter ? { pad_center: padCenter } : {}),
+          }
+        : error
     })
 
     return {

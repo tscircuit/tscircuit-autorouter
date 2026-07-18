@@ -50,7 +50,12 @@ type DirectedSegmentShiftStrategy = {
   distance: number
 }
 
+type TerminalSnapStrategy = {
+  type: "terminal_snap"
+}
+
 type CandidateStrategy =
+  | TerminalSnapStrategy
   | ({ type: "dogleg" } & DoglegStrategy)
   | ({ type: "directed_dogleg" } & DirectedDoglegStrategy)
   | ({ type: "directed_pair_shift" } & DirectedSegmentShiftStrategy)
@@ -68,6 +73,8 @@ type CandidateTarget = {
   sourceZ?: number
   viaCenter?: Point
   viaRouteIndexes?: readonly number[]
+  terminalPoint?: Point
+  terminalPortId?: string
 }
 
 type RouteProjection = Point & { z: number }
@@ -153,6 +160,7 @@ const DIRECTED_SEGMENT_SHIFT_STRATEGIES: readonly DirectedSegmentShiftStrategy[]
   ]
 
 const getCandidateStrategyKey = (strategy: CandidateStrategy): string => {
+  if (strategy.type === "terminal_snap") return strategy.type
   if (strategy.type === "layer_detour") {
     return `${strategy.type}:${strategy.scope}:${strategy.targetZ}:${strategy.span}`
   }
@@ -173,18 +181,64 @@ const getCandidatePriority = (
   target: CandidateTarget,
   strategy: CandidateStrategy,
 ): number => {
-  if (target.errorType === "pcb_via_trace_clearance_error") {
+  if (target.terminalPoint) {
+    if (strategy.type === "terminal_snap") return 0
+    return 1
+  }
+  if (target.viaCenter && target.viaRouteIndexes?.length) {
     if (strategy.type === "directed_via_shift") return 0
     if (strategy.type === "directed_segment_shift") return 1
     if (strategy.type === "directed_dogleg") return 2
     if (strategy.type === "layer_detour") return 3
     return 4
   }
+  if (target.otherRouteIndex !== undefined) {
+    if (strategy.type === "directed_pair_shift") return 0
+    if (strategy.type === "directed_segment_shift") return 1
+    if (strategy.type === "directed_dogleg") return 2
+    if (strategy.type === "layer_detour") return 3
+    return 4
+  }
+  if (target.moveDirection) {
+    if (strategy.type === "directed_segment_shift") return 0
+    if (strategy.type === "directed_dogleg") return 1
+    if (strategy.type === "layer_detour") return 2
+    return 3
+  }
   if (strategy.type === "layer_detour") return 0
-  if (strategy.type === "directed_pair_shift") return 1
-  if (strategy.type === "directed_segment_shift") return 2
-  if (strategy.type === "directed_dogleg") return 3
-  return 4
+  return 1
+}
+
+const getCandidateStrategyVariantRank = (
+  target: CandidateTarget,
+  strategy: CandidateStrategy,
+): number => {
+  if (strategy.type === "terminal_snap") return 0
+  if (strategy.type === "layer_detour") {
+    const spanIndex = LAYER_DETOUR_SPANS.findIndex(
+      (candidateSpan) => candidateSpan === strategy.span,
+    )
+    return (
+      spanIndex * 100 +
+      strategy.targetZ * 2 +
+      (strategy.scope === "route" ? 1 : 0)
+    )
+  }
+  const distance =
+    strategy.type === "dogleg" ? Math.abs(strategy.offset) : strategy.distance
+  const desiredDistance = Math.min(
+    0.2,
+    Math.max(0.01, target.severity + 0.01),
+  )
+  const distanceRank =
+    distance >= desiredDistance
+      ? distance - desiredDistance
+      : 100 + desiredDistance - distance
+  const spanRank =
+    strategy.type === "dogleg" || strategy.type === "directed_dogleg"
+      ? strategy.span / 100
+      : 0
+  return distanceRank + spanRank
 }
 
 const getDrcErrorSeverity = (error: DrcError): number => {
@@ -222,6 +276,38 @@ const getErrorCenter = (error: DrcError): Point | undefined => {
   }
   return { x: candidate.x, y: candidate.y }
 }
+
+const getDrcPointField = (
+  error: DrcError,
+  fieldName: string,
+): Point | undefined => {
+  const value = error[fieldName]
+  if (!value || typeof value !== "object") return undefined
+  const candidate = value as Record<string, unknown>
+  if (typeof candidate.x !== "number" || typeof candidate.y !== "number") {
+    return undefined
+  }
+  return { x: candidate.x, y: candidate.y }
+}
+
+const isTraceViaOverlapError = (error: DrcError): boolean =>
+  error.type === "pcb_trace_error" &&
+  typeof error.message === "string" &&
+  error.message.includes("overlaps with pcb_via")
+
+const getNearestTransitionPoint = (
+  center: Point,
+  transitionPoints: readonly Point[],
+): Point | undefined =>
+  transitionPoints.reduce<Point | undefined>(
+    (nearest, candidate) =>
+      !nearest ||
+      Math.hypot(candidate.x - center.x, candidate.y - center.y) <
+        Math.hypot(nearest.x - center.x, nearest.y - center.y)
+        ? candidate
+        : nearest,
+    undefined,
+  )
 
 const isBetterSnapshot = (
   candidate: DrcSnapshot,
@@ -509,6 +595,7 @@ const getMoveData = (
 
   routePoint ??= getNearestRouteProjection(route, center)
   if (!routePoint) return {}
+  obstaclePoint ??= getDrcPointField(error, "pad_center")
   if (!obstaclePoint && typeof error.message === "string") {
     const obstaclePortId = error.message.match(
       /pcb_port\[#(pcb_port_[^\]]+)\]/,
@@ -526,16 +613,11 @@ const getMoveData = (
       obstaclePoint = { x: viaCenter.x, y: viaCenter.y }
     }
   }
-  if (!obstaclePoint && typeof error.pcb_via_id === "string") {
-    obstaclePoint = transitionPoints.reduce<Point | undefined>(
-      (nearest, candidate) =>
-        !nearest ||
-        Math.hypot(candidate.x - center.x, candidate.y - center.y) <
-          Math.hypot(nearest.x - center.x, nearest.y - center.y)
-          ? candidate
-          : nearest,
-      undefined,
-    )
+  if (
+    !obstaclePoint &&
+    (typeof error.pcb_via_id === "string" || isTraceViaOverlapError(error))
+  ) {
+    obstaclePoint = getNearestTransitionPoint(center, transitionPoints)
   }
   if (!obstaclePoint) return { sourceZ: routePoint.z }
 
@@ -856,6 +938,65 @@ const shiftVia = (
   }
 
   return movedVia
+}
+
+const snapRouteTerminal = (
+  routes: HighDensityRoute[],
+  routeIndex: number,
+  errorCenter: Point,
+  terminalPoint: Point,
+  terminalPortId: string | undefined,
+  boardPolygon: readonly Point[],
+): boolean => {
+  const route = routes[routeIndex]
+  if (!route || route.route.length < 2) return false
+  const endpointIndexes = [0, route.route.length - 1]
+  let pointIndex = terminalPortId
+    ? endpointIndexes.find(
+        (candidateIndex) =>
+          route.route[candidateIndex]!.pcb_port_id === terminalPortId,
+      )
+    : undefined
+  if (pointIndex === undefined) {
+    pointIndex = endpointIndexes.reduce((nearestIndex, candidateIndex) => {
+      const nearest = route.route[nearestIndex]!
+      const candidate = route.route[candidateIndex]!
+      return Math.hypot(candidate.x - errorCenter.x, candidate.y - errorCenter.y) <
+        Math.hypot(nearest.x - errorCenter.x, nearest.y - errorCenter.y)
+        ? candidateIndex
+        : nearestIndex
+    })
+    const nearestEndpoint = route.route[pointIndex]!
+    if (
+      Math.hypot(
+        nearestEndpoint.x - errorCenter.x,
+        nearestEndpoint.y - errorCenter.y,
+      ) > 1e-3
+    ) {
+      return false
+    }
+  }
+
+  const terminal = route.route[pointIndex]!
+  if (
+    Math.hypot(terminal.x - terminalPoint.x, terminal.y - terminalPoint.y) <=
+    1e-6
+  ) {
+    return false
+  }
+  terminal.x = terminalPoint.x
+  terminal.y = terminalPoint.y
+  if (terminalPortId) terminal.pcb_port_id = terminalPortId
+  const neighbor = route.route[pointIndex === 0 ? 1 : pointIndex - 1]!
+  const traceRadius = (terminal.traceThickness ?? route.traceThickness) / 2
+  return (
+    isPointInsideBoard(terminal, boardPolygon, traceRadius) &&
+    doesDoglegStayInsideBoard(
+      pointIndex === 0 ? [terminal, neighbor] : [neighbor, terminal],
+      boardPolygon,
+      traceRadius,
+    )
+  )
 }
 
 const insertSegmentLayerDetour = (
@@ -1255,6 +1396,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         ...strategy,
       }))
     this.strategies = [
+      { type: "terminal_snap" },
       ...directedViaShiftStrategies,
       ...layerDetourStrategies,
       ...directedPairShiftStrategies,
@@ -1332,7 +1474,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
           transitionPoints,
           this.config.obstacles ?? [],
         )
-        const viaCenter =
+        const typedViaCenter =
           error.type === "pcb_via_trace_clearance_error" &&
           error.via_center &&
           typeof error.via_center === "object" &&
@@ -1343,6 +1485,21 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
                 y: (error.via_center as { y: number }).y,
               }
             : undefined
+        const viaCenter =
+          typedViaCenter ??
+          (isTraceViaOverlapError(error)
+            ? getNearestTransitionPoint(center, transitionPoints)
+            : undefined)
+        const terminalPortId =
+          typeof error.message === "string" &&
+          error.message.includes("missing a connection")
+            ? error.message.match(
+                /(?:smtpad|plated_hole)\[#(pcb_port_[^\]]+)\]/,
+              )?.[1]
+            : undefined
+        const terminalPoint = terminalPortId
+          ? getDrcPointField(error, "pad_center")
+          : undefined
         targets.push({
           routeIndex,
           center,
@@ -1355,6 +1512,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
           viaRouteIndexes: viaCenter
             ? getViaRouteIndexes(this.bestRoutes, viaCenter)
             : undefined,
+          terminalPoint,
+          terminalPortId,
         })
       }
     })
@@ -1368,6 +1527,9 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     const plan = this.strategies
       .flatMap((strategy) =>
         targets.flatMap((target) => {
+        if (strategy.type === "terminal_snap" && !target.terminalPoint) {
+          return []
+        }
         if (
           (strategy.type === "directed_dogleg" ||
             strategy.type === "directed_segment_shift" ||
@@ -1409,6 +1571,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       .sort(
         (a, b) =>
           getCandidatePriority(a, a) - getCandidatePriority(b, b) ||
+          getCandidateStrategyVariantRank(a, a) -
+            getCandidateStrategyVariantRank(b, b) ||
           a.severity - b.severity,
       )
 
@@ -1456,6 +1620,18 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     const candidateRoutes = structuredClone(this.bestRoutes)
     let changed = false
     if (
+      candidatePlanEntry.type === "terminal_snap" &&
+      candidatePlanEntry.terminalPoint
+    ) {
+      changed = snapRouteTerminal(
+        candidateRoutes,
+        candidatePlanEntry.routeIndex,
+        candidatePlanEntry.center,
+        candidatePlanEntry.terminalPoint,
+        candidatePlanEntry.terminalPortId,
+        this.boardPolygon,
+      )
+    } else if (
       candidatePlanEntry.type === "directed_via_shift" &&
       candidatePlanEntry.moveDirection &&
       candidatePlanEntry.viaCenter &&
