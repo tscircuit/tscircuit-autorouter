@@ -141,16 +141,6 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           )
         }
       }
-      for (const expectedPcbPortId of expectedPcbPortIds) {
-        const matchCount = taggedPcbPortIds.filter(
-          (pcbPortId) => pcbPortId === expectedPcbPortId,
-        ).length
-        if (matchCount > 1) {
-          throw new Error(
-            `SingleHighDensityRouteStitchSolver3 found PCB terminal "${expectedPcbPortId}" on multiple route endpoints of "${opts.connectionName}"`,
-          )
-        }
-      }
     }
 
     let bestDist = Infinity

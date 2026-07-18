@@ -94,3 +94,32 @@ test("single stitch can cap a modest terminal endpoint gap", () => {
     { x: 0, y: 0, z: 0 },
   ])
 })
+
+test("single stitch accepts fan-out terminal tags", () => {
+  const terminalFanoutRoutes = [
+    {
+      ...makeRoute("conn", [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ]),
+      startPcbPortId: "pcb_port_start",
+    },
+    {
+      ...makeRoute("conn", [
+        { x: 0, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 },
+      ]),
+      startPcbPortId: "pcb_port_start",
+    },
+  ]
+  const solver = new SingleHighDensityRouteStitchSolver3({
+    connectionName: "conn",
+    start: { x: 0, y: 0, z: 0, pcb_port_id: "pcb_port_start" },
+    end: { x: 10, y: 0, z: 0, pcb_port_id: "pcb_port_end" },
+    hdRoutes: terminalFanoutRoutes,
+    preserveTerminalPcbPortIds: true,
+  })
+
+  expect(solver.mergedHdRoute.startPcbPortId).toBe("pcb_port_start")
+  expect(solver.mergedHdRoute.endPcbPortId).toBe("pcb_port_end")
+})
