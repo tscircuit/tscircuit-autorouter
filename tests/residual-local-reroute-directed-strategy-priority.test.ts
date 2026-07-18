@@ -13,13 +13,18 @@ test("residual local rerouting tries directed local repairs before layer detours
       { x: -1, y: 0.15, z: 0 },
       { x: -0.4, y: 0.15, z: 0 },
       { x: 0.4, y: 0.15, z: 0 },
-      { x: 1, y: 0.15, z: 0 },
+      { x: 0.8, y: 0.8, z: 0 },
+      { x: 1.4, y: 1.4, z: 0 },
+      { x: 2, y: 1.4, z: 0 },
     ],
   }
   const error = {
     type: "pcb_pad_trace_clearance_error",
     pcb_trace_id: "trace_0",
-    center: { x: 0, y: 0.15 },
+    // The reporter's generic center can be far from the actual typed
+    // pad/trace collision. The exact pad center must drive segment selection.
+    center: { x: 1.7, y: 1.4 },
+    pad_center: { x: 0, y: 0 },
     message:
       "Pad pcb_port[#pcb_port_obstacle] and trace trace_0 are too close (clearance: 0.03mm, minimum: 0.1mm)",
   }
@@ -31,7 +36,7 @@ test("residual local rerouting tries directed local repairs before layer detours
   const solver = new ResidualLocalRerouteSolver({
     hdRoutes: [route],
     drcEvaluator: evaluator,
-    bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+    bounds: { minX: -2, minY: -2, maxX: 2.2, maxY: 2 },
     obstacles: [
       {
         center: { x: 0, y: 0 },

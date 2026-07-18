@@ -226,10 +226,7 @@ const getCandidateStrategyVariantRank = (
   }
   const distance =
     strategy.type === "dogleg" ? Math.abs(strategy.offset) : strategy.distance
-  const desiredDistance = Math.min(
-    0.2,
-    Math.max(0.01, target.severity + 0.01),
-  )
+  const desiredDistance = Math.min(0.2, Math.max(0.01, target.severity + 0.01))
   const distanceRank =
     distance >= desiredDistance
       ? distance - desiredDistance
@@ -430,8 +427,7 @@ const getNearestRouteProjection = (
       0,
       Math.min(
         1,
-        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
-          lengthSquared,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) / lengthSquared,
       ),
     )
     const point = { x: start.x + dx * t, y: start.y + dy * t, z: start.z }
@@ -446,7 +442,11 @@ const getNearestSameLayerProjectionPair = (
   otherRoute: HighDensityRoute,
   center: Point,
 ):
-  | { routePoint: RouteProjection; obstaclePoint: RouteProjection; score: number }
+  | {
+      routePoint: RouteProjection
+      obstaclePoint: RouteProjection
+      score: number
+    }
   | undefined => {
   let nearest:
     | {
@@ -455,7 +455,11 @@ const getNearestSameLayerProjectionPair = (
         score: number
       }
     | undefined
-  for (let routeIndex = 0; routeIndex + 1 < route.route.length; routeIndex += 1) {
+  for (
+    let routeIndex = 0;
+    routeIndex + 1 < route.route.length;
+    routeIndex += 1
+  ) {
     const routeStart = route.route[routeIndex]!
     const routeEnd = route.route[routeIndex + 1]!
     if (routeStart.z !== routeEnd.z) continue
@@ -515,7 +519,9 @@ const getNearestSameLayerProjectionPair = (
   return nearest
 }
 
-const getLayerTransitionPoints = (routes: readonly HighDensityRoute[]): Point[] => {
+const getLayerTransitionPoints = (
+  routes: readonly HighDensityRoute[],
+): Point[] => {
   const points: Point[] = []
   const keys = new Set<string>()
   for (const route of routes) {
@@ -562,15 +568,15 @@ const getViaRouteIndexes = (
 
 const getMoveData = (
   error: DrcError,
+  center: Point,
   routeIndex: number,
   errorRouteIndexes: readonly number[],
   routes: readonly HighDensityRoute[],
   transitionPoints: readonly Point[],
   obstacles: readonly RoutingObstacle[],
 ): MoveData => {
-  const center = getErrorCenter(error)
   const route = routes[routeIndex]
-  if (!center || !route) return {}
+  if (!route) return {}
 
   let routePoint: RouteProjection | undefined
   let obstaclePoint: RouteProjection | Point | undefined
@@ -607,7 +613,11 @@ const getMoveData = (
       : undefined
     if (obstacle) obstaclePoint = obstacle.center
   }
-  if (!obstaclePoint && error.via_center && typeof error.via_center === "object") {
+  if (
+    !obstaclePoint &&
+    error.via_center &&
+    typeof error.via_center === "object"
+  ) {
     const viaCenter = error.via_center as Record<string, unknown>
     if (typeof viaCenter.x === "number" && typeof viaCenter.y === "number") {
       obstaclePoint = { x: viaCenter.x, y: viaCenter.y }
@@ -625,8 +635,7 @@ const getMoveData = (
   const dy = routePoint.y - obstaclePoint.y
   const length = Math.hypot(dx, dy)
   return {
-    direction:
-      length > 1e-6 ? { x: dx / length, y: dy / length } : undefined,
+    direction: length > 1e-6 ? { x: dx / length, y: dy / length } : undefined,
     otherRouteIndex: pairedRouteIndex,
     sourceZ: routePoint.z,
   }
@@ -777,8 +786,7 @@ const shiftNearestSegment = (
       0,
       Math.min(
         1,
-        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
-          lengthSquared,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) / lengthSquared,
       ),
     )
     const projected = { x: start.x + dx * t, y: start.y + dy * t }
@@ -961,8 +969,10 @@ const snapRouteTerminal = (
     pointIndex = endpointIndexes.reduce((nearestIndex, candidateIndex) => {
       const nearest = route.route[nearestIndex]!
       const candidate = route.route[candidateIndex]!
-      return Math.hypot(candidate.x - errorCenter.x, candidate.y - errorCenter.y) <
-        Math.hypot(nearest.x - errorCenter.x, nearest.y - errorCenter.y)
+      return Math.hypot(
+        candidate.x - errorCenter.x,
+        candidate.y - errorCenter.y,
+      ) < Math.hypot(nearest.x - errorCenter.x, nearest.y - errorCenter.y)
         ? candidateIndex
         : nearestIndex
     })
@@ -1036,8 +1046,7 @@ const insertSegmentLayerDetour = (
       0,
       Math.min(
         1,
-        ((center.x - start.x) * dx + (center.y - start.y) * dy) /
-          lengthSquared,
+        ((center.x - start.x) * dx + (center.y - start.y) * dy) / lengthSquared,
       ),
     )
     const projected = { x: start.x + dx * t, y: start.y + dy * t }
@@ -1248,7 +1257,10 @@ const insertRouteLayerDetour = (
   }
   const beforePoint = interpolatePoint(beforeSegmentIndex, beforeT)
   const afterPoint = interpolatePoint(afterSegmentIndex, afterT)
-  if (Math.hypot(afterPoint.x - beforePoint.x, afterPoint.y - beforePoint.y) < 0.02) {
+  if (
+    Math.hypot(afterPoint.x - beforePoint.x, afterPoint.y - beforePoint.y) <
+    0.02
+  ) {
     return false
   }
 
@@ -1457,49 +1469,61 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
 
     snapshot.errors.forEach((error) => {
       if (!SUPPORTED_ERROR_TYPES.has(String(error.type))) return
-      const center = getErrorCenter(error)
-      if (!center) return
+      const errorCenter = getErrorCenter(error)
+      if (!errorCenter) return
       const routeIndexes = getTraceIdsForError(error)
         .map((traceId) => routeIndexByTraceId.get(traceId))
         .filter((routeIndex): routeIndex is number => routeIndex !== undefined)
+      const typedViaCenter =
+        error.type === "pcb_via_trace_clearance_error" &&
+        error.via_center &&
+        typeof error.via_center === "object" &&
+        typeof (error.via_center as Record<string, unknown>).x === "number" &&
+        typeof (error.via_center as Record<string, unknown>).y === "number"
+          ? {
+              x: (error.via_center as { x: number }).x,
+              y: (error.via_center as { y: number }).y,
+            }
+          : undefined
+      const viaCenter =
+        typedViaCenter ??
+        (isTraceViaOverlapError(error)
+          ? getNearestTransitionPoint(errorCenter, transitionPoints)
+          : undefined)
+      const terminalPortId =
+        typeof error.message === "string" &&
+        error.message.includes("missing a connection")
+          ? error.message.match(
+              /(?:smtpad|plated_hole)\[#(pcb_port_[^\]]+)\]/,
+            )?.[1]
+          : undefined
+      const terminalPoint = terminalPortId
+        ? getDrcPointField(error, "pad_center")
+        : undefined
+      const padCenter = getDrcPointField(error, "pad_center")
+      // Typed clearance reporters can attach a generic center that is far
+      // from the colliding copper. Exact pad/via centers identify the local
+      // route segment that must actually move. Trace overlap and connectivity
+      // reporters already provide their useful collision/endpoint location.
+      const center =
+        error.type === "pcb_pad_trace_clearance_error"
+          ? (padCenter ?? errorCenter)
+          : error.type === "pcb_via_trace_clearance_error"
+            ? (viaCenter ?? errorCenter)
+            : errorCenter
       for (const routeIndex of new Set(routeIndexes)) {
         const targetKey = `${routeIndex}:${center.x.toFixed(4)}:${center.y.toFixed(4)}`
         if (targetKeys.has(targetKey)) continue
         targetKeys.add(targetKey)
         const moveData = getMoveData(
           error,
+          center,
           routeIndex,
           routeIndexes,
           this.bestRoutes,
           transitionPoints,
           this.config.obstacles ?? [],
         )
-        const typedViaCenter =
-          error.type === "pcb_via_trace_clearance_error" &&
-          error.via_center &&
-          typeof error.via_center === "object" &&
-          typeof (error.via_center as Record<string, unknown>).x === "number" &&
-          typeof (error.via_center as Record<string, unknown>).y === "number"
-            ? {
-                x: (error.via_center as { x: number }).x,
-                y: (error.via_center as { y: number }).y,
-              }
-            : undefined
-        const viaCenter =
-          typedViaCenter ??
-          (isTraceViaOverlapError(error)
-            ? getNearestTransitionPoint(center, transitionPoints)
-            : undefined)
-        const terminalPortId =
-          typeof error.message === "string" &&
-          error.message.includes("missing a connection")
-            ? error.message.match(
-                /(?:smtpad|plated_hole)\[#(pcb_port_[^\]]+)\]/,
-              )?.[1]
-            : undefined
-        const terminalPoint = terminalPortId
-          ? getDrcPointField(error, "pad_center")
-          : undefined
         targets.push({
           routeIndex,
           center,
@@ -1527,45 +1551,45 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     const plan = this.strategies
       .flatMap((strategy) =>
         targets.flatMap((target) => {
-        if (strategy.type === "terminal_snap" && !target.terminalPoint) {
-          return []
-        }
-        if (
-          (strategy.type === "directed_dogleg" ||
-            strategy.type === "directed_segment_shift" ||
-            strategy.type === "directed_pair_shift" ||
-            strategy.type === "directed_via_shift") &&
-          !target.moveDirection
-        ) {
-          return []
-        }
-        if (
-          strategy.type === "directed_via_shift" &&
-          (!target.viaCenter || target.viaRouteIndexes?.length === 0)
-        ) {
-          return []
-        }
-        if (
-          strategy.type === "directed_pair_shift" &&
-          (target.otherRouteIndex === undefined ||
-            target.routeIndex > target.otherRouteIndex)
-        ) {
-          return []
-        }
-        const affectedRouteIndexes =
-          strategy.type === "directed_via_shift"
-            ? (target.viaRouteIndexes ?? [])
-            : [target.routeIndex]
-        const routeRevisions = affectedRouteIndexes
-          .map(
-            (routeIndex) =>
-              `${routeIndex}:${this.routeRevisionByIndex[routeIndex] ?? 0}`,
-          )
-          .join(",")
-        const key = `${routeRevisions}:${target.center.x.toFixed(4)}:${target.center.y.toFixed(4)}:${getCandidateStrategyKey(strategy)}`
-        return this.attemptedCandidateKeys.has(key)
-          ? []
-          : [{ ...target, ...strategy, key }]
+          if (strategy.type === "terminal_snap" && !target.terminalPoint) {
+            return []
+          }
+          if (
+            (strategy.type === "directed_dogleg" ||
+              strategy.type === "directed_segment_shift" ||
+              strategy.type === "directed_pair_shift" ||
+              strategy.type === "directed_via_shift") &&
+            !target.moveDirection
+          ) {
+            return []
+          }
+          if (
+            strategy.type === "directed_via_shift" &&
+            (!target.viaCenter || target.viaRouteIndexes?.length === 0)
+          ) {
+            return []
+          }
+          if (
+            strategy.type === "directed_pair_shift" &&
+            (target.otherRouteIndex === undefined ||
+              target.routeIndex > target.otherRouteIndex)
+          ) {
+            return []
+          }
+          const affectedRouteIndexes =
+            strategy.type === "directed_via_shift"
+              ? (target.viaRouteIndexes ?? [])
+              : [target.routeIndex]
+          const routeRevisions = affectedRouteIndexes
+            .map(
+              (routeIndex) =>
+                `${routeIndex}:${this.routeRevisionByIndex[routeIndex] ?? 0}`,
+            )
+            .join(",")
+          const key = `${routeRevisions}:${target.center.x.toFixed(4)}:${target.center.y.toFixed(4)}:${getCandidateStrategyKey(strategy)}`
+          return this.attemptedCandidateKeys.has(key)
+            ? []
+            : [{ ...target, ...strategy, key }]
         }),
       )
       .sort(
@@ -1790,13 +1814,13 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     let candidatePlanEntry: CandidatePlanEntry
     let candidateRoutes: HighDensityRoute[] | undefined
     do {
-    if (this.candidateAttempts >= this.config.maxCandidateAttempts) {
-      if (this.pendingCandidate) {
-        if (this.acceptCandidate(this.pendingCandidate)) return
-      }
-      this.finish({
-        stoppedAfterNoImprovement: false,
-        hitCandidateLimit: true,
+      if (this.candidateAttempts >= this.config.maxCandidateAttempts) {
+        if (this.pendingCandidate) {
+          if (this.acceptCandidate(this.pendingCandidate)) return
+        }
+        this.finish({
+          stoppedAfterNoImprovement: false,
+          hitCandidateLimit: true,
         })
         return
       }
@@ -1839,8 +1863,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     }
     if (
       this.pendingCandidate &&
-      this.candidateAttemptsSinceAccepted >=
-        this.maxCandidatesBeforeRefinement
+      this.candidateAttemptsSinceAccepted >= this.maxCandidatesBeforeRefinement
     ) {
       this.acceptCandidate(this.pendingCandidate)
       return
