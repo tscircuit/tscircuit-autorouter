@@ -132,6 +132,9 @@ test("Pipeline7 exact cleanup includes typed trace clearance errors", () => {
   expect(errors[0]?.type).toBe("pcb_pad_trace_clearance_error")
   expect(errorsWithCenters).toHaveLength(1)
   expect(errorsWithCenters?.[0]?.center).toEqual({ x: 0, y: 0.2 })
+  expect(
+    (errorsWithCenters?.[0] as Record<string, unknown>)?.pad_center,
+  ).toEqual({ x: 0, y: 0 })
 })
 
 test("Pipeline7 checkpoint validation includes benchmark typed clearance errors", () => {
