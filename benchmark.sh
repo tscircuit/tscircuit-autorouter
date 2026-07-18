@@ -75,7 +75,6 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh compat
   ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
   ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
 
@@ -93,12 +92,10 @@ Options:
 
 Defaults:
   Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver7_MultiGraph.
-  Use "compat" to run the default solver against the SRJ24 compatibility dataset.
   Use "all" to benchmark every available solver.
 
 Examples:
   ./benchmark.sh
-  ./benchmark.sh compat
   ./benchmark.sh AutoroutingPipelineSolver7_MultiGraph
   ./benchmark.sh all 20 --concurrency auto
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --effort 2
@@ -138,11 +135,6 @@ $SOLVERS
 EOF
   fi
 }
-
-if [ "${1:-}" = "compat" ]; then
-  DATASET="srj24"
-  shift
-fi
 
 if [ "${1:-}" != "" ] && [[ "${1}" != --* ]]; then
   SOLVER_NAME="$1"
