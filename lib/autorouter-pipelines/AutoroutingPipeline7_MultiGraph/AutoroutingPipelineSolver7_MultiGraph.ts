@@ -823,6 +823,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         {
           hdRoutes: cms.postDrcTraceSimplificationSolver!.simplifiedHdRoutes,
           drcEvaluator: createRelaxedDrcEvaluatorForPipeline(cms),
+          candidateDrcEvaluator:
+            createExactGeometryDrcEvaluatorForPipeline(cms),
           bounds: cms.srj.bounds,
           outline: cms.srj.outline,
           obstacles: cms.srj.obstacles,

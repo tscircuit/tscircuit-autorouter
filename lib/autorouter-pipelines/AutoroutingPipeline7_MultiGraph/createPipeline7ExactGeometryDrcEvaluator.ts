@@ -40,6 +40,8 @@ const createPipeline7DrcEvaluator = (
   conversionOptions: Pipeline7DrcEvaluatorConversionOptions,
   drcOptions: GetDrcErrorsOptions,
 ): DrcEvaluator => {
+  const routeConversionCache = new WeakMap()
+
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
@@ -49,6 +51,7 @@ const createPipeline7DrcEvaluator = (
     const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       ...conversionOptions,
       hdRoutes: evaluatedRoutes,
+      routeConversionCache,
     })
     const circuitJson = convertToCircuitJson(
       conversionOptions.srjWithPointPairs,

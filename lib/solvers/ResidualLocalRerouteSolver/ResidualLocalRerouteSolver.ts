@@ -103,6 +103,8 @@ type CandidatePlanEntry = CandidateTarget &
 export type ResidualLocalRerouteSolverConfig = {
   hdRoutes: readonly HighDensityRoute[]
   drcEvaluator: DrcEvaluator
+  /** Optional cheaper scorer; every accepted candidate still uses drcEvaluator. */
+  candidateDrcEvaluator?: DrcEvaluator
   bounds: Bounds
   outline?: readonly Point[]
   obstacles?: readonly RoutingObstacle[]
@@ -200,13 +202,6 @@ const getCandidatePriority = (
   if (target.terminalPoint) {
     if (strategy.type === "terminal_snap") return 0
     return 1
-  }
-  if (target.obstacle) {
-    if (strategy.type === "obstacle_detour") return 0
-    if (strategy.type === "directed_segment_shift") return 1
-    if (strategy.type === "directed_dogleg") return 2
-    if (strategy.type === "layer_detour") return 3
-    return 4
   }
   if (target.viaCenter && target.viaRouteIndexes?.length) {
     if (strategy.type === "directed_via_shift") return 0
@@ -1538,6 +1533,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private readonly strategies: readonly CandidateStrategy[]
   private bestRoutes: HighDensityRoute[]
   private bestSnapshot?: DrcSnapshot
+  private bestCandidateSnapshot?: DrcSnapshot
   private initialIssueCount = Number.POSITIVE_INFINITY
   private candidatePlan: CandidatePlanEntry[] = []
   private candidatePlanIndex = 0
@@ -1550,11 +1546,16 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private readonly attemptedCandidateKeys = new Set<string>()
   private readonly routeRevisionByIndex: number[]
   private readonly maxCandidatesBeforeRefinement: number
+  private readonly maxCandidatesWithoutCountReduction: number
   private readonly maxTotalAcceptedMoves: number
   private candidateAttemptsSinceAccepted = 0
+  private candidateAttemptsSinceCountReduction = 0
+  private candidateDrcEvaluations = 0
+  private validationDrcEvaluations = 0
   private pendingCandidate?: {
     routes: HighDensityRoute[]
     snapshot: DrcSnapshot
+    candidateSnapshot: DrcSnapshot
     entry: CandidatePlanEntry
   }
 
@@ -1587,6 +1588,11 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       Math.floor(
         config.maxCandidateAttempts / Math.max(1, config.maxAcceptedMoves),
       ),
+    )
+    this.maxCandidatesWithoutCountReduction = Math.min(
+      config.maxCandidateAttempts,
+      128,
+      Math.max(32, Math.ceil(20 * Math.log2(Math.max(2, config.effort)))),
     )
     const extraAcceptedMoveAllowance = Math.min(
       4,
@@ -1681,8 +1687,11 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     return this.bestRoutes
   }
 
-  private evaluate(routes: HighDensityRoute[]): DrcSnapshot {
-    const result = this.config.drcEvaluator({
+  private evaluate(
+    routes: HighDensityRoute[],
+    evaluator: DrcEvaluator,
+  ): DrcSnapshot {
+    const result = evaluator({
       traces: [],
       routes,
       hdRoutes: routes,
@@ -1699,6 +1708,19 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         0,
       ),
     }
+  }
+
+  private evaluateCandidate(routes: HighDensityRoute[]): DrcSnapshot {
+    this.candidateDrcEvaluations += 1
+    return this.evaluate(
+      routes,
+      this.config.candidateDrcEvaluator ?? this.config.drcEvaluator,
+    )
+  }
+
+  private evaluateValidation(routes: HighDensityRoute[]): DrcSnapshot {
+    this.validationDrcEvaluations += 1
+    return this.evaluate(routes, this.config.drcEvaluator)
   }
 
   private buildCandidatePlan(): void {
@@ -1805,8 +1827,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
           if (
             (strategy.type === "obstacle_detour" ||
               strategy.type === "directed_pair_dogleg") &&
-            this.initialIssueCount >
-              Math.max(2, Math.floor(this.config.maxAcceptedMoves / 2))
+            this.initialIssueCount > 2
           ) {
             return []
           }
@@ -1870,6 +1891,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
 
   private finish(params: {
     stoppedAfterNoImprovement: boolean
+    stoppedAfterCountPlateau?: boolean
     hitCandidateLimit?: boolean
     hitAcceptedMoveLimit?: boolean
     disabled?: boolean
@@ -1892,6 +1914,8 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         this.attemptedCandidateKeys.size,
       residualLocalRerouteStoppedAfterNoImprovement:
         params.stoppedAfterNoImprovement,
+      residualLocalRerouteStoppedAfterCountPlateau:
+        params.stoppedAfterCountPlateau ?? false,
       residualLocalRerouteHitCandidateLimit: params.hitCandidateLimit ?? false,
       residualLocalRerouteHitAcceptedMoveLimit:
         params.hitAcceptedMoveLimit ?? false,
@@ -1899,6 +1923,12 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         this.config.maxCandidateAttempts,
       residualLocalRerouteMaxAcceptedMoves: this.config.maxAcceptedMoves,
       residualLocalRerouteMaxTotalAcceptedMoves: this.maxTotalAcceptedMoves,
+      residualLocalRerouteMaxCandidatesWithoutCountReduction:
+        this.maxCandidatesWithoutCountReduction,
+      residualLocalRerouteCandidateDrcEvaluations:
+        this.candidateDrcEvaluations,
+      residualLocalRerouteValidationDrcEvaluations:
+        this.validationDrcEvaluations,
     }
     this.progress = 1
     this.solved = true
@@ -1907,7 +1937,22 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private createCandidateRoutes(
     candidatePlanEntry: CandidatePlanEntry,
   ): HighDensityRoute[] | undefined {
-    const candidateRoutes = structuredClone(this.bestRoutes)
+    const affectedRouteIndexes =
+      candidatePlanEntry.type === "directed_via_shift"
+        ? (candidatePlanEntry.viaRouteIndexes ?? [])
+        : (candidatePlanEntry.type === "directed_pair_shift" ||
+              candidatePlanEntry.type === "directed_pair_dogleg") &&
+            candidatePlanEntry.otherRouteIndex !== undefined
+          ? [candidatePlanEntry.routeIndex, candidatePlanEntry.otherRouteIndex]
+          : [candidatePlanEntry.routeIndex]
+    const candidateRoutes = [...this.bestRoutes]
+    for (const routeIndex of new Set(affectedRouteIndexes)) {
+      const route = this.bestRoutes[routeIndex]
+      if (!route) {
+        throw new Error(`Missing candidate route at index ${routeIndex}`)
+      }
+      candidateRoutes[routeIndex] = structuredClone(route)
+    }
     let changed = false
     if (
       candidatePlanEntry.type === "terminal_snap" &&
@@ -2061,6 +2106,7 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
   private acceptCandidate(candidate: {
     routes: HighDensityRoute[]
     snapshot: DrcSnapshot
+    candidateSnapshot: DrcSnapshot
     entry: CandidatePlanEntry
   }): boolean {
     const reducedIssueCount =
@@ -2068,9 +2114,14 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
       (this.bestSnapshot?.issueCount ?? Infinity)
     this.bestRoutes = candidate.routes
     this.bestSnapshot = candidate.snapshot
+    this.bestCandidateSnapshot = candidate.candidateSnapshot
     this.acceptedMoves += 1
-    if (reducedIssueCount) this.acceptedCountReducingMoves += 1
-    else this.acceptedRefinementMoves += 1
+    if (reducedIssueCount) {
+      this.acceptedCountReducingMoves += 1
+      this.candidateAttemptsSinceCountReduction = 0
+    } else {
+      this.acceptedRefinementMoves += 1
+    }
     this.candidateAttemptsSinceAccepted = 0
     this.pendingCandidate = undefined
     const changedRouteIndexes =
@@ -2117,7 +2168,10 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     }
 
     if (!this.bestSnapshot) {
-      this.bestSnapshot = this.evaluate(this.bestRoutes)
+      this.bestSnapshot = this.evaluateValidation(this.bestRoutes)
+      this.bestCandidateSnapshot = this.config.candidateDrcEvaluator
+        ? this.evaluateCandidate(this.bestRoutes)
+        : this.bestSnapshot
       this.initialIssueCount = this.bestSnapshot.issueCount
       this.stats.residualLocalRerouteInitialDrcIssueCount =
         this.bestSnapshot.issueCount
@@ -2158,25 +2212,56 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
 
     this.candidateAttempts += 1
     this.candidateAttemptsSinceAccepted += 1
-    const candidateSnapshot = this.evaluate(candidateRoutes)
-    if (candidateSnapshot.issueCount < this.bestSnapshot.issueCount) {
-      this.acceptCandidate({
-        routes: candidateRoutes,
-        snapshot: candidateSnapshot,
-        entry: candidatePlanEntry,
-      })
-      return
+    this.candidateAttemptsSinceCountReduction += 1
+    const candidateScoringSnapshot = this.evaluateCandidate(candidateRoutes)
+    const bestCandidateSnapshot = this.bestCandidateSnapshot
+    if (!bestCandidateSnapshot) {
+      throw new Error("Missing residual reroute candidate DRC checkpoint")
+    }
+    const shouldValidateCandidate =
+      !this.config.candidateDrcEvaluator ||
+      candidatePlanEntry.type === "terminal_snap" ||
+      isBetterSnapshot(candidateScoringSnapshot, bestCandidateSnapshot)
+    if (shouldValidateCandidate) {
+      const candidateSnapshot = this.config.candidateDrcEvaluator
+        ? this.evaluateValidation(candidateRoutes)
+        : candidateScoringSnapshot
+      if (candidateSnapshot.issueCount < this.bestSnapshot.issueCount) {
+        this.acceptCandidate({
+          routes: candidateRoutes,
+          snapshot: candidateSnapshot,
+          candidateSnapshot: candidateScoringSnapshot,
+          entry: candidatePlanEntry,
+        })
+        return
+      }
+      if (
+        isBetterSnapshot(candidateSnapshot, this.bestSnapshot) &&
+        (!this.pendingCandidate ||
+          isBetterSnapshot(candidateSnapshot, this.pendingCandidate.snapshot))
+      ) {
+        this.pendingCandidate = {
+          routes: candidateRoutes,
+          snapshot: candidateSnapshot,
+          candidateSnapshot: candidateScoringSnapshot,
+          entry: candidatePlanEntry,
+        }
+      }
     }
     if (
-      isBetterSnapshot(candidateSnapshot, this.bestSnapshot) &&
-      (!this.pendingCandidate ||
-        isBetterSnapshot(candidateSnapshot, this.pendingCandidate.snapshot))
+      this.maxCandidatesWithoutCountReduction <
+        this.config.maxCandidateAttempts &&
+      this.candidateAttemptsSinceCountReduction >=
+        this.maxCandidatesWithoutCountReduction
     ) {
-      this.pendingCandidate = {
-        routes: candidateRoutes,
-        snapshot: candidateSnapshot,
-        entry: candidatePlanEntry,
+      if (this.pendingCandidate) {
+        if (this.acceptCandidate(this.pendingCandidate)) return
       }
+      this.finish({
+        stoppedAfterNoImprovement: true,
+        stoppedAfterCountPlateau: true,
+      })
+      return
     }
     if (
       this.pendingCandidate &&
