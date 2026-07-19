@@ -19,6 +19,7 @@ export interface SameNetViaMergerSolverInput {
   layerCount: number
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
+  nearViaMergeDistanceMultiplier?: number
 }
 
 type Via = {
@@ -30,7 +31,7 @@ type Via = {
   layers: number[]
 }
 
-const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
+const DEFAULT_NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
 
 const getNetForRoute = (
@@ -166,6 +167,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
+  nearViaMergeDistanceMultiplier: number
 
   obstacleSHI: ObstacleSpatialHashIndex
   hdRouteSHI: HighDensityRouteSpatialIndex
@@ -174,6 +176,15 @@ export class SameNetViaMergerSolver extends BaseSolver {
     super()
     if (!input.connMap) {
       throw new Error("SameNetViaMergerSolver requires connMap")
+    }
+    if (
+      input.nearViaMergeDistanceMultiplier !== undefined &&
+      (!Number.isFinite(input.nearViaMergeDistanceMultiplier) ||
+        input.nearViaMergeDistanceMultiplier < 1)
+    ) {
+      throw new Error(
+        "nearViaMergeDistanceMultiplier must be a finite number of at least one",
+      )
     }
 
     this.input = {
@@ -195,6 +206,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.vias = []
     this.offendingVias = []
     this.connMap = input.connMap
+    this.nearViaMergeDistanceMultiplier =
+      input.nearViaMergeDistanceMultiplier ??
+      DEFAULT_NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
 
     this.viasByNet = new Map<string, Via[]>()
 
@@ -298,7 +312,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const keep = viasInNet[viaIndex]
         const cellX = Math.floor(keep.x / cellSize)
         const cellY = Math.floor(keep.y / cellSize)
-        const neighborCellRadius = Math.ceil(NEAR_VIA_MERGE_DISTANCE_MULTIPLIER)
+        const neighborCellRadius = Math.ceil(
+          this.nearViaMergeDistanceMultiplier,
+        )
         const removeByPhysicalViaKey = new Map<string, Via>()
 
         for (let dx = -neighborCellRadius; dx <= neighborCellRadius; dx++) {
@@ -317,7 +333,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const directOverlapDistance =
                 keep.diameter / 2 + candidate.diameter / 2
               const nearMergeDistance =
-                directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
+                directOverlapDistance * this.nearViaMergeDistanceMultiplier
 
               if (squaredDistance === 0) continue
 

@@ -8,10 +8,182 @@ import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameN
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import type { DrcEvaluator } from "high-density-repair03/lib"
 
 type Phase = "via_removal" | "via_merging" | "path_simplification"
 
+type RouteComplexity = {
+  viaCount: number
+  routePointCount: number
+  totalTraceLength: number
+}
+type DrcQuality = {
+  issueCount: number
+  issueScore: number
+}
+
+type SimplificationStrategy = {
+  enableGeometryShortcuts: boolean
+  geometryShortcutTraceMargin: number
+  geometryShortcutObstacleMarginScale: number
+  nearViaMergeDistanceMultiplier: number
+  pathMaxStepSize: number
+  pathTailJumpRatio: number
+}
+
+export interface TraceSimplificationSolverConfig {
+  readonly hdRoutes: ReadonlyArray<HighDensityRoute>
+  readonly obstacles: ReadonlyArray<Obstacle>
+  readonly connMap: ConnectivityMap
+  readonly colorMap: Readonly<Record<string, string>>
+  readonly outline?: ReadonlyArray<{ x: number; y: number }>
+  readonly defaultViaDiameter: number
+  readonly layerCount: number
+  readonly minTraceToPadEdgeClearance?: number
+  readonly effort?: number
+  readonly drcEvaluator?: DrcEvaluator
+  readonly preserveInitialDrcCheckpoint?: boolean
+}
+
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
+const TRACE_LENGTH_IMPROVEMENT_TOLERANCE = 1e-6
+const DRC_SCORE_IMPROVEMENT_TOLERANCE = 1e-9
+const MIN_LOOPS_BEFORE_CONVERGENCE = 2
+const MAX_NON_IMPROVING_STRATEGIES = 2
+const SIMPLIFICATION_STRATEGIES: readonly SimplificationStrategy[] = [
+  {
+    enableGeometryShortcuts: false,
+    geometryShortcutTraceMargin: 0.1,
+    geometryShortcutObstacleMarginScale: 1,
+    nearViaMergeDistanceMultiplier: 2.5,
+    pathMaxStepSize: 4,
+    pathTailJumpRatio: 0.8,
+  },
+  {
+    enableGeometryShortcuts: true,
+    geometryShortcutTraceMargin: 0.1,
+    geometryShortcutObstacleMarginScale: 1,
+    nearViaMergeDistanceMultiplier: 2.5,
+    pathMaxStepSize: 4,
+    pathTailJumpRatio: 0.8,
+  },
+  {
+    enableGeometryShortcuts: true,
+    geometryShortcutTraceMargin: 0.075,
+    geometryShortcutObstacleMarginScale: 0.85,
+    nearViaMergeDistanceMultiplier: 3.25,
+    pathMaxStepSize: 2,
+    pathTailJumpRatio: 0.7,
+  },
+  {
+    enableGeometryShortcuts: true,
+    geometryShortcutTraceMargin: 0.05,
+    geometryShortcutObstacleMarginScale: 0.7,
+    nearViaMergeDistanceMultiplier: 4,
+    pathMaxStepSize: 8,
+    pathTailJumpRatio: 0.9,
+  },
+  {
+    enableGeometryShortcuts: true,
+    geometryShortcutTraceMargin: 0.025,
+    geometryShortcutObstacleMarginScale: 0.5,
+    nearViaMergeDistanceMultiplier: 5,
+    pathMaxStepSize: 1,
+    pathTailJumpRatio: 0.6,
+  },
+  {
+    enableGeometryShortcuts: true,
+    geometryShortcutTraceMargin: 0.15,
+    geometryShortcutObstacleMarginScale: 1.2,
+    nearViaMergeDistanceMultiplier: 3,
+    pathMaxStepSize: 6,
+    pathTailJumpRatio: 0.75,
+  },
+]
+
+const getRouteComplexity = (
+  routes: ReadonlyArray<HighDensityRoute>,
+  connMap: ConnectivityMap,
+): RouteComplexity => {
+  const physicalViaKeys = new Set<string>()
+  let routePointCount = 0
+  let totalTraceLength = 0
+
+  for (const route of routes) {
+    const net =
+      connMap.idToNetMap[route.connectionName] ??
+      (route.rootConnectionName
+        ? connMap.idToNetMap[route.rootConnectionName]
+        : undefined) ??
+      route.rootConnectionName ??
+      route.connectionName
+    routePointCount += route.route.length
+    for (let index = 1; index < route.route.length; index += 1) {
+      const previousPoint = route.route[index - 1]!
+      const point = route.route[index]!
+      if (
+        previousPoint.z !== point.z &&
+        Math.abs(previousPoint.x - point.x) <= 1e-3 &&
+        Math.abs(previousPoint.y - point.y) <= 1e-3
+      ) {
+        physicalViaKeys.add(
+          `${net}:${point.x.toFixed(3)}:${point.y.toFixed(3)}`,
+        )
+      }
+      totalTraceLength += Math.hypot(
+        point.x - previousPoint.x,
+        point.y - previousPoint.y,
+      )
+    }
+  }
+
+  return {
+    viaCount: physicalViaKeys.size,
+    routePointCount,
+    totalTraceLength,
+  }
+}
+
+const isRouteComplexityImprovement = (
+  previous: RouteComplexity,
+  current: RouteComplexity,
+): boolean => {
+  if (current.viaCount !== previous.viaCount) {
+    return current.viaCount < previous.viaCount
+  }
+  if (current.routePointCount !== previous.routePointCount) {
+    return current.routePointCount < previous.routePointCount
+  }
+
+  return (
+    current.totalTraceLength <
+    previous.totalTraceLength - TRACE_LENGTH_IMPROVEMENT_TOLERANCE
+  )
+}
+
+const getDrcQuality = (
+  evaluator: DrcEvaluator | undefined,
+  routes: HighDensityRoute[],
+): DrcQuality => {
+  if (!evaluator) return { issueCount: 0, issueScore: 0 }
+  const result = evaluator({ traces: [], routes, hdRoutes: routes })
+  const errors = Array.isArray(result) ? result : result.errors
+  let issueScore = 0
+  for (const error of errors) {
+    const message = typeof error.message === "string" ? error.message : ""
+    const gap = Number.parseFloat(
+      message.match(/gap: (-?\d+(?:\.\d+)?)mm/)?.[1] ?? "",
+    )
+    const required = Number.parseFloat(
+      message.match(/required: (-?\d+(?:\.\d+)?)mm/)?.[1] ?? "",
+    )
+    issueScore +=
+      Number.isFinite(gap) && Number.isFinite(required)
+        ? Math.max(0, required - gap)
+        : 1
+  }
+  return { issueCount: errors.length, issueScore }
+}
 
 const pointInsideObstacle = (
   point: { x: number; y: number },
@@ -46,7 +218,7 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   simplificationPipelineLoops = 0
 
-  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
+  SIMPLIFICATION_STRATEGY_LIMIT: number
 
   PHASE_ORDER: Phase[] = ["via_removal", "via_merging", "path_simplification"]
 
@@ -54,6 +226,18 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   /** Callback to extract results from the active sub-solver */
   extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null = null
+
+  private bestRouteComplexity: RouteComplexity
+
+  private bestHdRoutes: HighDensityRoute[]
+
+  private bestDrcIssueCount: number
+
+  private bestDrcIssueScore: number
+
+  private readonly initialDrcIssueCount: number
+
+  private nonImprovingStrategyCount = 0
 
   /** Returns the simplified routes. This is the primary output of the solver. */
   get simplifiedHdRoutes(): HighDensityRoute[] {
@@ -71,21 +255,21 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
-   *   - iterations: Number of complete simplification iterations (default: 2)
+   *   - effort: Unlocks additional bounded simplification strategies.
+   *     The solver stops when those strategies stop improving the best route.
    */
   constructor(
-    private readonly simplificationConfig: {
-      readonly hdRoutes: ReadonlyArray<HighDensityRoute>
-      readonly obstacles: ReadonlyArray<Obstacle>
-      readonly connMap: ConnectivityMap
-      readonly colorMap: Readonly<Record<string, string>>
-      readonly outline?: ReadonlyArray<{ x: number; y: number }>
-      readonly defaultViaDiameter: number
-      readonly layerCount: number
-      readonly minTraceToPadEdgeClearance?: number
-    },
+    private readonly simplificationConfig: TraceSimplificationSolverConfig,
   ) {
     super()
+    const requestedEffort = simplificationConfig.effort ?? 1
+    const effortScale = Number.isFinite(requestedEffort)
+      ? Math.max(1, requestedEffort)
+      : 1
+    this.SIMPLIFICATION_STRATEGY_LIMIT = Math.min(
+      SIMPLIFICATION_STRATEGIES.length,
+      2 + Math.ceil(Math.log2(effortScale)),
+    )
     this.simplificationConfig = {
       ...simplificationConfig,
       obstacles: createObjectsWithZLayers(
@@ -96,7 +280,32 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
     )
+    this.bestRouteComplexity = getRouteComplexity(
+      this.hdRoutes,
+      this.simplificationConfig.connMap,
+    )
+    this.bestHdRoutes = structuredClone(this.hdRoutes)
+    const initialDrcQuality = getDrcQuality(
+      simplificationConfig.drcEvaluator,
+      this.hdRoutes,
+    )
+    this.bestDrcIssueCount = initialDrcQuality.issueCount
+    this.bestDrcIssueScore = initialDrcQuality.issueScore
+    this.initialDrcIssueCount = initialDrcQuality.issueCount
     this.MAX_ITERATIONS = 100e6
+  }
+
+  private finishSimplification(stoppedAfterNoImprovement: boolean): void {
+    this.hdRoutes = structuredClone(this.bestHdRoutes)
+    this.stats = {
+      simplificationPipelineLoops: this.simplificationPipelineLoops,
+      simplificationStoppedAfterNoImprovement: stoppedAfterNoImprovement,
+      simplificationStrategyLimit: this.SIMPLIFICATION_STRATEGY_LIMIT,
+      simplificationInitialDrcIssueCount: this.initialDrcIssueCount,
+      simplificationFinalDrcIssueCount: this.bestDrcIssueCount,
+      simplificationFinalDrcIssueScore: this.bestDrcIssueScore,
+    }
+    this.solved = true
   }
 
   private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle) {
@@ -145,34 +354,49 @@ export class TraceSimplificationSolver extends BaseSolver {
   markThroughObstacleSegments(
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
-    return routes.map((route) => ({
-      ...route,
-      route: route.route.map((point, index, points) => {
-        const nextPoint = points[index + 1]
-        if (
-          nextPoint &&
-          point.z !== nextPoint.z &&
-          this.getSameNetObstacleForSegment(route, point, nextPoint)
-        ) {
-          return {
-            ...point,
-            toNextSegmentType: "through_obstacle" as const,
-          }
-        }
+    return routes.map((route) => {
+      const vias =
+        (this.simplificationConfig.effort ?? 1) > 1
+          ? route.route.flatMap((point, index, points) => {
+              const nextPoint = points[index + 1]
+              if (!nextPoint || point.z === nextPoint.z) return []
+              if (
+                Math.abs(point.x - nextPoint.x) > 1e-3 ||
+                Math.abs(point.y - nextPoint.y) > 1e-3
+              ) {
+                return []
+              }
+              return [{ x: point.x, y: point.y }]
+            })
+          : route.vias
 
-        return { ...point }
-      }),
-      vias: route.vias.filter(
-        (via) => !this.isViaInsideSameNetObstacle(route, via),
-      ),
-    }))
+      return {
+        ...route,
+        route: route.route.map((point, index, points) => {
+          const nextPoint = points[index + 1]
+          if (
+            nextPoint &&
+            point.z !== nextPoint.z &&
+            this.getSameNetObstacleForSegment(route, point, nextPoint)
+          ) {
+            return {
+              ...point,
+              toNextSegmentType: "through_obstacle" as const,
+            }
+          }
+
+          return { ...point }
+        }),
+        vias: vias.filter(
+          (via) => !this.isViaInsideSameNetObstacle(route, via),
+        ),
+      }
+    })
   }
 
   _step() {
-    if (
-      this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
-    ) {
-      this.solved = true
+    if (this.simplificationPipelineLoops >= this.SIMPLIFICATION_STRATEGY_LIMIT) {
+      this.finishSimplification(false)
       return
     }
 
@@ -204,14 +428,75 @@ export class TraceSimplificationSolver extends BaseSolver {
         } else {
           this.currentPhase = "via_removal"
           this.simplificationPipelineLoops++
+
+          const completedLoopComplexity = getRouteComplexity(
+            this.hdRoutes,
+            this.simplificationConfig.connMap,
+          )
+          const completedLoopDrcQuality = getDrcQuality(
+            this.simplificationConfig.drcEvaluator,
+            this.hdRoutes,
+          )
+          const loopImprovedRouteComplexity = isRouteComplexityImprovement(
+            this.bestRouteComplexity,
+            completedLoopComplexity,
+          )
+          const loopImprovedBestCandidate =
+            completedLoopDrcQuality.issueCount < this.bestDrcIssueCount ||
+            (completedLoopDrcQuality.issueCount === this.bestDrcIssueCount &&
+              completedLoopDrcQuality.issueScore <
+                this.bestDrcIssueScore - DRC_SCORE_IMPROVEMENT_TOLERANCE) ||
+            (completedLoopDrcQuality.issueCount === this.bestDrcIssueCount &&
+              Math.abs(
+                completedLoopDrcQuality.issueScore - this.bestDrcIssueScore,
+              ) <= DRC_SCORE_IMPROVEMENT_TOLERANCE &&
+              loopImprovedRouteComplexity)
+          const completedBaselineCheckpoint =
+            !this.simplificationConfig.preserveInitialDrcCheckpoint &&
+            this.simplificationPipelineLoops ===
+              Math.min(
+                MIN_LOOPS_BEFORE_CONVERGENCE,
+                this.SIMPLIFICATION_STRATEGY_LIMIT,
+              )
+
+          if (completedBaselineCheckpoint || loopImprovedBestCandidate) {
+            this.bestDrcIssueCount = completedLoopDrcQuality.issueCount
+            this.bestDrcIssueScore = completedLoopDrcQuality.issueScore
+            this.bestRouteComplexity = completedLoopComplexity
+            this.bestHdRoutes = structuredClone(this.hdRoutes)
+            this.nonImprovingStrategyCount = 0
+          } else {
+            this.nonImprovingStrategyCount += 1
+          }
+
+          if (
+            this.simplificationPipelineLoops >=
+              Math.min(
+                this.SIMPLIFICATION_STRATEGY_LIMIT,
+                this.SIMPLIFICATION_STRATEGY_LIMIT > MIN_LOOPS_BEFORE_CONVERGENCE
+                  ? MIN_LOOPS_BEFORE_CONVERGENCE + 1
+                  : MIN_LOOPS_BEFORE_CONVERGENCE,
+              ) &&
+            this.simplificationPipelineLoops <
+              this.SIMPLIFICATION_STRATEGY_LIMIT &&
+            this.nonImprovingStrategyCount >= MAX_NON_IMPROVING_STRATEGIES
+          ) {
+            this.finishSimplification(true)
+            return
+          }
+
+          if (
+            this.simplificationPipelineLoops >= MIN_LOOPS_BEFORE_CONVERGENCE
+          ) {
+            this.hdRoutes = structuredClone(this.bestHdRoutes)
+          }
         }
 
         // Check if all iterations are complete
         if (
-          this.simplificationPipelineLoops >=
-          this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+          this.simplificationPipelineLoops >= this.SIMPLIFICATION_STRATEGY_LIMIT
         ) {
-          this.solved = true
+          this.finishSimplification(false)
           return
         }
       } else if (this.activeSubSolver.failed) {
@@ -225,6 +510,8 @@ export class TraceSimplificationSolver extends BaseSolver {
 
     // No active sub-solver, start the next one
     if (!this.activeSubSolver && !this.solved) {
+      const strategy =
+        SIMPLIFICATION_STRATEGIES[this.simplificationPipelineLoops]!
       switch (this.currentPhase) {
         case "via_removal":
           this.activeSubSolver = new UselessViaRemovalSolver({
@@ -236,12 +523,11 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
-            geometryShortcutTraceMargin: 0.1,
+            geometryShortcutTraceMargin: strategy.geometryShortcutTraceMargin,
             geometryShortcutObstacleMargin:
-              this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
-            // Delay the quadratic anchor search until the first path pass has
-            // reduced the route point count.
-            enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
+              (this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15) *
+              strategy.geometryShortcutObstacleMarginScale,
+            enableGeometryShortcuts: strategy.enableGeometryShortcuts,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
@@ -257,6 +543,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
+            nearViaMergeDistanceMultiplier:
+              strategy.nearViaMergeDistanceMultiplier,
           })
           this.extractResult = (s) =>
             (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []
@@ -272,6 +560,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
+            maxStepSize: strategy.pathMaxStepSize,
+            tailJumpRatio: strategy.pathTailJumpRatio,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes
