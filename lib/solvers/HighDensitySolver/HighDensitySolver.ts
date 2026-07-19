@@ -58,6 +58,7 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
 
@@ -90,6 +91,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
   }: {
@@ -103,6 +105,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     nodePfById?:
@@ -123,6 +126,7 @@ export class HighDensitySolver extends BaseSolver {
     this.layerCount = layerCount ?? 2
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
+    this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
@@ -271,6 +275,46 @@ export class HighDensitySolver extends BaseSolver {
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
   }
 
+  private getSolvedRoutesWithTerminalPcbPortIds(
+    solver: HighDensityIntraNodeSolver,
+  ): HighDensityIntraNodeRoute[] {
+    const terminalPortPoints = solver.nodeWithPortPoints.portPoints.filter(
+      (portPoint) => portPoint.pcb_port_id !== undefined,
+    )
+    if (terminalPortPoints.length === 0) return solver.solvedRoutes
+
+    const getTerminalPcbPortId = (
+      route: HighDensityIntraNodeRoute,
+      point: HighDensityIntraNodeRoute["route"][number],
+    ) => {
+      const matchingTerminals = terminalPortPoints.filter(
+        (terminal) =>
+          terminal.connectionName === route.connectionName &&
+          terminal.x === point.x &&
+          terminal.y === point.y &&
+          terminal.z === point.z,
+      )
+      if (matchingTerminals.length > 1) {
+        throw new Error(
+          `HighDensitySolver found multiple PCB terminals at an endpoint of "${route.connectionName}"`,
+        )
+      }
+      const terminal = matchingTerminals[0]
+      if (!terminal?.pcb_port_id) return undefined
+      return terminal.pcb_port_id
+    }
+    return solver.solvedRoutes.map((route) => ({
+      ...route,
+      startPcbPortId: route.route[0]
+        ? getTerminalPcbPortId(route, route.route[0])
+        : undefined,
+      endPcbPortId:
+        route.route.length > 1
+          ? getTerminalPcbPortId(route, route.route[route.route.length - 1]!)
+          : undefined,
+    }))
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -280,7 +324,11 @@ export class HighDensitySolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.routes.push(...this.activeSubSolver.solvedRoutes)
+        this.routes.push(
+          ...(this.preserveTerminalPcbPortIds
+            ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver)
+            : this.activeSubSolver.solvedRoutes),
+        )
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
         this.recordSolvedNodeStats(
           this.activeSubSolver,
