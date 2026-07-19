@@ -1,12 +1,15 @@
 import { expect, test } from "bun:test"
-import { addConnectionNamesToFragmentedObstacleMeshNodes } from "lib/solvers/TopologyPlanningSolver/add-connection-names-to-fragmented-obstacle-mesh-nodes"
+import {
+  FragmentedObstacleConnectivitySolver,
+  type FragmentedObstacleConnectivitySolverInput,
+} from "lib/solvers/TopologyPlanningSolver/fragmented-obstacle-connectivity-solver"
 import type {
   CapacityMeshNode,
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
 
-test("adds route names only to mesh nodes containing connected obstacle fragments", (): void => {
+test("adds route names only to mesh nodes containing enclosed obstacle fragments", (): void => {
   const meshNodes: CapacityMeshNode[] = [
     {
       capacityMeshNodeId: "fragment-node",
@@ -133,14 +136,18 @@ test("adds route names only to mesh nodes containing connected obstacle fragment
       pointsToConnect: [{ x: 10.5, y: 0, layer: "bottom" }],
     },
   ]
-
-  const result = addConnectionNamesToFragmentedObstacleMeshNodes({
+  const inputProblem: FragmentedObstacleConnectivitySolverInput = {
     meshNodes,
     obstacles,
     connections,
     layerCount: 2,
-  })
+  }
+  const solver = new FragmentedObstacleConnectivitySolver(inputProblem)
 
+  expect(() => solver.getOutput()).toThrow("before the solver completed")
+  solver.solve()
+
+  const result = solver.getOutput()
   expect(result[0]?._connectedTo).toEqual(["existing-net", "net-a"])
   expect(result[1]?._connectedTo).toBeUndefined()
   expect(result[2]?._connectedTo).toBeUndefined()
@@ -148,4 +155,14 @@ test("adds route names only to mesh nodes containing connected obstacle fragment
   expect(result[4]?._connectedTo).toBeUndefined()
   expect(result[5]?._connectedTo).toBeUndefined()
   expect(meshNodes[0]?._connectedTo).toEqual(["existing-net"])
+  expect(solver.iterations).toBeGreaterThan(meshNodes.length)
+  expect(solver.stats).toMatchObject({
+    fragmentGroupCount: 2,
+    classifiedFragmentGroupCount: 2,
+    groupWithoutRoutingExitCount: 1,
+    processedMeshNodeCount: 6,
+    updatedMeshNodeCount: 1,
+  })
+  expect(solver.getConstructorParams()).toEqual([inputProblem])
+  expect(solver.visualize().rects?.length).toBeGreaterThan(meshNodes.length)
 })
