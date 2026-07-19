@@ -25,4 +25,7 @@ test("benchmark dataset aliases resolve to canonical dataset names", () => {
   expect(parseDatasetName("23")).toBe("srj23")
   expect(parseDatasetName("dataset23")).toBe("srj23")
   expect(parseDatasetName("45-degree-trace-srj23")).toBe("srj23")
+  expect(parseDatasetName("24")).toBe("srj24")
+  expect(parseDatasetName("dataset24")).toBe("srj24")
+  expect(parseDatasetName("@tscircuit/dataset-srj24")).toBe("srj24")
 })

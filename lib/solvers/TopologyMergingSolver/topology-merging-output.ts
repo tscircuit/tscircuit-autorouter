@@ -264,6 +264,9 @@ function getOutputNodeMetadata({
       ),
     ),
   )
+  const connectedTo = Array.from(
+    new Set(sourceNodes.flatMap((node) => node._connectedTo ?? [])),
+  )
 
   return {
     _containsObstacle:
@@ -290,6 +293,7 @@ function getOutputNodeMetadata({
       sourceNodes.map((node) => node._soicRegionType),
     ),
     _isComponentTopologyNode: isComponentTopologyNode || undefined,
+    _connectedTo: connectedTo.length > 0 ? connectedTo : undefined,
   }
 }
 
