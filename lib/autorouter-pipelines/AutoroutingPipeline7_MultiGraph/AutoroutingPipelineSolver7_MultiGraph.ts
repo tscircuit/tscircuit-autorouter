@@ -88,6 +88,9 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
+const EXACT_DRC_BASE_MAX_ITERATIONS = 32
+const EXACT_DRC_BASE_BROAD_MAX_ITERATIONS = 8
+
 const getDrcEvaluatorConversionOptionsForPipeline = (
   solver: AutoroutingPipelineSolver7_MultiGraph,
 ): Parameters<typeof createPipeline7ExactGeometryDrcEvaluator>[0] => ({
@@ -259,6 +262,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   minTraceWidth!: number
   effort: number
   private readonly routingEffort: number
+  private readonly postProcessingEffortScale: number
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -711,13 +715,24 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srjWithPointPairs: cms.srjWithPointPairs!,
             originalSrj: cms.originalSrj,
           }),
-          maxIterations: 32,
+          maxIterations: Math.ceil(
+            EXACT_DRC_BASE_MAX_ITERATIONS *
+              cms.postProcessingEffortScale,
+          ),
           enableLargeBoardBroadFallback: false,
           enableTargetedErrorSweep: true,
           enablePostSolveClearanceRelaxation: false,
           enableViaInPadLayerMoves: true,
-          viaInPadMaxIterations: 32,
-          broadMaxIterations: 8,
+          viaInPadMaxIterations: Math.ceil(
+            EXACT_DRC_BASE_MAX_ITERATIONS *
+              cms.postProcessingEffortScale,
+          ),
+          broadMaxIterations: Math.ceil(
+            EXACT_DRC_BASE_BROAD_MAX_ITERATIONS *
+              cms.postProcessingEffortScale,
+          ),
+          baselineMaxIterations: EXACT_DRC_BASE_MAX_ITERATIONS,
+          baselineBroadMaxIterations: EXACT_DRC_BASE_BROAD_MAX_ITERATIONS,
           validationDrcEvaluator: createPipeline7RelaxedDrcEvaluator(
             getDrcEvaluatorConversionOptionsForPipeline(cms),
           ),
@@ -784,6 +799,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.effort = mutableOpts.effort ?? 1
     const finiteEffort = Number.isFinite(this.effort) ? this.effort : 1
     this.routingEffort = Math.min(1, Math.max(0.01, finiteEffort))
+    this.postProcessingEffortScale = Math.max(1, finiteEffort)
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
