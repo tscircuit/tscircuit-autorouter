@@ -258,6 +258,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   viaHoleDiameter!: number
   minTraceWidth!: number
   effort: number
+  private readonly routingEffort: number
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -579,7 +580,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
+          totalStepsPerNode: Math.max(
+            12,
+            Math.round(20 * cms.routingEffort),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -630,7 +634,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          effort: cms.effort,
+          effort: cms.routingEffort,
           drcEvaluator: createPipeline7RelaxedDrcEvaluator(
             getDrcEvaluatorConversionOptionsForPipeline(cms),
           ),
@@ -677,7 +681,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             ),
           ),
           connMap: cms.connMap,
-          effort: cms.effort,
+          effort: cms.routingEffort,
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
@@ -778,6 +782,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
+    const finiteEffort = Number.isFinite(this.effort) ? this.effort : 1
+    this.routingEffort = Math.min(1, Math.max(0.01, finiteEffort))
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
