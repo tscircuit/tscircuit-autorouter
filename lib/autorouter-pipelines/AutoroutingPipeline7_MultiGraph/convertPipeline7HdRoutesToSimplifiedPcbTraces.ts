@@ -16,8 +16,8 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
+  routeConversionCache?: WeakMap<HighDensityRoute, SimplifiedPcbTrace["route"]>
 }
-
 /** Converts Pipeline7 routes using the same net and terminal rules as final output. */
 export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   connections,
@@ -27,18 +27,24 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  routeConversionCache,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces => {
   const traces: SimplifiedPcbTraces = []
+  const originalConnectionByName = new Map(
+    originalConnections.map((connection) => [connection.name, connection]),
+  )
+  const routesByConnectionName = new Map<string, HighDensityRoute[]>()
+  for (const route of hdRoutes) {
+    const connectionRoutes = routesByConnectionName.get(route.connectionName)
+    if (connectionRoutes) connectionRoutes.push(route)
+    else routesByConnectionName.set(route.connectionName, [route])
+  }
 
   for (const connection of connections) {
     const netConnectionName =
       connection.__netConnectionName ??
-      originalConnections.find(
-        (candidate) => candidate.name === connection.name,
-      )?.__netConnectionName
-    const connectionRoutes = hdRoutes.filter(
-      (route) => route.connectionName === connection.name,
-    )
+      originalConnectionByName.get(connection.name)?.__netConnectionName
+    const connectionRoutes = routesByConnectionName.get(connection.name) ?? []
 
     if (connection.pointsToConnect.length !== 2) {
       throw new Error(
@@ -53,6 +59,16 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
 
     for (let index = 0; index < connectionRoutes.length; index += 1) {
       const hdRoute = connectionRoutes[index]!
+      let simplifiedRoute = routeConversionCache?.get(hdRoute)
+      if (!simplifiedRoute) {
+        simplifiedRoute = convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
+          connectionPoints: connection.pointsToConnect,
+          defaultViaHoleDiameter,
+          obstacles,
+          connMap,
+        })
+        routeConversionCache?.set(hdRoute, simplifiedRoute)
+      }
       const simplifiedPcbTrace: SimplifiedPcbTrace = {
         type: "pcb_trace",
         pcb_trace_id: `${connection.name}_${index}`,
@@ -61,12 +77,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
           connection.__rootConnectionNames?.[0] ??
           connection.name,
         connectsTo,
-        route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
-          connectionPoints: connection.pointsToConnect,
-          defaultViaHoleDiameter,
-          obstacles,
-          connMap,
-        }),
+        route: simplifiedRoute,
       }
 
       traces.push(simplifiedPcbTrace)

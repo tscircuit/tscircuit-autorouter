@@ -26,12 +26,15 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_via_id: string
   pcb_trace_id: string
 }
-
-type DrcError =
+type BaseDrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+
+type DrcError = BaseDrcError & {
+  pcb_trace_ids?: [string, string]
+}
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -68,6 +71,33 @@ const createDrcConnectivityMap = (
   return connMap
 }
 
+const addTracePairIds = (
+  error: PcbTraceError,
+  pcbTraceIds: readonly string[],
+): DrcError => {
+  const primaryTraceId = error.pcb_trace_id
+  const errorId = error.pcb_trace_error_id
+  if (typeof primaryTraceId !== "string" || typeof errorId !== "string") {
+    return error
+  }
+
+  const matchingOtherTraceIds = pcbTraceIds.filter(
+    (candidateTraceId) =>
+      candidateTraceId !== primaryTraceId &&
+      (errorId === `overlap_${primaryTraceId}_${candidateTraceId}` ||
+        errorId === `overlap_${candidateTraceId}_${primaryTraceId}`),
+  )
+  if (matchingOtherTraceIds.length > 1) {
+    throw new Error(`Ambiguous trace pair metadata for DRC error "${errorId}"`)
+  }
+  if (matchingOtherTraceIds.length === 0) return error
+
+  return {
+    ...error,
+    pcb_trace_ids: [primaryTraceId, matchingOtherTraceIds[0]!],
+  }
+}
+
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
@@ -77,10 +107,22 @@ export const getDrcErrors = (
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
+  const pcbTraceIds = circuitJson
+    .filter(
+      (
+        element,
+      ): element is CircuitJsonElement & {
+        type: "pcb_trace"
+        pcb_trace_id: string
+      } =>
+        element.type === "pcb_trace" &&
+        typeof element.pcb_trace_id === "string",
+    )
+    .map((trace) => trace.pcb_trace_id)
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
-  })
+  }).map((error) => addTracePairIds(error, pcbTraceIds))
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
   const viaTraceErrors = includeTypedTraceClearance

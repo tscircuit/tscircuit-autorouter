@@ -54,8 +54,15 @@ test("Pipeline7 checkpoint validation includes relaxed typed clearance errors", 
     ],
   })
   const errors = Array.isArray(result) ? result : result.errors
+  const errorsWithCenters = Array.isArray(result)
+    ? result
+    : result.errorsWithCenters
+  const padClearanceError = errorsWithCenters?.find(
+    (error) => error.type === "pcb_pad_trace_clearance_error",
+  ) as Record<string, unknown> | undefined
 
   expect(
     errors.some((error) => error.type === "pcb_pad_trace_clearance_error"),
   ).toBe(true)
+  expect(padClearanceError?.pad_center).toEqual({ x: 0, y: 0 })
 })

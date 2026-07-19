@@ -60,6 +60,7 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { ResidualLocalRerouteSolver } from "../../solvers/ResidualLocalRerouteSolver/residual-local-reroute-solver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -239,6 +240,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  residualLocalRerouteSolver?: ResidualLocalRerouteSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -743,6 +745,27 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep(
+      "residualLocalRerouteSolver",
+      ResidualLocalRerouteSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.postDrcTraceSimplificationSolver!.simplifiedHdRoutes,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
+          candidateDrcEvaluator: createPipeline7ExactGeometryDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
+          bounds: cms.srj.bounds,
+          outline: cms.srj.outline,
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+          effort: cms.effort,
+        },
+      ],
+      { shouldRun: (cms) => cms.effort > 1 },
+    ),
   ]
 
   constructor(
@@ -973,6 +996,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.exactGeometryDrcForceImproveSolver?.visualize()
     const postDrcTraceSimplificationViz =
       this.postDrcTraceSimplificationSolver?.visualize()
+    const residualLocalRerouteViz =
+      this.residualLocalRerouteSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1005,6 +1030,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
       postDrcTraceSimplificationViz,
+      residualLocalRerouteViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1082,6 +1108,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.residualLocalRerouteSolver?.getOutput() ??
       this.postDrcTraceSimplificationSolver?.simplifiedHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
