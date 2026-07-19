@@ -37,18 +37,20 @@ jobs:
 
       - name: Run tests for node ${{ matrix.node }}
         run: |
-          if [ "${{ matrix.node }}" = "1" ]; then
-            # Node 1: Run only the long-running test
-            bun test tests/bugs/bugreport23.test.ts --timeout 300000
-          else
-            # Other nodes: Run from generated test plan
-            test_files=()
-            while IFS= read -r test_file; do
-              test_files+=("$test_file")
-            done < .bun-test-plan/testplans/testplan${{ matrix.node }}.txt
-            bun test "${test_files[@]}" --timeout 300000
+          test_plan=".bun-test-plan/testplans/testplan${{ matrix.node }}.txt"
+          if [ ! -f "$test_plan" ]; then
+            echo "Test plan not found: $test_plan"
+            exit 1
           fi
 
+          mapfile -t test_files < "$test_plan"
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No test files found in: $test_plan"
+            exit 1
+          fi
+
+          echo "Running ${#test_files[@]} test files from $test_plan"
+          bun test "${test_files[@]}" --timeout 300000
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()
         uses: actions/upload-artifact@v4

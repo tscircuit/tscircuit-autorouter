@@ -14,6 +14,7 @@ import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/Necessar
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { FragmentedObstacleConnectivitySolver } from "lib/solvers/TopologyPlanningSolver/fragmented-obstacle-connectivity-solver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -214,6 +215,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   topologyMergingSolver?: TopologyMergingSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
+  fragmentedObstacleConnectivitySolver?: FragmentedObstacleConnectivitySolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
@@ -377,8 +379,25 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
+          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+        },
+      },
+    ),
+    definePipelineStep(
+      "fragmentedObstacleConnectivitySolver",
+      FragmentedObstacleConnectivitySolver,
+      (cms) => [
+        {
+          meshNodes: cms.capacityNodes!,
+          obstacles: cms.srjWithPointPairs!.obstacles,
+          connections: cms.srjWithPointPairs!.connections,
+          layerCount: cms.srjWithPointPairs!.layerCount,
+        },
+      ],
+      {
+        onSolved: (cms) => {
           cms.capacityNodes =
-            cms.nodeDimensionSubdivisionSolver?.outputNodes ?? []
+            cms.fragmentedObstacleConnectivitySolver!.getOutput()
         },
       },
     ),
@@ -818,6 +837,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalTopologyGeneratorSolver?.visualize()
     const topologyMergingViz = this.topologyMergingSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
+    const fragmentedObstacleConnectivityViz =
+      this.fragmentedObstacleConnectivitySolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
     const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
     const strawSolverViz = this.strawSolver?.visualize()
@@ -941,6 +962,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       globalTopologyGeneratorViz,
       topologyMergingViz,
       nodeSubdivisionViz,
+      fragmentedObstacleConnectivityViz,
       nodeTargetMergerViz,
       singleLayerNodeMergerViz,
       strawSolverViz,
