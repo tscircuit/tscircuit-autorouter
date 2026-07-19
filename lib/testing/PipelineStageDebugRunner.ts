@@ -13,6 +13,10 @@ type PipelineStepLike = {
   solverName: string
 }
 
+type OptionalPipelineStep<TPipelineSolver> = PipelineStepLike & {
+  shouldRun?: (pipelineSolver: TPipelineSolver) => boolean
+}
+
 type VisualizingSolver = {
   visualize: () => GraphicsObject
   iterations?: number
@@ -186,6 +190,15 @@ export class PipelineStageDebugRunner<
 
     const stageSolver = this.getStageSolver(stageName)
     if (!stageSolver) {
+      const pipelineStep = this.pipelineSolver.pipelineDef.find(
+        (step) => step.solverName === stageName,
+      ) as OptionalPipelineStep<TPipelineSolver> | undefined
+      if (pipelineStep?.shouldRun?.(this.pipelineSolver) === false) {
+        await this.log(
+          `skipped stage=${this.getStageNumber(stageName)} name=${stageName}`,
+        )
+        return
+      }
       throw new Error(`Unable to resolve solver for stage "${stageName}"`)
     }
 

@@ -214,6 +214,9 @@ test(
       "topologyPlanningSolver",
     )
     const traceWidthStage = getPipeline7StageNumber("traceWidthSolver")
+    const postDrcTraceSimplificationStage = getPipeline7StageNumber(
+      "postDrcTraceSimplificationSolver",
+    )
 
     expect(proc.exitCode).toBe(0)
     expect(stderr).toBe("")
@@ -227,6 +230,9 @@ test(
     )
     expect(stdout).toContain(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,
+    )
+    expect(stdout).toContain(
+      `skipped stage=${postDrcTraceSimplificationStage} name=postDrcTraceSimplificationSolver`,
     )
     expect(stdout).toContain("postrun")
     expect(stdout).toContain("drc.relaxedPassed=false")

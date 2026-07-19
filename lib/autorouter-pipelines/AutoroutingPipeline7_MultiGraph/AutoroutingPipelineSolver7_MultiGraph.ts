@@ -69,7 +69,10 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createViaInPadDrcEvaluator } from "./create-via-in-pad-drc-evaluator"
-import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
+import {
+  createPipeline7ExactGeometryDrcEvaluator,
+  createPipeline7RelaxedDrcEvaluator,
+} from "./createPipeline7ExactGeometryDrcEvaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -84,12 +87,26 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
+const getDrcEvaluatorConversionOptionsForPipeline = (
+  solver: AutoroutingPipelineSolver7_MultiGraph,
+): Parameters<typeof createPipeline7ExactGeometryDrcEvaluator>[0] => ({
+  connections: solver.netToPointPairsSolver?.newConnections ?? [],
+  originalConnections: solver.originalSrj.connections,
+  layerCount: solver.srj.layerCount,
+  obstacles: solver.srj.obstacles,
+  defaultViaHoleDiameter: solver.viaHoleDiameter,
+  connMap: solver.connMap,
+  srjWithPointPairs: solver.srjWithPointPairs!,
+  originalSrj: solver.originalSrj,
+})
+
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
   getConstructorParams: (
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
+  shouldRun?: (instance: AutoroutingPipelineSolver7_MultiGraph) => boolean
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
@@ -190,6 +207,7 @@ function definePipelineStep<
   solverClass: T,
   getConstructorParams: (instance: AutoroutingPipelineSolver7_MultiGraph) => P,
   opts: {
+    shouldRun?: (instance: AutoroutingPipelineSolver7_MultiGraph) => boolean
     onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
   } = {},
 ): PipelineStep<T> {
@@ -197,6 +215,7 @@ function definePipelineStep<
     solverName,
     solverClass,
     getConstructorParams,
+    shouldRun: opts.shouldRun,
     onSolved: opts.onSolved,
   }
 }
@@ -227,6 +246,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  postDrcTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -611,7 +631,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          iterations: 2,
+          effort: cms.effort,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
         },
       ],
     ),
@@ -672,16 +695,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           effort: cms.effort,
           viaHoleDiameter: cms.viaHoleDiameter,
-          drcEvaluator: createPipeline7ExactGeometryDrcEvaluator({
-            connections: cms.netToPointPairsSolver?.newConnections ?? [],
-            originalConnections: cms.originalSrj.connections,
-            layerCount: cms.srj.layerCount,
-            obstacles: cms.srj.obstacles,
-            defaultViaHoleDiameter: cms.viaHoleDiameter,
-            connMap: cms.connMap,
-            srjWithPointPairs: cms.srjWithPointPairs!,
-            originalSrj: cms.originalSrj,
-          }),
+          drcEvaluator: createPipeline7ExactGeometryDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
           viaInPadDrcEvaluator: createViaInPadDrcEvaluator({
             connections: cms.netToPointPairsSolver?.newConnections ?? [],
             originalConnections: cms.originalSrj.connections,
@@ -699,9 +715,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enableViaInPadLayerMoves: true,
           viaInPadMaxIterations: 32,
           broadMaxIterations: 8,
+          validationDrcEvaluator: createPipeline7RelaxedDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
+          additionalCandidateHdRoutes:
+            cms.effort > 1
+              ? [cms.traceWidthSolver!.getHdRoutesWithWidths()]
+              : undefined,
           broadPassMultiplier: 3,
         },
       ],
+    ),
+    definePipelineStep(
+      "postDrcTraceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          defaultViaDiameter: cms.viaDiameter,
+          layerCount: cms.srj.layerCount,
+          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          effort: cms.effort,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator(
+            getDrcEvaluatorConversionOptionsForPipeline(cms),
+          ),
+          preserveInitialDrcCheckpoint: true,
+        },
+      ],
+      { shouldRun: (cms) => cms.effort > 1 },
     ),
   ]
 
@@ -766,6 +811,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
+      return
+    }
+
+    if (pipelineStepDef.shouldRun && !pipelineStepDef.shouldRun(this)) {
+      this.currentPipelineStepIndex += 1
       return
     }
 
@@ -931,6 +981,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const postDrcTraceSimplificationViz =
+      this.postDrcTraceSimplificationSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -962,6 +1014,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      postDrcTraceSimplificationViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1039,6 +1092,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.postDrcTraceSimplificationSolver?.simplifiedHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
