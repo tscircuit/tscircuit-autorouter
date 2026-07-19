@@ -71,6 +71,7 @@ type TinyPortMetadata = {
   x?: number
   y?: number
   z?: number
+  pcb_port_id?: string
   prevPortPointId?: string
   nextPortPointId?: string
   distToCentermostPortOnZ?: number
@@ -438,6 +439,9 @@ const buildSerializedTinyGraph = (
         z: startZ,
         distToCentermostPortOnZ: 0,
         _tinyTerminal: true,
+        ...(params.preserveTerminalPcbPortIds && startPoint?.pcb_port_id
+          ? { pcb_port_id: startPoint.pcb_port_id }
+          : {}),
       },
     })
 
@@ -452,6 +456,9 @@ const buildSerializedTinyGraph = (
         z: endZ,
         distToCentermostPortOnZ: 0,
         _tinyTerminal: true,
+        ...(params.preserveTerminalPcbPortIds && endPoint?.pcb_port_id
+          ? { pcb_port_id: endPoint.pcb_port_id }
+          : {}),
       },
     })
 
@@ -1012,6 +1019,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      ...(this.params.preserveTerminalPcbPortIds &&
+      typeof portMetadata?.pcb_port_id === "string"
+        ? { pcb_port_id: portMetadata.pcb_port_id }
+        : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
           ? portMetadata.prevPortPointId

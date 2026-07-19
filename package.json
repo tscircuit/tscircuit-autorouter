@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.696",
+  "version": "0.0.699",
   "type": "module",
   "files": [
     "dist"
@@ -37,6 +37,7 @@
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
+    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#0973fa8a123276ff0f5de1fc7edef31efccb9cc9",
     "@tscircuit/fixed-via-hypergraph-solver": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
@@ -77,7 +78,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/AnasSarkiz/tiny-hypergraph.git#f4b157f57dd9c5f704f02cc936dffc749e9f0a4c",
+    "tiny-hypergraph": "git+https://github.com/AnasSarkiz/tiny-hypergraph.git#70bae0d858348618341544e90d240694ae1c4c51",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",

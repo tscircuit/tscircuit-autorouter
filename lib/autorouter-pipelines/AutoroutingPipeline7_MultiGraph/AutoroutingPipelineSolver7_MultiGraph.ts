@@ -471,6 +471,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             minTraceWidth: cms.minTraceWidth,
             minTraceClearance: cms.srj.defaultObstacleMargin,
@@ -548,6 +549,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
+          preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
         },
       ]
@@ -594,6 +596,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
+          preserveTerminalPcbPortIds: true,
         },
       ],
     ),
@@ -647,6 +650,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
+            new Map(
+              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
+                (route) => [route.connectionName, route],
+              ),
+            ),
           ),
           connMap: cms.connMap,
           effort: cms.effort,

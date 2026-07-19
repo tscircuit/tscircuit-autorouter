@@ -142,6 +142,12 @@ const fromRepairRoute = (
   connectionName: route.connectionName ?? fallbackRoute.connectionName,
   rootConnectionName:
     route.rootConnectionName ?? fallbackRoute.rootConnectionName,
+  ...(fallbackRoute.startPcbPortId
+    ? { startPcbPortId: fallbackRoute.startPcbPortId }
+    : {}),
+  ...(fallbackRoute.endPcbPortId
+    ? { endPcbPortId: fallbackRoute.endPcbPortId }
+    : {}),
   regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
   traceThickness: route.traceThickness ?? fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
