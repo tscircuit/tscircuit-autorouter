@@ -141,26 +141,28 @@ export class FragmentedObstacleConnectivitySolver extends BaseSolver {
         const hasNoRoutingExit: boolean =
           this.groupsWithoutRoutingExits.includes(group)
 
-        return group.fragments.map((fragment): Rect => ({
-          center: {
-            x: (fragment.bounds.minX + fragment.bounds.maxX) / 2,
-            y: (fragment.bounds.minY + fragment.bounds.maxY) / 2,
-          },
-          width: fragment.bounds.maxX - fragment.bounds.minX,
-          height: fragment.bounds.maxY - fragment.bounds.minY,
-          layer: `z${fragment.zLayers.join(",")}`,
-          fill: hasNoRoutingExit
-            ? "rgba(255,140,0,0.18)"
-            : isClassified
-              ? "rgba(120,120,120,0.08)"
-              : "rgba(255,0,0,0.08)",
-          stroke: hasNoRoutingExit
-            ? "rgba(255,140,0,0.85)"
-            : isClassified
-              ? "rgba(120,120,120,0.35)"
-              : "rgba(255,0,0,0.35)",
-          label: `${hasNoRoutingExit ? "enclosed" : isClassified ? "no restoration" : "pending"}\n${group.connectionNames.join(", ")}`,
-        }))
+        return group.fragments.map(
+          (fragment): Rect => ({
+            center: {
+              x: (fragment.bounds.minX + fragment.bounds.maxX) / 2,
+              y: (fragment.bounds.minY + fragment.bounds.maxY) / 2,
+            },
+            width: fragment.bounds.maxX - fragment.bounds.minX,
+            height: fragment.bounds.maxY - fragment.bounds.minY,
+            layer: `z${fragment.zLayers.join(",")}`,
+            fill: hasNoRoutingExit
+              ? "rgba(255,140,0,0.18)"
+              : isClassified
+                ? "rgba(120,120,120,0.08)"
+                : "rgba(255,0,0,0.08)",
+            stroke: hasNoRoutingExit
+              ? "rgba(255,140,0,0.85)"
+              : isClassified
+                ? "rgba(120,120,120,0.35)"
+                : "rgba(255,0,0,0.35)",
+            label: `${hasNoRoutingExit ? "enclosed" : isClassified ? "no restoration" : "pending"}\n${group.connectionNames.join(", ")}`,
+          }),
+        )
       },
     )
     const meshNodeRects: Rect[] = this.inputProblem.meshNodes.map(
@@ -194,15 +196,17 @@ export class FragmentedObstacleConnectivitySolver extends BaseSolver {
     )
     const connectionPoints: Point[] = this.inputProblem.connections.flatMap(
       (connection): Point[] =>
-        connection.pointsToConnect.map((point): Point => ({
-          ...point,
-          layer: getGraphicsLayerForConnectionPoint(
-            point,
-            this.inputProblem.layerCount,
-          ),
-          color: getStringColor(connection.name),
-          label: connection.name,
-        })),
+        connection.pointsToConnect.map(
+          (point): Point => ({
+            ...point,
+            layer: getGraphicsLayerForConnectionPoint(
+              point,
+              this.inputProblem.layerCount,
+            ),
+            color: getStringColor(connection.name),
+            label: connection.name,
+          }),
+        ),
     )
 
     return {
