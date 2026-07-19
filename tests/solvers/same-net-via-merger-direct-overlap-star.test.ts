@@ -32,6 +32,7 @@ test("SameNetViaMergerSolver consolidates a chain within the near-merge radius",
   solver.solve()
 
   expect(solver.failed).toBe(false)
+  expect(solver.MAX_ITERATIONS).toBe(4)
   expect(solver.iterations).toBeLessThan(10)
 
   const routes = solver.getMergedViaHdRoutes()
