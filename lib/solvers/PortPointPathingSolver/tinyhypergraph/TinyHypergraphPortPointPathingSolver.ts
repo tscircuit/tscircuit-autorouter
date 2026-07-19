@@ -1,4 +1,5 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -107,6 +108,8 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
     : {}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const TERMINAL_REGION_CONTAINMENT_TOLERANCE = 1e-3
+const TERMINAL_VIA_ROUTING_MARGIN = 0.15
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
@@ -224,6 +227,70 @@ const getSharedConnectionZ = (params: {
   return sharedZ ?? params.fallbackZ
 }
 
+const getViaHostRegion = (params: {
+  connection: TinyRouteConnection
+  startPoint: ReturnType<typeof getRoutePoint>
+  endPoint: ReturnType<typeof getRoutePoint>
+  startZ: number
+  endZ: number
+  minViaPadDiameter: number
+  routeNetIndex: number
+  regionNetIdByRegionId: Map<string, number>
+}): TinyRouteConnection["startRegion"] | undefined => {
+  const { connection, startPoint, endPoint, startZ, endZ } = params
+  if (!startPoint || !endPoint || startZ === endZ) return undefined
+
+  return [connection.startRegion, connection.endRegion].find((region) => {
+    const halfWidth = region.d.width / 2
+    const halfHeight = region.d.height / 2
+    const containsStart =
+      pointToBoxDistance(startPoint, region.d) <=
+      TERMINAL_REGION_CONTAINMENT_TOLERANCE
+    const containsEnd =
+      pointToBoxDistance(endPoint, region.d) <=
+      TERMINAL_REGION_CONTAINMENT_TOLERANCE
+    const canFitVia =
+      region.d.width + TERMINAL_REGION_CONTAINMENT_TOLERANCE >=
+        params.minViaPadDiameter &&
+      region.d.height + TERMINAL_REGION_CONTAINMENT_TOLERANCE >=
+        params.minViaPadDiameter
+    const viaMargin =
+      params.minViaPadDiameter / 2 + TERMINAL_VIA_ROUTING_MARGIN
+    const minViaX = region.d.center.x - halfWidth + viaMargin
+    const maxViaX = region.d.center.x + halfWidth - viaMargin
+    const minViaY = region.d.center.y - halfHeight + viaMargin
+    const maxViaY = region.d.center.y + halfHeight - viaMargin
+    const midpointX = (startPoint.x + endPoint.x) / 2
+    const midpointY = (startPoint.y + endPoint.y) / 2
+    const viaX =
+      minViaX <= maxViaX
+        ? Math.min(maxViaX, Math.max(minViaX, midpointX))
+        : midpointX
+    const viaY =
+      minViaY <= maxViaY
+        ? Math.min(maxViaY, Math.max(minViaY, midpointY))
+        : midpointY
+    const viaIsInsideBothTerminalRegions = [
+      connection.startRegion,
+      connection.endRegion,
+    ].every(
+      (terminalRegion) =>
+        pointToBoxDistance({ x: viaX, y: viaY }, terminalRegion.d) <=
+        TERMINAL_REGION_CONTAINMENT_TOLERANCE,
+    )
+    const isReservedForRoute =
+      params.regionNetIdByRegionId.get(region.regionId) === params.routeNetIndex
+
+    return (
+      containsStart &&
+      containsEnd &&
+      canFitVia &&
+      viaIsInsideBothTerminalRegions &&
+      isReservedForRoute
+    )
+  })
+}
+
 const toSerializedRegionData = (
   region: HgPortPointPathingSolverParams["graph"]["regions"][number],
   netId?: number,
@@ -333,6 +400,9 @@ const buildSerializedTinyGraph = (
       simpleRouteConnection: connection.simpleRouteConnection,
     }),
   )
+  const serializedConnectionById = new Map(
+    connections.map((connection) => [connection.connectionId, connection]),
+  )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
   for (const connection of params.connections) {
@@ -361,6 +431,47 @@ const buildSerializedTinyGraph = (
       regionAvailableZ: connection.endRegion.d.availableZ,
       layerCount: params.layerCount,
     })
+
+    let startAttachmentRegionId = connection.startRegion.regionId
+    let endAttachmentRegionId = connection.endRegion.regionId
+    // When opposite-layer pads overlap inside one same-net target region,
+    // model their through-via as the normal layer transition within that region.
+    const viaHostRegion = getViaHostRegion({
+      connection,
+      startPoint,
+      endPoint,
+      startZ,
+      endZ,
+      minViaPadDiameter: params.minViaPadDiameter ?? 0.3,
+      routeNetIndex,
+      regionNetIdByRegionId,
+    })
+    if (viaHostRegion) {
+      startAttachmentRegionId = viaHostRegion.regionId
+      endAttachmentRegionId = viaHostRegion.regionId
+      const serializedViaHostRegion = regions.find(
+        (region) => region.regionId === viaHostRegion.regionId,
+      )
+      if (!serializedViaHostRegion) {
+        throw new Error(
+          `Could not find via host region "${viaHostRegion.regionId}" for "${connection.connectionId}"`,
+        )
+      }
+      serializedViaHostRegion.d.availableZ = [
+        ...new Set([...serializedViaHostRegion.d.availableZ, startZ, endZ]),
+      ].sort((a, b) => a - b)
+    }
+
+    const serializedConnection = serializedConnectionById.get(
+      connection.connectionId,
+    )
+    if (!serializedConnection) {
+      throw new Error(
+        `Could not find serialized connection "${connection.connectionId}"`,
+      )
+    }
+    serializedConnection.startRegionId = startAttachmentRegionId
+    serializedConnection.endRegionId = endAttachmentRegionId
 
     const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
     const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
@@ -409,7 +520,7 @@ const buildSerializedTinyGraph = (
 
     ports.push({
       portId: startTerminalPortId,
-      region1Id: connection.startRegion.regionId,
+      region1Id: startAttachmentRegionId,
       region2Id: startTerminalRegionId,
       d: {
         portId: startTerminalPortId,
@@ -426,7 +537,7 @@ const buildSerializedTinyGraph = (
 
     ports.push({
       portId: endTerminalPortId,
-      region1Id: connection.endRegion.regionId,
+      region1Id: endAttachmentRegionId,
       region2Id: endTerminalRegionId,
       d: {
         portId: endTerminalPortId,
@@ -442,10 +553,10 @@ const buildSerializedTinyGraph = (
     })
 
     const startRegion = regions.find(
-      (region) => region.regionId === connection.startRegion.regionId,
+      (region) => region.regionId === startAttachmentRegionId,
     )
     const endRegion = regions.find(
-      (region) => region.regionId === connection.endRegion.regionId,
+      (region) => region.regionId === endAttachmentRegionId,
     )
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
@@ -525,7 +636,7 @@ const buildInputNodesWithPortPoints = (
       width: region.d.width,
       height: region.d.height,
       portPoints,
-      availableZ: region.d.availableZ,
+      availableZ: serializedRegion?.d.availableZ ?? region.d.availableZ,
       _containsObstacle: region.d._containsObstacle,
       _containsTarget: region.d._containsTarget,
       _offBoardConnectionId: region.d._offBoardConnectionId,
@@ -807,6 +918,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
+  private availableZByOriginalRegionId: Map<CapacityMeshNodeId, number[]>
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -877,6 +989,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.graph.regions.map((region) => [region.regionId, region]),
     )
     this.originalRegionIds = new Set(this.originalRegionById.keys())
+    this.availableZByOriginalRegionId = new Map(
+      graphForTiny.regions
+        .filter((region) => this.originalRegionIds.has(region.regionId))
+        .map((region) => [region.regionId, [...region.d.availableZ]]),
+    )
     this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
       params,
       graphForTiny,
@@ -1062,7 +1179,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         height: originalRegion.d.height,
         portPoints,
         portPointsInPairs,
-        availableZ: originalRegion.d.availableZ,
+        availableZ:
+          this.availableZByOriginalRegionId.get(originalRegionId) ??
+          originalRegion.d.availableZ,
       })
     }
 
