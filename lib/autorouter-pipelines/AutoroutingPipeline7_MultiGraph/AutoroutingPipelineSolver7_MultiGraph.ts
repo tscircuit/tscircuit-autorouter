@@ -60,6 +60,7 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { PostDrcTraceSimplificationSolver } from "../../solvers/PostDrcTraceSimplificationSolver/post-drc-trace-simplification-solver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -243,7 +244,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postDrcTraceSimplificationSolver?: TraceSimplificationSolver
+  postDrcTraceSimplificationSolver?: PostDrcTraceSimplificationSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -725,7 +726,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "postDrcTraceSimplificationSolver",
-      TraceSimplificationSolver,
+      PostDrcTraceSimplificationSolver,
       (cms) => [
         {
           hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
