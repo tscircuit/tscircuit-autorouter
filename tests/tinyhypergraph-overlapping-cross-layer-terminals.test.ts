@@ -38,6 +38,7 @@ test("TinyHypergraph routes overlapping cross-layer terminals through one target
   params.connections = [
     {
       connectionId: "cross-layer-targets",
+      mutuallyConnectedNetworkId: "cross-layer-targets",
       startRegion,
       endRegion,
       simpleRouteConnection: {

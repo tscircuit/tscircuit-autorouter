@@ -254,8 +254,7 @@ const getViaHostRegion = (params: {
         params.minViaPadDiameter &&
       region.d.height + TERMINAL_REGION_CONTAINMENT_TOLERANCE >=
         params.minViaPadDiameter
-    const viaMargin =
-      params.minViaPadDiameter / 2 + TERMINAL_VIA_ROUTING_MARGIN
+    const viaMargin = params.minViaPadDiameter / 2 + TERMINAL_VIA_ROUTING_MARGIN
     const minViaX = region.d.center.x - halfWidth + viaMargin
     const maxViaX = region.d.center.x + halfWidth - viaMargin
     const minViaY = region.d.center.y - halfHeight + viaMargin
