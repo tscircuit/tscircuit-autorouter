@@ -44,13 +44,26 @@ test("TinyHypergraph routes overlapping cross-layer terminals through one target
       simpleRouteConnection: {
         name: "cross-layer-targets",
         pointsToConnect: [
-          { x: 0, y: 0, layer: "bottom", pointId: "bottom-port" },
-          { x: 0.17, y: 0, layer: "top", pointId: "top-port" },
+          {
+            x: 0,
+            y: 0,
+            layer: "bottom",
+            pointId: "bottom-port",
+            pcb_port_id: "bottom-port",
+          },
+          {
+            x: 0.17,
+            y: 0,
+            layer: "top",
+            pointId: "top-port",
+            pcb_port_id: "top-port",
+          },
         ],
       },
     },
   ]
   params.layerCount = 2
+  params.preserveTerminalPcbPortIds = true
 
   const solver = new TinyHypergraphPortPointPathingSolver(params)
   solver.solve()
@@ -62,8 +75,36 @@ test("TinyHypergraph routes overlapping cross-layer terminals through one target
       capacityMeshNodeId: "bottom-target",
       availableZ: [0, 1],
       portPoints: [
-        expect.objectContaining({ x: 0, y: 0, z: 1 }),
-        expect.objectContaining({ x: 0.17, y: 0, z: 0 }),
+        expect.objectContaining({
+          x: 0,
+          y: 0,
+          z: 1,
+          pcb_port_id: "bottom-port",
+        }),
+        expect.objectContaining({
+          x: 0.085,
+          y: 0,
+          z: 0,
+          portPointId: "tiny-terminal:via-bridge-port:cross-layer-targets",
+        }),
+      ],
+    }),
+    expect.objectContaining({
+      capacityMeshNodeId: "top-target",
+      availableZ: [0],
+      portPoints: [
+        expect.objectContaining({
+          x: 0.085,
+          y: 0,
+          z: 0,
+          portPointId: "tiny-terminal:via-bridge-port:cross-layer-targets",
+        }),
+        expect.objectContaining({
+          x: 0.17,
+          y: 0,
+          z: 0,
+          pcb_port_id: "top-port",
+        }),
       ],
     }),
   ])

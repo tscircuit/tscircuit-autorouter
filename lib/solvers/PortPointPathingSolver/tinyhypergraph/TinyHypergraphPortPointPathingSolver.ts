@@ -18,6 +18,7 @@ import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   SelectiveReripTinyHyperGraphSolver,
+  type Candidate,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -37,6 +38,8 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 type RouteMetadata = {
   connectionId: string
   mutuallyConnectedNetworkId?: string
+  startRegionId?: string
+  endRegionId?: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
 }
 
@@ -62,6 +65,7 @@ type TinyBounds = {
 }
 
 type TinyRegionMetadata = {
+  serializedRegionId?: string
   bounds?: TinyBounds
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
@@ -69,6 +73,7 @@ type TinyRegionMetadata = {
 }
 
 type TinyPortMetadata = {
+  serializedPortId?: string
   x?: number
   y?: number
   z?: number
@@ -108,6 +113,7 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
     : {}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const TINY_TERMINAL_VIA_BRIDGE_PORT_PREFIX = "tiny-terminal:via-bridge-port:"
 const TERMINAL_REGION_CONTAINMENT_TOLERANCE = 1e-3
 const TERMINAL_VIA_ROUTING_MARGIN = 0.15
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
@@ -227,7 +233,7 @@ const getSharedConnectionZ = (params: {
   return sharedZ ?? params.fallbackZ
 }
 
-const getViaHostRegion = (params: {
+const getViaHostPlacement = (params: {
   connection: TinyRouteConnection
   startPoint: ReturnType<typeof getRoutePoint>
   endPoint: ReturnType<typeof getRoutePoint>
@@ -236,11 +242,16 @@ const getViaHostRegion = (params: {
   minViaPadDiameter: number
   routeNetIndex: number
   regionNetIdByRegionId: Map<string, number>
-}): TinyRouteConnection["startRegion"] | undefined => {
+}):
+  | {
+      region: TinyRouteConnection["startRegion"]
+      point: { x: number; y: number }
+    }
+  | undefined => {
   const { connection, startPoint, endPoint, startZ, endZ } = params
   if (!startPoint || !endPoint || startZ === endZ) return undefined
 
-  return [connection.startRegion, connection.endRegion].find((region) => {
+  for (const region of [connection.startRegion, connection.endRegion]) {
     const halfWidth = region.d.width / 2
     const halfHeight = region.d.height / 2
     const containsStart =
@@ -280,14 +291,116 @@ const getViaHostRegion = (params: {
     const isReservedForRoute =
       params.regionNetIdByRegionId.get(region.regionId) === params.routeNetIndex
 
-    return (
+    if (
       containsStart &&
       containsEnd &&
       canFitVia &&
       viaIsInsideBothTerminalRegions &&
       isReservedForRoute
+    ) {
+      return { region, point: { x: viaX, y: viaY } }
+    }
+  }
+
+  return undefined
+}
+
+const getOverlappingRegionViaPlacement = (params: {
+  firstRegion: TinyRouteConnection["startRegion"]
+  secondRegion: TinyRouteConnection["startRegion"]
+  minViaPadDiameter: number
+}):
+  | {
+      region: TinyRouteConnection["startRegion"]
+      point: { x: number; y: number }
+      bridgeZ: number
+    }
+  | undefined => {
+  const { firstRegion, secondRegion } = params
+  const firstZ = firstRegion.d.availableZ[0]
+  const secondZ = secondRegion.d.availableZ[0]
+  if (
+    firstZ === undefined ||
+    secondZ === undefined ||
+    firstRegion.d.availableZ.some((z) => secondRegion.d.availableZ.includes(z))
+  ) {
+    return undefined
+  }
+
+  const overlapMinX = Math.max(
+    firstRegion.d.center.x - firstRegion.d.width / 2,
+    secondRegion.d.center.x - secondRegion.d.width / 2,
+  )
+  const overlapMaxX = Math.min(
+    firstRegion.d.center.x + firstRegion.d.width / 2,
+    secondRegion.d.center.x + secondRegion.d.width / 2,
+  )
+  const overlapMinY = Math.max(
+    firstRegion.d.center.y - firstRegion.d.height / 2,
+    secondRegion.d.center.y - secondRegion.d.height / 2,
+  )
+  const overlapMaxY = Math.min(
+    firstRegion.d.center.y + firstRegion.d.height / 2,
+    secondRegion.d.center.y + secondRegion.d.height / 2,
+  )
+  if (
+    overlapMinX > overlapMaxX + TERMINAL_REGION_CONTAINMENT_TOLERANCE ||
+    overlapMinY > overlapMaxY + TERMINAL_REGION_CONTAINMENT_TOLERANCE
+  ) {
+    return undefined
+  }
+
+  for (const [region, bridgeZ] of [
+    [firstRegion, secondZ],
+    [secondRegion, firstZ],
+  ] as const) {
+    if (
+      region.d.width + TERMINAL_REGION_CONTAINMENT_TOLERANCE <
+        params.minViaPadDiameter ||
+      region.d.height + TERMINAL_REGION_CONTAINMENT_TOLERANCE <
+        params.minViaPadDiameter
+    ) {
+      continue
+    }
+
+    const viaMargin = params.minViaPadDiameter / 2 + TERMINAL_VIA_ROUTING_MARGIN
+    const minViaX = Math.max(
+      overlapMinX,
+      region.d.center.x - region.d.width / 2 + viaMargin,
     )
-  })
+    const maxViaX = Math.min(
+      overlapMaxX,
+      region.d.center.x + region.d.width / 2 - viaMargin,
+    )
+    const minViaY = Math.max(
+      overlapMinY,
+      region.d.center.y - region.d.height / 2 + viaMargin,
+    )
+    const maxViaY = Math.min(
+      overlapMaxY,
+      region.d.center.y + region.d.height / 2 - viaMargin,
+    )
+    const overlapCenterX = (overlapMinX + overlapMaxX) / 2
+    const overlapCenterY = (overlapMinY + overlapMaxY) / 2
+    const viaX =
+      minViaX <= maxViaX
+        ? Math.min(maxViaX, Math.max(minViaX, overlapCenterX))
+        : overlapCenterX
+    const viaY =
+      minViaY <= maxViaY
+        ? Math.min(maxViaY, Math.max(minViaY, overlapCenterY))
+        : overlapCenterY
+    const isInsideBothRegions = [firstRegion, secondRegion].every(
+      (candidateRegion) =>
+        pointToBoxDistance({ x: viaX, y: viaY }, candidateRegion.d) <=
+        TERMINAL_REGION_CONTAINMENT_TOLERANCE,
+    )
+    if (isInsideBothRegions) {
+      return { region, point: { x: viaX, y: viaY }, bridgeZ }
+    }
+  }
+
+  return undefined
 }
 
 const toSerializedRegionData = (
@@ -360,6 +473,351 @@ const getTinyRouteConnectionsOrThrow = (
   })
 }
 
+const getRegionPairKey = (firstRegionId: string, secondRegionId: string) =>
+  firstRegionId < secondRegionId
+    ? `${firstRegionId}\u0000${secondRegionId}`
+    : `${secondRegionId}\u0000${firstRegionId}`
+
+type TinyConnectionLayerInfo = {
+  connection: TinyRouteConnection
+  netId: number
+  startZ: number
+  endZ: number
+}
+
+type PendingTerminalViaBridge = TinyConnectionLayerInfo & {
+  placement: NonNullable<ReturnType<typeof getViaHostPlacement>>
+}
+
+const getUnreachableConnectionIds = (params: {
+  connectionLayerInfo: TinyConnectionLayerInfo[]
+  regions: SerializedHyperGraph["regions"]
+  ports: SerializedHyperGraph["ports"]
+}): Set<string> => {
+  const regionById = new Map(
+    params.regions.map((region) => [region.regionId, region]),
+  )
+  const incidentPortsByRegionId = new Map<
+    string,
+    SerializedHyperGraph["ports"]
+  >()
+  for (const port of params.ports) {
+    for (const regionId of [port.region1Id, port.region2Id]) {
+      const incidentPorts = incidentPortsByRegionId.get(regionId) ?? []
+      incidentPorts.push(port)
+      incidentPortsByRegionId.set(regionId, incidentPorts)
+    }
+  }
+
+  const unreachableConnectionIds = new Set<string>()
+  for (const { connection, netId } of params.connectionLayerInfo) {
+    const startRegionId = connection.startRegion.regionId
+    const endRegionId = connection.endRegion.regionId
+    const queue = [startRegionId]
+    const visited = new Set([startRegionId])
+    let reachable = false
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      const regionId = queue[queueIndex]!
+      if (regionId === endRegionId) {
+        reachable = true
+        break
+      }
+
+      const region = regionById.get(regionId)
+      if (!region) continue
+      const reservedNetId = region.d.netId
+      if (reservedNetId !== undefined && reservedNetId !== netId) continue
+
+      for (const port of incidentPortsByRegionId.get(regionId) ?? []) {
+        const nextRegionId =
+          port.region1Id === regionId ? port.region2Id : port.region1Id
+        const nextRegion = regionById.get(nextRegionId)
+        if (!nextRegion) continue
+        const nextReservedNetId = nextRegion.d.netId
+        if (nextReservedNetId !== undefined && nextReservedNetId !== netId) {
+          continue
+        }
+        if (visited.has(nextRegionId)) continue
+        visited.add(nextRegionId)
+        queue.push(nextRegionId)
+      }
+    }
+
+    if (!reachable) {
+      unreachableConnectionIds.add(connection.connectionId)
+    }
+  }
+
+  return unreachableConnectionIds
+}
+
+const addTerminalViaBridge = (params: {
+  bridge: PendingTerminalViaBridge
+  regions: SerializedHyperGraph["regions"]
+  ports: SerializedHyperGraph["ports"]
+}) => {
+  const { connection, placement, startZ, endZ } = params.bridge
+  const serializedViaHostRegion = params.regions.find(
+    (region) => region.regionId === placement.region.regionId,
+  )
+  const startRegion = params.regions.find(
+    (region) => region.regionId === connection.startRegion.regionId,
+  )
+  const endRegion = params.regions.find(
+    (region) => region.regionId === connection.endRegion.regionId,
+  )
+  if (!serializedViaHostRegion || !startRegion || !endRegion) {
+    throw new Error(
+      `Could not map terminal via bridge regions for "${connection.connectionId}"`,
+    )
+  }
+
+  serializedViaHostRegion.d.availableZ = [
+    ...new Set([...serializedViaHostRegion.d.availableZ, startZ, endZ]),
+  ].sort((a, b) => a - b)
+
+  const viaBridgePortId = `${TINY_TERMINAL_VIA_BRIDGE_PORT_PREFIX}${connection.connectionId}`
+  const viaBridgeZ =
+    placement.region.regionId === connection.startRegion.regionId
+      ? endZ
+      : startZ
+  params.ports.push({
+    portId: viaBridgePortId,
+    region1Id: connection.startRegion.regionId,
+    region2Id: connection.endRegion.regionId,
+    d: {
+      portId: viaBridgePortId,
+      x: placement.point.x,
+      y: placement.point.y,
+      z: viaBridgeZ,
+      distToCentermostPortOnZ: 0,
+      _tinyTerminal: true,
+    },
+  })
+  startRegion.pointIds.push(viaBridgePortId)
+  endRegion.pointIds.push(viaBridgePortId)
+}
+
+const addOverlappingNetViaBridges = (params: {
+  input: TinyHypergraphInput
+  regions: SerializedHyperGraph["regions"]
+  ports: SerializedHyperGraph["ports"]
+  regionNetIdByRegionId: Map<string, number>
+  netIds: Set<number>
+}) => {
+  const serializedRegionById = new Map(
+    params.regions.map((region) => [region.regionId, region]),
+  )
+  const connectedRegionPairs = new Set(
+    params.ports.map((port) =>
+      getRegionPairKey(port.region1Id, port.region2Id),
+    ),
+  )
+  const targetRegionsByNetId = new Map<
+    number,
+    TinyRouteConnection["startRegion"][]
+  >()
+
+  for (const region of params.input.graph.regions) {
+    if (!region.d._containsTarget) continue
+    const netId = params.regionNetIdByRegionId.get(region.regionId)
+    if (netId === undefined || !params.netIds.has(netId)) continue
+    const netRegions = targetRegionsByNetId.get(netId) ?? []
+    netRegions.push(region)
+    targetRegionsByNetId.set(netId, netRegions)
+  }
+
+  for (const [netId, netRegions] of targetRegionsByNetId) {
+    for (let firstIndex = 0; firstIndex < netRegions.length; firstIndex++) {
+      const firstRegion = netRegions[firstIndex]!
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < netRegions.length;
+        secondIndex++
+      ) {
+        const secondRegion = netRegions[secondIndex]!
+        const regionPairKey = getRegionPairKey(
+          firstRegion.regionId,
+          secondRegion.regionId,
+        )
+        if (connectedRegionPairs.has(regionPairKey)) continue
+
+        const viaPlacement = getOverlappingRegionViaPlacement({
+          firstRegion,
+          secondRegion,
+          minViaPadDiameter: params.input.minViaPadDiameter ?? 0.3,
+        })
+        if (!viaPlacement) continue
+
+        const serializedFirstRegion = serializedRegionById.get(
+          firstRegion.regionId,
+        )
+        const serializedSecondRegion = serializedRegionById.get(
+          secondRegion.regionId,
+        )
+        const serializedViaHostRegion = serializedRegionById.get(
+          viaPlacement.region.regionId,
+        )
+        if (
+          !serializedFirstRegion ||
+          !serializedSecondRegion ||
+          !serializedViaHostRegion
+        ) {
+          throw new Error(
+            `Could not map overlapping target regions "${firstRegion.regionId}" and "${secondRegion.regionId}"`,
+          )
+        }
+
+        const viaBridgePortId = `tiny-net-via-bridge-port:${netId}:${firstRegion.regionId}:${secondRegion.regionId}`
+        params.ports.push({
+          portId: viaBridgePortId,
+          region1Id: firstRegion.regionId,
+          region2Id: secondRegion.regionId,
+          d: {
+            portId: viaBridgePortId,
+            x: viaPlacement.point.x,
+            y: viaPlacement.point.y,
+            z: viaPlacement.bridgeZ,
+            distToCentermostPortOnZ: 0,
+            _tinyTerminal: true,
+          },
+        })
+        serializedFirstRegion.pointIds.push(viaBridgePortId)
+        serializedSecondRegion.pointIds.push(viaBridgePortId)
+        serializedViaHostRegion.d.availableZ = [
+          ...new Set([
+            ...serializedViaHostRegion.d.availableZ,
+            ...firstRegion.d.availableZ,
+            ...secondRegion.d.availableZ,
+          ]),
+        ].sort((a, b) => a - b)
+        connectedRegionPairs.add(regionPairKey)
+      }
+    }
+  }
+}
+
+const addOverlappingTargetRegionAttachments = (params: {
+  input: TinyHypergraphInput
+  regions: SerializedHyperGraph["regions"]
+  ports: SerializedHyperGraph["ports"]
+  regionNetIdByRegionId: Map<string, number>
+  netIds: Set<number>
+}) => {
+  const serializedRegionById = new Map(
+    params.regions.map((region) => [region.regionId, region]),
+  )
+  const connectedRegionPairs = new Set(
+    params.ports.map((port) =>
+      getRegionPairKey(port.region1Id, port.region2Id),
+    ),
+  )
+
+  for (const targetRegion of params.input.graph.regions) {
+    if (!targetRegion.d._containsTarget) continue
+    const targetNetId = params.regionNetIdByRegionId.get(targetRegion.regionId)
+    if (targetNetId === undefined || !params.netIds.has(targetNetId)) continue
+
+    for (const candidateRegion of params.input.graph.regions) {
+      if (
+        candidateRegion.regionId === targetRegion.regionId ||
+        candidateRegion.d._containsTarget ||
+        candidateRegion.d._containsObstacle ||
+        candidateRegion.ports.length === 0
+      ) {
+        continue
+      }
+      const candidateNetId = params.regionNetIdByRegionId.get(
+        candidateRegion.regionId,
+      )
+      if (candidateNetId !== undefined && candidateNetId !== targetNetId) {
+        continue
+      }
+
+      const sharedZ = targetRegion.d.availableZ.find((z) =>
+        candidateRegion.d.availableZ.includes(z),
+      )
+      if (sharedZ !== undefined) continue
+      const overlapMinX = Math.max(
+        targetRegion.d.center.x - targetRegion.d.width / 2,
+        candidateRegion.d.center.x - candidateRegion.d.width / 2,
+      )
+      const overlapMaxX = Math.min(
+        targetRegion.d.center.x + targetRegion.d.width / 2,
+        candidateRegion.d.center.x + candidateRegion.d.width / 2,
+      )
+      const overlapMinY = Math.max(
+        targetRegion.d.center.y - targetRegion.d.height / 2,
+        candidateRegion.d.center.y - candidateRegion.d.height / 2,
+      )
+      const overlapMaxY = Math.min(
+        targetRegion.d.center.y + targetRegion.d.height / 2,
+        candidateRegion.d.center.y + candidateRegion.d.height / 2,
+      )
+      if (
+        overlapMaxX - overlapMinX <= TERMINAL_REGION_CONTAINMENT_TOLERANCE ||
+        overlapMaxY - overlapMinY <= TERMINAL_REGION_CONTAINMENT_TOLERANCE
+      ) {
+        continue
+      }
+
+      const viaPlacement = getOverlappingRegionViaPlacement({
+        firstRegion: targetRegion,
+        secondRegion: candidateRegion,
+        minViaPadDiameter: params.input.minViaPadDiameter ?? 0.3,
+      })
+      if (!viaPlacement) continue
+
+      const regionPairKey = getRegionPairKey(
+        targetRegion.regionId,
+        candidateRegion.regionId,
+      )
+      if (connectedRegionPairs.has(regionPairKey)) continue
+
+      const serializedTargetRegion = serializedRegionById.get(
+        targetRegion.regionId,
+      )
+      const serializedCandidateRegion = serializedRegionById.get(
+        candidateRegion.regionId,
+      )
+      if (!serializedTargetRegion || !serializedCandidateRegion) {
+        throw new Error(
+          `Could not map overlapping target attachment regions "${targetRegion.regionId}" and "${candidateRegion.regionId}"`,
+        )
+      }
+
+      const attachmentPortId = `tiny-target-attachment-port:${targetRegion.regionId}:${candidateRegion.regionId}`
+      params.ports.push({
+        portId: attachmentPortId,
+        region1Id: targetRegion.regionId,
+        region2Id: candidateRegion.regionId,
+        d: {
+          portId: attachmentPortId,
+          x: viaPlacement.point.x,
+          y: viaPlacement.point.y,
+          z: viaPlacement.bridgeZ,
+          distToCentermostPortOnZ: 0,
+          _tinyTerminal: true,
+        },
+      })
+      serializedTargetRegion.pointIds.push(attachmentPortId)
+      serializedCandidateRegion.pointIds.push(attachmentPortId)
+      const serializedViaHostRegion = serializedRegionById.get(
+        viaPlacement.region.regionId,
+      )!
+      serializedViaHostRegion.d.availableZ = [
+        ...new Set([
+          ...serializedViaHostRegion.d.availableZ,
+          ...targetRegion.d.availableZ,
+          ...candidateRegion.d.availableZ,
+        ]),
+      ].sort((a, b) => a - b)
+      connectedRegionPairs.add(regionPairKey)
+    }
+  }
+}
+
 const buildSerializedTinyGraph = (
   params: TinyHypergraphInput,
 ): SerializedHyperGraph => {
@@ -399,11 +857,9 @@ const buildSerializedTinyGraph = (
       simpleRouteConnection: connection.simpleRouteConnection,
     }),
   )
-  const serializedConnectionById = new Map(
-    connections.map((connection) => [connection.connectionId, connection]),
-  )
-
   const solvedRoutes: SerializedTinySolvedRoute[] = []
+  const connectionLayerInfo: TinyConnectionLayerInfo[] = []
+  const pendingTerminalViaBridges = new Map<string, PendingTerminalViaBridge>()
   for (const connection of params.connections) {
     const routeMetadata: RouteMetadata = {
       connectionId: connection.connectionId,
@@ -430,47 +886,35 @@ const buildSerializedTinyGraph = (
       regionAvailableZ: connection.endRegion.d.availableZ,
       layerCount: params.layerCount,
     })
-
-    let startAttachmentRegionId = connection.startRegion.regionId
-    let endAttachmentRegionId = connection.endRegion.regionId
-    // When opposite-layer pads overlap inside one same-net target region,
-    // model their through-via as the normal layer transition within that region.
-    const viaHostRegion = getViaHostRegion({
+    const layerInfo: TinyConnectionLayerInfo = {
       connection,
-      startPoint,
-      endPoint,
+      netId: routeNetIndex,
       startZ,
       endZ,
-      minViaPadDiameter: params.minViaPadDiameter ?? 0.3,
-      routeNetIndex,
-      regionNetIdByRegionId,
-    })
-    if (viaHostRegion) {
-      startAttachmentRegionId = viaHostRegion.regionId
-      endAttachmentRegionId = viaHostRegion.regionId
-      const serializedViaHostRegion = regions.find(
-        (region) => region.regionId === viaHostRegion.regionId,
-      )
-      if (!serializedViaHostRegion) {
-        throw new Error(
-          `Could not find via host region "${viaHostRegion.regionId}" for "${connection.connectionId}"`,
-        )
-      }
-      serializedViaHostRegion.d.availableZ = [
-        ...new Set([...serializedViaHostRegion.d.availableZ, startZ, endZ]),
-      ].sort((a, b) => a - b)
     }
+    connectionLayerInfo.push(layerInfo)
 
-    const serializedConnection = serializedConnectionById.get(
-      connection.connectionId,
-    )
-    if (!serializedConnection) {
-      throw new Error(
-        `Could not find serialized connection "${connection.connectionId}"`,
-      )
+    // When opposite-layer pads overlap inside one same-net target region,
+    // remember a legal local bridge. It is added only if the unmodified graph
+    // has no layer-aware path for this route.
+    const viaHostPlacement = params.preserveTerminalPcbPortIds
+      ? getViaHostPlacement({
+          connection,
+          startPoint,
+          endPoint,
+          startZ,
+          endZ,
+          minViaPadDiameter: params.minViaPadDiameter ?? 0.3,
+          routeNetIndex,
+          regionNetIdByRegionId,
+        })
+      : undefined
+    if (viaHostPlacement) {
+      pendingTerminalViaBridges.set(connection.connectionId, {
+        ...layerInfo,
+        placement: viaHostPlacement,
+      })
     }
-    serializedConnection.startRegionId = startAttachmentRegionId
-    serializedConnection.endRegionId = endAttachmentRegionId
 
     const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
     const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
@@ -519,7 +963,7 @@ const buildSerializedTinyGraph = (
 
     ports.push({
       portId: startTerminalPortId,
-      region1Id: startAttachmentRegionId,
+      region1Id: connection.startRegion.regionId,
       region2Id: startTerminalRegionId,
       d: {
         portId: startTerminalPortId,
@@ -536,7 +980,7 @@ const buildSerializedTinyGraph = (
 
     ports.push({
       portId: endTerminalPortId,
-      region1Id: endAttachmentRegionId,
+      region1Id: connection.endRegion.regionId,
       region2Id: endTerminalRegionId,
       d: {
         portId: endTerminalPortId,
@@ -552,10 +996,10 @@ const buildSerializedTinyGraph = (
     })
 
     const startRegion = regions.find(
-      (region) => region.regionId === startAttachmentRegionId,
+      (region) => region.regionId === connection.startRegion.regionId,
     )
     const endRegion = regions.find(
-      (region) => region.regionId === endAttachmentRegionId,
+      (region) => region.regionId === connection.endRegion.regionId,
     )
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
@@ -566,6 +1010,38 @@ const buildSerializedTinyGraph = (
       },
       path: [{ portId: startTerminalPortId }, { portId: endTerminalPortId }],
     } as SerializedTinySolvedRoute)
+  }
+
+  // Pipeline 7 preserves PCB terminal identities for downstream stitching.
+  // Add cross-layer topology only for routes that are actually disconnected,
+  // preserving path selection for healthy routes and for other pipelines.
+  if (params.preserveTerminalPcbPortIds) {
+    const graphUnreachableConnectionIds = getUnreachableConnectionIds({
+      connectionLayerInfo,
+      regions,
+      ports,
+    })
+    if (graphUnreachableConnectionIds.size > 0) {
+      for (const bridge of pendingTerminalViaBridges.values()) {
+        addTerminalViaBridge({ bridge, regions, ports })
+      }
+
+      const routeNetIds = new Set(connectionLayerInfo.map(({ netId }) => netId))
+      addOverlappingNetViaBridges({
+        input: params,
+        regions,
+        ports,
+        regionNetIdByRegionId,
+        netIds: routeNetIds,
+      })
+      addOverlappingTargetRegionAttachments({
+        input: params,
+        regions,
+        ports,
+        regionNetIdByRegionId,
+        netIds: routeNetIds,
+      })
+    }
   }
 
   return {
@@ -737,6 +1213,110 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+class SelectiveReripTinyHyperGraphSolverWithViaBridges extends SelectiveReripTinyHyperGraphSolver {
+  override _setup() {
+    super._setup()
+    if (!this.failed) {
+      this.seedViaBridgeRoutes()
+    }
+  }
+
+  override resetRoutingStateForRerip() {
+    super.resetRoutingStateForRerip()
+    this.seedViaBridgeRoutes()
+  }
+
+  override _step() {
+    const ripCountBeforeStep = this.state.ripCount
+    super._step()
+    if (this.state.ripCount !== ripCountBeforeStep) {
+      this.seedViaBridgeRoutes()
+    }
+  }
+
+  private seedViaBridgeRoutes() {
+    const portIdBySerializedId = new Map<string, number>()
+    for (
+      let portId = 0;
+      portId < (this.topology.portMetadata?.length ?? 0);
+      portId++
+    ) {
+      const serializedPortId =
+        this.topology.portMetadata?.[portId]?.serializedPortId
+      if (typeof serializedPortId === "string") {
+        portIdBySerializedId.set(serializedPortId, portId)
+      }
+    }
+
+    const regionIdBySerializedId = new Map<string, number>()
+    for (
+      let regionId = 0;
+      regionId < (this.topology.regionMetadata?.length ?? 0);
+      regionId++
+    ) {
+      const serializedRegionId =
+        this.topology.regionMetadata?.[regionId]?.serializedRegionId
+      if (typeof serializedRegionId === "string") {
+        regionIdBySerializedId.set(serializedRegionId, regionId)
+      }
+    }
+
+    for (let routeId = 0; routeId < this.problem.routeCount; routeId++) {
+      const routeMetadata = this.problem.routeMetadata?.[
+        routeId
+      ] as RouteMetadata
+      const viaBridgePortId = portIdBySerializedId.get(
+        `${TINY_TERMINAL_VIA_BRIDGE_PORT_PREFIX}${routeMetadata.connectionId}`,
+      )
+      if (viaBridgePortId === undefined) continue
+
+      const alreadySeeded = this.state.regionSegments.some((segments) =>
+        segments.some(([segmentRouteId]) => segmentRouteId === routeId),
+      )
+      if (alreadySeeded) continue
+
+      const startRegionId = routeMetadata.startRegionId
+        ? regionIdBySerializedId.get(routeMetadata.startRegionId)
+        : undefined
+      const endRegionId = routeMetadata.endRegionId
+        ? regionIdBySerializedId.get(routeMetadata.endRegionId)
+        : undefined
+      if (startRegionId === undefined || endRegionId === undefined) {
+        throw new Error(
+          `Could not map via bridge regions for "${routeMetadata.connectionId}"`,
+        )
+      }
+
+      const startPortId = this.problem.routeStartPort[routeId]!
+      const endPortId = this.problem.routeEndPort[routeId]!
+      const startCandidate: Candidate = {
+        portId: startPortId,
+        nextRegionId: startRegionId,
+        f: 0,
+        g: 0,
+        h: 0,
+      }
+      const viaBridgeCandidate: Candidate = {
+        prevRegionId: startRegionId,
+        portId: viaBridgePortId,
+        nextRegionId: endRegionId,
+        prevCandidate: startCandidate,
+        f: 0,
+        g: 0,
+        h: 0,
+      }
+
+      this.state.unroutedRoutes = this.state.unroutedRoutes.filter(
+        (unroutedRouteId) => unroutedRouteId !== routeId,
+      )
+      this.state.currentRouteId = routeId
+      this.state.currentRouteNetId = this.problem.routeNet[routeId]
+      this.state.goalPortId = endPortId
+      this.onPathFound(viaBridgeCandidate)
+    }
+  }
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
@@ -761,7 +1341,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
+      solveGraphStep.solverClass =
+        SelectiveReripTinyHyperGraphSolverWithViaBridges
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
