@@ -17,14 +17,12 @@ type InspectableTinyPipelineSolver = {
   }
 }
 
-const getPortPointPathingParams = (
-  defaultObstacleMargin?: number,
-): HgPortPointPathingSolverParams => {
+const getPortPointPathingParams = (): HgPortPointPathingSolverParams => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
     minViaPadDiameter: 0.3,
-    defaultObstacleMargin,
+    defaultObstacleMargin: 0.22,
     bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
     obstacles: [],
     connections: [],
@@ -33,7 +31,7 @@ const getPortPointPathingParams = (
     (step) => step.solverName === "portPointPathingSolver",
   )
   if (!portPointPathingStep) {
-    throw new Error("Pipeline7 is missing the portPointPathingSolver stage")
+    throw new Error("Pipeline 7 is missing the port-point pathing stage")
   }
 
   const solverContext = Object.assign(solver, {
@@ -45,17 +43,13 @@ const getPortPointPathingParams = (
   return params as HgPortPointPathingSolverParams
 }
 
-test("Pipeline7 passes trace pitch dimensions to tiny-hypergraph", () => {
-  const explicitClearanceParams = getPortPointPathingParams(0.22)
-  expect(explicitClearanceParams.minTraceWidth).toBe(0.15)
-  expect(explicitClearanceParams.minTraceClearance).toBe(0.22)
-
-  const defaultClearanceParams = getPortPointPathingParams()
-  expect(defaultClearanceParams.minTraceWidth).toBe(0.15)
-  expect(defaultClearanceParams.minTraceClearance).toBeUndefined()
+test("Pipeline 7 passes physical trace dimensions to occupancy scoring", () => {
+  const params = getPortPointPathingParams()
+  expect(params.minTraceWidth).toBe(0.15)
+  expect(params.minTraceClearance).toBe(0.22)
 
   const tinySolver = new TinyHypergraphPortPointPathingSolver(
-    explicitClearanceParams,
+    params,
   ) as unknown as InspectableTinyPipelineSolver
   const { solveGraphOptions, sectionSolverOptions } =
     tinySolver.tinyPipelineSolver.inputProblem
