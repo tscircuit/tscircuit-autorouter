@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { ResidualLocalRerouteSolver } from "lib/solvers/ResidualLocalRerouteSolver/residual-local-reroute-solver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("Pipeline7 always includes residual local rerouting", () => {
@@ -26,6 +27,7 @@ test("Pipeline7 always includes residual local rerouting", () => {
   )
 
   expect(oneXStage?.solverClass).toBe(higherEffortStage?.solverClass)
+  expect(oneXStage?.solverClass).toBe(ResidualLocalRerouteSolver)
   expect(oneX.pipelineDef.map((stage) => stage.solverName)).toEqual(
     higherEffort.pipelineDef.map((stage) => stage.solverName),
   )

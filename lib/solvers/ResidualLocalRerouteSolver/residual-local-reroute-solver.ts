@@ -1642,15 +1642,13 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
         type: "directed_via_shift",
         ...strategy,
       }))
-    const obstacleDetourMargins = config.effort > 1 ? [0.1] : []
-    const obstacleDetourStrategies: CandidateStrategy[] =
-      obstacleDetourMargins.flatMap((margin) =>
-        (["top", "right", "bottom", "left"] as const).map((side) => ({
-          type: "obstacle_detour" as const,
-          side,
-          margin,
-        })),
-      )
+    const obstacleDetourStrategies: CandidateStrategy[] = (
+      ["top", "right", "bottom", "left"] as const
+    ).map((side) => ({
+      type: "obstacle_detour",
+      side,
+      margin: 0.1,
+    }))
     this.strategies = [
       { type: "terminal_snap" },
       ...directedViaShiftStrategies,
@@ -2262,4 +2260,3 @@ export class ResidualLocalRerouteSolver extends BaseSolver {
     )
   }
 }
-

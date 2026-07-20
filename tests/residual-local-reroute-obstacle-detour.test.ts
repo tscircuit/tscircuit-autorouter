@@ -3,7 +3,7 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import { ResidualLocalRerouteSolver } from "lib/solvers/ResidualLocalRerouteSolver/residual-local-reroute-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-test("residual local rerouting detours a multi-segment trace around a pad", () => {
+test("one-effort residual rerouting includes obstacle detours", () => {
   const route: HighDensityRoute = {
     connectionName: "trace",
     traceThickness: 0.1,
@@ -41,7 +41,7 @@ test("residual local rerouting detours a multi-segment trace around a pad", () =
       },
     ],
     layerCount: 2,
-    effort: 50,
+    effort: 1,
   })
 
   solver.solve()
@@ -49,6 +49,6 @@ test("residual local rerouting detours a multi-segment trace around a pad", () =
   expect(solver.failed).toBe(false)
   expect(solver.stats.residualLocalRerouteFinalDrcIssueCount).toBe(0)
   expect(solver.stats.residualLocalRerouteCandidateAttempts).toBe(1)
+  expect(solver.stats.residualLocalRerouteStrategyCount).toBe(53)
   expect(solver.getOutput()[0]!.route[1]!.y).toBeCloseTo(0.25)
 })
-
