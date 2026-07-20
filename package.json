@@ -44,7 +44,7 @@
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#28275c7",
     "@tscircuit/math-utils": "^0.0.36",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#a26f062441ed6baa679655fe10374b01017dcf98",
+    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#ba0f5e0356fa95572c44b2c5539b1a159bd6c7b6",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",

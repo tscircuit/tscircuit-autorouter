@@ -4,9 +4,9 @@ import { GEOMETRY_EPSILON } from "./capacity-node-geometry"
 
 /**
  * Retains the global topology as an input to common refinement. RectDiff marks
- * synthetic component replacement regions as obstacles and targets; those
- * flags describe the temporary global solve, not physical copper keepouts, so
- * they are cleared before the component-local topology groups are overlaid.
+ * synthetic component replacement regions as obstacles and targets; that
+ * metadata describes the temporary global solve, not physical copper or net
+ * ownership, so it is cleared before component-local topology is overlaid.
  */
 export function getGlobalMeshNodesForTopologyMerging({
   meshNodes,
@@ -29,6 +29,7 @@ export function getGlobalMeshNodesForTopologyMerging({
       _completelyInsideObstacle: undefined,
       _containsTarget: undefined,
       _targetConnectionName: undefined,
+      _connectedTo: undefined,
     }
   })
 }
