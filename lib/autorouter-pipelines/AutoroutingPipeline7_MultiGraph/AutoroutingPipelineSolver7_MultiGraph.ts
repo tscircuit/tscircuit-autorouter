@@ -377,8 +377,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes =
-            cms.nodeDimensionSubdivisionSolver?.outputNodes ?? []
+          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
         },
       },
     ),
