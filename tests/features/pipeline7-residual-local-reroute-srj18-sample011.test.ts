@@ -34,6 +34,8 @@ test("Pipeline7 residual local rerouting improves srj18 sample011", async () => 
   }
 
   expect(initialDrcIssueCount).toBeGreaterThan(0)
+  // Low-effort preceding stages can leave via-clearance errors owned by the
+  // via-merging stage, so this trace-local stage must strictly improve them.
   expect(finalDrcIssueCount).toBeLessThan(initialDrcIssueCount)
   expect(attempts).toBeLessThan(maxAttempts)
   expect(stats?.residualLocalRerouteHitCandidateLimit).toBe(false)
