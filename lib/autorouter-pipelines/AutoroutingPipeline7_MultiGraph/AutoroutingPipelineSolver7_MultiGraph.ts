@@ -715,9 +715,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           validationDrcEvaluator: createPipeline7RelaxedDrcEvaluator(
             getDrcEvaluatorConversionOptionsForPipeline(cms),
           ),
-          additionalCandidateHdRoutes: [
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          ],
+          additionalCandidateHdRoutes: cms.traceWidthSolver
+            ? [cms.traceWidthSolver.getHdRoutesWithWidths()]
+            : [],
           broadPassMultiplier: 3,
         },
       ],
