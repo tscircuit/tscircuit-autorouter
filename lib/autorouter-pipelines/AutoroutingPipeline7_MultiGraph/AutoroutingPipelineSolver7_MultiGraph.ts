@@ -764,7 +764,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           effort: cms.effort,
         },
       ],
-      { shouldRun: (cms) => cms.effort > 1 },
     ),
   ]
 
