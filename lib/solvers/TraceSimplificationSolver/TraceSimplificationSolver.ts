@@ -255,8 +255,9 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
-   *   - effort: Unlocks additional bounded simplification strategies.
-   *     The solver stops when those strategies stop improving the best route.
+   *   - effort: Scales the number of bounded simplification strategies.
+   *     Every effort uses the same ordered strategy portfolio and stops when
+   *     those strategies stop improving the best route.
    */
   constructor(
     private readonly simplificationConfig: TraceSimplificationSolverConfig,
@@ -355,20 +356,17 @@ export class TraceSimplificationSolver extends BaseSolver {
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
     return routes.map((route) => {
-      const vias =
-        (this.simplificationConfig.effort ?? 1) > 1
-          ? route.route.flatMap((point, index, points) => {
-              const nextPoint = points[index + 1]
-              if (!nextPoint || point.z === nextPoint.z) return []
-              if (
-                Math.abs(point.x - nextPoint.x) > 1e-3 ||
-                Math.abs(point.y - nextPoint.y) > 1e-3
-              ) {
-                return []
-              }
-              return [{ x: point.x, y: point.y }]
-            })
-          : route.vias
+      const vias = route.route.flatMap((point, index, points) => {
+        const nextPoint = points[index + 1]
+        if (!nextPoint || point.z === nextPoint.z) return []
+        if (
+          Math.abs(point.x - nextPoint.x) > 1e-3 ||
+          Math.abs(point.y - nextPoint.y) > 1e-3
+        ) {
+          return []
+        }
+        return [{ x: point.x, y: point.y }]
+      })
 
       return {
         ...route,

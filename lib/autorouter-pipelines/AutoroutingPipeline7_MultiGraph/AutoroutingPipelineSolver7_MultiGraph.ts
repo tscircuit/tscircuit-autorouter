@@ -60,7 +60,6 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { PostDrcTraceSimplificationSolver } from "../../solvers/PostDrcTraceSimplificationSolver/post-drc-trace-simplification-solver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -244,7 +243,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postDrcTraceSimplificationSolver?: PostDrcTraceSimplificationSolver
+  postDrcTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -716,17 +715,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           validationDrcEvaluator: createPipeline7RelaxedDrcEvaluator(
             getDrcEvaluatorConversionOptionsForPipeline(cms),
           ),
-          additionalCandidateHdRoutes:
-            cms.effort > 1
-              ? [cms.traceWidthSolver!.getHdRoutesWithWidths()]
-              : undefined,
+          additionalCandidateHdRoutes: [
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          ],
           broadPassMultiplier: 3,
         },
       ],
     ),
     definePipelineStep(
       "postDrcTraceSimplificationSolver",
-      PostDrcTraceSimplificationSolver,
+      TraceSimplificationSolver,
       (cms) => [
         {
           hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),

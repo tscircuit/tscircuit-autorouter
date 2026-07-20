@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-test("higher effort unlocks a wider same-net via merge strategy", () => {
+test("higher effort reaches deeper into the ordered strategy budget", () => {
   const makeViaRoute = (
     connectionName: string,
     x: number,
