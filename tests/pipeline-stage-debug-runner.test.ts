@@ -232,7 +232,7 @@ test(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,
     )
     expect(stdout).toContain(
-      `skipped stage=${postDrcTraceSimplificationStage} name=postDrcTraceSimplificationSolver`,
+      `captured stage=${postDrcTraceSimplificationStage} name=postDrcTraceSimplificationSolver`,
     )
     expect(stdout).toContain("postrun")
     expect(stdout).toContain("drc.relaxedPassed=false")

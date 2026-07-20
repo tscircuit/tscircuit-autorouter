@@ -106,7 +106,6 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   getConstructorParams: (
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
-  shouldRun?: (instance: AutoroutingPipelineSolver7_MultiGraph) => boolean
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
@@ -207,7 +206,6 @@ function definePipelineStep<
   solverClass: T,
   getConstructorParams: (instance: AutoroutingPipelineSolver7_MultiGraph) => P,
   opts: {
-    shouldRun?: (instance: AutoroutingPipelineSolver7_MultiGraph) => boolean
     onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
   } = {},
 ): PipelineStep<T> {
@@ -215,7 +213,6 @@ function definePipelineStep<
     solverName,
     solverClass,
     getConstructorParams,
-    shouldRun: opts.shouldRun,
     onSolved: opts.onSolved,
   }
 }
@@ -746,7 +743,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           preserveInitialDrcCheckpoint: true,
         },
       ],
-      { shouldRun: (cms) => cms.effort > 1 },
     ),
   ]
 
@@ -811,11 +807,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
-      return
-    }
-
-    if (pipelineStepDef.shouldRun && !pipelineStepDef.shouldRun(this)) {
-      this.currentPipelineStepIndex += 1
       return
     }
 
