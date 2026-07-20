@@ -3,11 +3,16 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
+type TinyRoutingDimensions = {
+  minTraceWidth?: number
+  minTraceClearance?: number
+}
+
 type InspectableTinyPipelineSolver = {
   tinyPipelineSolver: {
     inputProblem: {
-      solveGraphOptions?: { TRACE_DENSITY_COST_FACTOR?: number }
-      sectionSolverOptions?: { TRACE_DENSITY_COST_FACTOR?: number }
+      solveGraphOptions?: TinyRoutingDimensions
+      sectionSolverOptions?: TinyRoutingDimensions
     }
   }
 }
@@ -40,7 +45,7 @@ const getPortPointPathingParams = (
   return params as HgPortPointPathingSolverParams
 }
 
-test("Pipeline7 passes trace density dimensions to tiny-hypergraph", () => {
+test("Pipeline7 passes trace pitch dimensions to tiny-hypergraph", () => {
   const explicitClearanceParams = getPortPointPathingParams(0.22)
   expect(explicitClearanceParams.minTraceWidth).toBe(0.15)
   expect(explicitClearanceParams.minTraceClearance).toBe(0.22)
@@ -52,12 +57,10 @@ test("Pipeline7 passes trace density dimensions to tiny-hypergraph", () => {
   const tinySolver = new TinyHypergraphPortPointPathingSolver(
     explicitClearanceParams,
   ) as unknown as InspectableTinyPipelineSolver
-  expect(
-    tinySolver.tinyPipelineSolver.inputProblem.solveGraphOptions
-      ?.TRACE_DENSITY_COST_FACTOR,
-  ).toBe(0.1)
-  expect(
-    tinySolver.tinyPipelineSolver.inputProblem.sectionSolverOptions
-      ?.TRACE_DENSITY_COST_FACTOR,
-  ).toBe(0.1)
+  const { solveGraphOptions, sectionSolverOptions } =
+    tinySolver.tinyPipelineSolver.inputProblem
+  expect(solveGraphOptions?.minTraceWidth).toBe(0.15)
+  expect(solveGraphOptions?.minTraceClearance).toBe(0.22)
+  expect(sectionSolverOptions?.minTraceWidth).toBe(0.15)
+  expect(sectionSolverOptions?.minTraceClearance).toBe(0.22)
 })
