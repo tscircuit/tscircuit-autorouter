@@ -546,7 +546,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
       traceSimplificationViz,
       this.solved
         ? combineVisualizations(
-            problemViz,
+            { lines: problemLines },
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,

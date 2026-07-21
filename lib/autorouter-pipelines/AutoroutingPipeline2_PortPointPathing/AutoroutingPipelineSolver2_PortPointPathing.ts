@@ -593,7 +593,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       traceSimplificationViz,
       this.solved
         ? combineVisualizations(
-            problemViz,
+            { lines: problemLines },
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,

@@ -289,10 +289,7 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
       return inputViz
     }
 
-    return combineVisualizations(
-      inputViz,
-      convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
-    )
+    return convertSrjToGraphicsObject(this.getOutputSimpleRouteJson())
   }
 
   preview(): GraphicsObject {
