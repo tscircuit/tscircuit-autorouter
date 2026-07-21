@@ -726,8 +726,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       SameNetViaMergerSolver,
       (cms) => [
         {
-          inputHdRoutes:
-            cms.postDrcUselessViaRemovalSolver!.optimizedHdRoutes,
+          inputHdRoutes: cms.postDrcUselessViaRemovalSolver!.optimizedHdRoutes,
           obstacles: cms.srj.obstacles,
           connMap: cms.connMap,
           colorMap: cms.colorMap,
