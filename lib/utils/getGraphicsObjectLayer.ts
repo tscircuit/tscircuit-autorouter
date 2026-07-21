@@ -30,5 +30,4 @@ export const getGraphicsZLayersForObstacle = (
 export const getGraphicsLayerForObstacle = (
   obstacle: Obstacle,
   layerCount: number,
-): string =>
-  `z${getGraphicsZLayersForObstacle(obstacle, layerCount).join(",")}`
+): string => `z${getGraphicsZLayersForObstacle(obstacle, layerCount).join(",")}`

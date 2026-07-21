@@ -12,10 +12,7 @@ import {
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import {
-  type LayerName,
-  mapZToLayerName,
-} from "lib/utils/mapZToLayerName"
+import { type LayerName, mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 const GRAPHICS_LAYER_COLORS = {
   top: "red",
