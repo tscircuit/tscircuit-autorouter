@@ -16,15 +16,17 @@ import type { LayerName } from "lib/utils/mapZToLayerName"
 const TRACE_LAYER_COLORS = {
   top: "red",
   bottom: "blue",
-  inner1: "green",
-  inner2: "yellow",
-  inner3: "orange",
-  inner4: "purple",
-  inner5: "cyan",
-  inner6: "magenta",
-  inner7: "lime",
-  inner8: "brown",
+  inner1: "gray",
+  inner2: "gray",
+  inner3: "gray",
+  inner4: "gray",
+  inner5: "gray",
+  inner6: "gray",
+  inner7: "gray",
+  inner8: "gray",
 } satisfies Record<LayerName, string>
+const traceLayerColorsByName: Readonly<Record<string, string | undefined>> =
+  TRACE_LAYER_COLORS
 
 export type TraceColorMode = "layer" | "net"
 
@@ -32,12 +34,27 @@ export type ConvertSrjToGraphicsObjectOptions = {
   traceColorMode?: TraceColorMode
 }
 
-function getTraceLayerColor(layerName: string): string {
-  if (!Object.hasOwn(TRACE_LAYER_COLORS, layerName)) {
-    throw new Error(`No trace visualization color for layer "${layerName}"`)
+/** Returns the debugger color for geometry occupying the supplied PCB layers. */
+export function getGraphicsColorForLayers(
+  layerNames: readonly string[],
+): string {
+  const uniqueLayerNames = [...new Set(layerNames)]
+  if (uniqueLayerNames.length === 0) {
+    throw new Error("Cannot visualize geometry without a layer")
   }
 
-  return TRACE_LAYER_COLORS[layerName as LayerName]
+  const layerColors = uniqueLayerNames.map((layerName) => {
+    const layerColor = traceLayerColorsByName[layerName]
+    if (!layerColor) {
+      throw new Error(`No visualization color for layer "${layerName}"`)
+    }
+    return layerColor
+  })
+
+  if (layerColors.length > 1) return "gray"
+  const [layerColor] = layerColors
+  if (!layerColor) throw new Error("Cannot visualize geometry without a layer")
+  return layerColor
 }
 
 export const convertSrjToGraphicsObject = (
@@ -66,7 +83,10 @@ export const convertSrjToGraphicsObject = (
         points.push({
           x: point.x,
           y: point.y,
-          color: colorMap[connection.name]!,
+          color:
+            traceColorMode === "net"
+              ? colorMap[connection.name]!
+              : getGraphicsColorForLayers(pointLayers),
           layer: getGraphicsLayerForConnectionPoint(point, layerCount),
           label: [
             connection.name,
@@ -133,12 +153,21 @@ export const convertSrjToGraphicsObject = (
             fill:
               traceColorMode === "net"
                 ? colorMap[trace.connection_name]!
-                : "blue",
+                : getGraphicsColorForLayers([
+                    routePoint.from_layer,
+                    routePoint.to_layer,
+                  ]),
             stroke: "none",
             layer: `z${zLayers.join(",")}`,
           })
         } else if (routePoint.route_type === "through_obstacle") {
-          const connectionColor = colorMap[trace.connection_name] ?? "purple"
+          const connectionColor =
+            traceColorMode === "net"
+              ? (colorMap[trace.connection_name] ?? "purple")
+              : getGraphicsColorForLayers([
+                  routePoint.from_layer,
+                  routePoint.to_layer,
+                ])
           lines.push({
             points: [routePoint.start, routePoint.end],
             strokeColor: safeTransparentize(connectionColor, 0.35),
@@ -160,7 +189,10 @@ export const convertSrjToGraphicsObject = (
         if (routePoint.route_type === "jumper") {
           // Draw jumper pads and body
           const color =
-            colorMap[trace.connection_name] ?? "rgba(255, 165, 0, 0.8)"
+            traceColorMode === "net"
+              ? (colorMap[trace.connection_name] ??
+                "rgba(255, 165, 0, 0.8)")
+              : getGraphicsColorForLayers([routePoint.layer])
 
           // Get dimensions based on footprint
           const footprint = routePoint.footprint
@@ -232,7 +264,7 @@ export const convertSrjToGraphicsObject = (
           const baseColor =
             traceColorMode === "net"
               ? colorMap[trace.connection_name]!
-              : getTraceLayerColor(routePoint.layer)
+              : getGraphicsColorForLayers([routePoint.layer])
 
           // Create a line between consecutive wire segments on the same layer
           lines.push({
@@ -242,9 +274,10 @@ export const convertSrjToGraphicsObject = (
             ],
             layer: `z${mapLayerNameToZ(routePoint.layer, layerCount)}`,
             strokeWidth: traceWidth,
-            strokeColor: isTopLayer
-              ? baseColor
-              : safeTransparentize(baseColor, 0.5),
+            strokeColor:
+              traceColorMode === "net" && !isTopLayer
+                ? safeTransparentize(baseColor, 0.5)
+                : baseColor,
             ...(traceColorMode === "net"
               ? { label: trace.connection_name }
               : {}),
@@ -264,7 +297,10 @@ export const convertSrjToGraphicsObject = (
       width: o.width,
       height: o.height,
       ccwRotationDegrees: o.ccwRotationDegrees,
-      fill: "rgba(255,0,0,0.5)",
+      fill:
+        traceColorMode === "net"
+          ? "rgba(255,0,0,0.5)"
+          : safeTransparentize(getGraphicsColorForLayers(o.layers), 0.5),
       layer: getGraphicsLayerForObstacle(o, layerCount),
       label: formatObstacleLabel(o),
     })
@@ -279,8 +315,17 @@ export const convertSrjToGraphicsObject = (
           width: pad.width,
           height: pad.height,
           ccwRotationDegrees: pad.ccwRotationDegrees,
-          fill: "rgba(255, 165, 0, 0.3)",
-          stroke: "rgba(255, 165, 0, 0.8)",
+          fill:
+            traceColorMode === "net"
+              ? "rgba(255, 165, 0, 0.3)"
+              : safeTransparentize(
+                  getGraphicsColorForLayers(pad.layers),
+                  0.7,
+                ),
+          stroke:
+            traceColorMode === "net"
+              ? "rgba(255, 165, 0, 0.8)"
+              : getGraphicsColorForLayers(pad.layers),
           layer: getGraphicsLayerForObstacle(pad, layerCount),
         })
       }

@@ -100,7 +100,8 @@ Use line width to mean physical or solver-relevant width. Do not use width only 
 Line defaults:
 
 - Final top-layer traces: solid and visually dominant
-- Final non-top traces: dashed and lower opacity
+- Final non-top traces: dashed; use exact layer colors in layer mode and lower
+  opacity in net mode
 - Through-obstacle lines: translucent with short dash
 - Jumper body lines: gray and narrower than pads
 - Topology edges: solid; encode state with color and stroke width
@@ -133,7 +134,9 @@ Use helper functions instead of hand-mapping layer strings:
 - `getGraphicsLayerForConnectionPoint`
 - `getGraphicsLayerForObstacle`
 
-Connection colors come from `getColorMap(srj)` when available. Preserve per-connection colors; use layer styling through dash, opacity, and `layer`, not by replacing a known connection color.
+Connection colors come from `getColorMap(srj)` in net-color mode. Preserve
+per-connection colors in that mode; the default final-output layer mode uses
+the layer palette instead.
 
 For Pipeline 7 visuals colored by net instead of layer, use
 `bun scripts/run-sample.ts ... --net-colors`.
@@ -142,8 +145,7 @@ Fallback layer colors for final routed output:
 
 - `top`: red
 - `bottom`: blue
-- `inner1`: green
-- `inner2`: yellow
+- any `inner*` layer: gray
 
 Relevant paths:
 

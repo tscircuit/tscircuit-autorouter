@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { getLastStepGraphicsObject } from "../fixtures/getLastStepGraphicsObject"
 import { createTenLayerLayerMaze } from "../fixtures/ten-layer-layer-maze"
 
 const REQUIRED_LAYERS = [
@@ -59,5 +60,22 @@ test("pipeline 7 routes a layer maze that requires exactly ten layers", () => {
   )
   expect(exportedLayers).toEqual(new Set<string>(REQUIRED_LAYERS))
 
-  expect(solver.visualizeFinalOutput()).toMatchGraphicsSvg(import.meta.path)
+  const finalOutputVisualization = solver.visualizeFinalOutput()
+  const finalDebuggerVisualization = getLastStepGraphicsObject(
+    solver.visualize(),
+  )
+  const finalRouteColors = new Set(
+    finalDebuggerVisualization.lines
+      ?.filter((line) => line.layer?.startsWith("z"))
+      .map((line) => line.strokeColor),
+  )
+
+  expect(finalDebuggerVisualization.points).toHaveLength(
+    finalOutputVisualization.points.length,
+  )
+  expect(finalDebuggerVisualization.rects).toHaveLength(
+    finalOutputVisualization.rects.length,
+  )
+  expect(finalRouteColors).toEqual(new Set(["red", "gray", "blue"]))
+  expect(finalOutputVisualization).toMatchGraphicsSvg(import.meta.path)
 })

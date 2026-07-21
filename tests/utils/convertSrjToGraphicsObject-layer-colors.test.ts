@@ -1,13 +1,46 @@
 import { expect, test } from "bun:test"
 import { getColorMap, safeTransparentize } from "lib/solvers/colors"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import {
+  convertSrjToGraphicsObject,
+  getGraphicsColorForLayers,
+} from "lib/utils/convertSrjToGraphicsObject"
 import type { SimpleRouteJson } from "lib/types"
 
 test("colors wire segments by layer by default and by connection in net mode", () => {
+  expect(getGraphicsColorForLayers(["top", "bottom"])).toBe("gray")
+  expect(() => getGraphicsColorForLayers(["top", "bogus"])).toThrow(
+    'No visualization color for layer "bogus"',
+  )
+
   const srj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.15,
-    obstacles: [],
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 2, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        type: "rect",
+        layers: ["bottom"],
+        center: { x: 2, y: 1 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        type: "rect",
+        layers: ["inner1"],
+        center: { x: 2, y: 2 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+    ],
     connections: [
       {
         name: "top-net",
@@ -68,6 +101,13 @@ test("colors wire segments by layer by default and by connection in net mode", (
             width: 0.15,
             layer: "bottom",
           },
+          {
+            route_type: "via",
+            x: 1,
+            y: 1,
+            from_layer: "bottom",
+            to_layer: "inner1",
+          },
         ],
       },
       {
@@ -117,11 +157,23 @@ test("colors wire segments by layer by default and by connection in net mode", (
 
   const graphics = convertSrjToGraphicsObject(srj)
   const lineByLayer = new Map(graphics.lines.map((line) => [line.layer, line]))
+  const pointByLayer = new Map(
+    graphics.points.map((point) => [point.layer, point]),
+  )
+  const rectByLayer = new Map(graphics.rects.map((rect) => [rect.layer, rect]))
 
   expect(lineByLayer.get("z0")?.strokeColor).toBe("red")
-  expect(lineByLayer.get("z1")?.strokeColor).toBe("rgba(0,128,0,0.5)")
-  expect(lineByLayer.get("z2")?.strokeColor).toBe("rgba(255,255,0,0.5)")
-  expect(lineByLayer.get("z3")?.strokeColor).toBe("rgba(0,0,255,0.5)")
+  expect(lineByLayer.get("z1")?.strokeColor).toBe("gray")
+  expect(lineByLayer.get("z2")?.strokeColor).toBe("gray")
+  expect(lineByLayer.get("z3")?.strokeColor).toBe("blue")
+  expect(pointByLayer.get("z0")?.color).toBe("red")
+  expect(pointByLayer.get("z1")?.color).toBe("gray")
+  expect(pointByLayer.get("z2")?.color).toBe("gray")
+  expect(pointByLayer.get("z3")?.color).toBe("blue")
+  expect(rectByLayer.get("z0")?.fill).toBe("rgba(255,0,0,0.5)")
+  expect(rectByLayer.get("z1")?.fill).toBe("rgba(128,128,128,0.5)")
+  expect(rectByLayer.get("z3")?.fill).toBe("rgba(0,0,255,0.5)")
+  expect(graphics.circles[0]?.fill).toBe("gray")
 
   const netGraphics = convertSrjToGraphicsObject(srj, {
     traceColorMode: "net",
@@ -141,6 +193,8 @@ test("colors wire segments by layer by default and by connection in net mode", (
   expect(netLineByLayer.get("z3")?.strokeColor).toBe(
     safeTransparentize(colorMap["bottom-net"]!, 0.5),
   )
+  expect(netGraphics.points[0]?.color).toBe(colorMap["top-net"])
+  expect(netGraphics.circles[0]?.fill).toBe(colorMap["bottom-net"])
   expect(netGraphics.lines.every((line) => line.label?.endsWith("-net"))).toBe(
     true,
   )
