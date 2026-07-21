@@ -61,10 +61,12 @@ import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPo
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import { SameNetViaMergerSolver } from "../../solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { UselessViaRemovalSolver } from "../../solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -227,6 +229,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  postDrcUselessViaRemovalSolver?: UselessViaRemovalSolver
+  postDrcSameNetViaMergerSolver?: SameNetViaMergerSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -702,6 +706,36 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
+    definePipelineStep(
+      "postDrcUselessViaRemovalSolver",
+      UselessViaRemovalSolver,
+      (cms) => [
+        {
+          unsimplifiedHdRoutes:
+            cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+    ),
+    definePipelineStep(
+      "postDrcSameNetViaMergerSolver",
+      SameNetViaMergerSolver,
+      (cms) => [
+        {
+          inputHdRoutes:
+            cms.postDrcUselessViaRemovalSolver!.optimizedHdRoutes,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -930,6 +964,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const postDrcUselessViaRemovalViz =
+      this.postDrcUselessViaRemovalSolver?.visualize()
+    const postDrcSameNetViaMergerViz =
+      this.postDrcSameNetViaMergerSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -961,6 +999,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      postDrcUselessViaRemovalViz,
+      postDrcSameNetViaMergerViz,
       this.solved
         ? combineVisualizations(
             problemBaseViz,
@@ -1038,6 +1078,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.postDrcSameNetViaMergerSolver?.mergedViaHdRoutes ??
+      this.postDrcUselessViaRemovalSolver?.optimizedHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
