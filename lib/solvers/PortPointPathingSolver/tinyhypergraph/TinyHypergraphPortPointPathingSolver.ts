@@ -198,8 +198,8 @@ const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.mutuallyConnectedNetworkId
 
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
-  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.mutuallyConnectedNetworkId ??
+  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.connectionId
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
@@ -250,7 +250,9 @@ const toSerializedRegionData = (
           },
         }
       : {}),
-    _containsObstacle: region.d._containsObstacle,
+    // Net ownership blocks other nets while preserving this copper as a
+    // traversable region for routes on the owning physical net.
+    _containsObstacle: netId === undefined ? region.d._containsObstacle : false,
     _containsTarget: region.d._containsTarget,
     _offBoardConnectionId: region.d._offBoardConnectionId,
     _offBoardConnectedCapacityMeshNodeIds:

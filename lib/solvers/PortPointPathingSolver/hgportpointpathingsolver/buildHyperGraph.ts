@@ -1,4 +1,5 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   CapacityMeshNode,
@@ -21,6 +22,19 @@ import type {
 } from "./types"
 
 const GEOMETRIC_TOLERANCE = 1e-6
+
+type PhysicalNetConnectivityMap = Pick<ConnectivityMap, "getNetConnectedToId">
+
+const getCanonicalNetIdOrThrow = (
+  connectivityMap: PhysicalNetConnectivityMap,
+  connectionName: string,
+): string => {
+  const canonicalNetId = connectivityMap.getNetConnectedToId(connectionName)
+  if (!canonicalNetId) {
+    throw new Error(`Could not resolve physical net for "${connectionName}"`)
+  }
+  return canonicalNetId
+}
 
 const getCandidateRegionsForAssignableVia = (params: {
   graph: HyperGraphHg
@@ -147,6 +161,7 @@ export function buildHyperGraph(params: {
   capacityMeshNodes: CapacityMeshNode[]
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
+  connectivityMap: PhysicalNetConnectivityMap
   assignableViaObstacles?: Obstacle[]
 }): {
   graph: HyperGraphHg
@@ -159,9 +174,17 @@ export function buildHyperGraph(params: {
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
+    const canonicalConnectedTo = cmnNode._connectedTo?.map((connectionAlias) =>
+      getCanonicalNetIdOrThrow(params.connectivityMap, connectionAlias),
+    )
     graph.regions.push({
       regionId: cmnNode.capacityMeshNodeId,
-      d: cmnNode,
+      d: canonicalConnectedTo
+        ? {
+            ...cmnNode,
+            _connectedTo: [...new Set(canonicalConnectedTo)],
+          }
+        : cmnNode,
       ports: [],
     })
   }
@@ -238,8 +261,10 @@ export function buildHyperGraph(params: {
 
     connections.push({
       connectionId: connection.name,
-      mutuallyConnectedNetworkId:
-        connection.__rootConnectionNames?.[0] ?? connection.name,
+      mutuallyConnectedNetworkId: getCanonicalNetIdOrThrow(
+        params.connectivityMap,
+        connection.name,
+      ),
       startRegion,
       endRegion,
       simpleRouteConnection: connection,
