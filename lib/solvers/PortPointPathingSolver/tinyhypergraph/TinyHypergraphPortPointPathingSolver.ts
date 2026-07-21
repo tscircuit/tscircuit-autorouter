@@ -198,8 +198,8 @@ const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.mutuallyConnectedNetworkId
 
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
-  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.mutuallyConnectedNetworkId ??
+  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
   connection.connectionId
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
