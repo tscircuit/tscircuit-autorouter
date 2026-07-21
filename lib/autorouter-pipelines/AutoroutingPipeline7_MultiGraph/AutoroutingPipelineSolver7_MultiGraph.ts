@@ -549,15 +549,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return [
         {
           nodePortPoints: nodePortPointsSource,
-          nodePfById: new Map(
-            (
-              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-              []
-            ).map((node) => [
-              node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
-            ]),
-          ),
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,

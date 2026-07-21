@@ -23,7 +23,39 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
+    initialScaleFactor?: number
   }
+
+export const getInitialScaleFactorForNodePf = (
+  nodePf: number | null | undefined,
+  maxGrowthAttempts = DEFAULT_MAX_GROWTH_ATTEMPTS,
+  targetNodePf = 0.5,
+): number => {
+  if (
+    typeof nodePf !== "number" ||
+    !Number.isFinite(nodePf) ||
+    nodePf <= targetNodePf
+  ) {
+    return 1
+  }
+
+  const requiredLinearScale = Math.sqrt(nodePf / targetNodePf)
+  const growthAttempts = Math.min(
+    maxGrowthAttempts,
+    Math.ceil(Math.log2(requiredLinearScale)),
+  )
+  return 2 ** growthAttempts
+}
+
+export const getInitialScaleFactorForNode = (
+  node: NodeWithPortPoints,
+  nodePf: number | null | undefined,
+  maxGrowthAttempts = DEFAULT_MAX_GROWTH_ATTEMPTS,
+): number =>
+  Math.max(
+    getInitialScaleFactorForNodePf(nodePf, maxGrowthAttempts),
+    node.portPoints.some((portPoint) => portPoint.cramped) ? 2 : 1,
+  )
 
 const scalePoint = <T extends { x: number; y: number }>(
   point: T,
@@ -117,6 +149,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    const requestedInitialScaleFactor = Math.max(
+      1,
+      params.initialScaleFactor ?? 1,
+    )
+    this.growthAttempts = Math.min(
+      this.maxGrowthAttempts,
+      Math.ceil(Math.log2(requestedInitialScaleFactor)),
+    )
+    this.scaleFactor = 2 ** this.growthAttempts
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 

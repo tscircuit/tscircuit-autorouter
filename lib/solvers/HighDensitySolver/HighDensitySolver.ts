@@ -1,8 +1,12 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import type {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+} from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
@@ -10,8 +14,10 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
+  getInitialScaleFactorForNode,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
@@ -275,6 +281,32 @@ export class HighDensitySolver extends BaseSolver {
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
   }
 
+  private getOrComputeNodePf(node: NodeWithPortPoints): number {
+    const existingNodePf = this.nodePfById.get(node.capacityMeshNodeId)
+    if (existingNodePf !== undefined && existingNodePf !== null) {
+      return existingNodePf
+    }
+
+    const crossings = getIntraNodeCrossingsUsingCircle(node)
+    const capacityNode: CapacityMeshNode = {
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      layer: "",
+      availableZ: node.availableZ ?? [0, 1],
+      _containsTarget: node._containsTarget,
+    }
+    const nodePf = calculateNodeProbabilityOfFailure(
+      capacityNode,
+      crossings.numSameLayerCrossings,
+      crossings.numEntryExitLayerChanges,
+      crossings.numTransitionPairCrossings,
+    )
+    this.nodePfById.set(node.capacityMeshNodeId, nodePf)
+    return nodePf
+  }
+
   private getSolvedRoutesWithTerminalPcbPortIds(
     solver: HighDensityIntraNodeSolver,
   ): HighDensityIntraNodeRoute[] {
@@ -360,6 +392,7 @@ export class HighDensitySolver extends BaseSolver {
       return
     }
     const node = this.unsolvedNodePortPoints.pop()!
+    const nodePf = this.getOrComputeNodePf(node)
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
@@ -375,6 +408,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
+      initialScaleFactor: getInitialScaleFactorForNode(node, nodePf),
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

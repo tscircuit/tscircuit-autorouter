@@ -8,6 +8,8 @@ export type PortPoint = {
   z: number
   prevPortPointId?: string
   nextPortPointId?: string
+  /** The source edge could not provide normal spacing for this port. */
+  cramped?: boolean
 }
 
 export type NodeWithPortPoints = {
@@ -18,6 +20,7 @@ export type NodeWithPortPoints = {
   portPoints: PortPoint[]
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
+  _containsTarget?: boolean
 }
 
 /**

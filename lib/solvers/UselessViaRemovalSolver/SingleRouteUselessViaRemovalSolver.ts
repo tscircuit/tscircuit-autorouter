@@ -501,16 +501,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   }
 
   getOptimizedHdRoute(): HighDensityRoute {
-    // TODO reconstruct the route from segments, we will need to recompute the
-    // vias
     const route = this.routeSections.flatMap((section) => section.points)
     const vias: HighDensityRoute["vias"] = []
     for (let i = 0; i < route.length - 1; i++) {
-      if (route[i].z !== route[i + 1].z) {
-        vias.push({
-          x: route[i].x,
-          y: route[i].y,
-        })
+      const current = route[i]
+      const next = route[i + 1]
+      if (
+        current.z !== next.z &&
+        current.toNextSegmentType !== "through_obstacle"
+      ) {
+        vias.push({ x: current.x, y: current.y })
       }
     }
     return {
