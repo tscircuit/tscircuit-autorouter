@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
@@ -64,15 +62,11 @@ test("pipeline7 dataset01 circuit107 stitch output stays open between two termin
 
   solver.solve()
 
-  const circuitJson = convertToCircuitJson(
-    solver.srjWithPointPairs!,
-    solver.getOutputSimplifiedPcbTraces(),
-    {
-      minTraceWidth: circuit107.minTraceWidth,
-      originalSrj: circuit107,
-    },
-  )
-  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: circuit107,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    traces: solver.getOutputSimplifiedPcbTraces(),
+  })
 
   expect(errors).toHaveLength(0)
 })
