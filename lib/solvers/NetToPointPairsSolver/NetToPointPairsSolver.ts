@@ -25,7 +25,6 @@ export const getExternalConnectionState = (
   const allExternalGroups = [...externalGroups, ...routedTraceGroups]
   const pointIdToGroup = new Map<string, number>()
   const pointById = new Map<string, ConnectionPoint>()
-  const parentByPointId = new Map<string, string>()
 
   for (const point of connection.pointsToConnect) {
     if (point.pointId) {
@@ -39,58 +38,30 @@ export const getExternalConnectionState = (
     weight: number
   }> = []
 
-  const findRoot = (pointId: string): string => {
-    const parent = parentByPointId.get(pointId)
-    if (!parent || parent === pointId) return pointId
-    const root = findRoot(parent)
-    parentByPointId.set(pointId, root)
-    return root
-  }
-
-  const union = (firstPointId: string, secondPointId: string) => {
-    const firstRoot = findRoot(firstPointId)
-    const secondRoot = findRoot(secondPointId)
-    if (firstRoot !== secondRoot) {
-      parentByPointId.set(secondRoot, firstRoot)
-    }
-  }
-
-  for (const group of allExternalGroups) {
+  allExternalGroups.forEach((group, idx) => {
     const groupPoints = group
       .map((pointId) => pointById.get(pointId))
       .filter((point): point is ConnectionPoint => Boolean(point))
 
     for (const point of groupPoints) {
-      if (point.pointId && !parentByPointId.has(point.pointId)) {
-        parentByPointId.set(point.pointId, point.pointId)
+      if (point.pointId) {
+        pointIdToGroup.set(point.pointId, idx)
       }
     }
 
     const representativePoint = groupPoints[0]
     if (!representativePoint) {
-      continue
+      return
     }
 
     for (let i = 1; i < groupPoints.length; i++) {
-      union(representativePoint.pointId!, groupPoints[i]!.pointId!)
       zeroWeightEdges.push({
         from: representativePoint,
         to: groupPoints[i]!,
         weight: 0,
       })
     }
-  }
-
-  const groupIndexByRoot = new Map<string, number>()
-  for (const pointId of parentByPointId.keys()) {
-    const root = findRoot(pointId)
-    let groupIndex = groupIndexByRoot.get(root)
-    if (groupIndex === undefined) {
-      groupIndex = groupIndexByRoot.size
-      groupIndexByRoot.set(root, groupIndex)
-    }
-    pointIdToGroup.set(pointId, groupIndex)
-  }
+  })
 
   return { pointIdToGroup, zeroWeightEdges }
 }

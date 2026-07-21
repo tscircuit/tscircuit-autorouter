@@ -5,6 +5,7 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { normalizePhysicalConnectivity } from "lib/utils/normalizePhysicalConnectivity"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   outputSrj?: SimpleRouteJson
@@ -15,7 +16,12 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   }
 
   override _step() {
-    this.outputSrj = convertSrjTracesToObstacles(this.inputSrj) ?? this.inputSrj
+    const srjWithPhysicalConnectivity = normalizePhysicalConnectivity(
+      this.inputSrj,
+    )
+    this.outputSrj =
+      convertSrjTracesToObstacles(srjWithPhysicalConnectivity) ??
+      srjWithPhysicalConnectivity
     this.solved = true
   }
 

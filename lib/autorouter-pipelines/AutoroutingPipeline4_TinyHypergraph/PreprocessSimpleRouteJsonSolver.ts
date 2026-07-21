@@ -11,6 +11,7 @@ import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacl
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { normalizePhysicalConnectivity } from "lib/utils/normalizePhysicalConnectivity"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   outputSrj?: SimpleRouteJson
@@ -24,8 +25,11 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   }
 
   override _step() {
+    const inputSrjWithPhysicalConnectivity = normalizePhysicalConnectivity(
+      this.inputSrj,
+    )
     const inputSrjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(this.inputSrj)
+      createSrjWithBoardValidObstacleLayers(inputSrjWithPhysicalConnectivity)
     const srjWithPreloadedRouteObstacles =
       convertSrjTracesToObstacles(inputSrjWithBoardValidObstacleLayers) ??
       inputSrjWithBoardValidObstacleLayers
