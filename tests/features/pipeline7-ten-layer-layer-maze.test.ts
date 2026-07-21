@@ -64,18 +64,21 @@ test("pipeline 7 routes a layer maze that requires exactly ten layers", () => {
   const finalDebuggerVisualization = getLastStepGraphicsObject(
     solver.visualize(),
   )
+  const finalOutputRects = finalOutputVisualization.rects
+  const finalDebuggerRects = finalDebuggerVisualization.rects
+  if (!finalOutputRects || !finalDebuggerRects) {
+    throw new Error("Expected final obstacle rects in both solved views")
+  }
 
-  expect(finalDebuggerVisualization.rects).toHaveLength(
-    finalOutputVisualization.rects.length,
-  )
+  expect(finalDebuggerRects).toHaveLength(finalOutputRects.length)
   expect(
-    finalDebuggerVisualization.rects?.map((rect) => ({
+    finalDebuggerRects.map((rect) => ({
       center: rect.center,
       layer: rect.layer,
       fill: rect.fill,
     })),
   ).toEqual(
-    finalOutputVisualization.rects.map((rect) => ({
+    finalOutputRects.map((rect) => ({
       center: rect.center,
       layer: rect.layer,
       fill: rect.fill,
