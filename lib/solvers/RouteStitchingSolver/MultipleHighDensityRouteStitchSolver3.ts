@@ -1,14 +1,18 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import { Obstacle, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  type IsValidStitchSegment,
+  SingleHighDensityRouteStitchSolver3,
+} from "./SingleHighDensityRouteStitchSolver3"
+import { createStitchSegmentValidator } from "./createStitchSegmentValidator"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -41,6 +45,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  private isValidStitchSegment?: IsValidStitchSegment
   private endpointIndex = new EndpointClusterIndex()
 
   private canStitchBetweenTerminals(params: {
@@ -59,6 +64,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isValidStitchSegment: this.isValidStitchSegment,
     })
 
     while (
@@ -139,6 +145,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    obstacles?: Obstacle[]
+    connMap?: { areIdsConnected: (a: string, b: string) => boolean }
+    minTraceToPadEdgeClearance?: number
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
@@ -147,6 +156,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+
+    if (params.obstacles || params.connMap) {
+      this.isValidStitchSegment = createStitchSegmentValidator({
+        hdRoutes: canonicalHdRoutes,
+        obstacles: params.obstacles ?? [],
+        layerCount: params.layerCount,
+        connMap: params.connMap,
+        minClearance: params.minTraceToPadEdgeClearance ?? 0.1,
+      })
+    }
 
     const firstRoute = canonicalHdRoutes[0]
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
@@ -422,6 +441,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isValidStitchSegment: this.isValidStitchSegment,
     })
   }
 

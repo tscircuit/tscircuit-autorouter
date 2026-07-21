@@ -593,6 +593,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          minTraceToPadEdgeClearance:
+            cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         },
       ],
     ),
