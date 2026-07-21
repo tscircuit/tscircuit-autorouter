@@ -724,7 +724,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       traceSimplificationViz,
       this.solved
         ? combineVisualizations(
-            problemBaseViz,
+            { lines: problemLines },
             getPresuppliedTraceVisualization({ srj: this.originalSrj }),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )

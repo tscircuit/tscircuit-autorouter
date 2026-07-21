@@ -636,7 +636,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       simplifiedPathSolverViz2,
       this.solved
         ? combineVisualizations(
-            problemViz,
+            { lines: problemLines },
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,

@@ -7,13 +7,17 @@ import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
   getGraphicsLayerFromLayerNames,
+  getGraphicsZLayersForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import type { LayerName } from "lib/utils/mapZToLayerName"
+import {
+  type LayerName,
+  mapZToLayerName,
+} from "lib/utils/mapZToLayerName"
 
-const TRACE_LAYER_COLORS = {
+const GRAPHICS_LAYER_COLORS = {
   top: "red",
   bottom: "blue",
   inner1: "green",
@@ -32,12 +36,12 @@ export type ConvertSrjToGraphicsObjectOptions = {
   traceColorMode?: TraceColorMode
 }
 
-function getTraceLayerColor(layerName: string): string {
-  if (!Object.hasOwn(TRACE_LAYER_COLORS, layerName)) {
-    throw new Error(`No trace visualization color for layer "${layerName}"`)
+function getGraphicsLayerColor(layerName: string): string {
+  if (!Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
+    throw new Error(`No visualization color for layer "${layerName}"`)
   }
 
-  return TRACE_LAYER_COLORS[layerName as LayerName]
+  return GRAPHICS_LAYER_COLORS[layerName as LayerName]
 }
 
 export const convertSrjToGraphicsObject = (
@@ -232,7 +236,7 @@ export const convertSrjToGraphicsObject = (
           const baseColor =
             traceColorMode === "net"
               ? colorMap[trace.connection_name]!
-              : getTraceLayerColor(routePoint.layer)
+              : getGraphicsLayerColor(routePoint.layer)
 
           // Create a line between consecutive wire segments on the same layer
           lines.push({
@@ -259,15 +263,25 @@ export const convertSrjToGraphicsObject = (
   // Add obstacle rects
   for (const o of srj.obstacles) {
     if (o.isCopperPour) continue
-    rects.push({
-      center: o.center,
-      width: o.width,
-      height: o.height,
-      ccwRotationDegrees: o.ccwRotationDegrees,
-      fill: "rgba(255,0,0,0.5)",
-      layer: getGraphicsLayerForObstacle(o, layerCount),
-      label: formatObstacleLabel(o),
-    })
+    const obstacleZLayers = getGraphicsZLayersForObstacle(o, layerCount)
+    if (obstacleZLayers.length === 0) {
+      throw new Error(
+        `Cannot visualize obstacle "${o.obstacleId ?? "unknown"}" without a valid layer: layers=${o.layers.join(",")}, __zLayers=${o.__zLayers?.join(",") ?? "unset"}, layerCount=${layerCount}`,
+      )
+    }
+
+    for (const z of obstacleZLayers) {
+      const layerName = mapZToLayerName(z, layerCount)
+      rects.push({
+        center: o.center,
+        width: o.width,
+        height: o.height,
+        ccwRotationDegrees: o.ccwRotationDegrees,
+        fill: safeTransparentize(getGraphicsLayerColor(layerName), 0.5),
+        layer: `z${z}`,
+        label: formatObstacleLabel(o),
+      })
+    }
   }
 
   // Add jumper component rects from srj.jumpers if present

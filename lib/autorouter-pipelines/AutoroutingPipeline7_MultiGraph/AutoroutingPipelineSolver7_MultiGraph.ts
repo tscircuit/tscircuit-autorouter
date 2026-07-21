@@ -963,7 +963,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       exactGeometryDrcForceImproveViz,
       this.solved
         ? combineVisualizations(
-            problemBaseViz,
+            { lines: problemLines },
             getPresuppliedTraceVisualization({
               srj: this.originalSrj,
               visualizationOptions,

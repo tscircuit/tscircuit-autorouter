@@ -665,7 +665,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       traceSimplificationViz,
       this.solved
         ? combineVisualizations(
-            problemBaseViz,
+            { lines: problemLines },
             getPresuppliedTraceVisualization({ srj: this.originalSrj }),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )

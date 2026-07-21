@@ -653,7 +653,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
       traceWidthViz,
       this.solved
         ? combineVisualizations(
-            problemViz,
+            { lines: problemLines },
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,
