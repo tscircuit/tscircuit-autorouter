@@ -17,6 +17,12 @@ const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
+export type IsValidStitchSegment = (params: {
+  connectionName: string
+  start: Point3
+  end: Point3
+  traceThickness: number
+}) => boolean
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -52,6 +58,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  isValidStitchSegment?: IsValidStitchSegment
 
   constructor(opts: {
     connectionName: string
@@ -63,12 +70,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    isValidStitchSegment?: IsValidStitchSegment
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
+    this.isValidStitchSegment = opts.isValidStitchSegment
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -91,6 +100,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
         routePoints.push({ x: opts.start.x, y: opts.start.y, z: opts.end.z })
         vias.push({ x: opts.start.x, y: opts.start.y })
+      }
+      const planarStart = { ...opts.start, z: opts.end.z }
+      if (
+        distance(planarStart, opts.end) > GEOMETRIC_TOLERANCE &&
+        opts.isValidStitchSegment &&
+        !opts.isValidStitchSegment({
+          connectionName: opts.connectionName,
+          start: planarStart,
+          end: opts.end,
+          traceThickness: opts.defaultTraceThickness ?? 0.15,
+        })
+      ) {
+        this.failed = true
+        this.error = `Direct stitch segment for "${opts.connectionName}" is not collision-free`
+        return
       }
       routePoints.push({ x: opts.end.x, y: opts.end.y, z: opts.end.z })
 
@@ -151,10 +175,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const getTerminalDistance = (
+        terminal: StitchTerminal,
+        endpoint: RoutePoint,
+      ) => {
+        const terminalOnEndpointLayer = { ...terminal, z: endpoint.z }
+        if (
+          distance(terminalOnEndpointLayer, endpoint) >= GEOMETRIC_TOLERANCE &&
+          opts.isValidStitchSegment &&
+          !opts.isValidStitchSegment({
+            connectionName: opts.connectionName,
+            start: terminalOnEndpointLayer,
+            end: endpoint,
+            traceThickness: route.traceThickness,
+          })
+        ) {
+          return Infinity
+        }
+        return distance(terminal, endpoint)
+      }
+      const distStartToFirst = getTerminalDistance(opts.start, firstPoint)
+      const distStartToLast = getTerminalDistance(opts.start, lastPoint)
+      const distEndToFirst = getTerminalDistance(opts.end, firstPoint)
+      const distEndToLast = getTerminalDistance(opts.end, lastPoint)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -185,6 +228,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           orientation = "start-to-end"
         }
       }
+    }
+
+    if (!Number.isFinite(bestDist)) {
+      this.start = opts.start
+      this.end = opts.end
+      this.failed = true
+      this.error = `No collision-free terminal stitch segment for "${opts.connectionName}"`
+      return
     }
 
     if (orientation === "start-to-end") {
@@ -282,11 +333,32 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         distance(lastMergedPoint, this.end) <=
           MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
+        const endOnMergedLayer = { ...this.end, z: lastMergedPoint.z }
+        if (
+          this.isValidStitchSegment &&
+          !this.isValidStitchSegment({
+            connectionName: this.mergedHdRoute.connectionName,
+            start: lastMergedPoint,
+            end: endOnMergedLayer,
+            traceThickness: this.mergedHdRoute.traceThickness,
+          })
+        ) {
+          this.failed = true
+          this.error = `Final stitch segment for "${this.mergedHdRoute.connectionName}" is not collision-free`
+          return
+        }
         this.mergedHdRoute.route.push({
           x: this.end.x,
           y: this.end.y,
           z: lastMergedPoint.z,
         })
+      } else if (
+        this.isValidStitchSegment &&
+        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE
+      ) {
+        this.failed = true
+        this.error = `Stitched route "${this.mergedHdRoute.connectionName}" does not reach its terminal`
+        return
       }
 
       this.solved = true
@@ -313,7 +385,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
-          scoreFirst = GAP_PENALTY + distToFirst
+          if (
+            !this.isValidStitchSegment ||
+            this.isValidStitchSegment({
+              connectionName: this.mergedHdRoute.connectionName,
+              start: lastMergedPoint,
+              end: firstPointInCandidate,
+              traceThickness: this.mergedHdRoute.traceThickness,
+            })
+          ) {
+            scoreFirst = GAP_PENALTY + distToFirst
+          }
         }
       } else if (
         distToFirst < GEOMETRIC_TOLERANCE &&
@@ -336,7 +418,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (distToLast < GEOMETRIC_TOLERANCE) {
           scoreLast = distToLast
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
-          scoreLast = GAP_PENALTY + distToLast
+          if (
+            !this.isValidStitchSegment ||
+            this.isValidStitchSegment({
+              connectionName: this.mergedHdRoute.connectionName,
+              start: lastMergedPoint,
+              end: lastPointInCandidate,
+              traceThickness: this.mergedHdRoute.traceThickness,
+            })
+          ) {
+            scoreLast = GAP_PENALTY + distToLast
+          }
         }
       } else if (
         distToLast < GEOMETRIC_TOLERANCE &&
@@ -356,6 +448,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      if (this.isValidStitchSegment) {
+        this.failed = true
+        this.error = `No collision-free stitch continuation for "${this.mergedHdRoute.connectionName}"`
+        return
+      }
       this.remainingHdRoutes = []
       return
     }

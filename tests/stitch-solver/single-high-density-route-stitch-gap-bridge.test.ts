@@ -43,6 +43,60 @@ test("single stitch bridges small same-layer gaps", () => {
   ])
 })
 
+test("single stitch rejects a gap connector rejected by collision validation", () => {
+  const solver = new SingleHighDensityRouteStitchSolver3({
+    connectionName: "conn",
+    start: { x: 0, y: 0, z: 0 },
+    end: { x: 2, y: 0, z: 0 },
+    hdRoutes: [
+      makeRoute("conn", [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+      ]),
+      makeRoute("conn", [
+        { x: 1.5, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ]),
+    ],
+    isValidStitchSegment: ({ start, end }) => Math.abs(start.x - end.x) < 0.5,
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.error).toContain("No collision-free stitch continuation")
+})
+
+test("single stitch accepts a collision-validated gap connector", () => {
+  const checkedSegments: Array<[number, number]> = []
+  const solver = new SingleHighDensityRouteStitchSolver3({
+    connectionName: "conn",
+    start: { x: 0, y: 0, z: 0 },
+    end: { x: 2, y: 0, z: 0 },
+    hdRoutes: [
+      makeRoute("conn", [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+      ]),
+      makeRoute("conn", [
+        { x: 1.5, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ]),
+    ],
+    isValidStitchSegment: ({ start, end }) => {
+      checkedSegments.push([start.x, end.x])
+      return true
+    },
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(checkedSegments).toContainEqual([1, 1.5])
+})
+
 test("single stitch does not bridge large same-layer gaps", () => {
   const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "conn",
