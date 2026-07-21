@@ -17,7 +17,7 @@ import { BaseSolver } from "../BaseSolver"
 import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
-  getInitialScaleFactorForNode,
+  getInitialScaleFactorForNodePf,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
@@ -408,7 +408,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
-      initialScaleFactor: getInitialScaleFactorForNode(node, nodePf),
+      initialScaleFactor: getInitialScaleFactorForNodePf(nodePf),
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

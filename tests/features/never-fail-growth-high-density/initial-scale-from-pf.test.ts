@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import {
-  getInitialScaleFactorForNode,
   getInitialScaleFactorForNodePf,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
@@ -16,11 +15,21 @@ test("initial grow/shrink scale is derived from estimated capacity pressure", ()
   expect(getInitialScaleFactorForNodePf(100)).toBe(8)
 })
 
-test("cramped boundary ports start with enough room to restore spacing", () => {
+test("cramped metadata does not pre-grow a low-pressure node", () => {
   const node = makeNode()
   node.portPoints[0]!.cramped = true
+  const solver = new HighDensitySolver({
+    nodePortPoints: [node],
+    useGrowShrinkHighDensityIntraNodeSolver: true,
+  })
 
-  expect(getInitialScaleFactorForNode(node, 0)).toBe(2)
+  solver.step()
+
+  expect(solver.nodePfById.get(node.capacityMeshNodeId)).toBe(0)
+  expect(
+    (solver.activeSubSolver as GrowShrinkHighDensityIntraNodeSolver)
+      .scaleFactor,
+  ).toBe(1)
 })
 
 test("HighDensitySolver starts an over-capacity node at its derived scale", () => {

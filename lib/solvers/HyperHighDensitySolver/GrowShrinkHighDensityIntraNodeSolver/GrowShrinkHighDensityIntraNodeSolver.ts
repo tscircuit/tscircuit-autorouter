@@ -47,16 +47,6 @@ export const getInitialScaleFactorForNodePf = (
   return 2 ** growthAttempts
 }
 
-export const getInitialScaleFactorForNode = (
-  node: NodeWithPortPoints,
-  nodePf: number | null | undefined,
-  maxGrowthAttempts = DEFAULT_MAX_GROWTH_ATTEMPTS,
-): number =>
-  Math.max(
-    getInitialScaleFactorForNodePf(nodePf, maxGrowthAttempts),
-    node.portPoints.some((portPoint) => portPoint.cramped) ? 2 : 1,
-  )
-
 const scalePoint = <T extends { x: number; y: number }>(
   point: T,
   center: { x: number; y: number },
