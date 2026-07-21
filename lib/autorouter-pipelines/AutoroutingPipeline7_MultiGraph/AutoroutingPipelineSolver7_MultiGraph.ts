@@ -68,8 +68,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { createViaInPadDrcEvaluator } from "./create-via-in-pad-drc-evaluator"
-import { createPipeline7ExactGeometryDrcEvaluator } from "./createPipeline7ExactGeometryDrcEvaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -664,43 +663,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
-      (cms) => [
-        {
-          srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+      (cms) => {
+        const relaxedDrcEvaluator = createPipeline7RelaxedDrcEvaluator({
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
           connMap: cms.connMap,
-          effort: cms.effort,
-          viaHoleDiameter: cms.viaHoleDiameter,
-          drcEvaluator: createPipeline7ExactGeometryDrcEvaluator({
-            connections: cms.netToPointPairsSolver?.newConnections ?? [],
-            originalConnections: cms.originalSrj.connections,
-            layerCount: cms.srj.layerCount,
-            obstacles: cms.srj.obstacles,
-            defaultViaHoleDiameter: cms.viaHoleDiameter,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+        })
+
+        return [
+          {
+            srj: cms.srjWithPointPairs! as any,
+            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             connMap: cms.connMap,
-            srjWithPointPairs: cms.srjWithPointPairs!,
-            originalSrj: cms.originalSrj,
-          }),
-          viaInPadDrcEvaluator: createViaInPadDrcEvaluator({
-            connections: cms.netToPointPairsSolver?.newConnections ?? [],
-            originalConnections: cms.originalSrj.connections,
-            layerCount: cms.srj.layerCount,
-            obstacles: cms.srj.obstacles,
-            defaultViaHoleDiameter: cms.viaHoleDiameter,
-            connMap: cms.connMap,
-            srjWithPointPairs: cms.srjWithPointPairs!,
-            originalSrj: cms.originalSrj,
-          }),
-          maxIterations: 32,
-          enableLargeBoardBroadFallback: false,
-          enableTargetedErrorSweep: true,
-          enablePostSolveClearanceRelaxation: false,
-          enableViaInPadLayerMoves: true,
-          viaInPadMaxIterations: 32,
-          broadMaxIterations: 8,
-          broadPassMultiplier: 3,
-        },
-      ],
+            effort: cms.effort,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            drcEvaluator: relaxedDrcEvaluator,
+            viaInPadDrcEvaluator: relaxedDrcEvaluator,
+            maxIterations: 32,
+            enableLargeBoardBroadFallback: false,
+            enableTargetedErrorSweep: true,
+            enablePostSolveClearanceRelaxation: false,
+            enableViaInPadLayerMoves: true,
+            viaInPadMaxIterations: 32,
+            broadMaxIterations: 8,
+            broadPassMultiplier: 3,
+          },
+        ]
+      },
     ),
   ]
 

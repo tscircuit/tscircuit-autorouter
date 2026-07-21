@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import {
   getSolverSvgFrames,
@@ -50,16 +48,12 @@ test("solver svg frames capture selected pipeline7 frames for a zero-drc circuit
   expect(solver.failed).toBe(false)
 
   expect(solver.srjWithPointPairs).toBeDefined()
-  const circuitJson = convertToCircuitJson(
-    solver.srjWithPointPairs!,
-    solver.getOutputSimplifiedPcbTraces(),
-    {
-      minTraceWidth: circuit003.minTraceWidth,
-      originalSrj: circuit003,
-    },
-  )
-  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: circuit003,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    traces: solver.getOutputSimplifiedPcbTraces(),
+  })
 
   expect(errors).toHaveLength(0)
   expect(svg).toMatchSvgSnapshot(import.meta.path)
-}, 30_000)
+})
