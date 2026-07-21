@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { isDeepStrictEqual } from "node:util"
 import { createPipeline7RelaxedDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -74,10 +75,15 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
     throw new Error("Exact DRC evaluator returned errors without centers")
   }
 
-  expect(exactResult.errors).toEqual(benchmarkResult.errors)
-  expect(exactResult.errorsWithCenters).toEqual(
-    benchmarkResult.errorsWithCenters,
+  expect(isDeepStrictEqual(exactResult.errors, benchmarkResult.errors)).toBe(
+    true,
   )
+  expect(
+    isDeepStrictEqual(
+      exactResult.errorsWithCenters,
+      benchmarkResult.errorsWithCenters,
+    ),
+  ).toBe(true)
   expect(
     benchmarkResult.errors.some(
       (error) => error.type === "pcb_pad_trace_clearance_error",
