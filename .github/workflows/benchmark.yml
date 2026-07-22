@@ -366,6 +366,51 @@ jobs:
           cp benchmark-result.txt benchmark-result-pr.txt
           cp benchmark-result.json benchmark-result-pr.json
 
+      - name: Write raw benchmark execution metadata
+        env:
+          BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
+          BENCHMARK_RUNNER_NAME: ${{ runner.name }}
+          BENCHMARK_RUNNER_OS: ${{ runner.os }}
+          BENCHMARK_RUNNER_ARCH: ${{ runner.arch }}
+          BENCHMARK_SAMPLE_TIMEOUT_BASE_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+          BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+          BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+          BENCHMARK_MAIN_DATASETS: ${{ steps.main-datasets.outputs.datasets_json }}
+          BENCHMARK_REPOSITORY: ${{ github.repository }}
+          BENCHMARK_WORKFLOW_NAME: ${{ github.workflow }}
+          BENCHMARK_EVENT_NAME: ${{ github.event_name }}
+          BENCHMARK_REF_NAME: ${{ github.ref_name }}
+          BENCHMARK_RUN_ID: ${{ github.run_id }}
+          BENCHMARK_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BENCHMARK_COMMIT_SHA: ${{ github.sha }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const metadata = {
+            repository: process.env.BENCHMARK_REPOSITORY,
+            workflowName: process.env.BENCHMARK_WORKFLOW_NAME,
+            eventName: process.env.BENCHMARK_EVENT_NAME,
+            refName: process.env.BENCHMARK_REF_NAME,
+            workflowRunId: process.env.BENCHMARK_RUN_ID,
+            workflowRunAttempt: Number(process.env.BENCHMARK_RUN_ATTEMPT),
+            commitSha: process.env.BENCHMARK_COMMIT_SHA,
+            createdAt: new Date().toISOString(),
+            runner: {
+              name: process.env.BENCHMARK_RUNNER_NAME,
+              os: process.env.BENCHMARK_RUNNER_OS,
+              arch: process.env.BENCHMARK_RUNNER_ARCH,
+            },
+            benchmarkArgs: JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]'),
+            mainBranchDatasets: JSON.parse(process.env.BENCHMARK_MAIN_DATASETS || '[]'),
+            timeoutConfiguration: {
+              perEffortMs: process.env.BENCHMARK_SAMPLE_TIMEOUT_BASE_MS,
+              heartbeatIntervalMs: process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS,
+              terminateTimeoutMs: process.env.BENCHMARK_TERMINATE_TIMEOUT_MS,
+            },
+          }
+          fs.writeFileSync('benchmark-run-metadata.json', JSON.stringify(metadata, null, 2))
+          NODE
+
       - name: Download main branch benchmark result
         if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         env:
@@ -873,6 +918,7 @@ jobs:
             ./benchmark-result-main.json
             ./benchmark-best-vias-main.json
             ./benchmark-via-cells.json
+            ./benchmark-run-metadata.json
             ./profile-solvers-pr.txt
             ./profile-solvers-pr.json
             ./profile-solvers-main.txt
@@ -1296,3 +1342,83 @@ jobs:
               comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: finalBody,
             })
+
+  benchmark-history:
+    name: Build benchmark history dashboard
+    needs: benchmark
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    concurrency:
+      group: benchmark-history
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Checkout benchmarked code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Download benchmark result
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-result
+          path: ./benchmark-artifact
+
+      - name: Checkout or create benchmark history branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" benchmark-history; then
+            git clone --depth 1 --branch benchmark-history "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
+          else
+            git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
+            git -C .benchmark-history checkout --orphan benchmark-history
+            git -C .benchmark-history rm -rf .
+            git -C .benchmark-history config user.name "github-actions[bot]"
+            git -C .benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C .benchmark-history commit --allow-empty -m "Initialize benchmark history"
+          fi
+
+      - name: Record full benchmark history and build dashboard
+        run: |
+          bun scripts/benchmark/benchmark-history.ts record \
+            --report ./benchmark-artifact/benchmark-result.json \
+            --history-dir ./.benchmark-history/history \
+            --out benchmark-history.html \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --metadata ./benchmark-artifact/benchmark-run-metadata.json
+
+      - name: Persist full benchmark history
+        run: |
+          set -euo pipefail
+
+          git -C .benchmark-history config user.name "github-actions[bot]"
+          git -C .benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C .benchmark-history add history
+          if git -C .benchmark-history diff --cached --quiet; then
+            echo "Benchmark workflow ${{ github.run_id }} is already recorded."
+          else
+            git -C .benchmark-history commit -m "Record benchmark workflow ${{ github.run_id }}"
+            git -C .benchmark-history push origin HEAD:benchmark-history
+          fi
+
+      - name: Upload benchmark history dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-history-dashboard
+          path: ./benchmark-history.html
+          overwrite: true

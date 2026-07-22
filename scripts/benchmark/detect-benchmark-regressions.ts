@@ -750,7 +750,7 @@ export const buildSlackPayload = ({
     )
   }
   if (runUrl) {
-    contextParts.push(`*Run:* <${runUrl}|View benchmark run>`)
+    contextParts.push(`*Artifacts:* <${runUrl}|View benchmark run artifacts>`)
   }
   if (contextParts.length > 0) {
     blocks.push({

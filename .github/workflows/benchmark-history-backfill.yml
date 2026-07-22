@@ -1,0 +1,114 @@
+name: Backfill Benchmark History
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  backfill:
+    name: Import available successful main benchmark artifacts
+    runs-on: ubuntu-latest
+    concurrency:
+      group: benchmark-history
+      cancel-in-progress: false
+      queue: max
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Checkout or create benchmark history branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" benchmark-history; then
+            git clone --depth 1 --branch benchmark-history "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
+          else
+            git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
+            git -C .benchmark-history checkout --orphan benchmark-history
+            git -C .benchmark-history rm -rf .
+            git -C .benchmark-history config user.name "github-actions[bot]"
+            git -C .benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C .benchmark-history commit --allow-empty -m "Initialize benchmark history"
+          fi
+
+      - name: Import every retrievable successful main run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p .backfill-artifacts
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/workflows/benchmark.yml/runs?branch=main&event=push&status=success&per_page=100" \
+            --jq '.workflow_runs[] | [.id, .run_attempt, .html_url, .head_sha, .created_at, .name, .event, .head_branch] | @tsv' \
+            > .backfill-runs.tsv
+
+          while IFS=$'\t' read -r run_id run_attempt run_url commit_sha created_at workflow_name event_name ref_name; do
+            history_run_id="${run_id}-${run_attempt}"
+            if [ -f ".benchmark-history/history/runs/${history_run_id}.json" ]; then
+              continue
+            fi
+
+            artifact_directory=".backfill-artifacts/${history_run_id}"
+            mkdir -p "$artifact_directory"
+            if ! gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name benchmark-result --dir "$artifact_directory"; then
+              echo "Skipping ${history_run_id}: benchmark artifact is unavailable."
+              continue
+            fi
+            if [ ! -f "$artifact_directory/benchmark-result.json" ]; then
+              echo "Skipping ${history_run_id}: artifact has no benchmark-result.json."
+              continue
+            fi
+
+            if [ ! -f "$artifact_directory/benchmark-run-metadata.json" ]; then
+              WORKFLOW_NAME="$workflow_name" EVENT_NAME="$event_name" REF_NAME="$ref_name" RUN_ID="$run_id" RUN_ATTEMPT="$run_attempt" COMMIT_SHA="$commit_sha" CREATED_AT="$created_at" \
+                node -e 'const fs=require("node:fs"); fs.writeFileSync(process.argv[1], JSON.stringify({repository:process.env.GITHUB_REPOSITORY,workflowName:process.env.WORKFLOW_NAME,eventName:process.env.EVENT_NAME,refName:process.env.REF_NAME,workflowRunId:process.env.RUN_ID,workflowRunAttempt:Number(process.env.RUN_ATTEMPT),commitSha:process.env.COMMIT_SHA,createdAt:process.env.CREATED_AT,runner:{name:"unknown (backfilled)"},backfilled:true},null,2))' "$artifact_directory/benchmark-run-metadata.json"
+            fi
+
+            bun scripts/benchmark/benchmark-history.ts record \
+              --report "$artifact_directory/benchmark-result.json" \
+              --history-dir ./.benchmark-history/history \
+              --out /tmp/benchmark-history-backfill.html \
+              --run-url "$run_url" \
+              --metadata "$artifact_directory/benchmark-run-metadata.json"
+          done < .backfill-runs.tsv
+
+      - name: Render self-contained dashboard
+        run: |
+          bun scripts/benchmark/benchmark-history.ts render \
+            --history-dir ./.benchmark-history/history \
+            --out benchmark-history.html
+
+      - name: Persist imported history
+        run: |
+          set -euo pipefail
+
+          git -C .benchmark-history config user.name "github-actions[bot]"
+          git -C .benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C .benchmark-history add history
+          if git -C .benchmark-history diff --cached --quiet; then
+            echo "No new benchmark artifacts were available to import."
+            exit 0
+          fi
+          git -C .benchmark-history commit -m "Backfill benchmark history"
+          git -C .benchmark-history push origin HEAD:benchmark-history
+
+      - name: Upload benchmark history dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-history-dashboard
+          path: ./benchmark-history.html
+          overwrite: true
