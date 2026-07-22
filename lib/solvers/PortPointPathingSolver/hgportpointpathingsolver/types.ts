@@ -92,7 +92,7 @@ export interface HgPortPointPathingSolverParams {
   colorMap?: Record<string, string>
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
-  effort: number
+  effort?: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
   flags: {
