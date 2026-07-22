@@ -729,8 +729,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       if (!mergedEndpointIsMovable || !endpointIsMovable) return undefined
       const endpointDistance = distance(lastMergedPoint, endpoint)
       const mergedRadius =
-        (lastMergedPoint.traceThickness ??
-          this.mergedHdRoute.traceThickness) / 2
+        (lastMergedPoint.traceThickness ?? this.mergedHdRoute.traceThickness) /
+        2
       const candidateRadius =
         (endpoint.traceThickness ?? hdRoute.traceThickness) / 2
       const combinedRadius = mergedRadius + candidateRadius
@@ -739,10 +739,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
       const mergedShare = mergedRadius / combinedRadius
       return {
-        x: lastMergedPoint.x +
-          (endpoint.x - lastMergedPoint.x) * mergedShare,
-        y: lastMergedPoint.y +
-          (endpoint.y - lastMergedPoint.y) * mergedShare,
+        x: lastMergedPoint.x + (endpoint.x - lastMergedPoint.x) * mergedShare,
+        y: lastMergedPoint.y + (endpoint.y - lastMergedPoint.y) * mergedShare,
         z: lastMergedPoint.z,
       }
     }
@@ -763,8 +761,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           !firstPointInCandidate.pcb_port_id &&
           !hdRoute.startPcbPortId &&
           !hdRoute.vias.some(
-            (via) =>
-              distance(via, firstPointInCandidate) < GEOMETRIC_TOLERANCE,
+            (via) => distance(via, firstPointInCandidate) < GEOMETRIC_TOLERANCE,
           ),
       )
       const lastEndpointIsMovable = Boolean(
