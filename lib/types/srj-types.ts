@@ -96,6 +96,17 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   __netConnectionName?: string
   nominalTraceWidth?: number
+  /**
+   * Width requirements of the original connections that were merged into this
+   * connection. Each entry records one original connection's nominalTraceWidth
+   * and the PointKeys of the points it connected, so MST pair connections can
+   * derive a per-edge nominalTraceWidth: every tree edge on the path between a
+   * constraint's points must be at least that constraint's width.
+   */
+  __nominalTraceWidthConstraints?: Array<{
+    nominalTraceWidth: number
+    pointKeys: PointKey[]
+  }>
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

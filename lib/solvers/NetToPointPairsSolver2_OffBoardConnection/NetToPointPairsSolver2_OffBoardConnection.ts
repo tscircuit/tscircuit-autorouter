@@ -10,6 +10,7 @@ import {
   NetToPointPairsSolver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import { getNominalTraceWidthsForMstEdges } from "../NetToPointPairsSolver/mergeConnections"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -158,9 +159,21 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       currentConnection.pointsToConnect,
       { extraEdges: zeroWeightEdges },
     )
+    // Widths are resolved from the original MST edges: an off-board
+    // substitute point is electrically equivalent, so each edge keeps the
+    // width of the points it conceptually connects.
+    const edgeNominalTraceWidths = getNominalTraceWidthsForMstEdges(
+      currentConnection,
+      minimumSpanningTreeEdges,
+    )
 
     let mstEdgeIndex = 0
-    for (const mstEdge of minimumSpanningTreeEdges) {
+    for (
+      let edgeIndex = 0;
+      edgeIndex < minimumSpanningTreeEdges.length;
+      edgeIndex++
+    ) {
+      const mstEdge = minimumSpanningTreeEdges[edgeIndex]
       if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
         continue
       }
@@ -177,6 +190,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
+        nominalTraceWidth: edgeNominalTraceWidths[edgeIndex],
       })
     }
   }

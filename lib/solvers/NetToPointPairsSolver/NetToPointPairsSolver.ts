@@ -6,7 +6,10 @@ import {
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
-import { mergeConnections } from "./mergeConnections"
+import {
+  getNominalTraceWidthsForMstEdges,
+  mergeConnections,
+} from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 
 export const getExternalConnectionState = (
@@ -175,9 +178,14 @@ export class NetToPointPairsSolver extends BaseSolver {
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
     })
+    const edgeNominalTraceWidths = getNominalTraceWidthsForMstEdges(
+      connection,
+      edges,
+    )
 
     let mstIdx = 0
-    for (const edge of edges) {
+    for (let edgeIndex = 0; edgeIndex < edges.length; edgeIndex++) {
+      const edge = edges[edgeIndex]
       if (areExternallyConnected(pointIdToGroup, edge.from, edge.to)) continue
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
@@ -186,6 +194,7 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
+        nominalTraceWidth: edgeNominalTraceWidths[edgeIndex],
       })
     }
   }

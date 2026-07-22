@@ -632,7 +632,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        // Point-pair connections carry per-edge nominalTraceWidths for merged
+        // nets, so routes resolve widths by their own connection name first.
+        // Original connections are kept for the rootConnectionName fallback.
+        connection: [
+          ...cms.srj.connections,
+          ...cms.srjWithPointPairs!.connections,
+        ] as SimpleRouteConnection[],
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         layerCount: cms.srj.layerCount,
       },

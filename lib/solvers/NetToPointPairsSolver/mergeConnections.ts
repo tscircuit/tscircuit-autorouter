@@ -8,6 +8,98 @@ import {
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
 
+type MstEdgeLike = {
+  from: ConnectionPoint
+  to: ConnectionPoint
+}
+
+/**
+ * Resolves a nominalTraceWidth for every MST edge of a (possibly merged)
+ * connection. Returns one width (or undefined) per edge, in edge order.
+ *
+ * For merged connections we use the width constraints recorded by
+ * `mergeConnections`: an original connection with nominalTraceWidth W requires
+ * every tree edge on the path between its points to be at least W, because the
+ * MST may reroute that connection's current through edges whose endpoints
+ * belong to other (possibly narrower) connections. Each edge takes the widest
+ * width among the constraints whose path crosses it; edges crossed by no
+ * constraint get no width and are routed at the default.
+ *
+ * For unmerged connections the connection's own nominalTraceWidth applies to
+ * every edge.
+ */
+export function getNominalTraceWidthsForMstEdges(
+  connection: SimpleRouteConnection,
+  mstEdges: MstEdgeLike[],
+): Array<number | undefined> {
+  const constraints = connection.__nominalTraceWidthConstraints
+  if (!constraints || constraints.length === 0) {
+    return mstEdges.map(() => connection.nominalTraceWidth)
+  }
+
+  // Build tree adjacency: pointKey -> [neighbor pointKey, edge index]
+  const adjacency = new Map<PointKey, Array<[PointKey, number]>>()
+  mstEdges.forEach((mstEdge, edgeIndex) => {
+    const fromKey = getPointKey(mstEdge.from)
+    const toKey = getPointKey(mstEdge.to)
+    if (!adjacency.has(fromKey)) adjacency.set(fromKey, [])
+    if (!adjacency.has(toKey)) adjacency.set(toKey, [])
+    adjacency.get(fromKey)!.push([toKey, edgeIndex])
+    adjacency.get(toKey)!.push([fromKey, edgeIndex])
+  })
+
+  const edgeNominalTraceWidths: Array<number | undefined> = mstEdges.map(
+    () => undefined,
+  )
+
+  for (const constraint of constraints) {
+    const terminalKeys = constraint.pointKeys.filter((pointKey) =>
+      adjacency.has(pointKey),
+    )
+    if (terminalKeys.length < 2) continue
+
+    // BFS from the first terminal, recording each visited point's parent edge
+    const rootKey = terminalKeys[0]
+    const parentOf = new Map<PointKey, [PointKey, number]>()
+    const visited = new Set<PointKey>([rootKey])
+    const queue: PointKey[] = [rootKey]
+    while (queue.length > 0) {
+      const currentKey = queue.shift()!
+      for (const [neighborKey, edgeIndex] of adjacency.get(currentKey) ?? []) {
+        if (visited.has(neighborKey)) continue
+        visited.add(neighborKey)
+        parentOf.set(neighborKey, [currentKey, edgeIndex])
+        queue.push(neighborKey)
+      }
+    }
+
+    // Walk each remaining terminal back to the root; the union of these walks
+    // is the minimal subtree spanning the constraint's points.
+    const markedEdgeIndices = new Set<number>()
+    for (let i = 1; i < terminalKeys.length; i++) {
+      let walkKey: PointKey = terminalKeys[i]
+      while (walkKey !== rootKey) {
+        const parentEntry = parentOf.get(walkKey)
+        if (!parentEntry) break // Terminal unreachable from root (disconnected)
+        const [parentKey, edgeIndex] = parentEntry
+        if (markedEdgeIndices.has(edgeIndex)) break // Already-walked branch
+        markedEdgeIndices.add(edgeIndex)
+        walkKey = parentKey
+      }
+    }
+
+    for (const edgeIndex of markedEdgeIndices) {
+      const existingWidth = edgeNominalTraceWidths[edgeIndex]
+      edgeNominalTraceWidths[edgeIndex] =
+        existingWidth === undefined
+          ? constraint.nominalTraceWidth
+          : Math.max(existingWidth, constraint.nominalTraceWidth)
+    }
+  }
+
+  return edgeNominalTraceWidths
+}
+
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
  * This is useful for grouping related traces/nets that were defined separately
@@ -89,6 +181,10 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    const nominalTraceWidthConstraints: Array<{
+      nominalTraceWidth: number
+      pointKeys: PointKey[]
+    }> = []
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -125,13 +221,29 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
 
-      // Take the nominalTraceWidth from the first connection for now
-      // A more robust solution might average or pick the max/min based on context
-      if (
-        nominalTraceWidth === undefined &&
-        simpleRouteConnection.nominalTraceWidth !== undefined
-      ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+      // Record each connection's nominalTraceWidth and points as a width
+      // constraint so MST edges can later resolve a per-edge width (see
+      // getNominalTraceWidthsForMstEdges). Nested constraints from an earlier
+      // merge are carried through unchanged. The merged connection's own
+      // nominalTraceWidth is the widest in the group (order-independent).
+      if (simpleRouteConnection.__nominalTraceWidthConstraints) {
+        nominalTraceWidthConstraints.push(
+          ...simpleRouteConnection.__nominalTraceWidthConstraints,
+        )
+      } else if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+        nominalTraceWidthConstraints.push({
+          nominalTraceWidth: simpleRouteConnection.nominalTraceWidth,
+          pointKeys: simpleRouteConnection.pointsToConnect.map(getPointKey),
+        })
+      }
+      if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+        nominalTraceWidth =
+          nominalTraceWidth === undefined
+            ? simpleRouteConnection.nominalTraceWidth
+            : Math.max(
+                nominalTraceWidth,
+                simpleRouteConnection.nominalTraceWidth,
+              )
       }
     })
 
@@ -152,7 +264,11 @@ export function mergeConnections(
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      nominalTraceWidth: nominalTraceWidth, // Widest nominalTraceWidth in the group
+      __nominalTraceWidthConstraints:
+        nominalTraceWidthConstraints.length > 0
+          ? nominalTraceWidthConstraints
+          : undefined,
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)
