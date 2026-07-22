@@ -12,6 +12,7 @@ import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetween
 import type {
   FindValidStitchPath,
   IsValidStitchSegment,
+  IsTerminalCoveredByTrace,
   StitchSegmentRequest,
 } from "./SingleHighDensityRouteStitchSolver3"
 
@@ -41,6 +42,8 @@ type CollisionBoundary = {
 }
 
 const PATH_COORDINATE_EPSILON = 1e-4
+const COPPER_OVERLAP_TOLERANCE = 1e-3
+const CLEARANCE_COMPARISON_TOLERANCE = 1e-6
 
 const createIndex = (
   boxes: Array<{ minX: number; minY: number; maxX: number; maxY: number }>,
@@ -67,6 +70,7 @@ export const createStitchSegmentRouter = (params: {
 }): {
   isValidSegment: IsValidStitchSegment
   findValidPath: FindValidStitchPath
+  isTerminalCoveredByTrace: IsTerminalCoveredByTrace
 } => {
   const obstacles = createObjectsWithZLayers(
     params.obstacles,
@@ -138,6 +142,38 @@ export const createStitchSegmentRouter = (params: {
     return [...aRoots].some((root) => bRoots.has(root))
   }
 
+  const isTerminalCoveredByTrace: IsTerminalCoveredByTrace = ({
+    connectionName,
+    routeEnd,
+    terminal,
+    traceThickness,
+  }) => {
+    if (!terminal.pcb_port_id || routeEnd.z !== terminal.z) return false
+
+    const traceRadius = traceThickness / 2
+    for (const obstacleId of obstacleIndex?.search(
+      routeEnd.x - traceRadius,
+      routeEnd.y - traceRadius,
+      routeEnd.x + traceRadius,
+      routeEnd.y + traceRadius,
+    ) ?? []) {
+      const obstacle = obstacles[obstacleId]!
+      if (!obstacle.__zLayers?.includes(routeEnd.z)) continue
+      if (!obstacle.connectedTo.includes(terminal.pcb_port_id)) continue
+      if (!obstacle.connectedTo.some((id) => areSameNet(connectionName, id))) {
+        continue
+      }
+      if (
+        segmentToBoxMinDistance(routeEnd, routeEnd, obstacle) <=
+        traceRadius + COPPER_OVERLAP_TOLERANCE
+      ) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   const getSearchBounds = (
     start: { x: number; y: number },
     end: { x: number; y: number },
@@ -163,12 +199,44 @@ export const createStitchSegmentRouter = (params: {
     ].join(":")
   const segmentValidityCache = new Map<string, boolean>()
 
-  const evaluateSegmentValidity: IsValidStitchSegment = ({
-    connectionName,
-    start,
-    end,
-    traceThickness,
+  const preservesExistingEndpointClearance = (params: {
+    segmentStart: Point3
+    segmentEnd: Point3
+    existingCopperEndpoints: Point3[]
+    startGap: number
+    endGap: number
+    segmentGap: number
+    requiredGap: number
   }) => {
+    const isExistingEndpoint = (point: Point3) =>
+      params.existingCopperEndpoints.some(
+        (endpoint) =>
+          endpoint.z === point.z &&
+          distance(endpoint, point) < COPPER_OVERLAP_TOLERANCE,
+      )
+    const startCanEscape =
+      isExistingEndpoint(params.segmentStart) &&
+      params.startGap < params.requiredGap &&
+      params.endGap >= params.requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
+      params.segmentGap >=
+        params.startGap - CLEARANCE_COMPARISON_TOLERANCE
+    const endCanEscape =
+      isExistingEndpoint(params.segmentEnd) &&
+      params.endGap < params.requiredGap &&
+      params.startGap >= params.requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
+      params.segmentGap >= params.endGap - CLEARANCE_COMPARISON_TOLERANCE
+    return startCanEscape || endCanEscape
+  }
+
+  const evaluateSegmentValidity = (
+    {
+      connectionName,
+      start,
+      end,
+      traceThickness,
+    }: StitchSegmentRequest,
+    existingCopperEndpoints: Point3[],
+  ) => {
     const currentTraceRadius = traceThickness / 2
     const obstacleMargin = params.minClearance + currentTraceRadius
     for (const obstacleId of obstacleIndex?.search(
@@ -179,7 +247,19 @@ export const createStitchSegmentRouter = (params: {
       if (obstacle.connectedTo.some((id) => areSameNet(connectionName, id))) {
         continue
       }
-      if (segmentToBoxMinDistance(start, end, obstacle) < obstacleMargin) {
+      const segmentGap = segmentToBoxMinDistance(start, end, obstacle)
+      if (
+        segmentGap < obstacleMargin &&
+        !preservesExistingEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          existingCopperEndpoints,
+          startGap: segmentToBoxMinDistance(start, start, obstacle),
+          endGap: segmentToBoxMinDistance(end, end, obstacle),
+          segmentGap,
+          requiredGap: obstacleMargin,
+        })
+      ) {
         return false
       }
     }
@@ -194,9 +274,23 @@ export const createStitchSegmentRouter = (params: {
       if (segment.start.z !== start.z) continue
       const requiredGap =
         params.minClearance + currentTraceRadius + segment.traceThickness / 2
+      const segmentGap = minimumDistanceBetweenSegments(
+        start,
+        end,
+        segment.start,
+        segment.end,
+      )
       if (
-        minimumDistanceBetweenSegments(start, end, segment.start, segment.end) <
-        requiredGap
+        segmentGap < requiredGap &&
+        !preservesExistingEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          existingCopperEndpoints,
+          startGap: pointToSegmentDistance(start, segment.start, segment.end),
+          endGap: pointToSegmentDistance(end, segment.start, segment.end),
+          segmentGap,
+          requiredGap,
+        })
       ) {
         return false
       }
@@ -211,7 +305,21 @@ export const createStitchSegmentRouter = (params: {
       if (areSameNet(connectionName, via.connectionName)) continue
       const requiredGap =
         params.minClearance + currentTraceRadius + via.diameter / 2
-      if (pointToSegmentDistance(via, start, end) < requiredGap) return false
+      const segmentGap = pointToSegmentDistance(via, start, end)
+      if (
+        segmentGap < requiredGap &&
+        !preservesExistingEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          existingCopperEndpoints,
+          startGap: Math.hypot(start.x - via.x, start.y - via.y),
+          endGap: Math.hypot(end.x - via.x, end.y - via.y),
+          segmentGap,
+          requiredGap,
+        })
+      ) {
+        return false
+      }
     }
 
     return true
@@ -221,7 +329,7 @@ export const createStitchSegmentRouter = (params: {
     const key = getRequestKey(request)
     const cachedResult = segmentValidityCache.get(key)
     if (cachedResult !== undefined) return cachedResult
-    const result = evaluateSegmentValidity(request)
+    const result = evaluateSegmentValidity(request, [request.start, request.end])
     segmentValidityCache.set(key, result)
     return result
   }
@@ -244,9 +352,6 @@ export const createStitchSegmentRouter = (params: {
       if (obstacle.connectedTo.some((id) => areSameNet(connectionName, id))) {
         continue
       }
-      if (segmentToBoxMinDistance(start, end, obstacle) >= obstacleMargin) {
-        continue
-      }
       const margin = obstacleMargin + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: obstacle.center.x - obstacle.width / 2 - margin,
@@ -266,16 +371,6 @@ export const createStitchSegmentRouter = (params: {
       if (areSameNet(connectionName, segment.connectionName)) continue
       const requiredGap =
         params.minClearance + currentTraceRadius + segment.traceThickness / 2
-      if (
-        minimumDistanceBetweenSegments(
-          start,
-          end,
-          segment.start,
-          segment.end,
-        ) >= requiredGap
-      ) {
-        continue
-      }
       const margin = requiredGap + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: Math.min(segment.start.x, segment.end.x) - margin,
@@ -294,7 +389,6 @@ export const createStitchSegmentRouter = (params: {
       if (areSameNet(connectionName, via.connectionName)) continue
       const requiredGap =
         params.minClearance + currentTraceRadius + via.diameter / 2
-      if (pointToSegmentDistance(via, start, end) >= requiredGap) continue
       const margin = requiredGap + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: via.x - margin,
@@ -319,17 +413,80 @@ export const createStitchSegmentRouter = (params: {
       ),
     )
 
+    const addPoint = (x: number, y: number) => {
+      const point = { x, y, z: request.start.z }
+      const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
+      if (pointKeys.has(key)) return
+      pointKeys.add(key)
+      points.push(point)
+    }
+
     for (const boundary of boundaries) {
-      for (const point of [
-        { x: boundary.minX, y: boundary.minY, z: request.start.z },
-        { x: boundary.minX, y: boundary.maxY, z: request.start.z },
-        { x: boundary.maxX, y: boundary.minY, z: request.start.z },
-        { x: boundary.maxX, y: boundary.maxY, z: request.start.z },
+      for (const [x, y] of [
+        [boundary.minX, boundary.minY],
+        [boundary.minX, boundary.maxY],
+        [boundary.maxX, boundary.minY],
+        [boundary.maxX, boundary.maxY],
       ]) {
-        const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
-        if (pointKeys.has(key)) continue
-        pointKeys.add(key)
-        points.push(point)
+        addPoint(x!, y!)
+      }
+
+      // When an existing endpoint starts inside a clearance boundary, its
+      // shortest non-worsening escape is often perpendicular to an edge rather
+      // than toward a corner. Preserve the endpoint coordinates as projection
+      // vertices on each boundary edge.
+      for (const y of [request.start.y, request.end.y]) {
+        if (y < boundary.minY || y > boundary.maxY) continue
+        addPoint(boundary.minX, y)
+        addPoint(boundary.maxX, y)
+      }
+      for (const x of [request.start.x, request.end.x]) {
+        if (x < boundary.minX || x > boundary.maxX) continue
+        addPoint(x, boundary.minY)
+        addPoint(x, boundary.maxY)
+      }
+    }
+
+    // Individual corners are not enough when clearance rectangles overlap:
+    // every corner may be buried inside a neighboring rectangle even though
+    // the outer boundary of their union still has a legal turn. Add the
+    // vertical/horizontal boundary intersections that form those turns.
+    const addBoundaryIntersections = (
+      verticalBoundary: CollisionBoundary,
+      horizontalBoundary: CollisionBoundary,
+    ) => {
+      for (const x of [verticalBoundary.minX, verticalBoundary.maxX]) {
+        if (
+          x < horizontalBoundary.minX ||
+          x > horizontalBoundary.maxX
+        ) {
+          continue
+        }
+        for (const y of [
+          horizontalBoundary.minY,
+          horizontalBoundary.maxY,
+        ]) {
+          if (y < verticalBoundary.minY || y > verticalBoundary.maxY) {
+            continue
+          }
+          addPoint(x, y)
+        }
+      }
+    }
+    for (let firstIndex = 0; firstIndex < boundaries.length; firstIndex += 1) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < boundaries.length;
+        secondIndex += 1
+      ) {
+        addBoundaryIntersections(
+          boundaries[firstIndex]!,
+          boundaries[secondIndex]!,
+        )
+        addBoundaryIntersections(
+          boundaries[secondIndex]!,
+          boundaries[firstIndex]!,
+        )
       }
     }
 
@@ -344,7 +501,14 @@ export const createStitchSegmentRouter = (params: {
       ) {
         const start = points[firstIndex]!
         const end = points[secondIndex]!
-        if (!isValidSegment({ ...request, start, end })) continue
+        if (
+          !evaluateSegmentValidity(
+            { ...request, start, end },
+            [request.start, request.end],
+          )
+        ) {
+          continue
+        }
         const length = distance(start, end)
         edges[firstIndex]!.push({ index: secondIndex, length })
         edges[secondIndex]!.push({ index: firstIndex, length })
@@ -407,7 +571,7 @@ export const createStitchSegmentRouter = (params: {
     return path
   }
 
-  return { isValidSegment, findValidPath }
+  return { isValidSegment, findValidPath, isTerminalCoveredByTrace }
 }
 
 export const createStitchSegmentValidator = (

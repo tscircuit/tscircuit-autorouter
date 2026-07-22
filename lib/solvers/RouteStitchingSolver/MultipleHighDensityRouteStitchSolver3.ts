@@ -11,6 +11,7 @@ import { safeTransparentize } from "../colors"
 import {
   type FindValidStitchPath,
   type IsValidStitchSegment,
+  type IsTerminalCoveredByTrace,
   SingleHighDensityRouteStitchSolver3,
 } from "./SingleHighDensityRouteStitchSolver3"
 import { createStitchSegmentRouter } from "./createStitchSegmentValidator"
@@ -48,6 +49,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   private isValidStitchSegment?: IsValidStitchSegment
   private findValidStitchPath?: FindValidStitchPath
+  private isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
   private endpointIndex = new EndpointClusterIndex()
 
   private isValidStitchGap(params: {
@@ -83,6 +85,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isValidStitchSegment: this.isValidStitchSegment,
+      isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
     })
 
     while (
@@ -186,6 +189,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       })
       this.isValidStitchSegment = stitchSegmentRouter.isValidSegment
       this.findValidStitchPath = stitchSegmentRouter.findValidPath
+      this.isTerminalCoveredByTrace =
+        stitchSegmentRouter.isTerminalCoveredByTrace
     }
 
     const firstRoute = canonicalHdRoutes[0]
@@ -466,6 +471,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isValidStitchSegment: this.isValidStitchSegment,
       findValidStitchPath: this.findValidStitchPath,
+      isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
     })
   }
 

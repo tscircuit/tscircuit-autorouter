@@ -39,6 +39,12 @@ export type IsValidStitchSegment = (params: StitchSegmentRequest) => boolean
 export type FindValidStitchPath = (
   params: StitchSegmentRequest,
 ) => Point3[] | undefined
+export type IsTerminalCoveredByTrace = (params: {
+  connectionName: string
+  routeEnd: Point3
+  terminal: StitchTerminal
+  traceThickness: number
+}) => boolean
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -76,6 +82,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isValidStitchSegment?: IsValidStitchSegment
   findValidStitchPath?: FindValidStitchPath
+  isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
 
   private getPlanarStitchPath(
     params: StitchSegmentRequest,
@@ -148,6 +155,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const traceRadius =
       (routeEnd.traceThickness ?? this.mergedHdRoute.traceThickness) / 2
     return distance(routeEnd, terminal) <= traceRadius + GEOMETRIC_TOLERANCE
+  }
+
+  private isTerminalReachedByCopper(routeEnd: RoutePoint): boolean {
+    if (routeEnd.z !== this.end.z) return false
+    if (distance(routeEnd, this.end) < GEOMETRIC_TOLERANCE) return true
+    if (this.isUntaggedTerminalCoveredByTrace(routeEnd, this.end)) return true
+    return Boolean(
+      this.isTerminalCoveredByTrace?.({
+        connectionName: this.mergedHdRoute.connectionName,
+        routeEnd,
+        terminal: this.end,
+        traceThickness:
+          routeEnd.traceThickness ?? this.mergedHdRoute.traceThickness,
+      }),
+    )
   }
 
   /**
@@ -313,15 +335,25 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   }
 
   private tryCompleteTerminalStitch(lastMergedPoint: RoutePoint): boolean {
-    if (this.isUntaggedTerminalCoveredByTrace(lastMergedPoint, this.end)) {
-      return true
-    }
-
-    const terminalDistance = distance(lastMergedPoint, this.end)
-    if (terminalDistance < GEOMETRIC_TOLERANCE) return true
-    if (terminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) return false
+    if (this.isTerminalReachedByCopper(lastMergedPoint)) return true
 
     const endOnMergedLayer = { ...this.end, z: lastMergedPoint.z }
+    const planarTerminalDistance = distance(lastMergedPoint, endOnMergedLayer)
+    const needsLayerTransition = lastMergedPoint.z !== this.end.z
+    if (
+      needsLayerTransition &&
+      this.allowedLayerTransitionPointKeys &&
+      !this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.end))
+    ) {
+      return false
+    }
+    if (
+      !this.isValidStitchSegment &&
+      planarTerminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    ) {
+      return false
+    }
+
     const directTerminalPath = this.getPlanarStitchPath({
       connectionName: this.mergedHdRoute.connectionName,
       start: lastMergedPoint,
@@ -350,6 +382,20 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         z: point.z,
       })),
     )
+    if (needsLayerTransition) {
+      this.mergedHdRoute.route.push({
+        x: this.end.x,
+        y: this.end.y,
+        z: this.end.z,
+      })
+      if (
+        !this.mergedHdRoute.vias.some(
+          (via) => distance(via, this.end) < GEOMETRIC_TOLERANCE,
+        )
+      ) {
+        this.mergedHdRoute.vias.push({ x: this.end.x, y: this.end.y })
+      }
+    }
     return true
   }
 
@@ -382,6 +428,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     preserveTerminalPcbPortIds?: boolean
     isValidStitchSegment?: IsValidStitchSegment
     findValidStitchPath?: FindValidStitchPath
+    isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
@@ -390,6 +437,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isValidStitchSegment = opts.isValidStitchSegment
     this.findValidStitchPath = opts.findValidStitchPath
+    this.isTerminalCoveredByTrace = opts.isTerminalCoveredByTrace
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -693,6 +741,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const lastMergedPoint =
       this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
 
+    // A two-terminal route is complete as soon as its copper reaches the end
+    // terminal. Continuing from there can only append a same-root branch that
+    // belongs to another terminal path and may strand this route on its layer.
+    if (this.isTerminalReachedByCopper(lastMergedPoint)) {
+      this.remainingHdRoutes = []
+      this.solved = true
+      return
+    }
+
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
     let bestScore = Infinity
@@ -700,6 +757,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestMergedRetreatAnchor: RetreatAnchor | undefined
     let bestCandidateRetreatAnchor: RetreatAnchor | undefined
     let bestOverlapJoinPoint: Point3 | undefined
+    let bestStrandsLayer = true
 
     type StitchCandidate = {
       routeIndex: number
@@ -884,8 +942,51 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         (a.matchedOn === b.matchedOn ? 0 : a.matchedOn === "first" ? -1 : 1),
     )
 
+    const hasLayerCompatibleContinuation = (
+      candidate: StitchCandidate,
+    ): boolean => {
+      const route = this.remainingHdRoutes[candidate.routeIndex]!
+      const exitPoint =
+        candidate.matchedOn === "first"
+          ? route.route[route.route.length - 1]!
+          : route.route[0]!
+
+      if (exitPoint.z === this.end.z) return true
+      if (
+        Math.hypot(exitPoint.x - this.end.x, exitPoint.y - this.end.y) <
+          GEOMETRIC_TOLERANCE &&
+        (!this.allowedLayerTransitionPointKeys ||
+          this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.end)))
+      ) {
+        return true
+      }
+
+      for (let index = 0; index < this.remainingHdRoutes.length; index += 1) {
+        if (index === candidate.routeIndex) continue
+        const nextRoute = this.remainingHdRoutes[index]!
+        for (const endpoint of [
+          nextRoute.route[0]!,
+          nextRoute.route[nextRoute.route.length - 1]!,
+        ]) {
+          if (endpoint.z === exitPoint.z) return true
+          if (
+            Math.hypot(exitPoint.x - endpoint.x, exitPoint.y - endpoint.y) <
+              GEOMETRIC_TOLERANCE &&
+            (!this.allowedLayerTransitionPointKeys ||
+              this.allowedLayerTransitionPointKeys.has(
+                getXyPointKey(endpoint),
+              ))
+          ) {
+            return true
+          }
+        }
+      }
+
+      return false
+    }
+
     for (const candidate of candidates) {
-      if (candidate.lowerBoundScore >= bestScore) break
+      const strandsLayer = !hasLayerCompatibleContinuation(candidate)
       let score = candidate.lowerBoundScore
       let stitchPath: Point3[] | undefined
       let mergedRetreatAnchor: RetreatAnchor | undefined
@@ -921,8 +1022,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
         score = GAP_PENALTY + retreatDistance + this.getPathLength(stitchPath)
       }
-      if (score >= bestScore) continue
+      if (closestRouteIndex !== -1) {
+        if (bestStrandsLayer !== strandsLayer) {
+          if (strandsLayer) continue
+        } else if (score >= bestScore) {
+          continue
+        }
+      }
       bestScore = score
+      bestStrandsLayer = strandsLayer
       closestRouteIndex = candidate.routeIndex
       matchedOn = candidate.matchedOn
       bestStitchPath = stitchPath
