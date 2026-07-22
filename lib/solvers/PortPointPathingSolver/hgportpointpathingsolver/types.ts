@@ -46,6 +46,14 @@ export type ConnectionHg = Omit<Connection, "startRegion" | "endRegion"> & {
   simpleRouteConnection?: SimpleRouteConnection
 }
 
+export type ConnectionHgWithNetId = ConnectionHg & {
+  mutuallyConnectedNetworkId: string
+}
+
+export type ConnectionHgWithSimpleRouteConnection = ConnectionHgWithNetId & {
+  simpleRouteConnection: SimpleRouteConnection
+}
+
 export type CandidateHg = Omit<
   Candidate,
   "port" | "parent" | "lastPort" | "lastRegion" | "nextRegion"
@@ -80,11 +88,12 @@ export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
   graph: HyperGraphHg
-  connections: ConnectionHg[]
+  connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
+  preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
   flags: {
     FORCE_CENTER_FIRST: boolean

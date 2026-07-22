@@ -24,10 +24,11 @@ import {
   PipelineStageDebugRunner,
   type StageDebuggablePipelineSolver,
 } from "../lib/testing/PipelineStageDebugRunner"
-import { RELAXED_DRC_OPTIONS } from "../lib/testing/drcPresets"
-import { getDrcErrors } from "../lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "../lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson } from "../lib/types/srj-types"
+import { evaluateRelaxedDrc } from "../lib/testing/evaluate-relaxed-drc"
+import type {
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "../lib/types/srj-types"
 import {
   DATASET_OPTIONS_LABEL,
   type DatasetName,
@@ -44,7 +45,7 @@ type SolverOptions = {
 
 type PipelineRunSolver = StageDebuggablePipelineSolver & {
   srjWithPointPairs?: SimpleRouteJson
-  getOutputSimplifiedPcbTraces?: () => unknown[]
+  getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson: () => SimpleRouteJson
   visualizeFinalOutput?: () => GraphicsObject
 }
@@ -521,15 +522,12 @@ const main = async () => {
 
   if (result.solved && !result.failed) {
     const traces = pipelineSolver.getOutputSimplifiedPcbTraces?.() ?? []
-    const circuitJson = convertToCircuitJson(
-      pipelineSolver.srjWithPointPairs ?? input.scenario,
-      traces as any,
-      {
-        minTraceWidth: input.scenario.minTraceWidth,
-        minViaDiameter: input.scenario.minViaDiameter,
-      },
-    ) as Array<Record<string, unknown>>
-    const drcResult = getDrcErrors(circuitJson as any, RELAXED_DRC_OPTIONS)
+    const drcResult = evaluateRelaxedDrc({
+      inputSrj: input.scenario,
+      srjWithPointPairs: pipelineSolver.srjWithPointPairs ?? input.scenario,
+      traces,
+    })
+    const circuitJson = drcResult.circuitJson.map(toUnknownRecord)
     relaxedDrcPassed = drcResult.errors.length === 0
     drcErrors = drcResult.errorsWithCenters.map((error) => {
       const errorRecord = toUnknownRecord(error)

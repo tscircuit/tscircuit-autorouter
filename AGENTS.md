@@ -69,6 +69,13 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
   and return values have explicit types.
 - Always define function return types in new code.
 - Structure types so invalid states are not representable where practical.
+- Make solver invariants required in the type system; use `OrThrow` helpers at
+  boundaries where invalid external data must be rejected.
+- Name shared metadata for its domain role, not its current producer (for
+  example, `connectedTo`, not `obstacleConnectedTo`). Avoid prefixes; if one
+  defines a category, apply it consistently to every member of that category.
+- Keep diffs to the requested fix. Do not add precautionary or adjacent
+  refactors without asking first.
 - ONE TEST PER FILE
 
 ## Architecture

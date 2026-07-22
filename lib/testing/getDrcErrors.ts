@@ -130,6 +130,20 @@ export const getDrcErrors = (
   const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
+    if (
+      error.type === "pcb_via_trace_clearance_error" &&
+      typeof error.pcb_via_id === "string"
+    ) {
+      const via = viasById.get(error.pcb_via_id)
+
+      if (via) {
+        return {
+          ...error,
+          center: { x: via.x, y: via.y },
+        }
+      }
+    }
+
     if ("center" in error && error.center) {
       return error as DrcErrorWithCenter
     }

@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 
 test("pipeline7 dataset01 circuit003 keeps same-net obstacle IDs out of contiguity endpoints", () => {
@@ -19,15 +17,16 @@ test("pipeline7 dataset01 circuit003 keeps same-net obstacle IDs out of contigui
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.srjWithPointPairs).toBeDefined()
+  const srjWithPointPairs = solver.srjWithPointPairs
+  if (!srjWithPointPairs) {
+    throw new Error("Pipeline7 did not produce point-pair routing input")
+  }
 
-  const circuitJson = convertToCircuitJson(
-    solver.srjWithPointPairs!,
-    solver.getOutputSimplifiedPcbTraces(),
-    {
-      minTraceWidth: circuit003.minTraceWidth,
-      originalSrj: circuit003,
-    },
-  )
+  const { circuitJson, errors } = evaluateRelaxedDrc({
+    inputSrj: circuit003,
+    srjWithPointPairs,
+    traces: solver.getOutputSimplifiedPcbTraces(),
+  })
   const sourceTrace19 = circuitJson.find(
     (
       element,
@@ -45,8 +44,6 @@ test("pipeline7 dataset01 circuit003 keeps same-net obstacle IDs out of contigui
   ])
   expect(sourceTrace19?.connected_source_net_ids).toContain("pcb_port_24")
   expect(sourceTrace19?.connected_source_net_ids).toContain("pcb_port_26")
-
-  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
 
   expect(errors).toHaveLength(0)
 })

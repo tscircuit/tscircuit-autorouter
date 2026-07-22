@@ -592,7 +592,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       const region2PortPoint = assignment.regionPort2.d
       const connectionName = assignment.connection.connectionId
       const rootConnectionName =
-        assignment.connection.mutuallyConnectedNetworkId
+        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0]
       return [
         {
           x: region1PortPoint.x,
@@ -685,7 +685,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       const regionPort2 = assignment.regionPort2
       const connectionName = assignment.connection.connectionId
       const rootConnectionName =
-        assignment.connection.mutuallyConnectedNetworkId
+        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0]
       return [
         {
           x: regionPort1.d.x,
@@ -719,7 +719,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
             z: lastPort.d.z,
             connectionName: newlySolvedRoute.connection.connectionId,
             rootConnectionName:
-              newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+              newlySolvedRoute.connection.simpleRouteConnection
+                ?.__rootConnectionNames?.[0],
           },
           {
             x: currentPort.d.x,
@@ -727,7 +728,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
             z: currentPort.d.z,
             connectionName: newlySolvedRoute.connection.connectionId,
             rootConnectionName:
-              newlySolvedRoute.connection.mutuallyConnectedNetworkId,
+              newlySolvedRoute.connection.simpleRouteConnection
+                ?.__rootConnectionNames?.[0],
           },
         ] as PortPoint[]
       },
@@ -797,7 +799,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       if (!firstPort || !lastPort) continue
 
       const connectionName = route.connection.connectionId
-      const rootConnectionName = route.connection.mutuallyConnectedNetworkId
+      const connection = route.connection as ConnectionHg
+      const rootConnectionName =
+        connection.simpleRouteConnection?.__rootConnectionNames?.[0]
 
       const startRegionId = route.connection.startRegion.regionId
       const endRegionId = route.connection.endRegion.regionId
@@ -834,7 +838,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       const edgePortPoints = assignments.flatMap((assignment) => {
         const connectionName = assignment.connection.connectionId
         const rootConnectionName =
-          assignment.connection.mutuallyConnectedNetworkId
+          assignment.connection.simpleRouteConnection
+            ?.__rootConnectionNames?.[0]
         const startPoint: PortPoint = {
           portPointId: assignment.regionPort1.d.portId,
           x: assignment.regionPort1.d.x,

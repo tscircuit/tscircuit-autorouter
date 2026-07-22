@@ -86,7 +86,7 @@ Options:
   --effort N           Override scenario effort multiplier
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
   --sample-numbers L   Run comma-separated 1-based sample numbers from the dataset order
-  --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, or 23/srj23
+  --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, or 24/srj24
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
 
@@ -120,6 +120,7 @@ Examples:
   ./benchmark.sh --dataset 20
   ./benchmark.sh --dataset 21
   ./benchmark.sh --dataset 23
+  ./benchmark.sh --dataset 24
   ./benchmark.sh --include-assignable
 EOF
 

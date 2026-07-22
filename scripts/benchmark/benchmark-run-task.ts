@@ -2,9 +2,7 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
-import { RELAXED_DRC_OPTIONS } from "../../lib/testing/drcPresets"
-import { getDrcErrors } from "../../lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "../../lib/testing/utils/convertToCircuitJson"
+import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -417,15 +415,11 @@ export const runTask = async (
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
     const viaCount = countTraceVias(traces)
-    const circuitJson = convertToCircuitJson(
-      solver.srjWithPointPairs ?? task.scenario,
+    const { errors } = evaluateRelaxedDrc({
+      inputSrj: task.scenario,
+      srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
       traces,
-      {
-        minTraceWidth: task.scenario.minTraceWidth,
-        minViaDiameter: task.scenario.minViaDiameter,
-      },
-    )
-    const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
+    })
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])
     let benchmarkSnapshot: BenchmarkSnapshotWithImage | undefined

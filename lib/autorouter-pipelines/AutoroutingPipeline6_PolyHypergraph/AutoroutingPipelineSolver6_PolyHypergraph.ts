@@ -519,7 +519,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         traceSimplificationViz,
         this.solved
           ? combineVisualizations(
-              problemBaseViz,
+              { lines: problemBaseViz.lines },
               getPresuppliedTraceVisualization({ srj: this.originalSrj }),
               convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
             )

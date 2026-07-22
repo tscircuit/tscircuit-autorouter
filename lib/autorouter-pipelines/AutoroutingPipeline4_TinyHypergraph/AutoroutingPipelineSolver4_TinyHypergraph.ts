@@ -262,6 +262,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
+          connectivityMap: cms.connMap,
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
@@ -665,7 +666,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
       traceSimplificationViz,
       this.solved
         ? combineVisualizations(
-            problemBaseViz,
+            { lines: problemLines },
             getPresuppliedTraceVisualization({ srj: this.originalSrj }),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )

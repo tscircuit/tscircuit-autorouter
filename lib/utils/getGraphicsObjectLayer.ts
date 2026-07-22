@@ -15,14 +15,19 @@ export const getGraphicsLayerForConnectionPoint = (
   layerCount: number,
 ) => getGraphicsLayerFromLayerNames(getConnectionPointLayers(point), layerCount)
 
+/** Resolves an obstacle's canonical, valid z layers, preferring __zLayers. */
+export const getGraphicsZLayersForObstacle = (
+  obstacle: Obstacle,
+  layerCount: number,
+): number[] => {
+  if (obstacle.__zLayers && obstacle.__zLayers.length > 0) {
+    return getUniqueValidZLayers(obstacle.__zLayers, layerCount)
+  }
+
+  return getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
+}
+
 export const getGraphicsLayerForObstacle = (
   obstacle: Obstacle,
   layerCount: number,
-) => {
-  const zLayers =
-    obstacle.__zLayers && obstacle.__zLayers.length > 0
-      ? getUniqueValidZLayers(obstacle.__zLayers, layerCount)
-      : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
-
-  return `z${zLayers.join(",")}`
-}
+): string => `z${getGraphicsZLayersForObstacle(obstacle, layerCount).join(",")}`

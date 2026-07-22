@@ -3,11 +3,45 @@ import { getColorMap, safeTransparentize } from "lib/solvers/colors"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import type { SimpleRouteJson } from "lib/types"
 
-test("colors wire segments by layer by default and by connection in net mode", () => {
+test("colors traces and obstacles by layer and traces by connection in net mode", () => {
   const srj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.15,
-    obstacles: [],
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 2, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        type: "rect",
+        layers: ["bottom"],
+        center: { x: 2, y: 1 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        type: "rect",
+        layers: ["inner1"],
+        center: { x: 2, y: 2 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+      {
+        type: "rect",
+        layers: ["top", "bottom"],
+        __zLayers: [1, 2],
+        center: { x: 2, y: 3 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: [],
+      },
+    ],
     connections: [
       {
         name: "top-net",
@@ -122,6 +156,20 @@ test("colors wire segments by layer by default and by connection in net mode", (
   expect(lineByLayer.get("z1")?.strokeColor).toBe("rgba(0,128,0,0.5)")
   expect(lineByLayer.get("z2")?.strokeColor).toBe("rgba(255,255,0,0.5)")
   expect(lineByLayer.get("z3")?.strokeColor).toBe("rgba(0,0,255,0.5)")
+  expect(graphics.rects.filter((rect) => rect.center.y === 0)).toMatchObject([
+    { layer: "z0", fill: "rgba(255,0,0,0.5)" },
+  ])
+  expect(graphics.rects.filter((rect) => rect.center.y === 1)).toMatchObject([
+    { layer: "z3", fill: "rgba(0,0,255,0.5)" },
+  ])
+  expect(graphics.rects.filter((rect) => rect.center.y === 2)).toMatchObject([
+    { layer: "z1", fill: "rgba(0,128,0,0.5)" },
+  ])
+  expect(graphics.rects.filter((rect) => rect.center.y === 3)).toMatchObject([
+    { layer: "z1", fill: "rgba(0,128,0,0.5)" },
+    { layer: "z2", fill: "rgba(255,255,0,0.5)" },
+  ])
+  expect(graphics.rects.every((rect) => !rect.layer?.includes(","))).toBe(true)
 
   const netGraphics = convertSrjToGraphicsObject(srj, {
     traceColorMode: "net",
@@ -131,6 +179,7 @@ test("colors wire segments by layer by default and by connection in net mode", (
   )
   const colorMap = getColorMap(srj)
 
+  expect(netGraphics.rects).toEqual(graphics.rects)
   expect(netLineByLayer.get("z0")?.strokeColor).toBe(colorMap["top-net"])
   expect(netLineByLayer.get("z1")?.strokeColor).toBe(
     safeTransparentize(colorMap["inner1-net"]!, 0.5),
