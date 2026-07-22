@@ -20,8 +20,7 @@ test("terminal stitch repair retracts a colliding planar tail", () => {
     start: { x: 0, y: 0, z: 0 },
     end: { x: 1.1, y: 0, z: 0 },
     hdRoutes: [route],
-    isValidStitchSegment: ({ start, end }) =>
-      Math.max(start.x, end.x) <= 0.8,
+    isValidStitchSegment: ({ start, end }) => Math.max(start.x, end.x) <= 0.8,
     findValidStitchPath: ({ start, end }) => {
       if (Math.abs(start.x - 0.8) > 1e-6) return undefined
       if (Math.abs(end.x - 1.1) > 1e-6) return undefined

@@ -30,8 +30,7 @@ test("stitch repair retracts colliding fragment tails before rerouting", () => {
         { x: 2, y: 0, z: 0 },
       ]),
     ],
-    isValidStitchSegment: ({ start, end }) =>
-      Math.max(start.x, end.x) <= 0.8,
+    isValidStitchSegment: ({ start, end }) => Math.max(start.x, end.x) <= 0.8,
     findValidStitchPath: ({ start, end }) => {
       if (Math.abs(start.x - 0.8) > 1e-6) return undefined
       if (Math.abs(end.x - 1.3) > 1e-6) return undefined

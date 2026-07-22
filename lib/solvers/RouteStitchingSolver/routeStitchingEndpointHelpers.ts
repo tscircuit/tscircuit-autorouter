@@ -390,10 +390,7 @@ export const selectRoutesAlongEndpointPath = (params: {
     if (!endStateKey) return null
 
     const transitionsInReverse: PathTransition[] = []
-    for (
-      let cursorStateKey = endStateKey;
-      cursorStateKey !== startStateKey;
-    ) {
+    for (let cursorStateKey = endStateKey; cursorStateKey !== startStateKey; ) {
       const transition = prevByStateKey.get(cursorStateKey)
       if (!transition) return null
       transitionsInReverse.push(transition)

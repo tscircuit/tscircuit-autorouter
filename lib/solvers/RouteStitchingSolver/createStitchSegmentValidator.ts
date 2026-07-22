@@ -247,8 +247,7 @@ export const createStitchSegmentRouter = (params: {
       if (segmentToBoxMinDistance(start, end, obstacle) >= obstacleMargin) {
         continue
       }
-      const margin =
-        obstacleMargin + PATH_COORDINATE_EPSILON
+      const margin = obstacleMargin + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: obstacle.center.x - obstacle.width / 2 - margin,
         minY: obstacle.center.y - obstacle.height / 2 - margin,
@@ -268,13 +267,16 @@ export const createStitchSegmentRouter = (params: {
       const requiredGap =
         params.minClearance + currentTraceRadius + segment.traceThickness / 2
       if (
-        minimumDistanceBetweenSegments(start, end, segment.start, segment.end) >=
-        requiredGap
+        minimumDistanceBetweenSegments(
+          start,
+          end,
+          segment.start,
+          segment.end,
+        ) >= requiredGap
       ) {
         continue
       }
-      const margin =
-        requiredGap + PATH_COORDINATE_EPSILON
+      const margin = requiredGap + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: Math.min(segment.start.x, segment.end.x) - margin,
         minY: Math.min(segment.start.y, segment.end.y) - margin,
@@ -293,8 +295,7 @@ export const createStitchSegmentRouter = (params: {
       const requiredGap =
         params.minClearance + currentTraceRadius + via.diameter / 2
       if (pointToSegmentDistance(via, start, end) >= requiredGap) continue
-      const margin =
-        requiredGap + PATH_COORDINATE_EPSILON
+      const margin = requiredGap + PATH_COORDINATE_EPSILON
       boundaries.push({
         minX: via.x - margin,
         minY: via.y - margin,
@@ -367,7 +368,10 @@ export const createStitchSegmentRouter = (params: {
         }
       }
 
-      if (currentIndex === -1 || !Number.isFinite(shortestDistances[currentIndex])) {
+      if (
+        currentIndex === -1 ||
+        !Number.isFinite(shortestDistances[currentIndex])
+      ) {
         break
       }
       if (currentIndex === 1) break
@@ -375,8 +379,7 @@ export const createStitchSegmentRouter = (params: {
 
       for (const edge of edges[currentIndex]!) {
         if (visited[edge.index]) continue
-        const candidateDistance =
-          shortestDistances[currentIndex]! + edge.length
+        const candidateDistance = shortestDistances[currentIndex]! + edge.length
         if (candidateDistance < shortestDistances[edge.index]!) {
           shortestDistances[edge.index] = candidateDistance
           previousPointIndices[edge.index] = currentIndex

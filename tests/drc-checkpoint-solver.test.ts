@@ -23,8 +23,7 @@ test("DRC checkpoint accepts improvements and rejects regressions", () => {
       drcEvaluator: ({ routes }) => ({
         errors: Array.from(
           {
-            length:
-              routes === candidateHdRoutes ? candidateDrcCount : 1,
+            length: routes === candidateHdRoutes ? candidateDrcCount : 1,
           },
           (_, index) => ({ type: "test_error", index }),
         ),

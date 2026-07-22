@@ -77,15 +77,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   isValidStitchSegment?: IsValidStitchSegment
   findValidStitchPath?: FindValidStitchPath
 
-  private getPlanarStitchPath(params: StitchSegmentRequest): Point3[] | undefined {
+  private getPlanarStitchPath(
+    params: StitchSegmentRequest,
+  ): Point3[] | undefined {
     if (params.start.z !== params.end.z) return undefined
     if (distance(params.start, params.end) < GEOMETRIC_TOLERANCE) {
       return [params.start]
     }
-    if (
-      !this.isValidStitchSegment ||
-      this.isValidStitchSegment(params)
-    ) {
+    if (!this.isValidStitchSegment || this.isValidStitchSegment(params)) {
       return [params.start, params.end]
     }
 
@@ -176,9 +175,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     ]
     if (endpointIsProtected) return anchors
 
-    const sampleDistances = this.getRetreatSampleDistances(
-      maxRetreatDistance,
-    )
+    const sampleDistances = this.getRetreatSampleDistances(maxRetreatDistance)
     let retreatDistance = 0
     for (let index = 1; index < points.length; index += 1) {
       const removedPoint = points[index - 1]!
@@ -221,9 +218,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       })
     }
 
-    return anchors.sort(
-      (a, b) => a.retreatDistance - b.retreatDistance,
-    )
+    return anchors.sort((a, b) => a.retreatDistance - b.retreatDistance)
   }
 
   private getRetreatedPlanarStitchPlan(params: {
@@ -244,10 +239,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestCost = Infinity
     for (const mergedAnchor of mergedAnchors) {
       for (const candidateAnchor of candidateAnchors) {
-        if (
-          mergedAnchor.trimCount === 0 &&
-          candidateAnchor.trimCount === 0
-        ) {
+        if (mergedAnchor.trimCount === 0 && candidateAnchor.trimCount === 0) {
           continue
         }
         if (mergedAnchor.point.z !== candidateAnchor.point.z) continue
@@ -297,8 +289,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       })
       if (!path) continue
 
-      const cost =
-        mergedAnchor.retreatDistance + this.getPathLength(path)
+      const cost = mergedAnchor.retreatDistance + this.getPathLength(path)
       if (cost >= bestCost - DISTANCE_TIE_TOLERANCE) continue
       bestCost = cost
       bestPlan = {
@@ -654,8 +645,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             retreatDistance: 0,
           }
         } else {
-          terminalPlan =
-            this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
+          terminalPlan = this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
         }
         if (!terminalPlan) {
           this.failed = true
@@ -783,11 +773,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       (a, b) =>
         a.lowerBoundScore - b.lowerBoundScore ||
         a.routeIndex - b.routeIndex ||
-        (a.matchedOn === b.matchedOn
-          ? 0
-          : a.matchedOn === "first"
-            ? -1
-            : 1),
+        (a.matchedOn === b.matchedOn ? 0 : a.matchedOn === "first" ? -1 : 1),
     )
 
     for (const candidate of candidates) {
@@ -856,9 +842,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
     if (bestCandidateRetreatAnchor) {
-      pointsToAdd = pointsToAdd.slice(
-        bestCandidateRetreatAnchor.trimCount,
-      )
+      pointsToAdd = pointsToAdd.slice(bestCandidateRetreatAnchor.trimCount)
       if (bestCandidateRetreatAnchor.isVirtual) {
         pointsToAdd.unshift({ ...bestCandidateRetreatAnchor.point })
       }
