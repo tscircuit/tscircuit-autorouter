@@ -25,10 +25,12 @@ test("TraceWidthSolver - determines optimal trace width based on clearance", () 
     })
   }
 
+  const connections = Array.from(connectionByName.values())
   const solver = new TraceWidthSolver({
     hdRoutes: data.hdRoutes,
     minTraceWidth: data.minTraceWidth,
-    connection: Array.from(connectionByName.values()),
+    connection: connections,
+    originalConnections: connections,
     layerCount: 2,
   })
 

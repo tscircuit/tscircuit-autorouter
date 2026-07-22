@@ -38,6 +38,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
+    public originalSrj: SimpleRouteJson = ogSrj,
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -73,7 +74,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     }
 
     // Call super with a modified SRJ that only contains on-board connections
-    super({ ...ogSrj, connections: onBoardConnections }, colorMap)
+    super(
+      { ...ogSrj, connections: onBoardConnections },
+      colorMap,
+      originalSrj,
+    )
 
     this.connectionPointDsu = connectionPointDsu
     this.connectionPointMap = connectionPointMap
@@ -150,6 +155,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
           currentConnection.name,
         ],
+        __originalSrjConnectionName: this.selectOriginalSrjConnectionName(
+          currentConnection,
+          currentConnection.pointsToConnect[0],
+          currentConnection.pointsToConnect[1],
+        ),
       })
       return
     }
@@ -177,6 +187,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
+        __originalSrjConnectionName: this.selectOriginalSrjConnectionName(
+          currentConnection,
+          mstEdge.from,
+          mstEdge.to,
+        ),
       })
     }
   }

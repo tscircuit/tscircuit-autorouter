@@ -92,7 +92,16 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  /**
+   * Private autorouter metadata. All `__*` fields are internal and may be
+   * overwritten regardless of values supplied by a user.
+   */
   __rootConnectionNames?: string[]
+  /**
+   * Deterministic provenance attribution to a connection in the original
+   * user-provided SimpleRouteJson.
+   */
+  __originalSrjConnectionName?: string
   isOffBoard?: boolean
   __netConnectionName?: string
   nominalTraceWidth?: number

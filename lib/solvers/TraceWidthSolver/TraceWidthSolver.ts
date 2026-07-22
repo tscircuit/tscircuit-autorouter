@@ -41,6 +41,7 @@ type TaperRoutePointEntry = {
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
   connection: SimpleRouteConnection[]
+  originalConnections: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
@@ -58,9 +59,10 @@ export interface TraceWidthSolverInput {
  * If clearance is insufficient for the current width, it tries the next
  * narrower width in the schedule.
  *
- * It only runs width adjustments for routes whose connection provides a
- * nominalTraceWidth; routes without one are passed through unchanged.
- * The schedule is built per-route from that connection's nominalTraceWidth.
+ * It only runs width adjustments for routes whose attributed original
+ * connection provides a nominalTraceWidth; routes without one are passed
+ * through unchanged. The schedule is built per-route from that connection's
+ * nominalTraceWidth.
  */
 export class TraceWidthSolver extends BaseSolver {
   override getSolverName(): string {
@@ -75,6 +77,7 @@ export class TraceWidthSolver extends BaseSolver {
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
+  originalSrjConnectionNameByConnectionName: Map<string, string>
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -118,8 +121,18 @@ export class TraceWidthSolver extends BaseSolver {
       inferredLayerCount,
     )
     this.connectionNominalTraceWidthMap = new Map()
+    this.originalSrjConnectionNameByConnectionName = new Map()
 
     for (const connection of input.connection) {
+      if (connection.__originalSrjConnectionName) {
+        this.originalSrjConnectionNameByConnectionName.set(
+          connection.name,
+          connection.__originalSrjConnectionName,
+        )
+      }
+    }
+
+    for (const connection of input.originalConnections) {
       if (connection.nominalTraceWidth === undefined) {
         continue
       }
@@ -142,6 +155,17 @@ export class TraceWidthSolver extends BaseSolver {
   private getNominalTraceWidthForRoute(
     route: HighDensityRoute,
   ): number | undefined {
+    const originalSrjConnectionName =
+      this.originalSrjConnectionNameByConnectionName.get(route.connectionName)
+    if (originalSrjConnectionName) {
+      const byOriginalSrjConnectionName =
+        this.connectionNominalTraceWidthMap.get(
+          originalSrjConnectionName,
+        )
+      if (byOriginalSrjConnectionName !== undefined) {
+        return byOriginalSrjConnectionName
+      }
+    }
     const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
     if (byName !== undefined) {
       return byName

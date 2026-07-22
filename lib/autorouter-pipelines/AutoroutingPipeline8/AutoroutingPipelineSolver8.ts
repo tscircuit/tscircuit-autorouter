@@ -184,7 +184,11 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => [cms.srjWithEscapeViaLocations ?? cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srjWithEscapeViaLocations ?? cms.srj,
+        cms.colorMap,
+        cms.originalSrj,
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
@@ -475,7 +479,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        connection: cms.srjWithPointPairs!.connections,
+        originalConnections: cms.originalSrj.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         layerCount: cms.srj.layerCount,
       },

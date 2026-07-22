@@ -390,7 +390,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceKeepoutSolver?.redrawnHdRoutes ?? [],
-        connection: cms.srj.connections,
+        connection: cms.srjWithPointPairs!.connections,
+        originalConnections: cms.srj.connections,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,

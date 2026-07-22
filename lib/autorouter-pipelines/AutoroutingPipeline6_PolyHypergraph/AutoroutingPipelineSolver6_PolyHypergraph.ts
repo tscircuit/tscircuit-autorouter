@@ -157,7 +157,11 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => [cms.srjWithEscapeViaLocations ?? cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srjWithEscapeViaLocations ?? cms.srj,
+        cms.colorMap,
+        cms.originalSrj,
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
@@ -279,7 +283,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
+        connection: cms.srjWithPointPairs!.connections,
+        originalConnections: cms.originalSrj.connections,
         layerCount: cms.srj.layerCount,
       },
     ]),

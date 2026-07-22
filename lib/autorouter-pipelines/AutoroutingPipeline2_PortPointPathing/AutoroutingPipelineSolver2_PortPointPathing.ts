@@ -394,7 +394,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           connMap: cms.connMap,
           colorMap: cms.colorMap,
           minTraceWidth: cms.minTraceWidth,
-          connection: cms.srj.connections,
+          connection: cms.srjWithPointPairs!.connections,
+          originalConnections: cms.srj.connections,
           layerCount: cms.srj.layerCount,
         },
       ]

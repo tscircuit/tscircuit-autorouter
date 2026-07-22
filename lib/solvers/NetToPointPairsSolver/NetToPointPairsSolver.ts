@@ -8,6 +8,12 @@ import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { getPointKey } from "lib/utils/getPointKey"
+
+type OriginalConnectionRecord = {
+  connection: SimpleRouteConnection
+  originalIndex: number
+}
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
@@ -127,14 +133,150 @@ export class NetToPointPairsSolver extends BaseSolver {
 
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
+  protected originalConnectionByName: Map<string, OriginalConnectionRecord>
+  protected mergedConnectionConstituents: Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
+    public originalSrj: SimpleRouteJson = ogSrj,
   ) {
     super()
-    this.unprocessedConnections = mergeConnections([...ogSrj.connections])
+    this.originalConnectionByName = new Map()
+    for (const [originalIndex, connection] of originalSrj.connections.entries()) {
+      if (this.originalConnectionByName.has(connection.name)) {
+        throw new Error(
+          `Original SimpleRouteJson contains duplicate connection name "${connection.name}"`,
+        )
+      }
+      this.originalConnectionByName.set(connection.name, {
+        connection,
+        originalIndex,
+      })
+    }
+
+    const constituentConnections = [...ogSrj.connections]
+    for (const connection of constituentConnections) {
+      if (!this.originalConnectionByName.has(connection.name)) {
+        throw new Error(
+          `Could not match pre-merge connection "${connection.name}" to an original SimpleRouteJson connection`,
+        )
+      }
+    }
+
+    this.unprocessedConnections = mergeConnections(constituentConnections)
+    this.mergedConnectionConstituents = this.associateMergedConnections(
+      constituentConnections,
+    )
     this.newConnections = []
+  }
+
+  protected associateMergedConnections(
+    constituentConnections: SimpleRouteConnection[],
+  ): Map<SimpleRouteConnection, SimpleRouteConnection[]> {
+    const constituentsByMergedConnection = new Map<
+      SimpleRouteConnection,
+      SimpleRouteConnection[]
+    >(
+      this.unprocessedConnections.map((connection) => [connection, []]),
+    )
+    const mergedConnectionByPointKey = new Map<
+      string,
+      SimpleRouteConnection
+    >()
+
+    for (const mergedConnection of this.unprocessedConnections) {
+      for (const point of mergedConnection.pointsToConnect) {
+        mergedConnectionByPointKey.set(getPointKey(point), mergedConnection)
+      }
+    }
+
+    for (const constituent of constituentConnections) {
+      const mergedConnection =
+        this.unprocessedConnections.find(
+          (connection) => connection === constituent,
+        ) ??
+        constituent.pointsToConnect
+          .map((point) => mergedConnectionByPointKey.get(getPointKey(point)))
+          .find(
+            (connection): connection is SimpleRouteConnection =>
+              connection !== undefined,
+          )
+
+      if (!mergedConnection) {
+        throw new Error(
+          `Could not associate pre-merge connection "${constituent.name}" with a merged connection`,
+        )
+      }
+      constituentsByMergedConnection.get(mergedConnection)!.push(constituent)
+    }
+
+    return constituentsByMergedConnection
+  }
+
+  protected selectOriginalSrjConnectionName(
+    mergedConnection: SimpleRouteConnection,
+    firstEndpoint: ConnectionPoint,
+    secondEndpoint: ConnectionPoint,
+  ): string {
+    const constituents =
+      this.mergedConnectionConstituents.get(mergedConnection) ?? []
+    const candidateByOriginalIndex = new Map<number, OriginalConnectionRecord>()
+
+    for (const constituent of constituents) {
+      const originalRecord = this.originalConnectionByName.get(constituent.name)
+      if (!originalRecord) {
+        throw new Error(
+          `Could not match pre-merge connection "${constituent.name}" to an original SimpleRouteJson connection`,
+        )
+      }
+      candidateByOriginalIndex.set(originalRecord.originalIndex, originalRecord)
+    }
+
+    const candidates = Array.from(candidateByOriginalIndex.values()).sort(
+      (a, b) => a.originalIndex - b.originalIndex,
+    )
+    if (candidates.length === 0) {
+      throw new Error(
+        `Merged connection "${mergedConnection.name}" has no original provenance candidates`,
+      )
+    }
+
+    const firstEndpointKey = getPointKey(firstEndpoint)
+    const secondEndpointKey = getPointKey(secondEndpoint)
+    const exactOwners = candidates.filter(({ connection }) => {
+      const pointKeys = new Set(connection.pointsToConnect.map(getPointKey))
+      return (
+        pointKeys.has(firstEndpointKey) && pointKeys.has(secondEndpointKey)
+      )
+    })
+
+    // A global MST edge can join points that never shared an original
+    // connection. In that case this is deterministic attribution, not proof
+    // that the selected original connection contained both endpoints.
+    const selectionPool = exactOwners.length > 0 ? exactOwners : candidates
+    let selected = selectionPool[0]!
+    let selectedWidth =
+      selected.connection.nominalTraceWidth ??
+      this.originalSrj.nominalTraceWidth ??
+      this.originalSrj.minTraceWidth
+
+    for (let i = 1; i < selectionPool.length; i++) {
+      const candidate = selectionPool[i]!
+      const candidateWidth =
+        candidate.connection.nominalTraceWidth ??
+        this.originalSrj.nominalTraceWidth ??
+        this.originalSrj.minTraceWidth
+      if (candidateWidth > selectedWidth) {
+        selected = candidate
+        selectedWidth = candidateWidth
+      }
+    }
+
+    return selected.connection.name
   }
 
   _step() {
@@ -168,6 +310,11 @@ export class NetToPointPairsSolver extends BaseSolver {
         __rootConnectionNames: connection.__rootConnectionNames ?? [
           connection.name,
         ],
+        __originalSrjConnectionName: this.selectOriginalSrjConnectionName(
+          connection,
+          connection.pointsToConnect[0],
+          connection.pointsToConnect[1],
+        ),
       })
       return
     }
@@ -186,6 +333,11 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
+        __originalSrjConnectionName: this.selectOriginalSrjConnectionName(
+          connection,
+          edge.from,
+          edge.to,
+        ),
       })
     }
   }
