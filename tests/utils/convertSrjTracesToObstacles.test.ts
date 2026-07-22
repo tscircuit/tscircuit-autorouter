@@ -69,7 +69,7 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     center: { x: 2, y: 0 },
     width: 0.4,
     height: 0.4,
-    connectedTo: [],
+    connectedTo: ["net.GND"],
   })
   expect(traceObstacles[1]).toMatchObject({
     type: "rect",
@@ -78,6 +78,6 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     width: 2,
     height: 0.15,
     ccwRotationDegrees: 0,
-    connectedTo: [],
+    connectedTo: ["net.GND"],
   })
 })

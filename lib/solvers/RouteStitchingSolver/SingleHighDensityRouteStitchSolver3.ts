@@ -140,6 +140,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
   }
 
+  private isUntaggedTerminalCoveredByTrace(
+    routeEnd: RoutePoint,
+    terminal: StitchTerminal,
+  ): boolean {
+    if (terminal.pcb_port_id || routeEnd.z !== terminal.z) return false
+    const traceRadius =
+      (routeEnd.traceThickness ?? this.mergedHdRoute.traceThickness) / 2
+    return distance(routeEnd, terminal) <= traceRadius + GEOMETRIC_TOLERANCE
+  }
+
   /**
    * Returns progressively earlier anchors on the current planar tail. A layer
    * transition, protected terminal, or through-obstacle segment is a hard
@@ -620,6 +630,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
 
+      if (this.isUntaggedTerminalCoveredByTrace(lastMergedPoint, this.end)) {
+        this.solved = true
+        return
+      }
+
       if (
         distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
         distance(lastMergedPoint, this.end) <=
@@ -682,6 +697,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestStitchPath: Point3[] | undefined
     let bestMergedRetreatAnchor: RetreatAnchor | undefined
     let bestCandidateRetreatAnchor: RetreatAnchor | undefined
+    let bestOverlapJoinPoint: Point3 | undefined
 
     type StitchCandidate = {
       routeIndex: number
@@ -689,8 +705,47 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       endpoint: RoutePoint
       lowerBoundScore: number
       needsPlanarPath: boolean
+      overlapJoinPoint?: Point3
     }
     const candidates: StitchCandidate[] = []
+    const mergedPreviousPoint =
+      this.mergedHdRoute.route[this.mergedHdRoute.route.length - 2]
+    const mergedEndpointIsMovable = Boolean(
+      mergedPreviousPoint &&
+        mergedPreviousPoint.z === lastMergedPoint.z &&
+        !mergedPreviousPoint.toNextSegmentType &&
+        !lastMergedPoint.pcb_port_id &&
+        !this.isTerminalLocation(lastMergedPoint) &&
+        !this.mergedHdRoute.vias.some(
+          (via) => distance(via, lastMergedPoint) < GEOMETRIC_TOLERANCE,
+        ),
+    )
+
+    const getOverlapJoinPoint = (
+      hdRoute: HighDensityIntraNodeRoute,
+      endpoint: RoutePoint,
+      endpointIsMovable: boolean,
+    ): Point3 | undefined => {
+      if (!mergedEndpointIsMovable || !endpointIsMovable) return undefined
+      const endpointDistance = distance(lastMergedPoint, endpoint)
+      const mergedRadius =
+        (lastMergedPoint.traceThickness ??
+          this.mergedHdRoute.traceThickness) / 2
+      const candidateRadius =
+        (endpoint.traceThickness ?? hdRoute.traceThickness) / 2
+      const combinedRadius = mergedRadius + candidateRadius
+      if (endpointDistance > combinedRadius + GEOMETRIC_TOLERANCE) {
+        return undefined
+      }
+      const mergedShare = mergedRadius / combinedRadius
+      return {
+        x: lastMergedPoint.x +
+          (endpoint.x - lastMergedPoint.x) * mergedShare,
+        y: lastMergedPoint.y +
+          (endpoint.y - lastMergedPoint.y) * mergedShare,
+        z: lastMergedPoint.z,
+      }
+    }
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
@@ -699,6 +754,39 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       const distToFirst = distance(lastMergedPoint, firstPointInCandidate)
       const distToLast = distance(lastMergedPoint, lastPointInCandidate)
+      const firstAdjacentPoint = hdRoute.route[1]
+      const lastAdjacentPoint = hdRoute.route[hdRoute.route.length - 2]
+      const firstEndpointIsMovable = Boolean(
+        firstAdjacentPoint &&
+          firstAdjacentPoint.z === firstPointInCandidate.z &&
+          !firstPointInCandidate.toNextSegmentType &&
+          !firstPointInCandidate.pcb_port_id &&
+          !hdRoute.startPcbPortId &&
+          !hdRoute.vias.some(
+            (via) =>
+              distance(via, firstPointInCandidate) < GEOMETRIC_TOLERANCE,
+          ),
+      )
+      const lastEndpointIsMovable = Boolean(
+        lastAdjacentPoint &&
+          lastAdjacentPoint.z === lastPointInCandidate.z &&
+          !lastAdjacentPoint.toNextSegmentType &&
+          !lastPointInCandidate.pcb_port_id &&
+          !hdRoute.endPcbPortId &&
+          !hdRoute.vias.some(
+            (via) => distance(via, lastPointInCandidate) < GEOMETRIC_TOLERANCE,
+          ),
+      )
+      const firstOverlapJoinPoint = getOverlapJoinPoint(
+        hdRoute,
+        firstPointInCandidate,
+        firstEndpointIsMovable,
+      )
+      const lastOverlapJoinPoint = getOverlapJoinPoint(
+        hdRoute,
+        lastPointInCandidate,
+        lastEndpointIsMovable,
+      )
 
       if (lastMergedPoint.z === firstPointInCandidate.z) {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
@@ -708,6 +796,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             endpoint: firstPointInCandidate,
             lowerBoundScore: distToFirst,
             needsPlanarPath: false,
+          })
+        } else if (firstOverlapJoinPoint) {
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "first",
+            endpoint: firstPointInCandidate,
+            lowerBoundScore: distToFirst,
+            needsPlanarPath: false,
+            overlapJoinPoint: firstOverlapJoinPoint,
           })
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
           candidates.push({
@@ -742,6 +839,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             endpoint: lastPointInCandidate,
             lowerBoundScore: distToLast,
             needsPlanarPath: false,
+          })
+        } else if (lastOverlapJoinPoint) {
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "last",
+            endpoint: lastPointInCandidate,
+            lowerBoundScore: distToLast,
+            needsPlanarPath: false,
+            overlapJoinPoint: lastOverlapJoinPoint,
           })
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
           candidates.push({
@@ -820,6 +926,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       bestStitchPath = stitchPath
       bestMergedRetreatAnchor = mergedRetreatAnchor
       bestCandidateRetreatAnchor = candidateRetreatAnchor
+      bestOverlapJoinPoint = candidate.overlapJoinPoint
     }
 
     if (closestRouteIndex === -1) {
@@ -840,6 +947,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = hdRouteToMerge.route
     } else {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
+    }
+    if (bestOverlapJoinPoint) {
+      const mergedLastIndex = this.mergedHdRoute.route.length - 1
+      this.mergedHdRoute.route[mergedLastIndex] = {
+        ...this.mergedHdRoute.route[mergedLastIndex]!,
+        ...bestOverlapJoinPoint,
+      }
+      pointsToAdd = [
+        { ...pointsToAdd[0]!, ...bestOverlapJoinPoint },
+        ...pointsToAdd.slice(1),
+      ]
     }
     if (bestCandidateRetreatAnchor) {
       pointsToAdd = pointsToAdd.slice(bestCandidateRetreatAnchor.trimCount)

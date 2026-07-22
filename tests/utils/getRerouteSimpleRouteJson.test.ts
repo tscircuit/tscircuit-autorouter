@@ -205,6 +205,7 @@ test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacl
     traceObstacles.every((obstacle) => {
       const obstacleBounds = getBoundingBox(obstacle)
       return (
+        obstacle.connectedTo.includes("source_net_0") &&
         obstacleBounds.minX >= rerouted.bounds.minX - 1e-9 &&
         obstacleBounds.maxX <= rerouted.bounds.maxX + 1e-9 &&
         obstacleBounds.minY >= rerouted.bounds.minY - 1e-9 &&
