@@ -1,0 +1,1689 @@
+{
+  "version": 1,
+  "runId": "25161233021-1",
+  "workflowRunId": "25161233021",
+  "workflowRunAttempt": 1,
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/25161233021",
+  "commitSha": "d28bb87ad2849bff30a013e93c3726fe8728ddf7",
+  "createdAt": "2026-04-30T10:47:15Z",
+  "runner": "unknown (backfilled)",
+  "metadata": {
+    "repository": "tscircuit/tscircuit-autorouter",
+    "workflowName": "Autorouting Benchmark",
+    "eventName": "push",
+    "refName": "main",
+    "workflowRunId": "25161233021",
+    "workflowRunAttempt": 1,
+    "commitSha": "d28bb87ad2849bff30a013e93c3726fe8728ddf7",
+    "createdAt": "2026-04-30T10:47:15Z",
+    "runner": {
+      "name": "unknown (backfilled)"
+    },
+    "backfilled": true
+  },
+  "report": {
+    "version": 1,
+    "datasetName": "dataset01",
+    "scenarioCount": 205,
+    "effortLabel": "1x effort",
+    "summary": [
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "completedRateLabel": "96.1% (🕒3.4%)",
+        "relaxedDrcRateLabel": "91.7% (🕒3.4%)",
+        "timedOutLabel": "7/205",
+        "p50TimeMs": 6873.363289000001,
+        "p95TimeMs": 38010.07376399999
+      }
+    ],
+    "tests": [
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit001",
+        "elapsedTimeMs": 814.288937,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit002",
+        "elapsedTimeMs": 9683.470298999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit003",
+        "elapsedTimeMs": 5132.545518,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit004",
+        "elapsedTimeMs": 5155.182955,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit005",
+        "elapsedTimeMs": 1687.2118569999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit006",
+        "elapsedTimeMs": 1939.19976,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit007",
+        "elapsedTimeMs": 1952.957343,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit010",
+        "elapsedTimeMs": 1646.9903710000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit011",
+        "elapsedTimeMs": 3911.032934,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit012",
+        "elapsedTimeMs": 2378.9289230000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit013",
+        "elapsedTimeMs": 1702.535178,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit014",
+        "elapsedTimeMs": 3342.883183,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit015",
+        "elapsedTimeMs": 4768.560814,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit018",
+        "elapsedTimeMs": 1412.327561,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit019",
+        "elapsedTimeMs": 1232.206432,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit020",
+        "elapsedTimeMs": 894.214615,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit021",
+        "elapsedTimeMs": 2740.64394,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit100",
+        "elapsedTimeMs": 15016.766611,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit101",
+        "elapsedTimeMs": 2813.824016,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit102",
+        "elapsedTimeMs": 10723.66743,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit103",
+        "elapsedTimeMs": 27489.641235,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit104",
+        "elapsedTimeMs": 9758.507307,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit105",
+        "elapsedTimeMs": 19931.31682,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit106",
+        "elapsedTimeMs": 8428.327534,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit107",
+        "elapsedTimeMs": 4053.702657,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit108",
+        "elapsedTimeMs": 8362.73313,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit109",
+        "elapsedTimeMs": 25015.792611,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit110",
+        "elapsedTimeMs": 3280.3512360000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit111",
+        "elapsedTimeMs": 12912.609665,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit112",
+        "elapsedTimeMs": 5225.277115,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit113",
+        "elapsedTimeMs": 6515.7267950000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit114",
+        "elapsedTimeMs": 31016.314464000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit115",
+        "elapsedTimeMs": 1313.5038309999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit116",
+        "elapsedTimeMs": 2387.201825,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit118",
+        "elapsedTimeMs": 10621.975682,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit119",
+        "elapsedTimeMs": 364.2968799999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit120",
+        "elapsedTimeMs": 27225.647127,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit121",
+        "elapsedTimeMs": 4127.605702999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit123",
+        "elapsedTimeMs": 15281.476272,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit124",
+        "elapsedTimeMs": 4729.406653,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit125",
+        "elapsedTimeMs": 9293.09367,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit126",
+        "elapsedTimeMs": 2554.0920029999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit127",
+        "elapsedTimeMs": 926.7973710000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit128",
+        "elapsedTimeMs": 6246.0375650000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit129",
+        "elapsedTimeMs": 710.4523389999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit130",
+        "elapsedTimeMs": 273.5940950000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit131",
+        "elapsedTimeMs": 1474.5602719999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit132",
+        "elapsedTimeMs": 1576.92321,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit133",
+        "elapsedTimeMs": 1588.3644470000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit134",
+        "elapsedTimeMs": 18991.680933000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit135",
+        "elapsedTimeMs": 5123.657784999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit136",
+        "elapsedTimeMs": 1276.212383,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit137",
+        "elapsedTimeMs": 12253.0468,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit138",
+        "elapsedTimeMs": 12685.386789,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit139",
+        "elapsedTimeMs": 16640.909127,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit140",
+        "elapsedTimeMs": 14977.653629,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit141",
+        "elapsedTimeMs": 9646.462567,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit142",
+        "elapsedTimeMs": 7224.467578000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit143",
+        "elapsedTimeMs": 19981.088332,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit144",
+        "elapsedTimeMs": 6236.201484,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit145",
+        "elapsedTimeMs": 11116.161228,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit146",
+        "elapsedTimeMs": 17521.760915,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit147",
+        "elapsedTimeMs": 813.0619349999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit148",
+        "elapsedTimeMs": 2819.4782350000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit149",
+        "elapsedTimeMs": 6287.005279000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit150",
+        "elapsedTimeMs": 922.8676869999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit151",
+        "elapsedTimeMs": 40152.716336,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit152",
+        "elapsedTimeMs": 18791.642652000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit153",
+        "elapsedTimeMs": 436.8881040000015,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit155",
+        "elapsedTimeMs": 9199.906879999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit156",
+        "elapsedTimeMs": 19651.076282,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit157",
+        "elapsedTimeMs": 2782.3995830000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit158",
+        "elapsedTimeMs": 10277.796395,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit160",
+        "elapsedTimeMs": 293.791706,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit161",
+        "elapsedTimeMs": 191.50512600000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit162",
+        "elapsedTimeMs": 4563.598839,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit164",
+        "elapsedTimeMs": 15629.895282,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit165",
+        "elapsedTimeMs": 730.0092799999984,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit166",
+        "elapsedTimeMs": 341.03911100000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit167",
+        "elapsedTimeMs": 609.4029610000016,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit168",
+        "elapsedTimeMs": 954.785831000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit172",
+        "elapsedTimeMs": 1218.1562520000007,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit173",
+        "elapsedTimeMs": 15092.881034000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit174",
+        "elapsedTimeMs": 843.288783,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit175",
+        "elapsedTimeMs": 3745.134022,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit176",
+        "elapsedTimeMs": 5776.743163000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit177",
+        "elapsedTimeMs": 822.3910619999988,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit178",
+        "elapsedTimeMs": 21200.192761,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit179",
+        "elapsedTimeMs": 6835.015836999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit180",
+        "elapsedTimeMs": 1038.3118589999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit181",
+        "elapsedTimeMs": 24859.486788999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit182",
+        "elapsedTimeMs": 842.6376520000013,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit184",
+        "elapsedTimeMs": 23222.305444000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit185",
+        "elapsedTimeMs": 39516.978554999994,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit186",
+        "elapsedTimeMs": 432.2898299999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit187",
+        "elapsedTimeMs": 436.50388999999996,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit188",
+        "elapsedTimeMs": 18910.924535000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit189",
+        "elapsedTimeMs": 19047.332585,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit190",
+        "elapsedTimeMs": 2790.500828,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit192",
+        "elapsedTimeMs": 5126.713721999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit193",
+        "elapsedTimeMs": 2762.9505819999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit194",
+        "elapsedTimeMs": 1749.358369999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit195",
+        "elapsedTimeMs": 1250.0121770000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit196",
+        "elapsedTimeMs": 682.3377609999989,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit197",
+        "elapsedTimeMs": 2772.453866,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit200",
+        "elapsedTimeMs": 6097.080970999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit201",
+        "elapsedTimeMs": 14231.782529999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit202",
+        "elapsedTimeMs": 68670.53624799999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit203",
+        "elapsedTimeMs": 6846.121418000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit204",
+        "elapsedTimeMs": 8800.828108999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit205",
+        "elapsedTimeMs": 37802.234769999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit206",
+        "elapsedTimeMs": 7790.1394180000025,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit207",
+        "elapsedTimeMs": 25060.507917000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit208",
+        "elapsedTimeMs": 3915.9955429999973,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit209",
+        "elapsedTimeMs": 8347.359523000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit210",
+        "elapsedTimeMs": 26799.425363,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit211",
+        "elapsedTimeMs": 8915.448007000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit212",
+        "elapsedTimeMs": 26224.53463,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit213",
+        "elapsedTimeMs": 18336.053923,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit214",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit215",
+        "elapsedTimeMs": 4776.829196999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit216",
+        "elapsedTimeMs": 37846.129048,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit217",
+        "elapsedTimeMs": 4054.6258159999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit218",
+        "elapsedTimeMs": 3567.045409000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit219",
+        "elapsedTimeMs": 34138.199554,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit220",
+        "elapsedTimeMs": 12982.993109,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit221",
+        "elapsedTimeMs": 5023.168113,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit222",
+        "elapsedTimeMs": 5629.446709,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit223",
+        "elapsedTimeMs": 20550.781113000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit224",
+        "elapsedTimeMs": 38665.85262800001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit225",
+        "elapsedTimeMs": 41383.110759,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit226",
+        "elapsedTimeMs": 4036.9712510000027,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit227",
+        "elapsedTimeMs": 17393.880757,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit228",
+        "elapsedTimeMs": 7896.355864000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit229",
+        "elapsedTimeMs": 12920.405117000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit230",
+        "elapsedTimeMs": 4282.522481999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit231",
+        "elapsedTimeMs": 29199.924375000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit232",
+        "elapsedTimeMs": 17714.163204999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit233",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit234",
+        "elapsedTimeMs": 2884.1375229999976,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit235",
+        "elapsedTimeMs": 6873.363289000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit236",
+        "elapsedTimeMs": 3104.918880000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit237",
+        "elapsedTimeMs": 82114.12338199999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit238",
+        "elapsedTimeMs": 42144.555263,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit239",
+        "elapsedTimeMs": 13130.094417,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit240",
+        "elapsedTimeMs": 6018.638451999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit241",
+        "elapsedTimeMs": 16629.640885,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit242",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit243",
+        "elapsedTimeMs": 30293.429138,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit244",
+        "elapsedTimeMs": 5121.335042999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit245",
+        "elapsedTimeMs": 7320.791549000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit246",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit247",
+        "elapsedTimeMs": 4912.205508999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit248",
+        "elapsedTimeMs": 7914.1276020000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit249",
+        "elapsedTimeMs": 10105.596569000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit250",
+        "elapsedTimeMs": 25340.107702,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit251",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit252",
+        "elapsedTimeMs": 7341.017876999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit253",
+        "elapsedTimeMs": 7526.249478999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit254",
+        "elapsedTimeMs": 3656.6288649999988,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit255",
+        "elapsedTimeMs": 12332.903845,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit256",
+        "elapsedTimeMs": 24501.602562,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit257",
+        "elapsedTimeMs": 5144.8796409999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit258",
+        "elapsedTimeMs": 9496.036286000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit259",
+        "elapsedTimeMs": 5319.826480000003,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit260",
+        "elapsedTimeMs": 9828.220669000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit261",
+        "elapsedTimeMs": 7570.960866000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit262",
+        "elapsedTimeMs": 12789.603481999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit263",
+        "elapsedTimeMs": 5506.2697160000025,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit264",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit265",
+        "elapsedTimeMs": 4668.926200000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit266",
+        "elapsedTimeMs": 9061.080945999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit267",
+        "elapsedTimeMs": 120000,
+        "didSolve": false,
+        "didTimeout": true,
+        "relaxedDrcPassed": false,
+        "error": "Timed out after 120.0s"
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit268",
+        "elapsedTimeMs": 15053.980382000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit269",
+        "elapsedTimeMs": 5664.705352999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit270",
+        "elapsedTimeMs": 62489.889041,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit271",
+        "elapsedTimeMs": 2701.162403000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit272",
+        "elapsedTimeMs": 3319.056761,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit273",
+        "elapsedTimeMs": 10604.412017000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit274",
+        "elapsedTimeMs": 6608.921030000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit275",
+        "elapsedTimeMs": 16930.409966999992,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit276",
+        "elapsedTimeMs": 4837.138015999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit277",
+        "elapsedTimeMs": 10300.681033,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit278",
+        "elapsedTimeMs": 2426.629151000001,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit279",
+        "elapsedTimeMs": 7607.567010999999,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit280",
+        "elapsedTimeMs": 1045.788059999999,
+        "didSolve": false,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit281",
+        "elapsedTimeMs": 17719.130828,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit282",
+        "elapsedTimeMs": 3312.0547860000006,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit283",
+        "elapsedTimeMs": 24443.107058999994,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit284",
+        "elapsedTimeMs": 52931.977030999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit285",
+        "elapsedTimeMs": 26463.764693000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit286",
+        "elapsedTimeMs": 5349.239781000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit287",
+        "elapsedTimeMs": 7323.645237000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit288",
+        "elapsedTimeMs": 20146.041615999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit289",
+        "elapsedTimeMs": 6896.460165999997,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit290",
+        "elapsedTimeMs": 3830.8986740000037,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit291",
+        "elapsedTimeMs": 7259.681423999995,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit292",
+        "elapsedTimeMs": 64588.67292,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": false
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit293",
+        "elapsedTimeMs": 36417.494188,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit294",
+        "elapsedTimeMs": 24421.015359000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit295",
+        "elapsedTimeMs": 12078.491928999996,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit296",
+        "elapsedTimeMs": 3836.718335000005,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit297",
+        "elapsedTimeMs": 33312.569303000004,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit298",
+        "elapsedTimeMs": 7353.927369999998,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      },
+      {
+        "solverName": "AutoroutingPipelineSolver4",
+        "scenarioName": "circuit299",
+        "elapsedTimeMs": 6794.063666000002,
+        "didSolve": true,
+        "didTimeout": false,
+        "relaxedDrcPassed": true
+      }
+    ]
+  }
+}

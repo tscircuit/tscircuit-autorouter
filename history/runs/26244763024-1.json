@@ -1,0 +1,4765 @@
+{
+  "version": 1,
+  "runId": "26244763024-1",
+  "workflowRunId": "26244763024",
+  "workflowRunAttempt": 1,
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/26244763024",
+  "commitSha": "689d520dccad0e2dbb96556db623d035ccbc2884",
+  "createdAt": "2026-05-21T18:18:04Z",
+  "runner": "unknown (backfilled)",
+  "metadata": {
+    "repository": "tscircuit/tscircuit-autorouter",
+    "workflowName": "Autorouting Benchmark",
+    "eventName": "push",
+    "refName": "main",
+    "workflowRunId": "26244763024",
+    "workflowRunAttempt": 1,
+    "commitSha": "689d520dccad0e2dbb96556db623d035ccbc2884",
+    "createdAt": "2026-05-21T18:18:04Z",
+    "runner": {
+      "name": "unknown (backfilled)"
+    },
+    "backfilled": true
+  },
+  "report": {
+    "version": 2,
+    "kind": "benchmark-report-collection",
+    "generatedFor": "main",
+    "reports": [
+      {
+        "version": 1,
+        "datasetName": "dataset01",
+        "scenarioCount": 205,
+        "effortLabel": "1x effort",
+        "summary": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "completedRateLabel": "96.1% (🕒3.4%)",
+            "relaxedDrcRateLabel": "92.7% (🕒3.4%)",
+            "timedOutLabel": "7/205",
+            "p50TimeMs": 7080.330795000002,
+            "p95TimeMs": 37966.43761079996
+          }
+        ],
+        "tests": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit001",
+            "sampleNumber": 1,
+            "elapsedTimeMs": 1194.196215,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit002",
+            "sampleNumber": 2,
+            "elapsedTimeMs": 9840.791664,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit003",
+            "sampleNumber": 3,
+            "elapsedTimeMs": 4987.268338,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit004",
+            "sampleNumber": 4,
+            "elapsedTimeMs": 5189.672989,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit005",
+            "sampleNumber": 5,
+            "elapsedTimeMs": 1818.005952,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit006",
+            "sampleNumber": 6,
+            "elapsedTimeMs": 2457.596243,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit007",
+            "sampleNumber": 7,
+            "elapsedTimeMs": 2112.957202,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit010",
+            "sampleNumber": 8,
+            "elapsedTimeMs": 1465.1125690000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit011",
+            "sampleNumber": 9,
+            "elapsedTimeMs": 3807.0393630000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit012",
+            "sampleNumber": 10,
+            "elapsedTimeMs": 2439.461002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit013",
+            "sampleNumber": 11,
+            "elapsedTimeMs": 2058.781656,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit014",
+            "sampleNumber": 12,
+            "elapsedTimeMs": 3023.9445800000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit015",
+            "sampleNumber": 13,
+            "elapsedTimeMs": 5553.070982,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit018",
+            "sampleNumber": 14,
+            "elapsedTimeMs": 1457.8228719999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit019",
+            "sampleNumber": 15,
+            "elapsedTimeMs": 1396.120033,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit020",
+            "sampleNumber": 16,
+            "elapsedTimeMs": 854.953998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit021",
+            "sampleNumber": 17,
+            "elapsedTimeMs": 2666.199506,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit100",
+            "sampleNumber": 18,
+            "elapsedTimeMs": 15054.50043,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit101",
+            "sampleNumber": 19,
+            "elapsedTimeMs": 3299.725823,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit102",
+            "sampleNumber": 20,
+            "elapsedTimeMs": 10849.041134,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit103",
+            "sampleNumber": 21,
+            "elapsedTimeMs": 28333.574364,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit104",
+            "sampleNumber": 22,
+            "elapsedTimeMs": 9841.225358,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit105",
+            "sampleNumber": 23,
+            "elapsedTimeMs": 20662.430749000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit106",
+            "sampleNumber": 24,
+            "elapsedTimeMs": 9494.158112,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit107",
+            "sampleNumber": 25,
+            "elapsedTimeMs": 4392.680464,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit108",
+            "sampleNumber": 26,
+            "elapsedTimeMs": 8360.970545,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit109",
+            "sampleNumber": 27,
+            "elapsedTimeMs": 26340.393169000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit110",
+            "sampleNumber": 28,
+            "elapsedTimeMs": 3235.488601,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit111",
+            "sampleNumber": 29,
+            "elapsedTimeMs": 13315.565050000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit112",
+            "sampleNumber": 30,
+            "elapsedTimeMs": 4953.142865,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit113",
+            "sampleNumber": 31,
+            "elapsedTimeMs": 6212.338573,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit114",
+            "sampleNumber": 32,
+            "elapsedTimeMs": 27635.26283,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit115",
+            "sampleNumber": 33,
+            "elapsedTimeMs": 1032.2420670000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit116",
+            "sampleNumber": 34,
+            "elapsedTimeMs": 2792.360985,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit118",
+            "sampleNumber": 35,
+            "elapsedTimeMs": 10308.809303,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit119",
+            "sampleNumber": 36,
+            "elapsedTimeMs": 405.2012370000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit120",
+            "sampleNumber": 37,
+            "elapsedTimeMs": 26080.667098,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit121",
+            "sampleNumber": 38,
+            "elapsedTimeMs": 4212.627174,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit123",
+            "sampleNumber": 39,
+            "elapsedTimeMs": 15286.098584,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit124",
+            "sampleNumber": 40,
+            "elapsedTimeMs": 4500.617763,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit125",
+            "sampleNumber": 41,
+            "elapsedTimeMs": 8827.247451,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit126",
+            "sampleNumber": 42,
+            "elapsedTimeMs": 2672.970149,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit127",
+            "sampleNumber": 43,
+            "elapsedTimeMs": 916.5859369999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit128",
+            "sampleNumber": 44,
+            "elapsedTimeMs": 6467.204215000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit129",
+            "sampleNumber": 45,
+            "elapsedTimeMs": 801.1927650000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit130",
+            "sampleNumber": 46,
+            "elapsedTimeMs": 285.515664,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit131",
+            "sampleNumber": 47,
+            "elapsedTimeMs": 1802.5115929999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit132",
+            "sampleNumber": 48,
+            "elapsedTimeMs": 1447.6751179999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit133",
+            "sampleNumber": 49,
+            "elapsedTimeMs": 1593.5207970000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit134",
+            "sampleNumber": 50,
+            "elapsedTimeMs": 22058.02645,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit135",
+            "sampleNumber": 51,
+            "elapsedTimeMs": 5564.8874940000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit136",
+            "sampleNumber": 52,
+            "elapsedTimeMs": 1549.6248020000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit137",
+            "sampleNumber": 53,
+            "elapsedTimeMs": 13394.422264,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit138",
+            "sampleNumber": 54,
+            "elapsedTimeMs": 13379.725374000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit139",
+            "sampleNumber": 55,
+            "elapsedTimeMs": 16690.704356,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit140",
+            "sampleNumber": 56,
+            "elapsedTimeMs": 16543.778913,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit141",
+            "sampleNumber": 57,
+            "elapsedTimeMs": 10637.432914,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit142",
+            "sampleNumber": 58,
+            "elapsedTimeMs": 7861.6540319999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit143",
+            "sampleNumber": 59,
+            "elapsedTimeMs": 18547.696691999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit144",
+            "sampleNumber": 60,
+            "elapsedTimeMs": 6909.201325999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit145",
+            "sampleNumber": 61,
+            "elapsedTimeMs": 11872.028733000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit146",
+            "sampleNumber": 62,
+            "elapsedTimeMs": 15516.327119000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit147",
+            "sampleNumber": 63,
+            "elapsedTimeMs": 774.7063029999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit148",
+            "sampleNumber": 64,
+            "elapsedTimeMs": 3272.754468,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit149",
+            "sampleNumber": 65,
+            "elapsedTimeMs": 7468.452023999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit150",
+            "sampleNumber": 66,
+            "elapsedTimeMs": 893.9987200000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit151",
+            "sampleNumber": 67,
+            "elapsedTimeMs": 36437.756594000006,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit152",
+            "sampleNumber": 68,
+            "elapsedTimeMs": 22094.216195999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit153",
+            "sampleNumber": 69,
+            "elapsedTimeMs": 721.998814999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit155",
+            "sampleNumber": 70,
+            "elapsedTimeMs": 9886.63005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit156",
+            "sampleNumber": 71,
+            "elapsedTimeMs": 19363.580050999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit157",
+            "sampleNumber": 72,
+            "elapsedTimeMs": 2677.895899000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit158",
+            "sampleNumber": 73,
+            "elapsedTimeMs": 12435.043556999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit160",
+            "sampleNumber": 74,
+            "elapsedTimeMs": 406.48539899999923,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit161",
+            "sampleNumber": 75,
+            "elapsedTimeMs": 242.77643499999976,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit162",
+            "sampleNumber": 76,
+            "elapsedTimeMs": 5045.211869999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit164",
+            "sampleNumber": 77,
+            "elapsedTimeMs": 15486.859599,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit165",
+            "sampleNumber": 78,
+            "elapsedTimeMs": 716.8699289999986,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit166",
+            "sampleNumber": 79,
+            "elapsedTimeMs": 372.71794000000045,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit167",
+            "sampleNumber": 80,
+            "elapsedTimeMs": 600.0890749999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit168",
+            "sampleNumber": 81,
+            "elapsedTimeMs": 921.6729449999984,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit172",
+            "sampleNumber": 82,
+            "elapsedTimeMs": 1333.3949280000015,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit173",
+            "sampleNumber": 83,
+            "elapsedTimeMs": 16256.001924,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit174",
+            "sampleNumber": 84,
+            "elapsedTimeMs": 648.0247710000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit175",
+            "sampleNumber": 85,
+            "elapsedTimeMs": 4031.330761000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit176",
+            "sampleNumber": 86,
+            "elapsedTimeMs": 6184.037375999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit177",
+            "sampleNumber": 87,
+            "elapsedTimeMs": 869.8071049999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit178",
+            "sampleNumber": 88,
+            "elapsedTimeMs": 19533.535943999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit179",
+            "sampleNumber": 89,
+            "elapsedTimeMs": 6227.470636,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit180",
+            "sampleNumber": 90,
+            "elapsedTimeMs": 1049.1002860000008,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit181",
+            "sampleNumber": 91,
+            "elapsedTimeMs": 25087.598552000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit182",
+            "sampleNumber": 92,
+            "elapsedTimeMs": 995.1774759999989,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit184",
+            "sampleNumber": 93,
+            "elapsedTimeMs": 24239.571075999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit185",
+            "sampleNumber": 94,
+            "elapsedTimeMs": 41018.258015,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit186",
+            "sampleNumber": 95,
+            "elapsedTimeMs": 575.6443840000011,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit187",
+            "sampleNumber": 96,
+            "elapsedTimeMs": 585.352065000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit188",
+            "sampleNumber": 97,
+            "elapsedTimeMs": 19508.00367,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit189",
+            "sampleNumber": 98,
+            "elapsedTimeMs": 18068.905109,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit190",
+            "sampleNumber": 99,
+            "elapsedTimeMs": 2768.1096319999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit192",
+            "sampleNumber": 100,
+            "elapsedTimeMs": 4224.08567,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit193",
+            "sampleNumber": 101,
+            "elapsedTimeMs": 2867.7673890000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit194",
+            "sampleNumber": 102,
+            "elapsedTimeMs": 1614.3485189999992,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit195",
+            "sampleNumber": 103,
+            "elapsedTimeMs": 1253.5763079999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit196",
+            "sampleNumber": 104,
+            "elapsedTimeMs": 824.0898180000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit197",
+            "sampleNumber": 105,
+            "elapsedTimeMs": 3010.309474999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit200",
+            "sampleNumber": 106,
+            "elapsedTimeMs": 6739.261132,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit201",
+            "sampleNumber": 107,
+            "elapsedTimeMs": 14602.127629999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit202",
+            "sampleNumber": 108,
+            "elapsedTimeMs": 73923.05416700001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit203",
+            "sampleNumber": 109,
+            "elapsedTimeMs": 6611.17124,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit204",
+            "sampleNumber": 110,
+            "elapsedTimeMs": 9645.874888999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit205",
+            "sampleNumber": 111,
+            "elapsedTimeMs": 42472.410104,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit206",
+            "sampleNumber": 112,
+            "elapsedTimeMs": 8294.706254999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit207",
+            "sampleNumber": 113,
+            "elapsedTimeMs": 28051.669726999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit208",
+            "sampleNumber": 114,
+            "elapsedTimeMs": 4373.467498000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit209",
+            "sampleNumber": 115,
+            "elapsedTimeMs": 10831.178852000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit210",
+            "sampleNumber": 116,
+            "elapsedTimeMs": 29257.21023,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit211",
+            "sampleNumber": 117,
+            "elapsedTimeMs": 8319.965754,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit212",
+            "sampleNumber": 118,
+            "elapsedTimeMs": 26351.957067000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit213",
+            "sampleNumber": 119,
+            "elapsedTimeMs": 20334.985966,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit214",
+            "sampleNumber": 120,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=4526919, phaseIterations=4521772, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit215",
+            "sampleNumber": 121,
+            "elapsedTimeMs": 5396.242324000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit216",
+            "sampleNumber": 122,
+            "elapsedTimeMs": 37286.282922,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit217",
+            "sampleNumber": 123,
+            "elapsedTimeMs": 3401.6831719999973,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit218",
+            "sampleNumber": 124,
+            "elapsedTimeMs": 3447.6753750000025,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit219",
+            "sampleNumber": 125,
+            "elapsedTimeMs": 40687.056366000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit220",
+            "sampleNumber": 126,
+            "elapsedTimeMs": 13428.485120999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit221",
+            "sampleNumber": 127,
+            "elapsedTimeMs": 5489.834428000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit222",
+            "sampleNumber": 128,
+            "elapsedTimeMs": 5820.387906999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit223",
+            "sampleNumber": 129,
+            "elapsedTimeMs": 24967.519458,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit224",
+            "sampleNumber": 130,
+            "elapsedTimeMs": 31874.624753,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit225",
+            "sampleNumber": 131,
+            "elapsedTimeMs": 31557.214129,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit226",
+            "sampleNumber": 132,
+            "elapsedTimeMs": 3915.7088719999956,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit227",
+            "sampleNumber": 133,
+            "elapsedTimeMs": 18401.000426,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit228",
+            "sampleNumber": 134,
+            "elapsedTimeMs": 7407.974866999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit229",
+            "sampleNumber": 135,
+            "elapsedTimeMs": 13704.500957999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit230",
+            "sampleNumber": 136,
+            "elapsedTimeMs": 4640.521007000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit231",
+            "sampleNumber": 137,
+            "elapsedTimeMs": 30326.671997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit232",
+            "sampleNumber": 138,
+            "elapsedTimeMs": 16754.829941999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit233",
+            "sampleNumber": 139,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=4911658, phaseIterations=4905739, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit234",
+            "sampleNumber": 140,
+            "elapsedTimeMs": 3374.849990999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit235",
+            "sampleNumber": 141,
+            "elapsedTimeMs": 5792.076691000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit236",
+            "sampleNumber": 142,
+            "elapsedTimeMs": 3329.0830639999986,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit237",
+            "sampleNumber": 143,
+            "elapsedTimeMs": 86718.84913399999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit238",
+            "sampleNumber": 144,
+            "elapsedTimeMs": 41453.49247700001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit239",
+            "sampleNumber": 145,
+            "elapsedTimeMs": 13138.733052999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit240",
+            "sampleNumber": 146,
+            "elapsedTimeMs": 6661.586859999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit241",
+            "sampleNumber": 147,
+            "elapsedTimeMs": 16304.977603,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit242",
+            "sampleNumber": 148,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=5879233, phaseIterations=5874132, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit243",
+            "sampleNumber": 149,
+            "elapsedTimeMs": 28714.213045999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit244",
+            "sampleNumber": 150,
+            "elapsedTimeMs": 5717.350657000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit245",
+            "sampleNumber": 151,
+            "elapsedTimeMs": 7362.349217999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit246",
+            "sampleNumber": 152,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=4293473, phaseIterations=4286716, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit247",
+            "sampleNumber": 153,
+            "elapsedTimeMs": 4844.155860999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit248",
+            "sampleNumber": 154,
+            "elapsedTimeMs": 7127.573389999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit249",
+            "sampleNumber": 155,
+            "elapsedTimeMs": 10208.559115000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit250",
+            "sampleNumber": 156,
+            "elapsedTimeMs": 29390.477680000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit251",
+            "sampleNumber": 157,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=4552700, phaseIterations=4546195, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit252",
+            "sampleNumber": 158,
+            "elapsedTimeMs": 7604.4779620000045,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit253",
+            "sampleNumber": 159,
+            "elapsedTimeMs": 7980.473315999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit254",
+            "sampleNumber": 160,
+            "elapsedTimeMs": 3712.885107000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit255",
+            "sampleNumber": 161,
+            "elapsedTimeMs": 11219.036439000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit256",
+            "sampleNumber": 162,
+            "elapsedTimeMs": 26286.589847000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit257",
+            "sampleNumber": 163,
+            "elapsedTimeMs": 4641.391452999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit258",
+            "sampleNumber": 164,
+            "elapsedTimeMs": 9287.765194,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit259",
+            "sampleNumber": 165,
+            "elapsedTimeMs": 5476.272360999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit260",
+            "sampleNumber": 166,
+            "elapsedTimeMs": 9715.668882999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit261",
+            "sampleNumber": 167,
+            "elapsedTimeMs": 7259.117404999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit262",
+            "sampleNumber": 168,
+            "elapsedTimeMs": 14160.298014,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit263",
+            "sampleNumber": 169,
+            "elapsedTimeMs": 6061.919336999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit264",
+            "sampleNumber": 170,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=4288437, phaseIterations=4282461, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit265",
+            "sampleNumber": 171,
+            "elapsedTimeMs": 4891.1179090000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit266",
+            "sampleNumber": 172,
+            "elapsedTimeMs": 9158.910598000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit267",
+            "sampleNumber": 173,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=6579357, phaseIterations=6575889, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit268",
+            "sampleNumber": 174,
+            "elapsedTimeMs": 15568.459120999993,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit269",
+            "sampleNumber": 175,
+            "elapsedTimeMs": 5947.892172,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit270",
+            "sampleNumber": 176,
+            "elapsedTimeMs": 57735.343239,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit271",
+            "sampleNumber": 177,
+            "elapsedTimeMs": 3404.6031369999982,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit272",
+            "sampleNumber": 178,
+            "elapsedTimeMs": 3917.336374999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit273",
+            "sampleNumber": 179,
+            "elapsedTimeMs": 12322.044910000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit274",
+            "sampleNumber": 180,
+            "elapsedTimeMs": 5962.252299,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit275",
+            "sampleNumber": 181,
+            "elapsedTimeMs": 17573.923520999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit276",
+            "sampleNumber": 182,
+            "elapsedTimeMs": 4630.742744999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit277",
+            "sampleNumber": 183,
+            "elapsedTimeMs": 10150.812774000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit278",
+            "sampleNumber": 184,
+            "elapsedTimeMs": 2664.0511350000015,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit279",
+            "sampleNumber": 185,
+            "elapsedTimeMs": 7660.042342000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit280",
+            "sampleNumber": 186,
+            "elapsedTimeMs": 948.3269480000017,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Static reachability precheck failed: 1 route(s) have no legal path under the current reservation and start-region rules source_net_27 (pcb_port_41->pcb_port_152)"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit281",
+            "sampleNumber": 187,
+            "elapsedTimeMs": 20828.529673000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit282",
+            "sampleNumber": 188,
+            "elapsedTimeMs": 3596.795431999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit283",
+            "sampleNumber": 189,
+            "elapsedTimeMs": 26315.999735000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit284",
+            "sampleNumber": 190,
+            "elapsedTimeMs": 49835.811452999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit285",
+            "sampleNumber": 191,
+            "elapsedTimeMs": 26198.875092000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit286",
+            "sampleNumber": 192,
+            "elapsedTimeMs": 6541.072577999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit287",
+            "sampleNumber": 193,
+            "elapsedTimeMs": 7080.330795000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit288",
+            "sampleNumber": 194,
+            "elapsedTimeMs": 19799.661157999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit289",
+            "sampleNumber": 195,
+            "elapsedTimeMs": 7389.808150999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit290",
+            "sampleNumber": 196,
+            "elapsedTimeMs": 4426.595775000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit291",
+            "sampleNumber": 197,
+            "elapsedTimeMs": 7564.760415000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit292",
+            "sampleNumber": 198,
+            "elapsedTimeMs": 53993.285651000006,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit293",
+            "sampleNumber": 199,
+            "elapsedTimeMs": 41220.927562000004,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit294",
+            "sampleNumber": 200,
+            "elapsedTimeMs": 26651.501057,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit295",
+            "sampleNumber": 201,
+            "elapsedTimeMs": 12907.135452000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit296",
+            "sampleNumber": 202,
+            "elapsedTimeMs": 4010.359408999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit297",
+            "sampleNumber": 203,
+            "elapsedTimeMs": 34300.310914999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit298",
+            "sampleNumber": 204,
+            "elapsedTimeMs": 6949.946892000007,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "circuit299",
+            "sampleNumber": 205,
+            "elapsedTimeMs": 7685.680213,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "datasetName": "srj15",
+        "scenarioCount": 55,
+        "effortLabel": "1x effort",
+        "summary": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "completedRateLabel": "90.9%",
+            "relaxedDrcRateLabel": "3.6%",
+            "timedOutLabel": "0/55",
+            "p50TimeMs": 6206.787518499999,
+            "p95TimeMs": 75293.0716062
+          }
+        ],
+        "tests": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample001Circuit",
+            "sampleNumber": 1,
+            "elapsedTimeMs": 874.5886479999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample002Circuit",
+            "sampleNumber": 2,
+            "elapsedTimeMs": 3221.4958770000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample003Circuit",
+            "sampleNumber": 3,
+            "elapsedTimeMs": 3553.2812079999994,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample004Circuit",
+            "sampleNumber": 4,
+            "elapsedTimeMs": 1012.832039,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample005Circuit",
+            "sampleNumber": 5,
+            "elapsedTimeMs": 774.6950039999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample006Circuit",
+            "sampleNumber": 6,
+            "elapsedTimeMs": 12550.075819,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample007Circuit",
+            "sampleNumber": 7,
+            "elapsedTimeMs": 2523.458923,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": true
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample008Circuit",
+            "sampleNumber": 8,
+            "elapsedTimeMs": 3975.3715030000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample009Circuit",
+            "sampleNumber": 9,
+            "elapsedTimeMs": 3187.739403,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample010Circuit",
+            "sampleNumber": 10,
+            "elapsedTimeMs": 1922.5127380000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample011Circuit",
+            "sampleNumber": 11,
+            "elapsedTimeMs": 12623.828171,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample012Circuit",
+            "sampleNumber": 12,
+            "elapsedTimeMs": 16955.590303,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample013Circuit",
+            "sampleNumber": 13,
+            "elapsedTimeMs": 13909.958980000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample014Circuit",
+            "sampleNumber": 14,
+            "elapsedTimeMs": 2908.7889689999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample015Circuit",
+            "sampleNumber": 15,
+            "elapsedTimeMs": 1277.77882,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample016Circuit",
+            "sampleNumber": 16,
+            "elapsedTimeMs": 26206.558871,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_5. err0: All solvers failed in hyper solver. Example failures: MultiHeadPolyLineIntraNodeSolver3 ran out of iterations (MAX_ITERATIONS=1000), MultiHeadPolyLineIntraNodeSolver3 ran out of iterations (MAX_ITERATIONS=1000), Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample017Circuit",
+            "sampleNumber": 17,
+            "elapsedTimeMs": 14413.031562,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample018Circuit",
+            "sampleNumber": 18,
+            "elapsedTimeMs": 5892.711873,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample019Circuit",
+            "sampleNumber": 19,
+            "elapsedTimeMs": 5479.22652,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample020Circuit",
+            "sampleNumber": 20,
+            "elapsedTimeMs": 5360.644371,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample021Circuit",
+            "sampleNumber": 21,
+            "elapsedTimeMs": 6520.863163999999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample022Circuit",
+            "sampleNumber": 22,
+            "elapsedTimeMs": 5423.550029,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample023Circuit",
+            "sampleNumber": 23,
+            "elapsedTimeMs": 5041.174597,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample024Circuit",
+            "sampleNumber": 24,
+            "elapsedTimeMs": 2556.906577,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample025Circuit",
+            "sampleNumber": 25,
+            "elapsedTimeMs": 2485.5112769999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample026Circuit",
+            "sampleNumber": 26,
+            "elapsedTimeMs": 22458.042457,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample027Circuit",
+            "sampleNumber": 27,
+            "elapsedTimeMs": 32516.603424999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample028Circuit",
+            "sampleNumber": 28,
+            "elapsedTimeMs": 22279.178,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample029Circuit",
+            "sampleNumber": 29,
+            "elapsedTimeMs": 20520.255997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample030Circuit",
+            "sampleNumber": 30,
+            "elapsedTimeMs": 25115.157432,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample031Circuit",
+            "sampleNumber": 31,
+            "elapsedTimeMs": 24182.232778,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample032Circuit",
+            "sampleNumber": 32,
+            "elapsedTimeMs": 37246.29086,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample033Circuit",
+            "sampleNumber": 33,
+            "elapsedTimeMs": 42964.838774,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample034Circuit",
+            "sampleNumber": 34,
+            "elapsedTimeMs": 22196.012416,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample035Circuit",
+            "sampleNumber": 35,
+            "elapsedTimeMs": 26105.916954,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample036Circuit",
+            "sampleNumber": 36,
+            "elapsedTimeMs": 70426.45835,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample037Circuit",
+            "sampleNumber": 37,
+            "elapsedTimeMs": 67653.22526699999,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample038Circuit",
+            "sampleNumber": 38,
+            "elapsedTimeMs": 72609.694988,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample039Circuit",
+            "sampleNumber": 39,
+            "elapsedTimeMs": 74003.803273,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample040Circuit",
+            "sampleNumber": 40,
+            "elapsedTimeMs": 78178.504633,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample041Circuit",
+            "sampleNumber": 41,
+            "elapsedTimeMs": 33001.653759,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Static reachability precheck failed: 1 route(s) have no legal path under the current reservation and start-region rules source_net_7_reroute_source_net_7_0_0 (2138->2139)"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample042Circuit",
+            "sampleNumber": 42,
+            "elapsedTimeMs": 84472.825913,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample043Circuit",
+            "sampleNumber": 43,
+            "elapsedTimeMs": 27209.040065,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Static reachability precheck failed: 3 route(s) have no legal path under the current reservation and start-region rules source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_reroute_source_trace_61__source_trace_75__source_trace_77__source_trace_79__source_trace_87__source_net_0_mst45_0_0 (3950->3951), source_trace_167__source_trace_168__source_trace_322_reroute_source_trace_167__source_trace_168__source_trace_322_mst1_0_0 (3994->3995), source_net_2_reroute_source_net_2_mst2_0_0 (4050->4051)"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample044Circuit",
+            "sampleNumber": 44,
+            "elapsedTimeMs": 76117.005399,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample045Circuit",
+            "sampleNumber": 45,
+            "elapsedTimeMs": 74286.041415,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample046Circuit",
+            "sampleNumber": 46,
+            "elapsedTimeMs": 3292.580111,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample047Circuit",
+            "sampleNumber": 47,
+            "elapsedTimeMs": 2935.0838399999993,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample048Circuit",
+            "sampleNumber": 48,
+            "elapsedTimeMs": 3945.5612439999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample049Circuit",
+            "sampleNumber": 49,
+            "elapsedTimeMs": 10755.654316,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample050Circuit",
+            "sampleNumber": 50,
+            "elapsedTimeMs": 2722.2223940000003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample051Circuit",
+            "sampleNumber": 51,
+            "elapsedTimeMs": 2727.7245869999997,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample052Circuit",
+            "sampleNumber": 52,
+            "elapsedTimeMs": 5828.327139000001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_4. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample053Circuit",
+            "sampleNumber": 53,
+            "elapsedTimeMs": 3847.6231900000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample054Circuit",
+            "sampleNumber": 54,
+            "elapsedTimeMs": 58709.730244,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample055Circuit",
+            "sampleNumber": 55,
+            "elapsedTimeMs": 2841.702714000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "datasetName": "srj16",
+        "scenarioCount": 200,
+        "effortLabel": "1x effort",
+        "summary": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "completedRateLabel": "16.5% (🕒1.0%)",
+            "relaxedDrcRateLabel": "0.0% (🕒1.0%)",
+            "timedOutLabel": "2/200",
+            "p50TimeMs": 12429.959395,
+            "p95TimeMs": 39267.89429180001
+          }
+        ],
+        "tests": [
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample001Circuit",
+            "sampleNumber": 1,
+            "elapsedTimeMs": 6431.297334,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample002Circuit",
+            "sampleNumber": 2,
+            "elapsedTimeMs": 78924.11924,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample003Circuit",
+            "sampleNumber": 3,
+            "elapsedTimeMs": 93297.020001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample004Circuit",
+            "sampleNumber": 4,
+            "elapsedTimeMs": 107317.20940400001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample005Circuit",
+            "sampleNumber": 5,
+            "elapsedTimeMs": 90389.101245,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample006Circuit",
+            "sampleNumber": 6,
+            "elapsedTimeMs": 103667.888464,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample007Circuit",
+            "sampleNumber": 7,
+            "elapsedTimeMs": 101276.83344500001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample008Circuit",
+            "sampleNumber": 8,
+            "elapsedTimeMs": 28622.041865,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_68__sub_0_1. err0: All solvers failed in hyper solver. Example failures: , , Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample009Circuit",
+            "sampleNumber": 9,
+            "elapsedTimeMs": 12429.959395,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample010Circuit",
+            "sampleNumber": 10,
+            "elapsedTimeMs": 80055.806312,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample011Circuit",
+            "sampleNumber": 11,
+            "elapsedTimeMs": 115965.08557800001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample012Circuit",
+            "sampleNumber": 12,
+            "elapsedTimeMs": 114385.53666000001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample013Circuit",
+            "sampleNumber": 13,
+            "elapsedTimeMs": 101437.820835,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample014Circuit",
+            "sampleNumber": 14,
+            "elapsedTimeMs": 32831.658209,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample015Circuit",
+            "sampleNumber": 15,
+            "elapsedTimeMs": 86959.643342,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample016Circuit",
+            "sampleNumber": 16,
+            "elapsedTimeMs": 93226.787671,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample017Circuit",
+            "sampleNumber": 17,
+            "elapsedTimeMs": 62619.120861,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample018Circuit",
+            "sampleNumber": 18,
+            "elapsedTimeMs": 78958.024773,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample019Circuit",
+            "sampleNumber": 19,
+            "elapsedTimeMs": 111070.113127,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample020Circuit",
+            "sampleNumber": 20,
+            "elapsedTimeMs": 41082.986966,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample021Circuit",
+            "sampleNumber": 21,
+            "elapsedTimeMs": 63148.831817,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample022Circuit",
+            "sampleNumber": 22,
+            "elapsedTimeMs": 5143.668737,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample023Circuit",
+            "sampleNumber": 23,
+            "elapsedTimeMs": 78228.54692699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample024Circuit",
+            "sampleNumber": 24,
+            "elapsedTimeMs": 19971.598581000002,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample025Circuit",
+            "sampleNumber": 25,
+            "elapsedTimeMs": 114074.901583,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample026Circuit",
+            "sampleNumber": 26,
+            "elapsedTimeMs": 21669.596594,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample027Circuit",
+            "sampleNumber": 27,
+            "elapsedTimeMs": 63742.390050999995,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample028Circuit",
+            "sampleNumber": 28,
+            "elapsedTimeMs": 70552.108294,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample029Circuit",
+            "sampleNumber": 29,
+            "elapsedTimeMs": 67735.904463,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample030Circuit",
+            "sampleNumber": 30,
+            "elapsedTimeMs": 8392.449437000001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample031Circuit",
+            "sampleNumber": 31,
+            "elapsedTimeMs": 115173.063128,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample032Circuit",
+            "sampleNumber": 32,
+            "elapsedTimeMs": 20221.291881999998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 2 nodes, cmn_117,cmn_1. err0: All solvers failed in hyper solver. Example failures: , , Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample033Circuit",
+            "sampleNumber": 33,
+            "elapsedTimeMs": 66567.92017699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample034Circuit",
+            "sampleNumber": 34,
+            "elapsedTimeMs": 78277.09151900001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample035Circuit",
+            "sampleNumber": 35,
+            "elapsedTimeMs": 88602.58835600001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample036Circuit",
+            "sampleNumber": 36,
+            "elapsedTimeMs": 88107.159186,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample037Circuit",
+            "sampleNumber": 37,
+            "elapsedTimeMs": 96403.673404,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample038Circuit",
+            "sampleNumber": 38,
+            "elapsedTimeMs": 108901.210844,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample039Circuit",
+            "sampleNumber": 39,
+            "elapsedTimeMs": 90128.376425,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample040Circuit",
+            "sampleNumber": 40,
+            "elapsedTimeMs": 79930.92271,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample041Circuit",
+            "sampleNumber": 41,
+            "elapsedTimeMs": 85758.14351299999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample042Circuit",
+            "sampleNumber": 42,
+            "elapsedTimeMs": 81466.701947,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample043Circuit",
+            "sampleNumber": 43,
+            "elapsedTimeMs": 4767.005154999992,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample044Circuit",
+            "sampleNumber": 44,
+            "elapsedTimeMs": 81468.729227,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample045Circuit",
+            "sampleNumber": 45,
+            "elapsedTimeMs": 92815.62935,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample046Circuit",
+            "sampleNumber": 46,
+            "elapsedTimeMs": 111365.66591899999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample047Circuit",
+            "sampleNumber": 47,
+            "elapsedTimeMs": 85458.59933699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample048Circuit",
+            "sampleNumber": 48,
+            "elapsedTimeMs": 80664.712237,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample049Circuit",
+            "sampleNumber": 49,
+            "elapsedTimeMs": 91967.15565800002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample050Circuit",
+            "sampleNumber": 50,
+            "elapsedTimeMs": 22781.869703000004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_1. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Convergence failure: exceeded MAX_RIPS 200, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000)."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample051Circuit",
+            "sampleNumber": 51,
+            "elapsedTimeMs": 10267.530857000005,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample052Circuit",
+            "sampleNumber": 52,
+            "elapsedTimeMs": 91675.467154,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample053Circuit",
+            "sampleNumber": 53,
+            "elapsedTimeMs": 60197.74711600001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample054Circuit",
+            "sampleNumber": 54,
+            "elapsedTimeMs": 92785.04302600001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample055Circuit",
+            "sampleNumber": 55,
+            "elapsedTimeMs": 90460.32563300001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample056Circuit",
+            "sampleNumber": 56,
+            "elapsedTimeMs": 96331.541063,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample057Circuit",
+            "sampleNumber": 57,
+            "elapsedTimeMs": 87488.14812299999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample058Circuit",
+            "sampleNumber": 58,
+            "elapsedTimeMs": 90505.796961,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample059Circuit",
+            "sampleNumber": 59,
+            "elapsedTimeMs": 78676.715606,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample060Circuit",
+            "sampleNumber": 60,
+            "elapsedTimeMs": 104263.290404,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample061Circuit",
+            "sampleNumber": 61,
+            "elapsedTimeMs": 102175.95334900002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample062Circuit",
+            "sampleNumber": 62,
+            "elapsedTimeMs": 109158.14416800001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample063Circuit",
+            "sampleNumber": 63,
+            "elapsedTimeMs": 56032.050433,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample064Circuit",
+            "sampleNumber": 64,
+            "elapsedTimeMs": 9997.779433999996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample065Circuit",
+            "sampleNumber": 65,
+            "elapsedTimeMs": 74457.88273800001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample066Circuit",
+            "sampleNumber": 66,
+            "elapsedTimeMs": 60954.373305999994,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample067Circuit",
+            "sampleNumber": 67,
+            "elapsedTimeMs": 7782.420739999987,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample068Circuit",
+            "sampleNumber": 68,
+            "elapsedTimeMs": 113398.12513100001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample069Circuit",
+            "sampleNumber": 69,
+            "elapsedTimeMs": 19646.753452999998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample070Circuit",
+            "sampleNumber": 70,
+            "elapsedTimeMs": 63115.329721999995,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample071Circuit",
+            "sampleNumber": 71,
+            "elapsedTimeMs": 66258.382688,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample072Circuit",
+            "sampleNumber": 72,
+            "elapsedTimeMs": 39433.114652000004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_1. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, HighDensitySolverA01 ran out of iterations, Convergence failure: exceeded MAX_RIPS 200, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000)."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample073Circuit",
+            "sampleNumber": 73,
+            "elapsedTimeMs": 19929.938686999987,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample074Circuit",
+            "sampleNumber": 74,
+            "elapsedTimeMs": 84349.36654900001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample075Circuit",
+            "sampleNumber": 75,
+            "elapsedTimeMs": 15818.046944999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample076Circuit",
+            "sampleNumber": 76,
+            "elapsedTimeMs": 68578.36303300002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample077Circuit",
+            "sampleNumber": 77,
+            "elapsedTimeMs": 69440.707205,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample078Circuit",
+            "sampleNumber": 78,
+            "elapsedTimeMs": 88477.332401,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample079Circuit",
+            "sampleNumber": 79,
+            "elapsedTimeMs": 98425.26973,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample080Circuit",
+            "sampleNumber": 80,
+            "elapsedTimeMs": 117251.18595999997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample081Circuit",
+            "sampleNumber": 81,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=9811906, phaseIterations=9808856, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample082Circuit",
+            "sampleNumber": 82,
+            "elapsedTimeMs": 65701.027077,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample083Circuit",
+            "sampleNumber": 83,
+            "elapsedTimeMs": 77103.572071,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample084Circuit",
+            "sampleNumber": 84,
+            "elapsedTimeMs": 80338.853325,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample085Circuit",
+            "sampleNumber": 85,
+            "elapsedTimeMs": 6300.78015799998,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample086Circuit",
+            "sampleNumber": 86,
+            "elapsedTimeMs": 89079.510917,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample087Circuit",
+            "sampleNumber": 87,
+            "elapsedTimeMs": 106527.99119899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample088Circuit",
+            "sampleNumber": 88,
+            "elapsedTimeMs": 32311.317083,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample089Circuit",
+            "sampleNumber": 89,
+            "elapsedTimeMs": 68137.74103,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample090Circuit",
+            "sampleNumber": 90,
+            "elapsedTimeMs": 86962.597793,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample091Circuit",
+            "sampleNumber": 91,
+            "elapsedTimeMs": 84382.90882299998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample092Circuit",
+            "sampleNumber": 92,
+            "elapsedTimeMs": 71439.965134,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_3. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore, Convergence failure: exceeded MAX_RIPS 200."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample093Circuit",
+            "sampleNumber": 93,
+            "elapsedTimeMs": 10719.398706999986,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample094Circuit",
+            "sampleNumber": 94,
+            "elapsedTimeMs": 93483.15576899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample095Circuit",
+            "sampleNumber": 95,
+            "elapsedTimeMs": 91518.433991,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample096Circuit",
+            "sampleNumber": 96,
+            "elapsedTimeMs": 81323.45908500001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample097Circuit",
+            "sampleNumber": 97,
+            "elapsedTimeMs": 92232.44616599998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample098Circuit",
+            "sampleNumber": 98,
+            "elapsedTimeMs": 87633.61332499998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample099Circuit",
+            "sampleNumber": 99,
+            "elapsedTimeMs": 85634.61815199998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample100Circuit",
+            "sampleNumber": 100,
+            "elapsedTimeMs": 95782.663299,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample101Circuit",
+            "sampleNumber": 101,
+            "elapsedTimeMs": 87939.883818,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample102Circuit",
+            "sampleNumber": 102,
+            "elapsedTimeMs": 107051.95379,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample103Circuit",
+            "sampleNumber": 103,
+            "elapsedTimeMs": 94845.16517699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample104Circuit",
+            "sampleNumber": 104,
+            "elapsedTimeMs": 94448.52502899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample105Circuit",
+            "sampleNumber": 105,
+            "elapsedTimeMs": 107008.74947600003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample106Circuit",
+            "sampleNumber": 106,
+            "elapsedTimeMs": 2697.9781540000113,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample107Circuit",
+            "sampleNumber": 107,
+            "elapsedTimeMs": 94689.21586899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample108Circuit",
+            "sampleNumber": 108,
+            "elapsedTimeMs": 80606.64165199999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample109Circuit",
+            "sampleNumber": 109,
+            "elapsedTimeMs": 65113.94654700003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample110Circuit",
+            "sampleNumber": 110,
+            "elapsedTimeMs": 102799.565291,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample111Circuit",
+            "sampleNumber": 111,
+            "elapsedTimeMs": 104135.388015,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample112Circuit",
+            "sampleNumber": 112,
+            "elapsedTimeMs": 20207.717665999982,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample113Circuit",
+            "sampleNumber": 113,
+            "elapsedTimeMs": 67072.15616099999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample114Circuit",
+            "sampleNumber": 114,
+            "elapsedTimeMs": 19344.97722100001,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample115Circuit",
+            "sampleNumber": 115,
+            "elapsedTimeMs": 59592.293156,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample116Circuit",
+            "sampleNumber": 116,
+            "elapsedTimeMs": 104106.61223500004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample117Circuit",
+            "sampleNumber": 117,
+            "elapsedTimeMs": 114300.99589900003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample118Circuit",
+            "sampleNumber": 118,
+            "elapsedTimeMs": 18658.746538999985,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample119Circuit",
+            "sampleNumber": 119,
+            "elapsedTimeMs": 59738.147998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample120Circuit",
+            "sampleNumber": 120,
+            "elapsedTimeMs": 89805.60039899999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample121Circuit",
+            "sampleNumber": 121,
+            "elapsedTimeMs": 98651.182058,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample122Circuit",
+            "sampleNumber": 122,
+            "elapsedTimeMs": 34509.452527999994,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample123Circuit",
+            "sampleNumber": 123,
+            "elapsedTimeMs": 5240.518683999981,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample124Circuit",
+            "sampleNumber": 124,
+            "elapsedTimeMs": 113420.10660700002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample125Circuit",
+            "sampleNumber": 125,
+            "elapsedTimeMs": 68434.33985699998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample126Circuit",
+            "sampleNumber": 126,
+            "elapsedTimeMs": 63178.7647,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample127Circuit",
+            "sampleNumber": 127,
+            "elapsedTimeMs": 3533.9012279999733,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample128Circuit",
+            "sampleNumber": 128,
+            "elapsedTimeMs": 87254.03159300002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample129Circuit",
+            "sampleNumber": 129,
+            "elapsedTimeMs": 119132.91144999999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample130Circuit",
+            "sampleNumber": 130,
+            "elapsedTimeMs": 85030.414622,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample131Circuit",
+            "sampleNumber": 131,
+            "elapsedTimeMs": 58279.945187000034,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample132Circuit",
+            "sampleNumber": 132,
+            "elapsedTimeMs": 65310.46669500001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample133Circuit",
+            "sampleNumber": 133,
+            "elapsedTimeMs": 72955.61361599999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample134Circuit",
+            "sampleNumber": 134,
+            "elapsedTimeMs": 38057.83250900003,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample135Circuit",
+            "sampleNumber": 135,
+            "elapsedTimeMs": 66585.43215100002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample136Circuit",
+            "sampleNumber": 136,
+            "elapsedTimeMs": 100387.73020699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample137Circuit",
+            "sampleNumber": 137,
+            "elapsedTimeMs": 120000,
+            "didSolve": false,
+            "didTimeout": true,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "Timed out after 120.0s\nLast progress: phase=portPointPathingSolver, solver=TinyHypergraphPortPointPathingSolver, pipelineIterations=9547222, phaseIterations=9544124, pipelineProgress=0%, phaseProgress=0%"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample138Circuit",
+            "sampleNumber": 138,
+            "elapsedTimeMs": 63210.20538900001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample139Circuit",
+            "sampleNumber": 139,
+            "elapsedTimeMs": 83499.171333,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample140Circuit",
+            "sampleNumber": 140,
+            "elapsedTimeMs": 79714.815917,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample141Circuit",
+            "sampleNumber": 141,
+            "elapsedTimeMs": 94817.45541,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample142Circuit",
+            "sampleNumber": 142,
+            "elapsedTimeMs": 96821.52928800002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample143Circuit",
+            "sampleNumber": 143,
+            "elapsedTimeMs": 89086.84208899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample144Circuit",
+            "sampleNumber": 144,
+            "elapsedTimeMs": 77205.18881000002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 2 nodes, cmn_3,cmn_0. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Convergence failure: exceeded MAX_RIPS 200, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample145Circuit",
+            "sampleNumber": 145,
+            "elapsedTimeMs": 71365.76460699999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample146Circuit",
+            "sampleNumber": 146,
+            "elapsedTimeMs": 93860.69468800002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample147Circuit",
+            "sampleNumber": 147,
+            "elapsedTimeMs": 89970.52353899996,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample148Circuit",
+            "sampleNumber": 148,
+            "elapsedTimeMs": 1656.4926229999983,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_62__sub_1_0. err0: All solvers failed in hyper solver. Example failures: , , Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample149Circuit",
+            "sampleNumber": 149,
+            "elapsedTimeMs": 90505.572064,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample150Circuit",
+            "sampleNumber": 150,
+            "elapsedTimeMs": 93022.409736,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample151Circuit",
+            "sampleNumber": 151,
+            "elapsedTimeMs": 92909.69780199998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample152Circuit",
+            "sampleNumber": 152,
+            "elapsedTimeMs": 101580.06875599996,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample153Circuit",
+            "sampleNumber": 153,
+            "elapsedTimeMs": 90982.73116800003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample154Circuit",
+            "sampleNumber": 154,
+            "elapsedTimeMs": 108671.00617900002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample155Circuit",
+            "sampleNumber": 155,
+            "elapsedTimeMs": 11973.146958000027,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample156Circuit",
+            "sampleNumber": 156,
+            "elapsedTimeMs": 73196.61009500001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample157Circuit",
+            "sampleNumber": 157,
+            "elapsedTimeMs": 78163.431477,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample158Circuit",
+            "sampleNumber": 158,
+            "elapsedTimeMs": 119387.90820500004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample159Circuit",
+            "sampleNumber": 159,
+            "elapsedTimeMs": 95932.98387400003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample160Circuit",
+            "sampleNumber": 160,
+            "elapsedTimeMs": 118839.57428100001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample161Circuit",
+            "sampleNumber": 161,
+            "elapsedTimeMs": 19937.833791000012,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample162Circuit",
+            "sampleNumber": 162,
+            "elapsedTimeMs": 88141.234773,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample163Circuit",
+            "sampleNumber": 163,
+            "elapsedTimeMs": 95875.73582599999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample164Circuit",
+            "sampleNumber": 164,
+            "elapsedTimeMs": 60366.84218499996,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample165Circuit",
+            "sampleNumber": 165,
+            "elapsedTimeMs": 64639.99588900001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample166Circuit",
+            "sampleNumber": 166,
+            "elapsedTimeMs": 106588.69623099995,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample167Circuit",
+            "sampleNumber": 167,
+            "elapsedTimeMs": 100949.03853800001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample168Circuit",
+            "sampleNumber": 168,
+            "elapsedTimeMs": 60334.16153699998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample169Circuit",
+            "sampleNumber": 169,
+            "elapsedTimeMs": 3727.1598130000057,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample170Circuit",
+            "sampleNumber": 170,
+            "elapsedTimeMs": 85378.01713499997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample171Circuit",
+            "sampleNumber": 171,
+            "elapsedTimeMs": 64282.308597999974,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample172Circuit",
+            "sampleNumber": 172,
+            "elapsedTimeMs": 116971.34483800002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample173Circuit",
+            "sampleNumber": 173,
+            "elapsedTimeMs": 116479.74895400001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample174Circuit",
+            "sampleNumber": 174,
+            "elapsedTimeMs": 63064.306672999985,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample175Circuit",
+            "sampleNumber": 175,
+            "elapsedTimeMs": 54433.63588199997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample176Circuit",
+            "sampleNumber": 176,
+            "elapsedTimeMs": 15592.95345599996,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample177Circuit",
+            "sampleNumber": 177,
+            "elapsedTimeMs": 68436.03566499997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample178Circuit",
+            "sampleNumber": 178,
+            "elapsedTimeMs": 118270.73347699997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample179Circuit",
+            "sampleNumber": 179,
+            "elapsedTimeMs": 3758.7600139999995,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample180Circuit",
+            "sampleNumber": 180,
+            "elapsedTimeMs": 34700.70978599996,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_4. err0: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Convergence failure: exceeded MAX_RIPS 200, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=36482.8726939094), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000)."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample181Circuit",
+            "sampleNumber": 181,
+            "elapsedTimeMs": 66178.36682700005,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample182Circuit",
+            "sampleNumber": 182,
+            "elapsedTimeMs": 73483.89779099997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample183Circuit",
+            "sampleNumber": 183,
+            "elapsedTimeMs": 88583.57614399999,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample184Circuit",
+            "sampleNumber": 184,
+            "elapsedTimeMs": 108769.82831300003,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample185Circuit",
+            "sampleNumber": 185,
+            "elapsedTimeMs": 103923.25880299998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample186Circuit",
+            "sampleNumber": 186,
+            "elapsedTimeMs": 86380.17693800002,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample187Circuit",
+            "sampleNumber": 187,
+            "elapsedTimeMs": 62811.74496000004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample188Circuit",
+            "sampleNumber": 188,
+            "elapsedTimeMs": 79186.00989300001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample189Circuit",
+            "sampleNumber": 189,
+            "elapsedTimeMs": 81701.722958,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample190Circuit",
+            "sampleNumber": 190,
+            "elapsedTimeMs": 4160.085595000011,
+            "didSolve": true,
+            "didTimeout": false,
+            "relaxedDrcPassed": false
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample191Circuit",
+            "sampleNumber": 191,
+            "elapsedTimeMs": 90920.27772700001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample192Circuit",
+            "sampleNumber": 192,
+            "elapsedTimeMs": 93398.09204199997,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample193Circuit",
+            "sampleNumber": 193,
+            "elapsedTimeMs": 105425.30146300001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample194Circuit",
+            "sampleNumber": 194,
+            "elapsedTimeMs": 76626.05901899998,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample195Circuit",
+            "sampleNumber": 195,
+            "elapsedTimeMs": 93811.86537700001,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample196Circuit",
+            "sampleNumber": 196,
+            "elapsedTimeMs": 83169.50433900004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample197Circuit",
+            "sampleNumber": 197,
+            "elapsedTimeMs": 10724.569978000014,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "highDensityRouteSolver",
+            "errorSolverName": "HighDensitySolver",
+            "error": "Failed to solve 1 nodes, cmn_68__sub_0_0. err0: All solvers failed in hyper solver. Example failures: , , Convergence failure: exceeded MAX_RIPS 200, Convergence failure: exceeded MAX_RIPS 200, Ran out of candidate nodes to explore."
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample198Circuit",
+            "sampleNumber": 198,
+            "elapsedTimeMs": 71876.11713599996,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample199Circuit",
+            "sampleNumber": 199,
+            "elapsedTimeMs": 91907.62179400004,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          },
+          {
+            "solverName": "AutoroutingPipelineSolver4",
+            "scenarioName": "sample200Circuit",
+            "sampleNumber": 200,
+            "elapsedTimeMs": 65175.003804999986,
+            "didSolve": false,
+            "didTimeout": false,
+            "relaxedDrcPassed": false,
+            "errorPhaseName": "portPointPathingSolver",
+            "errorSolverName": "TinyHypergraphPortPointPathingSolver",
+            "error": "TinyHyperGraphSolver ran out of iterations"
+          }
+        ]
+      }
+    ]
+  }
+}
