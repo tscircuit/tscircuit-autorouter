@@ -208,6 +208,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
     for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
       const route = this.mergedViaHdRoutes[i]
+      this.dedupeRouteVias(route)
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
         const layers = [...new Set(route.route.map((p) => p.z))]
