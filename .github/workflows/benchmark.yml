@@ -386,26 +386,53 @@ jobs:
         run: |
           node <<'NODE'
           const fs = require('node:fs')
+          const readRequiredEnv = (name) => {
+            const value = process.env[name]
+            if (typeof value !== 'string' || value.trim() === '') {
+              throw new Error(`Missing required environment variable ${name}`)
+            }
+            return value
+          }
+          const parseStringArrayEnv = (name) => {
+            const rawValue = readRequiredEnv(name)
+            let value
+            try {
+              value = JSON.parse(rawValue)
+            } catch (error) {
+              throw new Error(`Invalid JSON in ${name}: ${error.message}`)
+            }
+            if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+              throw new Error(`${name} must be a JSON array of strings`)
+            }
+            return value
+          }
+          const parsePositiveIntegerEnv = (name) => {
+            const value = Number(readRequiredEnv(name))
+            if (!Number.isInteger(value) || value < 1) {
+              throw new Error(`${name} must be a positive integer`)
+            }
+            return value
+          }
           const metadata = {
-            repository: process.env.BENCHMARK_REPOSITORY,
-            workflowName: process.env.BENCHMARK_WORKFLOW_NAME,
-            eventName: process.env.BENCHMARK_EVENT_NAME,
-            refName: process.env.BENCHMARK_REF_NAME,
-            workflowRunId: process.env.BENCHMARK_RUN_ID,
-            workflowRunAttempt: Number(process.env.BENCHMARK_RUN_ATTEMPT),
-            commitSha: process.env.BENCHMARK_COMMIT_SHA,
+            repository: readRequiredEnv('BENCHMARK_REPOSITORY'),
+            workflowName: readRequiredEnv('BENCHMARK_WORKFLOW_NAME'),
+            eventName: readRequiredEnv('BENCHMARK_EVENT_NAME'),
+            refName: readRequiredEnv('BENCHMARK_REF_NAME'),
+            workflowRunId: readRequiredEnv('BENCHMARK_RUN_ID'),
+            workflowRunAttempt: parsePositiveIntegerEnv('BENCHMARK_RUN_ATTEMPT'),
+            commitSha: readRequiredEnv('BENCHMARK_COMMIT_SHA'),
             createdAt: new Date().toISOString(),
             runner: {
-              name: process.env.BENCHMARK_RUNNER_NAME,
-              os: process.env.BENCHMARK_RUNNER_OS,
-              arch: process.env.BENCHMARK_RUNNER_ARCH,
+              name: readRequiredEnv('BENCHMARK_RUNNER_NAME'),
+              os: readRequiredEnv('BENCHMARK_RUNNER_OS'),
+              arch: readRequiredEnv('BENCHMARK_RUNNER_ARCH'),
             },
-            benchmarkArgs: JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]'),
-            mainBranchDatasets: JSON.parse(process.env.BENCHMARK_MAIN_DATASETS || '[]'),
+            benchmarkArgs: parseStringArrayEnv('BENCHMARK_ARGS_JSON'),
+            mainBranchDatasets: parseStringArrayEnv('BENCHMARK_MAIN_DATASETS'),
             timeoutConfiguration: {
-              perEffortMs: process.env.BENCHMARK_SAMPLE_TIMEOUT_BASE_MS,
-              heartbeatIntervalMs: process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS,
-              terminateTimeoutMs: process.env.BENCHMARK_TERMINATE_TIMEOUT_MS,
+              perEffortMs: parsePositiveIntegerEnv('BENCHMARK_SAMPLE_TIMEOUT_BASE_MS'),
+              heartbeatIntervalMs: parsePositiveIntegerEnv('BENCHMARK_HEARTBEAT_INTERVAL_MS'),
+              terminateTimeoutMs: parsePositiveIntegerEnv('BENCHMARK_TERMINATE_TIMEOUT_MS'),
             },
           }
           fs.writeFileSync('benchmark-run-metadata.json', JSON.stringify(metadata, null, 2))
@@ -1347,7 +1374,6 @@ jobs:
     name: Build benchmark history dashboard
     needs: benchmark
     if: github.event_name == 'push' && github.ref_name == 'main'
-    continue-on-error: true
     runs-on: ubuntu-latest
     concurrency:
       group: benchmark-history
@@ -1382,15 +1408,22 @@ jobs:
           set -euo pipefail
 
           git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" benchmark-history; then
+          set +e
+          git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" benchmark-history >/dev/null
+          ls_remote_status=$?
+          set -e
+          if [ "$ls_remote_status" -eq 0 ]; then
             git clone --depth 1 --branch benchmark-history "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
-          else
+          elif [ "$ls_remote_status" -eq 2 ]; then
             git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" .benchmark-history
             git -C .benchmark-history checkout --orphan benchmark-history
             git -C .benchmark-history rm -rf .
             git -C .benchmark-history config user.name "github-actions[bot]"
             git -C .benchmark-history config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git -C .benchmark-history commit --allow-empty -m "Initialize benchmark history"
+          else
+            echo "Failed to check for the benchmark-history branch (git exit $ls_remote_status)." >&2
+            exit "$ls_remote_status"
           fi
 
       - name: Record full benchmark history and build dashboard
