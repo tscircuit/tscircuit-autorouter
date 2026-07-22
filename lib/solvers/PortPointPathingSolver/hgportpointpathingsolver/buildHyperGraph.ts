@@ -1,4 +1,5 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   CapacityMeshNode,
@@ -21,6 +22,17 @@ import type {
 } from "./types"
 
 const GEOMETRIC_TOLERANCE = 1e-6
+
+const getNetIdFromConnMapOrThrow = (
+  connectivityMap: ConnectivityMap,
+  connectionId: string,
+): string => {
+  const netId = connectivityMap.getNetConnectedToId(connectionId)
+  if (!netId) {
+    throw new Error(`Could not resolve net ID for connection "${connectionId}"`)
+  }
+  return netId
+}
 
 const getCandidateRegionsForAssignableVia = (params: {
   graph: HyperGraphHg
@@ -147,6 +159,7 @@ export function buildHyperGraph(params: {
   capacityMeshNodes: CapacityMeshNode[]
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
+  connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
 }): {
   graph: HyperGraphHg
@@ -159,9 +172,17 @@ export function buildHyperGraph(params: {
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
+    const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
+      getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
+    )
     graph.regions.push({
       regionId: cmnNode.capacityMeshNodeId,
-      d: cmnNode,
+      d: connectedNetIds
+        ? {
+            ...cmnNode,
+            _connectedTo: [...new Set(connectedNetIds)],
+          }
+        : cmnNode,
       ports: [],
     })
   }
@@ -238,8 +259,10 @@ export function buildHyperGraph(params: {
 
     connections.push({
       connectionId: connection.name,
-      mutuallyConnectedNetworkId:
-        connection.__rootConnectionNames?.[0] ?? connection.name,
+      mutuallyConnectedNetworkId: getNetIdFromConnMapOrThrow(
+        params.connectivityMap,
+        connection.name,
+      ),
       startRegion,
       endRegion,
       simpleRouteConnection: connection,

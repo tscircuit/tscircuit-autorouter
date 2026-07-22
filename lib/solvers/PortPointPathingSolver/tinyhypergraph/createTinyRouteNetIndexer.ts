@@ -1,6 +1,6 @@
 export type TinyRouteNetIndexSource = {
   connectionId: string
-  mutuallyConnectedNetworkId?: string
+  mutuallyConnectedNetworkId: string
 }
 
 export type TinyRouteNetIndexer = (
@@ -11,8 +11,7 @@ export function createTinyRouteNetIndexer(): TinyRouteNetIndexer {
   const netIndexById = new Map<string, number>()
 
   return (routeMetadata: TinyRouteNetIndexSource): number => {
-    const netId =
-      routeMetadata.mutuallyConnectedNetworkId ?? routeMetadata.connectionId
+    const netId = routeMetadata.mutuallyConnectedNetworkId
     let netIndex = netIndexById.get(netId)
     if (netIndex === undefined) {
       netIndex = netIndexById.size

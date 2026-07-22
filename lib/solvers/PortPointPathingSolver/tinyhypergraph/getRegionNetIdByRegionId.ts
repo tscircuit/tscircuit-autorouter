@@ -14,8 +14,7 @@ export function getRegionNetIdByRegionId(input: {
   const regionNetCandidates = new Map<string, Set<number>>()
   const netIndexByConnectionAlias = new Map<string, number>()
   for (const connection of input.params.connections) {
-    const netId =
-      connection.mutuallyConnectedNetworkId ?? connection.connectionId
+    const netId = connection.mutuallyConnectedNetworkId
     const routeNetIndex = input.getNetIndex({
       connectionId: connection.connectionId,
       mutuallyConnectedNetworkId: netId,

@@ -6,6 +6,7 @@ import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/Capaci
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
   type: "json",
 }
@@ -529,6 +530,7 @@ test("narrow QFP pad gap port points are marked cramped", () => {
   const { graph } = buildHyperGraph({
     capacityMeshNodes: qfpNodes,
     layerCount: inputSrj.layerCount,
+    connectivityMap: getConnectivityMapFromSimpleRouteJson(inputSrj),
     segmentPortPoints: narrowGapSegments.flatMap(
       (segment) => segment.portPoints,
     ),

@@ -33,7 +33,7 @@ type SerializedPort = {
 
 type SerializedConnection = {
   connectionId: string
-  mutuallyConnectedNetworkId?: string
+  mutuallyConnectedNetworkId: string
   startRegionId: string
   endRegionId: string
   simpleRouteConnection?: any
@@ -55,15 +55,10 @@ type NormalizedRegion = SerializedRegion & {
   ports: SerializedPort[]
 }
 
-type NormalizedConnection = SerializedConnection & {
-  rootConnectionName: string
-  connectionName: string
-}
-
 type NormalizedData = {
   regions: NormalizedRegion[]
   ports: SerializedPort[]
-  connections: NormalizedConnection[]
+  connections: SerializedConnection[]
 }
 
 type TinyRouteBfsState = {
@@ -86,20 +81,17 @@ type ActiveTinyRouteBfs = {
   blockedPortIds: Set<number>
 }
 
-type ConnectionNameSource = {
-  connectionId: string
-  mutuallyConnectedNetworkId?: string
-  simpleRouteConnection?: { rootConnectionName?: string; name?: string }
+const getSerializedNetIdOrThrow = (
+  connection: SerializedConnection,
+): string => {
+  const netId = connection.mutuallyConnectedNetworkId
+  if (!netId) {
+    throw new Error(
+      `TinyHypergraphBfsPortPointPathingSolver requires a net ID for "${connection.connectionId}"`,
+    )
+  }
+  return netId
 }
-
-const getConnectionNames = (connection: ConnectionNameSource) => ({
-  rootConnectionName:
-    connection.simpleRouteConnection?.rootConnectionName ??
-    connection.mutuallyConnectedNetworkId ??
-    connection.connectionId,
-  connectionName:
-    connection.simpleRouteConnection?.name ?? connection.connectionId,
-})
 
 type RuntimePortInput = {
   d: PortData
@@ -153,7 +145,7 @@ const normalizeParams = (
       ports,
       connections: params.connections.map((connection) => ({
         ...connection,
-        ...getConnectionNames(connection),
+        mutuallyConnectedNetworkId: getSerializedNetIdOrThrow(connection),
       })),
     }
   }
@@ -183,7 +175,6 @@ const normalizeParams = (
       startRegionId: connection.startRegion.regionId,
       endRegionId: connection.endRegion.regionId,
       simpleRouteConnection: connection.simpleRouteConnection,
-      ...getConnectionNames(connection),
     })),
   }
 }
@@ -239,7 +230,7 @@ const createRuntimeParams = (
       startRegion: regionMap.get(connection.startRegionId),
       endRegion: regionMap.get(connection.endRegionId),
       simpleRouteConnection: connection.simpleRouteConnection,
-    })) as HgPortPointPathingSolverParams["connections"],
+    })),
     colorMap: params.colorMap,
     inputSolvedRoutes: params.inputSolvedRoutes,
     layerCount: params.layerCount,
@@ -414,13 +405,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const startingPortId = solver.problem.routeStartPort[nextRouteId]
     const routeNetId = solver.problem.routeNet[nextRouteId]
     const routeMetadata = solver.problem.routeMetadata?.[nextRouteId]
-    const routeRootConnectionName = this.getRouteRootConnectionName(
-      routeMetadata,
-      nextRouteId,
-    )
+    const connectionNetId = this.getRouteNetId(routeMetadata, nextRouteId)
     const blockedPortIds = this.getBlockedPortIdsForRoute(
       solver,
-      routeRootConnectionName,
+      connectionNetId,
     )
     if (blockedPortIds.has(startingPortId)) {
       this.failed = true
@@ -772,33 +760,25 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private getRouteRootConnectionName(
-    routeMetadata: any,
-    routeId: number,
-  ): string | null {
-    return (
-      routeMetadata?.simpleRouteConnection?.rootConnectionName ??
-      routeMetadata?.mutuallyConnectedNetworkId ??
-      routeMetadata?.connectionId ??
-      `route-${routeId}`
-    )
+  private getRouteNetId(routeMetadata: any, routeId: number): string {
+    const netId = routeMetadata?.mutuallyConnectedNetworkId
+    if (!netId) {
+      throw new Error(
+        `TinyHypergraphBfsPortPointPathingSolver route ${routeId} is missing a net ID`,
+      )
+    }
+    return netId
   }
 
-  private getBlockedPortIdsForRoute(
-    solver: any,
-    routeRootConnectionName: string | null,
-  ) {
+  private getBlockedPortIdsForRoute(solver: any, connectionNetId: string) {
     const blockedPortIds = new Set<number>()
     const regionSegments = solver.state?.regionSegments ?? []
 
     for (const segments of regionSegments) {
       for (const [routeId, fromPortId, toPortId] of segments ?? []) {
         const routeMetadata = solver.problem.routeMetadata?.[routeId]
-        const segmentRootName = this.getRouteRootConnectionName(
-          routeMetadata,
-          routeId,
-        )
-        if (segmentRootName && segmentRootName === routeRootConnectionName) {
+        const segmentNetId = this.getRouteNetId(routeMetadata, routeId)
+        if (segmentNetId === connectionNetId) {
           continue
         }
         blockedPortIds.add(fromPortId)
