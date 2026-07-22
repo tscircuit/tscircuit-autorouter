@@ -1,7 +1,14 @@
 #!/usr/bin/env bun
 
 import { existsSync } from "node:fs"
-import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises"
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises"
 import { join } from "node:path"
 import stableStringify from "fast-json-stable-stringify"
 
@@ -122,10 +129,7 @@ const HISTORY_INDEX_NAME = "index.json"
 const HISTORY_RUNS_DIRECTORY = "runs"
 const DASHBOARD_RUN_LIMIT = 100
 
-const getPercentile = (
-  values: number[],
-  percentile: number,
-): number | null => {
+const getPercentile = (values: number[], percentile: number): number | null => {
   if (values.length === 0) return null
   const sortedValues = [...values].sort((a, b) => a - b)
   const index = (sortedValues.length - 1) * percentile
@@ -245,8 +249,7 @@ const parseBenchmarkSampleOrThrow = (
   ) {
     throw new Error(`Invalid benchmark sample fields in ${sourceLabel}`)
   }
-  const sampleNumber =
-    "sampleNumber" in value ? value.sampleNumber : undefined
+  const sampleNumber = "sampleNumber" in value ? value.sampleNumber : undefined
   if (
     sampleNumber !== undefined &&
     (typeof sampleNumber !== "number" ||
@@ -258,9 +261,7 @@ const parseBenchmarkSampleOrThrow = (
   const viaCount = "viaCount" in value ? value.viaCount : undefined
   if (
     viaCount !== undefined &&
-    (typeof viaCount !== "number" ||
-      !Number.isFinite(viaCount) ||
-      viaCount < 0)
+    (typeof viaCount !== "number" || !Number.isFinite(viaCount) || viaCount < 0)
   ) {
     throw new Error(`Invalid viaCount in ${sourceLabel}`)
   }
@@ -274,7 +275,9 @@ const parseBenchmarkSampleOrThrow = (
     throw new Error(`Invalid error in ${sourceLabel}`)
   }
   if (value.didSolve && value.didTimeout) {
-    throw new Error(`Benchmark sample is both solved and timed out in ${sourceLabel}`)
+    throw new Error(
+      `Benchmark sample is both solved and timed out in ${sourceLabel}`,
+    )
   }
   if (value.relaxedDrcPassed && !value.didSolve) {
     throw new Error(
@@ -1503,7 +1506,10 @@ export const readHistoryRuns = async (
   const indexPath = join(historyDirectory, HISTORY_INDEX_NAME)
   const runsDirectory = join(historyDirectory, HISTORY_RUNS_DIRECTORY)
   if (!existsSync(indexPath)) {
-    if (existsSync(runsDirectory) && (await readdir(runsDirectory)).length > 0) {
+    if (
+      existsSync(runsDirectory) &&
+      (await readdir(runsDirectory)).length > 0
+    ) {
       throw new Error(`Benchmark history index is missing: ${indexPath}`)
     }
     return []
@@ -1570,7 +1576,9 @@ export const appendHistoryRun = async ({
     HISTORY_RUNS_DIRECTORY,
     `${validatedRun.runId}.json`,
   )
-  await mkdir(join(historyDirectory, HISTORY_RUNS_DIRECTORY), { recursive: true })
+  await mkdir(join(historyDirectory, HISTORY_RUNS_DIRECTORY), {
+    recursive: true,
+  })
   await writeJsonFileAtomically(
     join(historyDirectory, relativePath),
     validatedRun,
@@ -1744,10 +1752,7 @@ const parseHistoryIndexOrThrow = (
     ) {
       throw new Error(`Invalid benchmark history index entry ${index}`)
     }
-    const expectedPath = join(
-      HISTORY_RUNS_DIRECTORY,
-      `${entry.runId}.json`,
-    )
+    const expectedPath = join(HISTORY_RUNS_DIRECTORY, `${entry.runId}.json`)
     if (entry.path !== expectedPath) {
       throw new Error(
         `Invalid path for benchmark history run ${entry.runId}: ${entry.path}`,
@@ -1873,10 +1878,7 @@ const main = async (): Promise<void> => {
       report,
     },
   })
-  await writeFile(
-    command.outputPath,
-    createBenchmarkHistoryDashboard(runs),
-  )
+  await writeFile(command.outputPath, createBenchmarkHistoryDashboard(runs))
 }
 
 if (import.meta.main) {

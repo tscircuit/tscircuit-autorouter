@@ -76,7 +76,10 @@ const makeRun = (runId: string): BenchmarkHistoryRun => ({
 test("benchmark history retains full sample records and embeds a self-contained dashboard", async () => {
   const directory = await mkdtemp(join(tmpdir(), "benchmark-history-"))
   await appendHistoryRun({ historyDirectory: directory, run: makeRun("1") })
-  const runs = await appendHistoryRun({ historyDirectory: directory, run: makeRun("2") })
+  const runs = await appendHistoryRun({
+    historyDirectory: directory,
+    run: makeRun("2"),
+  })
   const retriedRuns = await appendHistoryRun({
     historyDirectory: directory,
     run: makeRun("2"),
@@ -97,10 +100,7 @@ test("benchmark history retains full sample records and embeds a self-contained 
         version: 2,
         kind: "benchmark-report-collection",
         generatedFor: "main",
-        reports: [
-          firstReport,
-          { ...firstReport, datasetName: "dataset02" },
-        ],
+        reports: [firstReport, { ...firstReport, datasetName: "dataset02" }],
       },
     },
   ])
@@ -149,7 +149,9 @@ test("benchmark history retains full sample records and embeds a self-contained 
     stdout: "pipe",
     stderr: "pipe",
   })
-  const recordedCliRun = (await readHistoryRuns(join(cliDirectory, "history")))[0]
+  const recordedCliRun = (
+    await readHistoryRuns(join(cliDirectory, "history"))
+  )[0]
   const invalidMetadataPath = join(cliDirectory, "invalid-metadata.json")
   await writeFile(
     invalidMetadataPath,
@@ -194,7 +196,8 @@ test("benchmark history retains full sample records and embeds a self-contained 
   }
   missingSamplesRun.report.tests = []
   const legacyRun = makeRun("6")
-  if (legacyRun.report.version !== 1) throw new Error("Expected a single report")
+  if (legacyRun.report.version !== 1)
+    throw new Error("Expected a single report")
   const legacySummary = legacyRun.report.summary[0]
   if (!legacySummary) throw new Error("Expected a benchmark summary")
   delete legacySummary.avgVia
@@ -294,7 +297,9 @@ test("benchmark history retains full sample records and embeds a self-contained 
     }),
   )
 
-  expect((await readHistoryRuns(directory))[0]?.report).toEqual(makeRun("1").report)
+  expect((await readHistoryRuns(directory))[0]?.report).toEqual(
+    makeRun("1").report,
+  )
   expect(retriedRuns).toHaveLength(2)
   await expect(
     appendHistoryRun({ historyDirectory: directory, run: conflictingRun }),
@@ -325,8 +330,7 @@ test("benchmark history retains full sample records and embeds a self-contained 
   )
   expect(legacyPoint?.avgVia).toBeNull()
   expect(legacyPoint?.samples.map((sample) => sample.sampleNumber)).toEqual([
-    1,
-    2,
+    1, 2,
   ])
   expect(() => getDashboardPoints([duplicateSampleRun])).toThrow(
     "duplicate sample 1",
