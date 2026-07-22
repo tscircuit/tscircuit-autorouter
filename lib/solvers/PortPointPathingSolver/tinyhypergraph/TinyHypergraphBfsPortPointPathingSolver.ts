@@ -783,10 +783,7 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private getRouteCanonicalNetId(
-    routeMetadata: any,
-    routeId: number,
-  ): string {
+  private getRouteCanonicalNetId(routeMetadata: any, routeId: number): string {
     const canonicalNetId = routeMetadata?.mutuallyConnectedNetworkId
     if (!canonicalNetId) {
       throw new Error(
@@ -796,10 +793,7 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     return canonicalNetId
   }
 
-  private getBlockedPortIdsForRoute(
-    solver: any,
-    routeCanonicalNetId: string,
-  ) {
+  private getBlockedPortIdsForRoute(solver: any, routeCanonicalNetId: string) {
     const blockedPortIds = new Set<number>()
     const regionSegments = solver.state?.regionSegments ?? []
 

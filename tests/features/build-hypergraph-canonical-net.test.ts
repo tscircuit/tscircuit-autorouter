@@ -36,11 +36,7 @@ test("buildHyperGraph requires canonical physical net identities", (): void => {
   expect(connections[0]!.mutuallyConnectedNetworkId).toBe(canonicalNetId)
   expect(graph.regions[0]!.d._connectedTo).toEqual([canonicalNetId])
   expect(graph.regions[0]!.d).not.toBe(capacityNode)
-  expect(capacityNode._connectedTo).toEqual([
-    "alias-a",
-    "alias-b",
-    "alias-a",
-  ])
+  expect(capacityNode._connectedTo).toEqual(["alias-a", "alias-b", "alias-a"])
   expect(() =>
     buildHyperGraph({
       capacityMeshNodes: [capacityNode],
