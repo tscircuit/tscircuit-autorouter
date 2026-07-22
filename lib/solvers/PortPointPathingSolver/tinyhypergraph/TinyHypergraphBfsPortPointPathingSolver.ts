@@ -55,15 +55,10 @@ type NormalizedRegion = SerializedRegion & {
   ports: SerializedPort[]
 }
 
-type NormalizedConnection = SerializedConnection & {
-  rootConnectionName: string
-  connectionName: string
-}
-
 type NormalizedData = {
   regions: NormalizedRegion[]
   ports: SerializedPort[]
-  connections: NormalizedConnection[]
+  connections: SerializedConnection[]
 }
 
 type TinyRouteBfsState = {
@@ -85,18 +80,6 @@ type ActiveTinyRouteBfs = {
   approved: boolean
   blockedPortIds: Set<number>
 }
-
-type ConnectionNameSource = {
-  connectionId: string
-  mutuallyConnectedNetworkId: string
-  simpleRouteConnection?: { rootConnectionName?: string; name?: string }
-}
-
-const getConnectionNames = (connection: ConnectionNameSource) => ({
-  rootConnectionName: connection.mutuallyConnectedNetworkId,
-  connectionName:
-    connection.simpleRouteConnection?.name ?? connection.connectionId,
-})
 
 const getSerializedCanonicalNetIdOrThrow = (
   connection: SerializedConnection,
@@ -164,7 +147,6 @@ const normalizeParams = (
         ...connection,
         mutuallyConnectedNetworkId:
           getSerializedCanonicalNetIdOrThrow(connection),
-        ...getConnectionNames(connection),
       })),
     }
   }
@@ -194,7 +176,6 @@ const normalizeParams = (
       startRegionId: connection.startRegion.regionId,
       endRegionId: connection.endRegion.regionId,
       simpleRouteConnection: connection.simpleRouteConnection,
-      ...getConnectionNames(connection),
     })),
   }
 }

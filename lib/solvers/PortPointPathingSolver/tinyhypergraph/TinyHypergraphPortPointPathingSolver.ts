@@ -193,10 +193,6 @@ const getTinyHyperGraphPipelineMaxIterations = (
 const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
 
-const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
-  routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
-  routeMetadata.mutuallyConnectedNetworkId
-
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
 
@@ -813,6 +809,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
+  private rootConnectionNameByConnectionId: Map<string, string | undefined>
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -825,6 +822,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           getTinyRouteConnectionNetId,
         )
       : tinyRouteConnections
+    this.rootConnectionNameByConnectionId = new Map(
+      connections.map((connection) => [
+        connection.connectionId,
+        connection.simpleRouteConnection.__rootConnectionNames?.[0],
+      ]),
+    )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
@@ -988,7 +991,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? getRouteConnectionName(routeMetadata)
       : `route-${routeId}`
     const rootConnectionName = routeMetadata
-      ? getRouteRootConnectionName(routeMetadata)
+      ? this.rootConnectionNameByConnectionId.get(routeMetadata.connectionId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
 

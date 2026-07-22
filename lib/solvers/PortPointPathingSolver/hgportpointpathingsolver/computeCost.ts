@@ -1,6 +1,7 @@
-import { Region } from "@tscircuit/hypergraph"
+import type { Region } from "@tscircuit/hypergraph"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import type { ConnectionHg } from "./types"
 
 export const computeCostPerRegion = (region: Region) => {
   if (!region.assignments || region.assignments.length === 0) {
@@ -12,7 +13,9 @@ export const computeCostPerRegion = (region: Region) => {
     const region1PortPoint = assignment.regionPort1.d
     const region2PortPoint = assignment.regionPort2.d
     const connectionName = assignment.connection.connectionId
-    const rootConnectionName = assignment.connection.mutuallyConnectedNetworkId
+    const connection = assignment.connection as ConnectionHg
+    const rootConnectionName =
+      connection.simpleRouteConnection?.__rootConnectionNames?.[0]
     return [
       {
         x: region1PortPoint.x,
