@@ -39,6 +39,7 @@ type CollisionBoundary = {
   minY: number
   maxX: number
   maxY: number
+  directlyBlocksRequest: boolean
 }
 
 const PATH_COORDINATE_EPSILON = 1e-4
@@ -358,6 +359,8 @@ export const createStitchSegmentRouter = (params: {
         minY: obstacle.center.y - obstacle.height / 2 - margin,
         maxX: obstacle.center.x + obstacle.width / 2 + margin,
         maxY: obstacle.center.y + obstacle.height / 2 + margin,
+        directlyBlocksRequest:
+          segmentToBoxMinDistance(start, end, obstacle) < obstacleMargin,
       })
     }
 
@@ -377,6 +380,13 @@ export const createStitchSegmentRouter = (params: {
         minY: Math.min(segment.start.y, segment.end.y) - margin,
         maxX: Math.max(segment.start.x, segment.end.x) + margin,
         maxY: Math.max(segment.start.y, segment.end.y) + margin,
+        directlyBlocksRequest:
+          minimumDistanceBetweenSegments(
+            start,
+            end,
+            segment.start,
+            segment.end,
+          ) < requiredGap,
       })
     }
 
@@ -395,10 +405,40 @@ export const createStitchSegmentRouter = (params: {
         minY: via.y - margin,
         maxX: via.x + margin,
         maxY: via.y + margin,
+        directlyBlocksRequest:
+          pointToSegmentDistance(via, start, end) < requiredGap,
       })
     }
 
-    return boundaries
+    const overlaps = (
+      a: CollisionBoundary,
+      b: CollisionBoundary,
+    ): boolean =>
+      a.minX <= b.maxX &&
+      a.maxX >= b.minX &&
+      a.minY <= b.maxY &&
+      a.maxY >= b.minY
+    const relevantBoundaryIndexes = new Set<number>()
+    const pendingBoundaryIndexes: number[] = []
+    for (let index = 0; index < boundaries.length; index += 1) {
+      if (!boundaries[index]!.directlyBlocksRequest) continue
+      relevantBoundaryIndexes.add(index)
+      pendingBoundaryIndexes.push(index)
+    }
+    while (pendingBoundaryIndexes.length > 0) {
+      const currentIndex = pendingBoundaryIndexes.pop()!
+      const currentBoundary = boundaries[currentIndex]!
+      for (let index = 0; index < boundaries.length; index += 1) {
+        if (relevantBoundaryIndexes.has(index)) continue
+        if (!overlaps(currentBoundary, boundaries[index]!)) continue
+        relevantBoundaryIndexes.add(index)
+        pendingBoundaryIndexes.push(index)
+      }
+    }
+
+    return [...relevantBoundaryIndexes]
+      .sort((a, b) => a - b)
+      .map((index) => boundaries[index]!)
   }
 
   const findUncachedValidPath: FindValidStitchPath = (request) => {
@@ -417,6 +457,14 @@ export const createStitchSegmentRouter = (params: {
       const point = { x, y, z: request.start.z }
       const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
       if (pointKeys.has(key)) return
+      if (
+        !evaluateSegmentValidity(
+          { ...request, start: point, end: point },
+          [request.start, request.end],
+        )
+      ) {
+        return
+      }
       pointKeys.add(key)
       points.push(point)
     }
@@ -435,15 +483,19 @@ export const createStitchSegmentRouter = (params: {
       // shortest non-worsening escape is often perpendicular to an edge rather
       // than toward a corner. Preserve the endpoint coordinates as projection
       // vertices on each boundary edge.
-      for (const y of [request.start.y, request.end.y]) {
-        if (y < boundary.minY || y > boundary.maxY) continue
-        addPoint(boundary.minX, y)
-        addPoint(boundary.maxX, y)
-      }
-      for (const x of [request.start.x, request.end.x]) {
-        if (x < boundary.minX || x > boundary.maxX) continue
-        addPoint(x, boundary.minY)
-        addPoint(x, boundary.maxY)
+      for (const endpoint of [request.start, request.end]) {
+        if (
+          endpoint.x < boundary.minX ||
+          endpoint.x > boundary.maxX ||
+          endpoint.y < boundary.minY ||
+          endpoint.y > boundary.maxY
+        ) {
+          continue
+        }
+        addPoint(boundary.minX, endpoint.y)
+        addPoint(boundary.maxX, endpoint.y)
+        addPoint(endpoint.x, boundary.minY)
+        addPoint(endpoint.x, boundary.maxY)
       }
     }
 
