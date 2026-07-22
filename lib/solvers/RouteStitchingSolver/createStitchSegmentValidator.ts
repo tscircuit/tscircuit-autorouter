@@ -133,11 +133,9 @@ export const createStitchSegmentRouter = (params: {
 
   const areSameNet = (a: string, b: string) => {
     if (a === b || params.connMap?.areIdsConnected(a, b)) return true
-    const aRoots = rootsByConnection.get(a)
-    const bRoots = rootsByConnection.get(b)
-    return Boolean(
-      aRoots && bRoots && [...aRoots].some((root) => bRoots.has(root)),
-    )
+    const aRoots = rootsByConnection.get(a) ?? new Set([a])
+    const bRoots = rootsByConnection.get(b) ?? new Set([b])
+    return [...aRoots].some((root) => bRoots.has(root))
   }
 
   const getSearchBounds = (
