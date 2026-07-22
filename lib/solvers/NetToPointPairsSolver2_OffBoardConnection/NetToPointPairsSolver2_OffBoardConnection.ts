@@ -74,11 +74,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     }
 
     // Call super with a modified SRJ that only contains on-board connections
-    super(
-      { ...ogSrj, connections: onBoardConnections },
-      colorMap,
-      originalSrj,
-    )
+    super({ ...ogSrj, connections: onBoardConnections }, colorMap, originalSrj)
 
     this.connectionPointDsu = connectionPointDsu
     this.connectionPointMap = connectionPointMap

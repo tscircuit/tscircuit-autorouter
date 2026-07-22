@@ -146,7 +146,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   ) {
     super()
     this.originalConnectionByName = new Map()
-    for (const [originalIndex, connection] of originalSrj.connections.entries()) {
+    for (const [
+      originalIndex,
+      connection,
+    ] of originalSrj.connections.entries()) {
       if (this.originalConnectionByName.has(connection.name)) {
         throw new Error(
           `Original SimpleRouteJson contains duplicate connection name "${connection.name}"`,
@@ -180,13 +183,8 @@ export class NetToPointPairsSolver extends BaseSolver {
     const constituentsByMergedConnection = new Map<
       SimpleRouteConnection,
       SimpleRouteConnection[]
-    >(
-      this.unprocessedConnections.map((connection) => [connection, []]),
-    )
-    const mergedConnectionByPointKey = new Map<
-      string,
-      SimpleRouteConnection
-    >()
+    >(this.unprocessedConnections.map((connection) => [connection, []]))
+    const mergedConnectionByPointKey = new Map<string, SimpleRouteConnection>()
 
     for (const mergedConnection of this.unprocessedConnections) {
       for (const point of mergedConnection.pointsToConnect) {
@@ -249,9 +247,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     const secondEndpointKey = getPointKey(secondEndpoint)
     const exactOwners = candidates.filter(({ connection }) => {
       const pointKeys = new Set(connection.pointsToConnect.map(getPointKey))
-      return (
-        pointKeys.has(firstEndpointKey) && pointKeys.has(secondEndpointKey)
-      )
+      return pointKeys.has(firstEndpointKey) && pointKeys.has(secondEndpointKey)
     })
 
     // A global MST edge can join points that never shared an original

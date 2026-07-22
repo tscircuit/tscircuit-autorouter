@@ -159,9 +159,7 @@ export class TraceWidthSolver extends BaseSolver {
       this.originalSrjConnectionNameByConnectionName.get(route.connectionName)
     if (originalSrjConnectionName) {
       const byOriginalSrjConnectionName =
-        this.connectionNominalTraceWidthMap.get(
-          originalSrjConnectionName,
-        )
+        this.connectionNominalTraceWidthMap.get(originalSrjConnectionName)
       if (byOriginalSrjConnectionName !== undefined) {
         return byOriginalSrjConnectionName
       }
