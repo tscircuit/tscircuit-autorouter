@@ -312,6 +312,47 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     return bestPlan
   }
 
+  private tryCompleteTerminalStitch(lastMergedPoint: RoutePoint): boolean {
+    if (this.isUntaggedTerminalCoveredByTrace(lastMergedPoint, this.end)) {
+      return true
+    }
+
+    const terminalDistance = distance(lastMergedPoint, this.end)
+    if (terminalDistance < GEOMETRIC_TOLERANCE) return true
+    if (terminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) return false
+
+    const endOnMergedLayer = { ...this.end, z: lastMergedPoint.z }
+    const directTerminalPath = this.getPlanarStitchPath({
+      connectionName: this.mergedHdRoute.connectionName,
+      start: lastMergedPoint,
+      end: endOnMergedLayer,
+      traceThickness: this.mergedHdRoute.traceThickness,
+    })
+    const terminalPlan = directTerminalPath
+      ? {
+          path: directTerminalPath,
+          mergedAnchor: {
+            point: lastMergedPoint,
+            trimCount: 0,
+            retreatDistance: 0,
+            isVirtual: false,
+          },
+          retreatDistance: 0,
+        }
+      : this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
+
+    if (!terminalPlan) return false
+    this.applyMergedRetreat(terminalPlan.mergedAnchor)
+    this.mergedHdRoute.route.push(
+      ...terminalPlan.path.slice(1).map((point) => ({
+        x: point.x,
+        y: point.y,
+        z: point.z,
+      })),
+    )
+    return true
+  }
+
   private clearLastSegmentMetadata() {
     const lastIndex = this.mergedHdRoute.route.length - 1
     const lastPoint = this.mergedHdRoute.route[lastIndex]!
@@ -630,57 +671,18 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
 
-      if (this.isUntaggedTerminalCoveredByTrace(lastMergedPoint, this.end)) {
+      if (this.tryCompleteTerminalStitch(lastMergedPoint)) {
         this.solved = true
         return
       }
 
-      if (
-        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
-        distance(lastMergedPoint, this.end) <=
-          MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-      ) {
-        const endOnMergedLayer = { ...this.end, z: lastMergedPoint.z }
-        let terminalPlan: PlanarStitchPlan | undefined
-        const directTerminalPath = this.getPlanarStitchPath({
-          connectionName: this.mergedHdRoute.connectionName,
-          start: lastMergedPoint,
-          end: endOnMergedLayer,
-          traceThickness: this.mergedHdRoute.traceThickness,
-        })
-        if (directTerminalPath) {
-          terminalPlan = {
-            path: directTerminalPath,
-            mergedAnchor: {
-              point: lastMergedPoint,
-              trimCount: 0,
-              retreatDistance: 0,
-              isVirtual: false,
-            },
-            retreatDistance: 0,
-          }
-        } else {
-          terminalPlan = this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
-        }
-        if (!terminalPlan) {
-          this.failed = true
-          this.error = `Could not route a collision-free terminal stitch for "${this.mergedHdRoute.connectionName}"`
-          return
-        }
-        this.applyMergedRetreat(terminalPlan.mergedAnchor)
-        this.mergedHdRoute.route.push(
-          ...terminalPlan.path.slice(1).map((point) => ({
-            x: point.x,
-            y: point.y,
-            z: point.z,
-          })),
-        )
-      } else if (
-        this.isValidStitchSegment &&
-        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE
-      ) {
+      if (this.isValidStitchSegment) {
         this.failed = true
-        this.error = `Stitched route "${this.mergedHdRoute.connectionName}" does not reach its terminal`
+        const terminalDistance = distance(lastMergedPoint, this.end)
+        this.error =
+          terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+            ? `Could not route a collision-free terminal stitch for "${this.mergedHdRoute.connectionName}"`
+            : `Stitched route "${this.mergedHdRoute.connectionName}" does not reach its terminal`
         return
       }
 
@@ -708,6 +710,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       overlapJoinPoint?: Point3
     }
     const candidates: StitchCandidate[] = []
+    const canConsiderPlanarGap = (gapDistance: number) =>
+      Boolean(this.isValidStitchSegment) ||
+      gapDistance <= MAX_STITCH_GAP_DISTANCE_3
     const mergedPreviousPoint =
       this.mergedHdRoute.route[this.mergedHdRoute.route.length - 2]
     const mergedEndpointIsMovable = Boolean(
@@ -803,7 +808,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             needsPlanarPath: false,
             overlapJoinPoint: firstOverlapJoinPoint,
           })
-        } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
+        } else if (canConsiderPlanarGap(distToFirst)) {
           candidates.push({
             routeIndex: i,
             matchedOn: "first",
@@ -846,7 +851,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             needsPlanarPath: false,
             overlapJoinPoint: lastOverlapJoinPoint,
           })
-        } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
+        } else if (canConsiderPlanarGap(distToLast)) {
           candidates.push({
             routeIndex: i,
             matchedOn: "last",
@@ -928,6 +933,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     if (closestRouteIndex === -1) {
       if (this.isValidStitchSegment) {
+        if (this.tryCompleteTerminalStitch(lastMergedPoint)) {
+          this.remainingHdRoutes = []
+          return
+        }
         this.failed = true
         this.error = `No collision-free stitch continuation for "${this.mergedHdRoute.connectionName}"`
         return
