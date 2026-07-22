@@ -33,7 +33,7 @@ type SerializedPort = {
 
 type SerializedConnection = {
   connectionId: string
-  mutuallyConnectedNetworkId?: string
+  mutuallyConnectedNetworkId: string
   startRegionId: string
   endRegionId: string
   simpleRouteConnection?: any
@@ -88,18 +88,27 @@ type ActiveTinyRouteBfs = {
 
 type ConnectionNameSource = {
   connectionId: string
-  mutuallyConnectedNetworkId?: string
+  mutuallyConnectedNetworkId: string
   simpleRouteConnection?: { rootConnectionName?: string; name?: string }
 }
 
 const getConnectionNames = (connection: ConnectionNameSource) => ({
-  rootConnectionName:
-    connection.simpleRouteConnection?.rootConnectionName ??
-    connection.mutuallyConnectedNetworkId ??
-    connection.connectionId,
+  rootConnectionName: connection.mutuallyConnectedNetworkId,
   connectionName:
     connection.simpleRouteConnection?.name ?? connection.connectionId,
 })
+
+const getSerializedCanonicalNetIdOrThrow = (
+  connection: SerializedConnection,
+): string => {
+  const canonicalNetId = connection.mutuallyConnectedNetworkId
+  if (!canonicalNetId) {
+    throw new Error(
+      `TinyHypergraphBfsPortPointPathingSolver requires a canonical physical net for "${connection.connectionId}"`,
+    )
+  }
+  return canonicalNetId
+}
 
 type RuntimePortInput = {
   d: PortData
@@ -153,6 +162,8 @@ const normalizeParams = (
       ports,
       connections: params.connections.map((connection) => ({
         ...connection,
+        mutuallyConnectedNetworkId:
+          getSerializedCanonicalNetIdOrThrow(connection),
         ...getConnectionNames(connection),
       })),
     }
@@ -239,7 +250,7 @@ const createRuntimeParams = (
       startRegion: regionMap.get(connection.startRegionId),
       endRegion: regionMap.get(connection.endRegionId),
       simpleRouteConnection: connection.simpleRouteConnection,
-    })) as HgPortPointPathingSolverParams["connections"],
+    })),
     colorMap: params.colorMap,
     inputSolvedRoutes: params.inputSolvedRoutes,
     layerCount: params.layerCount,
@@ -414,13 +425,13 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const startingPortId = solver.problem.routeStartPort[nextRouteId]
     const routeNetId = solver.problem.routeNet[nextRouteId]
     const routeMetadata = solver.problem.routeMetadata?.[nextRouteId]
-    const routeRootConnectionName = this.getRouteRootConnectionName(
+    const routeCanonicalNetId = this.getRouteCanonicalNetId(
       routeMetadata,
       nextRouteId,
     )
     const blockedPortIds = this.getBlockedPortIdsForRoute(
       solver,
-      routeRootConnectionName,
+      routeCanonicalNetId,
     )
     if (blockedPortIds.has(startingPortId)) {
       this.failed = true
@@ -772,21 +783,22 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private getRouteRootConnectionName(
+  private getRouteCanonicalNetId(
     routeMetadata: any,
     routeId: number,
-  ): string | null {
-    return (
-      routeMetadata?.simpleRouteConnection?.rootConnectionName ??
-      routeMetadata?.mutuallyConnectedNetworkId ??
-      routeMetadata?.connectionId ??
-      `route-${routeId}`
-    )
+  ): string {
+    const canonicalNetId = routeMetadata?.mutuallyConnectedNetworkId
+    if (!canonicalNetId) {
+      throw new Error(
+        `TinyHypergraphBfsPortPointPathingSolver route ${routeId} is missing a canonical physical net`,
+      )
+    }
+    return canonicalNetId
   }
 
   private getBlockedPortIdsForRoute(
     solver: any,
-    routeRootConnectionName: string | null,
+    routeCanonicalNetId: string,
   ) {
     const blockedPortIds = new Set<number>()
     const regionSegments = solver.state?.regionSegments ?? []
@@ -794,11 +806,11 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     for (const segments of regionSegments) {
       for (const [routeId, fromPortId, toPortId] of segments ?? []) {
         const routeMetadata = solver.problem.routeMetadata?.[routeId]
-        const segmentRootName = this.getRouteRootConnectionName(
+        const segmentCanonicalNetId = this.getRouteCanonicalNetId(
           routeMetadata,
           routeId,
         )
-        if (segmentRootName && segmentRootName === routeRootConnectionName) {
+        if (segmentCanonicalNetId === routeCanonicalNetId) {
           continue
         }
         blockedPortIds.add(fromPortId)

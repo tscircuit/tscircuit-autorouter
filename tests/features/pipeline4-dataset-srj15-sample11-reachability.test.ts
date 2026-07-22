@@ -56,6 +56,7 @@ test("pipeline4 dataset-srj15 sample11 edgeSolver fixture passes portPointPathin
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes: capacityNodes,
     layerCount: pipeline.srj.layerCount,
+    connectivityMap: pipeline.connMap,
     segmentPortPoints: sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
     ),
