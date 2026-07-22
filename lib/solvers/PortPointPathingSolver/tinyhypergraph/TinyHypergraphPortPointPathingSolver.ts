@@ -287,7 +287,7 @@ const getTinyRouteConnectionsOrThrow = (
     const mutuallyConnectedNetworkId = connection.mutuallyConnectedNetworkId
     if (!mutuallyConnectedNetworkId) {
       throw new Error(
-        `TinyHypergraphPortPointPathingSolver requires a canonical physical net for "${connection.connectionId}"`,
+        `TinyHypergraphPortPointPathingSolver requires a net ID for "${connection.connectionId}"`,
       )
     }
     return {
@@ -545,9 +545,7 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
     const netId = routeMetadata?.mutuallyConnectedNetworkId
     if (typeof netId !== "string" || netId.length === 0) {
-      throw new Error(
-        `Tiny hypergraph route ${routeId} is missing a canonical physical net`,
-      )
+      throw new Error(`Tiny hypergraph route ${routeId} is missing a net ID`)
     }
     netIndexById.set(netId, loaded.problem.routeNet[routeId]!)
   }

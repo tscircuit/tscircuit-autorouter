@@ -23,19 +23,15 @@ import type {
 
 const GEOMETRIC_TOLERANCE = 1e-6
 
-type PhysicalNetConnectivityMap = Pick<ConnectivityMap, "getNetConnectedToId">
-
-const getCanonicalNetIdOrThrow = (
-  connectivityMap: PhysicalNetConnectivityMap,
-  connectionAlias: string,
+const getNetIdFromConnMapOrThrow = (
+  connectivityMap: ConnectivityMap,
+  connectionId: string,
 ): string => {
-  const canonicalNetId = connectivityMap.getNetConnectedToId(connectionAlias)
-  if (!canonicalNetId) {
-    throw new Error(
-      `Could not resolve physical net for connection alias "${connectionAlias}"`,
-    )
+  const netId = connectivityMap.getNetConnectedToId(connectionId)
+  if (!netId) {
+    throw new Error(`Could not resolve net ID for connection "${connectionId}"`)
   }
-  return canonicalNetId
+  return netId
 }
 
 const getCandidateRegionsForAssignableVia = (params: {
@@ -163,7 +159,7 @@ export function buildHyperGraph(params: {
   capacityMeshNodes: CapacityMeshNode[]
   segmentPortPoints: SegmentPortPoint[]
   layerCount: number
-  connectivityMap: PhysicalNetConnectivityMap
+  connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
 }): {
   graph: HyperGraphHg
@@ -176,15 +172,15 @@ export function buildHyperGraph(params: {
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
-    const canonicalConnectedTo = cmnNode._connectedTo?.map((connectionAlias) =>
-      getCanonicalNetIdOrThrow(params.connectivityMap, connectionAlias),
+    const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
+      getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
     )
     graph.regions.push({
       regionId: cmnNode.capacityMeshNodeId,
-      d: canonicalConnectedTo
+      d: connectedNetIds
         ? {
             ...cmnNode,
-            _connectedTo: [...new Set(canonicalConnectedTo)],
+            _connectedTo: [...new Set(connectedNetIds)],
           }
         : cmnNode,
       ports: [],
@@ -263,7 +259,7 @@ export function buildHyperGraph(params: {
 
     connections.push({
       connectionId: connection.name,
-      mutuallyConnectedNetworkId: getCanonicalNetIdOrThrow(
+      mutuallyConnectedNetworkId: getNetIdFromConnMapOrThrow(
         params.connectivityMap,
         connection.name,
       ),

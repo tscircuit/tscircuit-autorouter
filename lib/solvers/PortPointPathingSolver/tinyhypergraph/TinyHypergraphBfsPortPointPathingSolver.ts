@@ -81,16 +81,16 @@ type ActiveTinyRouteBfs = {
   blockedPortIds: Set<number>
 }
 
-const getSerializedCanonicalNetIdOrThrow = (
+const getSerializedNetIdOrThrow = (
   connection: SerializedConnection,
 ): string => {
-  const canonicalNetId = connection.mutuallyConnectedNetworkId
-  if (!canonicalNetId) {
+  const netId = connection.mutuallyConnectedNetworkId
+  if (!netId) {
     throw new Error(
-      `TinyHypergraphBfsPortPointPathingSolver requires a canonical physical net for "${connection.connectionId}"`,
+      `TinyHypergraphBfsPortPointPathingSolver requires a net ID for "${connection.connectionId}"`,
     )
   }
-  return canonicalNetId
+  return netId
 }
 
 type RuntimePortInput = {
@@ -145,8 +145,7 @@ const normalizeParams = (
       ports,
       connections: params.connections.map((connection) => ({
         ...connection,
-        mutuallyConnectedNetworkId:
-          getSerializedCanonicalNetIdOrThrow(connection),
+        mutuallyConnectedNetworkId: getSerializedNetIdOrThrow(connection),
       })),
     }
   }
@@ -406,13 +405,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const startingPortId = solver.problem.routeStartPort[nextRouteId]
     const routeNetId = solver.problem.routeNet[nextRouteId]
     const routeMetadata = solver.problem.routeMetadata?.[nextRouteId]
-    const routeCanonicalNetId = this.getRouteCanonicalNetId(
-      routeMetadata,
-      nextRouteId,
-    )
+    const connectionNetId = this.getRouteNetId(routeMetadata, nextRouteId)
     const blockedPortIds = this.getBlockedPortIdsForRoute(
       solver,
-      routeCanonicalNetId,
+      connectionNetId,
     )
     if (blockedPortIds.has(startingPortId)) {
       this.failed = true
@@ -764,28 +760,25 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private getRouteCanonicalNetId(routeMetadata: any, routeId: number): string {
-    const canonicalNetId = routeMetadata?.mutuallyConnectedNetworkId
-    if (!canonicalNetId) {
+  private getRouteNetId(routeMetadata: any, routeId: number): string {
+    const netId = routeMetadata?.mutuallyConnectedNetworkId
+    if (!netId) {
       throw new Error(
-        `TinyHypergraphBfsPortPointPathingSolver route ${routeId} is missing a canonical physical net`,
+        `TinyHypergraphBfsPortPointPathingSolver route ${routeId} is missing a net ID`,
       )
     }
-    return canonicalNetId
+    return netId
   }
 
-  private getBlockedPortIdsForRoute(solver: any, routeCanonicalNetId: string) {
+  private getBlockedPortIdsForRoute(solver: any, connectionNetId: string) {
     const blockedPortIds = new Set<number>()
     const regionSegments = solver.state?.regionSegments ?? []
 
     for (const segments of regionSegments) {
       for (const [routeId, fromPortId, toPortId] of segments ?? []) {
         const routeMetadata = solver.problem.routeMetadata?.[routeId]
-        const segmentCanonicalNetId = this.getRouteCanonicalNetId(
-          routeMetadata,
-          routeId,
-        )
-        if (segmentCanonicalNetId === routeCanonicalNetId) {
+        const segmentNetId = this.getRouteNetId(routeMetadata, routeId)
+        if (segmentNetId === connectionNetId) {
           continue
         }
         blockedPortIds.add(fromPortId)
