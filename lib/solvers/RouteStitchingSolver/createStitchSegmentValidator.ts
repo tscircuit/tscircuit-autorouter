@@ -1,13 +1,19 @@
 import {
+  distance,
   pointToSegmentDistance,
   segmentToBoxMinDistance,
+  type Point3,
 } from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
 import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { IsValidStitchSegment } from "./SingleHighDensityRouteStitchSolver3"
+import type {
+  FindValidStitchPath,
+  IsValidStitchSegment,
+  StitchSegmentRequest,
+} from "./SingleHighDensityRouteStitchSolver3"
 
 type ConnectivityLike = {
   areIdsConnected: (a: string, b: string) => boolean
@@ -27,6 +33,15 @@ type IndexedVia = {
   diameter: number
 }
 
+type CollisionBoundary = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
+const PATH_COORDINATE_EPSILON = 1e-4
+
 const createIndex = (
   boxes: Array<{ minX: number; minY: number; maxX: number; maxY: number }>,
 ) => {
@@ -43,13 +58,16 @@ const createIndex = (
  * Builds an indexed collision oracle for the short pieces of copper that the
  * stitcher may add between route fragments or between a fragment and terminal.
  */
-export const createStitchSegmentValidator = (params: {
+export const createStitchSegmentRouter = (params: {
   hdRoutes: HighDensityIntraNodeRoute[]
   obstacles: Obstacle[]
   layerCount: number
   connMap?: ConnectivityLike
   minClearance: number
-}): IsValidStitchSegment => {
+}): {
+  isValidSegment: IsValidStitchSegment
+  findValidPath: FindValidStitchPath
+} => {
   const obstacles = createObjectsWithZLayers(
     params.obstacles,
     params.layerCount,
@@ -134,7 +152,25 @@ export const createStitchSegmentValidator = (params: {
       Math.max(start.y, end.y) + margin,
     ] as const
 
-  return ({ connectionName, start, end, traceThickness }) => {
+  const getRequestKey = (request: StitchSegmentRequest) =>
+    [
+      request.connectionName,
+      request.traceThickness.toFixed(6),
+      request.start.x.toFixed(6),
+      request.start.y.toFixed(6),
+      request.start.z,
+      request.end.x.toFixed(6),
+      request.end.y.toFixed(6),
+      request.end.z,
+    ].join(":")
+  const segmentValidityCache = new Map<string, boolean>()
+
+  const evaluateSegmentValidity: IsValidStitchSegment = ({
+    connectionName,
+    start,
+    end,
+    traceThickness,
+  }) => {
     const currentTraceRadius = traceThickness / 2
     const obstacleMargin = params.minClearance + currentTraceRadius
     for (const obstacleId of obstacleIndex?.search(
@@ -182,4 +218,197 @@ export const createStitchSegmentValidator = (params: {
 
     return true
   }
+
+  const isValidSegment: IsValidStitchSegment = (request) => {
+    const key = getRequestKey(request)
+    const cachedResult = segmentValidityCache.get(key)
+    if (cachedResult !== undefined) return cachedResult
+    const result = evaluateSegmentValidity(request)
+    segmentValidityCache.set(key, result)
+    return result
+  }
+
+  const getCollisionBoundaries = ({
+    connectionName,
+    start,
+    end,
+    traceThickness,
+  }: StitchSegmentRequest): CollisionBoundary[] => {
+    const currentTraceRadius = traceThickness / 2
+    const boundaries: CollisionBoundary[] = []
+
+    const obstacleMargin = params.minClearance + currentTraceRadius
+    for (const obstacleId of obstacleIndex?.search(
+      ...getSearchBounds(start, end, obstacleMargin),
+    ) ?? []) {
+      const obstacle = obstacles[obstacleId]!
+      if (!obstacle.__zLayers?.includes(start.z)) continue
+      if (obstacle.connectedTo.some((id) => areSameNet(connectionName, id))) {
+        continue
+      }
+      if (segmentToBoxMinDistance(start, end, obstacle) >= obstacleMargin) {
+        continue
+      }
+      const margin =
+        obstacleMargin + PATH_COORDINATE_EPSILON
+      boundaries.push({
+        minX: obstacle.center.x - obstacle.width / 2 - margin,
+        minY: obstacle.center.y - obstacle.height / 2 - margin,
+        maxX: obstacle.center.x + obstacle.width / 2 + margin,
+        maxY: obstacle.center.y + obstacle.height / 2 + margin,
+      })
+    }
+
+    const traceSearchMargin =
+      params.minClearance + currentTraceRadius + maxTraceRadius
+    for (const segmentId of segmentIndex?.search(
+      ...getSearchBounds(start, end, traceSearchMargin),
+    ) ?? []) {
+      const segment = segments[segmentId]!
+      if (segment.start.z !== start.z) continue
+      if (areSameNet(connectionName, segment.connectionName)) continue
+      const requiredGap =
+        params.minClearance + currentTraceRadius + segment.traceThickness / 2
+      if (
+        minimumDistanceBetweenSegments(start, end, segment.start, segment.end) >=
+        requiredGap
+      ) {
+        continue
+      }
+      const margin =
+        requiredGap + PATH_COORDINATE_EPSILON
+      boundaries.push({
+        minX: Math.min(segment.start.x, segment.end.x) - margin,
+        minY: Math.min(segment.start.y, segment.end.y) - margin,
+        maxX: Math.max(segment.start.x, segment.end.x) + margin,
+        maxY: Math.max(segment.start.y, segment.end.y) + margin,
+      })
+    }
+
+    const viaSearchMargin =
+      params.minClearance + currentTraceRadius + maxViaRadius
+    for (const viaId of viaIndex?.search(
+      ...getSearchBounds(start, end, viaSearchMargin),
+    ) ?? []) {
+      const via = vias[viaId]!
+      if (areSameNet(connectionName, via.connectionName)) continue
+      const requiredGap =
+        params.minClearance + currentTraceRadius + via.diameter / 2
+      if (pointToSegmentDistance(via, start, end) >= requiredGap) continue
+      const margin =
+        requiredGap + PATH_COORDINATE_EPSILON
+      boundaries.push({
+        minX: via.x - margin,
+        minY: via.y - margin,
+        maxX: via.x + margin,
+        maxY: via.y + margin,
+      })
+    }
+
+    return boundaries
+  }
+
+  const findUncachedValidPath: FindValidStitchPath = (request) => {
+    if (request.start.z !== request.end.z) return undefined
+    if (isValidSegment(request)) return [request.start, request.end]
+
+    const boundaries = getCollisionBoundaries(request)
+    const points: Point3[] = [request.start, request.end]
+    const pointKeys = new Set(
+      points.map(
+        (point) => `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`,
+      ),
+    )
+
+    for (const boundary of boundaries) {
+      for (const point of [
+        { x: boundary.minX, y: boundary.minY, z: request.start.z },
+        { x: boundary.minX, y: boundary.maxY, z: request.start.z },
+        { x: boundary.maxX, y: boundary.minY, z: request.start.z },
+        { x: boundary.maxX, y: boundary.maxY, z: request.start.z },
+      ]) {
+        const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
+        if (pointKeys.has(key)) continue
+        pointKeys.add(key)
+        points.push(point)
+      }
+    }
+
+    const edges: Array<Array<{ index: number; length: number }>> = points.map(
+      () => [],
+    )
+    for (let firstIndex = 0; firstIndex < points.length; firstIndex += 1) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < points.length;
+        secondIndex += 1
+      ) {
+        const start = points[firstIndex]!
+        const end = points[secondIndex]!
+        if (!isValidSegment({ ...request, start, end })) continue
+        const length = distance(start, end)
+        edges[firstIndex]!.push({ index: secondIndex, length })
+        edges[secondIndex]!.push({ index: firstIndex, length })
+      }
+    }
+
+    const shortestDistances = points.map(() => Infinity)
+    const previousPointIndices = points.map(() => -1)
+    const visited = points.map(() => false)
+    shortestDistances[0] = 0
+
+    for (let iteration = 0; iteration < points.length; iteration += 1) {
+      let currentIndex = -1
+      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+        if (visited[pointIndex]) continue
+        if (
+          currentIndex === -1 ||
+          shortestDistances[pointIndex]! < shortestDistances[currentIndex]!
+        ) {
+          currentIndex = pointIndex
+        }
+      }
+
+      if (currentIndex === -1 || !Number.isFinite(shortestDistances[currentIndex])) {
+        break
+      }
+      if (currentIndex === 1) break
+      visited[currentIndex] = true
+
+      for (const edge of edges[currentIndex]!) {
+        if (visited[edge.index]) continue
+        const candidateDistance =
+          shortestDistances[currentIndex]! + edge.length
+        if (candidateDistance < shortestDistances[edge.index]!) {
+          shortestDistances[edge.index] = candidateDistance
+          previousPointIndices[edge.index] = currentIndex
+        }
+      }
+    }
+
+    if (!Number.isFinite(shortestDistances[1])) return undefined
+
+    const path: Point3[] = []
+    for (let pointIndex = 1; pointIndex !== -1; ) {
+      path.push(points[pointIndex]!)
+      pointIndex = previousPointIndices[pointIndex]!
+    }
+    path.reverse()
+    return path
+  }
+
+  const pathCache = new Map<string, Point3[] | null>()
+  const findValidPath: FindValidStitchPath = (request) => {
+    const key = getRequestKey(request)
+    if (pathCache.has(key)) return pathCache.get(key) ?? undefined
+    const path = findUncachedValidPath(request)
+    pathCache.set(key, path ?? null)
+    return path
+  }
+
+  return { isValidSegment, findValidPath }
 }
+
+export const createStitchSegmentValidator = (
+  params: Parameters<typeof createStitchSegmentRouter>[0],
+): IsValidStitchSegment => createStitchSegmentRouter(params).isValidSegment

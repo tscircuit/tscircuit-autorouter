@@ -9,10 +9,11 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import {
+  type FindValidStitchPath,
   type IsValidStitchSegment,
   SingleHighDensityRouteStitchSolver3,
 } from "./SingleHighDensityRouteStitchSolver3"
-import { createStitchSegmentValidator } from "./createStitchSegmentValidator"
+import { createStitchSegmentRouter } from "./createStitchSegmentValidator"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -46,7 +47,24 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
   private isValidStitchSegment?: IsValidStitchSegment
+  private findValidStitchPath?: FindValidStitchPath
   private endpointIndex = new EndpointClusterIndex()
+
+  private isValidStitchGap(params: {
+    connectionName: string
+    start: Point3
+    end: Point3
+  }) {
+    if (!this.isValidStitchSegment) return true
+    const request = {
+      ...params,
+      traceThickness: this.defaultTraceThickness,
+    }
+    return (
+      this.isValidStitchSegment(request) ||
+      Boolean(this.findValidStitchPath?.(request))
+    )
+  }
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -124,6 +142,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       endpointIndex: this.endpointIndex,
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
+      isValidStitchGap: (gap) => this.isValidStitchGap(gap),
     })
 
     const includesSharedRootBridge = pathRoutes.some(
@@ -158,13 +177,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
     if (params.obstacles || params.connMap) {
-      this.isValidStitchSegment = createStitchSegmentValidator({
+      const stitchSegmentRouter = createStitchSegmentRouter({
         hdRoutes: canonicalHdRoutes,
         obstacles: params.obstacles ?? [],
         layerCount: params.layerCount,
         connMap: params.connMap,
         minClearance: params.minTraceToPadEdgeClearance ?? 0.1,
       })
+      this.isValidStitchSegment = stitchSegmentRouter.isValidSegment
+      this.findValidStitchPath = stitchSegmentRouter.findValidPath
     }
 
     const firstRoute = canonicalHdRoutes[0]
@@ -311,6 +332,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         endpointIndex: this.endpointIndex,
         canStitchBetweenTerminals: (selection) =>
           this.canStitchBetweenTerminals(selection),
+        isValidStitchGap: (gap) => this.isValidStitchGap(gap),
       })
 
       this.unsolvedRoutes.push({
@@ -399,6 +421,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               endpointIndex: this.endpointIndex,
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
+              isValidStitchGap: (gap) => this.isValidStitchGap(gap),
             }),
           start,
           end,
@@ -442,6 +465,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isValidStitchSegment: this.isValidStitchSegment,
+      findValidStitchPath: this.findValidStitchPath,
     })
   }
 

@@ -17,12 +17,16 @@ const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
-export type IsValidStitchSegment = (params: {
+export type StitchSegmentRequest = {
   connectionName: string
   start: Point3
   end: Point3
   traceThickness: number
-}) => boolean
+}
+export type IsValidStitchSegment = (params: StitchSegmentRequest) => boolean
+export type FindValidStitchPath = (
+  params: StitchSegmentRequest,
+) => Point3[] | undefined
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -59,6 +63,30 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
   isValidStitchSegment?: IsValidStitchSegment
+  findValidStitchPath?: FindValidStitchPath
+
+  private getPlanarStitchPath(params: StitchSegmentRequest): Point3[] | undefined {
+    if (params.start.z !== params.end.z) return undefined
+    if (distance(params.start, params.end) < GEOMETRIC_TOLERANCE) {
+      return [params.start]
+    }
+    if (
+      !this.isValidStitchSegment ||
+      this.isValidStitchSegment(params)
+    ) {
+      return [params.start, params.end]
+    }
+
+    const path = this.findValidStitchPath?.(params)
+    if (!path || path.length < 2) return undefined
+    if (
+      distance(path[0]!, params.start) >= GEOMETRIC_TOLERANCE ||
+      distance(path[path.length - 1]!, params.end) >= GEOMETRIC_TOLERANCE
+    ) {
+      throw new Error("Stitch pathfinder returned a path with wrong endpoints")
+    }
+    return path
+  }
 
   constructor(opts: {
     connectionName: string
@@ -71,6 +99,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     isValidStitchSegment?: IsValidStitchSegment
+    findValidStitchPath?: FindValidStitchPath
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
@@ -78,6 +107,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isValidStitchSegment = opts.isValidStitchSegment
+    this.findValidStitchPath = opts.findValidStitchPath
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -102,21 +132,24 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         vias.push({ x: opts.start.x, y: opts.start.y })
       }
       const planarStart = { ...opts.start, z: opts.end.z }
-      if (
-        distance(planarStart, opts.end) > GEOMETRIC_TOLERANCE &&
-        opts.isValidStitchSegment &&
-        !opts.isValidStitchSegment({
-          connectionName: opts.connectionName,
-          start: planarStart,
-          end: opts.end,
-          traceThickness: opts.defaultTraceThickness ?? 0.15,
-        })
-      ) {
+      const stitchPath = this.getPlanarStitchPath({
+        connectionName: opts.connectionName,
+        start: planarStart,
+        end: opts.end,
+        traceThickness: opts.defaultTraceThickness ?? 0.15,
+      })
+      if (!stitchPath) {
         this.failed = true
-        this.error = `Direct stitch segment for "${opts.connectionName}" is not collision-free`
+        this.error = `Could not route a collision-free direct stitch for "${opts.connectionName}"`
         return
       }
-      routePoints.push({ x: opts.end.x, y: opts.end.y, z: opts.end.z })
+      routePoints.push(
+        ...stitchPath.slice(1).map((point) => ({
+          x: point.x,
+          y: point.y,
+          z: point.z,
+        })),
+      )
 
       this.mergedHdRoute = {
         connectionName: opts.connectionName,
@@ -181,18 +214,24 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       ) => {
         const terminalOnEndpointLayer = { ...terminal, z: endpoint.z }
         if (
-          distance(terminalOnEndpointLayer, endpoint) >= GEOMETRIC_TOLERANCE &&
-          opts.isValidStitchSegment &&
-          !opts.isValidStitchSegment({
-            connectionName: opts.connectionName,
-            start: terminalOnEndpointLayer,
-            end: endpoint,
-            traceThickness: route.traceThickness,
-          })
+          distance(terminalOnEndpointLayer, endpoint) >
+          MAX_TERMINAL_STITCH_GAP_DISTANCE_3
         ) {
           return Infinity
         }
-        return distance(terminal, endpoint)
+        const path = this.getPlanarStitchPath({
+          connectionName: opts.connectionName,
+          start: terminalOnEndpointLayer,
+          end: endpoint,
+          traceThickness: route.traceThickness,
+        })
+        if (!path) return Infinity
+
+        let pathLength = Math.abs(terminal.z - endpoint.z)
+        for (let index = 0; index < path.length - 1; index += 1) {
+          pathLength += distance(path[index]!, path[index + 1]!)
+        }
+        return pathLength
       }
       const distStartToFirst = getTerminalDistance(opts.start, firstPoint)
       const distStartToLast = getTerminalDistance(opts.start, lastPoint)
@@ -248,8 +287,30 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
+    const getFirstRouteEndpointDistance = (endpoint: RoutePoint) => {
+      const startOnEndpointLayer = { ...this.start, z: endpoint.z }
+      if (
+        distance(startOnEndpointLayer, endpoint) >
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      ) {
+        return Infinity
+      }
+      const path = this.getPlanarStitchPath({
+        connectionName: opts.connectionName,
+        start: startOnEndpointLayer,
+        end: endpoint,
+        traceThickness: firstRoute.traceThickness,
+      })
+      if (!path) return Infinity
+
+      let pathLength = Math.abs(this.start.z - endpoint.z)
+      for (let index = 0; index < path.length - 1; index += 1) {
+        pathLength += distance(path[index]!, path[index + 1]!)
+      }
+      return pathLength
+    }
+    const distToFirst = getFirstRouteEndpointDistance(firstRouteFirstPoint)
+    const distToLast = getFirstRouteEndpointDistance(firstRouteLastPoint)
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
@@ -334,24 +395,24 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
         const endOnMergedLayer = { ...this.end, z: lastMergedPoint.z }
-        if (
-          this.isValidStitchSegment &&
-          !this.isValidStitchSegment({
-            connectionName: this.mergedHdRoute.connectionName,
-            start: lastMergedPoint,
-            end: endOnMergedLayer,
-            traceThickness: this.mergedHdRoute.traceThickness,
-          })
-        ) {
+        const terminalPath = this.getPlanarStitchPath({
+          connectionName: this.mergedHdRoute.connectionName,
+          start: lastMergedPoint,
+          end: endOnMergedLayer,
+          traceThickness: this.mergedHdRoute.traceThickness,
+        })
+        if (!terminalPath) {
           this.failed = true
-          this.error = `Final stitch segment for "${this.mergedHdRoute.connectionName}" is not collision-free`
+          this.error = `Could not route a collision-free terminal stitch for "${this.mergedHdRoute.connectionName}"`
           return
         }
-        this.mergedHdRoute.route.push({
-          x: this.end.x,
-          y: this.end.y,
-          z: lastMergedPoint.z,
-        })
+        this.mergedHdRoute.route.push(
+          ...terminalPath.slice(1).map((point) => ({
+            x: point.x,
+            y: point.y,
+            z: point.z,
+          })),
+        )
       } else if (
         this.isValidStitchSegment &&
         distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE
@@ -371,6 +432,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
     let bestScore = Infinity
+    let bestStitchPath: Point3[] | undefined
+
+    type StitchCandidate = {
+      routeIndex: number
+      matchedOn: "first" | "last"
+      endpoint: RoutePoint
+      lowerBoundScore: number
+      needsPlanarPath: boolean
+    }
+    const candidates: StitchCandidate[] = []
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
@@ -380,22 +451,23 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const distToFirst = distance(lastMergedPoint, firstPointInCandidate)
       const distToLast = distance(lastMergedPoint, lastPointInCandidate)
 
-      let scoreFirst = Infinity
       if (lastMergedPoint.z === firstPointInCandidate.z) {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
-          scoreFirst = distToFirst
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "first",
+            endpoint: firstPointInCandidate,
+            lowerBoundScore: distToFirst,
+            needsPlanarPath: false,
+          })
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
-          if (
-            !this.isValidStitchSegment ||
-            this.isValidStitchSegment({
-              connectionName: this.mergedHdRoute.connectionName,
-              start: lastMergedPoint,
-              end: firstPointInCandidate,
-              traceThickness: this.mergedHdRoute.traceThickness,
-            })
-          ) {
-            scoreFirst = GAP_PENALTY + distToFirst
-          }
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "first",
+            endpoint: firstPointInCandidate,
+            lowerBoundScore: GAP_PENALTY + distToFirst,
+            needsPlanarPath: true,
+          })
         }
       } else if (
         distToFirst < GEOMETRIC_TOLERANCE &&
@@ -404,31 +476,32 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(firstPointInCandidate),
           ))
       ) {
-        scoreFirst = VIA_PENALTY + distToFirst
+        candidates.push({
+          routeIndex: i,
+          matchedOn: "first",
+          endpoint: firstPointInCandidate,
+          lowerBoundScore: VIA_PENALTY + distToFirst,
+          needsPlanarPath: false,
+        })
       }
 
-      if (scoreFirst < bestScore) {
-        bestScore = scoreFirst
-        closestRouteIndex = i
-        matchedOn = "first"
-      }
-
-      let scoreLast = Infinity
       if (lastMergedPoint.z === lastPointInCandidate.z) {
         if (distToLast < GEOMETRIC_TOLERANCE) {
-          scoreLast = distToLast
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "last",
+            endpoint: lastPointInCandidate,
+            lowerBoundScore: distToLast,
+            needsPlanarPath: false,
+          })
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
-          if (
-            !this.isValidStitchSegment ||
-            this.isValidStitchSegment({
-              connectionName: this.mergedHdRoute.connectionName,
-              start: lastMergedPoint,
-              end: lastPointInCandidate,
-              traceThickness: this.mergedHdRoute.traceThickness,
-            })
-          ) {
-            scoreLast = GAP_PENALTY + distToLast
-          }
+          candidates.push({
+            routeIndex: i,
+            matchedOn: "last",
+            endpoint: lastPointInCandidate,
+            lowerBoundScore: GAP_PENALTY + distToLast,
+            needsPlanarPath: true,
+          })
         }
       } else if (
         distToLast < GEOMETRIC_TOLERANCE &&
@@ -437,14 +510,50 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(lastPointInCandidate),
           ))
       ) {
-        scoreLast = VIA_PENALTY + distToLast
+        candidates.push({
+          routeIndex: i,
+          matchedOn: "last",
+          endpoint: lastPointInCandidate,
+          lowerBoundScore: VIA_PENALTY + distToLast,
+          needsPlanarPath: false,
+        })
       }
+    }
 
-      if (scoreLast < bestScore) {
-        bestScore = scoreLast
-        closestRouteIndex = i
-        matchedOn = "last"
+    candidates.sort(
+      (a, b) =>
+        a.lowerBoundScore - b.lowerBoundScore ||
+        a.routeIndex - b.routeIndex ||
+        (a.matchedOn === b.matchedOn
+          ? 0
+          : a.matchedOn === "first"
+            ? -1
+            : 1),
+    )
+
+    for (const candidate of candidates) {
+      if (candidate.lowerBoundScore >= bestScore) break
+      let score = candidate.lowerBoundScore
+      let stitchPath: Point3[] | undefined
+      if (candidate.needsPlanarPath) {
+        stitchPath = this.getPlanarStitchPath({
+          connectionName: this.mergedHdRoute.connectionName,
+          start: lastMergedPoint,
+          end: candidate.endpoint,
+          traceThickness: this.mergedHdRoute.traceThickness,
+        })
+        if (!stitchPath) continue
+        let pathLength = 0
+        for (let index = 0; index < stitchPath.length - 1; index += 1) {
+          pathLength += distance(stitchPath[index]!, stitchPath[index + 1]!)
+        }
+        score = GAP_PENALTY + pathLength
       }
+      if (score >= bestScore) continue
+      bestScore = score
+      closestRouteIndex = candidate.routeIndex
+      matchedOn = candidate.matchedOn
+      bestStitchPath = stitchPath
     }
 
     if (closestRouteIndex === -1) {
@@ -465,6 +574,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = hdRouteToMerge.route
     } else {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
+    }
+
+    if (bestStitchPath && bestStitchPath.length > 2) {
+      this.mergedHdRoute.route.push(
+        ...bestStitchPath.slice(1, -1).map((point) => ({
+          x: point.x,
+          y: point.y,
+          z: point.z,
+        })),
+      )
     }
 
     if (

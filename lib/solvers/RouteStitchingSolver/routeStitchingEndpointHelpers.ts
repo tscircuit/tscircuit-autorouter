@@ -25,6 +25,12 @@ export type CanStitchBetweenTerminals = (params: {
   end: Point3
 }) => boolean
 
+export type IsValidStitchGap = (params: {
+  connectionName: string
+  start: Point3
+  end: Point3
+}) => boolean
+
 /**
  * Maintains a deterministic cluster map for route endpoints so different route
  * fragments that terminate at effectively the same location share one key.
@@ -207,6 +213,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
+  isValidStitchGap?: IsValidStitchGap
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -226,6 +233,44 @@ export const selectRoutesAlongEndpointPath = (params: {
   if (!startHash || !endHash || startHash === endHash) {
     return canonicalHdRoutes
   }
+
+  const endpointClusters = params.endpointIndex.getClusters(
+    params.connectionName,
+  )
+  const startEndpoint = endpointClusters.find(
+    (cluster) => cluster.key === startHash,
+  )?.point
+  const endEndpoint = endpointClusters.find(
+    (cluster) => cluster.key === endHash,
+  )?.point
+  if (!startEndpoint || !endEndpoint) return canonicalHdRoutes
+
+  const isValidTerminalGap = (terminal: Point3, endpoint: Point3) => {
+    const terminalDistance = distance(terminal, endpoint)
+    if (terminalDistance <= ENDPOINT_MATCH_TOLERANCE) return true
+    if (terminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) return false
+    if (terminal.z !== endpoint.z) return false
+    return (
+      !params.isValidStitchGap ||
+      params.isValidStitchGap({
+        connectionName: params.connectionName,
+        start: terminal,
+        end: endpoint,
+      })
+    )
+  }
+
+  if (
+    !isValidTerminalGap(params.start, startEndpoint) ||
+    !isValidTerminalGap(params.end, endEndpoint)
+  ) {
+    return canonicalHdRoutes
+  }
+
+  const startRequiresGap =
+    distance(params.start, startEndpoint) > ENDPOINT_MATCH_TOLERANCE
+  const endRequiresGap =
+    distance(params.end, endEndpoint) > ENDPOINT_MATCH_TOLERANCE
 
   const adjacency = new Map<string, EndpointEdge[]>()
 
@@ -262,7 +307,6 @@ export const selectRoutesAlongEndpointPath = (params: {
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
       )
         continue
-
       addAdjacencyEdge(adjacency, endpointA.key, {
         nextHash: endpointB.key,
         routeIndex: null,
@@ -292,39 +336,120 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
-  const prevByHash = new Map<
-    string,
-    { prevHash: string; routeIndex: number | null }
-  >()
+  type SearchState = { hash: string; lastEdgeWasGap: boolean }
+  const getStateKey = (state: SearchState) =>
+    `${state.hash}:${state.lastEdgeWasGap ? "gap" : "route"}`
+  const startState: SearchState = {
+    hash: startHash,
+    lastEdgeWasGap: startRequiresGap,
+  }
+  const startStateKey = getStateKey(startState)
+  type PathTransition = {
+    prevStateKey: string
+    fromHash: string
+    toHash: string
+    routeIndex: number | null
+  }
+  const findCandidatePath = (): PathTransition[] | null => {
+    const queue = [startState]
+    const visitedStateKeys = new Set<string>([startStateKey])
+    const prevByStateKey = new Map<string, PathTransition>()
+    let endStateKey: string | null = null
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
-    if (currentHash === endHash) break
+    while (queue.length > 0) {
+      const currentState = queue.shift()!
+      const currentStateKey = getStateKey(currentState)
+      if (
+        currentState.hash === endHash &&
+        !(endRequiresGap && currentState.lastEdgeWasGap)
+      ) {
+        endStateKey = currentStateKey
+        break
+      }
 
-    for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
-      prevByHash.set(edge.nextHash, {
-        prevHash: currentHash,
-        routeIndex: edge.routeIndex,
-      })
-      queue.push(edge.nextHash)
+      for (const edge of adjacency.get(currentState.hash) ?? []) {
+        const edgeIsGap = edge.routeIndex === null
+        if (edgeIsGap && currentState.lastEdgeWasGap) continue
+        const nextState: SearchState = {
+          hash: edge.nextHash,
+          lastEdgeWasGap: edgeIsGap,
+        }
+        const nextStateKey = getStateKey(nextState)
+        if (visitedStateKeys.has(nextStateKey)) continue
+        visitedStateKeys.add(nextStateKey)
+        prevByStateKey.set(nextStateKey, {
+          prevStateKey: currentStateKey,
+          fromHash: currentState.hash,
+          toHash: edge.nextHash,
+          routeIndex: edge.routeIndex,
+        })
+        queue.push(nextState)
+      }
     }
+
+    if (!endStateKey) return null
+
+    const transitionsInReverse: PathTransition[] = []
+    for (
+      let cursorStateKey = endStateKey;
+      cursorStateKey !== startStateKey;
+    ) {
+      const transition = prevByStateKey.get(cursorStateKey)
+      if (!transition) return null
+      transitionsInReverse.push(transition)
+      cursorStateKey = transition.prevStateKey
+    }
+    return transitionsInReverse.reverse()
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
+  const endpointByHash = new Map(
+    sortedEndpointClusters.map((cluster) => [cluster.key, cluster.point]),
+  )
+  let selectedRouteIndexesInReverse: number[] = []
+  while (true) {
+    const transitions = findCandidatePath()
+    if (!transitions) return canonicalHdRoutes
 
-  const selectedRouteIndexesInReverse: number[] = []
-  let cursorHash = endHash
-  while (cursorHash !== startHash) {
-    const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
-    if (prev.routeIndex !== null) {
-      selectedRouteIndexesInReverse.push(prev.routeIndex)
+    const invalidGap = transitions.find((transition) => {
+      if (transition.routeIndex !== null || !params.isValidStitchGap) {
+        return false
+      }
+      const start = endpointByHash.get(transition.fromHash)
+      const end = endpointByHash.get(transition.toHash)
+      if (!start || !end) return true
+      return !params.isValidStitchGap!({
+        connectionName: params.connectionName,
+        start,
+        end,
+      })
+    })
+
+    if (invalidGap) {
+      adjacency.set(
+        invalidGap.fromHash,
+        (adjacency.get(invalidGap.fromHash) ?? []).filter(
+          (edge) =>
+            edge.routeIndex !== null || edge.nextHash !== invalidGap.toHash,
+        ),
+      )
+      adjacency.set(
+        invalidGap.toHash,
+        (adjacency.get(invalidGap.toHash) ?? []).filter(
+          (edge) =>
+            edge.routeIndex !== null || edge.nextHash !== invalidGap.fromHash,
+        ),
+      )
+      continue
     }
-    cursorHash = prev.prevHash
+
+    selectedRouteIndexesInReverse = transitions
+      .filter(
+        (transition): transition is PathTransition & { routeIndex: number } =>
+          transition.routeIndex !== null,
+      )
+      .map((transition) => transition.routeIndex)
+      .reverse()
+    break
   }
 
   if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
@@ -342,6 +467,7 @@ export const selectRoutesAlongEndpointPath = (params: {
       end: params.end,
     })
   ) {
+    if (params.isValidStitchGap) return selectedHdRoutes
     return canonicalHdRoutes
   }
 
