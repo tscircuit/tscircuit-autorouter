@@ -990,12 +990,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-    const postDrcUselessViaRemovalViz =
-      this.postDrcUselessViaRemovalSolver?.visualize()
-    const postDrcSameNetViaMergerViz =
-      this.postDrcSameNetViaMergerSolver?.visualize()
-    const postDrcViaOptimizationCheckpointViz =
-      this.postDrcViaOptimizationCheckpointSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1027,9 +1021,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      postDrcUselessViaRemovalViz,
-      postDrcSameNetViaMergerViz,
-      postDrcViaOptimizationCheckpointViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },

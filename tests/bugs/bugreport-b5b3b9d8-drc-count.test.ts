@@ -46,9 +46,8 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     return acc
   }, {})
 
-  expect(errors).toHaveLength(2)
+  expect(errors).toHaveLength(1)
   expect(errorCountByType).toEqual({
-    pcb_pad_trace_clearance_error: 1,
     pcb_trace_error: 1,
   })
 })
