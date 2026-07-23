@@ -47,7 +47,10 @@ test("bugreport58 stitch keeps source_net_2_mst21 connected", () => {
 test("bugreport58-b69d72.json", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 }, 120_000)
