@@ -27,7 +27,7 @@ jobs:
         github.event.comment.author_association == 'MEMBER' ||
         github.event.comment.author_association == 'COLLABORATOR'
       )
-    runs-on: ubuntu-latest
+    runs-on: ${{ contains(github.event.comment.body, '--ubuntu-latest') && 'ubuntu-latest' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
     timeout-minutes: 60
 
     steps:
@@ -43,13 +43,17 @@ jobs:
               pull_number: context.issue.number,
             })
 
-            const command = (context.payload.comment.body || '').trim().split(/\s+/)[0] || ''
+            const commandParts = (context.payload.comment.body || '').trim().split(/\s+/)
+            const command = commandParts[0] || ''
             const focused = command === '/usf'
+            const runnerMode = commandParts.includes('--ubuntu-latest')
+              ? 'ubuntu-latest'
+              : 'benchmark runner'
             const isSameRepo = pr.data.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`
             const title = focused ? '## 📸 Update Snapshots (focused)' : '## 📸 Update Snapshots'
             const statusLine = focused
-              ? `⏳ Finding recent failed test files and updating relevant snapshots on \`${pr.data.head.sha.slice(0, 7)}\`...`
-              : `⏳ Running snapshot update on \`${pr.data.head.sha.slice(0, 7)}\`...`
+              ? `⏳ Finding recent failed test files and updating relevant snapshots on \`${pr.data.head.sha.slice(0, 7)}\` using ${runnerMode}...`
+              : `⏳ Running snapshot update on \`${pr.data.head.sha.slice(0, 7)}\` using ${runnerMode}...`
 
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -68,6 +72,7 @@ jobs:
             core.setOutput('head_ref', pr.data.head.ref)
             core.setOutput('can_push', isSameRepo ? 'true' : 'false')
             core.setOutput('focused', focused ? 'true' : 'false')
+            core.setOutput('runner_mode', runnerMode)
             core.setOutput('status_comment_id', String(statusComment.data.id))
 
       - name: Checkout PR branch
@@ -412,6 +417,7 @@ jobs:
           SOURCE_RUN_URL: ${{ steps.failed_tests.outputs.source_run_url }}
           TEST_PLAN_NODES: ${{ steps.failed_tests.outputs.test_plan_nodes }}
           CHANGED_FILES: ${{ steps.commit.outputs.changed_files }}
+          RUNNER_MODE: ${{ steps.parse.outputs.runner_mode }}
           RUNNER_ARCH: ${{ runner.arch }}
           BUN_VERSION: "1.3.8"
           TEST_EXIT_CODE: ${{ steps.update_snapshots.outputs.exit_code }}
@@ -438,8 +444,6 @@ jobs:
                 'Focused test files:',
                 ...shownFiles,
                 ...(hiddenCount > 0 ? [`- ...and ${hiddenCount} more`] : []),
-                '',
-                `Environment: \`${process.env.RUNNER_ARCH}\`, Bun \`${process.env.BUN_VERSION}\``,
                 ...(testPlanNodes.length > 0
                   ? [`CI test shard${testPlanNodes.length === 1 ? '' : 's'}: ${testPlanNodes.map((node) => `\`${node}\``).join(', ')}`]
                   : []),
@@ -454,6 +458,8 @@ jobs:
               '',
               ...messageLines,
               ...focusedDetails(),
+              '',
+              `Environment: ${process.env.RUNNER_MODE} (\`${process.env.RUNNER_ARCH}\`), Bun \`${process.env.BUN_VERSION}\``,
               '',
               `🔗 Workflow: [View run](${runUrl})`,
             ].join('\n')
