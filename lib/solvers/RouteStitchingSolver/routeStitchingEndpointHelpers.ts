@@ -215,8 +215,20 @@ export const selectRoutesAlongEndpointPath = (params: {
   canStitchBetweenTerminals: CanStitchBetweenTerminals
   isValidStitchGap?: IsValidStitchGap
   allowProvisionalStitchSegmentsForDrcRepair?: boolean
+  onProvisionalPathSelected?: () => void
 }) => {
-  if (params.hdRoutes.length <= 2) return params.hdRoutes
+  const returnUnvalidatedRoutes = (
+    hdRoutes: HighDensityIntraNodeRoute[],
+  ) => {
+    if (params.allowProvisionalStitchSegmentsForDrcRepair) {
+      params.onProvisionalPathSelected?.()
+    }
+    return hdRoutes
+  }
+
+  if (params.hdRoutes.length <= 2) {
+    return returnUnvalidatedRoutes(params.hdRoutes)
+  }
 
   const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
@@ -232,7 +244,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   )
 
   if (!startHash || !endHash || startHash === endHash) {
-    return canonicalHdRoutes
+    return returnUnvalidatedRoutes(canonicalHdRoutes)
   }
 
   const endpointClusters = params.endpointIndex.getClusters(
@@ -244,7 +256,9 @@ export const selectRoutesAlongEndpointPath = (params: {
   const endEndpoint = endpointClusters.find(
     (cluster) => cluster.key === endHash,
   )?.point
-  if (!startEndpoint || !endEndpoint) return canonicalHdRoutes
+  if (!startEndpoint || !endEndpoint) {
+    return returnUnvalidatedRoutes(canonicalHdRoutes)
+  }
 
   const isValidTerminalGap = (terminal: Point3, endpoint: Point3) => {
     const terminalDistance = distance(terminal, endpoint)
@@ -265,7 +279,7 @@ export const selectRoutesAlongEndpointPath = (params: {
     !isValidTerminalGap(params.start, startEndpoint) ||
     !isValidTerminalGap(params.end, endEndpoint)
   ) {
-    return canonicalHdRoutes
+    return returnUnvalidatedRoutes(canonicalHdRoutes)
   }
 
   const startRequiresGap =
@@ -416,6 +430,9 @@ export const selectRoutesAlongEndpointPath = (params: {
   while (true) {
     const transitions = findCandidatePath()
     if (!transitions) {
+      if (params.allowProvisionalStitchSegmentsForDrcRepair) {
+        params.onProvisionalPathSelected?.()
+      }
       return params.allowProvisionalStitchSegmentsForDrcRepair
         ? (provisionalHdRoutes ?? canonicalHdRoutes)
         : canonicalHdRoutes
@@ -463,7 +480,9 @@ export const selectRoutesAlongEndpointPath = (params: {
     break
   }
 
-  if (selectedHdRoutes.length === 0) return params.hdRoutes
+  if (selectedHdRoutes.length === 0) {
+    return returnUnvalidatedRoutes(params.hdRoutes)
+  }
 
   if (
     selectedHdRoutes.length > 0 &&
@@ -474,7 +493,12 @@ export const selectRoutesAlongEndpointPath = (params: {
       end: params.end,
     })
   ) {
-    if (params.isValidStitchGap) return selectedHdRoutes
+    if (params.allowProvisionalStitchSegmentsForDrcRepair) {
+      params.onProvisionalPathSelected?.()
+    }
+    if (params.isValidStitchGap) {
+      return selectedHdRoutes
+    }
     return canonicalHdRoutes
   }
 

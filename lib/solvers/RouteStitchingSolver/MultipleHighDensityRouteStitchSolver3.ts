@@ -32,6 +32,7 @@ export type UnsolvedRoute3 = {
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
+  allowProvisionalStitchSegmentsForDrcRepair: boolean
 }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -110,8 +111,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isValidStitchSegment: this.isValidStitchSegment,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
-      allowProvisionalStitchSegmentsForDrcRepair:
-        this.allowProvisionalStitchSegmentsForDrcRepair,
+      allowProvisionalStitchSegmentsForDrcRepair: false,
     })
 
     while (
@@ -172,8 +172,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
       isValidStitchGap: (gap) => this.isValidStitchGap(gap),
-      allowProvisionalStitchSegmentsForDrcRepair:
-        this.allowProvisionalStitchSegmentsForDrcRepair,
+      allowProvisionalStitchSegmentsForDrcRepair: false,
     })
 
     const includesSharedRootBridge = pathRoutes.some(
@@ -360,6 +359,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
       }
 
+      let selectedProvisionalPath = false
       const selectedHdRoutes = selectRoutesAlongEndpointPath({
         connectionName: hdRoutes[0].connectionName,
         hdRoutes,
@@ -371,6 +371,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         isValidStitchGap: (gap) => this.isValidStitchGap(gap),
         allowProvisionalStitchSegmentsForDrcRepair:
           this.allowProvisionalStitchSegmentsForDrcRepair,
+        onProvisionalPathSelected: () => {
+          selectedProvisionalPath = true
+        },
       })
 
       this.unsolvedRoutes.push({
@@ -378,6 +381,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         hdRoutes: selectedHdRoutes,
         start,
         end,
+        allowProvisionalStitchSegmentsForDrcRepair: selectedProvisionalPath,
       })
     }
 
@@ -446,25 +450,32 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         return unsolvedRoutes
       }
 
+      let selectedProvisionalPath = false
+      const selectedHdRoutes =
+        sharedRootPathRoutes ??
+        selectRoutesAlongEndpointPath({
+          connectionName,
+          hdRoutes,
+          start,
+          end,
+          endpointIndex: this.endpointIndex,
+          canStitchBetweenTerminals: (selection) =>
+            this.canStitchBetweenTerminals(selection),
+          isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+          allowProvisionalStitchSegmentsForDrcRepair:
+            this.allowProvisionalStitchSegmentsForDrcRepair,
+          onProvisionalPathSelected: () => {
+            selectedProvisionalPath = true
+          },
+        })
+
       return [
         {
           connectionName,
-          hdRoutes:
-            sharedRootPathRoutes ??
-            selectRoutesAlongEndpointPath({
-              connectionName,
-              hdRoutes,
-              start,
-              end,
-              endpointIndex: this.endpointIndex,
-              canStitchBetweenTerminals: (selection) =>
-                this.canStitchBetweenTerminals(selection),
-              isValidStitchGap: (gap) => this.isValidStitchGap(gap),
-              allowProvisionalStitchSegmentsForDrcRepair:
-                this.allowProvisionalStitchSegmentsForDrcRepair,
-            }),
+          hdRoutes: selectedHdRoutes,
           start,
           end,
+          allowProvisionalStitchSegmentsForDrcRepair: selectedProvisionalPath,
         },
       ]
     })
@@ -508,7 +519,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       findValidStitchPath: this.findValidStitchPath,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
       allowProvisionalStitchSegmentsForDrcRepair:
-        this.allowProvisionalStitchSegmentsForDrcRepair,
+        unsolvedRoute.allowProvisionalStitchSegmentsForDrcRepair,
     })
   }
 

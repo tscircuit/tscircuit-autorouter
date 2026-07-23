@@ -106,7 +106,7 @@ export const getDrcErrors = (
     }),
   ]
 
-  const errors: DrcError[] = [
+  const reportedErrors: DrcError[] = [
     ...traceErrors,
     ...(options.includeTraceContinuity === false
       ? []
@@ -128,6 +128,17 @@ export const getDrcErrors = (
   )
 
   const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
+
+  const errors = reportedErrors.map((error): DrcError => {
+    if (error.type !== "pcb_via_trace_clearance_error") return error
+    const via = viasById.get(error.pcb_via_id)
+    if (!via) return error
+
+    return {
+      ...error,
+      center: { x: via.x, y: via.y },
+    }
+  })
 
   const errorsWithCenters = errors.map((error) => {
     if ("center" in error && error.center) {
