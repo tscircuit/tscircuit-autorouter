@@ -603,6 +603,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           minTraceToPadEdgeClearance:
             cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          // Stitching still prefers validated copper. If the topology itself
+          // has no collision-free stitch, preserve its terminal-to-terminal
+          // path so the downstream global DRC stages can rip up and repair
+          // that provisional segment instead of terminating the pipeline
+          // before those solvers run.
+          allowProvisionalStitchSegmentsForDrcRepair: true,
         },
       ],
     ),

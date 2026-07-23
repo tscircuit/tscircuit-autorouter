@@ -47,25 +47,49 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  allowProvisionalStitchSegmentsForDrcRepair: boolean
   private isValidStitchSegment?: IsValidStitchSegment
   private findValidStitchPath?: FindValidStitchPath
   private isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
   private endpointIndex = new EndpointClusterIndex()
+  private stitchGapValidityCache = new Map<string, boolean>()
+
+  private getStitchGapValidityCacheKey(params: {
+    connectionName: string
+    start: Point3
+    end: Point3
+  }) {
+    const startKey = `${params.start.x},${params.start.y},${params.start.z}`
+    const endKey = `${params.end.x},${params.end.y},${params.end.z}`
+    const [firstPointKey, secondPointKey] =
+      startKey.localeCompare(endKey) <= 0
+        ? [startKey, endKey]
+        : [endKey, startKey]
+    return `${params.connectionName}:${firstPointKey}:${secondPointKey}`
+  }
 
   private isValidStitchGap(params: {
     connectionName: string
     start: Point3
     end: Point3
   }) {
+    const cacheKey = this.getStitchGapValidityCacheKey(params)
+    const cachedValidity = this.stitchGapValidityCache.get(cacheKey)
+    if (cachedValidity !== undefined) return cachedValidity
+
     if (!this.isValidStitchSegment) return true
     const request = {
       ...params,
       traceThickness: this.defaultTraceThickness,
     }
-    return (
+    const isValid =
       this.isValidStitchSegment(request) ||
       Boolean(this.findValidStitchPath?.(request))
-    )
+    // Endpoint-path search can revisit a rejected gap while it removes graph
+    // alternatives. Validation is pure for a stitch input, so memoization
+    // preserves the exact path decision without repeating visibility routing.
+    this.stitchGapValidityCache.set(cacheKey, isValid)
+    return isValid
   }
 
   private canStitchBetweenTerminals(params: {
@@ -86,6 +110,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isValidStitchSegment: this.isValidStitchSegment,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
+      allowProvisionalStitchSegmentsForDrcRepair:
+        this.allowProvisionalStitchSegmentsForDrcRepair,
     })
 
     while (
@@ -146,6 +172,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
       isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+      allowProvisionalStitchSegmentsForDrcRepair:
+        this.allowProvisionalStitchSegmentsForDrcRepair,
     })
 
     const includesSharedRootBridge = pathRoutes.some(
@@ -170,12 +198,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     obstacles?: Obstacle[]
     connMap?: { areIdsConnected: (a: string, b: string) => boolean }
     minTraceToPadEdgeClearance?: number
+    allowProvisionalStitchSegmentsForDrcRepair?: boolean
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.allowProvisionalStitchSegmentsForDrcRepair =
+      params.allowProvisionalStitchSegmentsForDrcRepair ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
@@ -338,6 +369,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         canStitchBetweenTerminals: (selection) =>
           this.canStitchBetweenTerminals(selection),
         isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+        allowProvisionalStitchSegmentsForDrcRepair:
+          this.allowProvisionalStitchSegmentsForDrcRepair,
       })
 
       this.unsolvedRoutes.push({
@@ -427,6 +460,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
               isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+              allowProvisionalStitchSegmentsForDrcRepair:
+                this.allowProvisionalStitchSegmentsForDrcRepair,
             }),
           start,
           end,
@@ -472,6 +507,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       isValidStitchSegment: this.isValidStitchSegment,
       findValidStitchPath: this.findValidStitchPath,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
+      allowProvisionalStitchSegmentsForDrcRepair:
+        this.allowProvisionalStitchSegmentsForDrcRepair,
     })
   }
 

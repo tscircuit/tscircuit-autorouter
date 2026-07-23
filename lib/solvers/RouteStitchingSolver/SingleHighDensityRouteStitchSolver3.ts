@@ -83,6 +83,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   isValidStitchSegment?: IsValidStitchSegment
   findValidStitchPath?: FindValidStitchPath
   isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
+  allowProvisionalStitchSegmentsForDrcRepair: boolean
   private terminalAnchorPointKeys = new Set<string>()
 
   private getPointKey(point: Point3): string {
@@ -113,6 +114,32 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       throw new Error("Stitch pathfinder returned a path with wrong endpoints")
     }
     return path
+  }
+
+  /**
+   * A validated straight bridge may span any distance, but obstacle detours are
+   * local stitch repair. Keeping the visibility search local prevents a
+   * blocked fragment from turning stitching into a board-wide rerouter.
+   */
+  private getLocalPlanarStitchPath(
+    params: StitchSegmentRequest,
+    maxDetourDistance: number,
+  ): Point3[] | undefined {
+    if (params.start.z !== params.end.z) return undefined
+    if (distance(params.start, params.end) < GEOMETRIC_TOLERANCE) {
+      return [params.start]
+    }
+    if (!this.isValidStitchSegment || this.isValidStitchSegment(params)) {
+      return [params.start, params.end]
+    }
+    if (distance(params.start, params.end) > maxDetourDistance) {
+      return undefined
+    }
+    const path = this.getPlanarStitchPath(params)
+    if (path) return path
+    return this.allowProvisionalStitchSegmentsForDrcRepair
+      ? [params.start, params.end]
+      : undefined
   }
 
   private getPathLength(path: Point3[]): number {
@@ -289,12 +316,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         const retreatDistance =
           mergedAnchor.retreatDistance + candidateAnchor.retreatDistance
         if (retreatDistance >= bestCost) continue
-        const path = this.getPlanarStitchPath({
-          connectionName: this.mergedHdRoute.connectionName,
-          start: mergedAnchor.point,
-          end: candidateAnchor.point,
-          traceThickness: this.mergedHdRoute.traceThickness,
-        })
+        const path = this.getLocalPlanarStitchPath(
+          {
+            connectionName: this.mergedHdRoute.connectionName,
+            start: mergedAnchor.point,
+            end: candidateAnchor.point,
+            traceThickness: this.mergedHdRoute.traceThickness,
+          },
+          MAX_STITCH_GAP_DISTANCE_3,
+        )
         if (!path) continue
 
         const cost = retreatDistance + this.getPathLength(path)
@@ -323,12 +353,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestCost = Infinity
 
     for (const mergedAnchor of mergedAnchors.slice(1)) {
-      const path = this.getPlanarStitchPath({
-        connectionName: this.mergedHdRoute.connectionName,
-        start: mergedAnchor.point,
-        end: terminalOnMergedLayer,
-        traceThickness: this.mergedHdRoute.traceThickness,
-      })
+      const path = this.getLocalPlanarStitchPath(
+        {
+          connectionName: this.mergedHdRoute.connectionName,
+          start: mergedAnchor.point,
+          end: terminalOnMergedLayer,
+          traceThickness: this.mergedHdRoute.traceThickness,
+        },
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+      )
       if (!path) continue
 
       const cost = mergedAnchor.retreatDistance + this.getPathLength(path)
@@ -364,12 +397,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       return false
     }
 
-    const directTerminalPath = this.getPlanarStitchPath({
-      connectionName: this.mergedHdRoute.connectionName,
-      start: lastMergedPoint,
-      end: endOnMergedLayer,
-      traceThickness: this.mergedHdRoute.traceThickness,
-    })
+    const directTerminalPath = this.getLocalPlanarStitchPath(
+      {
+        connectionName: this.mergedHdRoute.connectionName,
+        start: lastMergedPoint,
+        end: endOnMergedLayer,
+        traceThickness: this.mergedHdRoute.traceThickness,
+      },
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+    )
     const terminalPlan = directTerminalPath
       ? {
           path: directTerminalPath,
@@ -381,7 +417,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           },
           retreatDistance: 0,
         }
-      : this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
+      : planarTerminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        ? this.getRetreatedTerminalStitchPlan(endOnMergedLayer)
+        : undefined
 
     if (!terminalPlan) return false
     this.applyMergedRetreat(terminalPlan.mergedAnchor)
@@ -454,12 +492,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           }
           if (distance(anchor, endpoint) > MAX_STITCH_GAP_DISTANCE_3) continue
           if (
-            this.getPlanarStitchPath({
-              connectionName: this.mergedHdRoute.connectionName,
-              start: anchor,
-              end: endpoint,
-              traceThickness: this.mergedHdRoute.traceThickness,
-            })
+            this.getLocalPlanarStitchPath(
+              {
+                connectionName: this.mergedHdRoute.connectionName,
+                start: anchor,
+                end: endpoint,
+                traceThickness: this.mergedHdRoute.traceThickness,
+              },
+              MAX_STITCH_GAP_DISTANCE_3,
+            )
           ) {
             return true
           }
@@ -501,12 +542,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         continue
       }
       if (
-        !this.getPlanarStitchPath({
-          connectionName: this.mergedHdRoute.connectionName,
-          start: anchor,
-          end: terminalOnAnchorLayer,
-          traceThickness: this.mergedHdRoute.traceThickness,
-        })
+        !this.getLocalPlanarStitchPath(
+          {
+            connectionName: this.mergedHdRoute.connectionName,
+            start: anchor,
+            end: terminalOnAnchorLayer,
+            traceThickness: this.mergedHdRoute.traceThickness,
+          },
+          MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+        )
       ) {
         continue
       }
@@ -532,6 +576,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     isValidStitchSegment?: IsValidStitchSegment
     findValidStitchPath?: FindValidStitchPath
     isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
+    allowProvisionalStitchSegmentsForDrcRepair?: boolean
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
@@ -541,6 +586,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.isValidStitchSegment = opts.isValidStitchSegment
     this.findValidStitchPath = opts.findValidStitchPath
     this.isTerminalCoveredByTrace = opts.isTerminalCoveredByTrace
+    this.allowProvisionalStitchSegmentsForDrcRepair =
+      opts.allowProvisionalStitchSegmentsForDrcRepair ?? false
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -646,12 +693,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       ) {
         return Infinity
       }
-      const path = this.getPlanarStitchPath({
-        connectionName: opts.connectionName,
-        start: terminalOnEndpointLayer,
-        end: endpoint,
-        traceThickness,
-      })
+      const path = this.getLocalPlanarStitchPath(
+        {
+          connectionName: opts.connectionName,
+          start: terminalOnEndpointLayer,
+          end: endpoint,
+          traceThickness,
+        },
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+      )
       if (!path) return Infinity
       return Math.abs(terminal.z - endpoint.z) + this.getPathLength(path)
     }
@@ -927,9 +977,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       overlapJoinPoint?: Point3
     }
     const candidates: StitchCandidate[] = []
-    const canConsiderPlanarGap = (gapDistance: number) =>
-      Boolean(this.isValidStitchSegment) ||
-      gapDistance <= MAX_STITCH_GAP_DISTANCE_3
+    const canConsiderPlanarGap = (endpoint: RoutePoint, gapDistance: number) =>
+      gapDistance <= MAX_STITCH_GAP_DISTANCE_3 ||
+      Boolean(
+        this.isValidStitchSegment?.({
+          connectionName: this.mergedHdRoute.connectionName,
+          start: lastMergedPoint,
+          end: endpoint,
+          traceThickness: this.mergedHdRoute.traceThickness,
+        }),
+      )
     const mergedPreviousPoint =
       this.mergedHdRoute.route[this.mergedHdRoute.route.length - 2]
     const mergedEndpointIsMovable = Boolean(
@@ -1028,7 +1085,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             needsPlanarPath: false,
             overlapJoinPoint: firstOverlapJoinPoint,
           })
-        } else if (canConsiderPlanarGap(distToFirst)) {
+        } else if (canConsiderPlanarGap(firstPointInCandidate, distToFirst)) {
           candidates.push({
             routeIndex: i,
             matchedOn: "first",
@@ -1071,7 +1128,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             needsPlanarPath: false,
             overlapJoinPoint: lastOverlapJoinPoint,
           })
-        } else if (canConsiderPlanarGap(distToLast)) {
+        } else if (canConsiderPlanarGap(lastPointInCandidate, distToLast)) {
           candidates.push({
             routeIndex: i,
             matchedOn: "last",
@@ -1111,12 +1168,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       let mergedRetreatAnchor: RetreatAnchor | undefined
       let candidateRetreatAnchor: RetreatAnchor | undefined
       if (candidate.needsPlanarPath) {
-        stitchPath = this.getPlanarStitchPath({
-          connectionName: this.mergedHdRoute.connectionName,
-          start: lastMergedPoint,
-          end: candidate.endpoint,
-          traceThickness: this.mergedHdRoute.traceThickness,
-        })
+        stitchPath = this.getLocalPlanarStitchPath(
+          {
+            connectionName: this.mergedHdRoute.connectionName,
+            start: lastMergedPoint,
+            end: candidate.endpoint,
+            traceThickness: this.mergedHdRoute.traceThickness,
+          },
+          MAX_STITCH_GAP_DISTANCE_3,
+        )
         let retreatDistance = 0
         if (!stitchPath) {
           const hdRoute = this.remainingHdRoutes[candidate.routeIndex]!

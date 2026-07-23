@@ -214,6 +214,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
   isValidStitchGap?: IsValidStitchGap
+  allowProvisionalStitchSegmentsForDrcRepair?: boolean
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -402,10 +403,29 @@ export const selectRoutesAlongEndpointPath = (params: {
   const endpointByHash = new Map(
     sortedEndpointClusters.map((cluster) => [cluster.key, cluster.point]),
   )
-  let selectedRouteIndexesInReverse: number[] = []
+  const getRoutesFromTransitions = (transitions: PathTransition[]) =>
+    transitions
+      .filter(
+        (transition): transition is PathTransition & { routeIndex: number } =>
+          transition.routeIndex !== null,
+      )
+      .map((transition) => canonicalHdRoutes[transition.routeIndex]!)
+
+  let selectedHdRoutes: HighDensityIntraNodeRoute[] = []
+  let provisionalHdRoutes: HighDensityIntraNodeRoute[] | undefined
   while (true) {
     const transitions = findCandidatePath()
-    if (!transitions) return canonicalHdRoutes
+    if (!transitions) {
+      return params.allowProvisionalStitchSegmentsForDrcRepair
+        ? provisionalHdRoutes ?? canonicalHdRoutes
+        : canonicalHdRoutes
+    }
+    if (
+      params.allowProvisionalStitchSegmentsForDrcRepair &&
+      !provisionalHdRoutes
+    ) {
+      provisionalHdRoutes = getRoutesFromTransitions(transitions)
+    }
 
     const invalidGap = transitions.find((transition) => {
       if (transition.routeIndex !== null || !params.isValidStitchGap) {
@@ -439,21 +459,11 @@ export const selectRoutesAlongEndpointPath = (params: {
       continue
     }
 
-    selectedRouteIndexesInReverse = transitions
-      .filter(
-        (transition): transition is PathTransition & { routeIndex: number } =>
-          transition.routeIndex !== null,
-      )
-      .map((transition) => transition.routeIndex)
-      .reverse()
+    selectedHdRoutes = getRoutesFromTransitions(transitions)
     break
   }
 
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
-
-  const selectedHdRoutes = selectedRouteIndexesInReverse
-    .reverse()
-    .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+  if (selectedHdRoutes.length === 0) return params.hdRoutes
 
   if (
     selectedHdRoutes.length > 0 &&
