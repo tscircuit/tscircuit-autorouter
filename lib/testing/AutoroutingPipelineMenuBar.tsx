@@ -62,6 +62,10 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline8 Preplaced Vias (Fab)",
   },
   {
+    id: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    label: "Pipeline9 Preloaded Trace Graph",
+  },
+  {
     id: "AssignableAutoroutingPipeline1Solver",
     label: "Assignable Pipeline 1",
   },
