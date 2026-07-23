@@ -27,7 +27,7 @@ jobs:
         github.event.comment.author_association == 'MEMBER' ||
         github.event.comment.author_association == 'COLLABORATOR'
       )
-    runs-on: ${{ vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
+    runs-on: ${{ contains(github.event.comment.body, '--ubuntu-latest') && 'ubuntu-latest' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
     timeout-minutes: 60
 
     steps:
@@ -43,13 +43,17 @@ jobs:
               pull_number: context.issue.number,
             })
 
-            const command = (context.payload.comment.body || '').trim().split(/\s+/)[0] || ''
+            const commandParts = (context.payload.comment.body || '').trim().split(/\s+/)
+            const command = commandParts[0] || ''
             const focused = command === '/usf'
+            const runnerMode = commandParts.includes('--ubuntu-latest')
+              ? 'ubuntu-latest'
+              : 'benchmark runner'
             const isSameRepo = pr.data.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`
             const title = focused ? '## 📸 Update Snapshots (focused)' : '## 📸 Update Snapshots'
             const statusLine = focused
-              ? `⏳ Finding recent failed test files and updating relevant snapshots on \`${pr.data.head.sha.slice(0, 7)}\`...`
-              : `⏳ Running snapshot update on \`${pr.data.head.sha.slice(0, 7)}\`...`
+              ? `⏳ Finding recent failed test files and updating relevant snapshots on \`${pr.data.head.sha.slice(0, 7)}\` using ${runnerMode}...`
+              : `⏳ Running snapshot update on \`${pr.data.head.sha.slice(0, 7)}\` using ${runnerMode}...`
 
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -68,6 +72,7 @@ jobs:
             core.setOutput('head_ref', pr.data.head.ref)
             core.setOutput('can_push', isSameRepo ? 'true' : 'false')
             core.setOutput('focused', focused ? 'true' : 'false')
+            core.setOutput('runner_mode', runnerMode)
             core.setOutput('status_comment_id', String(statusComment.data.id))
 
       - name: Checkout PR branch
@@ -75,13 +80,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-          ref: ${{ steps.parse.outputs.head_ref }}
+          ref: ${{ steps.parse.outputs.head_sha }}
+          fetch-depth: 0
 
       - name: Setup bun
         if: steps.parse.outputs.can_push == 'true'
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.8
 
       - name: Install dependencies
         if: steps.parse.outputs.can_push == 'true'
@@ -203,12 +209,18 @@ jobs:
                 .filter((job) => failedConclusions.has(job.conclusion))
                 .sort(byDateDesc)
               const files = new Set()
+              const testPlanNodes = new Set()
 
               for (const job of failedJobs) {
                 try {
                   const logs = await downloadJobLogs(job)
-                  for (const file of extractFailedTestFiles(logs)) {
+                  const jobFiles = extractFailedTestFiles(logs)
+                  for (const file of jobFiles) {
                     files.add(file)
+                  }
+                  const nodeMatch = job.name.match(/^test \((\d+)\)$/)
+                  if (jobFiles.size > 0 && nodeMatch) {
+                    testPlanNodes.add(Number(nodeMatch[1]))
                   }
                 } catch (error) {
                   core.warning(`Unable to read logs for job ${job.id}: ${error.message}`)
@@ -220,7 +232,12 @@ jobs:
                 if (relevantFiles.length === 0) continue
                 core.setOutput('relevant_files', relevantFiles.join(' '))
                 core.setOutput('source_run_url', run.html_url)
+                core.setOutput(
+                  'test_plan_nodes',
+                  Array.from(testPlanNodes).sort((a, b) => a - b).join(' '),
+                )
                 core.info(`Focused snapshot update will run: ${relevantFiles.join(' ')}`)
+                core.info(`Failed test plan nodes: ${Array.from(testPlanNodes).join(', ') || 'unknown'}`)
                 return
               }
             }
@@ -228,6 +245,15 @@ jobs:
             core.warning('No failed test files were found in recent failed workflow logs; falling back to the full snapshot update.')
             core.setOutput('relevant_files', '')
             core.setOutput('source_run_url', '')
+            core.setOutput('test_plan_nodes', '')
+
+      - name: Install bun-test-plan
+        if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
+        run: npm install -g @tscircuit/bun-test-plan
+
+      - name: Generate test plans
+        if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
+        run: bun-test-plan
 
       - name: Update snapshots
         if: steps.parse.outputs.can_push == 'true'
@@ -236,19 +262,39 @@ jobs:
           BUN_UPDATE_SNAPSHOTS: "1"
           FOCUSED: ${{ steps.parse.outputs.focused }}
           RELEVANT_FILES: ${{ steps.failed_tests.outputs.relevant_files }}
+          TEST_PLAN_NODES: ${{ steps.failed_tests.outputs.test_plan_nodes }}
         run: |
           set +e
           relevant_files="${RELEVANT_FILES}"
-          if [ "$FOCUSED" = "true" ] && [ -n "$relevant_files" ]; then
+          exit_code=0
+          if [ "$FOCUSED" = "true" ] && [ -n "$TEST_PLAN_NODES" ]; then
+            for node in $TEST_PLAN_NODES; do
+              test_plan=".bun-test-plan/testplans/testplan${node}.txt"
+              if [ ! -f "$test_plan" ]; then
+                echo "Test plan not found: $test_plan"
+                exit_code=1
+                continue
+              fi
+
+              mapfile -t test_files < "$test_plan"
+              if [ "${#test_files[@]}" -eq 0 ]; then
+                echo "No test files found in: $test_plan"
+                exit_code=1
+                continue
+              fi
+
+              echo "Updating snapshots in CI shard $node (${#test_files[@]} test files)"
+              bun test "${test_files[@]}" --timeout 300000 || exit_code=$?
+            done
+          elif [ "$FOCUSED" = "true" ] && [ -n "$relevant_files" ]; then
             echo "Running focused snapshot update: bun test --timeout 120_000 $relevant_files"
-            bun test --timeout 120_000 $relevant_files
+            bun test --timeout 120_000 $relevant_files || exit_code=$?
           else
             if [ "$FOCUSED" = "true" ]; then
               echo "No relevant failed test files found; falling back to the full snapshot update."
             fi
-            bun test --timeout 120_000
+            bun test --timeout 120_000 || exit_code=$?
           fi
-          exit_code=$?
           echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
           {
             echo "relevant_files<<EOF"
@@ -265,10 +311,26 @@ jobs:
         id: verify_focused
         env:
           RELEVANT_FILES: ${{ steps.failed_tests.outputs.relevant_files }}
+          TEST_PLAN_NODES: ${{ steps.failed_tests.outputs.test_plan_nodes }}
         run: |
           set +e
-          bun test $RELEVANT_FILES
-          exit_code=$?
+          exit_code=0
+          if [ -n "$TEST_PLAN_NODES" ]; then
+            for node in $TEST_PLAN_NODES; do
+              test_plan=".bun-test-plan/testplans/testplan${node}.txt"
+              if [ ! -f "$test_plan" ]; then
+                echo "Test plan not found: $test_plan"
+                exit_code=1
+                continue
+              fi
+
+              mapfile -t test_files < "$test_plan"
+              echo "Verifying CI shard $node (${#test_files[@]} test files)"
+              bun test "${test_files[@]}" --timeout 300000 || exit_code=$?
+            done
+          else
+            bun test $RELEVANT_FILES || exit_code=$?
+          fi
           echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
           if [ "$exit_code" -ne 0 ]; then
             echo "Focused verification exited with code $exit_code; continuing so snapshot updates can still be committed."
@@ -280,19 +342,51 @@ jobs:
         id: commit
         env:
           BRANCH_NAME: ${{ steps.parse.outputs.head_ref }}
+          EXPECTED_HEAD_SHA: ${{ steps.parse.outputs.head_sha }}
+          FOCUSED: ${{ steps.parse.outputs.focused }}
+          RELEVANT_FILES: ${{ steps.failed_tests.outputs.relevant_files }}
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
 
-          if [ -z "$(git status --porcelain)" ]; then
+          if [ "$FOCUSED" = "true" ] && [ -n "$RELEVANT_FILES" ]; then
+            for test_file in $RELEVANT_FILES; do
+              test_stem="${test_file%.test.ts}"
+              test_stem="${test_stem%.test.tsx}"
+              test_stem="${test_stem%.test.js}"
+              test_stem="${test_stem%.test.jsx}"
+              snapshot_dir="$(dirname "$test_stem")/__snapshots__"
+              snapshot_base="$(basename "$test_stem")"
+              if [ -d "$snapshot_dir" ]; then
+                find "$snapshot_dir" -maxdepth 1 -type f -name "${snapshot_base}*.snap.svg" -exec git add -- {} +
+              fi
+            done
+          else
+            git add -A
+          fi
+
+          if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "commit_sha=" >> "$GITHUB_OUTPUT"
+            echo "changed_files=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git add -A
+          {
+            echo "changed_files<<EOF"
+            git diff --cached --name-only
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
           git commit -m "Update test snapshots"
-          git push origin "$BRANCH_NAME"
+
+          remote_head="$(git ls-remote origin "refs/heads/$BRANCH_NAME" | cut -f1)"
+          if [ "$remote_head" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "PR branch moved from $EXPECTED_HEAD_SHA to ${remote_head:-missing}; refusing to push stale snapshots."
+            exit 1
+          fi
+
+          git push origin "HEAD:refs/heads/$BRANCH_NAME"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -321,6 +415,11 @@ jobs:
           FOCUSED: ${{ steps.parse.outputs.focused }}
           RELEVANT_FILES: ${{ steps.failed_tests.outputs.relevant_files }}
           SOURCE_RUN_URL: ${{ steps.failed_tests.outputs.source_run_url }}
+          TEST_PLAN_NODES: ${{ steps.failed_tests.outputs.test_plan_nodes }}
+          CHANGED_FILES: ${{ steps.commit.outputs.changed_files }}
+          RUNNER_MODE: ${{ steps.parse.outputs.runner_mode }}
+          RUNNER_ARCH: ${{ runner.arch }}
+          BUN_VERSION: "1.3.8"
           TEST_EXIT_CODE: ${{ steps.update_snapshots.outputs.exit_code }}
           VERIFY_EXIT_CODE: ${{ steps.verify_focused.outputs.exit_code }}
         with:
@@ -329,6 +428,8 @@ jobs:
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const focused = process.env.FOCUSED === 'true'
             const relevantFiles = (process.env.RELEVANT_FILES || '').trim().split(/\s+/).filter(Boolean)
+            const testPlanNodes = (process.env.TEST_PLAN_NODES || '').trim().split(/\s+/).filter(Boolean)
+            const changedFiles = (process.env.CHANGED_FILES || '').trim().split(/\s+/).filter(Boolean)
             const title = focused ? '## 📸 Update Snapshots (focused)' : '## 📸 Update Snapshots'
             const focusedDetails = () => {
               if (!focused) return []
@@ -343,7 +444,13 @@ jobs:
                 'Focused test files:',
                 ...shownFiles,
                 ...(hiddenCount > 0 ? [`- ...and ${hiddenCount} more`] : []),
+                ...(testPlanNodes.length > 0
+                  ? [`CI test shard${testPlanNodes.length === 1 ? '' : 's'}: ${testPlanNodes.map((node) => `\`${node}\``).join(', ')}`]
+                  : []),
                 ...(process.env.SOURCE_RUN_URL ? [``, `Source failure run: ${process.env.SOURCE_RUN_URL}`] : []),
+                ...(changedFiles.length > 0
+                  ? ['', 'Changed snapshots:', ...changedFiles.map((file) => `- \`${file}\``)]
+                  : []),
               ]
             }
             const makeBody = (messageLines) => [
@@ -351,6 +458,8 @@ jobs:
               '',
               ...messageLines,
               ...focusedDetails(),
+              '',
+              `Environment: ${process.env.RUNNER_MODE} (\`${process.env.RUNNER_ARCH}\`), Bun \`${process.env.BUN_VERSION}\``,
               '',
               `🔗 Workflow: [View run](${runUrl})`,
             ].join('\n')
