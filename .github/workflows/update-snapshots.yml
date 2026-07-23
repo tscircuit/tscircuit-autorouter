@@ -93,14 +93,6 @@ jobs:
         if: steps.parse.outputs.can_push == 'true'
         run: bun install
 
-      - name: Install bun-test-plan
-        if: steps.parse.outputs.can_push == 'true' && steps.parse.outputs.focused == 'true'
-        run: npm install -g @tscircuit/bun-test-plan
-
-      - name: Generate test plans
-        if: steps.parse.outputs.can_push == 'true' && steps.parse.outputs.focused == 'true'
-        run: bun-test-plan
-
       - name: Find failed test files
         if: steps.parse.outputs.can_push == 'true' && steps.parse.outputs.focused == 'true'
         id: failed_tests
@@ -254,6 +246,14 @@ jobs:
             core.setOutput('relevant_files', '')
             core.setOutput('source_run_url', '')
             core.setOutput('test_plan_nodes', '')
+
+      - name: Install bun-test-plan
+        if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
+        run: npm install -g @tscircuit/bun-test-plan
+
+      - name: Generate test plans
+        if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
+        run: bun-test-plan
 
       - name: Update snapshots
         if: steps.parse.outputs.can_push == 'true'
