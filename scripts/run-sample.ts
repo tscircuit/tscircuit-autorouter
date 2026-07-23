@@ -401,11 +401,7 @@ const parseArgs = (): RunSampleOptions => {
     throw new Error("--png-size must be at least 1024")
   }
 
-  if (
-    options.netColors &&
-    options.pipeline !== 7 &&
-    options.pipeline !== 9
-  ) {
+  if (options.netColors && options.pipeline !== 7 && options.pipeline !== 9) {
     throw new Error(
       "--net-colors is currently supported by pipelines 7 and 9 only",
     )

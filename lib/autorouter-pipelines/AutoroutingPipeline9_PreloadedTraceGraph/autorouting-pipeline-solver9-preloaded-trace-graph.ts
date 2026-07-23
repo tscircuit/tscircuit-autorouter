@@ -50,7 +50,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
       onSolved: (pipeline) => {
         const pipeline9 =
           pipeline as AutoroutingPipelineSolver9_PreloadedTraceGraph
-        pipeline9.capacityNodes = pipeline9.preloadedTraceGraphSolver!.getOutput()
+        pipeline9.capacityNodes =
+          pipeline9.preloadedTraceGraphSolver!.getOutput()
       },
     })
   }

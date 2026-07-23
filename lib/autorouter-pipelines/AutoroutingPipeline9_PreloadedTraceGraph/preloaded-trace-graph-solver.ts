@@ -1,10 +1,6 @@
 import { RbushIndex } from "lib/data-structures/RbushIndex"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type {
-  CapacityMeshNode,
-  Obstacle,
-  SimpleRouteJson,
-} from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 
@@ -25,9 +21,7 @@ type RotatedRectGeometry = {
 
 const GEOMETRIC_TOLERANCE = 1e-6
 
-const getRotatedRectGeometry = (
-  obstacle: Obstacle,
-): RotatedRectGeometry => {
+const getRotatedRectGeometry = (obstacle: Obstacle): RotatedRectGeometry => {
   const radians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
   const cos = Math.cos(radians)
   const sin = Math.sin(radians)
