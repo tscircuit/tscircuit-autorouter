@@ -8,7 +8,7 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const bugreport75Srj = bugReport as SimpleRouteJson
 
-test("bugreport75-d7c4d8 pipeline7 physical net canonicalization", (): void => {
+test("bugreport75-d7c4d8 pipeline7 connected-net routing", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(bugreport75Srj),
     {
@@ -18,6 +18,10 @@ test("bugreport75-d7c4d8 pipeline7 physical net canonicalization", (): void => {
 
   solver.solve()
 
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(solver.portPointPathingSolver?.failed).toBe(false)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
     { tolerance: 0.4 },

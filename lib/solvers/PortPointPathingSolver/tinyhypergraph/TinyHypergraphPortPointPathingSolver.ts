@@ -35,7 +35,7 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 
 type RouteMetadata = {
   connectionId: string
-  mutuallyConnectedNetworkId?: string
+  mutuallyConnectedNetworkId: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
 }
 
@@ -193,14 +193,8 @@ const getTinyHyperGraphPipelineMaxIterations = (
 const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
 
-const getRouteRootConnectionName = (routeMetadata: RouteMetadata) =>
-  routeMetadata.simpleRouteConnection?.__rootConnectionNames?.[0] ??
-  routeMetadata.mutuallyConnectedNetworkId
-
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
-  connection.simpleRouteConnection?.__rootConnectionNames?.[0] ??
-  connection.mutuallyConnectedNetworkId ??
-  connection.connectionId
+  connection.mutuallyConnectedNetworkId
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
@@ -290,7 +284,17 @@ const getTinyRouteConnectionsOrThrow = (
         `TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for "${connection.connectionId}"`,
       )
     }
-    return { ...connection, simpleRouteConnection }
+    const mutuallyConnectedNetworkId = connection.mutuallyConnectedNetworkId
+    if (!mutuallyConnectedNetworkId) {
+      throw new Error(
+        `TinyHypergraphPortPointPathingSolver requires a net ID for "${connection.connectionId}"`,
+      )
+    }
+    return {
+      ...connection,
+      mutuallyConnectedNetworkId,
+      simpleRouteConnection,
+    }
   })
 }
 
@@ -326,8 +330,7 @@ const buildSerializedTinyGraph = (
   const connections: SerializedTinyConnection[] = params.connections.map(
     (connection) => ({
       connectionId: connection.connectionId,
-      mutuallyConnectedNetworkId:
-        connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+      mutuallyConnectedNetworkId: connection.mutuallyConnectedNetworkId,
       startRegionId: connection.startRegion.regionId,
       endRegionId: connection.endRegion.regionId,
       simpleRouteConnection: connection.simpleRouteConnection,
@@ -338,8 +341,7 @@ const buildSerializedTinyGraph = (
   for (const connection of params.connections) {
     const routeMetadata: RouteMetadata = {
       connectionId: connection.connectionId,
-      mutuallyConnectedNetworkId:
-        connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+      mutuallyConnectedNetworkId: connection.mutuallyConnectedNetworkId,
       simpleRouteConnection: connection.simpleRouteConnection,
     }
     const routeNetIndex = getNetIndex(routeMetadata)
@@ -381,8 +383,7 @@ const buildSerializedTinyGraph = (
         availableZ: [startZ],
         _containsTarget: true,
         _tinyTerminal: true,
-        _tinyTerminalNetId:
-          connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        _tinyTerminalNetId: connection.mutuallyConnectedNetworkId,
         netId: routeNetIndex,
       },
     })
@@ -401,8 +402,7 @@ const buildSerializedTinyGraph = (
         availableZ: [endZ],
         _containsTarget: true,
         _tinyTerminal: true,
-        _tinyTerminalNetId:
-          connection.mutuallyConnectedNetworkId ?? connection.connectionId,
+        _tinyTerminalNetId: connection.mutuallyConnectedNetworkId,
         netId: routeNetIndex,
       },
     })
@@ -543,11 +543,11 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
   const netIndexById = new Map<string, number>()
   for (let routeId = 0; routeId < loaded.problem.routeNet.length; routeId++) {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
-    const netId =
-      routeMetadata?.mutuallyConnectedNetworkId ?? routeMetadata?.connectionId
-    if (typeof netId === "string") {
-      netIndexById.set(netId, loaded.problem.routeNet[routeId]!)
+    const netId = routeMetadata?.mutuallyConnectedNetworkId
+    if (typeof netId !== "string" || netId.length === 0) {
+      throw new Error(`Tiny hypergraph route ${routeId} is missing a net ID`)
     }
+    netIndexById.set(netId, loaded.problem.routeNet[routeId]!)
   }
 
   for (
@@ -807,6 +807,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
+  private rootConnectionNameByConnectionId: Map<string, string | undefined>
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -819,6 +820,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           getTinyRouteConnectionNetId,
         )
       : tinyRouteConnections
+    this.rootConnectionNameByConnectionId = new Map(
+      connections.map((connection) => [
+        connection.connectionId,
+        connection.simpleRouteConnection.__rootConnectionNames?.[0],
+      ]),
+    )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const shouldRunDuplicateCongestedPortPrepass =
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
@@ -982,7 +989,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? getRouteConnectionName(routeMetadata)
       : `route-${routeId}`
     const rootConnectionName = routeMetadata
-      ? getRouteRootConnectionName(routeMetadata)
+      ? this.rootConnectionNameByConnectionId.get(routeMetadata.connectionId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
 

@@ -115,7 +115,7 @@ jobs:
             "${BASELINE_ARGS[@]}" \
             --out benchmark-regressions.json \
             --slack-out slack-payload.json \
-            --run-url "${{ github.event.workflow_run.html_url }}" \
+            --run-url "${{ github.event.workflow_run.html_url }}#artifacts" \
             --commit "${{ github.event.workflow_run.head_sha }}" \
             --commit-url "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}"
 
