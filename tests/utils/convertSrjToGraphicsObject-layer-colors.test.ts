@@ -163,13 +163,12 @@ test("colors traces and obstacles by layer and traces by connection in net mode"
     { layer: "z3", fill: "rgba(0,0,255,0.5)" },
   ])
   expect(graphics.rects.filter((rect) => rect.center.y === 2)).toMatchObject([
-    { layer: "z1", fill: "rgba(0,128,0,0.5)" },
+    { layer: "z1", fill: "rgba(128,128,128,0.5)" },
   ])
   expect(graphics.rects.filter((rect) => rect.center.y === 3)).toMatchObject([
-    { layer: "z1", fill: "rgba(0,128,0,0.5)" },
-    { layer: "z2", fill: "rgba(255,255,0,0.5)" },
+    { layer: "z1,2", fill: "rgba(128,128,128,0.5)" },
   ])
-  expect(graphics.rects.every((rect) => !rect.layer?.includes(","))).toBe(true)
+  expect(graphics.rects).toHaveLength(4)
 
   const netGraphics = convertSrjToGraphicsObject(srj, {
     traceColorMode: "net",

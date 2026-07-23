@@ -27,6 +27,8 @@ const GRAPHICS_LAYER_COLORS = {
   inner8: "brown",
 } satisfies Record<LayerName, string>
 
+const NEUTRAL_OBSTACLE_COLOR = "gray"
+
 export type TraceColorMode = "layer" | "net"
 
 export type ConvertSrjToGraphicsObjectOptions = {
@@ -267,18 +269,24 @@ export const convertSrjToGraphicsObject = (
       )
     }
 
-    for (const z of obstacleZLayers) {
-      const layerName = mapZToLayerName(z, layerCount)
-      rects.push({
-        center: o.center,
-        width: o.width,
-        height: o.height,
-        ccwRotationDegrees: o.ccwRotationDegrees,
-        fill: safeTransparentize(getGraphicsLayerColor(layerName), 0.5),
-        layer: `z${z}`,
-        label: formatObstacleLabel(o),
-      })
-    }
+    const onlyLayerName =
+      obstacleZLayers.length === 1
+        ? mapZToLayerName(obstacleZLayers[0]!, layerCount)
+        : null
+    const obstacleColor =
+      onlyLayerName === "top" || onlyLayerName === "bottom"
+        ? getGraphicsLayerColor(onlyLayerName)
+        : NEUTRAL_OBSTACLE_COLOR
+
+    rects.push({
+      center: o.center,
+      width: o.width,
+      height: o.height,
+      ccwRotationDegrees: o.ccwRotationDegrees,
+      fill: safeTransparentize(obstacleColor, 0.5),
+      layer: getGraphicsLayerForObstacle(o, layerCount),
+      label: formatObstacleLabel(o),
+    })
   }
 
   // Add jumper component rects from srj.jumpers if present
