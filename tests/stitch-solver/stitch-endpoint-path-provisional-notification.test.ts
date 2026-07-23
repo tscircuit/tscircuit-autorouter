@@ -19,26 +19,24 @@ const makeRoute = (
   vias: [],
 })
 
-test("reports only endpoint paths that require provisional DRC repair", () => {
+test("reports only endpoint paths that require downstream DRC repair", () => {
   const terminalRoute = makeRoute(0, 1)
   const continuationRoute = makeRoute(1.5, 2)
   const unrelatedRoute = makeRoute(5, 6)
-  let provisionalSelectionCount = 0
 
-  const selectedRoutes = selectRoutesAlongEndpointPath({
+  const selection = selectRoutesAlongEndpointPath({
     connectionName: "conn",
     hdRoutes: [terminalRoute, continuationRoute, unrelatedRoute],
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 0 },
     endpointIndex: new EndpointClusterIndex(),
-    canStitchBetweenTerminals: () => false,
+    getStitchRepairPolicyBetweenTerminals: () => null,
     isValidStitchGap: () => false,
-    allowProvisionalStitchSegmentsForDrcRepair: true,
-    onProvisionalPathSelected: () => {
-      provisionalSelectionCount += 1
-    },
+    stitchRepairPolicy: "allow_drc_repair",
   })
 
-  expect(selectedRoutes).toEqual([terminalRoute])
-  expect(provisionalSelectionCount).toBe(1)
+  expect(selection).toEqual({
+    hdRoutes: [terminalRoute],
+    stitchRepairPolicy: "allow_drc_repair",
+  })
 })

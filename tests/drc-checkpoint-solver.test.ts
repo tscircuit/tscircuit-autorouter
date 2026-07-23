@@ -36,5 +36,18 @@ test("DRC checkpoint accepts improvements and rejects regressions", () => {
       candidateDrcCount === 0 ? candidateHdRoutes : baselineHdRoutes,
     )
     expect(solver.stats.accepted).toBe(candidateDrcCount === 0)
+
+    const graphics = solver.visualize()
+    expect(
+      new Set([
+        ...(graphics.lines ?? []).map((line) => line.step),
+        ...(graphics.texts ?? []).map((text) => text.step),
+      ]),
+    ).toEqual(new Set([1, 2, 3]))
+    expect(graphics.texts?.map((text) => text.text)).toContain(
+      candidateDrcCount === 0
+        ? "Decision: accept candidate (DRC did not increase)"
+        : "Decision: reject candidate (DRC increased)",
+    )
   }
 })

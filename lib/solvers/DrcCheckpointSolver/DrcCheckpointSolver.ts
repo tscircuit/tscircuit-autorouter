@@ -9,17 +9,62 @@ type DrcCheckpointSolverParams = {
   drcEvaluator: DrcEvaluator
 }
 
-const countDrcErrors = (
-  evaluator: DrcEvaluator,
-  routes: HighDensityRoute[],
-): number => {
-  const result = evaluator({ routes, traces: [] })
-  return Array.isArray(result) ? result.length : result.errors.length
+type DrcCheckpointDecision = {
+  baselineDrcCount: number
+  candidateDrcCount: number
+  accepted: boolean
+}
+
+const addRoutesToGraphics = ({
+  graphics,
+  routes,
+  color,
+  label,
+  step,
+}: {
+  graphics: GraphicsObject
+  routes: HighDensityRoute[]
+  color: string
+  label: string
+  step: number
+}): void => {
+  for (const route of routes) {
+    for (
+      let pointIndex = 0;
+      pointIndex < route.route.length - 1;
+      pointIndex++
+    ) {
+      const start = route.route[pointIndex]!
+      const end = route.route[pointIndex + 1]!
+      graphics.lines!.push({
+        points: [
+          { x: start.x, y: start.y },
+          { x: end.x, y: end.y },
+        ],
+        strokeColor: color,
+        strokeDash: start.z === end.z && start.z !== 0 ? [0.1, 0.1] : undefined,
+        strokeWidth: route.traceThickness,
+        label: `${label}: ${route.connectionName}`,
+        step,
+      })
+    }
+
+    for (const via of route.vias) {
+      graphics.circles!.push({
+        center: { x: via.x, y: via.y },
+        radius: route.viaDiameter / 2,
+        fill: color,
+        label: `${label} via: ${route.connectionName}`,
+        step,
+      })
+    }
+  }
 }
 
 export class DrcCheckpointSolver extends BaseSolver {
   readonly params: DrcCheckpointSolverParams
   outputHdRoutes: HighDensityRoute[]
+  decision?: DrcCheckpointDecision
 
   constructor(params: DrcCheckpointSolverParams) {
     super()
@@ -37,24 +82,31 @@ export class DrcCheckpointSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const baselineDrcCount = countDrcErrors(
-      this.params.drcEvaluator,
-      this.params.baselineHdRoutes,
-    )
-    const candidateDrcCount = countDrcErrors(
-      this.params.drcEvaluator,
-      this.params.candidateHdRoutes,
-    )
+    const baselineDrcResult = this.params.drcEvaluator({
+      routes: this.params.baselineHdRoutes,
+      traces: [],
+    })
+    const baselineDrcCount = Array.isArray(baselineDrcResult)
+      ? baselineDrcResult.length
+      : baselineDrcResult.errors.length
+    const candidateDrcResult = this.params.drcEvaluator({
+      routes: this.params.candidateHdRoutes,
+      traces: [],
+    })
+    const candidateDrcCount = Array.isArray(candidateDrcResult)
+      ? candidateDrcResult.length
+      : candidateDrcResult.errors.length
     const accepted = candidateDrcCount <= baselineDrcCount
-
-    this.outputHdRoutes = accepted
-      ? this.params.candidateHdRoutes
-      : this.params.baselineHdRoutes
-    this.stats = {
+    this.decision = {
       baselineDrcCount,
       candidateDrcCount,
       accepted,
     }
+
+    this.outputHdRoutes = accepted
+      ? this.params.candidateHdRoutes
+      : this.params.baselineHdRoutes
+    this.stats = this.decision
     this.solved = true
     this.progress = 1
   }
@@ -64,6 +116,71 @@ export class DrcCheckpointSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    return { lines: [], points: [], rects: [], circles: [] }
+    const graphics: GraphicsObject = {
+      lines: [],
+      points: [],
+      rects: [],
+      circles: [],
+      texts: [],
+      coordinateSystem: "cartesian",
+      title: "Post-DRC Via Optimization Checkpoint",
+    }
+    const decision = this.decision
+    const baselineAnchor = this.params.baselineHdRoutes[0]?.route[0] ?? {
+      x: 0,
+      y: 0,
+    }
+    const candidateAnchor =
+      this.params.candidateHdRoutes[0]?.route[0] ?? baselineAnchor
+    const outputAnchor = this.outputHdRoutes[0]?.route[0] ?? candidateAnchor
+
+    addRoutesToGraphics({
+      graphics,
+      routes: this.params.baselineHdRoutes,
+      color: "rgba(220, 38, 38, 0.65)",
+      label: "Pre-optimization baseline",
+      step: 1,
+    })
+    graphics.texts!.push({
+      x: baselineAnchor.x,
+      y: baselineAnchor.y,
+      text: `Baseline DRC errors: ${decision?.baselineDrcCount ?? "not evaluated"}`,
+      color: "#b91c1c",
+      step: 1,
+    })
+
+    addRoutesToGraphics({
+      graphics,
+      routes: this.params.candidateHdRoutes,
+      color: "rgba(217, 119, 6, 0.7)",
+      label: "Via-optimized candidate",
+      step: 2,
+    })
+    graphics.texts!.push({
+      x: candidateAnchor.x,
+      y: candidateAnchor.y,
+      text: `Candidate DRC errors: ${decision?.candidateDrcCount ?? "not evaluated"}`,
+      color: "#b45309",
+      step: 2,
+    })
+
+    addRoutesToGraphics({
+      graphics,
+      routes: this.outputHdRoutes,
+      color: "#16a34a",
+      label: decision?.accepted ? "Accepted candidate" : "Retained baseline",
+      step: 3,
+    })
+    graphics.texts!.push({
+      x: outputAnchor.x,
+      y: outputAnchor.y,
+      text: decision?.accepted
+        ? "Decision: accept candidate (DRC did not increase)"
+        : "Decision: reject candidate (DRC increased)",
+      color: "#15803d",
+      step: 3,
+    })
+
+    return graphics
   }
 }

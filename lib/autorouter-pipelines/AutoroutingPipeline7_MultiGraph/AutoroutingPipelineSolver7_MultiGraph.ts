@@ -604,12 +604,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           minTraceToPadEdgeClearance:
             cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-          // Stitching still prefers validated copper. If the topology itself
-          // has no collision-free stitch, preserve its terminal-to-terminal
-          // path so the downstream global DRC stages can rip up and repair
-          // that provisional segment instead of terminating the pipeline
-          // before those solvers run.
-          allowProvisionalStitchSegmentsForDrcRepair: true,
+          // The stitcher validates added copper first. When a topology bridge
+          // has no local collision-free path, explicitly hand that bridge to
+          // the downstream global DRC repair stage instead of treating an
+          // intermediate topology guide as final copper.
+          stitchRepairPolicy: "allow_drc_repair",
         },
       ],
     ),
@@ -991,6 +990,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const postDrcUselessViaRemovalViz =
+      this.postDrcUselessViaRemovalSolver?.visualize()
+    const postDrcSameNetViaMergerViz =
+      this.postDrcSameNetViaMergerSolver?.visualize()
+    const postDrcViaOptimizationCheckpointViz =
+      this.postDrcViaOptimizationCheckpointSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1022,6 +1027,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      postDrcUselessViaRemovalViz,
+      postDrcSameNetViaMergerViz,
+      postDrcViaOptimizationCheckpointViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },

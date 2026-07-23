@@ -20,17 +20,21 @@ type ConnectivityLike = {
   areIdsConnected: (a: string, b: string) => boolean
 }
 
+type ConnectionName = string
+type StitchRequestKey = string
+type StitchPathPointKey = string
+
 type IndexedSegment = {
   start: HighDensityIntraNodeRoute["route"][number]
   end: HighDensityIntraNodeRoute["route"][number]
-  connectionName: string
+  connectionName: ConnectionName
   traceThickness: number
 }
 
 type IndexedVia = {
   x: number
   y: number
-  connectionName: string
+  connectionName: ConnectionName
   diameter: number
 }
 
@@ -48,7 +52,7 @@ const CLEARANCE_COMPARISON_TOLERANCE = 1e-6
 
 const createIndex = (
   boxes: Array<{ minX: number; minY: number; maxX: number; maxY: number }>,
-) => {
+): Flatbush | null => {
   if (boxes.length === 0) return null
   const index = new Flatbush(boxes.length)
   for (const box of boxes) {
@@ -56,6 +60,104 @@ const createIndex = (
   }
   index.finish()
   return index
+}
+
+const getSearchBounds = ({
+  start,
+  end,
+  margin,
+}: {
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  margin: number
+}): readonly [number, number, number, number] => {
+  return [
+    Math.min(start.x, end.x) - margin,
+    Math.min(start.y, end.y) - margin,
+    Math.max(start.x, end.x) + margin,
+    Math.max(start.y, end.y) + margin,
+  ]
+}
+
+const getRequestKey = (request: StitchSegmentRequest): StitchRequestKey => {
+  return [
+    request.connectionName,
+    request.traceThickness.toFixed(6),
+    request.start.x.toFixed(6),
+    request.start.y.toFixed(6),
+    request.start.z,
+    request.end.x.toFixed(6),
+    request.end.y.toFixed(6),
+    request.end.z,
+  ].join(":")
+}
+
+const preservesExistingEndpointClearance = ({
+  segmentStart,
+  segmentEnd,
+  existingCopperEndpoints,
+  startGap,
+  endGap,
+  segmentGap,
+  requiredGap,
+}: {
+  segmentStart: Point3
+  segmentEnd: Point3
+  existingCopperEndpoints: Point3[]
+  startGap: number
+  endGap: number
+  segmentGap: number
+  requiredGap: number
+}): boolean => {
+  const startCanEscape =
+    existingCopperEndpoints.some(
+      (endpoint) =>
+        endpoint.z === segmentStart.z &&
+        distance(endpoint, segmentStart) < COPPER_OVERLAP_TOLERANCE,
+    ) &&
+    startGap < requiredGap &&
+    endGap >= requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
+    segmentGap >= startGap - CLEARANCE_COMPARISON_TOLERANCE
+  const endCanEscape =
+    existingCopperEndpoints.some(
+      (endpoint) =>
+        endpoint.z === segmentEnd.z &&
+        distance(endpoint, segmentEnd) < COPPER_OVERLAP_TOLERANCE,
+    ) &&
+    endGap < requiredGap &&
+    startGap >= requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
+    segmentGap >= endGap - CLEARANCE_COMPARISON_TOLERANCE
+  return startCanEscape || endCanEscape
+}
+
+const collisionBoundariesOverlap = (
+  first: CollisionBoundary,
+  second: CollisionBoundary,
+): boolean => {
+  return (
+    first.minX <= second.maxX &&
+    first.maxX >= second.minX &&
+    first.minY <= second.maxY &&
+    first.maxY >= second.minY
+  )
+}
+
+const addBoundaryIntersections = ({
+  verticalBoundary,
+  horizontalBoundary,
+  addPoint,
+}: {
+  verticalBoundary: CollisionBoundary
+  horizontalBoundary: CollisionBoundary
+  addPoint: (x: number, y: number) => void
+}): void => {
+  for (const x of [verticalBoundary.minX, verticalBoundary.maxX]) {
+    if (x < horizontalBoundary.minX || x > horizontalBoundary.maxX) continue
+    for (const y of [horizontalBoundary.minY, horizontalBoundary.maxY]) {
+      if (y < verticalBoundary.minY || y > verticalBoundary.maxY) continue
+      addPoint(x, y)
+    }
+  }
 }
 
 /**
@@ -88,12 +190,13 @@ export const createStitchSegmentRouter = (params: {
 
   const segments: IndexedSegment[] = []
   const vias: IndexedVia[] = []
-  const rootsByConnection = new Map<string, Set<string>>()
+  const rootsByConnection = new Map<ConnectionName, Set<ConnectionName>>()
   let maxTraceRadius = 0
   let maxViaRadius = 0
 
   for (const route of params.hdRoutes) {
-    const roots = rootsByConnection.get(route.connectionName) ?? new Set()
+    const roots =
+      rootsByConnection.get(route.connectionName) ?? new Set<ConnectionName>()
     roots.add(route.rootConnectionName ?? route.connectionName)
     rootsByConnection.set(route.connectionName, roots)
     maxTraceRadius = Math.max(maxTraceRadius, route.traceThickness / 2)
@@ -136,11 +239,23 @@ export const createStitchSegmentRouter = (params: {
     })),
   )
 
-  const areSameNet = (a: string, b: string) => {
-    if (a === b || params.connMap?.areIdsConnected(a, b)) return true
-    const aRoots = rootsByConnection.get(a) ?? new Set([a])
-    const bRoots = rootsByConnection.get(b) ?? new Set([b])
-    return [...aRoots].some((root) => bRoots.has(root))
+  const areSameNet = (
+    firstConnectionName: ConnectionName,
+    secondConnectionName: ConnectionName,
+  ): boolean => {
+    if (
+      firstConnectionName === secondConnectionName ||
+      params.connMap?.areIdsConnected(firstConnectionName, secondConnectionName)
+    ) {
+      return true
+    }
+    const firstRoots =
+      rootsByConnection.get(firstConnectionName) ??
+      new Set<ConnectionName>([firstConnectionName])
+    const secondRoots =
+      rootsByConnection.get(secondConnectionName) ??
+      new Set<ConnectionName>([secondConnectionName])
+    return [...firstRoots].some((root) => secondRoots.has(root))
   }
 
   const isTerminalCoveredByTrace: IsTerminalCoveredByTrace = ({
@@ -175,67 +290,16 @@ export const createStitchSegmentRouter = (params: {
     return false
   }
 
-  const getSearchBounds = (
-    start: { x: number; y: number },
-    end: { x: number; y: number },
-    margin: number,
-  ) =>
-    [
-      Math.min(start.x, end.x) - margin,
-      Math.min(start.y, end.y) - margin,
-      Math.max(start.x, end.x) + margin,
-      Math.max(start.y, end.y) + margin,
-    ] as const
-
-  const getRequestKey = (request: StitchSegmentRequest) =>
-    [
-      request.connectionName,
-      request.traceThickness.toFixed(6),
-      request.start.x.toFixed(6),
-      request.start.y.toFixed(6),
-      request.start.z,
-      request.end.x.toFixed(6),
-      request.end.y.toFixed(6),
-      request.end.z,
-    ].join(":")
-  const segmentValidityCache = new Map<string, boolean>()
-
-  const preservesExistingEndpointClearance = (params: {
-    segmentStart: Point3
-    segmentEnd: Point3
-    existingCopperEndpoints: Point3[]
-    startGap: number
-    endGap: number
-    segmentGap: number
-    requiredGap: number
-  }) => {
-    const isExistingEndpoint = (point: Point3) =>
-      params.existingCopperEndpoints.some(
-        (endpoint) =>
-          endpoint.z === point.z &&
-          distance(endpoint, point) < COPPER_OVERLAP_TOLERANCE,
-      )
-    const startCanEscape =
-      isExistingEndpoint(params.segmentStart) &&
-      params.startGap < params.requiredGap &&
-      params.endGap >= params.requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
-      params.segmentGap >= params.startGap - CLEARANCE_COMPARISON_TOLERANCE
-    const endCanEscape =
-      isExistingEndpoint(params.segmentEnd) &&
-      params.endGap < params.requiredGap &&
-      params.startGap >= params.requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
-      params.segmentGap >= params.endGap - CLEARANCE_COMPARISON_TOLERANCE
-    return startCanEscape || endCanEscape
-  }
+  const segmentValidityCache = new Map<StitchRequestKey, boolean>()
 
   const evaluateSegmentValidity = (
     { connectionName, start, end, traceThickness }: StitchSegmentRequest,
     existingCopperEndpoints: Point3[],
-  ) => {
+  ): boolean => {
     const currentTraceRadius = traceThickness / 2
     const obstacleMargin = params.minClearance + currentTraceRadius
     for (const obstacleId of obstacleIndex?.search(
-      ...getSearchBounds(start, end, obstacleMargin),
+      ...getSearchBounds({ start, end, margin: obstacleMargin }),
     ) ?? []) {
       const obstacle = obstacles[obstacleId]!
       if (!obstacle.__zLayers?.includes(start.z)) continue
@@ -262,7 +326,7 @@ export const createStitchSegmentRouter = (params: {
     const traceSearchMargin =
       params.minClearance + currentTraceRadius + maxTraceRadius
     for (const segmentId of segmentIndex?.search(
-      ...getSearchBounds(start, end, traceSearchMargin),
+      ...getSearchBounds({ start, end, margin: traceSearchMargin }),
     ) ?? []) {
       const segment = segments[segmentId]!
       if (areSameNet(connectionName, segment.connectionName)) continue
@@ -294,7 +358,7 @@ export const createStitchSegmentRouter = (params: {
     const viaSearchMargin =
       params.minClearance + currentTraceRadius + maxViaRadius
     for (const viaId of viaIndex?.search(
-      ...getSearchBounds(start, end, viaSearchMargin),
+      ...getSearchBounds({ start, end, margin: viaSearchMargin }),
     ) ?? []) {
       const via = vias[viaId]!
       if (areSameNet(connectionName, via.connectionName)) continue
@@ -343,7 +407,7 @@ export const createStitchSegmentRouter = (params: {
 
     const obstacleMargin = params.minClearance + currentTraceRadius
     for (const obstacleId of obstacleIndex?.search(
-      ...getSearchBounds(start, end, obstacleMargin),
+      ...getSearchBounds({ start, end, margin: obstacleMargin }),
     ) ?? []) {
       const obstacle = obstacles[obstacleId]!
       if (!obstacle.__zLayers?.includes(start.z)) continue
@@ -364,7 +428,7 @@ export const createStitchSegmentRouter = (params: {
     const traceSearchMargin =
       params.minClearance + currentTraceRadius + maxTraceRadius
     for (const segmentId of segmentIndex?.search(
-      ...getSearchBounds(start, end, traceSearchMargin),
+      ...getSearchBounds({ start, end, margin: traceSearchMargin }),
     ) ?? []) {
       const segment = segments[segmentId]!
       if (segment.start.z !== start.z) continue
@@ -390,7 +454,7 @@ export const createStitchSegmentRouter = (params: {
     const viaSearchMargin =
       params.minClearance + currentTraceRadius + maxViaRadius
     for (const viaId of viaIndex?.search(
-      ...getSearchBounds(start, end, viaSearchMargin),
+      ...getSearchBounds({ start, end, margin: viaSearchMargin }),
     ) ?? []) {
       const via = vias[viaId]!
       if (areSameNet(connectionName, via.connectionName)) continue
@@ -407,11 +471,6 @@ export const createStitchSegmentRouter = (params: {
       })
     }
 
-    const overlaps = (a: CollisionBoundary, b: CollisionBoundary): boolean =>
-      a.minX <= b.maxX &&
-      a.maxX >= b.minX &&
-      a.minY <= b.maxY &&
-      a.maxY >= b.minY
     const relevantBoundaryIndexes = new Set<number>()
     const pendingBoundaryIndexes: number[] = []
     for (let index = 0; index < boundaries.length; index += 1) {
@@ -424,7 +483,9 @@ export const createStitchSegmentRouter = (params: {
       const currentBoundary = boundaries[currentIndex]!
       for (let index = 0; index < boundaries.length; index += 1) {
         if (relevantBoundaryIndexes.has(index)) continue
-        if (!overlaps(currentBoundary, boundaries[index]!)) continue
+        if (!collisionBoundariesOverlap(currentBoundary, boundaries[index]!)) {
+          continue
+        }
         relevantBoundaryIndexes.add(index)
         pendingBoundaryIndexes.push(index)
       }
@@ -441,13 +502,13 @@ export const createStitchSegmentRouter = (params: {
 
     const boundaries = getCollisionBoundaries(request)
     const points: Point3[] = [request.start, request.end]
-    const pointKeys = new Set(
+    const pointKeys = new Set<StitchPathPointKey>(
       points.map(
         (point) => `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`,
       ),
     )
 
-    const addPoint = (x: number, y: number) => {
+    const addPoint = (x: number, y: number): void => {
       const point = { x, y, z: request.start.z }
       const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
       if (pointKeys.has(key)) return
@@ -497,36 +558,22 @@ export const createStitchSegmentRouter = (params: {
     // every corner may be buried inside a neighboring rectangle even though
     // the outer boundary of their union still has a legal turn. Add the
     // vertical/horizontal boundary intersections that form those turns.
-    const addBoundaryIntersections = (
-      verticalBoundary: CollisionBoundary,
-      horizontalBoundary: CollisionBoundary,
-    ) => {
-      for (const x of [verticalBoundary.minX, verticalBoundary.maxX]) {
-        if (x < horizontalBoundary.minX || x > horizontalBoundary.maxX) {
-          continue
-        }
-        for (const y of [horizontalBoundary.minY, horizontalBoundary.maxY]) {
-          if (y < verticalBoundary.minY || y > verticalBoundary.maxY) {
-            continue
-          }
-          addPoint(x, y)
-        }
-      }
-    }
     for (let firstIndex = 0; firstIndex < boundaries.length; firstIndex += 1) {
       for (
         let secondIndex = firstIndex + 1;
         secondIndex < boundaries.length;
         secondIndex += 1
       ) {
-        addBoundaryIntersections(
-          boundaries[firstIndex]!,
-          boundaries[secondIndex]!,
-        )
-        addBoundaryIntersections(
-          boundaries[secondIndex]!,
-          boundaries[firstIndex]!,
-        )
+        addBoundaryIntersections({
+          verticalBoundary: boundaries[firstIndex]!,
+          horizontalBoundary: boundaries[secondIndex]!,
+          addPoint,
+        })
+        addBoundaryIntersections({
+          verticalBoundary: boundaries[secondIndex]!,
+          horizontalBoundary: boundaries[firstIndex]!,
+          addPoint,
+        })
       }
     }
 
@@ -602,7 +649,7 @@ export const createStitchSegmentRouter = (params: {
     return path
   }
 
-  const pathCache = new Map<string, Point3[] | null>()
+  const pathCache = new Map<StitchRequestKey, Point3[] | null>()
   const findValidPath: FindValidStitchPath = (request) => {
     const key = getRequestKey(request)
     if (pathCache.has(key)) return pathCache.get(key) ?? undefined
@@ -613,7 +660,3 @@ export const createStitchSegmentRouter = (params: {
 
   return { isValidSegment, findValidPath, isTerminalCoveredByTrace }
 }
-
-export const createStitchSegmentValidator = (
-  params: Parameters<typeof createStitchSegmentRouter>[0],
-): IsValidStitchSegment => createStitchSegmentRouter(params).isValidSegment

@@ -130,4 +130,4 @@ test("bugreport71 final output shows nearby vias around 4.46,25.50", () => {
   expect(
     cropSvgToSectionView(finalSvg, traceSimplificationViaView),
   ).toMatchSvgSnapshot(import.meta.path)
-}, 30_000)
+})

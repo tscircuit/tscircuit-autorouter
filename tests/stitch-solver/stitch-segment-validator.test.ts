@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { createStitchSegmentValidator } from "lib/solvers/RouteStitchingSolver/createStitchSegmentValidator"
+import { createStitchSegmentRouter } from "lib/solvers/RouteStitchingSolver/create-stitch-segment-validator"
+import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 const makeRoute = (
@@ -22,8 +23,8 @@ const candidate = {
   traceThickness: 0.15,
 }
 
-test("stitch validator rejects foreign trace and via crossings", () => {
-  const foreignTraceValidator = createStitchSegmentValidator({
+test("stitch validator handles trace, via, same-net, and obstacle copper", () => {
+  const foreignTraceValidator = createStitchSegmentRouter({
     hdRoutes: [
       makeRoute("foreign", [
         { x: -1, y: 0, z: 0 },
@@ -33,8 +34,8 @@ test("stitch validator rejects foreign trace and via crossings", () => {
     obstacles: [],
     layerCount: 2,
     minClearance: 0.1,
-  })
-  const foreignViaValidator = createStitchSegmentValidator({
+  }).isValidSegment
+  const foreignViaValidator = createStitchSegmentRouter({
     hdRoutes: [
       makeRoute(
         "foreign",
@@ -48,14 +49,8 @@ test("stitch validator rejects foreign trace and via crossings", () => {
     obstacles: [],
     layerCount: 2,
     minClearance: 0.1,
-  })
-
-  expect(foreignTraceValidator(candidate)).toBe(false)
-  expect(foreignViaValidator(candidate)).toBe(false)
-})
-
-test("stitch validator ignores same-net copper", () => {
-  const validator = createStitchSegmentValidator({
+  }).isValidSegment
+  const sameNetValidator = createStitchSegmentRouter({
     hdRoutes: [
       makeRoute("candidate", [
         { x: -1, y: 0, z: 0 },
@@ -65,33 +60,31 @@ test("stitch validator ignores same-net copper", () => {
     obstacles: [],
     layerCount: 2,
     minClearance: 0.1,
-  })
-
-  expect(validator(candidate)).toBe(true)
-})
-
-test("stitch validator rejects foreign obstacles and permits same-net pads", () => {
-  const obstacle = {
+  }).isValidSegment
+  const obstacle: Obstacle = {
     type: "rect",
     center: { x: 0, y: 0 },
     width: 0.5,
     height: 0.5,
     layers: ["top"],
     connectedTo: ["foreign"],
-  } as any
-  const foreignValidator = createStitchSegmentValidator({
+  }
+  const foreignObstacleValidator = createStitchSegmentRouter({
     hdRoutes: [],
     obstacles: [obstacle],
     layerCount: 2,
     minClearance: 0.1,
-  })
-  const sameNetValidator = createStitchSegmentValidator({
+  }).isValidSegment
+  const sameNetObstacleValidator = createStitchSegmentRouter({
     hdRoutes: [],
     obstacles: [{ ...obstacle, connectedTo: ["candidate"] }],
     layerCount: 2,
     minClearance: 0.1,
-  })
+  }).isValidSegment
 
-  expect(foreignValidator(candidate)).toBe(false)
+  expect(foreignTraceValidator(candidate)).toBe(false)
+  expect(foreignViaValidator(candidate)).toBe(false)
   expect(sameNetValidator(candidate)).toBe(true)
+  expect(foreignObstacleValidator(candidate)).toBe(false)
+  expect(sameNetObstacleValidator(candidate)).toBe(true)
 })

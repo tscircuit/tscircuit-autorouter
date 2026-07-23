@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createStitchSegmentRouter } from "lib/solvers/RouteStitchingSolver/createStitchSegmentValidator"
+import { createStitchSegmentRouter } from "lib/solvers/RouteStitchingSolver/create-stitch-segment-validator"
 
 test("stitch pathfinder routes around foreign copper with validated segments", () => {
   const router = createStitchSegmentRouter({

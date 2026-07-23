@@ -17,4 +17,4 @@ test("bugreport51-7db9f8.json", () => {
       : import.meta.path
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-}, 120_000)
+})

@@ -25,15 +25,18 @@ test("endpoint path keeps a collision-routable subset instead of unrelated islan
   const secondRoute = makeRoute(1.5, 2)
   const unrelatedRoute = makeRoute(5, 6)
 
-  const selectedRoutes = selectRoutesAlongEndpointPath({
+  const selection = selectRoutesAlongEndpointPath({
     connectionName: "candidate",
     hdRoutes: [firstRoute, secondRoute, unrelatedRoute],
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 0 },
     endpointIndex: new EndpointClusterIndex(),
-    canStitchBetweenTerminals: () => false,
+    getStitchRepairPolicyBetweenTerminals: () => null,
     isValidStitchGap: () => true,
   })
 
-  expect(selectedRoutes).toEqual([firstRoute])
+  expect(selection).toEqual({
+    hdRoutes: [firstRoute],
+    stitchRepairPolicy: "validated_only",
+  })
 })

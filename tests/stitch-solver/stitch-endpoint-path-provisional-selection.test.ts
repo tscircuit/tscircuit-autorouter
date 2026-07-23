@@ -24,16 +24,19 @@ test("provisional endpoint path excludes unrelated route islands", () => {
   const continuationRoute = makeRoute(1.5, 2)
   const unrelatedRoute = makeRoute(5, 6)
 
-  const selectedRoutes = selectRoutesAlongEndpointPath({
+  const selection = selectRoutesAlongEndpointPath({
     connectionName: "conn",
     hdRoutes: [terminalRoute, continuationRoute, unrelatedRoute],
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 0 },
     endpointIndex: new EndpointClusterIndex(),
-    canStitchBetweenTerminals: () => false,
+    getStitchRepairPolicyBetweenTerminals: () => null,
     isValidStitchGap: () => false,
-    allowProvisionalStitchSegmentsForDrcRepair: true,
+    stitchRepairPolicy: "allow_drc_repair",
   })
 
-  expect(selectedRoutes).toEqual([terminalRoute])
+  expect(selection).toEqual({
+    hdRoutes: [terminalRoute],
+    stitchRepairPolicy: "allow_drc_repair",
+  })
 })
