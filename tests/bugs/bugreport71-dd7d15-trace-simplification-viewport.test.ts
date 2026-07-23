@@ -97,41 +97,37 @@ function cropSvgToSectionView(svg: string, sectionView: SectionView): string {
   )
 }
 
-test(
-  "bugreport71 final output shows nearby vias around 4.46,25.50",
-  () => {
-    const solver = new AutoroutingPipelineSolver(structuredClone(srj))
-    solver.solve()
-    if (solver.failed) {
-      throw new Error(solver.error ?? "Pipeline failed")
-    }
+test("bugreport71 final output shows nearby vias around 4.46,25.50", () => {
+  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+  solver.solve()
+  if (solver.failed) {
+    throw new Error(solver.error ?? "Pipeline failed")
+  }
 
-    const finalGraphics = getLastStepGraphicsObject(solver.visualize())
-    const nearbyVias = (finalGraphics.circles ?? []).filter(
-      (circle) =>
-        Math.abs(circle.center.x - traceSimplificationViaView.center.x) <=
-          traceSimplificationViaView.size / 2 &&
-        Math.abs(circle.center.y - traceSimplificationViaView.center.y) <=
-          traceSimplificationViaView.size / 2,
-    )
-    expect(nearbyVias.length).toBeGreaterThanOrEqual(2)
+  const finalGraphics = getLastStepGraphicsObject(solver.visualize())
+  const nearbyVias = (finalGraphics.circles ?? []).filter(
+    (circle) =>
+      Math.abs(circle.center.x - traceSimplificationViaView.center.x) <=
+        traceSimplificationViaView.size / 2 &&
+      Math.abs(circle.center.y - traceSimplificationViaView.center.y) <=
+        traceSimplificationViaView.size / 2,
+  )
+  expect(nearbyVias.length).toBeGreaterThanOrEqual(2)
 
-    const finalRoute = solver
-      ._getOutputHdRoutes()
-      .find((route) => route.connectionName === "source_net_0_mst0")
-    expect(
-      new Set([
-        finalRoute?.route[0]?.pcb_port_id,
-        finalRoute?.route.at(-1)?.pcb_port_id,
-      ]),
-    ).toEqual(new Set(["pcb_port_24", "pcb_port_28"]))
+  const finalRoute = solver
+    ._getOutputHdRoutes()
+    .find((route) => route.connectionName === "source_net_0_mst0")
+  expect(
+    new Set([
+      finalRoute?.route[0]?.pcb_port_id,
+      finalRoute?.route.at(-1)?.pcb_port_id,
+    ]),
+  ).toEqual(new Set(["pcb_port_24", "pcb_port_28"]))
 
-    const finalSvg = getSvgFromGraphicsObject(finalGraphics, {
-      backgroundColor: "white",
-    })
-    expect(
-      cropSvgToSectionView(finalSvg, traceSimplificationViaView),
-    ).toMatchSvgSnapshot(import.meta.path)
-  },
-  30_000,
-)
+  const finalSvg = getSvgFromGraphicsObject(finalGraphics, {
+    backgroundColor: "white",
+  })
+  expect(
+    cropSvgToSectionView(finalSvg, traceSimplificationViaView),
+  ).toMatchSvgSnapshot(import.meta.path)
+}, 30_000)
