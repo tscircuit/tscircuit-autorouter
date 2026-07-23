@@ -217,9 +217,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   allowProvisionalStitchSegmentsForDrcRepair?: boolean
   onProvisionalPathSelected?: () => void
 }) => {
-  const returnUnvalidatedRoutes = (
-    hdRoutes: HighDensityIntraNodeRoute[],
-  ) => {
+  const returnUnvalidatedRoutes = (hdRoutes: HighDensityIntraNodeRoute[]) => {
     if (params.allowProvisionalStitchSegmentsForDrcRepair) {
       params.onProvisionalPathSelected?.()
     }
