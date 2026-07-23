@@ -222,8 +222,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       reverseRoutePoints(points),
       maxRetreatDistance,
       this.isTerminalLocation(endpoint) || this.isTerminalAnchor(endpoint),
-      (point) =>
-        this.isTerminalLocation(point) || this.isTerminalAnchor(point),
+      (point) => this.isTerminalLocation(point) || this.isTerminalAnchor(point),
     )
   }
 
@@ -767,8 +766,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const routeComparison = compareRoutes(candidate.route, firstRoute!)
       if (
         candidateDistance < bestDist - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(candidateDistance - bestDist) <=
-          DISTANCE_TIE_TOLERANCE &&
+        (Math.abs(candidateDistance - bestDist) <= DISTANCE_TIE_TOLERANCE &&
           (routeComparison < 0 ||
             (routeComparison === 0 &&
               candidate.terminalKind === preferredTerminalKind &&

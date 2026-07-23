@@ -219,8 +219,7 @@ export const createStitchSegmentRouter = (params: {
       isExistingEndpoint(params.segmentStart) &&
       params.startGap < params.requiredGap &&
       params.endGap >= params.requiredGap - CLEARANCE_COMPARISON_TOLERANCE &&
-      params.segmentGap >=
-        params.startGap - CLEARANCE_COMPARISON_TOLERANCE
+      params.segmentGap >= params.startGap - CLEARANCE_COMPARISON_TOLERANCE
     const endCanEscape =
       isExistingEndpoint(params.segmentEnd) &&
       params.endGap < params.requiredGap &&
@@ -230,12 +229,7 @@ export const createStitchSegmentRouter = (params: {
   }
 
   const evaluateSegmentValidity = (
-    {
-      connectionName,
-      start,
-      end,
-      traceThickness,
-    }: StitchSegmentRequest,
+    { connectionName, start, end, traceThickness }: StitchSegmentRequest,
     existingCopperEndpoints: Point3[],
   ) => {
     const currentTraceRadius = traceThickness / 2
@@ -330,7 +324,10 @@ export const createStitchSegmentRouter = (params: {
     const key = getRequestKey(request)
     const cachedResult = segmentValidityCache.get(key)
     if (cachedResult !== undefined) return cachedResult
-    const result = evaluateSegmentValidity(request, [request.start, request.end])
+    const result = evaluateSegmentValidity(request, [
+      request.start,
+      request.end,
+    ])
     segmentValidityCache.set(key, result)
     return result
   }
@@ -410,10 +407,7 @@ export const createStitchSegmentRouter = (params: {
       })
     }
 
-    const overlaps = (
-      a: CollisionBoundary,
-      b: CollisionBoundary,
-    ): boolean =>
+    const overlaps = (a: CollisionBoundary, b: CollisionBoundary): boolean =>
       a.minX <= b.maxX &&
       a.maxX >= b.minX &&
       a.minY <= b.maxY &&
@@ -458,10 +452,10 @@ export const createStitchSegmentRouter = (params: {
       const key = `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
       if (pointKeys.has(key)) return
       if (
-        !evaluateSegmentValidity(
-          { ...request, start: point, end: point },
-          [request.start, request.end],
-        )
+        !evaluateSegmentValidity({ ...request, start: point, end: point }, [
+          request.start,
+          request.end,
+        ])
       ) {
         return
       }
@@ -508,16 +502,10 @@ export const createStitchSegmentRouter = (params: {
       horizontalBoundary: CollisionBoundary,
     ) => {
       for (const x of [verticalBoundary.minX, verticalBoundary.maxX]) {
-        if (
-          x < horizontalBoundary.minX ||
-          x > horizontalBoundary.maxX
-        ) {
+        if (x < horizontalBoundary.minX || x > horizontalBoundary.maxX) {
           continue
         }
-        for (const y of [
-          horizontalBoundary.minY,
-          horizontalBoundary.maxY,
-        ]) {
+        for (const y of [horizontalBoundary.minY, horizontalBoundary.maxY]) {
           if (y < verticalBoundary.minY || y > verticalBoundary.maxY) {
             continue
           }
@@ -554,10 +542,10 @@ export const createStitchSegmentRouter = (params: {
         const start = points[firstIndex]!
         const end = points[secondIndex]!
         if (
-          !evaluateSegmentValidity(
-            { ...request, start, end },
-            [request.start, request.end],
-          )
+          !evaluateSegmentValidity({ ...request, start, end }, [
+            request.start,
+            request.end,
+          ])
         ) {
           continue
         }

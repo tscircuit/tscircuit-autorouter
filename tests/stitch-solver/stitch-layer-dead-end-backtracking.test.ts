@@ -42,14 +42,9 @@ test("stitcher retraces a layer-stranding branch before continuing", () => {
         { x: 3, y: 0, z: 0 },
       ]),
     ],
-    allowedLayerTransitionPointKeys: new Set([
-      getXyPointKey(branchTransition),
-    ]),
+    allowedLayerTransitionPointKeys: new Set([getXyPointKey(branchTransition)]),
     isValidStitchSegment: ({ start, end }) =>
-      !(
-        Math.abs(start.x - 1) < 1e-3 &&
-        Math.abs(end.x - 0.2) < 1e-3
-      ),
+      !(Math.abs(start.x - 1) < 1e-3 && Math.abs(end.x - 0.2) < 1e-3),
   })
 
   solver.solve()

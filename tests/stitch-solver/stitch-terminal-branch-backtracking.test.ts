@@ -38,9 +38,7 @@ test("stitcher retraces a completed branch to reach its terminal", () => {
         [branchTransition],
       ),
     ],
-    allowedLayerTransitionPointKeys: new Set([
-      getXyPointKey(branchTransition),
-    ]),
+    allowedLayerTransitionPointKeys: new Set([getXyPointKey(branchTransition)]),
     isValidStitchSegment: () => true,
   })
 

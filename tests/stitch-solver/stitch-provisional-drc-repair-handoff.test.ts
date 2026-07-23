@@ -22,8 +22,7 @@ test("pipeline DRC handoff preserves topology when no validated stitch exists", 
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 0 },
     hdRoutes: [makeRoute(0, 1), makeRoute(1.5, 2)],
-    isValidStitchSegment: ({ start, end }) =>
-      Math.abs(start.x - end.x) < 0.5,
+    isValidStitchSegment: ({ start, end }) => Math.abs(start.x - end.x) < 0.5,
     allowProvisionalStitchSegmentsForDrcRepair: true,
   })
 

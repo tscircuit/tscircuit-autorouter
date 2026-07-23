@@ -33,7 +33,7 @@ test("stitch pathfinder routes around overlapping clearance boundaries", () => {
     ],
     obstacles: [
       {
-        type: "oval",
+        type: "rect",
         center: { x: 35.0725, y: 0.714 },
         width: 0.2,
         height: 0.2,

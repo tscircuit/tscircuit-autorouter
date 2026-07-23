@@ -417,7 +417,7 @@ export const selectRoutesAlongEndpointPath = (params: {
     const transitions = findCandidatePath()
     if (!transitions) {
       return params.allowProvisionalStitchSegmentsForDrcRepair
-        ? provisionalHdRoutes ?? canonicalHdRoutes
+        ? (provisionalHdRoutes ?? canonicalHdRoutes)
         : canonicalHdRoutes
     }
     if (

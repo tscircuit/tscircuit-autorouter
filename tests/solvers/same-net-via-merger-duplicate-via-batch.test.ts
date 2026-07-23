@@ -15,7 +15,12 @@ const makeViaRoute = (
     { x, y: 0, z: 0 },
     { x, y: 0, z: 1 },
   ],
-  vias: duplicateVia ? [{ x, y: 0 }, { x, y: 0 }] : [{ x, y: 0 }],
+  vias: duplicateVia
+    ? [
+        { x, y: 0 },
+        { x, y: 0 },
+      ]
+    : [{ x, y: 0 }],
 })
 
 test("SameNetViaMergerSolver canonicalizes duplicate physical vias before batching merges", () => {
