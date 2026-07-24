@@ -128,6 +128,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const LARGE_GRAPH_CONNECTION_COUNT = 500
+const LARGE_GRAPH_HEURISTIC_WEIGHT = 256
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -195,6 +197,57 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
+
+function doesConnectionChangeLayer(
+  connection: TinyRouteConnection,
+): boolean {
+  const [start, end] = connection.simpleRouteConnection.pointsToConnect
+  const endLayers = getConnectionPointLayers(end!)
+
+  return !getConnectionPointLayers(start!).some((layer) =>
+    endLayers.includes(layer),
+  )
+}
+
+function getConnectionDistance(connection: TinyRouteConnection): number {
+  const [start, end] = connection.simpleRouteConnection.pointsToConnect
+
+  return Math.hypot(start!.x - end!.x, start!.y - end!.y)
+}
+
+export const orderLargeGraphConnections = (
+  connections: TinyRouteConnection[],
+): TinyRouteConnection[] => {
+  const countByNet = new Map<string, number>()
+  for (const connection of connections) {
+    const netId = getTinyRouteConnectionNetId(connection)
+    countByNet.set(netId, (countByNet.get(netId) ?? 0) + 1)
+  }
+
+  return connections
+    .map((connection, index) => ({ connection, index }))
+    .sort((left, right) => {
+      return (
+        countByNet.get(getTinyRouteConnectionNetId(right.connection))! -
+          countByNet.get(getTinyRouteConnectionNetId(left.connection))! ||
+        Number(doesConnectionChangeLayer(right.connection)) -
+          Number(doesConnectionChangeLayer(left.connection)) ||
+        getConnectionDistance(left.connection) -
+          getConnectionDistance(right.connection) ||
+        left.index - right.index
+      )
+    })
+    .map(({ connection }) => connection)
+}
+
+class LargeGraphSelectiveReripSolver extends SelectiveReripTinyHyperGraphSolver {
+  override computeH(neighborPortId: number): number {
+    const heuristic = super.computeH(neighborPortId)
+    return this.problem.routeCount >= LARGE_GRAPH_CONNECTION_COUNT
+      ? heuristic * LARGE_GRAPH_HEURISTIC_WEIGHT
+      : heuristic
+  }
+}
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
@@ -651,7 +704,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
+      solveGraphStep.solverClass = LargeGraphSelectiveReripSolver
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -697,7 +750,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver = new SelectiveReripTinyHyperGraphSolver(
+      this.initialVisualizationSolver = new LargeGraphSelectiveReripSolver(
         topology,
         problem,
         this.getSolveGraphOptions(),
@@ -814,12 +867,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
-    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
+    let connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
       ? orderConnectionsByNetCardinality(
           tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
       : tinyRouteConnections
+    if (connections.length >= LARGE_GRAPH_CONNECTION_COUNT) {
+      connections = orderLargeGraphConnections(connections)
+    }
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
         connection.connectionId,

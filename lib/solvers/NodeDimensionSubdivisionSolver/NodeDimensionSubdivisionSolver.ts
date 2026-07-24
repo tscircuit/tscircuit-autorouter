@@ -2,6 +2,8 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import type { Bounds } from "@tscircuit/math-utils"
+import { addTargetViaAccessLayers } from "./add-target-via-access-layers"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
@@ -15,6 +17,11 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     private readonly maxNodeDimension: number,
     private readonly maxNodeRatio: number = Number.POSITIVE_INFINITY,
     private readonly minNodeArea: number = DEFAULT_MIN_NODE_AREA,
+    private readonly viaAccess?: {
+      layerCount: number
+      viaDiameter: number
+      componentBounds: readonly Bounds[]
+    },
   ) {
     super()
     this.outputNodes = []
@@ -162,6 +169,13 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       this.outputNodes.push(...subdividedNodes)
     }
 
+    const viaAccessStats = this.viaAccess
+      ? addTargetViaAccessLayers({
+          nodes: this.outputNodes,
+          ...this.viaAccess,
+        })
+      : null
+
     this.stats = {
       inputNodeCount: inputCount,
       outputNodeCount: this.outputNodes.length,
@@ -171,6 +185,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
       minNodeArea: this.minNodeArea,
+      ...viaAccessStats,
     }
     this.solved = true
   }
