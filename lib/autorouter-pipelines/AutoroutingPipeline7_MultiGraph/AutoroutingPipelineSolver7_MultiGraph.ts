@@ -92,6 +92,50 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
 }
 
+const MIN_DENSE_COMPONENT_PAD_COUNT = 90
+const MAX_DENSE_COMPONENT_ASPECT_RATIO = 1.5
+
+export function getCompactDenseComponentBounds(
+  obstacles: SimpleRouteJson["obstacles"],
+  detectedComponentIds: ReadonlySet<string>,
+): SimpleRouteJson["bounds"][] {
+  const obstaclesByComponentId = Map.groupBy(
+    obstacles.filter(
+      (obstacle) =>
+        obstacle.componentId &&
+        !detectedComponentIds.has(obstacle.componentId),
+    ),
+    (obstacle) => obstacle.componentId!,
+  )
+
+  return [...obstaclesByComponentId.values()].flatMap(
+    (componentObstacles) => {
+      if (componentObstacles.length < MIN_DENSE_COMPONENT_PAD_COUNT) return []
+
+      const bounds = componentObstacles.reduce<SimpleRouteJson["bounds"]>(
+        (result, obstacle) => ({
+          minX: Math.min(result.minX, obstacle.center.x - obstacle.width / 2),
+          maxX: Math.max(result.maxX, obstacle.center.x + obstacle.width / 2),
+          minY: Math.min(result.minY, obstacle.center.y - obstacle.height / 2),
+          maxY: Math.max(result.maxY, obstacle.center.y + obstacle.height / 2),
+        }),
+        {
+          minX: Number.POSITIVE_INFINITY,
+          maxX: Number.NEGATIVE_INFINITY,
+          minY: Number.POSITIVE_INFINITY,
+          maxY: Number.NEGATIVE_INFINITY,
+        },
+      )
+      const width = bounds.maxX - bounds.minX
+      const height = bounds.maxY - bounds.minY
+      const aspectRatio =
+        Math.max(width, height) / Math.max(Math.min(width, height), 1e-6)
+
+      return aspectRatio <= MAX_DENSE_COMPONENT_ASPECT_RATIO ? [bounds] : []
+    },
+  )
+}
+
 /**
  * Collects the capacity mesh node ids produced by component-local topology
  * generation.
@@ -373,6 +417,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         cms.maxNodeDimension,
         cms.maxNodeRatio,
         cms.minNodeArea,
+        {
+          layerCount: cms.srj.layerCount,
+          viaDiameter: cms.viaDiameter,
+          componentBounds: getCompactDenseComponentBounds(
+            cms.srj.obstacles,
+            new Set(
+              cms
+                .componentDetectionSolver!.getOutput()
+                .map(({ componentId }) => componentId),
+            ),
+          ),
+        },
       ],
       {
         onSolved: (cms) => {
@@ -383,7 +439,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "edgeSolver",
       CapacityMeshEdgeSolver2_NodeTreeOptimization,
-      (cms) => [cms.capacityNodes!],
+      (cms) => [cms.capacityNodes!, cms.viaDiameter],
       {
         onSolved: (cms) => {
           cms.capacityEdges = cms.edgeSolver?.edges!

@@ -6,6 +6,7 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { hasViaAccessOverlap } from "../NodeDimensionSubdivisionSolver/add-target-via-access-layers"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -17,7 +18,10 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
   /** Only used for visualization, dynamically instantiated if necessary */
   nodeMap?: Map<CapacityMeshNodeId, CapacityMeshNode>
 
-  constructor(public nodes: CapacityMeshNode[]) {
+  constructor(
+    public nodes: CapacityMeshNode[],
+    public viaDiameter?: number,
+  ) {
     super()
     this.edges = []
   }
@@ -37,7 +41,12 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
             this.nodes[j]._strawParentCapacityMeshNodeId
         if (
           !strawNodesWithSameParent &&
-          areNodesBordering(this.nodes[i], this.nodes[j]) &&
+          (areNodesBordering(this.nodes[i], this.nodes[j]) ||
+            hasViaAccessOverlap(
+              this.nodes[i],
+              this.nodes[j],
+              this.viaDiameter,
+            )) &&
           this.doNodesHaveSharedLayer(this.nodes[i], this.nodes[j])
         ) {
           this.edges.push({
