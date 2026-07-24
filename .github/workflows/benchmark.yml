@@ -375,7 +375,7 @@ jobs:
           BENCHMARK_SAMPLE_TIMEOUT_BASE_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
           BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
           BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
-          BENCHMARK_MAIN_DATASETS: ${{ steps.main-datasets.outputs.datasets_json }}
+          BENCHMARK_MAIN_DATASETS: ${{ steps.main-datasets.outputs.datasets_json || '[]' }}
           BENCHMARK_REPOSITORY: ${{ github.repository }}
           BENCHMARK_WORKFLOW_NAME: ${{ github.workflow }}
           BENCHMARK_EVENT_NAME: ${{ github.event_name }}
@@ -439,7 +439,7 @@ jobs:
           NODE
 
       - name: Download main branch benchmark result
-        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
         run: |
