@@ -61,6 +61,7 @@ import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPo
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import { SameNetViaMergerSolver } from "../../solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
@@ -226,6 +227,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  postDrcSameNetViaMergerSolver?: SameNetViaMergerSolver
   lengthMatchingSolver?: LengthMatchingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -706,6 +708,20 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "postDrcSameNetViaMergerSolver",
+      SameNetViaMergerSolver,
+      (cms) => [
+        {
+          inputHdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -1042,6 +1058,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.postDrcSameNetViaMergerSolver?.mergedViaHdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
