@@ -19,56 +19,28 @@ source_net_1
 inner2
 source_net_1
 bottom
-source_net_1" data-x="-2.3329521523757077e-16" data-y="-9.81" x="306.875" y="473.65000000000003" width="26.25" height="26.25" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
-source_net_1
-inner1
-source_net_1
-inner2
-source_net_1
-bottom
-source_net_1" data-x="-2.3329521523757077e-16" data-y="-9.81" x="306.875" y="473.65000000000003" width="26.25" height="26.25" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
+source_net_1" data-x="-2.3329521523757077e-16" data-y="-9.81" x="306.875" y="473.65000000000003" width="26.25" height="26.25" fill="rgba(255,0,0,0.75)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
 source_net_0
 inner1
 source_net_0
 inner2
 source_net_0
 bottom
-source_net_0" data-x="-7.776507174585693e-17" data-y="-7.27" x="306.875" y="429.20000000000005" width="26.25" height="26.25" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
-source_net_0
-inner1
-source_net_0
-inner2
-source_net_0
-bottom
-source_net_0" data-x="-7.776507174585693e-17" data-y="-7.27" x="306.875" y="429.20000000000005" width="26.25" height="26.25" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
+source_net_0" data-x="-7.776507174585693e-17" data-y="-7.27" x="306.875" y="429.20000000000005" width="26.25" height="26.25" fill="rgba(255,0,0,0.75)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
 source_net_2
 inner1
 source_net_2
 inner2
 source_net_2
 bottom
-source_net_2" data-x="7.776507174585693e-17" data-y="-4.73" x="306.875" y="384.75" width="26.25" height="26.25" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
-source_net_2
-inner1
-source_net_2
-inner2
-source_net_2
-bottom
-source_net_2" data-x="7.776507174585693e-17" data-y="-4.73" x="306.875" y="384.75" width="26.25" height="26.25" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
+source_net_2" data-x="7.776507174585693e-17" data-y="-4.73" x="306.875" y="384.75" width="26.25" height="26.25" fill="rgba(255,0,0,0.75)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
 source_net_3
 inner1
 source_net_3
 inner2
 source_net_3
 bottom
-source_net_3" data-x="2.3329521523757077e-16" data-y="-2.19" x="306.875" y="340.3" width="26.25" height="26.25" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><g><rect data-type="rect" data-label="top
-source_net_3
-inner1
-source_net_3
-inner2
-source_net_3
-bottom
-source_net_3" data-x="2.3329521523757077e-16" data-y="-2.19" x="306.875" y="340.3" width="26.25" height="26.25" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.05714285714285714"/></g><circle data-type="circle" data-label="" data-x="-1.258" data-y="4.722" cx="297.985" cy="232.46500000000003" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-2.581" data-y="-1.484" cx="274.8325" cy="341.07000000000005" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-4" data-y="-1.2" cx="250" cy="336.1" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-9.799999999999999" data-y="5.2" cx="148.50000000000003" cy="224.10000000000002" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="11.4" data-y="2.8" cx="519.5" cy="266.1" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="5.304" data-y="0.788" cx="412.82" cy="301.31" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="2.191" data-y="-1.97" cx="358.3425" cy="349.57500000000005" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><g><circle data-type="point" data-label="source_net_0
+source_net_3" data-x="2.3329521523757077e-16" data-y="-2.19" x="306.875" y="340.3" width="26.25" height="26.25" fill="rgba(255,0,0,0.75)" stroke="black" stroke-width="0.05714285714285714"/></g><circle data-type="circle" data-label="" data-x="-1.258" data-y="4.722" cx="297.985" cy="232.46500000000003" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-2.581" data-y="-1.484" cx="274.8325" cy="341.07000000000005" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-4" data-y="-1.2" cx="250" cy="336.1" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="-9.799999999999999" data-y="5.2" cx="148.50000000000003" cy="224.10000000000002" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="11.4" data-y="2.8" cx="519.5" cy="266.1" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="5.304" data-y="0.788" cx="412.82" cy="301.31" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><circle data-type="circle" data-label="" data-x="2.191" data-y="-1.97" cx="358.3425" cy="349.57500000000005" r="2.625" fill="blue" stroke="none" stroke-width="0.05714285714285714"/><g><circle data-type="point" data-label="source_net_0
 source_net_0
 top" data-x="-9.500130000000013" data-y="3.9994833000000654" cx="153.74772499999978" cy="245.10904224999888" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_net_0
 source_net_0
