@@ -4,14 +4,14 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 routes srj23 samples with connected pads beyond implicit bounds", async () => {
   for (const sampleNumber of [101, 107]) {
-    const { scenario } = await loadScenarioBySampleNumber(
-      "srj23",
-      sampleNumber,
+    const { scenario } = await loadScenarioBySampleNumber("srj23", sampleNumber)
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      scenario,
+      {
+        cacheProvider: null,
+        effort: 0.1,
+      },
     )
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario, {
-      cacheProvider: null,
-      effort: 0.1,
-    })
     solver.solve()
 
     expect(solver.failed).toBe(false)
