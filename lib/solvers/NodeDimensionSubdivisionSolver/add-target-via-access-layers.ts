@@ -96,10 +96,7 @@ export function addTargetViaAccessLayers({
         overlap.height + EPSILON >= viaDiameter
       )
     })
-    if (
-      !hasSameNetTargetOnAnotherLayer &&
-      viaSizedFreeOverlaps.length === 0
-    ) {
+    if (!hasSameNetTargetOnAnotherLayer && viaSizedFreeOverlaps.length === 0) {
       continue
     }
 
@@ -132,9 +129,7 @@ export function addTargetViaAccessLayers({
       !isInComponentBounds(node) ||
       Math.min(node.width, node.height) + EPSILON < viaDiameter ||
       !allLayers.every((z) =>
-        freeNodesByLayer[z]!.some((candidate) =>
-          containsNode(candidate, node),
-        ),
+        freeNodesByLayer[z]!.some((candidate) => containsNode(candidate, node)),
       )
     ) {
       continue

@@ -132,8 +132,7 @@ function findNestedBgaObstacles({
           coordinateKey(obstacle.height),
           obstacle.layers.join(","),
         ].join(":")
-        const matchingObstacles =
-          obstaclesByPadGeometry.get(geometryKey) ?? []
+        const matchingObstacles = obstaclesByPadGeometry.get(geometryKey) ?? []
         matchingObstacles.push(obstacle)
         obstaclesByPadGeometry.set(geometryKey, matchingObstacles)
       }
@@ -176,9 +175,7 @@ export function findNestedBgaTopologyComponents({
           obstacleId: `${nestedComponentId}_bounds`,
           componentId: nestedComponentId,
           type: "rect",
-          layers: zLayers.map((z) =>
-            mapZToLayerName(z, inputSrj.layerCount),
-          ),
+          layers: zLayers.map((z) => mapZToLayerName(z, inputSrj.layerCount)),
           __zLayers: zLayers,
           center: {
             x: (bounds.minX + bounds.maxX) / 2,

@@ -111,9 +111,7 @@ export function createComponentSrj({
     )
     .map((obstacle) => ({
       ...obstacle,
-      ...(component.memberObstacleIds.includes(
-        getTopologyObstacleKey(obstacle),
-      )
+      ...(component.memberObstacleIds.includes(getTopologyObstacleKey(obstacle))
         ? { componentId: component.componentId }
         : {}),
     }))

@@ -13,10 +13,7 @@ function createConnection(
     endRegion: {},
     simpleRouteConnection: {
       name: connectionId,
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "top" },
-        end,
-      ],
+      pointsToConnect: [{ x: 0, y: 0, layer: "top" }, end],
     },
   }
 }

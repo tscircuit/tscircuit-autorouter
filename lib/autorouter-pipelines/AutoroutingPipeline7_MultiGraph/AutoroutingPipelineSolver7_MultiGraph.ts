@@ -3,10 +3,7 @@ import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import {
-  GlobalDrcBranchPortfolioSolver,
-  GlobalDrcForceImproveSolver,
-} from "high-density-repair03/lib"
+import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -70,6 +67,7 @@ import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
+import { BoundedGlobalDrcBranchPortfolioSolver } from "./BoundedGlobalDrcBranchPortfolioSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -102,38 +100,35 @@ export function getCompactDenseComponentBounds(
   const obstaclesByComponentId = Map.groupBy(
     obstacles.filter(
       (obstacle) =>
-        obstacle.componentId &&
-        !detectedComponentIds.has(obstacle.componentId),
+        obstacle.componentId && !detectedComponentIds.has(obstacle.componentId),
     ),
     (obstacle) => obstacle.componentId!,
   )
 
-  return [...obstaclesByComponentId.values()].flatMap(
-    (componentObstacles) => {
-      if (componentObstacles.length < MIN_DENSE_COMPONENT_PAD_COUNT) return []
+  return [...obstaclesByComponentId.values()].flatMap((componentObstacles) => {
+    if (componentObstacles.length < MIN_DENSE_COMPONENT_PAD_COUNT) return []
 
-      const bounds = componentObstacles.reduce<SimpleRouteJson["bounds"]>(
-        (result, obstacle) => ({
-          minX: Math.min(result.minX, obstacle.center.x - obstacle.width / 2),
-          maxX: Math.max(result.maxX, obstacle.center.x + obstacle.width / 2),
-          minY: Math.min(result.minY, obstacle.center.y - obstacle.height / 2),
-          maxY: Math.max(result.maxY, obstacle.center.y + obstacle.height / 2),
-        }),
-        {
-          minX: Number.POSITIVE_INFINITY,
-          maxX: Number.NEGATIVE_INFINITY,
-          minY: Number.POSITIVE_INFINITY,
-          maxY: Number.NEGATIVE_INFINITY,
-        },
-      )
-      const width = bounds.maxX - bounds.minX
-      const height = bounds.maxY - bounds.minY
-      const aspectRatio =
-        Math.max(width, height) / Math.max(Math.min(width, height), 1e-6)
+    const bounds = componentObstacles.reduce<SimpleRouteJson["bounds"]>(
+      (result, obstacle) => ({
+        minX: Math.min(result.minX, obstacle.center.x - obstacle.width / 2),
+        maxX: Math.max(result.maxX, obstacle.center.x + obstacle.width / 2),
+        minY: Math.min(result.minY, obstacle.center.y - obstacle.height / 2),
+        maxY: Math.max(result.maxY, obstacle.center.y + obstacle.height / 2),
+      }),
+      {
+        minX: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        minY: Number.POSITIVE_INFINITY,
+        maxY: Number.NEGATIVE_INFINITY,
+      },
+    )
+    const width = bounds.maxX - bounds.minX
+    const height = bounds.maxY - bounds.minY
+    const aspectRatio =
+      Math.max(width, height) / Math.max(Math.min(width, height), 1e-6)
 
-      return aspectRatio <= MAX_DENSE_COMPONENT_ASPECT_RATIO ? [bounds] : []
-    },
-  )
+    return aspectRatio <= MAX_DENSE_COMPONENT_ASPECT_RATIO ? [bounds] : []
+  })
 }
 
 /**
@@ -265,7 +260,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
-  exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  exactGeometryDrcForceImproveSolver?: BoundedGlobalDrcBranchPortfolioSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -580,11 +575,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+      // HighDensitySolver consumes only the outer array with pop().
+      cms.highDensityNodePortPoints = nodePortPointsSource
 
       return [
         {
-          nodePortPoints: nodePortPointsSource,
+          nodePortPoints: [...nodePortPointsSource] as NodeWithPortPoints[],
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
@@ -711,7 +707,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           ),
           connMap: cms.connMap,
           effort: cms.effort,
-          maxIterations: 16,
+          maxIterations: cms.srj.connections.length >= 500 ? 8 : 16,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
         },
@@ -719,7 +715,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
-      GlobalDrcBranchPortfolioSolver,
+      BoundedGlobalDrcBranchPortfolioSolver,
       (cms) => {
         const relaxedDrcEvaluator = createPipeline7RelaxedDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],

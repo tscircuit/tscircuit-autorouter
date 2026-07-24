@@ -3,11 +3,7 @@ import { findNestedBgaTopologyComponents } from "lib/solvers/TopologyPlanningSol
 import { createComponentSrj } from "lib/solvers/TopologyPlanningSolver/topologyPlanningShared"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 
-const createPad = (
-  obstacleId: string,
-  x: number,
-  y: number,
-): Obstacle => ({
+const createPad = (obstacleId: string, x: number, y: number): Obstacle => ({
   obstacleId,
   componentId: "U1",
   type: "rect",

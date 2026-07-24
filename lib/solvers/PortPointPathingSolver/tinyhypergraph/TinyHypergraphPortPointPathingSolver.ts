@@ -198,9 +198,7 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
 
-function doesConnectionChangeLayer(
-  connection: TinyRouteConnection,
-): boolean {
+function doesConnectionChangeLayer(connection: TinyRouteConnection): boolean {
   const [start, end] = connection.simpleRouteConnection.pointsToConnect
   const endLayers = getConnectionPointLayers(end!)
 
@@ -860,6 +858,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
+  private solvedOutputCache?: {
+    nodesWithPortPoints: NodeWithPortPoints[]
+    inputNodeWithPortPoints: InputNodeWithPortPoints[]
+  }
+  private solvedNodeByIdCache?: Map<CapacityMeshNodeId, NodeWithPortPoints>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
 
   constructor(private params: HgPortPointPathingSolverParams) {
@@ -1079,6 +1082,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
   } {
+    if (this.solvedOutputCache) return this.solvedOutputCache
+
     const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
@@ -1129,16 +1134,26 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       })
     }
 
-    return {
+    const output = {
       nodesWithPortPoints,
       inputNodeWithPortPoints: this.inputNodeWithPortPoints,
     }
+    if (this.solved) {
+      this.solvedOutputCache = output
+      this.solvedNodeByIdCache = new Map(
+        nodesWithPortPoints.map((node) => [node.capacityMeshNodeId, node]),
+      )
+    }
+    return output
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number | null {
-    const solvedNode = this.getOutput().nodesWithPortPoints.find(
-      (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
-    )
+    const output = this.getOutput()
+    const solvedNode =
+      this.solvedNodeByIdCache?.get(node.capacityMeshNodeId) ??
+      output.nodesWithPortPoints.find(
+        (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
+      )
     const originalRegion = this.originalRegionById.get(node.capacityMeshNodeId)
 
     if (!solvedNode || !originalRegion) {
