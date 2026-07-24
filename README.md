@@ -59,6 +59,7 @@ interface SimpleRouteJson {
   minTraceWidth: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
+  buses?: Array<SimpleRouteBus>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   traces?: SimplifiedPcbTraces // Optional for input
 }
@@ -79,7 +80,17 @@ interface SimpleRouteConnection {
   name: string
   pointsToConnect: Array<{ x: number; y: number; layer: string }>
 }
+
+interface SimpleRouteBus {
+  busId: string
+  connectionNames: string[] // Ordered SimpleRouteConnection names
+  maxLengthSkew?: number // Maximum routed-length difference in millimeters
+}
 ```
+
+`maxLengthSkew` records the maximum permitted routed-length difference for the
+bus. Bus metadata is preserved in the output so routing implementations can
+apply the constraint without losing the original membership or ordering.
 
 ### Output Format
 

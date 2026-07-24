@@ -35,5 +35,14 @@ test("normalizes obstacle layers to the board layer count", (): void => {
     createSrjWithBoardValidObstacleLayers(srj).obstacles[0]!
 
   expect(outputObstacle.layers).toEqual(["top", "bottom"])
+  expect(outputObstacle.zLayers).toEqual([0, 1])
   expect(outputObstacle.__zLayers).toEqual([0, 1])
+
+  const explicitZLayerObstacle = createSrjWithBoardValidObstacleLayers({
+    ...srj,
+    obstacles: [{ ...obstacle, layers: ["top"], zLayers: [0, 1] }],
+  }).obstacles[0]!
+
+  expect(explicitZLayerObstacle.layers).toEqual(["top", "bottom"])
+  expect(explicitZLayerObstacle.__zLayers).toEqual([0, 1])
 })

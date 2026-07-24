@@ -55,9 +55,11 @@ export interface SimpleRouteJson {
   min_via_pad_diameter?: number
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
+  minViaEdgeToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
+  buses?: Array<SimpleRouteBus>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
@@ -69,7 +71,15 @@ export interface SimpleRouteJson {
 
 export interface DifferentialPair {
   connectionNames: [string, string]
-  lengthTolerance: 0.1
+  lengthTolerance: number
+}
+
+export interface SimpleRouteBus {
+  busId: BusId
+  /** SimpleRouteJson connection names belonging to this bus, in bus order. */
+  connectionNames: string[]
+  /** Maximum permitted routed-length difference in millimeters. */
+  maxLengthSkew?: number
 }
 
 export interface Obstacle {
@@ -78,6 +88,9 @@ export interface Obstacle {
   componentId?: string
   type: "rect"
   layers: string[]
+  /** Public z-layer indexes supplied by SimpleRouteJson producers. */
+  zLayers?: number[]
+  /** Canonicalized z-layer indexes used by autorouter internals. */
   __zLayers?: number[]
   center: { x: number; y: number }
   width: number
@@ -92,8 +105,11 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  rootConnectionName?: RootConnectionName
+  mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
   isOffBoard?: boolean
+  netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
@@ -114,6 +130,8 @@ export interface SimplifiedPcbTrace {
         y: number
         width: number
         layer: string
+        start_pcb_port_id?: string
+        end_pcb_port_id?: string
       }
     | {
         route_type: "via"
