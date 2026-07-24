@@ -13,14 +13,14 @@ const routeTouchesPoint = (
   route: { route: Array<{ x: number; y: number }> },
   point: { x: number; y: number },
   tolerance = 1e-3,
-) =>
+): boolean =>
   route.route.some(
     (routePoint) =>
       Math.abs(routePoint.x - point.x) < tolerance &&
       Math.abs(routePoint.y - point.y) < tolerance,
   )
 
-test("bugreport58 stitch keeps source_net_2_mst21 connected", () => {
+test("bugreport58 keeps the target stitched and renders the final route", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
 
   solver.solveUntilPhase("traceSimplificationSolver")
@@ -42,12 +42,12 @@ test("bugreport58 stitch keeps source_net_2_mst21 connected", () => {
   expect(
     routeTouchesPoint(stitchedRoutes[0]!, targetConnection!.pointsToConnect[1]),
   ).toBe(true)
-}, 120_000)
 
-test("bugreport58-b69d72.json", () => {
-  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
-}, 120_000)
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+})

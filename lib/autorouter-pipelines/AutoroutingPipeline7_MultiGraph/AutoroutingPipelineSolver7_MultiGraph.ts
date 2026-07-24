@@ -594,6 +594,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          minTraceToPadEdgeClearance:
+            cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          // The stitcher validates added copper first. When a topology bridge
+          // has no local collision-free path, explicitly hand that bridge to
+          // the downstream global DRC repair stage instead of treating an
+          // intermediate topology guide as final copper.
+          stitchRepairPolicy: "allow_drc_repair",
         },
       ],
     ),

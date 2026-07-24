@@ -43,8 +43,8 @@ const srj: SimpleRouteJson = {
   ],
 }
 
-test("getRerouteSimpleRouteJson clips traces out of a rectangular region", () => {
-  const rerouted = getRerouteSimpleRouteJson(srj, {
+test("reroute regions clip, expand, preserve endpoints, and reconnect", () => {
+  const clippedRegion = getRerouteSimpleRouteJson(srj, {
     shape: "rect",
     minX: -1,
     maxX: 1,
@@ -52,22 +52,22 @@ test("getRerouteSimpleRouteJson clips traces out of a rectangular region", () =>
     maxY: 1,
   })
 
-  expect(rerouted.connections).toHaveLength(1)
-  expect(rerouted.bounds).toEqual({
+  expect(clippedRegion.connections).toHaveLength(1)
+  expect(clippedRegion.bounds).toEqual({
     minX: -1.075,
     maxX: 1.075,
     minY: -1,
     maxY: 1,
   })
-  expect(rerouted.connections[0]?.__rootConnectionNames).toEqual([
+  expect(clippedRegion.connections[0]?.__rootConnectionNames).toEqual([
     "source_net_0",
   ])
-  expect(rerouted.connections[0]?.pointsToConnect).toEqual([
+  expect(clippedRegion.connections[0]?.pointsToConnect).toEqual([
     { x: -1, y: 0, layer: "top" },
     { x: 1, y: 0, layer: "top" },
   ])
   expect(
-    rerouted.obstacles.filter((obstacle) =>
+    clippedRegion.obstacles.filter((obstacle) =>
       obstacle.obstacleId?.startsWith(
         "source_net_0_reroute_source_net_0_0_0_route_endpoint_",
       ),
@@ -93,17 +93,17 @@ test("getRerouteSimpleRouteJson clips traces out of a rectangular region", () =>
     },
   ])
 
-  const affectedTracePieces = rerouted.traces?.filter((trace) =>
+  const affectedTracePieces = clippedRegion.traces?.filter((trace) =>
     trace.pcb_trace_id.startsWith("source_net_0_0_keep_"),
   )
   expect(affectedTracePieces).toHaveLength(2)
   expect(
-    rerouted.traces?.some((trace) => trace.pcb_trace_id === "source_net_1_0"),
+    clippedRegion.traces?.some(
+      (trace) => trace.pcb_trace_id === "source_net_1_0",
+    ),
   ).toBe(true)
-})
 
-test("getRerouteSimpleRouteJson keeps trace endpoints inside the region connectable", () => {
-  const rerouted = getRerouteSimpleRouteJson(
+  const insideRegion = getRerouteSimpleRouteJson(
     {
       ...srj,
       traces: [
@@ -127,13 +127,13 @@ test("getRerouteSimpleRouteJson keeps trace endpoints inside the region connecta
     },
   )
 
-  expect(rerouted.connections).toHaveLength(1)
-  expect(rerouted.connections[0]?.pointsToConnect).toEqual([
+  expect(insideRegion.connections).toHaveLength(1)
+  expect(insideRegion.connections[0]?.pointsToConnect).toEqual([
     { x: -0.5, y: 0, layer: "top" },
     { x: 0.5, y: 0, layer: "top" },
   ])
   expect(
-    rerouted.obstacles.map((obstacle) => ({
+    insideRegion.obstacles.map((obstacle) => ({
       center: obstacle.center,
       width: obstacle.width,
       height: obstacle.height,
@@ -153,11 +153,9 @@ test("getRerouteSimpleRouteJson keeps trace endpoints inside the region connecta
       layers: ["top"],
     },
   ])
-  expect(rerouted.traces).toHaveLength(0)
-})
+  expect(insideRegion.traces).toHaveLength(0)
 
-test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacles", () => {
-  const rerouted = getRerouteSimpleRouteJson(
+  const expandedRegion = getRerouteSimpleRouteJson(
     {
       ...srj,
       traces: [
@@ -187,12 +185,12 @@ test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacl
     },
   )
 
-  expect(rerouted.bounds.minX).toBeLessThan(-1.075)
-  expect(rerouted.bounds.maxX).toBe(1)
-  expect(rerouted.bounds.minY).toBe(-1)
-  expect(rerouted.bounds.maxY).toBe(1)
+  expect(expandedRegion.bounds.minX).toBeLessThan(-1.075)
+  expect(expandedRegion.bounds.maxX).toBe(1)
+  expect(expandedRegion.bounds.minY).toBe(-1)
+  expect(expandedRegion.bounds.maxY).toBe(1)
 
-  const reroutedWithTraceObstacles = convertSrjTracesToObstacles(rerouted)
+  const reroutedWithTraceObstacles = convertSrjTracesToObstacles(expandedRegion)
   const traceObstacles =
     reroutedWithTraceObstacles?.obstacles.filter((obstacle) =>
       obstacle.obstacleId?.startsWith(
@@ -205,34 +203,36 @@ test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacl
     traceObstacles.every((obstacle) => {
       const obstacleBounds = getBoundingBox(obstacle)
       return (
-        obstacleBounds.minX >= rerouted.bounds.minX - 1e-9 &&
-        obstacleBounds.maxX <= rerouted.bounds.maxX + 1e-9 &&
-        obstacleBounds.minY >= rerouted.bounds.minY - 1e-9 &&
-        obstacleBounds.maxY <= rerouted.bounds.maxY + 1e-9
+        obstacle.connectedTo.includes("source_net_0") &&
+        obstacleBounds.minX >= expandedRegion.bounds.minX - 1e-9 &&
+        obstacleBounds.maxX <= expandedRegion.bounds.maxX + 1e-9 &&
+        obstacleBounds.minY >= expandedRegion.bounds.minY - 1e-9 &&
+        obstacleBounds.maxY <= expandedRegion.bounds.maxY + 1e-9
       )
     }),
   ).toBe(true)
-})
 
-test("reconnectReroutedSimpleRouteJsonRegion restores original connections", () => {
-  const rerouted = getRerouteSimpleRouteJson(srj, {
+  const reroutedRegion = getRerouteSimpleRouteJson(srj, {
     shape: "rect",
     minX: -1,
     maxX: 1,
     minY: -1,
     maxY: 1,
   })
-  rerouted.traces?.push({
+  reroutedRegion.traces?.push({
     type: "pcb_trace",
     pcb_trace_id: "rerouted_trace_0",
-    connection_name: rerouted.connections[0]!.name,
+    connection_name: reroutedRegion.connections[0]!.name,
     route: [
       { route_type: "wire", x: -1, y: 0, width: 0.15, layer: "top" },
       { route_type: "wire", x: 1, y: 0, width: 0.15, layer: "top" },
     ],
   })
 
-  const reconnected = reconnectReroutedSimpleRouteJsonRegion(srj, rerouted)
+  const reconnected = reconnectReroutedSimpleRouteJsonRegion(
+    srj,
+    reroutedRegion,
+  )
 
   expect(reconnected.connections).toEqual(srj.connections)
   expect(

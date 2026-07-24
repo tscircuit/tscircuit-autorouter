@@ -5,6 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../fixtures/bug-reports/bugreport71-dd7d15/bugreport71-dd7d15.json" with {
   type: "json",
 }
+import { getLastStepGraphicsObject } from "../fixtures/getLastStepGraphicsObject"
 
 type Point = {
   x: number
@@ -96,24 +97,15 @@ function cropSvgToSectionView(svg: string, sectionView: SectionView): string {
   )
 }
 
-test("bugreport71 trace simplification shows nearby vias around 4.46,25.50", () => {
+test("bugreport71 final output shows nearby vias around 4.46,25.50", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
-  solver.solveUntilPhase("traceSimplificationSolver")
-
-  while (solver.getCurrentPhase() === "traceSimplificationSolver") {
-    solver.step()
-    if (solver.failed) {
-      throw new Error(solver.error ?? "Trace simplification pipeline failed")
-    }
+  solver.solve()
+  if (solver.failed) {
+    throw new Error(solver.error ?? "Pipeline failed")
   }
 
-  const traceSimplificationSolver = solver.traceSimplificationSolver
-  if (!traceSimplificationSolver) {
-    throw new Error("Trace simplification solver did not run")
-  }
-
-  const traceSimplificationGraphics = traceSimplificationSolver.visualize()
-  const nearbyVias = (traceSimplificationGraphics.circles ?? []).filter(
+  const finalGraphics = getLastStepGraphicsObject(solver.visualize())
+  const nearbyVias = (finalGraphics.circles ?? []).filter(
     (circle) =>
       Math.abs(circle.center.x - traceSimplificationViaView.center.x) <=
         traceSimplificationViaView.size / 2 &&
@@ -122,11 +114,20 @@ test("bugreport71 trace simplification shows nearby vias around 4.46,25.50", () 
   )
   expect(nearbyVias.length).toBeGreaterThanOrEqual(2)
 
-  const traceSimplificationSvg = getSvgFromGraphicsObject(
-    traceSimplificationGraphics,
-    { backgroundColor: "white" },
-  )
+  const finalRoute = solver
+    ._getOutputHdRoutes()
+    .find((route) => route.connectionName === "source_net_0_mst0")
   expect(
-    cropSvgToSectionView(traceSimplificationSvg, traceSimplificationViaView),
+    new Set([
+      finalRoute?.route[0]?.pcb_port_id,
+      finalRoute?.route.at(-1)?.pcb_port_id,
+    ]),
+  ).toEqual(new Set(["pcb_port_24", "pcb_port_28"]))
+
+  const finalSvg = getSvgFromGraphicsObject(finalGraphics, {
+    backgroundColor: "white",
+  })
+  expect(
+    cropSvgToSectionView(finalSvg, traceSimplificationViaView),
   ).toMatchSvgSnapshot(import.meta.path)
 })

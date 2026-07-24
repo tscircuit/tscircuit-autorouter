@@ -225,12 +225,14 @@ const createClippedTraceSegmentObstacle = ({
   end,
   layer,
   width,
+  connectedTo,
 }: {
   obstacleId: string
   start: LocatedPoint
   end: LocatedPoint
   layer: string
   width: number
+  connectedTo: string[]
 }): Obstacle | null => {
   const dx = end.x - start.x
   const dy = end.y - start.y
@@ -249,7 +251,7 @@ const createClippedTraceSegmentObstacle = ({
     width: length,
     height: width,
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
-    connectedTo: [],
+    connectedTo,
   }
 }
 
@@ -411,6 +413,7 @@ const getClippedTracePieces = (
         end: keptEnd,
         layer,
         width,
+        connectedTo: [trace.connection_name, ...(trace.connectsTo ?? [])],
       })
       if (clippedTraceSegmentObstacle) {
         clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)
@@ -467,6 +470,7 @@ const getClippedTracePieces = (
         end: segmentEnd,
         layer,
         width,
+        connectedTo: [trace.connection_name, ...(trace.connectsTo ?? [])],
       })
       if (clippedTraceSegmentObstacle) {
         clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)

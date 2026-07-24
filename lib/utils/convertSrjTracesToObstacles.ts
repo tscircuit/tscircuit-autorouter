@@ -83,7 +83,9 @@ export const getObstaclesFromSrjTraces = (
   const viaDimensions = getViaDimensions(srj)
 
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
-    const connectedTo = trace.connectsTo ?? []
+    const connectedTo = Array.from(
+      new Set([trace.connection_name, ...(trace.connectsTo ?? [])]),
+    )
 
     for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
       const routePoint = trace.route[pointIndex]!
