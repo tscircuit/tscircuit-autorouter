@@ -2,15 +2,31 @@ import { expect, test } from "bun:test"
 import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preloaded-trace-graph-solver"
 import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 
-test("preloaded trace projection follows rotated wires and via layers", () => {
+test("preloaded trace projection only reserves fully covered layers", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
     {
       capacityMeshNodeId: "diagonal-top",
+      center: { x: 0, y: 0 },
+      width: 0.05,
+      height: 0.05,
+      layer: "top",
+      availableZ: [0],
+    },
+    {
+      capacityMeshNodeId: "coarse-diagonal-top",
       center: { x: 0, y: 0 },
       width: 0.2,
       height: 0.2,
       layer: "top",
       availableZ: [0],
+    },
+    {
+      capacityMeshNodeId: "multilayer-diagonal",
+      center: { x: 0, y: 0 },
+      width: 0.05,
+      height: 0.05,
+      layer: "z0,1",
+      availableZ: [0, 1],
     },
     {
       capacityMeshNodeId: "off-diagonal-top",
@@ -31,8 +47,8 @@ test("preloaded trace projection follows rotated wires and via layers", () => {
     {
       capacityMeshNodeId: "wire-bottom",
       center: { x: 0, y: 2 },
-      width: 0.2,
-      height: 0.2,
+      width: 0.05,
+      height: 0.05,
       layer: "bottom",
       availableZ: [1],
     },

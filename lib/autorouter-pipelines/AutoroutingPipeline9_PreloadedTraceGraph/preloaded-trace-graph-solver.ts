@@ -45,7 +45,7 @@ const getRotatedRectGeometry = (obstacle: Obstacle): RotatedRectGeometry => {
   }
 }
 
-const doesRotatedRectOverlapNode = (
+const doesRotatedRectContainNode = (
   rect: RotatedRectGeometry,
   node: CapacityMeshNode,
 ): boolean => {
@@ -60,27 +60,18 @@ const doesRotatedRectOverlapNode = (
     deltaX * rect.unitY.x + deltaY * rect.unitY.y,
   )
 
+  const nodeExtentOnRectX =
+    nodeHalfWidth * Math.abs(rect.unitX.x) +
+    nodeHalfHeight * Math.abs(rect.unitX.y)
+  const nodeExtentOnRectY =
+    nodeHalfWidth * Math.abs(rect.unitY.x) +
+    nodeHalfHeight * Math.abs(rect.unitY.y)
+
   return (
-    Math.abs(deltaX) <=
-      nodeHalfWidth +
-        rect.halfWidth * Math.abs(rect.unitX.x) +
-        rect.halfHeight * Math.abs(rect.unitY.x) +
-        GEOMETRIC_TOLERANCE &&
-    Math.abs(deltaY) <=
-      nodeHalfHeight +
-        rect.halfWidth * Math.abs(rect.unitX.y) +
-        rect.halfHeight * Math.abs(rect.unitY.y) +
-        GEOMETRIC_TOLERANCE &&
-    projectedOnRectX <=
-      rect.halfWidth +
-        nodeHalfWidth * Math.abs(rect.unitX.x) +
-        nodeHalfHeight * Math.abs(rect.unitX.y) +
-        GEOMETRIC_TOLERANCE &&
-    projectedOnRectY <=
-      rect.halfHeight +
-        nodeHalfWidth * Math.abs(rect.unitY.x) +
-        nodeHalfHeight * Math.abs(rect.unitY.y) +
-        GEOMETRIC_TOLERANCE
+    projectedOnRectX + nodeExtentOnRectX <=
+      rect.halfWidth + GEOMETRIC_TOLERANCE &&
+    projectedOnRectY + nodeExtentOnRectY <=
+      rect.halfHeight + GEOMETRIC_TOLERANCE
   )
 }
 
@@ -122,10 +113,10 @@ const getPreloadedTraceShapes = (
 }
 
 /**
- * Projects exact preloaded wire/via geometry onto the final capacity mesh.
- * buildHyperGraph canonicalizes each `_connectedTo` value into a fixed net
- * assignment, so old copper participates in pathing without fragmenting the
- * RectDiff topology.
+ * Conservatively projects preloaded copper onto the final capacity mesh.
+ * A region is assigned only when one trace shape covers its full area and
+ * every available layer. The hypergraph has region-level ownership, so
+ * assigning on partial overlap would block free space or an unused layer.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly outputNodes: CapacityMeshNode[]
@@ -174,8 +165,8 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       )
 
       for (const node of candidateNodes) {
-        if (!node.availableZ.some((z) => shape.zLayers.includes(z))) continue
-        if (!doesRotatedRectOverlapNode(geometry, node)) continue
+        if (!node.availableZ.every((z) => shape.zLayers.includes(z))) continue
+        if (!doesRotatedRectContainNode(geometry, node)) continue
 
         const connectedTo = new Set(node._connectedTo ?? [])
         const previousConnectionCount = connectedTo.size
