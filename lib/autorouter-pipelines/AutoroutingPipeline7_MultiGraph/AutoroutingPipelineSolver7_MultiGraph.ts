@@ -45,6 +45,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { isViaInPadEnabled } from "lib/utils/isViaInPadEnabled"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -689,7 +690,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             enableLargeBoardBroadFallback: false,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
-            enableViaInPadLayerMoves: true,
+            enableViaInPadLayerMoves: isViaInPadEnabled(cms.originalSrj),
             viaInPadMaxIterations: 32,
             broadMaxIterations: 8,
             broadPassMultiplier: 3,

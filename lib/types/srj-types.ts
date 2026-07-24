@@ -55,9 +55,16 @@ export interface SimpleRouteJson {
   min_via_pad_diameter?: number
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
+  minViaEdgeToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
+  /**
+   * Allows DRC repair to place layer transitions at terminal pad centers.
+   * Defaults to false because via-in-pad requires a fabrication process that
+   * explicitly supports filled and capped vias.
+   */
+  allowViaInPad?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
@@ -69,7 +76,7 @@ export interface SimpleRouteJson {
 
 export interface DifferentialPair {
   connectionNames: [string, string]
-  lengthTolerance: 0.1
+  lengthTolerance: number
 }
 
 export interface Obstacle {
@@ -78,6 +85,9 @@ export interface Obstacle {
   componentId?: string
   type: "rect"
   layers: string[]
+  /** Public z-layer indexes supplied by SimpleRouteJson producers. */
+  zLayers?: number[]
+  /** Canonicalized z-layer indexes used by autorouter internals. */
   __zLayers?: number[]
   center: { x: number; y: number }
   width: number
@@ -92,8 +102,11 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  rootConnectionName?: RootConnectionName
+  mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
   isOffBoard?: boolean
+  netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
@@ -114,6 +127,8 @@ export interface SimplifiedPcbTrace {
         y: number
         width: number
         layer: string
+        start_pcb_port_id?: string
+        end_pcb_port_id?: string
       }
     | {
         route_type: "via"

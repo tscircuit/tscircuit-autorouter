@@ -59,6 +59,7 @@ interface SimpleRouteJson {
   minTraceWidth: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
+  allowViaInPad?: boolean // Defaults to false
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   traces?: SimplifiedPcbTraces // Optional for input
 }
@@ -80,6 +81,10 @@ interface SimpleRouteConnection {
   pointsToConnect: Array<{ x: number; y: number; layer: string }>
 }
 ```
+
+Via-in-pad is disabled by default because it normally requires filled and
+capped vias. Set `allowViaInPad: true` only when the selected fabrication
+process supports it.
 
 ### Output Format
 

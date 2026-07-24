@@ -72,6 +72,17 @@ export type {
   GlobalDrcBranchPortfolioSolverParams,
   GlobalDrcForceImproveSolverParams,
   HighDensityRoute,
+} from "high-density-repair03/lib"
+export type {
+  BusId,
+  ConnectionPoint,
+  DifferentialPair,
+  MultiLayerConnectionPoint,
+  Obstacle,
+  SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,
-} from "high-density-repair03/lib"
+  SimplifiedPcbTraces,
+  SingleLayerConnectionPoint,
+  TerminalViaHint,
+} from "./types/srj-types"
