@@ -1,4 +1,3 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
@@ -210,9 +209,6 @@ function convertHdRouteToCircuitJsonTraces(
   return traces
 }
 
-const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
-  Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
-
 /**
  * Create source_trace elements from the SimpleRouteJson connections
  * These represent the logical connections between points
@@ -220,8 +216,94 @@ const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
 function createSourceTraces(
   srj: SimpleRouteJson,
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
+  obstacleSrj: SimpleRouteJson = srj,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
+  const sourceTraceById = new Map<string, AnyCircuitElement>()
+  const endpointConnectivityByRouteName = new Map<string, Set<string>>()
+
+  type RouteEndpoint = { x: number; y: number; layers: string[] }
+  const getRouteEndpoint = (
+    route: SimplifiedPcbTrace | HighDensityRoute,
+    endpoint: "start" | "end",
+  ): RouteEndpoint | undefined => {
+    const segment = endpoint === "start" ? route.route[0] : route.route.at(-1)
+    if (!segment) return undefined
+
+    if ("route_type" in segment) {
+      if (segment.route_type === "wire") {
+        return { x: segment.x, y: segment.y, layers: [segment.layer] }
+      }
+      if (segment.route_type === "via") {
+        return {
+          x: segment.x,
+          y: segment.y,
+          layers: [segment.from_layer, segment.to_layer],
+        }
+      }
+      const point = segment[endpoint]
+      return {
+        x: point.x,
+        y: point.y,
+        layers: [
+          segment.route_type === "jumper"
+            ? segment.layer
+            : endpoint === "start"
+              ? segment.from_layer
+              : segment.to_layer,
+        ],
+      }
+    }
+
+    return {
+      x: segment.x,
+      y: segment.y,
+      layers: [mapZToLayerName(segment.z, obstacleSrj.layerCount)],
+    }
+  }
+  const endpointIsInsideObstacle = (
+    endpoint: RouteEndpoint,
+    obstacle: Obstacle,
+  ): boolean => {
+    if (!endpoint.layers.some((layer) => obstacle.layers.includes(layer))) {
+      return false
+    }
+
+    const radians = -((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+    const deltaX = endpoint.x - obstacle.center.x
+    const deltaY = endpoint.y - obstacle.center.y
+    const localX = deltaX * Math.cos(radians) - deltaY * Math.sin(radians)
+    const localY = deltaX * Math.sin(radians) + deltaY * Math.cos(radians)
+    return (
+      Math.abs(localX) <= obstacle.width / 2 + 1e-9 &&
+      Math.abs(localY) <= obstacle.height / 2 + 1e-9
+    )
+  }
+
+  for (const hdRoute of hdRoutes) {
+    const routeName =
+      (hdRoute as SimplifiedPcbTrace).connection_name ??
+      (hdRoute as HighDensityRoute).connectionName
+    if (!routeName || hdRoute.route.length === 0) continue
+
+    const endpoints = [
+      getRouteEndpoint(hdRoute, "start"),
+      getRouteEndpoint(hdRoute, "end"),
+    ].filter((endpoint): endpoint is RouteEndpoint => endpoint !== undefined)
+    const endpointConnectivity =
+      endpointConnectivityByRouteName.get(routeName) ?? new Set<string>()
+
+    for (const endpoint of endpoints) {
+      for (const obstacle of obstacleSrj.obstacles) {
+        if (endpointIsInsideObstacle(endpoint, obstacle)) {
+          for (const connectivityId of obstacle.connectedTo) {
+            endpointConnectivity.add(connectivityId)
+          }
+        }
+      }
+    }
+    endpointConnectivityByRouteName.set(routeName, endpointConnectivity)
+  }
 
   // Process each connection to create a source_trace
   srj.connections.forEach((connection) => {
@@ -236,44 +318,30 @@ function createSourceTraces(
       connection.__netConnectionName ||
       connection.__rootConnectionNames?.[0] ||
       connection.name
-
-    // Test for obstacles we're inside of
-    const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
-    if (hdRoute) {
-      const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
-        if ("route_type" in segment && segment.route_type === "jumper") {
-          return segment.start
-        }
-        if ("x" in segment && "y" in segment) {
-          return { x: segment.x, y: segment.y }
-        }
-        return { x: 0, y: 0 }
-      }
-
-      const endpoints = [
-        getPointFromSegment(hdRoute.route[0]),
-        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
+    const connectionNames = new Set([
+      connection.name,
+      connection.__netConnectionName,
+      ...(connection.__rootConnectionNames ?? []),
+    ])
+    const connectedSourceNetIds = new Set<string>(
+      [
+        connection.__netConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
       ]
-
-      for (const endpoint of endpoints) {
-        for (const obstacle of srj.obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
-            obstaclesContainingEndpoints.push(obstacle)
-          }
-        }
+        .filter((name): name is string => Boolean(name))
+        .filter((name) => name !== netConnectionName),
+    )
+    for (const connectionName of connectionNames) {
+      if (!connectionName) continue
+      for (const connectivityId of endpointConnectivityByRouteName.get(
+        connectionName,
+      ) ?? []) {
+        connectedSourceNetIds.add(connectivityId)
       }
     }
 
     // Check if this source_trace already exists
-    const existingSourceTrace = sourceTraces.find(
-      (st) =>
-        st.type === "source_trace" && st.source_trace_id === netConnectionName,
-    )
+    const existingSourceTrace = sourceTraceById.get(netConnectionName)
 
     if (existingSourceTrace) {
       // Add these port IDs to the existing source_trace
@@ -287,19 +355,19 @@ function createSourceTraces(
       sourceTrace.connected_source_net_ids = [
         ...new Set([
           ...(sourceTrace.connected_source_net_ids ?? []),
-          ...getObstacleConnectivityIds(obstaclesContainingEndpoints),
+          ...connectedSourceNetIds,
         ]),
       ]
     } else {
       // Create a new source_trace for this connection
-      sourceTraces.push({
+      const sourceTrace = {
         type: "source_trace",
         source_trace_id: netConnectionName,
         connected_source_port_ids: connectedPortIds,
-        connected_source_net_ids: getObstacleConnectivityIds(
-          obstaclesContainingEndpoints,
-        ),
-      })
+        connected_source_net_ids: [...connectedSourceNetIds],
+      } as AnyCircuitElement
+      sourceTraces.push(sourceTrace)
+      sourceTraceById.set(netConnectionName, sourceTrace)
     }
   })
 
@@ -658,15 +726,16 @@ export function convertToCircuitJson(
 
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
+  const circuitSrj = originalSrj ?? srjWithPointPairs
 
   // Add source traces from connection information
-  circuitJson.push(...createSourceTraces(srjWithPointPairs, routes))
+  circuitJson.push(...createSourceTraces(srjWithPointPairs, routes, circuitSrj))
 
   // Add PCB ports for connection points
-  circuitJson.push(...createPcbPorts(srjWithPointPairs))
+  circuitJson.push(...createPcbPorts(circuitSrj))
 
   // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  circuitJson.push(...createPcbPadElements(circuitSrj))
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(
