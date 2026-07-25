@@ -104,6 +104,8 @@ export type SolverSvgFrame = (
 export type GraphicsSvgFrame = {
   /** Label prefix shown above this frame. */
   name: string
+  /** Render only the label, without solver step/layer metadata. */
+  hideMetadata?: boolean
   /** Optional step label shown after the frame name. */
   step?: number | "start" | "end"
   /** Marks this frame as a completed pipeline output. */
@@ -840,6 +842,10 @@ function getTextWidth(text: string, fontSize: number): number {
 }
 
 function getFrameTitleLines(frame: GraphicsSvgFrame): TitleSegment[][] {
+  if (frame.hideMetadata) {
+    return [[{ text: frame.name, color: "rgb(18,18,18)" }]]
+  }
+
   const phase = getFramePhase(frame)
   const stepValue = getFrameStepValue(frame)
   const layerValue = getFrameLayerValue(frame)
