@@ -279,6 +279,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (typeof setup === "function") setup.call(solver)
   }
 
+  /**
+   * Hard ceiling imposed by an owner, e.g. GrowShrink's
+   * maxInnerIterationsPerGrowthAttempt. Assigning MAX_ITERATIONS directly does
+   * not work: refreshDynamicIterationLimit() recomputes it from the remaining
+   * candidate budgets on the first step and would discard the cap.
+   */
+  externalMaxIterations: number | null = null
+
   private refreshDynamicIterationLimit() {
     const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) => {
@@ -300,6 +308,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.iterations + 1,
       this.iterations + remainingSupervisorIterations,
     )
+    if (
+      this.externalMaxIterations !== null &&
+      this.MAX_ITERATIONS > this.externalMaxIterations
+    ) {
+      this.MAX_ITERATIONS = this.externalMaxIterations
+    }
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 

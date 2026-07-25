@@ -148,6 +148,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ),
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
+      // Must be an external ceiling: the portfolio recomputes MAX_ITERATIONS
+      // dynamically on its first step and would otherwise discard this.
+      this.activeSubSolver.externalMaxIterations =
+        this.constructorParams.maxInnerIterationsPerGrowthAttempt
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt
     }
