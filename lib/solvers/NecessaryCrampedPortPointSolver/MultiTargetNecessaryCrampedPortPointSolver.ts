@@ -1,4 +1,6 @@
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import { GraphicsObject, mergeGraphics } from "graphics-debug"
 import {
   CapacityMeshNode,
   CapacityMeshNodeId,
@@ -8,12 +10,10 @@ import {
   SegmentPortPoint,
   SharedEdgeSegment,
 } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { GraphicsObject, mergeGraphics } from "graphics-debug"
-import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObstacles"
-import { costFunction } from "./costFunction"
-import { ExploredPortPoint } from "./types"
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import { costFunction } from "./costFunction"
+import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObstacles"
+import { ExploredPortPoint } from "./types"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 
@@ -158,7 +158,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         return
       }
 
-      let crampedCandidates = this.candidatesAtDepth.filter((candidate) => {
+      const crampedCandidates = this.candidatesAtDepth.filter((candidate) => {
         const port = candidate.port
         const capacityMeshNodes = port.nodeIds.map((nodeId) => {
           const cmNode = this.nodeMap.get(nodeId)
@@ -242,7 +242,10 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        if (
+          this.isMultilayerEscapePort(portPoint) ||
+          this.isPreloadedFixedCopperPort(portPoint)
+        ) {
           return [
             {
               ...portPoint,
@@ -260,6 +263,13 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private isMultilayerEscapePort(portPoint: SegmentPortPoint): boolean {
     return portPoint.nodeIds.some(
       (nodeId) => (this.nodeMap.get(nodeId)?.availableZ.length ?? 0) > 1,
+    )
+  }
+
+  private isPreloadedFixedCopperPort(portPoint: SegmentPortPoint): boolean {
+    return portPoint.nodeIds.some(
+      (nodeId) =>
+        (this.nodeMap.get(nodeId)?._preloadedFixedNetIds?.length ?? 0) > 0,
     )
   }
 

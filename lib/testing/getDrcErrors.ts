@@ -26,6 +26,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_via_id: string
   pcb_trace_id: string
 }
+type PcbViaElement = Extract<CircuitJsonElement, { type: "pcb_via" }>
 
 type DrcError =
   | PcbTraceError
@@ -51,6 +52,70 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+}
+
+export const VIA_OUTER_CLEARANCE_ERROR_PREFIX =
+  "different_net_vias_outer_clearance_"
+
+const getLayerName = (layer: PcbViaElement["layers"][number]): string => layer
+
+const viasShareLayer = (viaA: PcbViaElement, viaB: PcbViaElement): boolean => {
+  const viaALayers = new Set(viaA.layers.map(getLayerName))
+  return viaB.layers.some((layer) => viaALayers.has(getLayerName(layer)))
+}
+
+/**
+ * The manufacturing via-spacing checks use drill-hole edges. Different nets
+ * also need copper-to-copper clearance between their outer annuli.
+ */
+const checkDifferentNetViaOuterClearance = (
+  circuitJson: CircuitJson,
+  connMap: ConnectivityMap,
+  minimumClearance: number,
+): PcbViaClearanceError[] => {
+  const vias = circuitJson.filter(
+    (element): element is PcbViaElement => element.type === "pcb_via",
+  )
+  const errors: PcbViaClearanceError[] = []
+
+  for (let viaAIndex = 0; viaAIndex < vias.length; viaAIndex += 1) {
+    const viaA = vias[viaAIndex]!
+    for (
+      let viaBIndex = viaAIndex + 1;
+      viaBIndex < vias.length;
+      viaBIndex += 1
+    ) {
+      const viaB = vias[viaBIndex]!
+      if (
+        !viasShareLayer(viaA, viaB) ||
+        connMap.areIdsConnected(viaA.pcb_via_id, viaB.pcb_via_id)
+      ) {
+        continue
+      }
+      const actualClearance =
+        Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
+        viaA.outer_diameter / 2 -
+        viaB.outer_diameter / 2
+      if (actualClearance + 1e-9 >= minimumClearance) continue
+
+      const sortedViaIds = [viaA.pcb_via_id, viaB.pcb_via_id].sort()
+      errors.push({
+        type: "pcb_via_clearance_error",
+        error_type: "pcb_via_clearance_error",
+        pcb_error_id: `${VIA_OUTER_CLEARANCE_ERROR_PREFIX}${sortedViaIds.join("_")}`,
+        pcb_via_ids: [viaA.pcb_via_id, viaB.pcb_via_id],
+        minimum_clearance: minimumClearance,
+        actual_clearance: actualClearance,
+        pcb_center: {
+          x: (viaA.x + viaB.x) / 2,
+          y: (viaA.y + viaB.y) / 2,
+        },
+        message: `Vias ${viaA.pcb_via_id} and ${viaB.pcb_via_id} from different nets have ${actualClearance.toFixed(3)}mm outer-copper clearance (minimum: ${minimumClearance.toFixed(3)}mm)`,
+      })
+    }
+  }
+
+  return errors
 }
 
 const createDrcConnectivityMap = (
@@ -104,6 +169,11 @@ export const getDrcErrors = (
       connMap,
       minClearance: viaClearance,
     }),
+    ...checkDifferentNetViaOuterClearance(
+      circuitJson,
+      connMap,
+      options.traceClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
+    ),
   ]
 
   const errors: DrcError[] = [

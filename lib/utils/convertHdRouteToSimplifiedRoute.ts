@@ -240,6 +240,7 @@ export const convertHdRouteToSimplifiedRoute = (
 
   let currentLayerPoints: Point[] = []
   let currentZ = hdRoute.route[0].z
+  const emittedViaTransitions = new Set<string>()
 
   // Add all points to their respective layer segments
   for (let i = 0; i < hdRoute.route.length; i++) {
@@ -281,9 +282,14 @@ export const convertHdRouteToSimplifiedRoute = (
             Math.abs(via.x - point.x) < 0.001 &&
             Math.abs(via.y - point.y) < 0.001,
         )
+        const viaTransitionKey = `${point.x}:${point.y}:${Math.min(
+          currentZ,
+          point.z,
+        )}:${Math.max(currentZ, point.z)}`
 
         // Add a via if one exists
-        if (viaExists) {
+        if (viaExists && !emittedViaTransitions.has(viaTransitionKey)) {
+          emittedViaTransitions.add(viaTransitionKey)
           result.push({
             route_type: "via",
             x: point.x,

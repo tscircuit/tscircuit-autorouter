@@ -3,8 +3,26 @@ import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { resolvePreloadedTraceCanonicalNetIds } from "lib/utils/resolvePreloadedTraceCanonicalNetIds"
+
+export type PcbViaTraceContribution = {
+  pcb_trace_id: string
+  outer_diameter: number
+  hole_diameter: number
+}
+
+export type PcbViaWithContributingTraceIds = PcbVia & {
+  contributing_pcb_trace_ids?: string[]
+  contributing_pcb_trace_via_dimensions?: PcbViaTraceContribution[]
+}
+
+type ResolveMappedConnectionName = (
+  connectionName: string,
+  pcbTraceId: string,
+) => string | undefined
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -54,8 +72,23 @@ function convertSimplifiedPcbTraceToCircuitJson(
             from_layer: segment.from_layer,
             to_layer: segment.to_layer,
           }
+        } else if (segment.route_type === "through_obstacle") {
+          if (
+            !isLayerName(segment.from_layer) ||
+            !isLayerName(segment.to_layer)
+          ) {
+            return null
+          }
+          return {
+            route_type: "through_pad" as const,
+            start: segment.start,
+            end: segment.end,
+            width: segment.width,
+            start_layer: segment.from_layer,
+            end_layer: segment.to_layer,
+          }
         } else {
-          // jumper/through_obstacle - skip for now as circuit-json doesn't support these route types
+          // Jumpers are represented by separate off-board components, not PCB copper.
           return null
         }
       })
@@ -217,6 +250,8 @@ function createSourceTraces(
   srj: SimpleRouteJson,
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
   obstacleSrj: SimpleRouteJson = srj,
+  originalSrj?: SimpleRouteJson,
+  resolveMappedConnectionName: ResolveMappedConnectionName = () => undefined,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
   const sourceTraceById = new Map<string, AnyCircuitElement>()
@@ -280,18 +315,25 @@ function createSourceTraces(
     )
   }
 
-  for (const hdRoute of hdRoutes) {
+  for (const [routeIndex, hdRoute] of hdRoutes.entries()) {
     const routeName =
       (hdRoute as SimplifiedPcbTrace).connection_name ??
       (hdRoute as HighDensityRoute).connectionName
     if (!routeName || hdRoute.route.length === 0) continue
+    const pcbTraceId =
+      "type" in hdRoute && hdRoute.type === "pcb_trace"
+        ? hdRoute.pcb_trace_id
+        : `trace_${routeIndex}`
+    const canonicalRouteName =
+      resolveMappedConnectionName(routeName, pcbTraceId) ?? routeName
 
     const endpoints = [
       getRouteEndpoint(hdRoute, "start"),
       getRouteEndpoint(hdRoute, "end"),
     ].filter((endpoint): endpoint is RouteEndpoint => endpoint !== undefined)
     const endpointConnectivity =
-      endpointConnectivityByRouteName.get(routeName) ?? new Set<string>()
+      endpointConnectivityByRouteName.get(canonicalRouteName) ??
+      new Set<string>()
 
     for (const endpoint of endpoints) {
       for (const obstacle of obstacleSrj.obstacles) {
@@ -302,11 +344,21 @@ function createSourceTraces(
         }
       }
     }
-    endpointConnectivityByRouteName.set(routeName, endpointConnectivity)
+    endpointConnectivityByRouteName.set(
+      canonicalRouteName,
+      endpointConnectivity,
+    )
   }
 
+  // Include original connections because point-pair conversion can omit nets
+  // that are already represented by preloaded copper.
+  const sourceConnections = [
+    ...srj.connections,
+    ...(originalSrj?.connections ?? []),
+  ]
+
   // Process each connection to create a source_trace
-  srj.connections.forEach((connection) => {
+  sourceConnections.forEach((connection) => {
     // Extract port IDs from the connection points
     const connectedPortIds = connection.pointsToConnect
       .filter((point) => point.pcb_port_id)
@@ -318,8 +370,8 @@ function createSourceTraces(
       connection.__netConnectionName ||
       connection.__rootConnectionNames?.[0] ||
       connection.name
-    const connectionNames = new Set([
-      connection.name,
+    const canonicalConnectionNames = new Set([
+      netConnectionName,
       connection.__netConnectionName,
       ...(connection.__rootConnectionNames ?? []),
     ])
@@ -331,7 +383,7 @@ function createSourceTraces(
         .filter((name): name is string => Boolean(name))
         .filter((name) => name !== netConnectionName),
     )
-    for (const connectionName of connectionNames) {
+    for (const connectionName of canonicalConnectionNames) {
       if (!connectionName) continue
       for (const connectivityId of endpointConnectivityByRouteName.get(
         connectionName,
@@ -451,6 +503,23 @@ const layerNames = new Set<string>([
 ])
 
 const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
+
+const getLayerNamesBetween = (
+  fromLayer: string,
+  toLayer: string,
+  layerCount: number,
+): LayerName[] => {
+  const zLayers = getUniqueValidZLayersFromLayerNames(
+    [fromLayer, toLayer],
+    layerCount,
+  )
+  if (zLayers.length === 0) return []
+  const minimumZ = Math.min(...zLayers)
+  const maximumZ = Math.max(...zLayers)
+  return Array.from({ length: maximumZ - minimumZ + 1 }, (_, index) =>
+    mapZToLayerName(minimumZ + index, layerCount),
+  )
+}
 
 /**
  * Create pad-like circuit-json elements from SRJ obstacles.
@@ -611,9 +680,93 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  resolveMappedConnectionName: ResolveMappedConnectionName = () => undefined,
+  reservedCircuitElementIds: Set<string> = new Set(),
 ): PcbVia[] {
-  const vias: PcbVia[] = []
-  const viaLocations = new Set<string>() // Track unique via locations
+  const vias: PcbViaWithContributingTraceIds[] = []
+  const viaIndexByLocation = new Map<string, number>()
+  let nextViaId = 0
+  const createPcbViaId = () => {
+    let pcbViaId = `via_${nextViaId}`
+    while (reservedCircuitElementIds.has(pcbViaId)) {
+      nextViaId += 1
+      pcbViaId = `via_${nextViaId}`
+    }
+    nextViaId += 1
+    reservedCircuitElementIds.add(pcbViaId)
+    return pcbViaId
+  }
+  const addOrMergeVia = (
+    locationKey: string,
+    via: Omit<PcbVia, "pcb_via_id">,
+  ) => {
+    const existingViaIndex = viaIndexByLocation.get(locationKey)
+    if (existingViaIndex === undefined) {
+      const pcbVia = {
+        ...via,
+        pcb_via_id: createPcbViaId(),
+        ...(typeof via.pcb_trace_id === "string"
+          ? {
+              contributing_pcb_trace_via_dimensions: [
+                {
+                  pcb_trace_id: via.pcb_trace_id,
+                  outer_diameter: via.outer_diameter,
+                  hole_diameter: via.hole_diameter,
+                },
+              ],
+            }
+          : {}),
+      } as PcbViaWithContributingTraceIds
+      viaIndexByLocation.set(locationKey, vias.length)
+      vias.push(pcbVia)
+      return
+    }
+
+    const existingVia = vias[existingViaIndex]
+    if (!existingVia) return
+    if (typeof via.pcb_trace_id === "string") {
+      const contributions =
+        existingVia.contributing_pcb_trace_via_dimensions ?? []
+      const existingContribution = contributions.find(
+        (contribution) => contribution.pcb_trace_id === via.pcb_trace_id,
+      )
+      if (existingContribution) {
+        existingContribution.outer_diameter = Math.max(
+          existingContribution.outer_diameter,
+          via.outer_diameter,
+        )
+        existingContribution.hole_diameter = Math.max(
+          existingContribution.hole_diameter,
+          via.hole_diameter,
+        )
+      } else {
+        contributions.push({
+          pcb_trace_id: via.pcb_trace_id,
+          outer_diameter: via.outer_diameter,
+          hole_diameter: via.hole_diameter,
+        })
+      }
+      existingVia.contributing_pcb_trace_via_dimensions = contributions
+    }
+    existingVia.outer_diameter = Math.max(
+      existingVia.outer_diameter,
+      via.outer_diameter,
+    )
+    existingVia.hole_diameter = Math.max(
+      existingVia.hole_diameter,
+      via.hole_diameter,
+    )
+    if (typeof via.pcb_trace_id === "string") {
+      const existingContributorTraceIds =
+        existingVia.contributing_pcb_trace_ids ??
+        (typeof existingVia.pcb_trace_id === "string"
+          ? [existingVia.pcb_trace_id]
+          : [])
+      existingVia.contributing_pcb_trace_ids = [
+        ...new Set([...existingContributorTraceIds, via.pcb_trace_id]),
+      ]
+    }
+  }
 
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
@@ -630,20 +783,28 @@ function extractViasFromRoutes(
             const viaDiameter = segment.via_diameter ?? minViaDiameter
             const viaHoleDiameter =
               segment.via_hole_diameter ?? minViaHoleDiameter
-            const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
-            if (!viaLocations.has(locationKey)) {
-              vias.push({
-                type: "pcb_via",
-                pcb_via_id: `via_${vias.length}`,
-                pcb_trace_id: trace.pcb_trace_id,
-                x: segment.x,
-                y: segment.y,
-                outer_diameter: viaDiameter,
-                hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
-              })
-              viaLocations.add(locationKey)
-            }
+            const routeNetId =
+              resolveMappedConnectionName(
+                trace.connection_name,
+                trace.pcb_trace_id,
+              ) ?? trace.connection_name
+            const viaLayerKey = [segment.from_layer, segment.to_layer]
+              .sort()
+              .join(",")
+            const locationKey = `${routeNetId},${segment.x},${segment.y},${viaLayerKey}`
+            addOrMergeVia(locationKey, {
+              type: "pcb_via",
+              pcb_trace_id: trace.pcb_trace_id,
+              x: segment.x,
+              y: segment.y,
+              outer_diameter: viaDiameter,
+              hole_diameter: viaHoleDiameter,
+              layers: getLayerNamesBetween(
+                segment.from_layer,
+                segment.to_layer,
+                layerCount,
+              ),
+            })
           }
         })
       })
@@ -665,21 +826,23 @@ function extractViasFromRoutes(
           ) {
             const fromLayer = mapZToLayerName(prevPoint.z, layerCount)
             const toLayer = mapZToLayerName(currPoint.z, layerCount)
-            const locationKey = `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
+            const routeNetId =
+              resolveMappedConnectionName(route.connectionName, traceId) ??
+              route.rootConnectionName ??
+              route.connectionName ??
+              traceId
+            const viaLayerKey = [fromLayer, toLayer].sort().join(",")
+            const locationKey = `${routeNetId},${currPoint.x},${currPoint.y},${viaLayerKey}`
 
-            if (!viaLocations.has(locationKey)) {
-              vias.push({
-                type: "pcb_via",
-                pcb_via_id: `via_${vias.length}`,
-                pcb_trace_id: traceId,
-                x: currPoint.x,
-                y: currPoint.y,
-                outer_diameter: viaDiameter,
-                hole_diameter: viaHoleDiameter,
-                layers: [fromLayer, toLayer],
-              })
-              viaLocations.add(locationKey)
-            }
+            addOrMergeVia(locationKey, {
+              type: "pcb_via",
+              pcb_trace_id: traceId,
+              x: currPoint.x,
+              y: currPoint.y,
+              outer_diameter: viaDiameter,
+              hole_diameter: viaHoleDiameter,
+              layers: getLayerNamesBetween(fromLayer, toLayer, layerCount),
+            })
           }
         }
       })
@@ -699,6 +862,7 @@ export type ConvertToCircuitJsonOptions = {
   minViaDiameter?: number
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
+  preloadedTraceIds?: ReadonlySet<string>
 }
 
 export function convertToCircuitJson(
@@ -711,6 +875,7 @@ export function convertToCircuitJson(
     minViaDiameter,
     minViaHoleDiameter,
     originalSrj,
+    preloadedTraceIds = new Set<string>(),
   } = options
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
@@ -727,9 +892,61 @@ export function convertToCircuitJson(
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
   const circuitSrj = originalSrj ?? srjWithPointPairs
+  const createConnectionMap = (connectionSrj: SimpleRouteJson) => {
+    const connectionMap = new Map<string, string>()
+    connectionSrj.connections.forEach((conn) => {
+      connectionMap.set(
+        conn.name,
+        conn.__netConnectionName ||
+          conn.__rootConnectionNames?.[0] ||
+          conn.name,
+      )
+    })
+    return connectionMap
+  }
+  const originalConnectionMap = originalSrj
+    ? createConnectionMap(originalSrj)
+    : new Map<string, string>()
+  const pointPairConnectionMap = createConnectionMap(srjWithPointPairs)
+  const inferredPreloadedConnectionByTraceId = new Map<string, string>()
+  if (
+    originalSrj &&
+    routes.length > 0 &&
+    "type" in routes[0] &&
+    routes[0].type === "pcb_trace"
+  ) {
+    const preloadedTraces = (routes as SimplifiedPcbTrace[]).filter((trace) =>
+      preloadedTraceIds.has(trace.pcb_trace_id),
+    )
+    for (const [traceId, canonicalName] of resolvePreloadedTraceCanonicalNetIds(
+      {
+        ...originalSrj,
+        traces: preloadedTraces,
+      },
+    )) {
+      inferredPreloadedConnectionByTraceId.set(traceId, canonicalName)
+    }
+  }
+  const resolveMappedConnectionName = (
+    connectionName: string,
+    pcbTraceId: string,
+  ): string | undefined =>
+    preloadedTraceIds.has(pcbTraceId)
+      ? (originalConnectionMap.get(connectionName) ??
+        inferredPreloadedConnectionByTraceId.get(pcbTraceId))
+      : (pointPairConnectionMap.get(connectionName) ??
+        originalConnectionMap.get(connectionName))
 
   // Add source traces from connection information
-  circuitJson.push(...createSourceTraces(srjWithPointPairs, routes, circuitSrj))
+  circuitJson.push(
+    ...createSourceTraces(
+      srjWithPointPairs,
+      routes,
+      circuitSrj,
+      originalSrj,
+      resolveMappedConnectionName,
+    ),
+  )
 
   // Add PCB ports for connection points
   circuitJson.push(...createPcbPorts(circuitSrj))
@@ -737,35 +954,19 @@ export function convertToCircuitJson(
   // Add PCB pads / plated holes represented by SRJ obstacles
   circuitJson.push(...createPcbPadElements(circuitSrj))
 
-  // Extract and add vias as independent pcb_via elements
-  circuitJson.push(
-    ...extractViasFromRoutes(
-      routes,
-      srjWithPointPairs.layerCount,
-      resolvedMinViaDiameter,
-      resolvedMinViaHoleDiameter,
-    ),
-  )
-
-  // Build a map of connection names to simplify lookups
-  const connectionMap = new Map<string, string>()
-  srjWithPointPairs.connections.forEach((conn) => {
-    connectionMap.set(
-      conn.name,
-      conn.__netConnectionName || conn.__rootConnectionNames?.[0] || conn.name,
-    )
-  })
-
-  // Process routes based on their type
+  // Convert PCB traces before allocating via ids so generated ids can avoid
+  // every id already present in the resulting Circuit JSON.
+  const convertedPcbTraces: AnyCircuitElement[] = []
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       // Handle SimplifiedPcbTraces
       ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
         const connectionName = trace.connection_name
-        circuitJson.push(
+        convertedPcbTraces.push(
           convertSimplifiedPcbTraceToCircuitJson(
             trace,
-            connectionMap.get(connectionName) || connectionName,
+            resolveMappedConnectionName(connectionName, trace.pcb_trace_id) ??
+              connectionName,
           ) as AnyCircuitElement,
         )
       })
@@ -776,14 +977,37 @@ export function convertToCircuitJson(
         const traces = convertHdRouteToCircuitJsonTraces(
           route,
           `trace_${index}`,
-          connectionMap.get(connectionName) || connectionName,
+          resolveMappedConnectionName(connectionName, `trace_${index}`) ??
+            connectionName,
           srjWithPointPairs.layerCount,
           minTraceWidth,
         )
-        circuitJson.push(...(traces as AnyCircuitElement[]))
+        convertedPcbTraces.push(...(traces as AnyCircuitElement[]))
       })
     }
   }
+
+  const reservedCircuitElementIds = new Set<string>()
+  for (const element of [...circuitJson, ...convertedPcbTraces]) {
+    for (const [propertyName, value] of Object.entries(element)) {
+      if (propertyName.endsWith("_id") && typeof value === "string") {
+        reservedCircuitElementIds.add(value)
+      }
+    }
+  }
+
+  // Extract and add vias as independent pcb_via elements.
+  circuitJson.push(
+    ...extractViasFromRoutes(
+      routes,
+      srjWithPointPairs.layerCount,
+      resolvedMinViaDiameter,
+      resolvedMinViaHoleDiameter,
+      resolveMappedConnectionName,
+      reservedCircuitElementIds,
+    ),
+  )
+  circuitJson.push(...convertedPcbTraces)
 
   return circuitJson
 }

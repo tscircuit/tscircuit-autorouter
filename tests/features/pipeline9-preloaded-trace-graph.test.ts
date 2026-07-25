@@ -33,7 +33,7 @@ test("Pipeline9 projects preloaded copper into hypergraph regions without topolo
   })
   expect(
     solver.capacityNodes?.some((node) =>
-      node._connectedTo?.includes(preloadedTrace.connection_name),
+      node._preloadedFixedNetIds?.includes(srj.connections[0]!.name),
     ),
   ).toBe(true)
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(1)

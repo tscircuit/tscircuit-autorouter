@@ -87,6 +87,13 @@ export const inferPreloadedTraceConnectivity = (
       getTraceEndpoint(trace, 0),
       getTraceEndpoint(trace, 1),
     ].filter((endpoint): endpoint is TraceEndpoint => endpoint !== null)
+    const connectionPointIds = new Set(
+      connection?.pointsToConnect.flatMap((point) =>
+        [point.pointId, point.pcb_port_id].filter(
+          (pointId): pointId is string => pointId !== undefined,
+        ),
+      ) ?? [],
+    )
     const inferredPointIds =
       connection?.pointsToConnect
         .filter((point) =>
@@ -99,14 +106,18 @@ export const inferPreloadedTraceConnectivity = (
             ),
           ),
         )
-        .map((point) => point.pointId)
-        .filter((pointId): pointId is string => pointId !== undefined) ?? []
+        .flatMap((point) =>
+          [point.pointId, point.pcb_port_id].filter(
+            (pointId): pointId is string => pointId !== undefined,
+          ),
+        ) ?? []
+    const preservedNonPointIds = (trace.connectsTo ?? []).filter(
+      (connectsTo) => !connectionPointIds.has(connectsTo),
+    )
 
     return {
       ...trace,
-      connectsTo: [
-        ...new Set([...(trace.connectsTo ?? []), ...inferredPointIds]),
-      ],
+      connectsTo: [...new Set([...preservedNonPointIds, ...inferredPointIds])],
     }
   })
 

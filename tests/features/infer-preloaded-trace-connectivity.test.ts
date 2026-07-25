@@ -75,3 +75,62 @@ test("infers quantized endpoints through multilayer connected pads", () => {
     "quantized-top",
   ])
 })
+
+test("removes stale known port metadata that retained copper no longer reaches", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -3, minY: -3, maxX: 3, maxY: 3 },
+    obstacles: [],
+    connections: [
+      {
+        name: "net1",
+        pointsToConnect: [
+          {
+            x: -2,
+            y: 0,
+            layer: "top",
+            pointId: "port-a",
+            pcb_port_id: "port-a",
+          },
+          {
+            x: 2,
+            y: 0,
+            layer: "top",
+            pointId: "port-b",
+            pcb_port_id: "port-b",
+          },
+        ],
+      },
+    ],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "partial-net1",
+        connection_name: "net1",
+        connectsTo: ["port-a", "port-b", "non-port-alias"],
+        route: [
+          {
+            route_type: "wire",
+            x: -2,
+            y: 0,
+            width: 0.1,
+            layer: "top",
+          },
+          {
+            route_type: "wire",
+            x: 0,
+            y: 0,
+            width: 0.1,
+            layer: "top",
+          },
+        ],
+      },
+    ],
+  }
+
+  expect(inferPreloadedTraceConnectivity(srj).traces?.[0]?.connectsTo).toEqual([
+    "non-port-alias",
+    "port-a",
+  ])
+})

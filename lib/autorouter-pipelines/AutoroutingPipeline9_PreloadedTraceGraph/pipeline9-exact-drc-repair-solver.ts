@@ -8,16 +8,24 @@ import {
   getDrcSnapshot,
   materializeRoutes,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import {
+  type Pipeline9IjumpRerouteOptions,
+  Pipeline9IjumpRerouter,
+} from "./pipeline9-ijump-rerouter"
 
 type Pipeline9ExactDrcRepairSolverParams =
   GlobalDrcBranchPortfolioSolverParams & {
     originalObstacles: Obstacle[]
+    ijumpBaseObstacles: Obstacle[]
   }
 
 type DrcError = Record<string, unknown>
+type DrcSnapshot = ReturnType<typeof getDrcSnapshot>
 
 type TerminalConstraint = {
   routeIndex: number
@@ -27,14 +35,156 @@ type TerminalConstraint = {
   owningObstacles: Obstacle[]
 }
 
+type ViaTransitionGroup = {
+  routeIndex: number
+  indexes: number[]
+  x: number
+  y: number
+  distanceToError: number
+}
+
+type ErrorOwnedClusterPlan = {
+  routeIndexes: number[]
+  reverse: boolean
+  allowTerminalEscape: boolean
+}
+
+type PostFinalCompositeWindow = {
+  startIndex: number
+  endIndex: number
+  terminalRooted: boolean
+}
+
+type FixedCopperCompositePlan = {
+  routeIndex: number
+  targetErrorIdentity: string
+}
+
+type ScopedSameNetViaMergeResult = {
+  routes?: HighDensityRoute[]
+  iterations: number
+  mergedViaCount: number
+}
+
+type SharedTerminalCompositeGroup = {
+  fixedTraceId: string
+  canonicalNet: string
+  terminalPortId: string
+  branches: Array<{
+    routeIndex: number
+    endpoint: "start" | "end"
+  }>
+  baselineErrorIds: Set<string>
+}
+
+type EndpointSlideBranch = {
+  routeIndex: number
+  endpoint: "start" | "end"
+  endpointIndex: number
+  coincidentIndexes: number[]
+  constraint: TerminalConstraint
+}
+
+type FinalContinuityTerminalViaCandidate = {
+  routeIndex: number
+  endpoint: "start" | "end"
+  targetZ: number
+  distanceToError: number
+}
+
 const POSITION_EPSILON = 1e-6
+const PRELOADED_TERMINAL_MATCH_TOLERANCE = 1e-3
 const ENDPOINT_SLIDE_RADII = [
   0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.3,
 ] as const
+const VIA_MICRO_SHIFT_RADII = ENDPOINT_SLIDE_RADII
+const MAX_VIA_GROUPS_PER_ROUTE = 3
+const MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP = 32
+const MAX_VIA_MICRO_SHIFT_SNAPSHOT_ISSUES = 8
 const BATCHED_TRACE_FORCE_SCALES = [4, 2, 1, 0.5, 0.25] as const
 const MAX_BATCHED_TRACE_FORCE_PASSES = 20
 const MAX_CLEANUP_PASSES = 8
+const DEFAULT_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS = 500
+const HIGH_INITIAL_DRC_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS = 300
+const HIGH_INITIAL_DRC_THRESHOLD = 20
+const DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES =
+  DEFAULT_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS
+const HIGH_INITIAL_DRC_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES = 64
 const MAX_LOCAL_LAYER_DETOUR_EXPANSION = 6
+const MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND = 18
+const MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND = 24
+const MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND = 8
+const DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS = 300_000
+const HIGH_INITIAL_DRC_MAX_IJUMP_TOTAL_ITERATIONS = 200_000
+const MAX_IJUMP_FULL_ITERATIONS = 30_000
+const MAX_IJUMP_INTERIOR_ITERATIONS = 10_000
+const MAX_IJUMP_PHASE_ROUNDS = 2
+const MAX_IJUMP_INTERIOR_EXPANSION = 6
+const MAX_ERROR_OWNED_CLUSTER_ITERATIONS = 75_000
+const MAX_ERROR_OWNED_CLUSTER_ROUTE_ITERATIONS = 15_000
+const MAX_ERROR_OWNED_CLUSTER_PASSES = 2
+const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_CANDIDATES = 4
+const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_ITERATIONS = 10_000
+const MAX_POST_CLUSTER_VIA_MICRO_SHIFT_DRC_EVALUATIONS = 32
+const MAX_FINAL_OWNER_IJUMP_ITERATIONS = 50_000
+const MAX_FINAL_OWNER_FULL_ROUTE_ITERATIONS = 25_000
+const MAX_FINAL_OWNER_LONG_ROUTE_ITERATIONS = 4_000
+const MAX_FINAL_OWNER_VARIANT_ITERATIONS = 10_000
+const MAX_FINAL_OWNER_INTERIOR_ITERATIONS = 10_000
+const MAX_FINAL_OWNER_FULL_VARIANT_ROUTE_POINTS = 24
+const FINAL_OWNER_INTERIOR_ITERATION_RESERVE = 8_000
+const MAX_FINAL_OWNER_FALLBACK_RESIDUAL = 2
+const MAX_POST_REPAIR_SAME_NET_VIA_MERGER_ITERATIONS = 8
+const MAX_SHARED_TERMINAL_COMPOSITE_RESIDUAL = 4
+const MAX_SHARED_TERMINAL_COMPOSITE_ATTEMPTS = 1
+const MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS = 12_500
+const MAX_SHARED_TERMINAL_COMPOSITE_DRC_EVALUATIONS = 2
+const MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS = 24_000
+const MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS_PER_ATTEMPT = 8_000
+const MAX_POST_FINAL_COMPOSITE_ATTEMPTS = 12
+const MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS = 12
+const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS = 32
+const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS_PER_ATTEMPT = 8
+const MAX_FIXED_COPPER_COMPOSITE_RESIDUAL = 2
+const MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS = 4
+const MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_ATTEMPTS = 6
+const MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS = 8
+const MAX_FIXED_COPPER_COMPOSITE_ITERATIONS = 24_000
+const MAX_FIXED_COPPER_COMPOSITE_ITERATIONS_PER_ATTEMPT = 8_000
+const MAX_FIXED_COPPER_COMPOSITE_EXPOSED_ISSUES = 4
+const MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_OWNERS = 2
+const MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS = 32
+const MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS = 32
+const MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS = 8
+const POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS = [4, 8] as const
+const POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY = 4
+const FULL_IJUMP_VARIANTS = [
+  { reverse: false, shortenPath: true },
+  { reverse: false, shortenPath: false },
+  { reverse: true, shortenPath: false },
+] as const
+
+const INTERIOR_IJUMP_VARIANTS = [
+  { reverse: false, shortenPath: false },
+  { reverse: true, shortenPath: false },
+] as const
+
+const FIXED_ONLY_IJUMP_VARIANTS = [
+  { reverse: false, shortenPath: false },
+  { reverse: true, shortenPath: false },
+] as const
+
+const FINAL_OWNER_FULL_VARIANTS = [
+  { reverse: false, shortenPath: false },
+  { reverse: false, shortenPath: true },
+  { reverse: true, shortenPath: false },
+] as const
+
+const FIXED_COPPER_COMPOSITE_PRIMARY_VARIANTS = [
+  { reverse: false, shortenPath: true },
+  { reverse: false, shortenPath: false },
+  { reverse: true, shortenPath: false },
+] as const
 
 const getErrorType = (error: DrcError): string | undefined =>
   typeof error.error_type === "string"
@@ -123,6 +273,75 @@ const getOtherTraceId = (
   return traceRouteIndexById.has(otherTraceId) ? otherTraceId : undefined
 }
 
+const getRawOtherTraceId = (error: DrcError): string | undefined => {
+  const traceId = error.pcb_trace_id
+  const errorId = error.pcb_trace_error_id
+  if (typeof traceId !== "string" || typeof errorId !== "string") {
+    return undefined
+  }
+  const prefix = `overlap_${traceId}_`
+  return errorId.startsWith(prefix) ? errorId.slice(prefix.length) : undefined
+}
+
+const getCandidateTraceIdsFromError = (error: DrcError): string[] =>
+  Array.isArray(error.candidate_pcb_trace_ids)
+    ? error.candidate_pcb_trace_ids.filter(
+        (traceId): traceId is string => typeof traceId === "string",
+      )
+    : []
+
+const getUnitDirection = (
+  deltaX: number,
+  deltaY: number,
+): { x: number; y: number } | undefined => {
+  const length = Math.hypot(deltaX, deltaY)
+  if (length <= POSITION_EPSILON) return undefined
+  return { x: deltaX / length, y: deltaY / length }
+}
+
+const getMicroShiftDirections = (preferredDirection?: {
+  x: number
+  y: number
+}): Array<{ x: number; y: number }> => {
+  const directions: Array<{ x: number; y: number }> = []
+  const seenDirections = new Set<string>()
+  const addDirection = (direction: { x: number; y: number } | undefined) => {
+    if (!direction) return
+    const unitDirection = getUnitDirection(direction.x, direction.y)
+    if (!unitDirection) return
+    const key = `${unitDirection.x.toFixed(6)}:${unitDirection.y.toFixed(6)}`
+    if (seenDirections.has(key)) return
+    seenDirections.add(key)
+    directions.push(unitDirection)
+  }
+
+  addDirection(preferredDirection)
+  for (const direction of [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: Math.SQRT1_2, y: Math.SQRT1_2 },
+    { x: Math.SQRT1_2, y: -Math.SQRT1_2 },
+    { x: -Math.SQRT1_2, y: Math.SQRT1_2 },
+    { x: -Math.SQRT1_2, y: -Math.SQRT1_2 },
+  ]) {
+    addDirection(direction)
+  }
+
+  return directions
+}
+
+const routeHasValidLayerTransitions = (route: HighDensityRoute): boolean =>
+  route.route.every((point, pointIndex) => {
+    const nextPoint = route.route[pointIndex + 1]
+    return (
+      !nextPoint ||
+      point.z === nextPoint.z ||
+      getPointDistance(point, nextPoint) <= POSITION_EPSILON
+    )
+  })
+
 const getPointToSegmentDistance = (
   point: { x: number; y: number },
   start: { x: number; y: number },
@@ -173,13 +392,79 @@ const getCoincidentTerminalPointIndexes = (
 export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolver {
   private readonly originalObstacles: Obstacle[]
   private readonly terminalConstraints: TerminalConstraint[]
+  private readonly ijumpRerouter: Pipeline9IjumpRerouter
   private cleanupStarted = false
   private cleanupCandidateAttempts = 0
   private cleanupCandidatesAccepted = 0
+  private localCleanupDrcEvaluations = 0
+  private selectedLocalCleanupDrcEvaluationLimit =
+    DEFAULT_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS
+  private consecutiveLocalCleanupDrcMisses = 0
+  private maxConsecutiveLocalCleanupDrcMisses = 0
+  private selectedConsecutiveLocalCleanupDrcMissLimit =
+    DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
+  private selectedIjumpIterationLimit = DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS
+  private viaMicroShiftAttempts = 0
+  private viaMicroShiftsAccepted = 0
+  private ijumpFullAttempts = 0
+  private ijumpInteriorAttempts = 0
+  private ijumpFixedOnlyAttempts = 0
+  private ijumpCandidatesAccepted = 0
+  private ijumpIterations = 0
+  private errorOwnedClusterOrderAttempts = 0
+  private errorOwnedClusterRouteAttempts = 0
+  private errorOwnedClusterDrcEvaluations = 0
+  private errorOwnedClusterIterations = 0
+  private errorOwnedClusterAccepted = 0
+  private errorOwnedClusterTerminalEscapeAttempts = 0
+  private errorOwnedClusterPostRouteAttempts = 0
+  private errorOwnedClusterPostCandidatesAccepted = 0
+  private postClusterViaMicroShiftDrcEvaluations = 0
+  private finalOwnerFullAttempts = 0
+  private finalOwnerInteriorAttempts = 0
+  private finalOwnerDrcEvaluations = 0
+  private finalOwnerCandidatesAccepted = 0
+  private finalOwnerIterations = 0
+  private postRepairSameNetViaMergeAttempts = 0
+  private postRepairSameNetViaMergeDrcEvaluations = 0
+  private postRepairSameNetViaMergeCandidatesAccepted = 0
+  private postRepairSameNetViaMergeIterations = 0
+  private sharedTerminalCompositeAttempts = 0
+  private sharedTerminalCompositeRelocatedBranches = 0
+  private sharedTerminalCompositeIjumpAttempts = 0
+  private sharedTerminalCompositeDrcEvaluations = 0
+  private sharedTerminalCompositeCandidatesAccepted = 0
+  private sharedTerminalCompositeIterations = 0
+  private postFinalCompositeAttempts = 0
+  private postFinalCompositeForwardAttempts = 0
+  private postFinalCompositeReverseAttempts = 0
+  private postFinalCompositeTerminalRootedAttempts = 0
+  private postFinalCompositeDrcEvaluations = 0
+  private postFinalCompositeCandidatesAccepted = 0
+  private postFinalCompositeIterations = 0
+  private postFinalCompositeSameNetViaMergeIterations = 0
+  private fixedCopperCompositePrimaryAttempts = 0
+  private fixedCopperCompositeFollowupAttempts = 0
+  private fixedCopperCompositeDrcEvaluations = 0
+  private fixedCopperCompositeCandidatesAccepted = 0
+  private fixedCopperCompositeIterations = 0
+  private finalEndpointSlideAttempts = 0
+  private finalEndpointSlideDrcEvaluations = 0
+  private finalEndpointSlideCandidatesAccepted = 0
+  private finalEndpointSlideRelocatedBranches = 0
+  private finalContinuityTerminalViaAttempts = 0
+  private finalContinuityTerminalViaDrcEvaluations = 0
+  private finalContinuityTerminalViaCandidatesAccepted = 0
 
   constructor(params: Pipeline9ExactDrcRepairSolverParams) {
     super(params)
     this.originalObstacles = params.originalObstacles
+    this.ijumpRerouter = new Pipeline9IjumpRerouter({
+      srj: params.srj,
+      baseObstacles: params.ijumpBaseObstacles,
+      connMap: params.connMap,
+      viaHoleDiameter: params.viaHoleDiameter,
+    })
     this.terminalConstraints = params.hdRoutes.flatMap((route, routeIndex) =>
       (["start", "end"] as const).flatMap((endpoint) => {
         const point = endpoint === "start" ? route.route[0] : route.route.at(-1)
@@ -285,20 +570,287 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private candidateImprovesSnapshot(
     candidateRoutes: HighDensityRoute[],
     currentIssueCount: number,
+    source: "local" | "ijump" = "local",
   ): boolean {
     this.cleanupCandidateAttempts += 1
     if (!this.candidatePreservesTerminals(candidateRoutes)) return false
+    if (
+      source === "local" &&
+      this.localCleanupDrcEvaluations >=
+        this.selectedLocalCleanupDrcEvaluationLimit
+    ) {
+      return false
+    }
+    if (source === "local") this.localCleanupDrcEvaluations += 1
 
     const candidateSnapshot = this.getSnapshot(candidateRoutes)
-    if (candidateSnapshot.count >= currentIssueCount) return false
+    if (candidateSnapshot.count >= currentIssueCount) {
+      if (source === "local") {
+        this.consecutiveLocalCleanupDrcMisses += 1
+        this.maxConsecutiveLocalCleanupDrcMisses = Math.max(
+          this.maxConsecutiveLocalCleanupDrcMisses,
+          this.consecutiveLocalCleanupDrcMisses,
+        )
+      }
+      return false
+    }
+    if (source === "local") this.consecutiveLocalCleanupDrcMisses = 0
     this.cleanupCandidatesAccepted += 1
     return true
+  }
+
+  private hasLocalCleanupBudget(): boolean {
+    return (
+      this.localCleanupDrcEvaluations <
+        this.selectedLocalCleanupDrcEvaluationLimit &&
+      this.consecutiveLocalCleanupDrcMisses <
+        this.selectedConsecutiveLocalCleanupDrcMissLimit
+    )
+  }
+
+  private selectAdaptiveCleanupLimits(): void {
+    const initialDrcIssueCount = this.stats.initialDrcIssueCount
+    const useHighInitialDrcLimits =
+      typeof initialDrcIssueCount === "number" &&
+      initialDrcIssueCount >= HIGH_INITIAL_DRC_THRESHOLD
+    this.selectedLocalCleanupDrcEvaluationLimit = useHighInitialDrcLimits
+      ? HIGH_INITIAL_DRC_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS
+      : DEFAULT_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS
+    this.selectedConsecutiveLocalCleanupDrcMissLimit = useHighInitialDrcLimits
+      ? HIGH_INITIAL_DRC_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
+      : DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
+    this.selectedIjumpIterationLimit = useHighInitialDrcLimits
+      ? HIGH_INITIAL_DRC_MAX_IJUMP_TOTAL_ITERATIONS
+      : DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS
+  }
+
+  private getCandidateRouteIndexesForError(
+    error: DrcError,
+    snapshot: DrcSnapshot,
+  ): number[] {
+    const primaryTraceId =
+      typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+    const otherTraceId = getOtherTraceId(error, snapshot.traceRouteIndexById)
+    const routeIndexes: number[] = []
+    const seenRouteIndexes = new Set<number>()
+
+    for (const traceId of [
+      ...getCandidateTraceIdsFromError(error),
+      otherTraceId,
+      primaryTraceId,
+    ]) {
+      if (!traceId) continue
+      const routeIndex = snapshot.traceRouteIndexById.get(traceId)
+      if (routeIndex === undefined || seenRouteIndexes.has(routeIndex)) {
+        continue
+      }
+      seenRouteIndexes.add(routeIndex)
+      routeIndexes.push(routeIndex)
+    }
+
+    return routeIndexes
+  }
+
+  private getViaTransitionGroups(
+    route: HighDensityRoute,
+    routeIndex: number,
+    errorCenter: { x: number; y: number },
+  ): ViaTransitionGroup[] {
+    const groups: ViaTransitionGroup[] = []
+    const seenGroups = new Set<string>()
+
+    for (
+      let pointIndex = 0;
+      pointIndex < route.route.length - 1;
+      pointIndex += 1
+    ) {
+      const point = route.route[pointIndex]
+      const nextPoint = route.route[pointIndex + 1]
+      if (
+        !point ||
+        !nextPoint ||
+        point.z === nextPoint.z ||
+        getPointDistance(point, nextPoint) > POSITION_EPSILON
+      ) {
+        continue
+      }
+
+      let startIndex = pointIndex
+      let endIndex = pointIndex + 1
+      while (
+        startIndex > 0 &&
+        getPointDistance(route.route[startIndex - 1]!, point) <=
+          POSITION_EPSILON
+      ) {
+        startIndex -= 1
+      }
+      while (
+        endIndex < route.route.length - 1 &&
+        getPointDistance(route.route[endIndex + 1]!, point) <= POSITION_EPSILON
+      ) {
+        endIndex += 1
+      }
+
+      const groupKey = `${startIndex}:${endIndex}`
+      if (seenGroups.has(groupKey)) continue
+      seenGroups.add(groupKey)
+      groups.push({
+        routeIndex,
+        indexes: Array.from(
+          { length: endIndex - startIndex + 1 },
+          (_, indexOffset) => startIndex + indexOffset,
+        ),
+        x: point.x,
+        y: point.y,
+        distanceToError: getPointDistance(point, errorCenter),
+      })
+    }
+
+    return groups
+      .toSorted((left, right) => left.distanceToError - right.distanceToError)
+      .slice(0, MAX_VIA_GROUPS_PER_ROUTE)
+  }
+
+  private tryViaMicroShift(
+    routes: HighDensityRoute[],
+    error: DrcError,
+    sweepBudget = {
+      remaining: MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP,
+    },
+  ): HighDensityRoute[] | undefined {
+    if (!this.hasLocalCleanupBudget() || sweepBudget.remaining <= 0) {
+      return undefined
+    }
+    const errorType = getErrorType(error)
+    if (
+      errorType !== "pcb_via_clearance_error" &&
+      errorType !== "pcb_via_trace_clearance_error"
+    ) {
+      return undefined
+    }
+    const errorCenter = this.getErrorCenter(error)
+    if (!errorCenter) return undefined
+
+    const snapshot = this.getSnapshot(routes)
+    const viaGroups = this.getCandidateRouteIndexesForError(error, snapshot)
+      .flatMap((routeIndex) => {
+        const route = routes[routeIndex]
+        if (!route) return []
+        return this.getViaTransitionGroups(route, routeIndex, errorCenter)
+      })
+      .toSorted((left, right) => left.distanceToError - right.distanceToError)
+    if (viaGroups.length === 0) return undefined
+
+    for (const viaGroup of viaGroups) {
+      const route = routes[viaGroup.routeIndex]
+      if (!route) continue
+      const nearestOtherVia = viaGroups
+        .filter(
+          (candidate) =>
+            candidate !== viaGroup &&
+            getPointDistance(candidate, viaGroup) > POSITION_EPSILON,
+        )
+        .toSorted(
+          (left, right) =>
+            getPointDistance(left, viaGroup) -
+            getPointDistance(right, viaGroup),
+        )[0]
+      const preferredDirection = nearestOtherVia
+        ? getUnitDirection(
+            viaGroup.x - nearestOtherVia.x,
+            viaGroup.y - nearestOtherVia.y,
+          )
+        : getUnitDirection(
+            viaGroup.x - errorCenter.x,
+            viaGroup.y - errorCenter.y,
+          )
+
+      for (const direction of getMicroShiftDirections(preferredDirection)) {
+        for (const radius of VIA_MICRO_SHIFT_RADII) {
+          if (!this.hasLocalCleanupBudget() || sweepBudget.remaining <= 0) {
+            return undefined
+          }
+          const candidateX = viaGroup.x + direction.x * radius
+          const candidateY = viaGroup.y + direction.y * radius
+          const viaInset = route.viaDiameter / 2
+          if (
+            candidateX <
+              this.params.srj.bounds.minX + viaInset - POSITION_EPSILON ||
+            candidateX >
+              this.params.srj.bounds.maxX - viaInset + POSITION_EPSILON ||
+            candidateY <
+              this.params.srj.bounds.minY + viaInset - POSITION_EPSILON ||
+            candidateY >
+              this.params.srj.bounds.maxY - viaInset + POSITION_EPSILON
+          ) {
+            continue
+          }
+
+          const candidateRoutes = cloneRoutes(routes)
+          const candidateRoute = candidateRoutes[viaGroup.routeIndex]
+          if (!candidateRoute) continue
+          for (const pointIndex of viaGroup.indexes) {
+            const point = candidateRoute.route[pointIndex]
+            if (!point) continue
+            point.x = candidateX
+            point.y = candidateY
+          }
+          if (!routeHasValidLayerTransitions(candidateRoute)) continue
+
+          this.viaMicroShiftAttempts += 1
+          sweepBudget.remaining -= 1
+          const materializedCandidate = materializeRoutes(candidateRoutes)
+          if (
+            this.candidateImprovesSnapshot(
+              materializedCandidate,
+              snapshot.count,
+            )
+          ) {
+            this.viaMicroShiftsAccepted += 1
+            return materializedCandidate
+          }
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  private runViaMicroShiftCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    const sweepBudget = {
+      remaining: MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP,
+    }
+
+    while (this.hasLocalCleanupBudget() && sweepBudget.remaining > 0) {
+      const snapshot = this.getSnapshot(improvedRoutes)
+      if (snapshot.count === 0) break
+      if (snapshot.count > MAX_VIA_MICRO_SHIFT_SNAPSHOT_ISSUES) break
+      let nextRoutes: HighDensityRoute[] | undefined
+      for (const error of snapshot.errors) {
+        nextRoutes = this.tryViaMicroShift(improvedRoutes, error, sweepBudget)
+        if (
+          nextRoutes ||
+          !this.hasLocalCleanupBudget() ||
+          sweepBudget.remaining <= 0
+        ) {
+          break
+        }
+      }
+      if (!nextRoutes) break
+      improvedRoutes = nextRoutes
+    }
+
+    return improvedRoutes
   }
 
   private tryEndpointSlide(
     routes: HighDensityRoute[],
     error: DrcError,
   ): HighDensityRoute[] | undefined {
+    if (!this.hasLocalCleanupBudget()) return undefined
     const errorType = getErrorType(error)
     const padId = getPhysicalPadIdFromError(error)
     if (
@@ -375,6 +927,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
       for (const radius of ENDPOINT_SLIDE_RADII) {
         for (const direction of directions) {
+          if (!this.hasLocalCleanupBudget()) return undefined
           const candidatePoint = {
             x: endpoint.x + direction.x * radius,
             y: endpoint.y + direction.y * radius,
@@ -416,6 +969,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     routes: HighDensityRoute[],
     error: DrcError,
   ): HighDensityRoute[] | undefined {
+    if (!this.hasLocalCleanupBudget()) return undefined
     const errorType = getErrorType(error)
     if (
       errorType !== "pcb_trace_error" &&
@@ -483,11 +1037,21 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         sameLayerEnd += 1
       }
 
-      for (
-        let expansion = 0;
-        expansion <= MAX_LOCAL_LAYER_DETOUR_EXPANSION;
-        expansion += 1
-      ) {
+      const fullRunExpansion = Math.max(
+        nearestSegmentIndex - sameLayerStart,
+        sameLayerEnd - nearestSegmentIndex - 1,
+      )
+      const expansionCandidates = [
+        ...Array.from(
+          { length: MAX_LOCAL_LAYER_DETOUR_EXPANSION + 1 },
+          (_, expansion) => expansion,
+        ),
+        ...(fullRunExpansion > MAX_LOCAL_LAYER_DETOUR_EXPANSION
+          ? [fullRunExpansion]
+          : []),
+      ]
+
+      for (const expansion of expansionCandidates) {
         const detourStart = Math.max(
           sameLayerStart,
           nearestSegmentIndex - expansion,
@@ -503,6 +1067,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           targetZ < this.params.srj.layerCount;
           targetZ += 1
         ) {
+          if (!this.hasLocalCleanupBudget()) return undefined
           if (targetZ === z) continue
           const candidateRoutes = cloneRoutes(routes)
           const candidateRoute = candidateRoutes[routeIndex]
@@ -543,6 +1108,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     routes: HighDensityRoute[],
     error: DrcError,
   ): HighDensityRoute[] | undefined {
+    if (!this.hasLocalCleanupBudget()) return undefined
     const errorType = getErrorType(error)
     if (
       errorType !== "pcb_trace_error" &&
@@ -563,6 +1129,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       for (const scale of BATCHED_TRACE_FORCE_SCALES) {
         let candidateRoutes = cloneRoutes(routes)
         for (let pass = 0; pass < MAX_BATCHED_TRACE_FORCE_PASSES; pass += 1) {
+          if (!this.hasLocalCleanupBudget()) return undefined
           const changed = applyDrcErrorForces(
             this.params.srj,
             candidateRoutes,
@@ -590,8 +1157,2755 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return undefined
   }
 
+  private getRemainingIjumpIterations(): number {
+    return Math.max(0, this.selectedIjumpIterationLimit - this.ijumpIterations)
+  }
+
+  private tryIjumpCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    maxIterations: number,
+  ): HighDensityRoute[] | undefined {
+    const iterationLimit = Math.min(
+      maxIterations,
+      this.getRemainingIjumpIterations(),
+    )
+    if (iterationLimit <= 0) return undefined
+
+    const result = this.ijumpRerouter.tryReroute(routes, {
+      ...options,
+      maxIterations: iterationLimit,
+    })
+    this.ijumpIterations += Math.max(0, result?.iterations ?? 0)
+    if (!result?.route) return undefined
+
+    const candidateRoutes = cloneRoutes(routes)
+    candidateRoutes[options.routeIndex] = result.route
+    const materializedCandidate = materializeRoutes(candidateRoutes)
+    if (
+      !this.candidateImprovesSnapshot(
+        materializedCandidate,
+        snapshot.count,
+        "ijump",
+      )
+    ) {
+      return undefined
+    }
+
+    this.ijumpCandidatesAccepted += 1
+    return materializedCandidate
+  }
+
+  private getOrderedIjumpRouteIndexes(snapshot: DrcSnapshot): number[] {
+    const orderedRouteIndexes: number[] = []
+    const seenRouteIndexes = new Set<number>()
+    const seenErrorGroups = new Set<string>()
+
+    for (const [errorIndex, error] of snapshot.errors.entries()) {
+      const primaryTraceId = error.pcb_trace_id
+      const errorGroup =
+        typeof primaryTraceId === "string"
+          ? `trace:${primaryTraceId}`
+          : `error:${errorIndex}`
+      if (seenErrorGroups.has(errorGroup)) continue
+      seenErrorGroups.add(errorGroup)
+
+      const relatedErrors =
+        typeof primaryTraceId === "string"
+          ? snapshot.errors.filter(
+              (relatedError) => relatedError.pcb_trace_id === primaryTraceId,
+            )
+          : [error]
+      for (const relatedError of relatedErrors) {
+        const otherTraceId = getOtherTraceId(
+          relatedError,
+          snapshot.traceRouteIndexById,
+        )
+        for (const traceId of [
+          ...getCandidateTraceIdsFromError(relatedError),
+          otherTraceId,
+        ]) {
+          if (!traceId || traceId === primaryTraceId) continue
+          const routeIndex = snapshot.traceRouteIndexById.get(traceId)
+          if (routeIndex !== undefined && !seenRouteIndexes.has(routeIndex)) {
+            seenRouteIndexes.add(routeIndex)
+            orderedRouteIndexes.push(routeIndex)
+          }
+        }
+      }
+
+      const primaryRouteIndex =
+        typeof primaryTraceId === "string"
+          ? snapshot.traceRouteIndexById.get(primaryTraceId)
+          : undefined
+      if (
+        primaryRouteIndex !== undefined &&
+        !seenRouteIndexes.has(primaryRouteIndex)
+      ) {
+        seenRouteIndexes.add(primaryRouteIndex)
+        orderedRouteIndexes.push(primaryRouteIndex)
+      }
+    }
+
+    return orderedRouteIndexes
+  }
+
+  private runIjumpFullRouteCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let roundAttempts = 0
+
+    while (
+      roundAttempts < MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND &&
+      this.getRemainingIjumpIterations() > 0
+    ) {
+      const snapshot = this.getSnapshot(improvedRoutes)
+      if (snapshot.count === 0) break
+      let nextRoutes: HighDensityRoute[] | undefined
+      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+
+      attemptLoop: for (const variant of FULL_IJUMP_VARIANTS) {
+        for (const routeIndex of routeIndexes) {
+          if (
+            roundAttempts >= MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND ||
+            this.getRemainingIjumpIterations() <= 0
+          ) {
+            break attemptLoop
+          }
+          roundAttempts += 1
+          this.ijumpFullAttempts += 1
+          nextRoutes = this.tryIjumpCandidate(
+            improvedRoutes,
+            snapshot,
+            {
+              routeIndex,
+              includeCandidateCopper: true,
+              ...variant,
+            },
+            MAX_IJUMP_FULL_ITERATIONS,
+          )
+          if (nextRoutes) break attemptLoop
+        }
+      }
+
+      if (!nextRoutes) break
+      improvedRoutes = nextRoutes
+    }
+
+    return improvedRoutes
+  }
+
+  private getErrorCenter(
+    error: DrcError,
+  ): { x: number; y: number } | undefined {
+    const center = error.center ?? error.pcb_center
+    if (!center || typeof center !== "object") return undefined
+    const maybeCenter = center as Record<string, unknown>
+    if (
+      typeof maybeCenter.x !== "number" ||
+      typeof maybeCenter.y !== "number"
+    ) {
+      return undefined
+    }
+    return { x: maybeCenter.x, y: maybeCenter.y }
+  }
+
+  private getInteriorRerouteWindows(
+    route: HighDensityRoute,
+    center: { x: number; y: number },
+  ): Array<{ startIndex: number; endIndex: number }> {
+    if (route.route.length < 4) return []
+
+    let nearestSegmentIndex = -1
+    let nearestDistance = Number.POSITIVE_INFINITY
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      const start = route.route[segmentIndex]
+      const end = route.route[segmentIndex + 1]
+      if (!start || !end || start.z !== end.z) continue
+      const distance = getPointToSegmentDistance(center, start, end)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestSegmentIndex = segmentIndex
+      }
+    }
+    if (nearestSegmentIndex < 1) return []
+
+    const lastInteriorIndex = route.route.length - 2
+    if (nearestSegmentIndex + 1 > lastInteriorIndex) return []
+
+    const windows: Array<{ startIndex: number; endIndex: number }> = []
+    const seenWindows = new Set<string>()
+    const addWindow = (startIndex: number, endIndex: number) => {
+      const boundedStart = Math.max(1, startIndex)
+      const boundedEnd = Math.min(lastInteriorIndex, endIndex)
+      if (
+        boundedStart > nearestSegmentIndex ||
+        boundedEnd < nearestSegmentIndex + 1 ||
+        boundedStart >= boundedEnd
+      ) {
+        return
+      }
+      const key = `${boundedStart}:${boundedEnd}`
+      if (seenWindows.has(key)) return
+      seenWindows.add(key)
+      windows.push({ startIndex: boundedStart, endIndex: boundedEnd })
+    }
+
+    addWindow(
+      nearestSegmentIndex - MAX_IJUMP_INTERIOR_EXPANSION,
+      nearestSegmentIndex + 1,
+    )
+    addWindow(
+      nearestSegmentIndex,
+      nearestSegmentIndex + 1 + MAX_IJUMP_INTERIOR_EXPANSION,
+    )
+    addWindow(
+      nearestSegmentIndex - MAX_IJUMP_INTERIOR_EXPANSION,
+      nearestSegmentIndex + 1 + MAX_IJUMP_INTERIOR_EXPANSION,
+    )
+
+    for (
+      let totalExpansion = 0;
+      totalExpansion <= MAX_IJUMP_INTERIOR_EXPANSION;
+      totalExpansion += 1
+    ) {
+      for (
+        let startExpansion = 0;
+        startExpansion <= totalExpansion;
+        startExpansion += 1
+      ) {
+        const endExpansion = totalExpansion - startExpansion
+        addWindow(
+          nearestSegmentIndex - startExpansion,
+          nearestSegmentIndex + 1 + endExpansion,
+        )
+      }
+    }
+
+    return windows
+  }
+
+  private runIjumpInteriorCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let roundAttempts = 0
+
+    while (
+      roundAttempts < MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND &&
+      this.getRemainingIjumpIterations() > 0
+    ) {
+      const snapshot = this.getSnapshot(improvedRoutes)
+      if (snapshot.count === 0) break
+      let nextRoutes: HighDensityRoute[] | undefined
+
+      const targets: Array<{
+        routeIndex: number
+        windows: Array<{ startIndex: number; endIndex: number }>
+      }> = []
+      const seenTargets = new Set<string>()
+
+      for (const error of snapshot.errors) {
+        const center = this.getErrorCenter(error)
+        if (!center) continue
+        const primaryTraceId = error.pcb_trace_id
+        const otherTraceId = getOtherTraceId(
+          error,
+          snapshot.traceRouteIndexById,
+        )
+        const traceIds = [
+          ...getCandidateTraceIdsFromError(error),
+          otherTraceId,
+          primaryTraceId,
+        ]
+        const seenTraceIds = new Set<string>()
+
+        for (const traceId of traceIds) {
+          if (
+            typeof traceId !== "string" ||
+            seenTraceIds.has(traceId) ||
+            !snapshot.traceRouteIndexById.has(traceId)
+          ) {
+            continue
+          }
+          seenTraceIds.add(traceId)
+          const routeIndex = snapshot.traceRouteIndexById.get(traceId)!
+          const route = improvedRoutes[routeIndex]
+          if (!route) continue
+          const windows = this.getInteriorRerouteWindows(route, center)
+          if (windows.length === 0) continue
+          const targetKey = `${routeIndex}:${windows
+            .map(({ startIndex, endIndex }) => `${startIndex}-${endIndex}`)
+            .join(",")}`
+          if (seenTargets.has(targetKey)) continue
+          seenTargets.add(targetKey)
+          targets.push({ routeIndex, windows })
+        }
+      }
+
+      const maximumWindowCount = Math.max(
+        0,
+        ...targets.map((target) => target.windows.length),
+      )
+      attemptLoop: for (
+        let windowIndex = 0;
+        windowIndex < maximumWindowCount;
+        windowIndex += 1
+      ) {
+        for (const variant of INTERIOR_IJUMP_VARIANTS) {
+          for (const target of targets) {
+            const window = target.windows[windowIndex]
+            if (!window) continue
+            if (
+              roundAttempts >= MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND ||
+              this.getRemainingIjumpIterations() <= 0
+            ) {
+              break attemptLoop
+            }
+            roundAttempts += 1
+            this.ijumpInteriorAttempts += 1
+            nextRoutes = this.tryIjumpCandidate(
+              improvedRoutes,
+              snapshot,
+              {
+                routeIndex: target.routeIndex,
+                ...window,
+                includeCandidateCopper: true,
+                ...variant,
+              },
+              MAX_IJUMP_INTERIOR_ITERATIONS,
+            )
+            if (nextRoutes) break attemptLoop
+          }
+        }
+      }
+
+      if (!nextRoutes) break
+      improvedRoutes = nextRoutes
+    }
+
+    return improvedRoutes
+  }
+
+  private runIjumpFixedOnlyCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let roundAttempts = 0
+
+    while (
+      roundAttempts < MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND &&
+      this.getRemainingIjumpIterations() > 0
+    ) {
+      const snapshot = this.getSnapshot(improvedRoutes)
+      if (snapshot.count === 0) break
+      let nextRoutes: HighDensityRoute[] | undefined
+      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+
+      attemptLoop: for (const variant of FIXED_ONLY_IJUMP_VARIANTS) {
+        for (const routeIndex of routeIndexes) {
+          if (
+            roundAttempts >= MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND ||
+            this.getRemainingIjumpIterations() <= 0
+          ) {
+            break attemptLoop
+          }
+          roundAttempts += 1
+          this.ijumpFixedOnlyAttempts += 1
+          nextRoutes = this.tryIjumpCandidate(
+            improvedRoutes,
+            snapshot,
+            {
+              routeIndex,
+              includeCandidateCopper: false,
+              ...variant,
+            },
+            MAX_IJUMP_FULL_ITERATIONS,
+          )
+          if (nextRoutes) break attemptLoop
+        }
+      }
+
+      if (!nextRoutes) break
+      improvedRoutes = nextRoutes
+    }
+
+    return improvedRoutes
+  }
+
+  private getErrorOwnedClusterRouteIndexes(
+    error: DrcError,
+    snapshot: DrcSnapshot,
+    routes: HighDensityRoute[],
+  ): number[] {
+    const routeIndexes = new Set(
+      this.getCandidateRouteIndexesForError(error, snapshot),
+    )
+    const referencedTraceIds = [
+      typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined,
+      getRawOtherTraceId(error),
+    ].filter((traceId): traceId is string => Boolean(traceId))
+
+    // A preloaded trace is namespaced as `preloaded_<n>_<trace id>`.
+    // Include the candidate counterpart, when present, because rebuilding the
+    // whole error-owned group can free the corridor used by its fixed copy.
+    for (const referencedTraceId of referencedTraceIds) {
+      let longestEmbeddedMatchLength = -1
+      const embeddedRouteIndexes: number[] = []
+      for (const [
+        candidateTraceId,
+        routeIndex,
+      ] of snapshot.traceRouteIndexById) {
+        if (
+          referencedTraceId !== candidateTraceId &&
+          !referencedTraceId.endsWith(`_${candidateTraceId}`)
+        ) {
+          continue
+        }
+        if (candidateTraceId.length > longestEmbeddedMatchLength) {
+          longestEmbeddedMatchLength = candidateTraceId.length
+          embeddedRouteIndexes.length = 0
+        }
+        if (candidateTraceId.length === longestEmbeddedMatchLength) {
+          embeddedRouteIndexes.push(routeIndex)
+        }
+      }
+      for (const routeIndex of embeddedRouteIndexes) {
+        routeIndexes.add(routeIndex)
+      }
+    }
+
+    return [...routeIndexes].filter(
+      (routeIndex) => (routes[routeIndex]?.route.length ?? 0) >= 2,
+    )
+  }
+
+  private getErrorOwnedClusterOrders(
+    snapshot: DrcSnapshot,
+    routes: HighDensityRoute[],
+  ): number[][] {
+    const residualDegreeByRouteIndex = new Map<number, number>()
+    for (const error of snapshot.errors) {
+      for (const routeIndex of this.getErrorOwnedClusterRouteIndexes(
+        error,
+        snapshot,
+        routes,
+      )) {
+        residualDegreeByRouteIndex.set(
+          routeIndex,
+          (residualDegreeByRouteIndex.get(routeIndex) ?? 0) + 1,
+        )
+      }
+    }
+
+    const degreeDescending = (
+      left: number,
+      right: number,
+      indexDirection: 1 | -1,
+    ) =>
+      (residualDegreeByRouteIndex.get(right) ?? 0) -
+        (residualDegreeByRouteIndex.get(left) ?? 0) ||
+      (left - right) * indexDirection
+    const ascendingIndexOrder = [...residualDegreeByRouteIndex.keys()].sort(
+      (left, right) => degreeDescending(left, right, 1),
+    )
+    if (ascendingIndexOrder.length <= 1) return [ascendingIndexOrder]
+
+    const descendingIndexOrder = [...ascendingIndexOrder].sort((left, right) =>
+      degreeDescending(left, right, -1),
+    )
+    return [ascendingIndexOrder, descendingIndexOrder]
+  }
+
+  private getErrorOwnedClusterPlans(
+    snapshot: DrcSnapshot,
+    routes: HighDensityRoute[],
+  ): ErrorOwnedClusterPlan[] {
+    const degreeDescendingOrders = this.getErrorOwnedClusterOrders(
+      snapshot,
+      routes,
+    ).filter((order) => order.length > 0)
+    return [
+      ...degreeDescendingOrders.map((routeIndexes) => ({
+        routeIndexes,
+        reverse: false,
+        allowTerminalEscape: routeIndexes.length <= 2,
+      })),
+      ...degreeDescendingOrders.map((routeIndexes) => ({
+        routeIndexes: routeIndexes.toReversed(),
+        reverse: true,
+        allowTerminalEscape: true,
+      })),
+    ]
+  }
+
+  private runIjumpErrorOwnedClusterRebuild(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    const baselineSnapshot = this.getSnapshot(routes)
+    if (baselineSnapshot.count === 0) return routes
+
+    const plans = this.getErrorOwnedClusterPlans(baselineSnapshot, routes)
+    const seenPlans = new Set<string>()
+    const failedFirstRouteAttempts = new Set<string>()
+
+    for (const plan of plans) {
+      const planKey = `${plan.reverse ? "reverse" : "forward"}:${plan.routeIndexes.join(",")}`
+      if (
+        seenPlans.has(planKey) ||
+        this.errorOwnedClusterIterations >= MAX_ERROR_OWNED_CLUSTER_ITERATIONS
+      ) {
+        continue
+      }
+      seenPlans.add(planKey)
+      this.errorOwnedClusterOrderAttempts += 1
+
+      const candidateRoutes = cloneRoutes(routes)
+      const pendingRouteIndexes = new Set(plan.routeIndexes)
+      const rebuiltRouteIndexes: number[] = []
+      let completed = true
+
+      for (const routeIndex of plan.routeIndexes) {
+        const firstRouteAttemptKey = [
+          plan.reverse ? "reverse" : "forward",
+          routeIndex,
+          ...[...pendingRouteIndexes].sort((left, right) => left - right),
+        ].join(":")
+        if (
+          rebuiltRouteIndexes.length === 0 &&
+          failedFirstRouteAttempts.has(firstRouteAttemptKey)
+        ) {
+          completed = false
+          break
+        }
+        const remainingIterations =
+          MAX_ERROR_OWNED_CLUSTER_ITERATIONS - this.errorOwnedClusterIterations
+        if (remainingIterations <= 0) {
+          completed = false
+          break
+        }
+
+        pendingRouteIndexes.delete(routeIndex)
+        this.errorOwnedClusterRouteAttempts += 1
+        let result = this.ijumpRerouter.tryReroute(candidateRoutes, {
+          routeIndex,
+          omitCandidateRouteIndexes: pendingRouteIndexes,
+          includeCandidateCopper: true,
+          reverse: plan.reverse,
+          shortenPath: false,
+          maxIterations: Math.min(
+            MAX_ERROR_OWNED_CLUSTER_ROUTE_ITERATIONS,
+            remainingIterations,
+          ),
+        })
+        this.errorOwnedClusterIterations += Math.max(0, result?.iterations ?? 0)
+        if (
+          (!result?.route || !routeHasValidLayerTransitions(result.route)) &&
+          plan.allowTerminalEscape
+        ) {
+          for (const candidate of this.ijumpRerouter
+            .getTerminalViaEscapeCandidates(candidateRoutes, routeIndex)
+            .slice(0, MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_CANDIDATES)) {
+            const terminalRemainingIterations =
+              MAX_ERROR_OWNED_CLUSTER_ITERATIONS -
+              this.errorOwnedClusterIterations
+            if (terminalRemainingIterations <= 0) break
+
+            this.errorOwnedClusterTerminalEscapeAttempts += 1
+            const terminalResult =
+              this.ijumpRerouter.tryRerouteWithTerminalViaEscape(
+                candidateRoutes,
+                {
+                  routeIndex,
+                  omitCandidateRouteIndexes: pendingRouteIndexes,
+                  candidate,
+                  includeCandidateCopper: true,
+                  reverse: plan.reverse,
+                  shortenPath: false,
+                  maxIterations: Math.min(
+                    MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_ITERATIONS,
+                    terminalRemainingIterations,
+                  ),
+                },
+              )
+            this.errorOwnedClusterIterations += Math.max(
+              0,
+              terminalResult?.iterations ?? 0,
+            )
+            if (
+              terminalResult?.route &&
+              routeHasValidLayerTransitions(terminalResult.route)
+            ) {
+              result = terminalResult
+              break
+            }
+          }
+        }
+        if (!result?.route || !routeHasValidLayerTransitions(result.route)) {
+          if (rebuiltRouteIndexes.length === 0) {
+            failedFirstRouteAttempts.add(firstRouteAttemptKey)
+          }
+          completed = false
+          break
+        }
+
+        candidateRoutes[routeIndex] = result.route
+        rebuiltRouteIndexes.push(routeIndex)
+      }
+
+      if (!completed) continue
+      const materializedCandidate = materializeRoutes(candidateRoutes)
+      if (
+        !this.candidatePreservesTerminals(materializedCandidate) ||
+        rebuiltRouteIndexes.some((routeIndex) => {
+          const route = materializedCandidate[routeIndex]
+          return !route || !routeHasValidLayerTransitions(route)
+        })
+      ) {
+        continue
+      }
+
+      this.errorOwnedClusterDrcEvaluations += 1
+      this.cleanupCandidateAttempts += 1
+      const candidateSnapshot = this.getSnapshot(materializedCandidate)
+      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+
+      let acceptedRoutes = materializedCandidate
+      let acceptedSnapshot = candidateSnapshot
+      const postClusterOrder = this.getErrorOwnedClusterOrders(
+        acceptedSnapshot,
+        acceptedRoutes,
+      )[0]
+      for (const routeIndex of postClusterOrder ?? []) {
+        if (
+          acceptedSnapshot.count === 0 ||
+          this.errorOwnedClusterIterations >= MAX_ERROR_OWNED_CLUSTER_ITERATIONS
+        ) {
+          break
+        }
+
+        const remainingIterations =
+          MAX_ERROR_OWNED_CLUSTER_ITERATIONS - this.errorOwnedClusterIterations
+        this.errorOwnedClusterRouteAttempts += 1
+        this.errorOwnedClusterPostRouteAttempts += 1
+        const result = this.ijumpRerouter.tryReroute(acceptedRoutes, {
+          routeIndex,
+          includeCandidateCopper: true,
+          reverse: false,
+          shortenPath: false,
+          maxIterations: Math.min(
+            MAX_ERROR_OWNED_CLUSTER_ROUTE_ITERATIONS,
+            remainingIterations,
+          ),
+        })
+        this.errorOwnedClusterIterations += Math.max(0, result?.iterations ?? 0)
+        if (!result?.route || !routeHasValidLayerTransitions(result.route)) {
+          continue
+        }
+
+        const postCandidateRoutes = cloneRoutes(acceptedRoutes)
+        postCandidateRoutes[routeIndex] = result.route
+        const materializedPostCandidate = materializeRoutes(postCandidateRoutes)
+        if (
+          !this.candidatePreservesTerminals(materializedPostCandidate) ||
+          !routeHasValidLayerTransitions(materializedPostCandidate[routeIndex]!)
+        ) {
+          continue
+        }
+
+        this.errorOwnedClusterDrcEvaluations += 1
+        this.cleanupCandidateAttempts += 1
+        const postCandidateSnapshot = this.getSnapshot(
+          materializedPostCandidate,
+        )
+        if (postCandidateSnapshot.count >= acceptedSnapshot.count) continue
+
+        acceptedRoutes = materializedPostCandidate
+        acceptedSnapshot = postCandidateSnapshot
+        this.errorOwnedClusterPostCandidatesAccepted += 1
+        this.cleanupCandidatesAccepted += 1
+      }
+
+      this.errorOwnedClusterAccepted += 1
+      this.cleanupCandidatesAccepted += 1
+      return acceptedRoutes
+    }
+
+    return routes
+  }
+
+  private runIjumpErrorOwnedClusterRebuildPasses(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    for (let pass = 0; pass < MAX_ERROR_OWNED_CLUSTER_PASSES; pass += 1) {
+      const issueCountBeforePass = this.getSnapshot(improvedRoutes).count
+      if (
+        issueCountBeforePass === 0 ||
+        this.errorOwnedClusterIterations >= MAX_ERROR_OWNED_CLUSTER_ITERATIONS
+      ) {
+        break
+      }
+
+      const candidateRoutes =
+        this.runIjumpErrorOwnedClusterRebuild(improvedRoutes)
+      const issueCountAfterPass = this.getSnapshot(candidateRoutes).count
+      if (issueCountAfterPass >= issueCountBeforePass) break
+      improvedRoutes = candidateRoutes
+    }
+    return improvedRoutes
+  }
+
+  private runPostClusterViaMicroShiftCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    const baseLimit = this.selectedLocalCleanupDrcEvaluationLimit
+    const evaluationsBeforeSweep = this.localCleanupDrcEvaluations
+    const consecutiveMissesBeforeSweep = this.consecutiveLocalCleanupDrcMisses
+    this.selectedLocalCleanupDrcEvaluationLimit =
+      Math.max(baseLimit, evaluationsBeforeSweep) +
+      MAX_POST_CLUSTER_VIA_MICRO_SHIFT_DRC_EVALUATIONS
+    // This sweep has its own explicit evaluation allowance, so a stalled
+    // earlier local phase must not consume it.
+    this.consecutiveLocalCleanupDrcMisses = 0
+    try {
+      return this.runViaMicroShiftCleanup(routes)
+    } finally {
+      this.postClusterViaMicroShiftDrcEvaluations +=
+        this.localCleanupDrcEvaluations - evaluationsBeforeSweep
+      this.selectedLocalCleanupDrcEvaluationLimit = baseLimit
+      this.consecutiveLocalCleanupDrcMisses = consecutiveMissesBeforeSweep
+    }
+  }
+
+  private getRemainingFinalOwnerIterations(): number {
+    return Math.max(
+      0,
+      MAX_FINAL_OWNER_IJUMP_ITERATIONS - this.finalOwnerIterations,
+    )
+  }
+
+  private getFinalOwnerErrorKey(
+    routeIndex: number,
+    snapshot: DrcSnapshot,
+  ): string {
+    return snapshot.errors
+      .filter((error) =>
+        this.getCandidateRouteIndexesForError(error, snapshot).includes(
+          routeIndex,
+        ),
+      )
+      .map((error) =>
+        String(
+          error.pcb_trace_error_id ??
+            error.pcb_via_trace_clearance_error_id ??
+            error.pcb_pad_trace_clearance_error_id ??
+            error.pcb_via_clearance_error_id ??
+            error.error_type ??
+            error.type,
+        ),
+      )
+      .sort()
+      .join("|")
+  }
+
+  private getFinalOwnerInteriorWindows(
+    route: HighDensityRoute,
+    center: { x: number; y: number },
+  ): Array<{ startIndex: number; endIndex: number }> {
+    let nearestSegmentIndex = -1
+    let nearestDistance = Number.POSITIVE_INFINITY
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      const start = route.route[segmentIndex]
+      const end = route.route[segmentIndex + 1]
+      if (!start || !end || start.z !== end.z) continue
+      const distance = getPointToSegmentDistance(center, start, end)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestSegmentIndex = segmentIndex
+      }
+    }
+    if (nearestSegmentIndex < 0) return []
+
+    return this.getInteriorRerouteWindows(route, center).toSorted(
+      (left, right) =>
+        Math.abs(
+          (left.startIndex + left.endIndex - 1) / 2 - nearestSegmentIndex,
+        ) -
+          Math.abs(
+            (right.startIndex + right.endIndex - 1) / 2 - nearestSegmentIndex,
+          ) ||
+        left.endIndex - left.startIndex - (right.endIndex - right.startIndex) ||
+        left.startIndex - right.startIndex,
+    )
+  }
+
+  private tryFinalOwnerIjumpCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    maxIterations: number,
+    kind: "full" | "interior",
+  ):
+    | {
+        routes: HighDensityRoute[]
+        snapshot: DrcSnapshot
+      }
+    | undefined {
+    const iterationLimit = Math.min(
+      maxIterations,
+      this.getRemainingFinalOwnerIterations(),
+    )
+    if (iterationLimit <= 0) return undefined
+
+    if (kind === "full") this.finalOwnerFullAttempts += 1
+    else this.finalOwnerInteriorAttempts += 1
+    const result = this.ijumpRerouter.tryReroute(routes, {
+      ...options,
+      maxIterations: iterationLimit,
+    })
+    this.finalOwnerIterations += Math.max(0, result?.iterations ?? 0)
+    if (!result?.route || !routeHasValidLayerTransitions(result.route)) {
+      return undefined
+    }
+
+    const candidateRoutes = cloneRoutes(routes)
+    candidateRoutes[options.routeIndex] = result.route
+    const materializedCandidate = materializeRoutes(candidateRoutes)
+    const materializedRoute = materializedCandidate[options.routeIndex]
+    if (
+      !materializedRoute ||
+      !routeHasValidLayerTransitions(materializedRoute) ||
+      !this.candidatePreservesTerminals(materializedCandidate)
+    ) {
+      return undefined
+    }
+
+    this.finalOwnerDrcEvaluations += 1
+    this.cleanupCandidateAttempts += 1
+    const candidateSnapshot = this.getSnapshot(materializedCandidate)
+    if (candidateSnapshot.count >= snapshot.count) return undefined
+
+    this.finalOwnerCandidatesAccepted += 1
+    this.cleanupCandidatesAccepted += 1
+    return {
+      routes: materializedCandidate,
+      snapshot: candidateSnapshot,
+    }
+  }
+
+  private runIjumpFinalErrorOwnerSweep(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+    const failedFullAttempts = new Set<string>()
+    const failedInteriorAttempts = new Set<string>()
+
+    repairLoop: while (
+      snapshot.count > 0 &&
+      this.getRemainingFinalOwnerIterations() > 0
+    ) {
+      let acceptedCandidate:
+        | {
+            routes: HighDensityRoute[]
+            snapshot: DrcSnapshot
+          }
+        | undefined
+      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+
+      fullLoop: for (const variant of FINAL_OWNER_FULL_VARIANTS) {
+        for (const routeIndex of routeIndexes) {
+          const route = improvedRoutes[routeIndex]
+          if (!route) continue
+          const isLongRoute =
+            route.route.length > MAX_FINAL_OWNER_FULL_VARIANT_ROUTE_POINTS
+          if (isLongRoute && (variant.reverse || variant.shortenPath)) continue
+
+          const attemptKey = [
+            routeIndex,
+            this.getFinalOwnerErrorKey(routeIndex, snapshot),
+            variant.reverse ? "reverse" : "forward",
+            variant.shortenPath ? "short" : "raw",
+          ].join(":")
+          if (failedFullAttempts.has(attemptKey)) continue
+
+          const remainingForFullRoute =
+            this.getRemainingFinalOwnerIterations() -
+            FINAL_OWNER_INTERIOR_ITERATION_RESERVE
+          if (remainingForFullRoute <= 0) break fullLoop
+          const perAttemptLimit = isLongRoute
+            ? MAX_FINAL_OWNER_LONG_ROUTE_ITERATIONS
+            : variant.reverse || variant.shortenPath
+              ? MAX_FINAL_OWNER_VARIANT_ITERATIONS
+              : MAX_FINAL_OWNER_FULL_ROUTE_ITERATIONS
+          acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+            improvedRoutes,
+            snapshot,
+            {
+              routeIndex,
+              includeCandidateCopper: true,
+              ...variant,
+            },
+            Math.min(perAttemptLimit, remainingForFullRoute),
+            "full",
+          )
+          if (acceptedCandidate) break fullLoop
+          failedFullAttempts.add(attemptKey)
+        }
+      }
+
+      if (acceptedCandidate) {
+        improvedRoutes = acceptedCandidate.routes
+        snapshot = acceptedCandidate.snapshot
+        // A successful reroute changes the candidate-copper obstacle field.
+        // Attempts that failed against the previous geometry must be eligible
+        // again even when their DRC error identifiers did not change.
+        failedFullAttempts.clear()
+        failedInteriorAttempts.clear()
+        continue
+      }
+
+      interiorLoop: for (const error of snapshot.errors) {
+        const center = this.getErrorCenter(error)
+        if (!center) continue
+        for (const routeIndex of this.getCandidateRouteIndexesForError(
+          error,
+          snapshot,
+        )) {
+          const route = improvedRoutes[routeIndex]
+          if (!route) continue
+          for (const window of this.getFinalOwnerInteriorWindows(
+            route,
+            center,
+          )) {
+            const attemptKey = [
+              routeIndex,
+              this.getFinalOwnerErrorKey(routeIndex, snapshot),
+              window.startIndex,
+              window.endIndex,
+            ].join(":")
+            if (failedInteriorAttempts.has(attemptKey)) continue
+            const remainingIterations = this.getRemainingFinalOwnerIterations()
+            if (remainingIterations <= 0) break repairLoop
+
+            acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+              improvedRoutes,
+              snapshot,
+              {
+                routeIndex,
+                ...window,
+                includeCandidateCopper: true,
+                reverse: true,
+                shortenPath: false,
+              },
+              Math.min(
+                MAX_FINAL_OWNER_INTERIOR_ITERATIONS,
+                remainingIterations,
+              ),
+              "interior",
+            )
+            if (acceptedCandidate) break interiorLoop
+            failedInteriorAttempts.add(attemptKey)
+          }
+        }
+      }
+
+      if (acceptedCandidate) {
+        improvedRoutes = acceptedCandidate.routes
+        snapshot = acceptedCandidate.snapshot
+        failedFullAttempts.clear()
+        failedInteriorAttempts.clear()
+        continue
+      }
+
+      if (snapshot.count <= MAX_FINAL_OWNER_FALLBACK_RESIDUAL) {
+        fallbackLoop: for (const variant of FINAL_OWNER_FULL_VARIANTS) {
+          for (const routeIndex of this.getOrderedIjumpRouteIndexes(snapshot)) {
+            const remainingIterations = this.getRemainingFinalOwnerIterations()
+            if (remainingIterations <= 0) break fallbackLoop
+            acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+              improvedRoutes,
+              snapshot,
+              {
+                routeIndex,
+                includeCandidateCopper: true,
+                ...variant,
+              },
+              remainingIterations,
+              "full",
+            )
+            if (acceptedCandidate) break fallbackLoop
+          }
+        }
+      }
+
+      if (!acceptedCandidate) break
+      improvedRoutes = acceptedCandidate.routes
+      snapshot = acceptedCandidate.snapshot
+      failedFullAttempts.clear()
+      failedInteriorAttempts.clear()
+    }
+
+    return improvedRoutes
+  }
+
+  private normalizeViaMetadataFromLayerTransitions(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    return materializeRoutes(routes).map((route) => {
+      const seenViaLocations = new Set<string>()
+      const vias = route.route.flatMap((point, pointIndex) => {
+        const nextPoint = route.route[pointIndex + 1]
+        if (
+          !nextPoint ||
+          point.z === nextPoint.z ||
+          point.x !== nextPoint.x ||
+          point.y !== nextPoint.y
+        ) {
+          return []
+        }
+
+        const locationKey = `${point.x}:${point.y}`
+        if (seenViaLocations.has(locationKey)) return []
+        seenViaLocations.add(locationKey)
+        return [{ x: point.x, y: point.y }]
+      })
+
+      return { ...route, vias }
+    })
+  }
+
+  private getCanonicalNetForRoute(route: HighDensityRoute): string | undefined {
+    return this.params.connMap?.getNetConnectedToId(route.connectionName)
+  }
+
+  private tryScopedSameNetViaMerge(
+    routes: HighDensityRoute[],
+    ownerRouteIndex: number,
+    maxIterations: number,
+  ): ScopedSameNetViaMergeResult {
+    const connMap = this.params.connMap
+    const ownerRoute = routes[ownerRouteIndex]
+    const canonicalNet = ownerRoute && this.getCanonicalNetForRoute(ownerRoute)
+    if (!connMap || !ownerRoute || !canonicalNet || maxIterations <= 0) {
+      return { iterations: 0, mergedViaCount: 0 }
+    }
+
+    const scopedRouteIndexes = routes.flatMap((route, routeIndex) =>
+      this.getCanonicalNetForRoute(route) === canonicalNet ? [routeIndex] : [],
+    )
+    if (scopedRouteIndexes.length === 0) {
+      return { iterations: 0, mergedViaCount: 0 }
+    }
+
+    const scopedRoutes = this.normalizeViaMetadataFromLayerTransitions(
+      scopedRouteIndexes.map((routeIndex) => routes[routeIndex]!),
+    )
+    let merger: SameNetViaMergerSolver | undefined
+    try {
+      merger = new SameNetViaMergerSolver({
+        inputHdRoutes: scopedRoutes,
+        obstacles: this.params.srj.obstacles,
+        colorMap: {},
+        layerCount: this.params.srj.layerCount,
+        connMap,
+      })
+      while (
+        !merger.solved &&
+        !merger.failed &&
+        merger.iterations < maxIterations
+      ) {
+        merger.step()
+      }
+    } catch {
+      return {
+        iterations: Math.min(maxIterations, merger?.iterations ?? 0),
+        mergedViaCount: 0,
+      }
+    }
+
+    const iterations = Math.min(maxIterations, merger.iterations)
+    const mergedViaCount = Number(merger.stats.mergedViaCount) || 0
+    const mergedScopedRoutes = merger.getMergedViaHdRoutes()
+    if (
+      !merger.solved ||
+      merger.failed ||
+      mergedViaCount <= 0 ||
+      !mergedScopedRoutes ||
+      mergedScopedRoutes.length !== scopedRouteIndexes.length
+    ) {
+      return { iterations, mergedViaCount: 0 }
+    }
+
+    const mergedRoutes = cloneRoutes(routes)
+    for (const [scopedIndex, routeIndex] of scopedRouteIndexes.entries()) {
+      mergedRoutes[routeIndex] = mergedScopedRoutes[scopedIndex]!
+    }
+    return {
+      routes: materializeRoutes(mergedRoutes),
+      iterations,
+      mergedViaCount,
+    }
+  }
+
+  private runPostRepairSameNetViaMerge(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let baselineSnapshot = this.getSnapshot(improvedRoutes)
+    if (
+      baselineSnapshot.count === 0 ||
+      !baselineSnapshot.errors.some(
+        (error) => getErrorType(error) === "pcb_via_clearance_error",
+      )
+    ) {
+      return routes
+    }
+    if (!this.params.connMap) return routes
+
+    const orderedOwnerRouteIndexes: number[] = []
+    const seenCanonicalNets = new Set<string>()
+    const addOwner = (routeIndex: number) => {
+      const route = improvedRoutes[routeIndex]
+      const canonicalNet = route && this.getCanonicalNetForRoute(route)
+      if (!canonicalNet || seenCanonicalNets.has(canonicalNet)) return
+      seenCanonicalNets.add(canonicalNet)
+      orderedOwnerRouteIndexes.push(routeIndex)
+    }
+
+    for (const error of baselineSnapshot.errors) {
+      if (getErrorType(error) !== "pcb_via_clearance_error") continue
+      for (const routeIndex of this.getCandidateRouteIndexesForError(
+        error,
+        baselineSnapshot,
+      )) {
+        addOwner(routeIndex)
+      }
+    }
+    for (const routeIndex of improvedRoutes.keys()) addOwner(routeIndex)
+
+    for (const ownerRouteIndex of orderedOwnerRouteIndexes) {
+      const remainingIterations =
+        MAX_POST_REPAIR_SAME_NET_VIA_MERGER_ITERATIONS -
+        this.postRepairSameNetViaMergeIterations
+      if (remainingIterations <= 0) break
+
+      this.postRepairSameNetViaMergeAttempts += 1
+      const mergeResult = this.tryScopedSameNetViaMerge(
+        improvedRoutes,
+        ownerRouteIndex,
+        remainingIterations,
+      )
+      this.postRepairSameNetViaMergeIterations += mergeResult.iterations
+      const materializedCandidate = mergeResult.routes
+      if (
+        !materializedCandidate ||
+        !this.candidatePreservesTerminals(materializedCandidate) ||
+        materializedCandidate.some(
+          (route) => !routeHasValidLayerTransitions(route),
+        )
+      ) {
+        continue
+      }
+
+      this.postRepairSameNetViaMergeDrcEvaluations += 1
+      this.cleanupCandidateAttempts += 1
+      const candidateSnapshot = this.getSnapshot(materializedCandidate)
+      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+
+      this.postRepairSameNetViaMergeCandidatesAccepted += 1
+      this.cleanupCandidatesAccepted += 1
+      improvedRoutes = materializedCandidate
+      baselineSnapshot = candidateSnapshot
+      if (baselineSnapshot.count === 0) break
+    }
+
+    return improvedRoutes
+  }
+
+  private getDrcErrorIdentifier(error: DrcError, errorIndex: number): string {
+    for (const key of [
+      "pcb_trace_error_id",
+      "pcb_error_id",
+      "pcb_via_trace_clearance_error_id",
+      "pcb_pad_trace_clearance_error_id",
+      "pcb_via_clearance_error_id",
+    ]) {
+      const identifier = error[key]
+      if (typeof identifier === "string") return identifier
+    }
+    return `${getErrorType(error) ?? "unknown"}:${errorIndex}`
+  }
+
+  private getSharedTerminalCompositeGroups(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+  ): SharedTerminalCompositeGroup[] {
+    if (
+      snapshot.count === 0 ||
+      snapshot.count > MAX_SHARED_TERMINAL_COMPOSITE_RESIDUAL ||
+      !this.params.connMap
+    ) {
+      return []
+    }
+
+    const candidatesByFixedTraceAndNet = new Map<
+      string,
+      {
+        fixedTraceId: string
+        canonicalNet: string
+        routeIndexes: Set<number>
+        baselineErrorIds: Set<string>
+      }
+    >()
+    for (const [errorIndex, error] of snapshot.errors.entries()) {
+      if (
+        getErrorType(error) !== "pcb_trace_error" ||
+        getPhysicalPadIdFromError(error)
+      ) {
+        continue
+      }
+      const candidateRouteIndexes = this.getCandidateRouteIndexesForError(
+        error,
+        snapshot,
+      )
+      if (candidateRouteIndexes.length !== 1) continue
+      const routeIndex = candidateRouteIndexes[0]!
+      const route = routes[routeIndex]
+      const canonicalNet = route && this.getCanonicalNetForRoute(route)
+      if (!route || !canonicalNet) continue
+
+      const referencedTraceIds = [
+        typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined,
+        getRawOtherTraceId(error),
+      ].filter((traceId): traceId is string => Boolean(traceId))
+      const fixedTraceIds = [
+        ...new Set(
+          referencedTraceIds.filter(
+            (traceId) => !snapshot.traceRouteIndexById.has(traceId),
+          ),
+        ),
+      ]
+      if (fixedTraceIds.length !== 1) continue
+      const fixedTraceId = fixedTraceIds[0]!
+      const key = `${fixedTraceId}:${canonicalNet}`
+      const candidate = candidatesByFixedTraceAndNet.get(key) ?? {
+        fixedTraceId,
+        canonicalNet,
+        routeIndexes: new Set<number>(),
+        baselineErrorIds: new Set<string>(),
+      }
+      candidate.routeIndexes.add(routeIndex)
+      candidate.baselineErrorIds.add(
+        this.getDrcErrorIdentifier(error, errorIndex),
+      )
+      candidatesByFixedTraceAndNet.set(key, candidate)
+    }
+
+    const groups: SharedTerminalCompositeGroup[] = []
+    for (const candidate of candidatesByFixedTraceAndNet.values()) {
+      const routeIndexes = [...candidate.routeIndexes]
+      if (routeIndexes.length < 2) continue
+
+      let commonPortIds: Set<string> | undefined
+      for (const routeIndex of routeIndexes) {
+        const routePortIds = new Set(
+          this.terminalConstraints.flatMap((constraint) =>
+            constraint.routeIndex === routeIndex &&
+            typeof constraint.originalPoint.pcb_port_id === "string"
+              ? [constraint.originalPoint.pcb_port_id]
+              : [],
+          ),
+        )
+        commonPortIds =
+          commonPortIds === undefined
+            ? routePortIds
+            : new Set(
+                [...commonPortIds].filter((portId) => routePortIds.has(portId)),
+              )
+      }
+
+      for (const terminalPortId of [...(commonPortIds ?? [])].sort()) {
+        const branches = routeIndexes.flatMap((routeIndex) => {
+          const constraint = this.terminalConstraints.find(
+            (candidateConstraint) =>
+              candidateConstraint.routeIndex === routeIndex &&
+              candidateConstraint.originalPoint.pcb_port_id === terminalPortId,
+          )
+          return constraint
+            ? [{ routeIndex, endpoint: constraint.endpoint }]
+            : []
+        })
+        if (branches.length !== routeIndexes.length) continue
+        groups.push({
+          fixedTraceId: candidate.fixedTraceId,
+          canonicalNet: candidate.canonicalNet,
+          terminalPortId,
+          branches,
+          baselineErrorIds: new Set(candidate.baselineErrorIds),
+        })
+      }
+    }
+    return groups
+  }
+
+  private terminalCanHostRelocatedVia(
+    routes: HighDensityRoute[],
+    routeIndex: number,
+    endpoint: "start" | "end",
+  ): boolean {
+    const route = routes[routeIndex]
+    const terminal =
+      endpoint === "start" ? route?.route[0] : route?.route.at(-1)
+    const constraint = this.terminalConstraints.find(
+      (candidate) =>
+        candidate.routeIndex === routeIndex && candidate.endpoint === endpoint,
+    )
+    if (!route || !terminal || !constraint) return false
+
+    const viaRadius = (route.viaDiameter ?? this.params.srj.minViaDiameter) / 2
+    const bounds = this.params.srj.bounds
+    if (
+      terminal.x < bounds.minX + viaRadius - POSITION_EPSILON ||
+      terminal.x > bounds.maxX - viaRadius + POSITION_EPSILON ||
+      terminal.y < bounds.minY + viaRadius - POSITION_EPSILON ||
+      terminal.y > bounds.maxY - viaRadius + POSITION_EPSILON
+    ) {
+      return false
+    }
+
+    return constraint.owningObstacles.some(
+      (obstacle) =>
+        obstacle.connectedTo.some(
+          (id) =>
+            id.startsWith("pcb_smtpad_") || id.startsWith("pcb_plated_hole_"),
+        ) && pointFitsInsideObstacle(terminal, obstacle, viaRadius),
+    )
+  }
+
+  private relocateNearestTransitionToTerminal(
+    route: HighDensityRoute,
+    endpoint: "start" | "end",
+  ): HighDensityRoute | undefined {
+    const terminal = endpoint === "start" ? route.route[0] : route.route.at(-1)
+    if (!terminal || route.route.length < 3) return undefined
+
+    const transitionIndexes: number[] = []
+    for (
+      let pointIndex = 0;
+      pointIndex < route.route.length - 1;
+      pointIndex += 1
+    ) {
+      const point = route.route[pointIndex]
+      const nextPoint = route.route[pointIndex + 1]
+      if (
+        point &&
+        nextPoint &&
+        point.z !== nextPoint.z &&
+        getPointDistance(point, nextPoint) <= POSITION_EPSILON
+      ) {
+        transitionIndexes.push(pointIndex)
+      }
+    }
+    const transitionIndex =
+      endpoint === "start" ? transitionIndexes[0] : transitionIndexes.at(-1)
+    if (transitionIndex === undefined) return undefined
+
+    const transitionStart = route.route[transitionIndex]!
+    const transitionEnd = route.route[transitionIndex + 1]!
+    const oppositeZ =
+      terminal.z === transitionStart.z
+        ? transitionEnd.z
+        : terminal.z === transitionEnd.z
+          ? transitionStart.z
+          : undefined
+    if (
+      oppositeZ === undefined ||
+      oppositeZ === terminal.z ||
+      oppositeZ < 0 ||
+      oppositeZ >= this.params.srj.layerCount
+    ) {
+      return undefined
+    }
+
+    const { pcb_port_id: _pcbPortId, ...terminalWithoutPortId } = terminal
+    const oppositeTerminal = {
+      ...terminalWithoutPortId,
+      z: oppositeZ,
+    }
+    const relocatedPoints =
+      endpoint === "start"
+        ? [
+            { ...terminal },
+            oppositeTerminal,
+            ...route.route.slice(transitionIndex + 2),
+          ]
+        : [
+            ...route.route.slice(0, transitionIndex),
+            oppositeTerminal,
+            { ...terminal },
+          ]
+    if (relocatedPoints.length < 2) return undefined
+    return { ...route, route: relocatedPoints }
+  }
+
+  private runSharedTerminalCompositeRepair(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    const baselineSnapshot = this.getSnapshot(routes)
+    const groups = this.getSharedTerminalCompositeGroups(
+      routes,
+      baselineSnapshot,
+    )
+    for (const group of groups) {
+      if (
+        this.sharedTerminalCompositeAttempts >=
+          MAX_SHARED_TERMINAL_COMPOSITE_ATTEMPTS ||
+        this.sharedTerminalCompositeDrcEvaluations >=
+          MAX_SHARED_TERMINAL_COMPOSITE_DRC_EVALUATIONS
+      ) {
+        break
+      }
+      if (
+        group.branches.some(
+          ({ routeIndex, endpoint }) =>
+            !this.terminalCanHostRelocatedVia(routes, routeIndex, endpoint),
+        )
+      ) {
+        continue
+      }
+
+      const relocatedRoutes = cloneRoutes(routes)
+      let relocationIsValid = true
+      for (const { routeIndex, endpoint } of group.branches) {
+        const relocatedRoute = this.relocateNearestTransitionToTerminal(
+          relocatedRoutes[routeIndex]!,
+          endpoint,
+        )
+        if (!relocatedRoute) {
+          relocationIsValid = false
+          break
+        }
+        relocatedRoutes[routeIndex] = relocatedRoute
+      }
+      if (!relocationIsValid) continue
+
+      this.sharedTerminalCompositeAttempts += 1
+      this.sharedTerminalCompositeRelocatedBranches += group.branches.length
+      let atomicCandidate =
+        this.normalizeViaMetadataFromLayerTransitions(relocatedRoutes)
+      if (
+        atomicCandidate.some(
+          (route) => !routeHasValidLayerTransitions(route),
+        ) ||
+        !this.candidatePreservesTerminals(atomicCandidate)
+      ) {
+        continue
+      }
+
+      this.sharedTerminalCompositeDrcEvaluations += 1
+      this.cleanupCandidateAttempts += 1
+      const relocatedSnapshot = this.getSnapshot(atomicCandidate)
+      if (relocatedSnapshot.count < baselineSnapshot.count) {
+        this.sharedTerminalCompositeCandidatesAccepted += 1
+        this.cleanupCandidatesAccepted += 1
+        return atomicCandidate
+      }
+      if (relocatedSnapshot.count > baselineSnapshot.count) continue
+
+      const relocatedErrorIds = new Set(
+        relocatedSnapshot.errors.map((error, errorIndex) =>
+          this.getDrcErrorIdentifier(error, errorIndex),
+        ),
+      )
+      if (
+        [...group.baselineErrorIds].some((errorId) =>
+          relocatedErrorIds.has(errorId),
+        )
+      ) {
+        continue
+      }
+
+      const branchRouteIndexes = new Set(
+        group.branches.map(({ routeIndex }) => routeIndex),
+      )
+      const baselineErrorIds = new Set(
+        baselineSnapshot.errors.map((error, errorIndex) =>
+          this.getDrcErrorIdentifier(error, errorIndex),
+        ),
+      )
+      const exposedOwnerSets = relocatedSnapshot.errors.flatMap(
+        (error, errorIndex) => {
+          if (
+            baselineErrorIds.has(this.getDrcErrorIdentifier(error, errorIndex))
+          ) {
+            return []
+          }
+          const routeIndexes = this.getCandidateRouteIndexesForError(
+            error,
+            relocatedSnapshot,
+          )
+          if (
+            !routeIndexes.some((routeIndex) =>
+              branchRouteIndexes.has(routeIndex),
+            )
+          ) {
+            return []
+          }
+          const exposedRouteIndexes = routeIndexes.filter(
+            (routeIndex) => !branchRouteIndexes.has(routeIndex),
+          )
+          return exposedRouteIndexes.length > 0
+            ? [new Set(exposedRouteIndexes)]
+            : []
+        },
+      )
+      if (exposedOwnerSets.length === 0) continue
+      const commonExposedOwners = new Set(exposedOwnerSets[0])
+      for (const ownerSet of exposedOwnerSets.slice(1)) {
+        for (const routeIndex of commonExposedOwners) {
+          if (!ownerSet.has(routeIndex)) commonExposedOwners.delete(routeIndex)
+        }
+      }
+      if (commonExposedOwners.size !== 1) continue
+      const exposedOwnerRouteIndex = [...commonExposedOwners][0]!
+
+      const remainingIterations =
+        MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS -
+        this.sharedTerminalCompositeIterations
+      if (remainingIterations <= 0) break
+      this.sharedTerminalCompositeIjumpAttempts += 1
+      const rerouteResult = this.ijumpRerouter.tryReroute(atomicCandidate, {
+        routeIndex: exposedOwnerRouteIndex,
+        includeCandidateCopper: true,
+        reverse: false,
+        shortenPath: false,
+        maxIterations: remainingIterations,
+      })
+      this.sharedTerminalCompositeIterations += Math.min(
+        remainingIterations,
+        Math.max(0, rerouteResult?.iterations ?? 0),
+      )
+      if (
+        !rerouteResult?.route ||
+        !routeHasValidLayerTransitions(rerouteResult.route)
+      ) {
+        continue
+      }
+
+      atomicCandidate = cloneRoutes(atomicCandidate)
+      atomicCandidate[exposedOwnerRouteIndex] = rerouteResult.route
+      atomicCandidate =
+        this.normalizeViaMetadataFromLayerTransitions(atomicCandidate)
+      if (
+        atomicCandidate.some(
+          (route) => !routeHasValidLayerTransitions(route),
+        ) ||
+        !this.candidatePreservesTerminals(atomicCandidate) ||
+        this.sharedTerminalCompositeDrcEvaluations >=
+          MAX_SHARED_TERMINAL_COMPOSITE_DRC_EVALUATIONS
+      ) {
+        continue
+      }
+
+      this.sharedTerminalCompositeDrcEvaluations += 1
+      this.cleanupCandidateAttempts += 1
+      const candidateSnapshot = this.getSnapshot(atomicCandidate)
+      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+
+      this.sharedTerminalCompositeCandidatesAccepted += 1
+      this.cleanupCandidatesAccepted += 1
+      return atomicCandidate
+    }
+
+    return routes
+  }
+
+  private getPostFinalCompositeWindows(
+    route: HighDensityRoute,
+    center: { x: number; y: number },
+  ): PostFinalCompositeWindow[] {
+    if (route.route.length < 3) return []
+
+    let nearestSegmentIndex = -1
+    let nearestDistance = Number.POSITIVE_INFINITY
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      const start = route.route[segmentIndex]
+      const end = route.route[segmentIndex + 1]
+      if (!start || !end || start.z !== end.z) continue
+      const distance = getPointToSegmentDistance(center, start, end)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestSegmentIndex = segmentIndex
+      }
+    }
+    if (nearestSegmentIndex < 0) return []
+
+    const lastPointIndex = route.route.length - 1
+    const lastSegmentIndex = lastPointIndex - 1
+    const lastInteriorIndex = lastPointIndex - 1
+    const windows: PostFinalCompositeWindow[] = []
+    const seenWindows = new Set<string>()
+    const addWindow = (
+      startIndex: number,
+      endIndex: number,
+      terminalRooted: boolean,
+    ) => {
+      if (
+        startIndex < 0 ||
+        endIndex > lastPointIndex ||
+        startIndex >= endIndex ||
+        startIndex > nearestSegmentIndex ||
+        endIndex < nearestSegmentIndex + 1
+      ) {
+        return
+      }
+      const key = `${startIndex}:${endIndex}`
+      if (seenWindows.has(key)) return
+      seenWindows.add(key)
+      windows.push({ startIndex, endIndex, terminalRooted })
+    }
+
+    if (nearestSegmentIndex <= POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY) {
+      let endIndex = Math.min(
+        lastPointIndex,
+        nearestSegmentIndex +
+          1 +
+          POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS.at(-1)!,
+      )
+      for (
+        let pointIndex = nearestSegmentIndex;
+        pointIndex < lastPointIndex;
+        pointIndex += 1
+      ) {
+        if (route.route[pointIndex]!.z === route.route[pointIndex + 1]!.z) {
+          continue
+        }
+        endIndex = Math.min(lastPointIndex, pointIndex + 2)
+        break
+      }
+      addWindow(0, endIndex, true)
+    }
+
+    if (
+      lastSegmentIndex - nearestSegmentIndex <=
+      POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY
+    ) {
+      let startIndex = Math.max(
+        0,
+        nearestSegmentIndex - POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS.at(-1)!,
+      )
+      for (
+        let pointIndex = nearestSegmentIndex;
+        pointIndex >= 0;
+        pointIndex -= 1
+      ) {
+        if (route.route[pointIndex]!.z === route.route[pointIndex + 1]!.z) {
+          continue
+        }
+        startIndex = Math.max(0, pointIndex - 1)
+        break
+      }
+      addWindow(startIndex, lastPointIndex, true)
+    }
+
+    for (const expansion of POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS) {
+      const startIndex = Math.max(1, nearestSegmentIndex - expansion)
+      const endIndex = Math.min(
+        lastInteriorIndex,
+        nearestSegmentIndex + 1 + expansion,
+      )
+      addWindow(startIndex, endIndex, false)
+    }
+
+    return windows
+  }
+
+  private getRemainingPostFinalCompositeIterations(): number {
+    return Math.max(
+      0,
+      MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS -
+        this.postFinalCompositeIterations,
+    )
+  }
+
+  private tryPostFinalCompositeCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    terminalRooted: boolean,
+  ):
+    | {
+        routes: HighDensityRoute[]
+        snapshot: DrcSnapshot
+      }
+    | undefined {
+    const iterationLimit = Math.min(
+      MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS_PER_ATTEMPT,
+      this.getRemainingPostFinalCompositeIterations(),
+    )
+    if (
+      iterationLimit <= 0 ||
+      this.postFinalCompositeAttempts >= MAX_POST_FINAL_COMPOSITE_ATTEMPTS ||
+      this.postFinalCompositeDrcEvaluations >=
+        MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS
+    ) {
+      return undefined
+    }
+
+    this.postFinalCompositeAttempts += 1
+    if (options.reverse) this.postFinalCompositeReverseAttempts += 1
+    else this.postFinalCompositeForwardAttempts += 1
+    if (terminalRooted) this.postFinalCompositeTerminalRootedAttempts += 1
+
+    const result = this.ijumpRerouter.tryReroute(routes, {
+      ...options,
+      maxIterations: iterationLimit,
+    })
+    this.postFinalCompositeIterations += Math.min(
+      iterationLimit,
+      Math.max(0, result?.iterations ?? 0),
+    )
+    if (!result?.route || !routeHasValidLayerTransitions(result.route)) {
+      return undefined
+    }
+
+    const candidateRoutes = cloneRoutes(routes)
+    candidateRoutes[options.routeIndex] = result.route
+    const rawCandidate = materializeRoutes(candidateRoutes)
+    if (
+      rawCandidate.some((route) => !routeHasValidLayerTransitions(route)) ||
+      !this.candidatePreservesTerminals(rawCandidate)
+    ) {
+      return undefined
+    }
+
+    this.postFinalCompositeDrcEvaluations += 1
+    this.cleanupCandidateAttempts += 1
+    const rawCandidateSnapshot = this.getSnapshot(rawCandidate)
+    if (rawCandidateSnapshot.count < snapshot.count) {
+      this.postFinalCompositeCandidatesAccepted += 1
+      this.cleanupCandidatesAccepted += 1
+      return { routes: rawCandidate, snapshot: rawCandidateSnapshot }
+    }
+    if (
+      this.postFinalCompositeDrcEvaluations >=
+      MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS
+    ) {
+      return undefined
+    }
+
+    const remainingViaMergeIterations =
+      MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS -
+      this.postFinalCompositeSameNetViaMergeIterations
+    if (remainingViaMergeIterations <= 0) return undefined
+    const mergeResult = this.tryScopedSameNetViaMerge(
+      rawCandidate,
+      options.routeIndex,
+      Math.min(
+        MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS_PER_ATTEMPT,
+        remainingViaMergeIterations,
+      ),
+    )
+    this.postFinalCompositeSameNetViaMergeIterations += mergeResult.iterations
+    const atomicCandidate = mergeResult.routes
+    if (!atomicCandidate) return undefined
+
+    if (
+      atomicCandidate.some((route) => !routeHasValidLayerTransitions(route)) ||
+      !this.candidatePreservesTerminals(atomicCandidate)
+    ) {
+      return undefined
+    }
+
+    this.postFinalCompositeDrcEvaluations += 1
+    this.cleanupCandidateAttempts += 1
+    const atomicCandidateSnapshot = this.getSnapshot(atomicCandidate)
+    if (atomicCandidateSnapshot.count >= snapshot.count) return undefined
+
+    this.postFinalCompositeCandidatesAccepted += 1
+    this.cleanupCandidatesAccepted += 1
+    return { routes: atomicCandidate, snapshot: atomicCandidateSnapshot }
+  }
+
+  private runPostFinalCompositeRepair(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+
+    repairLoop: while (
+      snapshot.count > 0 &&
+      this.getRemainingPostFinalCompositeIterations() > 0 &&
+      this.postFinalCompositeAttempts < MAX_POST_FINAL_COMPOSITE_ATTEMPTS &&
+      this.postFinalCompositeDrcEvaluations <
+        MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS
+    ) {
+      const errors = snapshot.errors
+        .map((error, errorIndex) => ({ error, errorIndex }))
+        .toSorted(
+          (left, right) =>
+            Number(!getPhysicalPadIdFromError(left.error)) -
+              Number(!getPhysicalPadIdFromError(right.error)) ||
+            left.errorIndex - right.errorIndex,
+        )
+
+      for (const { error } of errors) {
+        const center = this.getErrorCenter(error)
+        if (!center) continue
+        for (const routeIndex of this.getCandidateRouteIndexesForError(
+          error,
+          snapshot,
+        )) {
+          const route = improvedRoutes[routeIndex]
+          if (!route) continue
+          for (const window of this.getPostFinalCompositeWindows(
+            route,
+            center,
+          )) {
+            // Keep both search directions adjacent so neither is starved by
+            // later windows or owners.
+            for (const reverse of [false, true]) {
+              const candidate = this.tryPostFinalCompositeCandidate(
+                improvedRoutes,
+                snapshot,
+                {
+                  routeIndex,
+                  startIndex: window.startIndex,
+                  endIndex: window.endIndex,
+                  includeCandidateCopper: true,
+                  reverse,
+                  shortenPath: false,
+                },
+                window.terminalRooted,
+              )
+              if (!candidate) {
+                if (
+                  this.getRemainingPostFinalCompositeIterations() <= 0 ||
+                  this.postFinalCompositeAttempts >=
+                    MAX_POST_FINAL_COMPOSITE_ATTEMPTS ||
+                  this.postFinalCompositeDrcEvaluations >=
+                    MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS
+                ) {
+                  break repairLoop
+                }
+                continue
+              }
+
+              improvedRoutes = candidate.routes
+              snapshot = candidate.snapshot
+              continue repairLoop
+            }
+          }
+        }
+      }
+
+      break
+    }
+
+    return improvedRoutes
+  }
+
+  private getDrcErrorIdentity(error: DrcError): string {
+    for (const idKey of [
+      "pcb_trace_error_id",
+      "pcb_via_trace_clearance_error_id",
+      "pcb_pad_trace_clearance_error_id",
+      "pcb_via_clearance_error_id",
+      "pcb_error_id",
+    ]) {
+      const id = error[idKey]
+      if (typeof id === "string") return `${getErrorType(error)}:${id}`
+    }
+
+    const center = this.getErrorCenter(error)
+    return JSON.stringify([
+      getErrorType(error),
+      error.pcb_trace_id,
+      error.pcb_via_id,
+      getCandidateTraceIdsFromError(error).toSorted(),
+      center?.x,
+      center?.y,
+      error.message,
+    ])
+  }
+
+  private getFixedCopperCompositePlans(
+    snapshot: DrcSnapshot,
+  ): FixedCopperCompositePlan[] {
+    if (
+      snapshot.count === 0 ||
+      snapshot.count > MAX_FIXED_COPPER_COMPOSITE_RESIDUAL
+    ) {
+      return []
+    }
+
+    const plans: FixedCopperCompositePlan[] = []
+    const seenRouteIndexes = new Set<number>()
+    for (const error of snapshot.errors) {
+      if (
+        getErrorType(error) !== "pcb_trace_error" ||
+        typeof error.pcb_trace_error_id !== "string" ||
+        !error.pcb_trace_error_id.startsWith("overlap_")
+      ) {
+        continue
+      }
+
+      const referencedTraceIds = [
+        typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined,
+        getRawOtherTraceId(error),
+      ].filter((traceId): traceId is string => Boolean(traceId))
+      const referencesFixedCopper = referencedTraceIds.some(
+        (traceId) => !snapshot.traceRouteIndexById.has(traceId),
+      )
+      const candidateRouteIndexes = this.getCandidateRouteIndexesForError(
+        error,
+        snapshot,
+      )
+      if (
+        !referencesFixedCopper ||
+        candidateRouteIndexes.length !== 1 ||
+        seenRouteIndexes.has(candidateRouteIndexes[0]!)
+      ) {
+        continue
+      }
+
+      const routeIndex = candidateRouteIndexes[0]!
+      seenRouteIndexes.add(routeIndex)
+      plans.push({
+        routeIndex,
+        targetErrorIdentity: this.getDrcErrorIdentity(error),
+      })
+    }
+
+    return plans
+  }
+
+  private getRemainingFixedCopperCompositeIterations(): number {
+    return Math.max(
+      0,
+      MAX_FIXED_COPPER_COMPOSITE_ITERATIONS -
+        this.fixedCopperCompositeIterations,
+    )
+  }
+
+  private evaluateFixedCopperCompositeCandidate(
+    routes: HighDensityRoute[],
+  ): DrcSnapshot | undefined {
+    if (
+      this.fixedCopperCompositeDrcEvaluations >=
+      MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS
+    ) {
+      return undefined
+    }
+    this.fixedCopperCompositeDrcEvaluations += 1
+    this.cleanupCandidateAttempts += 1
+    return this.getSnapshot(routes)
+  }
+
+  private getNewlyExposedFixedCopperCompositeOwners(
+    snapshot: DrcSnapshot,
+    baselineErrorIdentities: ReadonlySet<string>,
+    primaryRouteIndex: number,
+  ): number[] {
+    const degreeByRouteIndex = new Map<number, number>()
+    for (const error of snapshot.errors) {
+      if (baselineErrorIdentities.has(this.getDrcErrorIdentity(error))) {
+        continue
+      }
+      for (const routeIndex of this.getCandidateRouteIndexesForError(
+        error,
+        snapshot,
+      )) {
+        if (routeIndex === primaryRouteIndex) continue
+        degreeByRouteIndex.set(
+          routeIndex,
+          (degreeByRouteIndex.get(routeIndex) ?? 0) + 1,
+        )
+      }
+    }
+
+    return [...degreeByRouteIndex.keys()]
+      .toSorted(
+        (left, right) =>
+          (degreeByRouteIndex.get(right) ?? 0) -
+            (degreeByRouteIndex.get(left) ?? 0) || left - right,
+      )
+      .slice(0, MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_OWNERS)
+  }
+
+  private acceptFixedCopperCompositeCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+  ): { routes: HighDensityRoute[]; snapshot: DrcSnapshot } {
+    this.fixedCopperCompositeCandidatesAccepted += 1
+    this.cleanupCandidatesAccepted += 1
+    return { routes, snapshot }
+  }
+
+  private tryFixedCopperCompositePlan(
+    routes: HighDensityRoute[],
+    baselineSnapshot: DrcSnapshot,
+    plan: FixedCopperCompositePlan,
+  ):
+    | {
+        routes: HighDensityRoute[]
+        snapshot: DrcSnapshot
+      }
+    | undefined {
+    const baselineErrorIdentities = new Set(
+      baselineSnapshot.errors.map((error) => this.getDrcErrorIdentity(error)),
+    )
+
+    for (const primaryVariant of FIXED_COPPER_COMPOSITE_PRIMARY_VARIANTS) {
+      const primaryIterationLimit = Math.min(
+        MAX_FIXED_COPPER_COMPOSITE_ITERATIONS_PER_ATTEMPT,
+        this.getRemainingFixedCopperCompositeIterations(),
+      )
+      if (
+        primaryIterationLimit <= 0 ||
+        this.fixedCopperCompositePrimaryAttempts >=
+          MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS ||
+        this.fixedCopperCompositeDrcEvaluations >=
+          MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS
+      ) {
+        return undefined
+      }
+
+      this.fixedCopperCompositePrimaryAttempts += 1
+      const primaryResult = this.ijumpRerouter.tryReroute(routes, {
+        routeIndex: plan.routeIndex,
+        includeCandidateCopper: false,
+        ...primaryVariant,
+        maxIterations: primaryIterationLimit,
+      })
+      this.fixedCopperCompositeIterations += Math.min(
+        primaryIterationLimit,
+        Math.max(0, primaryResult?.iterations ?? 0),
+      )
+      if (
+        !primaryResult?.route ||
+        !routeHasValidLayerTransitions(primaryResult.route)
+      ) {
+        continue
+      }
+
+      const primaryRoutes = cloneRoutes(routes)
+      primaryRoutes[plan.routeIndex] = primaryResult.route
+      const materializedPrimary = materializeRoutes(primaryRoutes)
+      if (
+        materializedPrimary.some(
+          (route) => !routeHasValidLayerTransitions(route),
+        ) ||
+        !this.candidatePreservesTerminals(materializedPrimary)
+      ) {
+        continue
+      }
+
+      const primarySnapshot =
+        this.evaluateFixedCopperCompositeCandidate(materializedPrimary)
+      if (!primarySnapshot) return undefined
+      if (primarySnapshot.count < baselineSnapshot.count) {
+        return this.acceptFixedCopperCompositeCandidate(
+          materializedPrimary,
+          primarySnapshot,
+        )
+      }
+      if (
+        primarySnapshot.count > MAX_FIXED_COPPER_COMPOSITE_EXPOSED_ISSUES ||
+        primarySnapshot.errors.some(
+          (error) =>
+            this.getDrcErrorIdentity(error) === plan.targetErrorIdentity,
+        )
+      ) {
+        continue
+      }
+
+      let workingRoutes = materializedPrimary
+      let workingSnapshot = primarySnapshot
+      const exposedOwnerRouteIndexes =
+        this.getNewlyExposedFixedCopperCompositeOwners(
+          workingSnapshot,
+          baselineErrorIdentities,
+          plan.routeIndex,
+        )
+      if (exposedOwnerRouteIndexes.length === 0) continue
+
+      for (const ownerRouteIndex of exposedOwnerRouteIndexes) {
+        let bestOwnerCandidate:
+          | {
+              routes: HighDensityRoute[]
+              snapshot: DrcSnapshot
+            }
+          | undefined
+
+        for (const followupVariant of FINAL_OWNER_FULL_VARIANTS) {
+          const followupIterationLimit = Math.min(
+            MAX_FIXED_COPPER_COMPOSITE_ITERATIONS_PER_ATTEMPT,
+            this.getRemainingFixedCopperCompositeIterations(),
+          )
+          if (
+            followupIterationLimit <= 0 ||
+            this.fixedCopperCompositeFollowupAttempts >=
+              MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_ATTEMPTS ||
+            this.fixedCopperCompositeDrcEvaluations >=
+              MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS
+          ) {
+            break
+          }
+
+          this.fixedCopperCompositeFollowupAttempts += 1
+          const followupResult = this.ijumpRerouter.tryReroute(workingRoutes, {
+            routeIndex: ownerRouteIndex,
+            includeCandidateCopper: true,
+            ...followupVariant,
+            maxIterations: followupIterationLimit,
+          })
+          this.fixedCopperCompositeIterations += Math.min(
+            followupIterationLimit,
+            Math.max(0, followupResult?.iterations ?? 0),
+          )
+          if (
+            !followupResult?.route ||
+            !routeHasValidLayerTransitions(followupResult.route)
+          ) {
+            continue
+          }
+
+          const followupRoutes = cloneRoutes(workingRoutes)
+          followupRoutes[ownerRouteIndex] = followupResult.route
+          const materializedFollowup = materializeRoutes(followupRoutes)
+          if (
+            materializedFollowup.some(
+              (route) => !routeHasValidLayerTransitions(route),
+            ) ||
+            !this.candidatePreservesTerminals(materializedFollowup)
+          ) {
+            continue
+          }
+
+          const followupSnapshot =
+            this.evaluateFixedCopperCompositeCandidate(materializedFollowup)
+          if (!followupSnapshot) break
+          if (followupSnapshot.count < baselineSnapshot.count) {
+            return this.acceptFixedCopperCompositeCandidate(
+              materializedFollowup,
+              followupSnapshot,
+            )
+          }
+          if (
+            followupSnapshot.count < workingSnapshot.count &&
+            (!bestOwnerCandidate ||
+              followupSnapshot.count < bestOwnerCandidate.snapshot.count)
+          ) {
+            bestOwnerCandidate = {
+              routes: materializedFollowup,
+              snapshot: followupSnapshot,
+            }
+          }
+        }
+
+        if (!bestOwnerCandidate) continue
+        workingRoutes = bestOwnerCandidate.routes
+        workingSnapshot = bestOwnerCandidate.snapshot
+      }
+
+      if (workingSnapshot.count < baselineSnapshot.count) {
+        return this.acceptFixedCopperCompositeCandidate(
+          workingRoutes,
+          workingSnapshot,
+        )
+      }
+    }
+
+    return undefined
+  }
+
+  private runFixedCopperCompositeRepair(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+
+    while (
+      snapshot.count > 0 &&
+      snapshot.count <= MAX_FIXED_COPPER_COMPOSITE_RESIDUAL &&
+      this.getRemainingFixedCopperCompositeIterations() > 0 &&
+      this.fixedCopperCompositePrimaryAttempts <
+        MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS &&
+      this.fixedCopperCompositeDrcEvaluations <
+        MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS
+    ) {
+      let acceptedCandidate:
+        | {
+            routes: HighDensityRoute[]
+            snapshot: DrcSnapshot
+          }
+        | undefined
+      for (const plan of this.getFixedCopperCompositePlans(snapshot)) {
+        acceptedCandidate = this.tryFixedCopperCompositePlan(
+          improvedRoutes,
+          snapshot,
+          plan,
+        )
+        if (acceptedCandidate) break
+      }
+      if (!acceptedCandidate) break
+
+      improvedRoutes = acceptedCandidate.routes
+      snapshot = acceptedCandidate.snapshot
+    }
+
+    return improvedRoutes
+  }
+
+  private getAtomicEndpointSlideBranches(
+    routes: HighDensityRoute[],
+    routeIndex: number,
+    endpoint: "start" | "end",
+  ): EndpointSlideBranch[] {
+    const anchorConstraint = this.terminalConstraints.find(
+      (constraint) =>
+        constraint.routeIndex === routeIndex &&
+        constraint.endpoint === endpoint,
+    )
+    if (!anchorConstraint) return []
+
+    const terminalPortId = anchorConstraint.originalPoint.pcb_port_id
+    const constraints =
+      typeof terminalPortId === "string"
+        ? this.terminalConstraints.filter(
+            (constraint) =>
+              constraint.originalPoint.pcb_port_id === terminalPortId,
+          )
+        : [anchorConstraint]
+    const branches: EndpointSlideBranch[] = []
+    const seenBranches = new Set<string>()
+
+    for (const constraint of constraints) {
+      const branchKey = `${constraint.routeIndex}:${constraint.endpoint}`
+      if (seenBranches.has(branchKey)) continue
+      seenBranches.add(branchKey)
+      const route = routes[constraint.routeIndex]
+      if (!route) continue
+      const endpointIndex =
+        constraint.endpoint === "start" ? 0 : route.route.length - 1
+      if (!route.route[endpointIndex]) continue
+      branches.push({
+        routeIndex: constraint.routeIndex,
+        endpoint: constraint.endpoint,
+        endpointIndex,
+        coincidentIndexes: getCoincidentTerminalPointIndexes(
+          route,
+          endpointIndex,
+        ),
+        constraint,
+      })
+    }
+
+    return branches
+  }
+
+  private tryFinalEndpointSlideCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    error: DrcError,
+  ):
+    | {
+        routes: HighDensityRoute[]
+        snapshot: DrcSnapshot
+      }
+    | undefined {
+    if (
+      this.finalEndpointSlideDrcEvaluations >=
+      MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS
+    ) {
+      return undefined
+    }
+    const errorType = getErrorType(error)
+    const padId = getPhysicalPadIdFromError(error)
+    if (
+      !padId ||
+      (errorType !== "pcb_pad_trace_clearance_error" &&
+        errorType !== "pcb_trace_error")
+    ) {
+      return undefined
+    }
+    const foreignObstacle = this.originalObstacles.find((obstacle) =>
+      obstacleRepresentsPhysicalPad(obstacle, padId),
+    )
+    if (!foreignObstacle) return undefined
+
+    for (const routeIndex of this.getCandidateRouteIndexesForError(
+      error,
+      snapshot,
+    )) {
+      const route = routes[routeIndex]
+      if (!route || route.route.length < 2) continue
+      const endpoints = (["start", "end"] as const).toSorted((left, right) => {
+        const leftPoint =
+          left === "start" ? route.route[0]! : route.route.at(-1)!
+        const rightPoint =
+          right === "start" ? route.route[0]! : route.route.at(-1)!
+        return (
+          getPointDistance(leftPoint, foreignObstacle.center) -
+          getPointDistance(rightPoint, foreignObstacle.center)
+        )
+      })
+
+      for (const endpoint of endpoints) {
+        const endpointPoint =
+          endpoint === "start" ? route.route[0] : route.route.at(-1)
+        if (!endpointPoint) continue
+        const branches = this.getAtomicEndpointSlideBranches(
+          routes,
+          routeIndex,
+          endpoint,
+        )
+        if (branches.length === 0) continue
+
+        const preferredDirection = getUnitDirection(
+          endpointPoint.x - foreignObstacle.center.x,
+          endpointPoint.y - foreignObstacle.center.y,
+        )
+        for (const direction of getMicroShiftDirections(preferredDirection)) {
+          for (const radius of ENDPOINT_SLIDE_RADII) {
+            if (
+              this.finalEndpointSlideDrcEvaluations >=
+              MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS
+            ) {
+              return undefined
+            }
+            const candidatePoint = {
+              x: endpointPoint.x + direction.x * radius,
+              y: endpointPoint.y + direction.y * radius,
+            }
+            const everyBranchFitsOwningPad = branches.every((branch) => {
+              const branchRoute = routes[branch.routeIndex]
+              const branchEndpoint =
+                branch.endpoint === "start"
+                  ? branchRoute?.route[0]
+                  : branchRoute?.route.at(-1)
+              return Boolean(
+                branchEndpoint &&
+                  branch.constraint.owningObstacles.some(
+                    (obstacle) =>
+                      obstacleAppliesToLayer(
+                        obstacle,
+                        branchEndpoint.z,
+                        this.params.srj.layerCount,
+                      ) &&
+                      pointFitsInsideObstacle(
+                        candidatePoint,
+                        obstacle,
+                        branch.constraint.traceRadius,
+                      ),
+                  ),
+              )
+            })
+            if (!everyBranchFitsOwningPad) continue
+
+            const candidateRoutes = cloneRoutes(routes)
+            for (const branch of branches) {
+              const candidateRoute = candidateRoutes[branch.routeIndex]
+              if (!candidateRoute) continue
+              for (const pointIndex of branch.coincidentIndexes) {
+                const point = candidateRoute.route[pointIndex]
+                if (!point) continue
+                point.x = candidatePoint.x
+                point.y = candidatePoint.y
+              }
+            }
+            const materializedCandidate = materializeRoutes(candidateRoutes)
+            if (
+              materializedCandidate.some(
+                (candidateRoute) =>
+                  !routeHasValidLayerTransitions(candidateRoute),
+              ) ||
+              !this.candidatePreservesTerminals(materializedCandidate)
+            ) {
+              continue
+            }
+
+            this.finalEndpointSlideAttempts += 1
+            this.finalEndpointSlideDrcEvaluations += 1
+            this.cleanupCandidateAttempts += 1
+            const candidateSnapshot = this.getSnapshot(materializedCandidate)
+            if (candidateSnapshot.count >= snapshot.count) continue
+
+            this.finalEndpointSlideCandidatesAccepted += 1
+            this.finalEndpointSlideRelocatedBranches += branches.length
+            this.cleanupCandidatesAccepted += 1
+            return {
+              routes: materializedCandidate,
+              snapshot: candidateSnapshot,
+            }
+          }
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  private runFinalEndpointSlideCleanup(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+
+    while (
+      snapshot.count > 0 &&
+      this.finalEndpointSlideDrcEvaluations <
+        MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS
+    ) {
+      let acceptedCandidate:
+        | {
+            routes: HighDensityRoute[]
+            snapshot: DrcSnapshot
+          }
+        | undefined
+      for (const error of snapshot.errors) {
+        acceptedCandidate = this.tryFinalEndpointSlideCandidate(
+          improvedRoutes,
+          snapshot,
+          error,
+        )
+        if (acceptedCandidate) break
+        if (
+          this.finalEndpointSlideDrcEvaluations >=
+          MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS
+        ) {
+          break
+        }
+      }
+      if (!acceptedCandidate) break
+      improvedRoutes = acceptedCandidate.routes
+      snapshot = acceptedCandidate.snapshot
+    }
+
+    return improvedRoutes
+  }
+
+  private getCombinedMissingConnectionCanonicalNet(
+    error: DrcError,
+  ): string | undefined {
+    if (
+      getErrorType(error) !== "pcb_trace_error" ||
+      typeof error.pcb_trace_error_id !== "string" ||
+      !error.pcb_trace_error_id.startsWith("missing_connection_combined_") ||
+      typeof error.source_trace_id !== "string"
+    ) {
+      return undefined
+    }
+    return (
+      this.params.connMap?.getNetConnectedToId(error.source_trace_id) ??
+      error.source_trace_id
+    )
+  }
+
+  private getPreloadedCopperLayersAtPoint(
+    canonicalNet: string,
+    point: { x: number; y: number },
+  ): number[] {
+    const zLayers = new Set<number>()
+    const addLayer = (layer: string) => {
+      const z = mapLayerNameToZ(layer, this.params.srj.layerCount)
+      if (Number.isInteger(z) && z >= 0 && z < this.params.srj.layerCount) {
+        zLayers.add(z)
+      }
+    }
+    for (const trace of this.params.srj.traces ?? []) {
+      const traceCanonicalNet =
+        this.params.connMap?.getNetConnectedToId(trace.connection_name) ??
+        trace.connection_name
+      if (traceCanonicalNet !== canonicalNet) continue
+
+      for (
+        let pointIndex = 0;
+        pointIndex < trace.route.length;
+        pointIndex += 1
+      ) {
+        const routePoint = trace.route[pointIndex]!
+        const nextPoint = trace.route[pointIndex + 1]
+        if (routePoint.route_type === "wire") {
+          if (
+            getPointDistance(point, routePoint) <=
+            PRELOADED_TERMINAL_MATCH_TOLERANCE
+          ) {
+            addLayer(routePoint.layer)
+          }
+          if (
+            nextPoint?.route_type === "wire" &&
+            nextPoint.layer === routePoint.layer &&
+            getPointToSegmentDistance(point, routePoint, nextPoint) <=
+              PRELOADED_TERMINAL_MATCH_TOLERANCE
+          ) {
+            addLayer(routePoint.layer)
+          }
+        }
+      }
+    }
+
+    return [...zLayers].sort((left, right) => left - right)
+  }
+
+  private routeAlreadyHasTransitionAtPoint(
+    route: HighDensityRoute,
+    point: { x: number; y: number },
+  ): boolean {
+    if (
+      route.vias.some(
+        (via) =>
+          getPointDistance(via, point) <= PRELOADED_TERMINAL_MATCH_TOLERANCE,
+      )
+    ) {
+      return true
+    }
+    return route.route.some((routePoint, pointIndex) => {
+      const nextPoint = route.route[pointIndex + 1]
+      return Boolean(
+        nextPoint &&
+          routePoint.z !== nextPoint.z &&
+          getPointDistance(routePoint, nextPoint) <= POSITION_EPSILON &&
+          getPointDistance(routePoint, point) <=
+            PRELOADED_TERMINAL_MATCH_TOLERANCE,
+      )
+    })
+  }
+
+  private getFinalContinuityTerminalViaCandidates(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    error: DrcError,
+  ): FinalContinuityTerminalViaCandidate[] {
+    const canonicalNet = this.getCombinedMissingConnectionCanonicalNet(error)
+    if (!canonicalNet) return []
+    const errorCenter = this.getErrorCenter(error)
+    const candidates: FinalContinuityTerminalViaCandidate[] = []
+
+    for (const routeIndex of this.getCandidateRouteIndexesForError(
+      error,
+      snapshot,
+    )) {
+      const route = routes[routeIndex]
+      const routeCanonicalNet =
+        (route && this.getCanonicalNetForRoute(route)) ??
+        route?.rootConnectionName ??
+        route?.connectionName
+      if (!route || routeCanonicalNet !== canonicalNet) continue
+
+      for (const endpoint of ["start", "end"] as const) {
+        const constraint = this.terminalConstraints.find(
+          (candidateConstraint) =>
+            candidateConstraint.routeIndex === routeIndex &&
+            candidateConstraint.endpoint === endpoint &&
+            typeof candidateConstraint.originalPoint.pcb_port_id === "string",
+        )
+        const terminal =
+          endpoint === "start" ? route.route[0] : route.route.at(-1)
+        if (
+          !constraint ||
+          !terminal ||
+          terminal.z !== constraint.originalPoint.z ||
+          this.routeAlreadyHasTransitionAtPoint(route, terminal) ||
+          !this.terminalCanHostRelocatedVia(routes, routeIndex, endpoint)
+        ) {
+          continue
+        }
+
+        for (const targetZ of this.getPreloadedCopperLayersAtPoint(
+          canonicalNet,
+          terminal,
+        )) {
+          if (targetZ === terminal.z) continue
+          candidates.push({
+            routeIndex,
+            endpoint,
+            targetZ,
+            distanceToError: errorCenter
+              ? getPointDistance(terminal, errorCenter)
+              : 0,
+          })
+        }
+      }
+    }
+
+    return candidates.sort(
+      (left, right) =>
+        left.distanceToError - right.distanceToError ||
+        left.routeIndex - right.routeIndex ||
+        (left.endpoint === right.endpoint
+          ? Math.abs(left.targetZ) - Math.abs(right.targetZ)
+          : left.endpoint === "start"
+            ? -1
+            : 1),
+    )
+  }
+
+  private addFinalContinuityTerminalViaStub(
+    route: HighDensityRoute,
+    endpoint: "start" | "end",
+    targetZ: number,
+  ): HighDensityRoute | undefined {
+    const terminal = endpoint === "start" ? route.route[0] : route.route.at(-1)
+    if (
+      !terminal ||
+      targetZ === terminal.z ||
+      targetZ < 0 ||
+      targetZ >= this.params.srj.layerCount ||
+      this.routeAlreadyHasTransitionAtPoint(route, terminal)
+    ) {
+      return undefined
+    }
+
+    const { pcb_port_id: _pcbPortId, ...terminalWithoutIdentity } = terminal
+    const targetLayerPoint = {
+      ...terminalWithoutIdentity,
+      z: targetZ,
+    }
+    const routePoints =
+      endpoint === "start"
+        ? [
+            { ...terminal },
+            targetLayerPoint,
+            { ...terminalWithoutIdentity },
+            ...route.route.slice(1),
+          ]
+        : [
+            ...route.route.slice(0, -1),
+            { ...terminalWithoutIdentity },
+            targetLayerPoint,
+            { ...terminal },
+          ]
+    const materializedRoute = materializeRoutes([
+      { ...route, route: routePoints },
+    ])[0]
+    if (
+      !materializedRoute ||
+      !routeHasValidLayerTransitions(materializedRoute)
+    ) {
+      return undefined
+    }
+
+    const transitionCountAtTerminal = materializedRoute.route.filter(
+      (routePoint, pointIndex) => {
+        const nextPoint = materializedRoute.route[pointIndex + 1]
+        return Boolean(
+          nextPoint &&
+            routePoint.z !== nextPoint.z &&
+            getPointDistance(routePoint, nextPoint) <= POSITION_EPSILON &&
+            getPointDistance(routePoint, terminal) <= POSITION_EPSILON,
+        )
+      },
+    ).length
+    const viaCountAtTerminal = materializedRoute.vias.filter(
+      (via) =>
+        getPointDistance(via, terminal) <= PRELOADED_TERMINAL_MATCH_TOLERANCE,
+    ).length
+    if (transitionCountAtTerminal !== 2 || viaCountAtTerminal !== 1) {
+      return undefined
+    }
+    return materializedRoute
+  }
+
+  private runFinalContinuityTerminalViaBridge(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+
+    while (
+      snapshot.count > 0 &&
+      this.finalContinuityTerminalViaAttempts <
+        MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS &&
+      this.finalContinuityTerminalViaDrcEvaluations <
+        MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS
+    ) {
+      let acceptedCandidate:
+        | {
+            routes: HighDensityRoute[]
+            snapshot: DrcSnapshot
+          }
+        | undefined
+
+      errorLoop: for (const error of snapshot.errors) {
+        for (const candidate of this.getFinalContinuityTerminalViaCandidates(
+          improvedRoutes,
+          snapshot,
+          error,
+        )) {
+          if (
+            this.finalContinuityTerminalViaAttempts >=
+              MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS ||
+            this.finalContinuityTerminalViaDrcEvaluations >=
+              MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS
+          ) {
+            break errorLoop
+          }
+          this.finalContinuityTerminalViaAttempts += 1
+
+          const candidateRoutes = cloneRoutes(improvedRoutes)
+          const bridgedRoute = this.addFinalContinuityTerminalViaStub(
+            candidateRoutes[candidate.routeIndex]!,
+            candidate.endpoint,
+            candidate.targetZ,
+          )
+          if (!bridgedRoute) continue
+          candidateRoutes[candidate.routeIndex] = bridgedRoute
+          const materializedCandidate = materializeRoutes(candidateRoutes)
+          if (
+            materializedCandidate.some(
+              (candidateRoute) =>
+                !routeHasValidLayerTransitions(candidateRoute),
+            ) ||
+            !this.candidatePreservesTerminals(materializedCandidate)
+          ) {
+            continue
+          }
+
+          this.finalContinuityTerminalViaDrcEvaluations += 1
+          this.cleanupCandidateAttempts += 1
+          const candidateSnapshot = this.getSnapshot(materializedCandidate)
+          if (candidateSnapshot.count >= snapshot.count) continue
+
+          this.finalContinuityTerminalViaCandidatesAccepted += 1
+          this.cleanupCandidatesAccepted += 1
+          acceptedCandidate = {
+            routes: materializedCandidate,
+            snapshot: candidateSnapshot,
+          }
+          break errorLoop
+        }
+      }
+
+      if (!acceptedCandidate) break
+      improvedRoutes = acceptedCandidate.routes
+      snapshot = acceptedCandidate.snapshot
+    }
+
+    return improvedRoutes
+  }
+
   private runPipeline9Cleanup(routes: HighDensityRoute[]): HighDensityRoute[] {
+    this.selectAdaptiveCleanupLimits()
     let improvedRoutes = this.unlockCleanupTerminals(routes)
+    improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
 
     for (let pass = 0; pass < MAX_CLEANUP_PASSES; pass += 1) {
       const snapshot = this.getSnapshot(improvedRoutes)
@@ -599,17 +3913,20 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
       let nextRoutes: HighDensityRoute[] | undefined
       for (const error of snapshot.errors) {
+        if (!this.hasLocalCleanupBudget()) break
         nextRoutes = this.tryEndpointSlide(improvedRoutes, error)
         if (nextRoutes) break
       }
       if (!nextRoutes) {
         for (const error of snapshot.errors) {
+          if (!this.hasLocalCleanupBudget()) break
           nextRoutes = this.tryLocalTraceLayerDetour(improvedRoutes, error)
           if (nextRoutes) break
         }
       }
       if (!nextRoutes) {
         for (const error of snapshot.errors) {
+          if (!this.hasLocalCleanupBudget()) break
           nextRoutes = this.tryBatchedTraceForce(improvedRoutes, error)
           if (nextRoutes) break
         }
@@ -617,6 +3934,47 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       if (!nextRoutes) break
       improvedRoutes = nextRoutes
     }
+    improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
+
+    for (let round = 0; round < MAX_IJUMP_PHASE_ROUNDS; round += 1) {
+      const issueCountBeforeRound = this.getSnapshot(improvedRoutes).count
+      if (issueCountBeforeRound === 0) break
+
+      let issueCountBeforePhase = issueCountBeforeRound
+      improvedRoutes = this.runIjumpFullRouteCleanup(improvedRoutes)
+      let issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
+      if (issueCountAfterPhase < issueCountBeforePhase) {
+        improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
+      }
+
+      issueCountBeforePhase = this.getSnapshot(improvedRoutes).count
+      improvedRoutes = this.runIjumpInteriorCleanup(improvedRoutes)
+      issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
+      if (issueCountAfterPhase < issueCountBeforePhase) {
+        improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
+      }
+
+      issueCountBeforePhase = this.getSnapshot(improvedRoutes).count
+      improvedRoutes = this.runIjumpFixedOnlyCleanup(improvedRoutes)
+      issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
+      if (issueCountAfterPhase < issueCountBeforePhase) {
+        improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
+      }
+
+      if (this.getSnapshot(improvedRoutes).count >= issueCountBeforeRound) {
+        break
+      }
+    }
+
+    improvedRoutes = this.runIjumpErrorOwnedClusterRebuildPasses(improvedRoutes)
+    improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
+    improvedRoutes = this.runIjumpFinalErrorOwnerSweep(improvedRoutes)
+    improvedRoutes = this.runPostRepairSameNetViaMerge(improvedRoutes)
+    improvedRoutes = this.runSharedTerminalCompositeRepair(improvedRoutes)
+    improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
+    improvedRoutes = this.runFixedCopperCompositeRepair(improvedRoutes)
+    improvedRoutes = this.runFinalEndpointSlideCleanup(improvedRoutes)
+    improvedRoutes = this.runFinalContinuityTerminalViaBridge(improvedRoutes)
 
     return this.restoreTerminalIds(improvedRoutes)
   }
@@ -636,6 +3994,124 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       finalDrcIssueCount: finalSnapshot.count,
       pipeline9DrcCleanupCandidateAttempts: this.cleanupCandidateAttempts,
       pipeline9DrcCleanupCandidatesAccepted: this.cleanupCandidatesAccepted,
+      pipeline9LocalCleanupDrcEvaluations: this.localCleanupDrcEvaluations,
+      pipeline9SelectedLocalCleanupDrcEvaluationLimit:
+        this.selectedLocalCleanupDrcEvaluationLimit,
+      pipeline9ConsecutiveLocalCleanupDrcMisses:
+        this.consecutiveLocalCleanupDrcMisses,
+      pipeline9MaxConsecutiveLocalCleanupDrcMisses:
+        this.maxConsecutiveLocalCleanupDrcMisses,
+      pipeline9SelectedConsecutiveLocalCleanupDrcMissLimit:
+        this.selectedConsecutiveLocalCleanupDrcMissLimit,
+      pipeline9ViaMicroShiftAttempts: this.viaMicroShiftAttempts,
+      pipeline9ViaMicroShiftsAccepted: this.viaMicroShiftsAccepted,
+      pipeline9IjumpFullAttempts: this.ijumpFullAttempts,
+      pipeline9IjumpInteriorAttempts: this.ijumpInteriorAttempts,
+      pipeline9IjumpFixedOnlyAttempts: this.ijumpFixedOnlyAttempts,
+      pipeline9IjumpCandidatesAccepted: this.ijumpCandidatesAccepted,
+      pipeline9IjumpIterations: this.ijumpIterations,
+      pipeline9SelectedIjumpIterationLimit: this.selectedIjumpIterationLimit,
+      pipeline9ErrorOwnedClusterOrderAttempts:
+        this.errorOwnedClusterOrderAttempts,
+      pipeline9ErrorOwnedClusterRouteAttempts:
+        this.errorOwnedClusterRouteAttempts,
+      pipeline9ErrorOwnedClusterDrcEvaluations:
+        this.errorOwnedClusterDrcEvaluations,
+      pipeline9ErrorOwnedClusterIterations: this.errorOwnedClusterIterations,
+      pipeline9ErrorOwnedClusterAccepted: this.errorOwnedClusterAccepted,
+      pipeline9ErrorOwnedClusterTerminalEscapeAttempts:
+        this.errorOwnedClusterTerminalEscapeAttempts,
+      pipeline9ErrorOwnedClusterPostRouteAttempts:
+        this.errorOwnedClusterPostRouteAttempts,
+      pipeline9ErrorOwnedClusterPostCandidatesAccepted:
+        this.errorOwnedClusterPostCandidatesAccepted,
+      pipeline9PostClusterViaMicroShiftDrcEvaluations:
+        this.postClusterViaMicroShiftDrcEvaluations,
+      pipeline9FinalOwnerFullAttempts: this.finalOwnerFullAttempts,
+      pipeline9FinalOwnerInteriorAttempts: this.finalOwnerInteriorAttempts,
+      pipeline9FinalOwnerDrcEvaluations: this.finalOwnerDrcEvaluations,
+      pipeline9FinalOwnerCandidatesAccepted: this.finalOwnerCandidatesAccepted,
+      pipeline9FinalOwnerIterations: this.finalOwnerIterations,
+      pipeline9FinalOwnerIterationLimit: MAX_FINAL_OWNER_IJUMP_ITERATIONS,
+      pipeline9PostRepairSameNetViaMergeAttempts:
+        this.postRepairSameNetViaMergeAttempts,
+      pipeline9PostRepairSameNetViaMergeDrcEvaluations:
+        this.postRepairSameNetViaMergeDrcEvaluations,
+      pipeline9PostRepairSameNetViaMergeCandidatesAccepted:
+        this.postRepairSameNetViaMergeCandidatesAccepted,
+      pipeline9PostRepairSameNetViaMergeIterations:
+        this.postRepairSameNetViaMergeIterations,
+      pipeline9PostRepairSameNetViaMergeIterationLimit:
+        MAX_POST_REPAIR_SAME_NET_VIA_MERGER_ITERATIONS,
+      pipeline9SharedTerminalCompositeAttempts:
+        this.sharedTerminalCompositeAttempts,
+      pipeline9SharedTerminalCompositeRelocatedBranches:
+        this.sharedTerminalCompositeRelocatedBranches,
+      pipeline9SharedTerminalCompositeIjumpAttempts:
+        this.sharedTerminalCompositeIjumpAttempts,
+      pipeline9SharedTerminalCompositeDrcEvaluations:
+        this.sharedTerminalCompositeDrcEvaluations,
+      pipeline9SharedTerminalCompositeCandidatesAccepted:
+        this.sharedTerminalCompositeCandidatesAccepted,
+      pipeline9SharedTerminalCompositeIterations:
+        this.sharedTerminalCompositeIterations,
+      pipeline9SharedTerminalCompositeIterationLimit:
+        MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS,
+      pipeline9PostFinalCompositeAttempts: this.postFinalCompositeAttempts,
+      pipeline9PostFinalCompositeForwardAttempts:
+        this.postFinalCompositeForwardAttempts,
+      pipeline9PostFinalCompositeReverseAttempts:
+        this.postFinalCompositeReverseAttempts,
+      pipeline9PostFinalCompositeTerminalRootedAttempts:
+        this.postFinalCompositeTerminalRootedAttempts,
+      pipeline9PostFinalCompositeDrcEvaluations:
+        this.postFinalCompositeDrcEvaluations,
+      pipeline9PostFinalCompositeCandidatesAccepted:
+        this.postFinalCompositeCandidatesAccepted,
+      pipeline9PostFinalCompositeIterations: this.postFinalCompositeIterations,
+      pipeline9PostFinalCompositeIterationLimit:
+        MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS,
+      pipeline9PostFinalCompositeSameNetViaMergeIterations:
+        this.postFinalCompositeSameNetViaMergeIterations,
+      pipeline9PostFinalCompositeSameNetViaMergeIterationLimit:
+        MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS,
+      pipeline9FixedCopperCompositePrimaryAttempts:
+        this.fixedCopperCompositePrimaryAttempts,
+      pipeline9FixedCopperCompositeFollowupAttempts:
+        this.fixedCopperCompositeFollowupAttempts,
+      pipeline9FixedCopperCompositeDrcEvaluations:
+        this.fixedCopperCompositeDrcEvaluations,
+      pipeline9FixedCopperCompositeCandidatesAccepted:
+        this.fixedCopperCompositeCandidatesAccepted,
+      pipeline9FixedCopperCompositeIterations:
+        this.fixedCopperCompositeIterations,
+      pipeline9FixedCopperCompositePrimaryAttemptLimit:
+        MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS,
+      pipeline9FixedCopperCompositeFollowupAttemptLimit:
+        MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_ATTEMPTS,
+      pipeline9FixedCopperCompositeDrcEvaluationLimit:
+        MAX_FIXED_COPPER_COMPOSITE_DRC_EVALUATIONS,
+      pipeline9FixedCopperCompositeIterationLimit:
+        MAX_FIXED_COPPER_COMPOSITE_ITERATIONS,
+      pipeline9FinalEndpointSlideAttempts: this.finalEndpointSlideAttempts,
+      pipeline9FinalEndpointSlideDrcEvaluations:
+        this.finalEndpointSlideDrcEvaluations,
+      pipeline9FinalEndpointSlideCandidatesAccepted:
+        this.finalEndpointSlideCandidatesAccepted,
+      pipeline9FinalEndpointSlideRelocatedBranches:
+        this.finalEndpointSlideRelocatedBranches,
+      pipeline9FinalEndpointSlideDrcEvaluationLimit:
+        MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS,
+      pipeline9FinalContinuityTerminalViaAttempts:
+        this.finalContinuityTerminalViaAttempts,
+      pipeline9FinalContinuityTerminalViaDrcEvaluations:
+        this.finalContinuityTerminalViaDrcEvaluations,
+      pipeline9FinalContinuityTerminalViaCandidatesAccepted:
+        this.finalContinuityTerminalViaCandidatesAccepted,
+      pipeline9FinalContinuityTerminalViaAttemptLimit:
+        MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS,
+      pipeline9FinalContinuityTerminalViaDrcEvaluationLimit:
+        MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS,
     }
     this.progress = 1
     this.solved = true

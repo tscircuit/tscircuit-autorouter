@@ -15,6 +15,7 @@ import {
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
   snapIslandEndpointToNearestTerminal,
+  snapIslandEndpointsToDistinctTerminals,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
@@ -41,6 +42,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  preserveTerminalLayers: boolean
+  preserveDistinctTerminalSnaps: boolean
   private endpointIndex = new EndpointClusterIndex()
 
   private canStitchBetweenTerminals(params: {
@@ -59,6 +62,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preserveTerminalLayers: this.preserveTerminalLayers,
     })
 
     while (
@@ -139,12 +143,17 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preserveTerminalLayers?: boolean
+    preserveDistinctTerminalSnaps?: boolean
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.preserveTerminalLayers = params.preserveTerminalLayers ?? false
+    this.preserveDistinctTerminalSnaps =
+      params.preserveDistinctTerminalSnaps ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
@@ -258,15 +267,22 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
-
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
-        })
+        if (this.preserveDistinctTerminalSnaps) {
+          ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
+            start,
+            end,
+            terminals: [globalStart, globalEnd],
+          }))
+        } else {
+          start = snapIslandEndpointToNearestTerminal({
+            islandEndpoint: start,
+            terminals: [globalStart, globalEnd],
+          })
+          end = snapIslandEndpointToNearestTerminal({
+            islandEndpoint: end,
+            terminals: [globalStart, globalEnd],
+          })
+        }
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -422,6 +438,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preserveTerminalLayers: this.preserveTerminalLayers,
     })
   }
 

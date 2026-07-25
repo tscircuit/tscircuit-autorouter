@@ -92,7 +92,81 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
   expect(
     benchmarkResult.errors.some(
       (error) =>
-        "error_type" in error && error.error_type === "pcb_trace_error",
+        "pcb_trace_error_id" in error &&
+        error.pcb_trace_error_id.startsWith("missing_connection_combined_"),
     ),
-  ).toBe(true)
+  ).toBe(false)
+})
+
+test("Pipeline7 repair receives location-aware via errors", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+    obstacles: [],
+    connections: [
+      {
+        name: "a",
+        pointsToConnect: [
+          { x: -1, y: 0, layer: "top", pointId: "a_start" },
+          { x: 1, y: 0, layer: "bottom", pointId: "a_end" },
+        ],
+      },
+      {
+        name: "b",
+        pointsToConnect: [
+          { x: -1, y: 0.35, layer: "top", pointId: "b_start" },
+          { x: 1, y: 0.35, layer: "bottom", pointId: "b_end" },
+        ],
+      },
+    ],
+  }
+  const routes: HighDensityRoute[] = [
+    {
+      connectionName: "a",
+      route: [
+        { x: -1, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 1 },
+        { x: 1, y: 0, z: 1 },
+      ],
+      vias: [{ x: 0, y: 0 }],
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+    },
+    {
+      connectionName: "b",
+      route: [
+        { x: -1, y: 0.35, z: 0 },
+        { x: 0, y: 0.35, z: 0 },
+        { x: 0, y: 0.35, z: 1 },
+        { x: 1, y: 0.35, z: 1 },
+      ],
+      vias: [{ x: 0, y: 0.35 }],
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+    },
+  ]
+  const evaluator = createPipeline7RelaxedDrcEvaluator({
+    connections: srj.connections,
+    originalConnections: srj.connections,
+    layerCount: srj.layerCount,
+    obstacles: srj.obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap: getConnectivityMapFromSimpleRouteJson(srj),
+    srjWithPointPairs: srj,
+    originalSrj: srj,
+  })
+
+  const result = evaluator({ traces: [], routes })
+  if (Array.isArray(result)) {
+    throw new Error("Exact DRC evaluator returned errors without centers")
+  }
+
+  const viaError = result.errors.find(
+    (error) => error.type === "pcb_via_clearance_error",
+  )
+  expect(viaError).toBeDefined()
+  expect(viaError?.center).toEqual({ x: 0, y: 0.175 })
+  expect(isDeepStrictEqual(result.errors, result.errorsWithCenters)).toBe(true)
 })

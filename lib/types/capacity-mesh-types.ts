@@ -34,6 +34,14 @@ export interface CapacityMeshNode {
   _soicRegionType?: "center" | "pad" | "pad-gap"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
+  /**
+   * Canonical net ids for fixed, preloaded copper occupying this node.
+   *
+   * This is kept separate from `_connectedTo` because those ids are resolved
+   * through the active point-pair connectivity map. A generated point-pair
+   * name can collide with an unrelated original fixed-net name.
+   */
+  _preloadedFixedNetIds?: string[]
 
   _parent?: CapacityMeshNode
 }

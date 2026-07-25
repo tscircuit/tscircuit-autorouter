@@ -196,6 +196,47 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 }
 
 /**
+ * Snaps both island endpoints without collapsing a partial island onto one
+ * physical terminal. When both endpoints choose the same terminal, keep the
+ * closer snap and leave the farther island endpoint available for stitching.
+ */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: Point3
+  end: Point3
+  terminals: Point3[]
+}) => {
+  const snappedStart = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals: params.terminals,
+  })
+  const snappedEnd = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals: params.terminals,
+  })
+  const getSnappedTerminalIdentity = (point: Point3) => {
+    const terminal = params.terminals.find(
+      (candidateTerminal) => candidateTerminal === point,
+    ) as (Point3 & { pcb_port_id?: string; pointId?: string }) | undefined
+    if (!terminal) return undefined
+    if (terminal.pcb_port_id) return `pcb_port:${terminal.pcb_port_id}`
+    if (terminal.pointId) return `point:${terminal.pointId}`
+    return `position:${terminal.x}:${terminal.y}:${terminal.z}`
+  }
+  const startTerminalIdentity = getSnappedTerminalIdentity(snappedStart)
+  const endTerminalIdentity = getSnappedTerminalIdentity(snappedEnd)
+
+  if (startTerminalIdentity && startTerminalIdentity === endTerminalIdentity) {
+    const startSnapDistance = distance(params.start, snappedStart)
+    const endSnapDistance = distance(params.end, snappedEnd)
+    return startSnapDistance <= endSnapDistance
+      ? { start: snappedStart, end: params.end }
+      : { start: params.start, end: snappedEnd }
+  }
+
+  return { start: snappedStart, end: snappedEnd }
+}
+
+/**
  * Returns the route islands on the deterministic endpoint path between the
  * chosen terminals. If the subset cannot actually stitch to both terminals,
  * the full route set is returned instead.

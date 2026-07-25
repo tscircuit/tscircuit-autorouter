@@ -428,4 +428,33 @@ describe("convertHdRouteToSimplifiedRoute", () => {
       ]
     `)
   })
+
+  test("serializes a coincident terminal via stub as one fabrication via", () => {
+    const input: HighDensityIntraNodeRoute = {
+      connectionName: "terminal-via-stub",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      route: [
+        { x: 0, y: 0, z: 1 },
+        { x: 1, y: 0, z: 1 },
+        { x: 1, y: 0, z: 0 },
+        { x: 1, y: 0, z: 1, pcb_port_id: "pcb_port_16" },
+      ],
+      vias: [{ x: 1, y: 0 }],
+    }
+
+    const result = convertHdRouteToSimplifiedRoute(input, 2)
+    const vias = result.filter((segment) => segment.route_type === "via")
+
+    expect(vias).toEqual([
+      {
+        route_type: "via",
+        x: 1,
+        y: 0,
+        from_layer: "bottom",
+        to_layer: "top",
+        via_diameter: 0.3,
+      },
+    ])
+  })
 })
