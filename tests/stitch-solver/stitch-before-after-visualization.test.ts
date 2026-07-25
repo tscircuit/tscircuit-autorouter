@@ -88,7 +88,7 @@ test("stitch visualizations show collision-safe and repair-handoff changes", asy
       columns: 2,
       cellHeight: 1.2,
       backgroundColor: "white",
-    }),
+    }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "validated-detour-before-after",
   })
@@ -157,7 +157,7 @@ test("stitch visualizations show collision-safe and repair-handoff changes", asy
       columns: 3,
       cellHeight: 1.2,
       backgroundColor: "white",
-    }),
+    }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "repair-handoff-before-after",
   })
