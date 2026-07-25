@@ -42,7 +42,7 @@ test("solver svg frames capture selected pipeline7 frames for a zero-drc circuit
     solver,
     frames,
     columns: 3,
-  })
+  }).replace(/[ \t]+$/gm, "")
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)

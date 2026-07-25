@@ -54,30 +54,25 @@ const getInputSegmentKeys = (
   return inputSegmentKeys
 }
 
-const addObstacleGraphics = ({
+export const addStitchObstacleGraphics = ({
   graphics,
   obstacles,
-  steps,
 }: {
   graphics: GraphicsObject
   obstacles: Obstacle[]
-  steps: number[]
 }): void => {
   for (const obstacle of obstacles) {
-    for (const step of steps) {
-      graphics.rects!.push({
-        center: obstacle.center,
-        width: obstacle.width,
-        height: obstacle.height,
-        ccwRotationDegrees: obstacle.ccwRotationDegrees,
-        fill: "rgba(100, 116, 139, 0.18)",
-        stroke: "#64748b",
-        label: obstacle.obstacleId
-          ? `Blocking obstacle: ${obstacle.obstacleId}`
-          : "Blocking obstacle",
-        step,
-      })
-    }
+    graphics.rects!.push({
+      center: obstacle.center,
+      width: obstacle.width,
+      height: obstacle.height,
+      ccwRotationDegrees: obstacle.ccwRotationDegrees,
+      fill: "rgba(100, 116, 139, 0.18)",
+      stroke: "#64748b",
+      label: obstacle.obstacleId
+        ? `Blocking obstacle: ${obstacle.obstacleId}`
+        : "Blocking obstacle",
+    })
   }
 }
 
@@ -280,10 +275,9 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
     rects: [],
     title: "Single High Density Route Stitch Solver 3",
   }
-  addObstacleGraphics({
+  addStitchObstacleGraphics({
     graphics,
     obstacles: stitchState.obstacles,
-    steps: hasRepairHandoffStep ? [1, 2, 3] : [1, 2],
   })
 
   const inputRoutes =

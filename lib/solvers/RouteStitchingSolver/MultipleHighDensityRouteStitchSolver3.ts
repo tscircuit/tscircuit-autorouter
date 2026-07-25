@@ -30,6 +30,7 @@ import {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 import {
+  addStitchObstacleGraphics,
   visualizeSingleHighDensityRouteStitchSolver3,
   type StitchVisualizationInput,
 } from "./visualize-single-high-density-route-stitch-solver3"
@@ -549,12 +550,20 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     for (const completedAttempt of this.completedStitchAttempts) {
       graphics = mergeGraphics(
         graphics,
-        visualizeSingleHighDensityRouteStitchSolver3(completedAttempt),
+        visualizeSingleHighDensityRouteStitchSolver3({
+          ...completedAttempt,
+          obstacles: [],
+        }),
       )
     }
 
     if (this.activeSolver) {
       graphics = mergeGraphics(graphics, this.activeSolver.visualize())
+    } else {
+      addStitchObstacleGraphics({
+        graphics,
+        obstacles: this.obstacles,
+      })
     }
 
     return graphics
