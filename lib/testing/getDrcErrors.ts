@@ -26,6 +26,11 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_via_id: string
   pcb_trace_id: string
 }
+type PcbPadWithLocation = CircuitJsonElement & {
+  type: "pcb_smtpad" | "pcb_plated_hole"
+  x: number
+  y: number
+}
 
 type DrcError =
   | PcbTraceError
@@ -128,16 +133,42 @@ export const getDrcErrors = (
   )
 
   const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
+  const pads = circuitJson.filter(
+    (element): element is PcbPadWithLocation =>
+      (element.type === "pcb_smtpad" || element.type === "pcb_plated_hole") &&
+      typeof element.x === "number" &&
+      typeof element.y === "number",
+  )
+  const padsById = new Map(
+    pads.flatMap((pad) => {
+      const padId =
+        pad.type === "pcb_smtpad" ? pad.pcb_smtpad_id : pad.pcb_plated_hole_id
+      return padId ? [[padId, pad] as const] : []
+    }),
+  )
 
   const errors = reportedErrors.map((error): DrcError => {
-    if (error.type !== "pcb_via_trace_clearance_error") return error
-    const via = viasById.get(error.pcb_via_id)
-    if (!via) return error
+    if (error.type === "pcb_via_trace_clearance_error") {
+      const via = viasById.get(error.pcb_via_id)
+      if (!via) return error
 
-    return {
-      ...error,
-      center: { x: via.x, y: via.y },
+      return {
+        ...error,
+        center: { x: via.x, y: via.y },
+      }
     }
+
+    if (error.type === "pcb_pad_trace_clearance_error") {
+      const pad = padsById.get(error.pcb_pad_id)
+      if (!pad) return error
+
+      return {
+        ...error,
+        center: { x: pad.x, y: pad.y },
+      }
+    }
+
+    return error
   })
 
   const errorsWithCenters = errors.map((error) => {

@@ -43,7 +43,7 @@ test("checks classifies pad/via pairs once through getDrcErrors", () => {
     (error) => error.type === "pcb_pad_trace_clearance_error",
   )
   expect(padClearanceErrors).toHaveLength(1)
-  expect(padClearanceErrors[0]).toMatchObject({ center: { x: 0, y: 0 } })
+  expect(padClearanceErrors[0]).toMatchObject({ center: { x: 0, y: 0.2 } })
   expect(
     errors.filter((error) => error.type === "pcb_via_trace_clearance_error"),
   ).toHaveLength(0)
