@@ -39,19 +39,29 @@ test("locates pad-trace clearance errors at the involved pad", () => {
   const normalizedError = errors.find(
     (error) => error.type === "pcb_pad_trace_clearance_error",
   )
+  const reportedCenter = reportedError?.center
+  const normalizedCenter = errorsWithCenters.find(
+    (error) => error.type === "pcb_pad_trace_clearance_error",
+  )?.center
+  if (
+    typeof reportedCenter?.x !== "number" ||
+    typeof reportedCenter.y !== "number" ||
+    typeof normalizedCenter?.x !== "number" ||
+    typeof normalizedCenter.y !== "number"
+  ) {
+    throw new Error("Expected pad-trace errors with numeric centers")
+  }
+  const reportedPoint = { x: reportedCenter.x, y: reportedCenter.y }
+  const normalizedPoint = { x: normalizedCenter.x, y: normalizedCenter.y }
 
-  expect(reportedError?.center).toEqual({ x: 0, y: 0 })
+  expect(reportedPoint).toEqual({ x: 0, y: 0 })
   expect(normalizedError).toMatchObject({
     type: "pcb_pad_trace_clearance_error",
     pcb_pad_id: "pad_a",
     pcb_trace_id: "trace_b",
     center: { x: 1, y: 0.2 },
   })
-  expect(
-    errorsWithCenters.find(
-      (error) => error.type === "pcb_pad_trace_clearance_error",
-    )?.center,
-  ).toEqual({ x: 1, y: 0.2 })
+  expect(normalizedPoint).toEqual({ x: 1, y: 0.2 })
 
   const getPanel = (
     marker: { x: number; y: number },
@@ -91,13 +101,8 @@ test("locates pad-trace clearance errors at the involved pad", () => {
   const svg = getSvgFromGraphicsObject(
     stackGraphicsHorizontally(
       [
-        getPanel(reportedError!.center!, "rgba(147, 51, 234, 0.6)"),
-        getPanel(
-          errorsWithCenters.find(
-            (error) => error.type === "pcb_pad_trace_clearance_error",
-          )!.center!,
-          "rgba(34, 197, 94, 0.6)",
-        ),
+        getPanel(reportedPoint, "rgba(147, 51, 234, 0.6)"),
+        getPanel(normalizedPoint, "rgba(34, 197, 94, 0.6)"),
       ],
       {
         titles: ["Before: generic trace center", "After: involved pad center"],

@@ -136,7 +136,9 @@ export const getDrcErrors = (
   const pads = circuitJson.filter(
     (element): element is PcbPadWithLocation =>
       (element.type === "pcb_smtpad" || element.type === "pcb_plated_hole") &&
+      "x" in element &&
       typeof element.x === "number" &&
+      "y" in element &&
       typeof element.y === "number",
   )
   const padsById = new Map(
