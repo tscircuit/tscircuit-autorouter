@@ -117,10 +117,8 @@ test("separate nets keep their own widths", () => {
   ])
 
   expect(connections).toHaveLength(2)
-  expect(
-    connections.find((c) => c.name === "motor")?.nominalTraceWidth,
-  ).toBe(1)
-  expect(
-    connections.find((c) => c.name === "signal")?.nominalTraceWidth,
-  ).toBe(0.15)
+  expect(connections.find((c) => c.name === "motor")?.nominalTraceWidth).toBe(1)
+  expect(connections.find((c) => c.name === "signal")?.nominalTraceWidth).toBe(
+    0.15,
+  )
 })

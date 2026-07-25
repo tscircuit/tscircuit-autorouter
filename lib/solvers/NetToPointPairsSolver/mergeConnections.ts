@@ -134,7 +134,10 @@ export function mergeConnections(
         nominalTraceWidth =
           nominalTraceWidth === undefined
             ? simpleRouteConnection.nominalTraceWidth
-            : Math.max(nominalTraceWidth, simpleRouteConnection.nominalTraceWidth)
+            : Math.max(
+                nominalTraceWidth,
+                simpleRouteConnection.nominalTraceWidth,
+              )
       }
     })
 
