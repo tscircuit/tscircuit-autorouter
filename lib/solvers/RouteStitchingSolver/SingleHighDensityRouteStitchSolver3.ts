@@ -1,6 +1,7 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
+import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import type { StitchRepairPolicy } from "./routeStitchingEndpointHelpers"
@@ -100,6 +101,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   start: StitchTerminal
   end: StitchTerminal
   colorMap: Record<string, string>
+  obstacles: Obstacle[]
   allowedLayerTransitionPointKeys?: Set<string>
   isValidStitchSegment?: IsValidStitchSegment
   findValidStitchPath?: FindValidStitchPath
@@ -684,12 +686,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     findValidStitchPath?: FindValidStitchPath
     isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
     stitchRepairPolicy?: StitchRepairPolicy
+    obstacles?: Obstacle[]
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
     this.inputHdRoutes = [...canonicalHdRoutes]
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
+    this.obstacles = opts.obstacles ?? []
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isValidStitchSegment = opts.isValidStitchSegment
     this.findValidStitchPath = opts.findValidStitchPath
@@ -1349,6 +1353,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       start: this.start,
       end: this.end,
       colorMap: this.colorMap,
+      obstacles: this.obstacles,
       stitchRepairPolicy: this.stitchRepairPolicy,
       isValidStitchSegment: this.isValidStitchSegment,
     })
