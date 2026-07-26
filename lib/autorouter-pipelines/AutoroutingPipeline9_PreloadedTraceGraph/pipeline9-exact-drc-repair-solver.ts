@@ -14,14 +14,14 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
-  type Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouter,
-} from "./pipeline9-ijump-rerouter"
+  type Pipeline9B01RerouteOptions,
+  Pipeline9B01Rerouter,
+} from "./pipeline9-b01-rerouter"
 
 type Pipeline9ExactDrcRepairSolverParams =
   GlobalDrcBranchPortfolioSolverParams & {
     originalObstacles: Obstacle[]
-    ijumpBaseObstacles: Obstacle[]
+    b01BaseObstacles: Obstacle[]
   }
 
 type DrcError = Record<string, unknown>
@@ -111,22 +111,22 @@ const DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES =
   DEFAULT_MAX_LOCAL_CLEANUP_DRC_EVALUATIONS
 const HIGH_INITIAL_DRC_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES = 64
 const MAX_LOCAL_LAYER_DETOUR_EXPANSION = 6
-const MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND = 18
-const MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND = 24
-const MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND = 8
-const DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS = 300_000
-const HIGH_INITIAL_DRC_MAX_IJUMP_TOTAL_ITERATIONS = 200_000
-const MAX_IJUMP_FULL_ITERATIONS = 30_000
-const MAX_IJUMP_INTERIOR_ITERATIONS = 10_000
-const MAX_IJUMP_PHASE_ROUNDS = 2
-const MAX_IJUMP_INTERIOR_EXPANSION = 6
+const MAX_B01_FULL_ATTEMPTS_PER_ROUND = 18
+const MAX_B01_INTERIOR_ATTEMPTS_PER_ROUND = 24
+const MAX_B01_FIXED_ONLY_ATTEMPTS_PER_ROUND = 8
+const DEFAULT_MAX_B01_TOTAL_ITERATIONS = 300_000
+const HIGH_INITIAL_DRC_MAX_B01_TOTAL_ITERATIONS = 200_000
+const MAX_B01_FULL_ITERATIONS = 30_000
+const MAX_B01_INTERIOR_ITERATIONS = 10_000
+const MAX_B01_PHASE_ROUNDS = 2
+const MAX_B01_INTERIOR_EXPANSION = 6
 const MAX_ERROR_OWNED_CLUSTER_ITERATIONS = 75_000
 const MAX_ERROR_OWNED_CLUSTER_ROUTE_ITERATIONS = 15_000
 const MAX_ERROR_OWNED_CLUSTER_PASSES = 2
 const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_CANDIDATES = 4
 const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_ITERATIONS = 10_000
 const MAX_POST_CLUSTER_VIA_MICRO_SHIFT_DRC_EVALUATIONS = 32
-const MAX_FINAL_OWNER_IJUMP_ITERATIONS = 50_000
+const MAX_FINAL_OWNER_B01_ITERATIONS = 50_000
 const MAX_FINAL_OWNER_FULL_ROUTE_ITERATIONS = 25_000
 const MAX_FINAL_OWNER_LONG_ROUTE_ITERATIONS = 4_000
 const MAX_FINAL_OWNER_VARIANT_ITERATIONS = 10_000
@@ -137,10 +137,10 @@ const MAX_FINAL_OWNER_FALLBACK_RESIDUAL = 2
 const MAX_POST_REPAIR_SAME_NET_VIA_MERGER_ITERATIONS = 8
 const MAX_SHARED_TERMINAL_COMPOSITE_RESIDUAL = 4
 const MAX_SHARED_TERMINAL_COMPOSITE_ATTEMPTS = 1
-const MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS = 12_500
+const MAX_SHARED_TERMINAL_COMPOSITE_B01_ITERATIONS = 12_500
 const MAX_SHARED_TERMINAL_COMPOSITE_DRC_EVALUATIONS = 2
-const MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS = 24_000
-const MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS_PER_ATTEMPT = 8_000
+const MAX_POST_FINAL_COMPOSITE_B01_ITERATIONS = 24_000
+const MAX_POST_FINAL_COMPOSITE_B01_ITERATIONS_PER_ATTEMPT = 8_000
 const MAX_POST_FINAL_COMPOSITE_ATTEMPTS = 12
 const MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS = 12
 const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS = 32
@@ -158,18 +158,18 @@ const MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS = 32
 const MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS = 8
 const POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS = [4, 8] as const
 const POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY = 4
-const FULL_IJUMP_VARIANTS = [
+const FULL_B01_VARIANTS = [
   { reverse: false, shortenPath: true },
   { reverse: false, shortenPath: false },
   { reverse: true, shortenPath: false },
 ] as const
 
-const INTERIOR_IJUMP_VARIANTS = [
+const INTERIOR_B01_VARIANTS = [
   { reverse: false, shortenPath: false },
   { reverse: true, shortenPath: false },
 ] as const
 
-const FIXED_ONLY_IJUMP_VARIANTS = [
+const FIXED_ONLY_B01_VARIANTS = [
   { reverse: false, shortenPath: false },
   { reverse: true, shortenPath: false },
 ] as const
@@ -392,7 +392,7 @@ const getCoincidentTerminalPointIndexes = (
 export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolver {
   private readonly originalObstacles: Obstacle[]
   private readonly terminalConstraints: TerminalConstraint[]
-  private readonly ijumpRerouter: Pipeline9IjumpRerouter
+  private readonly b01Rerouter: Pipeline9B01Rerouter
   private cleanupStarted = false
   private cleanupCandidateAttempts = 0
   private cleanupCandidatesAccepted = 0
@@ -403,14 +403,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private maxConsecutiveLocalCleanupDrcMisses = 0
   private selectedConsecutiveLocalCleanupDrcMissLimit =
     DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
-  private selectedIjumpIterationLimit = DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS
+  private selectedB01IterationLimit = DEFAULT_MAX_B01_TOTAL_ITERATIONS
   private viaMicroShiftAttempts = 0
   private viaMicroShiftsAccepted = 0
-  private ijumpFullAttempts = 0
-  private ijumpInteriorAttempts = 0
-  private ijumpFixedOnlyAttempts = 0
-  private ijumpCandidatesAccepted = 0
-  private ijumpIterations = 0
+  private b01FullAttempts = 0
+  private b01InteriorAttempts = 0
+  private b01FixedOnlyAttempts = 0
+  private b01CandidatesAccepted = 0
+  private b01Iterations = 0
   private errorOwnedClusterOrderAttempts = 0
   private errorOwnedClusterRouteAttempts = 0
   private errorOwnedClusterDrcEvaluations = 0
@@ -431,7 +431,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private postRepairSameNetViaMergeIterations = 0
   private sharedTerminalCompositeAttempts = 0
   private sharedTerminalCompositeRelocatedBranches = 0
-  private sharedTerminalCompositeIjumpAttempts = 0
+  private sharedTerminalCompositeB01Attempts = 0
   private sharedTerminalCompositeDrcEvaluations = 0
   private sharedTerminalCompositeCandidatesAccepted = 0
   private sharedTerminalCompositeIterations = 0
@@ -459,11 +459,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   constructor(params: Pipeline9ExactDrcRepairSolverParams) {
     super(params)
     this.originalObstacles = params.originalObstacles
-    this.ijumpRerouter = new Pipeline9IjumpRerouter({
+    this.b01Rerouter = new Pipeline9B01Rerouter({
       srj: params.srj,
-      baseObstacles: params.ijumpBaseObstacles,
+      baseObstacles: params.b01BaseObstacles,
       connMap: params.connMap,
-      viaHoleDiameter: params.viaHoleDiameter,
     })
     this.terminalConstraints = params.hdRoutes.flatMap((route, routeIndex) =>
       (["start", "end"] as const).flatMap((endpoint) => {
@@ -570,7 +569,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private candidateImprovesSnapshot(
     candidateRoutes: HighDensityRoute[],
     currentIssueCount: number,
-    source: "local" | "ijump" = "local",
+    source: "local" | "b01" = "local",
   ): boolean {
     this.cleanupCandidateAttempts += 1
     if (!this.candidatePreservesTerminals(candidateRoutes)) return false
@@ -619,9 +618,9 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.selectedConsecutiveLocalCleanupDrcMissLimit = useHighInitialDrcLimits
       ? HIGH_INITIAL_DRC_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
       : DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES
-    this.selectedIjumpIterationLimit = useHighInitialDrcLimits
-      ? HIGH_INITIAL_DRC_MAX_IJUMP_TOTAL_ITERATIONS
-      : DEFAULT_MAX_IJUMP_TOTAL_ITERATIONS
+    this.selectedB01IterationLimit = useHighInitialDrcLimits
+      ? HIGH_INITIAL_DRC_MAX_B01_TOTAL_ITERATIONS
+      : DEFAULT_MAX_B01_TOTAL_ITERATIONS
   }
 
   private getCandidateRouteIndexesForError(
@@ -1157,27 +1156,27 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return undefined
   }
 
-  private getRemainingIjumpIterations(): number {
-    return Math.max(0, this.selectedIjumpIterationLimit - this.ijumpIterations)
+  private getRemainingB01Iterations(): number {
+    return Math.max(0, this.selectedB01IterationLimit - this.b01Iterations)
   }
 
-  private tryIjumpCandidate(
+  private tryB01Candidate(
     routes: HighDensityRoute[],
     snapshot: DrcSnapshot,
-    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    options: Omit<Pipeline9B01RerouteOptions, "maxIterations">,
     maxIterations: number,
   ): HighDensityRoute[] | undefined {
     const iterationLimit = Math.min(
       maxIterations,
-      this.getRemainingIjumpIterations(),
+      this.getRemainingB01Iterations(),
     )
     if (iterationLimit <= 0) return undefined
 
-    const result = this.ijumpRerouter.tryReroute(routes, {
+    const result = this.b01Rerouter.tryReroute(routes, {
       ...options,
       maxIterations: iterationLimit,
     })
-    this.ijumpIterations += Math.max(0, result?.iterations ?? 0)
+    this.b01Iterations += Math.max(0, result?.iterations ?? 0)
     if (!result?.route) return undefined
 
     const candidateRoutes = cloneRoutes(routes)
@@ -1187,17 +1186,17 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       !this.candidateImprovesSnapshot(
         materializedCandidate,
         snapshot.count,
-        "ijump",
+        "b01",
       )
     ) {
       return undefined
     }
 
-    this.ijumpCandidatesAccepted += 1
+    this.b01CandidatesAccepted += 1
     return materializedCandidate
   }
 
-  private getOrderedIjumpRouteIndexes(snapshot: DrcSnapshot): number[] {
+  private getOrderedB01RouteIndexes(snapshot: DrcSnapshot): number[] {
     const orderedRouteIndexes: number[] = []
     const seenRouteIndexes = new Set<number>()
     const seenErrorGroups = new Set<string>()
@@ -1251,32 +1250,32 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return orderedRouteIndexes
   }
 
-  private runIjumpFullRouteCleanup(
+  private runB01FullRouteCleanup(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     let improvedRoutes = routes
     let roundAttempts = 0
 
     while (
-      roundAttempts < MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND &&
-      this.getRemainingIjumpIterations() > 0
+      roundAttempts < MAX_B01_FULL_ATTEMPTS_PER_ROUND &&
+      this.getRemainingB01Iterations() > 0
     ) {
       const snapshot = this.getSnapshot(improvedRoutes)
       if (snapshot.count === 0) break
       let nextRoutes: HighDensityRoute[] | undefined
-      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+      const routeIndexes = this.getOrderedB01RouteIndexes(snapshot)
 
-      attemptLoop: for (const variant of FULL_IJUMP_VARIANTS) {
+      attemptLoop: for (const variant of FULL_B01_VARIANTS) {
         for (const routeIndex of routeIndexes) {
           if (
-            roundAttempts >= MAX_IJUMP_FULL_ATTEMPTS_PER_ROUND ||
-            this.getRemainingIjumpIterations() <= 0
+            roundAttempts >= MAX_B01_FULL_ATTEMPTS_PER_ROUND ||
+            this.getRemainingB01Iterations() <= 0
           ) {
             break attemptLoop
           }
           roundAttempts += 1
-          this.ijumpFullAttempts += 1
-          nextRoutes = this.tryIjumpCandidate(
+          this.b01FullAttempts += 1
+          nextRoutes = this.tryB01Candidate(
             improvedRoutes,
             snapshot,
             {
@@ -1284,7 +1283,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
               includeCandidateCopper: true,
               ...variant,
             },
-            MAX_IJUMP_FULL_ITERATIONS,
+            MAX_B01_FULL_ITERATIONS,
           )
           if (nextRoutes) break attemptLoop
         }
@@ -1358,21 +1357,21 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     }
 
     addWindow(
-      nearestSegmentIndex - MAX_IJUMP_INTERIOR_EXPANSION,
+      nearestSegmentIndex - MAX_B01_INTERIOR_EXPANSION,
       nearestSegmentIndex + 1,
     )
     addWindow(
       nearestSegmentIndex,
-      nearestSegmentIndex + 1 + MAX_IJUMP_INTERIOR_EXPANSION,
+      nearestSegmentIndex + 1 + MAX_B01_INTERIOR_EXPANSION,
     )
     addWindow(
-      nearestSegmentIndex - MAX_IJUMP_INTERIOR_EXPANSION,
-      nearestSegmentIndex + 1 + MAX_IJUMP_INTERIOR_EXPANSION,
+      nearestSegmentIndex - MAX_B01_INTERIOR_EXPANSION,
+      nearestSegmentIndex + 1 + MAX_B01_INTERIOR_EXPANSION,
     )
 
     for (
       let totalExpansion = 0;
-      totalExpansion <= MAX_IJUMP_INTERIOR_EXPANSION;
+      totalExpansion <= MAX_B01_INTERIOR_EXPANSION;
       totalExpansion += 1
     ) {
       for (
@@ -1391,15 +1390,15 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return windows
   }
 
-  private runIjumpInteriorCleanup(
+  private runB01InteriorCleanup(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     let improvedRoutes = routes
     let roundAttempts = 0
 
     while (
-      roundAttempts < MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND &&
-      this.getRemainingIjumpIterations() > 0
+      roundAttempts < MAX_B01_INTERIOR_ATTEMPTS_PER_ROUND &&
+      this.getRemainingB01Iterations() > 0
     ) {
       const snapshot = this.getSnapshot(improvedRoutes)
       if (snapshot.count === 0) break
@@ -1458,19 +1457,19 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         windowIndex < maximumWindowCount;
         windowIndex += 1
       ) {
-        for (const variant of INTERIOR_IJUMP_VARIANTS) {
+        for (const variant of INTERIOR_B01_VARIANTS) {
           for (const target of targets) {
             const window = target.windows[windowIndex]
             if (!window) continue
             if (
-              roundAttempts >= MAX_IJUMP_INTERIOR_ATTEMPTS_PER_ROUND ||
-              this.getRemainingIjumpIterations() <= 0
+              roundAttempts >= MAX_B01_INTERIOR_ATTEMPTS_PER_ROUND ||
+              this.getRemainingB01Iterations() <= 0
             ) {
               break attemptLoop
             }
             roundAttempts += 1
-            this.ijumpInteriorAttempts += 1
-            nextRoutes = this.tryIjumpCandidate(
+            this.b01InteriorAttempts += 1
+            nextRoutes = this.tryB01Candidate(
               improvedRoutes,
               snapshot,
               {
@@ -1479,7 +1478,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
                 includeCandidateCopper: true,
                 ...variant,
               },
-              MAX_IJUMP_INTERIOR_ITERATIONS,
+              MAX_B01_INTERIOR_ITERATIONS,
             )
             if (nextRoutes) break attemptLoop
           }
@@ -1493,32 +1492,32 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return improvedRoutes
   }
 
-  private runIjumpFixedOnlyCleanup(
+  private runB01FixedOnlyCleanup(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     let improvedRoutes = routes
     let roundAttempts = 0
 
     while (
-      roundAttempts < MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND &&
-      this.getRemainingIjumpIterations() > 0
+      roundAttempts < MAX_B01_FIXED_ONLY_ATTEMPTS_PER_ROUND &&
+      this.getRemainingB01Iterations() > 0
     ) {
       const snapshot = this.getSnapshot(improvedRoutes)
       if (snapshot.count === 0) break
       let nextRoutes: HighDensityRoute[] | undefined
-      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+      const routeIndexes = this.getOrderedB01RouteIndexes(snapshot)
 
-      attemptLoop: for (const variant of FIXED_ONLY_IJUMP_VARIANTS) {
+      attemptLoop: for (const variant of FIXED_ONLY_B01_VARIANTS) {
         for (const routeIndex of routeIndexes) {
           if (
-            roundAttempts >= MAX_IJUMP_FIXED_ONLY_ATTEMPTS_PER_ROUND ||
-            this.getRemainingIjumpIterations() <= 0
+            roundAttempts >= MAX_B01_FIXED_ONLY_ATTEMPTS_PER_ROUND ||
+            this.getRemainingB01Iterations() <= 0
           ) {
             break attemptLoop
           }
           roundAttempts += 1
-          this.ijumpFixedOnlyAttempts += 1
-          nextRoutes = this.tryIjumpCandidate(
+          this.b01FixedOnlyAttempts += 1
+          nextRoutes = this.tryB01Candidate(
             improvedRoutes,
             snapshot,
             {
@@ -1526,7 +1525,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
               includeCandidateCopper: false,
               ...variant,
             },
-            MAX_IJUMP_FULL_ITERATIONS,
+            MAX_B01_FULL_ITERATIONS,
           )
           if (nextRoutes) break attemptLoop
         }
@@ -1645,7 +1644,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     ]
   }
 
-  private runIjumpErrorOwnedClusterRebuild(
+  private runB01ErrorOwnedClusterRebuild(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     const baselineSnapshot = this.getSnapshot(routes)
@@ -1693,7 +1692,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
         pendingRouteIndexes.delete(routeIndex)
         this.errorOwnedClusterRouteAttempts += 1
-        let result = this.ijumpRerouter.tryReroute(candidateRoutes, {
+        let result = this.b01Rerouter.tryReroute(candidateRoutes, {
           routeIndex,
           omitCandidateRouteIndexes: pendingRouteIndexes,
           includeCandidateCopper: true,
@@ -1709,7 +1708,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           (!result?.route || !routeHasValidLayerTransitions(result.route)) &&
           plan.allowTerminalEscape
         ) {
-          for (const candidate of this.ijumpRerouter
+          for (const candidate of this.b01Rerouter
             .getTerminalViaEscapeCandidates(candidateRoutes, routeIndex)
             .slice(0, MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_CANDIDATES)) {
             const terminalRemainingIterations =
@@ -1719,7 +1718,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
             this.errorOwnedClusterTerminalEscapeAttempts += 1
             const terminalResult =
-              this.ijumpRerouter.tryRerouteWithTerminalViaEscape(
+              this.b01Rerouter.tryRerouteWithTerminalViaEscape(
                 candidateRoutes,
                 {
                   routeIndex,
@@ -1794,7 +1793,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           MAX_ERROR_OWNED_CLUSTER_ITERATIONS - this.errorOwnedClusterIterations
         this.errorOwnedClusterRouteAttempts += 1
         this.errorOwnedClusterPostRouteAttempts += 1
-        const result = this.ijumpRerouter.tryReroute(acceptedRoutes, {
+        const result = this.b01Rerouter.tryReroute(acceptedRoutes, {
           routeIndex,
           includeCandidateCopper: true,
           reverse: false,
@@ -1840,7 +1839,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return routes
   }
 
-  private runIjumpErrorOwnedClusterRebuildPasses(
+  private runB01ErrorOwnedClusterRebuildPasses(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     let improvedRoutes = routes
@@ -1854,7 +1853,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       }
 
       const candidateRoutes =
-        this.runIjumpErrorOwnedClusterRebuild(improvedRoutes)
+        this.runB01ErrorOwnedClusterRebuild(improvedRoutes)
       const issueCountAfterPass = this.getSnapshot(candidateRoutes).count
       if (issueCountAfterPass >= issueCountBeforePass) break
       improvedRoutes = candidateRoutes
@@ -1887,7 +1886,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private getRemainingFinalOwnerIterations(): number {
     return Math.max(
       0,
-      MAX_FINAL_OWNER_IJUMP_ITERATIONS - this.finalOwnerIterations,
+      MAX_FINAL_OWNER_B01_ITERATIONS - this.finalOwnerIterations,
     )
   }
 
@@ -1950,10 +1949,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     )
   }
 
-  private tryFinalOwnerIjumpCandidate(
+  private tryFinalOwnerB01Candidate(
     routes: HighDensityRoute[],
     snapshot: DrcSnapshot,
-    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    options: Omit<Pipeline9B01RerouteOptions, "maxIterations">,
     maxIterations: number,
     kind: "full" | "interior",
   ):
@@ -1970,7 +1969,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
     if (kind === "full") this.finalOwnerFullAttempts += 1
     else this.finalOwnerInteriorAttempts += 1
-    const result = this.ijumpRerouter.tryReroute(routes, {
+    const result = this.b01Rerouter.tryReroute(routes, {
       ...options,
       maxIterations: iterationLimit,
     })
@@ -2004,7 +2003,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     }
   }
 
-  private runIjumpFinalErrorOwnerSweep(
+  private runB01FinalErrorOwnerSweep(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
     let improvedRoutes = routes
@@ -2022,7 +2021,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             snapshot: DrcSnapshot
           }
         | undefined
-      const routeIndexes = this.getOrderedIjumpRouteIndexes(snapshot)
+      const routeIndexes = this.getOrderedB01RouteIndexes(snapshot)
 
       fullLoop: for (const variant of FINAL_OWNER_FULL_VARIANTS) {
         for (const routeIndex of routeIndexes) {
@@ -2049,7 +2048,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             : variant.reverse || variant.shortenPath
               ? MAX_FINAL_OWNER_VARIANT_ITERATIONS
               : MAX_FINAL_OWNER_FULL_ROUTE_ITERATIONS
-          acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+          acceptedCandidate = this.tryFinalOwnerB01Candidate(
             improvedRoutes,
             snapshot,
             {
@@ -2099,7 +2098,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             const remainingIterations = this.getRemainingFinalOwnerIterations()
             if (remainingIterations <= 0) break repairLoop
 
-            acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+            acceptedCandidate = this.tryFinalOwnerB01Candidate(
               improvedRoutes,
               snapshot,
               {
@@ -2131,10 +2130,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
       if (snapshot.count <= MAX_FINAL_OWNER_FALLBACK_RESIDUAL) {
         fallbackLoop: for (const variant of FINAL_OWNER_FULL_VARIANTS) {
-          for (const routeIndex of this.getOrderedIjumpRouteIndexes(snapshot)) {
+          for (const routeIndex of this.getOrderedB01RouteIndexes(snapshot)) {
             const remainingIterations = this.getRemainingFinalOwnerIterations()
             if (remainingIterations <= 0) break fallbackLoop
-            acceptedCandidate = this.tryFinalOwnerIjumpCandidate(
+            acceptedCandidate = this.tryFinalOwnerB01Candidate(
               improvedRoutes,
               snapshot,
               {
@@ -2682,11 +2681,11 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       const exposedOwnerRouteIndex = [...commonExposedOwners][0]!
 
       const remainingIterations =
-        MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS -
+        MAX_SHARED_TERMINAL_COMPOSITE_B01_ITERATIONS -
         this.sharedTerminalCompositeIterations
       if (remainingIterations <= 0) break
-      this.sharedTerminalCompositeIjumpAttempts += 1
-      const rerouteResult = this.ijumpRerouter.tryReroute(atomicCandidate, {
+      this.sharedTerminalCompositeB01Attempts += 1
+      const rerouteResult = this.b01Rerouter.tryReroute(atomicCandidate, {
         routeIndex: exposedOwnerRouteIndex,
         includeCandidateCopper: true,
         reverse: false,
@@ -2839,7 +2838,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private getRemainingPostFinalCompositeIterations(): number {
     return Math.max(
       0,
-      MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS -
+      MAX_POST_FINAL_COMPOSITE_B01_ITERATIONS -
         this.postFinalCompositeIterations,
     )
   }
@@ -2847,7 +2846,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private tryPostFinalCompositeCandidate(
     routes: HighDensityRoute[],
     snapshot: DrcSnapshot,
-    options: Omit<Pipeline9IjumpRerouteOptions, "maxIterations">,
+    options: Omit<Pipeline9B01RerouteOptions, "maxIterations">,
     terminalRooted: boolean,
   ):
     | {
@@ -2856,7 +2855,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       }
     | undefined {
     const iterationLimit = Math.min(
-      MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS_PER_ATTEMPT,
+      MAX_POST_FINAL_COMPOSITE_B01_ITERATIONS_PER_ATTEMPT,
       this.getRemainingPostFinalCompositeIterations(),
     )
     if (
@@ -2873,7 +2872,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     else this.postFinalCompositeForwardAttempts += 1
     if (terminalRooted) this.postFinalCompositeTerminalRootedAttempts += 1
 
-    const result = this.ijumpRerouter.tryReroute(routes, {
+    const result = this.b01Rerouter.tryReroute(routes, {
       ...options,
       maxIterations: iterationLimit,
     })
@@ -3188,7 +3187,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       }
 
       this.fixedCopperCompositePrimaryAttempts += 1
-      const primaryResult = this.ijumpRerouter.tryReroute(routes, {
+      const primaryResult = this.b01Rerouter.tryReroute(routes, {
         routeIndex: plan.routeIndex,
         includeCandidateCopper: false,
         ...primaryVariant,
@@ -3270,7 +3269,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           }
 
           this.fixedCopperCompositeFollowupAttempts += 1
-          const followupResult = this.ijumpRerouter.tryReroute(workingRoutes, {
+          const followupResult = this.b01Rerouter.tryReroute(workingRoutes, {
             routeIndex: ownerRouteIndex,
             includeCandidateCopper: true,
             ...followupVariant,
@@ -3936,26 +3935,26 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     }
     improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
 
-    for (let round = 0; round < MAX_IJUMP_PHASE_ROUNDS; round += 1) {
+    for (let round = 0; round < MAX_B01_PHASE_ROUNDS; round += 1) {
       const issueCountBeforeRound = this.getSnapshot(improvedRoutes).count
       if (issueCountBeforeRound === 0) break
 
       let issueCountBeforePhase = issueCountBeforeRound
-      improvedRoutes = this.runIjumpFullRouteCleanup(improvedRoutes)
+      improvedRoutes = this.runB01FullRouteCleanup(improvedRoutes)
       let issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
       if (issueCountAfterPhase < issueCountBeforePhase) {
         improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
       }
 
       issueCountBeforePhase = this.getSnapshot(improvedRoutes).count
-      improvedRoutes = this.runIjumpInteriorCleanup(improvedRoutes)
+      improvedRoutes = this.runB01InteriorCleanup(improvedRoutes)
       issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
       if (issueCountAfterPhase < issueCountBeforePhase) {
         improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
       }
 
       issueCountBeforePhase = this.getSnapshot(improvedRoutes).count
-      improvedRoutes = this.runIjumpFixedOnlyCleanup(improvedRoutes)
+      improvedRoutes = this.runB01FixedOnlyCleanup(improvedRoutes)
       issueCountAfterPhase = this.getSnapshot(improvedRoutes).count
       if (issueCountAfterPhase < issueCountBeforePhase) {
         improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
@@ -3966,9 +3965,9 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       }
     }
 
-    improvedRoutes = this.runIjumpErrorOwnedClusterRebuildPasses(improvedRoutes)
+    improvedRoutes = this.runB01ErrorOwnedClusterRebuildPasses(improvedRoutes)
     improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
-    improvedRoutes = this.runIjumpFinalErrorOwnerSweep(improvedRoutes)
+    improvedRoutes = this.runB01FinalErrorOwnerSweep(improvedRoutes)
     improvedRoutes = this.runPostRepairSameNetViaMerge(improvedRoutes)
     improvedRoutes = this.runSharedTerminalCompositeRepair(improvedRoutes)
     improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
@@ -4005,12 +4004,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         this.selectedConsecutiveLocalCleanupDrcMissLimit,
       pipeline9ViaMicroShiftAttempts: this.viaMicroShiftAttempts,
       pipeline9ViaMicroShiftsAccepted: this.viaMicroShiftsAccepted,
-      pipeline9IjumpFullAttempts: this.ijumpFullAttempts,
-      pipeline9IjumpInteriorAttempts: this.ijumpInteriorAttempts,
-      pipeline9IjumpFixedOnlyAttempts: this.ijumpFixedOnlyAttempts,
-      pipeline9IjumpCandidatesAccepted: this.ijumpCandidatesAccepted,
-      pipeline9IjumpIterations: this.ijumpIterations,
-      pipeline9SelectedIjumpIterationLimit: this.selectedIjumpIterationLimit,
+      pipeline9B01FullAttempts: this.b01FullAttempts,
+      pipeline9B01InteriorAttempts: this.b01InteriorAttempts,
+      pipeline9B01FixedOnlyAttempts: this.b01FixedOnlyAttempts,
+      pipeline9B01CandidatesAccepted: this.b01CandidatesAccepted,
+      pipeline9B01Iterations: this.b01Iterations,
+      pipeline9SelectedB01IterationLimit: this.selectedB01IterationLimit,
       pipeline9ErrorOwnedClusterOrderAttempts:
         this.errorOwnedClusterOrderAttempts,
       pipeline9ErrorOwnedClusterRouteAttempts:
@@ -4032,7 +4031,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       pipeline9FinalOwnerDrcEvaluations: this.finalOwnerDrcEvaluations,
       pipeline9FinalOwnerCandidatesAccepted: this.finalOwnerCandidatesAccepted,
       pipeline9FinalOwnerIterations: this.finalOwnerIterations,
-      pipeline9FinalOwnerIterationLimit: MAX_FINAL_OWNER_IJUMP_ITERATIONS,
+      pipeline9FinalOwnerIterationLimit: MAX_FINAL_OWNER_B01_ITERATIONS,
       pipeline9PostRepairSameNetViaMergeAttempts:
         this.postRepairSameNetViaMergeAttempts,
       pipeline9PostRepairSameNetViaMergeDrcEvaluations:
@@ -4047,8 +4046,8 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         this.sharedTerminalCompositeAttempts,
       pipeline9SharedTerminalCompositeRelocatedBranches:
         this.sharedTerminalCompositeRelocatedBranches,
-      pipeline9SharedTerminalCompositeIjumpAttempts:
-        this.sharedTerminalCompositeIjumpAttempts,
+      pipeline9SharedTerminalCompositeB01Attempts:
+        this.sharedTerminalCompositeB01Attempts,
       pipeline9SharedTerminalCompositeDrcEvaluations:
         this.sharedTerminalCompositeDrcEvaluations,
       pipeline9SharedTerminalCompositeCandidatesAccepted:
@@ -4056,7 +4055,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       pipeline9SharedTerminalCompositeIterations:
         this.sharedTerminalCompositeIterations,
       pipeline9SharedTerminalCompositeIterationLimit:
-        MAX_SHARED_TERMINAL_COMPOSITE_IJUMP_ITERATIONS,
+        MAX_SHARED_TERMINAL_COMPOSITE_B01_ITERATIONS,
       pipeline9PostFinalCompositeAttempts: this.postFinalCompositeAttempts,
       pipeline9PostFinalCompositeForwardAttempts:
         this.postFinalCompositeForwardAttempts,
@@ -4070,7 +4069,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         this.postFinalCompositeCandidatesAccepted,
       pipeline9PostFinalCompositeIterations: this.postFinalCompositeIterations,
       pipeline9PostFinalCompositeIterationLimit:
-        MAX_POST_FINAL_COMPOSITE_IJUMP_ITERATIONS,
+        MAX_POST_FINAL_COMPOSITE_B01_ITERATIONS,
       pipeline9PostFinalCompositeSameNetViaMergeIterations:
         this.postFinalCompositeSameNetViaMergeIterations,
       pipeline9PostFinalCompositeSameNetViaMergeIterationLimit:

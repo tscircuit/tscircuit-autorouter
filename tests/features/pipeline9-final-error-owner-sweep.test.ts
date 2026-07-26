@@ -6,9 +6,9 @@ import type {
 } from "high-density-repair03/lib"
 import { Pipeline9ExactDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-exact-drc-repair-solver"
 import type {
-  Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouteResult,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+  Pipeline9B01RerouteOptions,
+  Pipeline9B01RerouteResult,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 
 const makeSrj = (names: string[]): SimpleRouteJson => ({
   bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
@@ -35,7 +35,7 @@ const makeSolver = (
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -76,8 +76,8 @@ test("Pipeline9 final-owner sweep handles a 1,046-iteration single owner", () =>
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       const target = routes[options.routeIndex]!
       return {
         route: {
@@ -93,17 +93,17 @@ test("Pipeline9 final-owner sweep handles a 1,046-iteration single owner", () =>
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpFinalErrorOwnerSweep: (
+    b01Rerouter: typeof stubRerouter
+    runB01FinalErrorOwnerSweep: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     finalOwnerFullAttempts: number
     finalOwnerCandidatesAccepted: number
     finalOwnerIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  const output = privateSolver.runIjumpFinalErrorOwnerSweep(hdRoutes)
+  const output = privateSolver.runB01FinalErrorOwnerSweep(hdRoutes)
 
   expect(drcEvaluator({ traces: [], routes: output })).toEqual([])
   expect(privateSolver.finalOwnerFullAttempts).toBe(1)
@@ -154,8 +154,8 @@ test("Pipeline9 recomputes final owners and falls back to a nearest-error interi
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       attemptedRouteIndexes.push(options.routeIndex)
       const target = routes[options.routeIndex]!
       if (options.routeIndex === 0) {
@@ -187,17 +187,17 @@ test("Pipeline9 recomputes final owners and falls back to a nearest-error interi
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpFinalErrorOwnerSweep: (
+    b01Rerouter: typeof stubRerouter
+    runB01FinalErrorOwnerSweep: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     finalOwnerFullAttempts: number
     finalOwnerInteriorAttempts: number
     finalOwnerCandidatesAccepted: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  const output = privateSolver.runIjumpFinalErrorOwnerSweep(hdRoutes)
+  const output = privateSolver.runB01FinalErrorOwnerSweep(hdRoutes)
 
   expect(drcEvaluator({ traces: [], routes: output })).toEqual([])
   expect(attemptedRouteIndexes[0]).toBe(0)
@@ -260,8 +260,8 @@ test("Pipeline9 retries a failed final owner after accepted copper changes", () 
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       if (!options.reverse && !options.shortenPath) {
         rawForwardAttempts.push(options.routeIndex)
       }
@@ -286,15 +286,15 @@ test("Pipeline9 retries a failed final owner after accepted copper changes", () 
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpFinalErrorOwnerSweep: (
+    b01Rerouter: typeof stubRerouter
+    runB01FinalErrorOwnerSweep: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     finalOwnerCandidatesAccepted: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  const output = privateSolver.runIjumpFinalErrorOwnerSweep(hdRoutes)
+  const output = privateSolver.runB01FinalErrorOwnerSweep(hdRoutes)
 
   expect(output[0]?.route).toHaveLength(3)
   expect(output[1]?.route).toHaveLength(3)
@@ -327,21 +327,21 @@ test("Pipeline9 final-owner sweep never exceeds its separate 50k budget", () => 
   const stubRerouter = {
     tryReroute: (
       _routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => ({
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => ({
       iterations: options.maxIterations,
     }),
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpFinalErrorOwnerSweep: (
+    b01Rerouter: typeof stubRerouter
+    runB01FinalErrorOwnerSweep: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     finalOwnerIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  privateSolver.runIjumpFinalErrorOwnerSweep(hdRoutes)
+  privateSolver.runB01FinalErrorOwnerSweep(hdRoutes)
 
   expect(privateSolver.finalOwnerIterations).toBe(50_000)
 })

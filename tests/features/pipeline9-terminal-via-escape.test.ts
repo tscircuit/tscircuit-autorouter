@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import {
-  Pipeline9IjumpRerouter,
+  Pipeline9B01Rerouter,
   type Pipeline9TerminalViaEscapeCandidate,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -62,7 +62,7 @@ const getLayerTransitions = (candidateRoute: HighDensityRoute) =>
   })
 
 test("Pipeline9 escapes a blocked terminal pad with bounded generated vias", () => {
-  const rerouter = new Pipeline9IjumpRerouter({
+  const rerouter = new Pipeline9B01Rerouter({
     srj,
     baseObstacles: srj.obstacles,
   })
@@ -129,7 +129,7 @@ test("Pipeline9 escapes a blocked terminal pad with bounded generated vias", () 
 })
 
 test("Pipeline9 rejects a terminal escape access point outside its pad", () => {
-  const rerouter = new Pipeline9IjumpRerouter({
+  const rerouter = new Pipeline9B01Rerouter({
     srj,
     baseObstacles: srj.obstacles,
   })
@@ -156,7 +156,7 @@ test("Pipeline9 interleaves terminal escape layers within the bounded prefix", (
     ...srj,
     layerCount: 4,
   }
-  const rerouter = new Pipeline9IjumpRerouter({
+  const rerouter = new Pipeline9B01Rerouter({
     srj: multilayerSrj,
     baseObstacles: multilayerSrj.obstacles,
   })

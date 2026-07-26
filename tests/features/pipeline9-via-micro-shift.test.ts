@@ -92,7 +92,7 @@ test("Pipeline9 micro-shifts a candidate via when strict DRC improves", () => {
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,

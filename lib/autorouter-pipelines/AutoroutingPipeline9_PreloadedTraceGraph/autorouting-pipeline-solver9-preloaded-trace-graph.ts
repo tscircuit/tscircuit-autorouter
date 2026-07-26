@@ -252,10 +252,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
           drcEvaluator,
           viaInPadDrcEvaluator,
           originalObstacles,
-          ijumpBaseObstacles: [
-            ...originalObstacles,
-            ...preloadedTraceGeometryObstacles,
-          ],
+          b01BaseObstacles: originalObstacles,
           srj: {
             ...params.srj,
             obstacles: [

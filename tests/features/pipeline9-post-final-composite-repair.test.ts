@@ -7,9 +7,9 @@ import type {
 } from "high-density-repair03/lib"
 import { Pipeline9ExactDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-exact-drc-repair-solver"
 import type {
-  Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouteResult,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+  Pipeline9B01RerouteOptions,
+  Pipeline9B01RerouteResult,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 
 const makeSolver = ({
   srj,
@@ -28,7 +28,7 @@ const makeSolver = ({
     drcEvaluator,
     connMap,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -102,12 +102,12 @@ test("Pipeline9 fairly schedules both directions for a terminal-rooted window", 
       ? []
       : { errors: [error], errorsWithCenters: [error] }
   const solver = makeSolver({ srj, hdRoutes, drcEvaluator })
-  const attempts: Pipeline9IjumpRerouteOptions[] = []
+  const attempts: Pipeline9B01RerouteOptions[] = []
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       attempts.push({ ...options })
       if (!options.reverse) return { iterations: 100 }
       return {
@@ -120,7 +120,7 @@ test("Pipeline9 fairly schedules both directions for a terminal-rooted window", 
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
+    b01Rerouter: typeof stubRerouter
     runPostFinalCompositeRepair: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
@@ -130,7 +130,7 @@ test("Pipeline9 fairly schedules both directions for a terminal-rooted window", 
     postFinalCompositeTerminalRootedAttempts: number
     postFinalCompositeCandidatesAccepted: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
   const output = privateSolver.runPostFinalCompositeRepair(hdRoutes)
 
@@ -247,8 +247,8 @@ test("Pipeline9 atomically merges only the rerouted owner's canonical net", () =
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => ({
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => ({
       route: {
         ...routes[options.routeIndex]!,
         rootConnectionName: "rerouted",
@@ -257,7 +257,7 @@ test("Pipeline9 atomically merges only the rerouted owner's canonical net", () =
     }),
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
+    b01Rerouter: typeof stubRerouter
     runPostFinalCompositeRepair: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
@@ -266,7 +266,7 @@ test("Pipeline9 atomically merges only the rerouted owner's canonical net", () =
     postFinalCompositeCandidatesAccepted: number
     postFinalCompositeSameNetViaMergeIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
   expect(privateSolver.getSnapshot(hdRoutes).count).toBe(1)
   const output = privateSolver.runPostFinalCompositeRepair(hdRoutes)

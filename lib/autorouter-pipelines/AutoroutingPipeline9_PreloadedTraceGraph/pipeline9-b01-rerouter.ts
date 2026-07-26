@@ -1,22 +1,24 @@
-import { MultilayerIjump } from "@tscircuit/infgrid-ijump-astar"
+import {
+  HighDensitySolverB01,
+  type HighDensityObstacle,
+  type HighDensityRectObstacle,
+  type HighDensityRouteObstacle,
+  type NodeWithPortPoints,
+} from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
-type Pipeline9IjumpRerouterParams = {
+type Pipeline9B01RerouterParams = {
   srj: SimpleRouteJson
   baseObstacles: Obstacle[]
   connMap?: ConnectivityMap
-  viaHoleDiameter?: number
 }
 
-export type Pipeline9IjumpRerouteOptions = {
+export type Pipeline9B01RerouteOptions = {
   routeIndex: number
   startIndex?: number
   endIndex?: number
@@ -31,7 +33,7 @@ export type Pipeline9IjumpRerouteOptions = {
   maxIterations: number
 }
 
-export type Pipeline9IjumpRerouteResult = {
+export type Pipeline9B01RerouteResult = {
   route?: HighDensityRoute
   iterations: number
 }
@@ -43,40 +45,25 @@ export type Pipeline9TerminalViaEscapeCandidate = {
 }
 
 export type Pipeline9TerminalViaEscapeOptions = Omit<
-  Pipeline9IjumpRerouteOptions,
+  Pipeline9B01RerouteOptions,
   "startIndex" | "endIndex"
 > & {
   candidate: Pipeline9TerminalViaEscapeCandidate
 }
 
 const SAME_POINT_EPSILON = 1e-9
-const RELAXED_TRACE_CLEARANCE = 0.1
-const IJUMP_GRID_STEP = 0.05
+const B01_TRACE_CLEARANCE = 0.1
+const B01_GRID_STEP = 0.05
+const B01_LOW_RESOLUTION_CELL_SIZE = 0.2
+const MAX_B01_ROUTING_WINDOW_SIZE = 15
+const B01_ROUTING_WINDOW_PADDING = 2
+const MIN_B01_ROUTING_WINDOW_SIZE = 2
 const MAX_TERMINAL_VIA_ESCAPE_CANDIDATES = 64
-
-const getFailedAttemptIterationCost = (
-  solverIterations: number | undefined,
-  maxIterations: number,
-): number => {
-  const boundedMaxIterations = Math.max(0, Math.floor(maxIterations))
-  if (boundedMaxIterations === 0) return 0
-  if (solverIterations === undefined || !Number.isFinite(solverIterations)) {
-    return boundedMaxIterations
-  }
-
-  // MultilayerIjump starts at -1 and resets to zero only once a connection
-  // search begins. An exception during its connection setup must still consume
-  // budget, otherwise exact repair can retry a broken setup for free.
-  return Math.min(
-    boundedMaxIterations,
-    Math.max(1, Math.floor(solverIterations)),
-  )
-}
 
 const pointsAreEqual = (
   left: HighDensityRoute["route"][number] | undefined,
   right: HighDensityRoute["route"][number],
-) =>
+): boolean =>
   Boolean(left) &&
   Math.abs(left!.x - right.x) <= SAME_POINT_EPSILON &&
   Math.abs(left!.y - right.y) <= SAME_POINT_EPSILON &&
@@ -96,86 +83,260 @@ const addCanonicalConnectivity = (
   return { ...obstacle, connectedTo: [...connectedTo] }
 }
 
-const reverseSimplifiedRoute = (
-  route: SimplifiedPcbTrace["route"],
-): SimplifiedPcbTrace["route"] =>
-  route.toReversed().map((point) =>
-    point.route_type === "via"
-      ? {
-          ...point,
-          from_layer: point.to_layer,
-          to_layer: point.from_layer,
-        }
-      : point,
-  )
+const getCanonicalRootConnectionName = (
+  connectionName: string,
+  connMap?: ConnectivityMap,
+): string =>
+  connMap?.getNetConnectedToId(connectionName) ??
+  connectionName.replace(/_mst\d+$/, "")
 
-const convertSimplifiedRouteToHdPoints = (
-  simplifiedRoute: SimplifiedPcbTrace["route"],
+const convertRectObstacle = (
+  obstacle: Obstacle,
+  obstacleIndex: number,
   layerCount: number,
-  traceThickness: number,
-): HighDensityRoute["route"] | undefined => {
-  const points: HighDensityRoute["route"] = []
-  const pushPoint = (point: HighDensityRoute["route"][number]) => {
-    if (!pointsAreEqual(points.at(-1), point)) points.push(point)
+  connMap?: ConnectivityMap,
+): HighDensityRectObstacle => {
+  const connectionName =
+    obstacle.obstacleId ?? `pipeline9_base_obstacle_${obstacleIndex}`
+  const rootConnectionName =
+    obstacle.connectedTo
+      .map((connectedId) => connMap?.getNetConnectedToId(connectedId))
+      .find((netId): netId is string => Boolean(netId)) ?? connectionName
+  return {
+    type: "rect",
+    connectionName,
+    rootConnectionName,
+    center: obstacle.center,
+    width: obstacle.width,
+    height: obstacle.height,
+    ccwRotationDegrees: obstacle.ccwRotationDegrees,
+    zLayers:
+      obstacle.__zLayers ??
+      obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
+  }
+}
+
+const getRouteVias = (
+  route: HighDensityRoute["route"],
+): Array<{ x: number; y: number }> => {
+  const vias: Array<{ x: number; y: number }> = []
+  const seen = new Set<string>()
+  for (let pointIndex = 1; pointIndex < route.length; pointIndex += 1) {
+    const previous = route[pointIndex - 1]!
+    const point = route[pointIndex]!
+    if (previous.z === point.z) continue
+    const key = `${point.x.toFixed(9)}:${point.y.toFixed(9)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    vias.push({ x: point.x, y: point.y })
+  }
+  return vias
+}
+
+const convertCandidateRouteToObstacle = (
+  route: HighDensityRoute,
+  connMap?: ConnectivityMap,
+): HighDensityRouteObstacle => ({
+  type: "route",
+  connectionName: route.connectionName,
+  rootConnectionName:
+    connMap?.getNetConnectedToId(route.connectionName) ??
+    route.rootConnectionName ??
+    route.connectionName.replace(/_mst\d+$/, ""),
+  traceThickness: route.traceThickness,
+  viaDiameter: route.viaDiameter,
+  route: route.route.map(({ x, y, z }) => ({ x, y, z })),
+  vias: getRouteVias(route.route),
+})
+
+const convertPreloadedTraceToRouteObstacles = (
+  trace: SimplifiedPcbTrace,
+  traceIndex: number,
+  layerCount: number,
+  defaultViaDiameter: number,
+  connMap?: ConnectivityMap,
+): HighDensityRouteObstacle[] => {
+  const connectionName = trace.connection_name
+  const rootConnectionName = getCanonicalRootConnectionName(
+    connectionName,
+    connMap,
+  )
+  const obstacles: HighDensityRouteObstacle[] = []
+  const addObstacle = (
+    route: HighDensityRouteObstacle["route"],
+    traceThickness: number,
+    viaDiameter = defaultViaDiameter,
+    vias: Array<{ x: number; y: number }> = [],
+  ): void => {
+    if (route.length < 2) return
+    obstacles.push({
+      type: "route",
+      connectionName: `${connectionName}_fixed_${traceIndex}_${obstacles.length}`,
+      rootConnectionName,
+      traceThickness: Math.max(SAME_POINT_EPSILON, traceThickness),
+      viaDiameter: Math.max(SAME_POINT_EPSILON, viaDiameter),
+      route,
+      vias,
+    })
   }
 
-  for (const point of simplifiedRoute) {
-    if (point.route_type === "wire") {
-      const z = mapLayerNameToZ(point.layer, layerCount)
-      if (
-        !Number.isFinite(point.x) ||
-        !Number.isFinite(point.y) ||
-        !Number.isInteger(z) ||
-        z < 0 ||
-        z >= layerCount
-      ) {
-        return undefined
-      }
-      pushPoint({
-        x: point.x,
-        y: point.y,
-        z,
-        traceThickness,
-      })
-      continue
-    }
-
+  for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex += 1) {
+    const point = trace.route[pointIndex]!
     if (point.route_type === "via") {
       const fromZ = mapLayerNameToZ(point.from_layer, layerCount)
       const toZ = mapLayerNameToZ(point.to_layer, layerCount)
-      if (
-        !Number.isFinite(point.x) ||
-        !Number.isFinite(point.y) ||
-        !Number.isInteger(fromZ) ||
-        !Number.isInteger(toZ) ||
-        fromZ < 0 ||
-        fromZ >= layerCount ||
-        toZ < 0 ||
-        toZ >= layerCount
-      ) {
-        return undefined
+      addObstacle(
+        [
+          { x: point.x, y: point.y, z: fromZ },
+          { x: point.x, y: point.y, z: toZ },
+        ],
+        SAME_POINT_EPSILON,
+        point.via_diameter ?? defaultViaDiameter,
+        [{ x: point.x, y: point.y }],
+      )
+      continue
+    }
+    if (point.route_type === "through_obstacle") {
+      const fromZ = mapLayerNameToZ(point.from_layer, layerCount)
+      const toZ = mapLayerNameToZ(point.to_layer, layerCount)
+      const minZ = Math.min(fromZ, toZ)
+      const maxZ = Math.max(fromZ, toZ)
+      for (let z = minZ; z <= maxZ; z += 1) {
+        addObstacle(
+          [
+            { ...point.start, z },
+            { ...point.end, z },
+          ],
+          point.width,
+        )
       }
-      pushPoint({ x: point.x, y: point.y, z: fromZ, traceThickness })
-      pushPoint({ x: point.x, y: point.y, z: toZ, traceThickness })
       continue
     }
 
-    return undefined
+    const next = trace.route[pointIndex + 1]
+    if (
+      point.route_type !== "wire" ||
+      next?.route_type !== "wire" ||
+      point.layer !== next.layer
+    ) {
+      continue
+    }
+    const z = mapLayerNameToZ(point.layer, layerCount)
+    addObstacle(
+      [
+        { x: point.x, y: point.y, z },
+        { x: next.x, y: next.y, z },
+      ],
+      Math.max(point.width, next.width),
+    )
   }
 
-  if (points.length < 2) return undefined
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const current = points[index]!
-    const next = points[index + 1]!
+  return obstacles
+}
+
+const simplifyB01Route = (
+  route: HighDensityRoute["route"],
+): HighDensityRoute["route"] => {
+  const deduplicated = route.filter(
+    (point, pointIndex, allPoints) =>
+      !pointsAreEqual(allPoints[pointIndex - 1], point),
+  )
+  if (deduplicated.length < 3) return deduplicated
+
+  const simplified = [deduplicated[0]!]
+  for (let pointIndex = 1; pointIndex < deduplicated.length - 1; pointIndex++) {
+    const previous = simplified.at(-1)!
+    const point = deduplicated[pointIndex]!
+    const next = deduplicated[pointIndex + 1]!
+    const crossProduct =
+      (point.x - previous.x) * (next.y - point.y) -
+      (point.y - previous.y) * (next.x - point.x)
     if (
-      current.z !== next.z &&
-      (Math.abs(current.x - next.x) > SAME_POINT_EPSILON ||
-        Math.abs(current.y - next.y) > SAME_POINT_EPSILON)
+      previous.z === point.z &&
+      point.z === next.z &&
+      Math.abs(crossProduct) <= SAME_POINT_EPSILON
+    ) {
+      continue
+    }
+    simplified.push(point)
+  }
+  simplified.push(deduplicated.at(-1)!)
+  return simplified
+}
+
+const getB01RoutingWindow = (
+  startPoint: HighDensityRoute["route"][number],
+  endPoint: HighDensityRoute["route"][number],
+  boardBounds: SimpleRouteJson["bounds"],
+):
+  | {
+      center: { x: number; y: number }
+      width: number
+      height: number
+    }
+  | undefined => {
+  const getAxisWindow = (
+    start: number,
+    end: number,
+    boardMin: number,
+    boardMax: number,
+  ): { min: number; max: number } | undefined => {
+    const endpointMin = Math.min(start, end)
+    const endpointMax = Math.max(start, end)
+    const endpointSpan = endpointMax - endpointMin
+    if (endpointSpan > MAX_B01_ROUTING_WINDOW_SIZE) return undefined
+
+    const boardSize = boardMax - boardMin
+    if (boardSize <= 0) return undefined
+    const size = Math.min(
+      boardSize,
+      MAX_B01_ROUTING_WINDOW_SIZE,
+      Math.max(
+        MIN_B01_ROUTING_WINDOW_SIZE,
+        endpointSpan + B01_ROUTING_WINDOW_PADDING * 2,
+      ),
+    )
+    let min = (start + end) / 2 - size / 2
+    let max = min + size
+    if (min < boardMin) {
+      min = boardMin
+      max = min + size
+    }
+    if (max > boardMax) {
+      max = boardMax
+      min = max - size
+    }
+    if (
+      endpointMin < min - SAME_POINT_EPSILON ||
+      endpointMax > max + SAME_POINT_EPSILON
     ) {
       return undefined
     }
+    return { min, max }
   }
-  return points
+
+  const xWindow = getAxisWindow(
+    startPoint.x,
+    endPoint.x,
+    boardBounds.minX,
+    boardBounds.maxX,
+  )
+  const yWindow = getAxisWindow(
+    startPoint.y,
+    endPoint.y,
+    boardBounds.minY,
+    boardBounds.maxY,
+  )
+  if (!xWindow || !yWindow) return undefined
+
+  return {
+    center: {
+      x: (xWindow.min + xWindow.max) / 2,
+      y: (yWindow.min + yWindow.max) / 2,
+    },
+    width: xWindow.max - xWindow.min,
+    height: yWindow.max - yWindow.min,
+  }
 }
 
 const routeStaysInsideBounds = (
@@ -243,38 +404,55 @@ const obstacleRepresentsPhysicalPad = (obstacle: Obstacle): boolean =>
     (id) => id.startsWith("pcb_smtpad_") || id.startsWith("pcb_plated_hole_"),
   )
 
-const snapToIjumpGrid = (value: number): number => {
-  const snapped = Math.round(value / IJUMP_GRID_STEP) * IJUMP_GRID_STEP
+const snapToB01Grid = (value: number): number => {
+  const snapped = Math.round(value / B01_GRID_STEP) * B01_GRID_STEP
   return Math.abs(snapped) <= SAME_POINT_EPSILON ? 0 : snapped
 }
 
 const getPointKey = (point: { x: number; y: number }): string =>
   `${point.x.toFixed(9)}:${point.y.toFixed(9)}`
 
-export class Pipeline9IjumpRerouter {
+export class Pipeline9B01Rerouter {
   private readonly srj: SimpleRouteJson
   private readonly connMap?: ConnectivityMap
-  private readonly viaHoleDiameter?: number
   private readonly terminalObstacles: Obstacle[]
-  private readonly baseObstacles: Obstacle[]
+  private readonly fixedObstacles: HighDensityObstacle[]
   private readonly candidateObstacleCache = new WeakMap<
     HighDensityRoute[],
-    Map<string, Obstacle[]>
+    Map<string, HighDensityRouteObstacle[]>
   >()
 
-  constructor(params: Pipeline9IjumpRerouterParams) {
+  constructor(params: Pipeline9B01RerouterParams) {
     this.srj = params.srj
     this.connMap = params.connMap
-    this.viaHoleDiameter = params.viaHoleDiameter
     this.terminalObstacles = params.baseObstacles.map((obstacle) =>
       addCanonicalConnectivity(obstacle, params.connMap),
     )
-    this.baseObstacles = addApproximatingRectsToSrj({
-      ...params.srj,
-      obstacles: this.terminalObstacles,
-      connections: [],
-      traces: undefined,
-    }).obstacles
+    const defaultViaDiameter =
+      params.srj.minViaPadDiameter ??
+      params.srj.min_via_pad_diameter ??
+      params.srj.minViaDiameter ??
+      0.3
+    const preloadedTraceObstacles = (params.srj.traces ?? []).flatMap(
+      (trace, traceIndex) =>
+        convertPreloadedTraceToRouteObstacles(
+          trace,
+          traceIndex,
+          params.srj.layerCount,
+          defaultViaDiameter,
+          params.connMap,
+        ),
+    )
+    const baseRectObstacles = this.terminalObstacles.map(
+      (obstacle, obstacleIndex) =>
+        convertRectObstacle(
+          obstacle,
+          obstacleIndex,
+          params.srj.layerCount,
+          params.connMap,
+        ),
+    )
+    this.fixedObstacles = [...baseRectObstacles, ...preloadedTraceObstacles]
   }
 
   private getOwningTerminalObstacles(
@@ -347,12 +525,12 @@ export class Pipeline9IjumpRerouter {
         const localX = longAxisIsX ? offset : 0
         const localY = longAxisIsX ? 0 : offset
         addPoint({
-          x: snapToIjumpGrid(
+          x: snapToB01Grid(
             obstacle.center.x +
               localX * Math.cos(rotationRadians) -
               localY * Math.sin(rotationRadians),
           ),
-          y: snapToIjumpGrid(
+          y: snapToB01Grid(
             obstacle.center.y +
               localX * Math.sin(rotationRadians) +
               localY * Math.cos(rotationRadians),
@@ -468,7 +646,7 @@ export class Pipeline9IjumpRerouter {
   tryRerouteWithTerminalViaEscape(
     routes: HighDensityRoute[],
     options: Pipeline9TerminalViaEscapeOptions,
-  ): Pipeline9IjumpRerouteResult | undefined {
+  ): Pipeline9B01RerouteResult | undefined {
     const targetRoute = routes[options.routeIndex]
     const originalStart = targetRoute?.route[0]
     const originalEnd = targetRoute?.route.at(-1)
@@ -556,7 +734,7 @@ export class Pipeline9IjumpRerouter {
     routes: HighDensityRoute[],
     targetRouteIndex: number,
     omitCandidateRouteIndexes?: ReadonlySet<number>,
-  ): Obstacle[] {
+  ): HighDensityRouteObstacle[] {
     const omittedRouteIndexes = [...(omitCandidateRouteIndexes ?? [])]
       .filter((routeIndex) => routeIndex !== targetRouteIndex)
       .sort((left, right) => left - right)
@@ -566,7 +744,7 @@ export class Pipeline9IjumpRerouter {
     if (cachedObstacles) return cachedObstacles
 
     const omittedRouteIndexSet = new Set(omittedRouteIndexes)
-    const traces = routes.flatMap((route, routeIndex) => {
+    const candidateObstacles = routes.flatMap((route, routeIndex) => {
       if (
         routeIndex === targetRouteIndex ||
         omittedRouteIndexSet.has(routeIndex) ||
@@ -574,40 +752,10 @@ export class Pipeline9IjumpRerouter {
       ) {
         return []
       }
-      return [
-        {
-          type: "pcb_trace" as const,
-          pcb_trace_id: `pipeline9_candidate_${routeIndex}`,
-          connection_name: route.connectionName,
-          route: convertHdRouteToSimplifiedRoute(route, this.srj.layerCount, {
-            defaultViaHoleDiameter: this.viaHoleDiameter,
-            obstacles: this.baseObstacles,
-            connMap: this.connMap,
-          }),
-        },
-      ]
+      return [convertCandidateRouteToObstacle(route, this.connMap)]
     })
-    const traceObstacles = getObstaclesFromSrjTraces(
-      {
-        ...this.srj,
-        obstacles: [],
-        connections: [],
-        traces,
-      },
-      {
-        includeConnectionNameInConnectedTo: true,
-        includeSquareCaps: true,
-        modelJumperPads: true,
-      },
-    ).map((obstacle) => addCanonicalConnectivity(obstacle, this.connMap))
-
-    const candidateObstacles = addApproximatingRectsToSrj({
-      ...this.srj,
-      obstacles: traceObstacles,
-      connections: [],
-      traces: undefined,
-    }).obstacles
-    const obstaclesByTarget = cachedForRoutes ?? new Map<string, Obstacle[]>()
+    const obstaclesByTarget =
+      cachedForRoutes ?? new Map<string, HighDensityRouteObstacle[]>()
     obstaclesByTarget.set(cacheKey, candidateObstacles)
     if (!cachedForRoutes) {
       this.candidateObstacleCache.set(routes, obstaclesByTarget)
@@ -618,8 +766,8 @@ export class Pipeline9IjumpRerouter {
 
   tryReroute(
     routes: HighDensityRoute[],
-    options: Pipeline9IjumpRerouteOptions,
-  ): Pipeline9IjumpRerouteResult | undefined {
+    options: Pipeline9B01RerouteOptions,
+  ): Pipeline9B01RerouteResult | undefined {
     const targetRoute = routes[options.routeIndex]
     if (!targetRoute || targetRoute.route.length < 2) return undefined
 
@@ -637,17 +785,42 @@ export class Pipeline9IjumpRerouter {
       return undefined
     }
 
+    const routingWindow = getB01RoutingWindow(
+      startPoint,
+      endPoint,
+      this.srj.bounds,
+    )
+    if (!routingWindow) {
+      return { iterations: 0 }
+    }
+
+    const rootConnectionName =
+      this.connMap?.getNetConnectedToId(targetRoute.connectionName) ??
+      targetRoute.rootConnectionName ??
+      targetRoute.connectionName.replace(/_mst\d+$/, "")
     const start = {
+      connectionName: targetRoute.connectionName,
+      rootConnectionName,
       x: startPoint.x,
       y: startPoint.y,
-      layer: mapZToLayerName(startPoint.z, this.srj.layerCount),
+      z: startPoint.z,
     }
     const end = {
+      connectionName: targetRoute.connectionName,
+      rootConnectionName,
       x: endPoint.x,
       y: endPoint.y,
-      layer: mapZToLayerName(endPoint.z, this.srj.layerCount),
+      z: endPoint.z,
     }
-    const pointsToConnect = options.reverse ? [end, start] : [start, end]
+    const portPoints = options.reverse ? [end, start] : [start, end]
+    const nodeWithPortPoints: NodeWithPortPoints = {
+      capacityMeshNodeId: `pipeline9_b01_${options.routeIndex}`,
+      center: routingWindow.center,
+      width: routingWindow.width,
+      height: routingWindow.height,
+      availableZ: Array.from({ length: this.srj.layerCount }, (_, z) => z),
+      portPoints,
+    }
     const candidateObstacles = options.includeCandidateCopper
       ? this.getCandidateObstacles(
           routes,
@@ -655,83 +828,75 @@ export class Pipeline9IjumpRerouter {
           options.omitCandidateRouteIndexes,
         )
       : []
-    const input = {
-      ...this.srj,
-      obstacles: [...this.baseObstacles, ...candidateObstacles],
-      connections: [
-        {
-          name: targetRoute.connectionName,
-          pointsToConnect,
-        },
-      ],
-      traces: undefined,
+    const solver = new HighDensitySolverB01({
+      nodeWithPortPoints,
+      obstacles: [...this.fixedObstacles, ...candidateObstacles],
+      highResolutionCellSize: B01_GRID_STEP,
+      highResolutionCellThickness: 8,
+      lowResolutionCellSize: B01_LOW_RESOLUTION_CELL_SIZE,
+      traceThickness: targetRoute.traceThickness,
+      traceMargin: B01_TRACE_CLEARANCE,
+      obstacleClearanceMargin: B01_TRACE_CLEARANCE,
+      viaDiameter: targetRoute.viaDiameter,
+      viaMinDistFromBorder: 0,
+      maxCellCount: 500_000,
+      hyperParameters: {
+        shuffleSeed: options.reverse ? 1 : options.shortenPath ? 2 : 0,
+        viaBaseCost: 4,
+        sameRootObstacleCostMultiplier: 0.05,
+      },
+    })
+    solver.MAX_ITERATIONS = Math.max(1, Math.floor(options.maxIterations))
+    solver.solve()
+    const [solvedRoute] = solver.getOutput()
+    if (!solver.solved || !solvedRoute) {
+      return { iterations: solver.iterations }
     }
 
-    let solver: MultilayerIjump | undefined
-    try {
-      solver = new MultilayerIjump({
-        input: input as never,
-        connMap: this.connMap,
-        GRID_STEP: IJUMP_GRID_STEP,
-        OBSTACLE_MARGIN:
-          RELAXED_TRACE_CLEARANCE + targetRoute.traceThickness / 2,
-        MAX_ITERATIONS: options.maxIterations,
-        VIA_COST: 4,
-        isRemovePathLoopsEnabled: true,
-        isShortenPathWithShortcutsEnabled: options.shortenPath,
-        optimizeWithGoalBoxes: false,
-      })
-      solver.VIA_DIAMETER = targetRoute.viaDiameter
-      solver.GOAL_RUSH_FACTOR = 1.1
+    let reroutedPoints: HighDensityRoute["route"] = solvedRoute.route.map(
+      ({ x, y, z }) => ({
+        x,
+        y,
+        z,
+        traceThickness: targetRoute.traceThickness,
+      }),
+    )
+    const firstPoint = reroutedPoints[0]
+    const lastPoint = reroutedPoints.at(-1)
+    if (
+      firstPoint &&
+      lastPoint &&
+      Math.hypot(lastPoint.x - startPoint.x, lastPoint.y - startPoint.y) <
+        Math.hypot(firstPoint.x - startPoint.x, firstPoint.y - startPoint.y)
+    ) {
+      reroutedPoints.reverse()
+    }
+    reroutedPoints = simplifyB01Route(reroutedPoints)
+    if (reroutedPoints.length < 2) {
+      return { iterations: solver.iterations }
+    }
+    reroutedPoints[0] = { ...startPoint }
+    reroutedPoints[reroutedPoints.length - 1] = { ...endPoint }
+    if (!routeStaysInsideBounds(reroutedPoints, targetRoute, this.srj.bounds)) {
+      return { iterations: solver.iterations }
+    }
 
-      const [rawTrace] = solver.solveAndMapToTraces()
-      if (!rawTrace) return { iterations: solver.iterations }
-      const simplifiedRoute = options.reverse
-        ? reverseSimplifiedRoute(
-            (rawTrace as unknown as SimplifiedPcbTrace).route,
-          )
-        : (rawTrace as unknown as SimplifiedPcbTrace).route
-      const reroutedPoints = convertSimplifiedRouteToHdPoints(
-        simplifiedRoute,
-        this.srj.layerCount,
-        targetRoute.traceThickness,
-      )
-      if (!reroutedPoints) return { iterations: solver.iterations }
+    const route = [
+      ...targetRoute.route.slice(0, startIndex),
+      ...reroutedPoints,
+      ...targetRoute.route.slice(endIndex + 1),
+    ].filter(
+      (point, pointIndex, allPoints) =>
+        !pointsAreEqual(allPoints[pointIndex - 1], point),
+    )
 
-      reroutedPoints[0] = { ...reroutedPoints[0]!, ...startPoint }
-      reroutedPoints[reroutedPoints.length - 1] = {
-        ...reroutedPoints.at(-1)!,
-        ...endPoint,
-      }
-      if (
-        !routeStaysInsideBounds(reroutedPoints, targetRoute, this.srj.bounds)
-      ) {
-        return { iterations: solver.iterations }
-      }
-      const route = [
-        ...targetRoute.route.slice(0, startIndex),
-        ...reroutedPoints,
-        ...targetRoute.route.slice(endIndex + 1),
-      ].filter(
-        (point, pointIndex, allPoints) =>
-          !pointsAreEqual(allPoints[pointIndex - 1], point),
-      )
-
-      return {
-        route: {
-          ...targetRoute,
-          route,
-          vias: [],
-        },
-        iterations: solver.iterations,
-      }
-    } catch {
-      return {
-        iterations: getFailedAttemptIterationCost(
-          solver?.iterations,
-          options.maxIterations,
-        ),
-      }
+    return {
+      route: {
+        ...targetRoute,
+        route,
+        vias: getRouteVias(route),
+      },
+      iterations: solver.iterations,
     }
   }
 }

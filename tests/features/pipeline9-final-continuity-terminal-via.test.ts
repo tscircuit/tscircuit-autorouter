@@ -137,7 +137,7 @@ test("Pipeline9 bridges a bottom terminal to same-net preloaded top copper", () 
       connectivity_net16: ["source_net_1", "source_net_1_mst0"],
     }),
     originalObstacles: [startPad, terminalPad],
-    ijumpBaseObstacles: [startPad, terminalPad],
+    b01BaseObstacles: [startPad, terminalPad],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,

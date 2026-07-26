@@ -6,9 +6,9 @@ import type {
 } from "high-density-repair03/lib"
 import { Pipeline9ExactDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-exact-drc-repair-solver"
 import type {
-  Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouteResult,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+  Pipeline9B01RerouteOptions,
+  Pipeline9B01RerouteResult,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 
 const srj: SimpleRouteJson = {
   bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
@@ -101,7 +101,7 @@ test("Pipeline9 atomically repairs a fixed-copper escape and its newly exposed o
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -117,8 +117,8 @@ test("Pipeline9 atomically repairs a fixed-copper escape and its newly exposed o
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult | undefined => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult | undefined => {
       attempts.push({
         routeIndex: options.routeIndex,
         includeCandidateCopper: options.includeCandidateCopper,
@@ -157,7 +157,7 @@ test("Pipeline9 atomically repairs a fixed-copper escape and its newly exposed o
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
+    b01Rerouter: typeof stubRerouter
     runFixedCopperCompositeRepair: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
@@ -168,7 +168,7 @@ test("Pipeline9 atomically repairs a fixed-copper escape and its newly exposed o
     fixedCopperCompositeCandidatesAccepted: number
     fixedCopperCompositeIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
   expect(privateSolver.getSnapshot(hdRoutes).count).toBe(1)
   const output = privateSolver.runFixedCopperCompositeRepair(hdRoutes)

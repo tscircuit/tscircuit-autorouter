@@ -6,10 +6,10 @@ import type {
 } from "high-density-repair03/lib"
 import { Pipeline9ExactDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-exact-drc-repair-solver"
 import type {
-  Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouteResult,
+  Pipeline9B01RerouteOptions,
+  Pipeline9B01RerouteResult,
   Pipeline9TerminalViaEscapeOptions,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 
 const srj: SimpleRouteJson = {
   bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
@@ -91,7 +91,7 @@ test("Pipeline9 atomically rebuilds error-owned routes in residual-degree order"
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -107,8 +107,8 @@ test("Pipeline9 atomically rebuilds error-owned routes in residual-degree order"
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult | undefined => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult | undefined => {
       const target = routes[options.routeIndex]
       const start = target?.route[0]
       const end = target?.route.at(-1)
@@ -158,16 +158,16 @@ test("Pipeline9 atomically rebuilds error-owned routes in residual-degree order"
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpErrorOwnedClusterRebuild: (
+    b01Rerouter: typeof stubRerouter
+    runB01ErrorOwnedClusterRebuild: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     errorOwnedClusterAccepted: number
     errorOwnedClusterIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  const output = privateSolver.runIjumpErrorOwnedClusterRebuild(hdRoutes)
+  const output = privateSolver.runB01ErrorOwnedClusterRebuild(hdRoutes)
 
   expect(output.map((route) => route.route.length)).toEqual([4, 3, 3])
   expect(attempts).toEqual([
@@ -204,7 +204,7 @@ test("Pipeline9 falls back to a low-degree-first reverse cluster with a bounded 
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -239,8 +239,8 @@ test("Pipeline9 falls back to a low-degree-first reverse cluster with a bounded 
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       routeAttempts.push({
         routeIndex: options.routeIndex,
         reverse: options.reverse,
@@ -263,7 +263,7 @@ test("Pipeline9 falls back to a low-degree-first reverse cluster with a bounded 
     tryRerouteWithTerminalViaEscape: (
       routes: HighDensityRoute[],
       options: Pipeline9TerminalViaEscapeOptions,
-    ): Pipeline9IjumpRerouteResult => {
+    ): Pipeline9B01RerouteResult => {
       terminalAttempts.push(options.routeIndex)
       return {
         route: rebuildRoute(routes, options.routeIndex),
@@ -272,17 +272,17 @@ test("Pipeline9 falls back to a low-degree-first reverse cluster with a bounded 
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
-    runIjumpErrorOwnedClusterRebuild: (
+    b01Rerouter: typeof stubRerouter
+    runB01ErrorOwnedClusterRebuild: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     errorOwnedClusterAccepted: number
     errorOwnedClusterIterations: number
     errorOwnedClusterTerminalEscapeAttempts: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
-  const output = privateSolver.runIjumpErrorOwnedClusterRebuild(hdRoutes)
+  const output = privateSolver.runB01ErrorOwnedClusterRebuild(hdRoutes)
 
   expect(output.every((route) => route.route.length === 3)).toBe(true)
   expect(routeAttempts.some((attempt) => attempt.reverse)).toBe(true)
@@ -302,13 +302,13 @@ test.each([
     initialDrcIssueCount: 19,
     expectedLocalLimit: 500,
     expectedConsecutiveMissLimit: 500,
-    expectedIjumpLimit: 300_000,
+    expectedB01Limit: 300_000,
   },
   {
     initialDrcIssueCount: 20,
     expectedLocalLimit: 300,
     expectedConsecutiveMissLimit: 64,
-    expectedIjumpLimit: 200_000,
+    expectedB01Limit: 200_000,
   },
 ])(
   "Pipeline9 selects adaptive cleanup limits for $initialDrcIssueCount initial errors",
@@ -316,14 +316,14 @@ test.each([
     initialDrcIssueCount,
     expectedLocalLimit,
     expectedConsecutiveMissLimit,
-    expectedIjumpLimit,
+    expectedB01Limit,
   }) => {
     const solver = new Pipeline9ExactDrcRepairSolver({
       srj,
       hdRoutes,
       drcEvaluator,
       originalObstacles: [],
-      ijumpBaseObstacles: [],
+      b01BaseObstacles: [],
       viaHoleDiameter: 0.15,
       maxIterations: 1,
       enableLargeBoardBroadFallback: false,
@@ -335,13 +335,13 @@ test.each([
       stats: Record<string, unknown>
       localCleanupDrcEvaluations: number
       consecutiveLocalCleanupDrcMisses: number
-      ijumpIterations: number
+      b01Iterations: number
       selectedLocalCleanupDrcEvaluationLimit: number
       selectedConsecutiveLocalCleanupDrcMissLimit: number
-      selectedIjumpIterationLimit: number
+      selectedB01IterationLimit: number
       selectAdaptiveCleanupLimits: () => void
       hasLocalCleanupBudget: () => boolean
-      getRemainingIjumpIterations: () => number
+      getRemainingB01Iterations: () => number
     }
     privateSolver.stats = { initialDrcIssueCount }
     privateSolver.selectAdaptiveCleanupLimits()
@@ -352,12 +352,12 @@ test.each([
     expect(privateSolver.selectedConsecutiveLocalCleanupDrcMissLimit).toBe(
       expectedConsecutiveMissLimit,
     )
-    expect(privateSolver.selectedIjumpIterationLimit).toBe(expectedIjumpLimit)
+    expect(privateSolver.selectedB01IterationLimit).toBe(expectedB01Limit)
     privateSolver.consecutiveLocalCleanupDrcMisses =
       expectedConsecutiveMissLimit
     expect(privateSolver.hasLocalCleanupBudget()).toBe(false)
-    privateSolver.ijumpIterations = expectedIjumpLimit - 123
-    expect(privateSolver.getRemainingIjumpIterations()).toBe(123)
+    privateSolver.b01Iterations = expectedB01Limit - 123
+    expect(privateSolver.getRemainingB01Iterations()).toBe(123)
   },
 )
 
@@ -376,7 +376,7 @@ test("Pipeline9 bounds consecutive fruitless local DRC evaluations and resets af
     hdRoutes,
     drcEvaluator: boundedDrcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -428,7 +428,7 @@ test("Pipeline9 reserves a bounded post-cluster via micro-shift sweep after the 
     hdRoutes,
     drcEvaluator,
     originalObstacles: [],
-    ijumpBaseObstacles: [],
+    b01BaseObstacles: [],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,

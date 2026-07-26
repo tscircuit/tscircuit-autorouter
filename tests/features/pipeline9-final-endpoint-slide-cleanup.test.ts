@@ -149,7 +149,7 @@ test("Pipeline9 atomically slides a shared terminal after local cleanup is exhau
       foreign_net: ["foreign_net"],
     }),
     originalObstacles: [ownPad, foreignPad],
-    ijumpBaseObstacles: [ownPad, foreignPad],
+    b01BaseObstacles: [ownPad, foreignPad],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,

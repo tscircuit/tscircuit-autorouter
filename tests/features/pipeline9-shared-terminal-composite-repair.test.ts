@@ -7,9 +7,9 @@ import type {
 } from "high-density-repair03/lib"
 import { Pipeline9ExactDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-exact-drc-repair-solver"
 import type {
-  Pipeline9IjumpRerouteOptions,
-  Pipeline9IjumpRerouteResult,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-ijump-rerouter"
+  Pipeline9B01RerouteOptions,
+  Pipeline9B01RerouteResult,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-b01-rerouter"
 import type { Obstacle } from "lib/types"
 
 const srj: SimpleRouteJson = {
@@ -145,7 +145,7 @@ const makeSolver = () =>
       blocker_net: ["blocker"],
     }),
     originalObstacles: [sharedPad],
-    ijumpBaseObstacles: [sharedPad],
+    b01BaseObstacles: [sharedPad],
     viaHoleDiameter: 0.15,
     maxIterations: 1,
     enableLargeBoardBroadFallback: false,
@@ -156,12 +156,12 @@ const makeSolver = () =>
 
 test("Pipeline9 atomically relocates shared-terminal vias and reroutes the exposed owner", () => {
   const solver = makeSolver()
-  const attempts: Pipeline9IjumpRerouteOptions[] = []
+  const attempts: Pipeline9B01RerouteOptions[] = []
   const stubRerouter = {
     tryReroute: (
       routes: HighDensityRoute[],
-      options: Pipeline9IjumpRerouteOptions,
-    ): Pipeline9IjumpRerouteResult => {
+      options: Pipeline9B01RerouteOptions,
+    ): Pipeline9B01RerouteResult => {
       attempts.push({ ...options })
       return {
         route: {
@@ -173,19 +173,19 @@ test("Pipeline9 atomically relocates shared-terminal vias and reroutes the expos
     },
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
+    b01Rerouter: typeof stubRerouter
     runSharedTerminalCompositeRepair: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     getSnapshot: (routes: HighDensityRoute[]) => { count: number }
     sharedTerminalCompositeAttempts: number
     sharedTerminalCompositeRelocatedBranches: number
-    sharedTerminalCompositeIjumpAttempts: number
+    sharedTerminalCompositeB01Attempts: number
     sharedTerminalCompositeDrcEvaluations: number
     sharedTerminalCompositeCandidatesAccepted: number
     sharedTerminalCompositeIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
   const output = privateSolver.runSharedTerminalCompositeRepair(hdRoutes)
 
@@ -203,7 +203,7 @@ test("Pipeline9 atomically relocates shared-terminal vias and reroutes the expos
   ])
   expect(privateSolver.sharedTerminalCompositeAttempts).toBe(1)
   expect(privateSolver.sharedTerminalCompositeRelocatedBranches).toBe(2)
-  expect(privateSolver.sharedTerminalCompositeIjumpAttempts).toBe(1)
+  expect(privateSolver.sharedTerminalCompositeB01Attempts).toBe(1)
   expect(privateSolver.sharedTerminalCompositeDrcEvaluations).toBe(2)
   expect(privateSolver.sharedTerminalCompositeCandidatesAccepted).toBe(1)
   expect(privateSolver.sharedTerminalCompositeIterations).toBe(2_181)
@@ -212,17 +212,17 @@ test("Pipeline9 atomically relocates shared-terminal vias and reroutes the expos
 test("Pipeline9 rolls back a shared-terminal composite that exhausts its hard budget", () => {
   const solver = makeSolver()
   const stubRerouter = {
-    tryReroute: (): Pipeline9IjumpRerouteResult => ({ iterations: 12_500 }),
+    tryReroute: (): Pipeline9B01RerouteResult => ({ iterations: 12_500 }),
   }
   const privateSolver = solver as unknown as {
-    ijumpRerouter: typeof stubRerouter
+    b01Rerouter: typeof stubRerouter
     runSharedTerminalCompositeRepair: (
       routes: HighDensityRoute[],
     ) => HighDensityRoute[]
     sharedTerminalCompositeCandidatesAccepted: number
     sharedTerminalCompositeIterations: number
   }
-  privateSolver.ijumpRerouter = stubRerouter
+  privateSolver.b01Rerouter = stubRerouter
 
   const output = privateSolver.runSharedTerminalCompositeRepair(hdRoutes)
 
