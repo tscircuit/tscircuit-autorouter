@@ -8,7 +8,10 @@ test(
   async () => {
     const failures: Array<{ sampleNumber: number; errors: unknown[] }> = []
 
-    for (const sampleNumber of [8, 14, 21, 32, 55, 58, 62, 64, 107]) {
+    for (const sampleNumber of [
+      8, 14, 21, 23, 27, 29, 32, 51, 55, 57, 58, 62, 64, 68, 72, 74, 83, 94, 97,
+      107,
+    ]) {
       const { scenario } = await loadScenarioBySampleNumber(
         "srj23",
         sampleNumber,
@@ -34,5 +37,5 @@ test(
 
     expect(failures).toEqual([])
   },
-  { timeout: 300_000 },
+  { timeout: 900_000 },
 )

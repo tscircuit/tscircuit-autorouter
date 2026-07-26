@@ -60,6 +60,12 @@ type FixedCopperCompositePlan = {
   targetErrorIdentity: string
 }
 
+type AnchoredFixedCopperWindow = {
+  routes: HighDensityRoute[]
+  startIndex: number
+  endIndex: number
+}
+
 type ScopedSameNetViaMergeResult = {
   routes?: HighDensityRoute[]
   iterations: number
@@ -145,6 +151,11 @@ const MAX_POST_FINAL_COMPOSITE_ATTEMPTS = 12
 const MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS = 12
 const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS = 32
 const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS_PER_ATTEMPT = 8
+const ANCHORED_FIXED_COPPER_HALF_SPAN = 7
+const MAX_ANCHORED_FIXED_COPPER_ATTEMPTS = 96
+const MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS = 48
+const MAX_ANCHORED_FIXED_COPPER_ITERATIONS = 480_000
+const MAX_ANCHORED_FIXED_COPPER_ITERATIONS_PER_ATTEMPT = 12_000
 const MAX_FIXED_COPPER_COMPOSITE_RESIDUAL = 2
 const MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS = 4
 const MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_ATTEMPTS = 6
@@ -443,6 +454,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private postFinalCompositeCandidatesAccepted = 0
   private postFinalCompositeIterations = 0
   private postFinalCompositeSameNetViaMergeIterations = 0
+  private anchoredFixedCopperAttempts = 0
+  private anchoredFixedCopperDrcEvaluations = 0
+  private anchoredFixedCopperCandidatesAccepted = 0
+  private anchoredFixedCopperIterations = 0
   private fixedCopperCompositePrimaryAttempts = 0
   private fixedCopperCompositeFollowupAttempts = 0
   private fixedCopperCompositeDrcEvaluations = 0
@@ -3020,6 +3035,341 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     return improvedRoutes
   }
 
+  private getAnchoredFixedCopperWindow(
+    routes: HighDensityRoute[],
+    routeIndex: number,
+    centers: ReadonlyArray<{ x: number; y: number }>,
+  ): AnchoredFixedCopperWindow | undefined {
+    const route = routes[routeIndex]
+    if (!route || route.route.length < 2 || centers.length === 0) {
+      return undefined
+    }
+
+    const cumulativeDistances = [0]
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      cumulativeDistances.push(
+        cumulativeDistances[segmentIndex]! +
+          getPointDistance(
+            route.route[segmentIndex]!,
+            route.route[segmentIndex + 1]!,
+          ),
+      )
+    }
+    const totalRouteDistance = cumulativeDistances.at(-1) ?? 0
+    if (totalRouteDistance <= POSITION_EPSILON) return undefined
+
+    const projectedRouteDistances: number[] = []
+    for (const center of centers) {
+      let nearestSegmentIndex = -1
+      let nearestSegmentProjection = 0
+      let nearestDistance = Number.POSITIVE_INFINITY
+      for (
+        let segmentIndex = 0;
+        segmentIndex < route.route.length - 1;
+        segmentIndex += 1
+      ) {
+        const start = route.route[segmentIndex]
+        const end = route.route[segmentIndex + 1]
+        if (!start || !end || start.z !== end.z) continue
+        const segmentLength = getPointDistance(start, end)
+        if (segmentLength <= POSITION_EPSILON) continue
+        const distance = getPointToSegmentDistance(center, start, end)
+        if (distance < nearestDistance) {
+          const deltaX = end.x - start.x
+          const deltaY = end.y - start.y
+          nearestDistance = distance
+          nearestSegmentIndex = segmentIndex
+          nearestSegmentProjection = Math.max(
+            0,
+            Math.min(
+              1,
+              ((center.x - start.x) * deltaX + (center.y - start.y) * deltaY) /
+                (segmentLength * segmentLength),
+            ),
+          )
+        }
+      }
+      if (nearestSegmentIndex < 0) continue
+      projectedRouteDistances.push(
+        cumulativeDistances[nearestSegmentIndex]! +
+          nearestSegmentProjection *
+            getPointDistance(
+              route.route[nearestSegmentIndex]!,
+              route.route[nearestSegmentIndex + 1]!,
+            ),
+      )
+    }
+    if (projectedRouteDistances.length === 0) return undefined
+
+    const startRouteDistance = Math.max(
+      0,
+      Math.min(...projectedRouteDistances) - ANCHORED_FIXED_COPPER_HALF_SPAN,
+    )
+    const endRouteDistance = Math.min(
+      totalRouteDistance,
+      Math.max(...projectedRouteDistances) + ANCHORED_FIXED_COPPER_HALF_SPAN,
+    )
+    if (endRouteDistance - startRouteDistance <= POSITION_EPSILON) {
+      return undefined
+    }
+
+    const getAnchorAtRouteDistance = (
+      routeDistance: number,
+    ):
+      | {
+          segmentIndex: number
+          point: HighDensityRoute["route"][number]
+        }
+      | undefined => {
+      for (
+        let segmentIndex = 0;
+        segmentIndex < route.route.length - 1;
+        segmentIndex += 1
+      ) {
+        const segmentStartDistance = cumulativeDistances[segmentIndex]!
+        const segmentEndDistance = cumulativeDistances[segmentIndex + 1]!
+        const segmentLength = segmentEndDistance - segmentStartDistance
+        if (
+          segmentLength <= POSITION_EPSILON ||
+          routeDistance > segmentEndDistance + POSITION_EPSILON
+        ) {
+          continue
+        }
+        const segmentStart = route.route[segmentIndex]!
+        const segmentEnd = route.route[segmentIndex + 1]!
+        if (routeDistance <= segmentStartDistance + POSITION_EPSILON) {
+          return { segmentIndex, point: { ...segmentStart } }
+        }
+        if (routeDistance >= segmentEndDistance - POSITION_EPSILON) {
+          return { segmentIndex, point: { ...segmentEnd } }
+        }
+        const fraction = (routeDistance - segmentStartDistance) / segmentLength
+        return {
+          segmentIndex,
+          point: {
+            x: segmentStart.x + (segmentEnd.x - segmentStart.x) * fraction,
+            y: segmentStart.y + (segmentEnd.y - segmentStart.y) * fraction,
+            z: segmentStart.z,
+            traceThickness: route.traceThickness,
+          },
+        }
+      }
+      return undefined
+    }
+    const startAnchor = getAnchorAtRouteDistance(startRouteDistance)
+    const endAnchor = getAnchorAtRouteDistance(endRouteDistance)
+    if (!startAnchor || !endAnchor) return undefined
+
+    const anchoredPoints: HighDensityRoute["route"] = []
+    const pushPoint = (point: HighDensityRoute["route"][number]): number => {
+      const previousPoint = anchoredPoints.at(-1)
+      if (
+        previousPoint &&
+        previousPoint.z === point.z &&
+        getPointDistance(previousPoint, point) <= POSITION_EPSILON
+      ) {
+        anchoredPoints[anchoredPoints.length - 1] = { ...point }
+        return anchoredPoints.length - 1
+      }
+      anchoredPoints.push({ ...point })
+      return anchoredPoints.length - 1
+    }
+    let startIndex = -1
+    let endIndex = -1
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      pushPoint(route.route[segmentIndex]!)
+      if (segmentIndex === startAnchor.segmentIndex) {
+        startIndex = pushPoint(startAnchor.point)
+      }
+      if (segmentIndex === endAnchor.segmentIndex) {
+        endIndex = pushPoint(endAnchor.point)
+      }
+    }
+    pushPoint(route.route.at(-1)!)
+    if (startIndex < 0 || endIndex < 0 || startIndex >= endIndex) {
+      return undefined
+    }
+
+    const anchoredRoutes = cloneRoutes(routes)
+    anchoredRoutes[routeIndex] = {
+      ...route,
+      route: anchoredPoints,
+    }
+    return { routes: anchoredRoutes, startIndex, endIndex }
+  }
+
+  private getRemainingAnchoredFixedCopperIterations(): number {
+    return Math.max(
+      0,
+      MAX_ANCHORED_FIXED_COPPER_ITERATIONS - this.anchoredFixedCopperIterations,
+    )
+  }
+
+  private tryAnchoredFixedCopperCandidate(
+    routes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    routeIndex: number,
+    centers: ReadonlyArray<{ x: number; y: number }>,
+    options: {
+      includeCandidateCopper: boolean
+      reverse: boolean
+    },
+  ):
+    | {
+        routes: HighDensityRoute[]
+        snapshot: DrcSnapshot
+      }
+    | undefined {
+    const anchoredWindow = this.getAnchoredFixedCopperWindow(
+      routes,
+      routeIndex,
+      centers,
+    )
+    if (!anchoredWindow) return undefined
+    const iterationLimit = Math.min(
+      MAX_ANCHORED_FIXED_COPPER_ITERATIONS_PER_ATTEMPT,
+      this.getRemainingAnchoredFixedCopperIterations(),
+    )
+    if (
+      iterationLimit <= 0 ||
+      this.anchoredFixedCopperAttempts >= MAX_ANCHORED_FIXED_COPPER_ATTEMPTS ||
+      this.anchoredFixedCopperDrcEvaluations >=
+        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+    ) {
+      return undefined
+    }
+
+    this.anchoredFixedCopperAttempts += 1
+    const result = this.b01Rerouter.tryReroute(anchoredWindow.routes, {
+      routeIndex,
+      startIndex: anchoredWindow.startIndex,
+      endIndex: anchoredWindow.endIndex,
+      includeCandidateCopper: options.includeCandidateCopper,
+      reverse: options.reverse,
+      shortenPath: false,
+      maxIterations: iterationLimit,
+    })
+    this.anchoredFixedCopperIterations += Math.min(
+      iterationLimit,
+      Math.max(0, result?.iterations ?? 0),
+    )
+    if (!result?.route || !routeHasValidLayerTransitions(result.route)) {
+      return undefined
+    }
+
+    const candidateRoutes = cloneRoutes(anchoredWindow.routes)
+    candidateRoutes[routeIndex] = result.route
+    const materializedCandidate = materializeRoutes(candidateRoutes)
+    if (
+      materializedCandidate.some(
+        (candidateRoute) => !routeHasValidLayerTransitions(candidateRoute),
+      ) ||
+      !this.candidatePreservesTerminals(materializedCandidate)
+    ) {
+      return undefined
+    }
+
+    this.anchoredFixedCopperDrcEvaluations += 1
+    this.cleanupCandidateAttempts += 1
+    const candidateSnapshot = this.getSnapshot(materializedCandidate)
+    if (candidateSnapshot.count >= snapshot.count) return undefined
+
+    this.anchoredFixedCopperCandidatesAccepted += 1
+    this.cleanupCandidatesAccepted += 1
+    return {
+      routes: materializedCandidate,
+      snapshot: candidateSnapshot,
+    }
+  }
+
+  private runAnchoredFixedCopperRepair(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    let snapshot = this.getSnapshot(improvedRoutes)
+
+    repairLoop: while (
+      snapshot.count > 0 &&
+      this.getRemainingAnchoredFixedCopperIterations() > 0 &&
+      this.anchoredFixedCopperAttempts < MAX_ANCHORED_FIXED_COPPER_ATTEMPTS &&
+      this.anchoredFixedCopperDrcEvaluations <
+        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+    ) {
+      const centersByRouteIndex = new Map<
+        number,
+        Array<{ x: number; y: number }>
+      >()
+      for (const error of snapshot.errors) {
+        const center = this.getErrorCenter(error)
+        if (!center) continue
+        for (const routeIndex of this.getCandidateRouteIndexesForError(
+          error,
+          snapshot,
+        )) {
+          const centers = centersByRouteIndex.get(routeIndex) ?? []
+          if (
+            !centers.some(
+              (existingCenter) =>
+                getPointDistance(existingCenter, center) <= POSITION_EPSILON,
+            )
+          ) {
+            centers.push(center)
+          }
+          centersByRouteIndex.set(routeIndex, centers)
+        }
+      }
+
+      const routeGroups = [...centersByRouteIndex.entries()].toSorted(
+        (left, right) => right[1].length - left[1].length || left[0] - right[0],
+      )
+      for (const [routeIndex, centers] of routeGroups) {
+        const centerGroups =
+          centers.length > 1
+            ? [centers, ...centers.map((center) => [center])]
+            : [centers]
+        for (const centerGroup of centerGroups) {
+          for (const includeCandidateCopper of [true, false]) {
+            for (const reverse of [false, true]) {
+              const candidate = this.tryAnchoredFixedCopperCandidate(
+                improvedRoutes,
+                snapshot,
+                routeIndex,
+                centerGroup,
+                { includeCandidateCopper, reverse },
+              )
+              if (!candidate) {
+                if (
+                  this.getRemainingAnchoredFixedCopperIterations() <= 0 ||
+                  this.anchoredFixedCopperAttempts >=
+                    MAX_ANCHORED_FIXED_COPPER_ATTEMPTS ||
+                  this.anchoredFixedCopperDrcEvaluations >=
+                    MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+                ) {
+                  break repairLoop
+                }
+                continue
+              }
+              improvedRoutes = candidate.routes
+              snapshot = candidate.snapshot
+              continue repairLoop
+            }
+          }
+        }
+      }
+      break
+    }
+
+    return improvedRoutes
+  }
+
   private getDrcErrorIdentity(error: DrcError): string {
     for (const idKey of [
       "pcb_trace_error_id",
@@ -3971,6 +4321,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     improvedRoutes = this.runPostRepairSameNetViaMerge(improvedRoutes)
     improvedRoutes = this.runSharedTerminalCompositeRepair(improvedRoutes)
     improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
+    improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes)
     improvedRoutes = this.runFixedCopperCompositeRepair(improvedRoutes)
     improvedRoutes = this.runFinalEndpointSlideCleanup(improvedRoutes)
     improvedRoutes = this.runFinalContinuityTerminalViaBridge(improvedRoutes)
@@ -4074,6 +4425,19 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         this.postFinalCompositeSameNetViaMergeIterations,
       pipeline9PostFinalCompositeSameNetViaMergeIterationLimit:
         MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS,
+      pipeline9AnchoredFixedCopperAttempts: this.anchoredFixedCopperAttempts,
+      pipeline9AnchoredFixedCopperDrcEvaluations:
+        this.anchoredFixedCopperDrcEvaluations,
+      pipeline9AnchoredFixedCopperCandidatesAccepted:
+        this.anchoredFixedCopperCandidatesAccepted,
+      pipeline9AnchoredFixedCopperIterations:
+        this.anchoredFixedCopperIterations,
+      pipeline9AnchoredFixedCopperAttemptLimit:
+        MAX_ANCHORED_FIXED_COPPER_ATTEMPTS,
+      pipeline9AnchoredFixedCopperDrcEvaluationLimit:
+        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS,
+      pipeline9AnchoredFixedCopperIterationLimit:
+        MAX_ANCHORED_FIXED_COPPER_ITERATIONS,
       pipeline9FixedCopperCompositePrimaryAttempts:
         this.fixedCopperCompositePrimaryAttempts,
       pipeline9FixedCopperCompositeFollowupAttempts:

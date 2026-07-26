@@ -56,8 +56,6 @@ const B01_TRACE_CLEARANCE = 0.1
 const B01_GRID_STEP = 0.05
 const B01_LOW_RESOLUTION_CELL_SIZE = 0.2
 const MAX_B01_ROUTING_WINDOW_SIZE = 15
-const B01_ROUTING_WINDOW_PADDING = 2
-const MIN_B01_ROUTING_WINDOW_SIZE = 2
 const MAX_TERMINAL_VIA_ESCAPE_CANDIDATES = 64
 
 const pointsAreEqual = (
@@ -264,6 +262,41 @@ const simplifyB01Route = (
   return simplified
 }
 
+const normalizeEndpointLayerTransitions = (
+  route: HighDensityRoute["route"],
+): HighDensityRoute["route"] => {
+  if (route.length < 2) return route
+  const normalized = [...route]
+  const start = normalized[0]!
+  const next = normalized[1]!
+  if (
+    start.z !== next.z &&
+    Math.hypot(start.x - next.x, start.y - next.y) > SAME_POINT_EPSILON
+  ) {
+    normalized.splice(1, 0, {
+      x: start.x,
+      y: start.y,
+      z: next.z,
+      traceThickness: start.traceThickness,
+    })
+  }
+
+  const end = normalized.at(-1)!
+  const previous = normalized.at(-2)!
+  if (
+    previous.z !== end.z &&
+    Math.hypot(previous.x - end.x, previous.y - end.y) > SAME_POINT_EPSILON
+  ) {
+    normalized.splice(normalized.length - 1, 0, {
+      x: end.x,
+      y: end.y,
+      z: previous.z,
+      traceThickness: end.traceThickness,
+    })
+  }
+  return normalized
+}
+
 const getB01RoutingWindow = (
   startPoint: HighDensityRoute["route"][number],
   endPoint: HighDensityRoute["route"][number],
@@ -288,14 +321,7 @@ const getB01RoutingWindow = (
 
     const boardSize = boardMax - boardMin
     if (boardSize <= 0) return undefined
-    const size = Math.min(
-      boardSize,
-      MAX_B01_ROUTING_WINDOW_SIZE,
-      Math.max(
-        MIN_B01_ROUTING_WINDOW_SIZE,
-        endpointSpan + B01_ROUTING_WINDOW_PADDING * 2,
-      ),
-    )
+    const size = Math.min(boardSize, MAX_B01_ROUTING_WINDOW_SIZE)
     let min = (start + end) / 2 - size / 2
     let max = min + size
     if (min < boardMin) {
@@ -848,10 +874,11 @@ export class Pipeline9B01Rerouter {
     })
     solver.MAX_ITERATIONS = Math.max(1, Math.floor(options.maxIterations))
     solver.solve()
-    const [solvedRoute] = solver.getOutput()
-    if (!solver.solved || !solvedRoute) {
+    if (!solver.solved) {
       return { iterations: solver.iterations }
     }
+    const [solvedRoute] = solver.getOutput()
+    if (!solvedRoute) return { iterations: solver.iterations }
 
     let reroutedPoints: HighDensityRoute["route"] = solvedRoute.route.map(
       ({ x, y, z }) => ({
@@ -877,6 +904,7 @@ export class Pipeline9B01Rerouter {
     }
     reroutedPoints[0] = { ...startPoint }
     reroutedPoints[reroutedPoints.length - 1] = { ...endPoint }
+    reroutedPoints = normalizeEndpointLayerTransitions(reroutedPoints)
     if (!routeStaysInsideBounds(reroutedPoints, targetRoute, this.srj.bounds)) {
       return { iterations: solver.iterations }
     }
