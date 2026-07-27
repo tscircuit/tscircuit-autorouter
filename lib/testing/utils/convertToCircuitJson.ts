@@ -2,10 +2,6 @@ import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
-import {
-  getCanonicalConnectionName,
-  getCanonicalConnectionNameMap,
-} from "lib/utils/getCanonicalConnectionNameMap"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import type { LayerName } from "lib/utils/mapZToLayerName"
@@ -896,27 +892,22 @@ export function convertToCircuitJson(
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
   const circuitSrj = originalSrj ?? srjWithPointPairs
-  const canonicalNameByOriginalAlias = getCanonicalConnectionNameMap(circuitSrj)
-  const createConnectionMap = (
-    connectionSrj: SimpleRouteJson,
-    canonicalNameByAlias: ReadonlyMap<string, string>,
-  ) => {
+  const createConnectionMap = (connectionSrj: SimpleRouteJson) => {
     const connectionMap = new Map<string, string>()
     connectionSrj.connections.forEach((conn) => {
       connectionMap.set(
         conn.name,
-        getCanonicalConnectionName(conn, canonicalNameByAlias),
+        conn.__netConnectionName ||
+          conn.__rootConnectionNames?.[0] ||
+          conn.name,
       )
     })
     return connectionMap
   }
   const originalConnectionMap = originalSrj
-    ? createConnectionMap(originalSrj, canonicalNameByOriginalAlias)
+    ? createConnectionMap(originalSrj)
     : new Map<string, string>()
-  const pointPairConnectionMap = createConnectionMap(
-    srjWithPointPairs,
-    canonicalNameByOriginalAlias,
-  )
+  const pointPairConnectionMap = createConnectionMap(srjWithPointPairs)
   const inferredPreloadedConnectionByTraceId = new Map<string, string>()
   if (
     originalSrj &&
@@ -942,13 +933,9 @@ export function convertToCircuitJson(
   ): string | undefined =>
     preloadedTraceIds.has(pcbTraceId)
       ? (originalConnectionMap.get(connectionName) ??
-        canonicalNameByOriginalAlias.get(
-          inferredPreloadedConnectionByTraceId.get(pcbTraceId) ?? "",
-        ) ??
         inferredPreloadedConnectionByTraceId.get(pcbTraceId))
       : (pointPairConnectionMap.get(connectionName) ??
-        originalConnectionMap.get(connectionName) ??
-        canonicalNameByOriginalAlias.get(connectionName))
+        originalConnectionMap.get(connectionName))
 
   // Add source traces from connection information
   circuitJson.push(
