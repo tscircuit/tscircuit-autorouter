@@ -2,10 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import type {
-  CapacityMeshNode,
-  SimpleRouteConnection,
-} from "lib/types"
+import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 
 test("preloaded port ownership preserves the original graph topology", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [

@@ -5,10 +5,7 @@ import {
   evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type {
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-} from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { resolvePreloadedTraceCanonicalNetIds } from "lib/utils/resolvePreloadedTraceCanonicalNetIds"
 
 const makePreloadedTraceChain = (): SimpleRouteJson => ({
@@ -161,9 +158,9 @@ test("preloaded graph assigns the canonical net to a middle trace port", () => {
   solver.solve()
 
   expect(solver.getOutput()).toHaveLength(1)
-  expect(
-    solver.getOutput()[0]?.portPoints[0]?._preloadedFixedNetIds,
-  ).toEqual(["root-net"])
+  expect(solver.getOutput()[0]?.portPoints[0]?._preloadedFixedNetIds).toEqual([
+    "root-net",
+  ])
 })
 
 test("relaxed DRC namespaces trace links before canonical conversion", () => {

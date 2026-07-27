@@ -6,11 +6,7 @@ import type {
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { SimpleRouteJson } from "lib/types"
 
-const createPort = (
-  id: string,
-  y: number,
-  z: number,
-): SegmentPortPoint => ({
+const createPort = (id: string, y: number, z: number): SegmentPortPoint => ({
   segmentPortPointId: id,
   x: 0,
   y,
