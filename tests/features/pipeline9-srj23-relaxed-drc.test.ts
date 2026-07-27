@@ -10,7 +10,7 @@ test(
 
     // Keep this regression test bounded so the regular CI suite stays below its
     // 15-minute job limit. The benchmark workflow covers all 107 samples.
-    for (const sampleNumber of [14, 21, 68]) {
+    for (const sampleNumber of [14]) {
       const { scenario } = await loadScenarioBySampleNumber(
         "srj23",
         sampleNumber,
