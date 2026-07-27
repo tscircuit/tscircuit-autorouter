@@ -35,7 +35,7 @@ export type ConvertSrjToGraphicsObjectOptions = {
   traceColorMode?: TraceColorMode
 }
 
-function getGraphicsLayerColor(layerName: string): string {
+export function getGraphicsLayerColor(layerName: string): string {
   if (!Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
     throw new Error(`No visualization color for layer "${layerName}"`)
   }

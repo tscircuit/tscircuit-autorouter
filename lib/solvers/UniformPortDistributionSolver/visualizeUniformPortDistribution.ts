@@ -1,6 +1,13 @@
 import { GraphicsObject, Line, Rect } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { safeTransparentize } from "lib/solvers/colors"
+import { getGraphicsLayerColor } from "lib/utils/convertSrjToGraphicsObject"
+import {
+  getGraphicsLayerForObstacle,
+  getGraphicsZLayersForObstacle,
+} from "lib/utils/getGraphicsObjectLayer"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   Bounds,
   OwnerPairKey,
@@ -20,6 +27,7 @@ export const visualizeUniformPortDistribution = ({
   ownerPairsToProcess,
   currentOwnerPairBeingProcessed,
   mapOfNodeIdToBounds,
+  layerCount,
 }: {
   obstacles: Obstacle[]
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -28,10 +36,26 @@ export const visualizeUniformPortDistribution = ({
   ownerPairsToProcess: OwnerPairKey[]
   currentOwnerPairBeingProcessed: OwnerPairKey | null
   mapOfNodeIdToBounds: Map<string, Bounds>
+  layerCount: number
 }): GraphicsObject => {
   const rects: Rect[] = obstacles
     .filter((o) => !o.isCopperPour)
-    .map((o) => ({ ...o, fill: "#ec000070" }))
+    .map((o) => {
+      const zLayers = getGraphicsZLayersForObstacle(o, layerCount)
+      const fill =
+        zLayers.length === 1
+          ? safeTransparentize(
+              getGraphicsLayerColor(mapZToLayerName(zLayers[0]!, layerCount)),
+              0.56,
+            )
+          : "rgba(128,0,128,0.44)"
+
+      return {
+        ...o,
+        fill,
+        layer: getGraphicsLayerForObstacle(o, layerCount),
+      }
+    })
   const points: Array<{ x: number; y: number; label?: string }> = []
   const lines: Line[] = []
 

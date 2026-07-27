@@ -23,6 +23,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  layerCount: number
 }
 
 /**
@@ -183,6 +184,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ownerPairsToProcess: this.ownerPairsToProcess,
       currentOwnerPairBeingProcessed: this.currentOwnerPairBeingProcessed,
       mapOfNodeIdToBounds: this.mapOfNodeIdToBounds,
+      layerCount: this.input.layerCount,
     })
   }
 }
