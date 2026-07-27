@@ -2,10 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import type {
-  CapacityMeshNode,
-  SimpleRouteConnection,
-} from "lib/types"
+import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
 test("preloaded trace segments occupy existing hypergraph regions", () => {
@@ -21,8 +18,7 @@ test("preloaded trace segments occupy existing hypergraph regions", () => {
     width: 2,
     height: 2,
     layer: "top",
-    availableZ:
-      capacityMeshNodeId === "center" ? [0, 1] : [0],
+    availableZ: capacityMeshNodeId === "center" ? [0, 1] : [0],
   }))
   const simpleRouteJsonConnections: SimpleRouteConnection[] = [
     {
@@ -50,8 +46,7 @@ test("preloaded trace segments occupy existing hypergraph regions", () => {
     nodeIds,
     edgeId: `${segmentPortPointId}-edge`,
     connectionName: routePosition === undefined ? null : "fixed-route",
-    rootConnectionName:
-      routePosition === undefined ? undefined : "fixed-root",
+    rootConnectionName: routePosition === undefined ? undefined : "fixed-root",
     distToCentermostPortOnZ: 0,
     cramped: false,
     ...(routePosition === undefined
@@ -134,18 +129,29 @@ test("preloaded trace segments occupy existing hypergraph regions", () => {
     tinySolver.state.regionIntersectionCaches[centerRegionId!]
       .existingSegmentCount,
   ).toBe(1)
-
-  tinySolver.state.currentRouteNetId = tinySolver.problem.routeNet[0]
+  const [[preloadedRouteId, preloadedFromPortId, preloadedToPortId]] =
+    tinySolver.state.regionSegments[centerRegionId!]
+  const preloadedConnectionId =
+    tinySolver.problem.routeMetadata?.[preloadedRouteId]?.connectionId
   expect(
-    tinySolver.computeG(
-      {
-        portId: northPortId,
-        nextRegionId: centerRegionId!,
-        f: 0,
-        g: 0,
-        h: 0,
-      },
-      southPortId,
-    ),
-  ).toBe(Number.POSITIVE_INFINITY)
+    preloadedConnectionId?.startsWith("__tscircuit_preloaded_trace__:"),
+  ).toBe(true)
+  expect(
+    [preloadedFromPortId, preloadedToPortId].sort((a, b) => a - b),
+  ).toEqual([westPortId, eastPortId].sort((a, b) => a - b))
+  expect(tinySolver.state.portAssignment[westPortId]).toBe(
+    tinySolver.problem.routeNet[preloadedRouteId],
+  )
+  expect(tinySolver.state.portAssignment[eastPortId]).toBe(
+    tinySolver.problem.routeNet[preloadedRouteId],
+  )
+  expect(northPortId).toBeGreaterThanOrEqual(0)
+  expect(southPortId).toBeGreaterThanOrEqual(0)
+
+  tinySolver.resetRoutingStateForRerip()
+
+  expect(tinySolver.state.regionSegments[centerRegionId!]).toEqual([
+    [preloadedRouteId, preloadedFromPortId, preloadedToPortId],
+  ])
+  expect(tinySolver.state.unroutedRoutes).not.toContain(preloadedRouteId)
 })

@@ -44,3 +44,48 @@ test("SameNetViaMergerSolver consolidates a chain within the near-merge radius",
     { x: 0, y: 0 },
   ])
 })
+
+test("SameNetViaMergerSolver resolves rounded via metadata to its route transition", () => {
+  const roundedViaRoute = makeViaRoute("route-b", 0.25)
+  roundedViaRoute.vias = [{ x: 0.250001, y: -0.000001 }]
+  const solver = new SameNetViaMergerSolver({
+    inputHdRoutes: [makeViaRoute("route-a", 0), roundedViaRoute],
+    obstacles: [],
+    colorMap: {},
+    layerCount: 2,
+    connMap: new ConnectivityMap({
+      net0: ["route-a", "route-b"],
+    }),
+  })
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.getMergedViaHdRoutes()?.flatMap((route) => route.vias)).toEqual(
+    [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+    ],
+  )
+})
+
+test("SameNetViaMergerSolver ignores a stale candidate after its transition moved", () => {
+  const solver = new SameNetViaMergerSolver({
+    inputHdRoutes: [makeViaRoute("route-a", 0), makeViaRoute("route-b", 0.25)],
+    obstacles: [],
+    colorMap: {},
+    layerCount: 2,
+    connMap: new ConnectivityMap({
+      net0: ["route-a", "route-b"],
+    }),
+  })
+  solver.mergedViaHdRoutes[1]!.route = [
+    { x: 0.25, y: 0, z: 0 },
+    { x: 0.5, y: 0, z: 0 },
+  ]
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.getMergedViaHdRoutes()?.[1]?.vias).toEqual([])
+})

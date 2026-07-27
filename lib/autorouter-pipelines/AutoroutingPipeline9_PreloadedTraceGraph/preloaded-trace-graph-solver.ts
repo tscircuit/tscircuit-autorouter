@@ -109,7 +109,11 @@ const getPreloadedTracePrimitives = (
       }
     }
 
-    for (let pointIndex = 0; pointIndex < trace.route.length - 1; pointIndex++) {
+    for (
+      let pointIndex = 0;
+      pointIndex < trace.route.length - 1;
+      pointIndex++
+    ) {
       const start = trace.route[pointIndex]!
       const end = trace.route[pointIndex + 1]!
       if (
@@ -141,7 +145,15 @@ const getClosestPortPoint = (
   z: number,
 ): SegmentPortPoint | undefined =>
   segment.portPoints
-    .filter((portPoint) => portPoint.availableZ.includes(z))
+    .filter(
+      (portPoint) =>
+        portPoint.availableZ.includes(z) &&
+        !(portPoint._preloadedTracePortAssignments ?? []).some(
+          (assignment) =>
+            assignment.z === z &&
+            assignment.fixedNetId !== primitive.fixedNetId,
+        ),
+    )
     .map((portPoint) => ({
       portPoint,
       distance: pointToSegmentDistance(
@@ -192,14 +204,12 @@ const preloadPort = (
     fixedNetId: primitive.fixedNetId,
     routePosition:
       primitive.routePositionStart +
-      projection *
-        (primitive.routePositionEnd - primitive.routePositionStart),
+      projection * (primitive.routePositionEnd - primitive.routePositionStart),
     z,
     traceX: primitive.start.x + projection * dx,
     traceY: primitive.start.y + projection * dy,
   }
-  const existingAssignments =
-    portPoint._preloadedTracePortAssignments ?? []
+  const existingAssignments = portPoint._preloadedTracePortAssignments ?? []
   if (
     !existingAssignments.some(
       (existing) =>

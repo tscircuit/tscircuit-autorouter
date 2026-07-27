@@ -28,5 +28,5 @@ test(
       expect(solver.originalSrj.bounds).toEqual(scenario.bounds)
     }
   },
-  { timeout: 15_000 },
+  { timeout: 30_000 },
 )

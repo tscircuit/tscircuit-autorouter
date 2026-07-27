@@ -32,6 +32,28 @@ type Via = {
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
+const VIA_TRANSITION_POSITION_TOLERANCE = 1e-5
+
+const positionsMatch = (
+  first: { x: number; y: number },
+  second: { x: number; y: number },
+) =>
+  Math.abs(first.x - second.x) <= VIA_TRANSITION_POSITION_TOLERANCE &&
+  Math.abs(first.y - second.y) <= VIA_TRANSITION_POSITION_TOLERANCE
+
+const getRouteTransitionNearVia = (
+  route: HighDensityRoute,
+  via: { x: number; y: number },
+) => {
+  for (let pointIndex = 1; pointIndex < route.route.length; pointIndex++) {
+    const previousPoint = route.route[pointIndex - 1]!
+    const currentPoint = route.route[pointIndex]!
+    if (previousPoint.z === currentPoint.z) continue
+    if (!positionsMatch(previousPoint, currentPoint)) continue
+    if (positionsMatch(previousPoint, via)) return previousPoint
+  }
+  return undefined
+}
 
 const getNetForRoute = (
   connMap: ConnectivityMap,
@@ -210,6 +232,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const route = this.mergedViaHdRoutes[i]
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
+        const transitionPoint = getRouteTransitionNearVia(route, viaPoint)
+        if (!transitionPoint) continue
         const layers = [...new Set(route.route.map((p) => p.z))]
         if (layers.length === 0) {
           throw new Error(
@@ -218,8 +242,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
         }
 
         const via: Via = {
-          x: viaPoint.x,
-          y: viaPoint.y,
+          x: transitionPoint.x,
+          y: transitionPoint.y,
           diameter: route.viaDiameter,
           net: getNetForRoute(this.connMap, route),
           layers,
@@ -403,9 +427,12 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     if (routePointIndexesToMove.size === 0) {
-      throw new Error(
-        `SameNetViaMergerSolver could not find route transition for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${routeToUpdate.connectionName}"`,
+      routeToUpdate.vias = routeToUpdate.vias.filter(
+        (via) => !positionsMatch(via, viaToRemove),
       )
+      this.dedupeRouteVias(routeToUpdate)
+      if (rebuildVias) this.rebuildVias()
+      return
     }
 
     for (const routePointIndex of routePointIndexesToMove) {
@@ -414,7 +441,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
-      if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
+      if (!positionsMatch(vx, viaToRemove)) return vx
       replacedVia = true
       return { x: viaKeep.x, y: viaKeep.y }
     })
