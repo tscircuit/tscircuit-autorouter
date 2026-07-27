@@ -6,6 +6,7 @@ import {
 } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { getCanonicalConnectionNameMap } from "lib/utils/getCanonicalConnectionNameMap"
 import { resolvePreloadedTraceCanonicalNetIds } from "lib/utils/resolvePreloadedTraceCanonicalNetIds"
 
 const makePreloadedTraceChain = (): SimpleRouteJson => ({
@@ -126,6 +127,36 @@ test("shared resolver propagates obstacle-only evidence through an A-MID-C trace
     "fixed-a": "root-net",
     "fixed-mid": "root-net",
     "fixed-c": "root-net",
+  })
+})
+
+test("canonical connection aliases prefer the explicit full-net connection", () => {
+  const makePoint = (pcbPortId: string, x: number) => ({
+    x,
+    y: 0,
+    layer: "top" as const,
+    pointId: pcbPortId,
+    pcb_port_id: pcbPortId,
+  })
+  const pointA = makePoint("pcb_port_a", -2)
+  const pointB = makePoint("pcb_port_b", -1)
+  const pointC = makePoint("pcb_port_c", 1)
+  const pointD = makePoint("pcb_port_d", 2)
+  const canonicalNameByAlias = getCanonicalConnectionNameMap({
+    connections: [
+      { name: "source_trace_a", pointsToConnect: [pointA, pointB] },
+      { name: "source_trace_b", pointsToConnect: [pointC, pointD] },
+      {
+        name: "source_net",
+        pointsToConnect: [pointA, pointB, pointC, pointD],
+      },
+    ],
+  })
+
+  expect(Object.fromEntries(canonicalNameByAlias)).toEqual({
+    source_trace_a: "source_net",
+    source_trace_b: "source_net",
+    source_net: "source_net",
   })
 })
 

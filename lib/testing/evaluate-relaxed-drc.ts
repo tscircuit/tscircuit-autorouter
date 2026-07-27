@@ -10,6 +10,10 @@ import {
   type SimplifiedPcbTrace,
   getConnectionPointLayers,
 } from "lib/types"
+import {
+  getCanonicalConnectionName,
+  getCanonicalConnectionNameMap,
+} from "lib/utils/getCanonicalConnectionNameMap"
 import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { resolvePreloadedTraceCanonicalNetIds } from "lib/utils/resolvePreloadedTraceCanonicalNetIds"
@@ -466,13 +470,6 @@ const primitiveTouchesTerminalPoint = (
   )
 }
 
-const getCanonicalConnectionName = (
-  connection: SimpleRouteJson["connections"][number],
-): string =>
-  connection.__netConnectionName ??
-  connection.__rootConnectionNames?.[0] ??
-  connection.name
-
 const getPrimitiveCenter = (primitive: CopperPrimitive): Point =>
   primitive.kind === "via"
     ? primitive.center
@@ -510,9 +507,13 @@ const getCombinedCopperContinuityErrors = ({
   candidateTraceIds: Set<string>
   canonicalNetByTraceId: Map<string, string>
 }): GetDrcErrorsResult["errors"] => {
+  const canonicalNameByInputAlias = getCanonicalConnectionNameMap(inputSrj)
   const candidateTraceIdsByCanonicalNet = new Map<string, string[]>()
   for (const traceId of candidateTraceIds) {
-    const canonicalNet = canonicalNetByTraceId.get(traceId)
+    const rawCanonicalNet = canonicalNetByTraceId.get(traceId)
+    const canonicalNet = rawCanonicalNet
+      ? (canonicalNameByInputAlias.get(rawCanonicalNet) ?? rawCanonicalNet)
+      : undefined
     if (!canonicalNet) continue
     const owners = candidateTraceIdsByCanonicalNet.get(canonicalNet) ?? []
     owners.push(traceId)
@@ -527,7 +528,10 @@ const getCombinedCopperContinuityErrors = ({
     }>
   >()
   for (const connection of inputSrj.connections) {
-    const canonicalNet = getCanonicalConnectionName(connection)
+    const canonicalNet = getCanonicalConnectionName(
+      connection,
+      canonicalNameByInputAlias,
+    )
     const points = pointsByCanonicalNet.get(canonicalNet) ?? []
     points.push(
       ...connection.pointsToConnect.map((point) => ({ point, connection })),
@@ -536,7 +540,10 @@ const getCombinedCopperContinuityErrors = ({
   }
   const expectedCanonicalNets = new Set<string>()
   for (const connection of srjWithPointPairs.connections) {
-    const canonicalNet = getCanonicalConnectionName(connection)
+    const canonicalNet = getCanonicalConnectionName(
+      connection,
+      canonicalNameByInputAlias,
+    )
     expectedCanonicalNets.add(canonicalNet)
     if (!pointsByCanonicalNet.has(canonicalNet)) {
       pointsByCanonicalNet.set(
@@ -552,9 +559,11 @@ const getCombinedCopperContinuityErrors = ({
       candidateTraceIdsByCanonicalNet.get(canonicalNet) ?? []
     const requiredPoints = pointsByCanonicalNet.get(canonicalNet) ?? []
     if (requiredPoints.length < 2) continue
-    const netTraces = physicalTraces.filter(
-      (trace) => trace.canonicalNet === canonicalNet,
-    )
+    const netTraces = physicalTraces.filter((trace) => {
+      const physicalCanonicalNet =
+        canonicalNameByInputAlias.get(trace.canonicalNet) ?? trace.canonicalNet
+      return physicalCanonicalNet === canonicalNet
+    })
 
     const primitiveNodes = netTraces.flatMap((trace) =>
       trace.primitives.map((primitive) => ({
