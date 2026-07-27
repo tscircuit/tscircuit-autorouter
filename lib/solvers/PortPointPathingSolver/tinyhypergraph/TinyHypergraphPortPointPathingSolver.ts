@@ -945,6 +945,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
+        for (const port of graphForTiny.ports) {
+          const metadata = port.d as TinyPortMetadata
+          if (typeof metadata.duplicatedFromPortId === "string") {
+            delete metadata._preloadedFixedNetIds
+          }
+        }
       }
     } else {
       this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
