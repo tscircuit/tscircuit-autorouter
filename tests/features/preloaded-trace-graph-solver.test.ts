@@ -110,6 +110,16 @@ test("preloaded traces reserve existing graph ports without changing topology", 
       connectionName: "child-net",
       rootConnectionName: "root-net",
       _preloadedFixedNetIds: ["root-net"],
+      _preloadedTracePortAssignments: [
+        {
+          traceId: "fixed-trace",
+          fixedNetId: "root-net",
+          routePosition: 0.5,
+          z: 0,
+          traceX: 0,
+          traceY: 0.42,
+        },
+      ],
     }),
     expect.objectContaining({
       segmentPortPointId: "bottom-high",

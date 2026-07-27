@@ -63,14 +63,13 @@ const createPadCenteredDrcEvaluator = (
 
   const physicalObstacleById = new Map<string, Obstacle>()
   for (const obstacle of originalObstacles) {
-    const physicalIds = [
-      obstacle.connectedTo.find((id) => id.startsWith("pcb_smtpad_")),
-      obstacle.connectedTo.find((id) => id.startsWith("pcb_plated_hole_")),
-    ]
-    for (const physicalId of physicalIds) {
-      if (physicalId && !physicalObstacleById.has(physicalId)) {
-        physicalObstacleById.set(physicalId, obstacle)
-      }
+    const physicalId = obstacle.connectedTo[0]
+    if (
+      physicalId &&
+      (physicalId.startsWith("pcb_smtpad_") ||
+        physicalId.startsWith("pcb_plated_hole_"))
+    ) {
+      physicalObstacleById.set(physicalId, obstacle)
     }
   }
   const addAccuratePadCenters = (

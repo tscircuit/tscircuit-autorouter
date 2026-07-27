@@ -103,9 +103,14 @@ const PRELOADED_TERMINAL_MATCH_TOLERANCE = 1e-3
 const ENDPOINT_SLIDE_RADII = [
   0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.3,
 ] as const
-const VIA_MICRO_SHIFT_RADII = ENDPOINT_SLIDE_RADII
+const VIA_MICRO_SHIFT_RADII = [
+  ...ENDPOINT_SLIDE_RADII,
+  0.4,
+  0.5,
+  0.75,
+] as const
 const MAX_VIA_GROUPS_PER_ROUTE = 3
-const MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP = 32
+const MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP = 128
 const MAX_VIA_MICRO_SHIFT_SNAPSHOT_ISSUES = 8
 const BATCHED_TRACE_FORCE_SCALES = [4, 2, 1, 0.5, 0.25] as const
 const MAX_BATCHED_TRACE_FORCE_PASSES = 20
@@ -131,7 +136,7 @@ const MAX_ERROR_OWNED_CLUSTER_ROUTE_ITERATIONS = 15_000
 const MAX_ERROR_OWNED_CLUSTER_PASSES = 2
 const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_CANDIDATES = 4
 const MAX_ERROR_OWNED_CLUSTER_TERMINAL_ESCAPE_ITERATIONS = 10_000
-const MAX_POST_CLUSTER_VIA_MICRO_SHIFT_DRC_EVALUATIONS = 32
+const MAX_POST_CLUSTER_VIA_MICRO_SHIFT_DRC_EVALUATIONS = 128
 const MAX_FINAL_OWNER_B01_ITERATIONS = 50_000
 const MAX_FINAL_OWNER_FULL_ROUTE_ITERATIONS = 25_000
 const MAX_FINAL_OWNER_LONG_ROUTE_ITERATIONS = 4_000
@@ -167,6 +172,8 @@ const MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_OWNERS = 2
 const MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS = 32
 const MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS = 32
 const MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS = 8
+const MAX_EARLY_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS = 128
+const MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS = 64
 const POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS = [4, 8] as const
 const POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY = 4
 const FULL_B01_VARIANTS = [
@@ -265,9 +272,7 @@ const obstacleSharesRouteNet = (
 const obstacleRepresentsPhysicalPad = (
   obstacle: Obstacle,
   padId: string,
-): boolean =>
-  obstacle.connectedTo.find((id) => id.startsWith("pcb_smtpad_")) === padId ||
-  obstacle.connectedTo.find((id) => id.startsWith("pcb_plated_hole_")) === padId
+): boolean => obstacle.connectedTo[0] === padId
 
 const getOtherTraceId = (
   error: DrcError,
@@ -353,6 +358,31 @@ const routeHasValidLayerTransitions = (route: HighDensityRoute): boolean =>
     )
   })
 
+const normalizePipeline9ViaMetadataFromLayerTransitions = (
+  routes: HighDensityRoute[],
+): HighDensityRoute[] =>
+  materializeRoutes(routes).map((route) => {
+    const seenViaLocations = new Set<string>()
+    const vias = route.route.flatMap((point, pointIndex) => {
+      const nextPoint = route.route[pointIndex + 1]
+      if (
+        !nextPoint ||
+        point.z === nextPoint.z ||
+        point.x !== nextPoint.x ||
+        point.y !== nextPoint.y
+      ) {
+        return []
+      }
+
+      const locationKey = `${point.x}:${point.y}`
+      if (seenViaLocations.has(locationKey)) return []
+      seenViaLocations.add(locationKey)
+      return [{ x: point.x, y: point.y }]
+    })
+
+    return { ...route, vias }
+  })
+
 const getPointToSegmentDistance = (
   point: { x: number; y: number },
   start: { x: number; y: number },
@@ -402,6 +432,7 @@ const getCoincidentTerminalPointIndexes = (
 
 export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolver {
   private readonly originalObstacles: Obstacle[]
+  private readonly initialHdRoutes: HighDensityRoute[]
   private readonly terminalConstraints: TerminalConstraint[]
   private readonly b01Rerouter: Pipeline9B01Rerouter
   private cleanupStarted = false
@@ -470,16 +501,30 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private finalContinuityTerminalViaAttempts = 0
   private finalContinuityTerminalViaDrcEvaluations = 0
   private finalContinuityTerminalViaCandidatesAccepted = 0
+  private finalFixedOverlapLayerDetourDrcEvaluations = 0
+  private finalFixedOverlapLayerDetourCandidatesAccepted = 0
+  private finalFixedOverlapBestRemovedTargetIssueCount =
+    Number.POSITIVE_INFINITY
+  private finalFixedOverlapBestRemovedTargetFixedScore =
+    Number.POSITIVE_INFINITY
 
   constructor(params: Pipeline9ExactDrcRepairSolverParams) {
-    super(params)
+    const normalizedParams = {
+      ...params,
+      hdRoutes: normalizePipeline9ViaMetadataFromLayerTransitions(
+        params.hdRoutes,
+      ),
+    }
+    super(normalizedParams)
+    this.initialHdRoutes = cloneRoutes(normalizedParams.hdRoutes)
     this.originalObstacles = params.originalObstacles
     this.b01Rerouter = new Pipeline9B01Rerouter({
       srj: params.srj,
       baseObstacles: params.b01BaseObstacles,
       connMap: params.connMap,
     })
-    this.terminalConstraints = params.hdRoutes.flatMap((route, routeIndex) =>
+    this.terminalConstraints = normalizedParams.hdRoutes.flatMap(
+      (route, routeIndex) =>
       (["start", "end"] as const).flatMap((endpoint) => {
         const point = endpoint === "start" ? route.route[0] : route.route.at(-1)
         if (!point) return []
@@ -510,6 +555,71 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       routes,
       this.params.drcEvaluator,
       this.params.connMap,
+    )
+  }
+
+  private isFixedCopperIssue(
+    error: DrcError,
+    snapshot: DrcSnapshot,
+  ): boolean {
+    const errorType = getErrorType(error)
+    const primaryTraceId =
+      typeof error.pcb_trace_id === "string"
+        ? error.pcb_trace_id
+        : undefined
+    const otherTraceId = getRawOtherTraceId(error)
+    const primaryIsCandidate = Boolean(
+      primaryTraceId && snapshot.traceRouteIndexById.has(primaryTraceId),
+    )
+    if (
+      errorType === "pcb_via_trace_clearance_error" &&
+      primaryTraceId &&
+      !primaryIsCandidate
+    ) {
+      return true
+    }
+    if (
+      errorType !== "pcb_trace_error" ||
+      !primaryTraceId ||
+      !otherTraceId
+    ) {
+      return false
+    }
+    const otherIsCandidate = snapshot.traceRouteIndexById.has(otherTraceId)
+    return primaryIsCandidate !== otherIsCandidate
+  }
+
+  private getFixedCopperIssueCount(snapshot: DrcSnapshot): number {
+    return snapshot.errors.filter((error) =>
+      this.isFixedCopperIssue(error, snapshot),
+    ).length
+  }
+
+  private getFixedCopperIssueScore(snapshot: DrcSnapshot): number {
+    return snapshot.errors.reduce((score, error) => {
+      if (!this.isFixedCopperIssue(error, snapshot)) return score
+      return score + (getErrorType(error) === "pcb_trace_error" ? 2 : 1)
+    }, 0)
+  }
+
+  private getFixedCopperTraceOverlapCount(snapshot: DrcSnapshot): number {
+    return snapshot.errors.filter(
+      (error) =>
+        getErrorType(error) === "pcb_trace_error" &&
+        this.isFixedCopperIssue(error, snapshot),
+    ).length
+  }
+
+  private snapshotImprovesWithoutFixedCopperRegression(
+    candidate: DrcSnapshot,
+    baseline: DrcSnapshot,
+  ): boolean {
+    return (
+      candidate.count < baseline.count &&
+      this.getFixedCopperTraceOverlapCount(candidate) <=
+        this.getFixedCopperTraceOverlapCount(baseline) &&
+      this.getFixedCopperIssueScore(candidate) <=
+        this.getFixedCopperIssueScore(baseline)
     )
   }
 
@@ -583,7 +693,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
   private candidateImprovesSnapshot(
     candidateRoutes: HighDensityRoute[],
-    currentIssueCount: number,
+    currentSnapshot: DrcSnapshot,
     source: "local" | "b01" = "local",
   ): boolean {
     this.cleanupCandidateAttempts += 1
@@ -598,7 +708,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     if (source === "local") this.localCleanupDrcEvaluations += 1
 
     const candidateSnapshot = this.getSnapshot(candidateRoutes)
-    if (candidateSnapshot.count >= currentIssueCount) {
+    if (
+      !this.snapshotImprovesWithoutFixedCopperRegression(
+        candidateSnapshot,
+        currentSnapshot,
+      )
+    ) {
       if (source === "local") {
         this.consecutiveLocalCleanupDrcMisses += 1
         this.maxConsecutiveLocalCleanupDrcMisses = Math.max(
@@ -817,7 +932,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           if (
             this.candidateImprovesSnapshot(
               materializedCandidate,
-              snapshot.count,
+              snapshot,
             )
           ) {
             this.viaMicroShiftsAccepted += 1
@@ -967,7 +1082,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           if (
             this.candidateImprovesSnapshot(
               materializedCandidate,
-              snapshot.count,
+              snapshot,
             )
           ) {
             return materializedCandidate
@@ -982,6 +1097,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private tryLocalTraceLayerDetour(
     routes: HighDensityRoute[],
     error: DrcError,
+    options: {
+      preferFixedCopperIssueReduction?: boolean
+      maxIssueCountIncrease?: number
+    } = {},
   ): HighDensityRoute[] | undefined {
     if (!this.hasLocalCleanupBudget()) return undefined
     const errorType = getErrorType(error)
@@ -1010,6 +1129,15 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         snapshot.traceRouteIndexById.has(traceId),
     )
     const errorCenter = center as { x: number; y: number }
+    const baselineFixedCopperIssueScore =
+      this.getFixedCopperIssueScore(snapshot)
+    const targetErrorIdentity = this.getDrcErrorIdentity(error)
+    let bestFixedCopperCandidate:
+      | {
+          routes: HighDensityRoute[]
+          snapshot: DrcSnapshot
+        }
+      | undefined
 
     for (const traceId of traceIds) {
       const routeIndex = snapshot.traceRouteIndexById.get(traceId)!
@@ -1103,10 +1231,72 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           )
 
           const materializedCandidate = materializeRoutes(candidateRoutes)
+          if (options.preferFixedCopperIssueReduction) {
+            this.cleanupCandidateAttempts += 1
+            if (!this.candidatePreservesTerminals(materializedCandidate)) {
+              continue
+            }
+            if (!this.hasLocalCleanupBudget()) {
+              return bestFixedCopperCandidate?.routes
+            }
+            this.localCleanupDrcEvaluations += 1
+            const candidateSnapshot = this.getSnapshot(materializedCandidate)
+            const candidateFixedCopperIssueScore =
+              this.getFixedCopperIssueScore(candidateSnapshot)
+            const targetErrorWasRemoved = !candidateSnapshot.errors.some(
+              (candidateError) =>
+                this.getDrcErrorIdentity(candidateError) ===
+                targetErrorIdentity,
+            )
+            if (targetErrorWasRemoved) {
+              this.finalFixedOverlapBestRemovedTargetIssueCount = Math.min(
+                this.finalFixedOverlapBestRemovedTargetIssueCount,
+                candidateSnapshot.count,
+              )
+              this.finalFixedOverlapBestRemovedTargetFixedScore = Math.min(
+                this.finalFixedOverlapBestRemovedTargetFixedScore,
+                candidateFixedCopperIssueScore,
+              )
+            }
+            const isEligible =
+              (candidateFixedCopperIssueScore <
+                baselineFixedCopperIssueScore ||
+                (candidateFixedCopperIssueScore ===
+                  baselineFixedCopperIssueScore &&
+                  targetErrorWasRemoved)) &&
+              candidateSnapshot.count <=
+                snapshot.count + (options.maxIssueCountIncrease ?? 2)
+            const isBetter =
+              isEligible &&
+              (!bestFixedCopperCandidate ||
+                candidateFixedCopperIssueScore <
+                  this.getFixedCopperIssueScore(
+                    bestFixedCopperCandidate.snapshot,
+                  ) ||
+                (candidateFixedCopperIssueScore ===
+                  this.getFixedCopperIssueScore(
+                    bestFixedCopperCandidate.snapshot,
+                  ) &&
+                  candidateSnapshot.count <
+                    bestFixedCopperCandidate.snapshot.count))
+            if (isBetter) {
+              bestFixedCopperCandidate = {
+                routes: materializedCandidate,
+                snapshot: candidateSnapshot,
+              }
+            } else {
+              this.consecutiveLocalCleanupDrcMisses += 1
+              this.maxConsecutiveLocalCleanupDrcMisses = Math.max(
+                this.maxConsecutiveLocalCleanupDrcMisses,
+                this.consecutiveLocalCleanupDrcMisses,
+              )
+            }
+            continue
+          }
           if (
             this.candidateImprovesSnapshot(
               materializedCandidate,
-              snapshot.count,
+              snapshot,
             )
           ) {
             return materializedCandidate
@@ -1115,6 +1305,11 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       }
     }
 
+    if (bestFixedCopperCandidate) {
+      this.cleanupCandidatesAccepted += 1
+      this.consecutiveLocalCleanupDrcMisses = 0
+      return bestFixedCopperCandidate.routes
+    }
     return undefined
   }
 
@@ -1158,7 +1353,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           if (
             this.candidateImprovesSnapshot(
               materializedCandidate,
-              snapshot.count,
+              snapshot,
             )
           ) {
             return materializedCandidate
@@ -1200,7 +1395,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     if (
       !this.candidateImprovesSnapshot(
         materializedCandidate,
-        snapshot.count,
+        snapshot,
         "b01",
       )
     ) {
@@ -1348,13 +1543,47 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         nearestSegmentIndex = segmentIndex
       }
     }
-    if (nearestSegmentIndex < 1) return []
+    if (nearestSegmentIndex < 0) return []
 
+    const lastRouteIndex = route.route.length - 1
     const lastInteriorIndex = route.route.length - 2
-    if (nearestSegmentIndex + 1 > lastInteriorIndex) return []
 
     const windows: Array<{ startIndex: number; endIndex: number }> = []
     const seenWindows = new Set<string>()
+    const addRawWindow = (startIndex: number, endIndex: number) => {
+      if (
+        startIndex < 0 ||
+        endIndex > lastRouteIndex ||
+        startIndex >= endIndex
+      ) {
+        return
+      }
+      const key = `${startIndex}:${endIndex}`
+      if (seenWindows.has(key)) return
+      seenWindows.add(key)
+      windows.push({ startIndex, endIndex })
+    }
+    if (nearestSegmentIndex === 0) {
+      for (const endIndex of [2, 4, 8]) {
+        addRawWindow(0, Math.min(lastRouteIndex, endIndex))
+      }
+    }
+    if (nearestSegmentIndex === lastRouteIndex - 1) {
+      for (const startIndex of [
+        lastRouteIndex - 2,
+        lastRouteIndex - 4,
+        lastRouteIndex - 8,
+      ]) {
+        addRawWindow(Math.max(0, startIndex), lastRouteIndex)
+      }
+    }
+    if (
+      nearestSegmentIndex < 1 ||
+      nearestSegmentIndex + 1 > lastInteriorIndex
+    ) {
+      return windows
+    }
+
     const addWindow = (startIndex: number, endIndex: number) => {
       const boundedStart = Math.max(1, startIndex)
       const boundedEnd = Math.min(lastInteriorIndex, endIndex)
@@ -1365,10 +1594,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       ) {
         return
       }
-      const key = `${boundedStart}:${boundedEnd}`
-      if (seenWindows.has(key)) return
-      seenWindows.add(key)
-      windows.push({ startIndex: boundedStart, endIndex: boundedEnd })
+      addRawWindow(boundedStart, boundedEnd)
     }
 
     addWindow(
@@ -1788,7 +2014,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       this.errorOwnedClusterDrcEvaluations += 1
       this.cleanupCandidateAttempts += 1
       const candidateSnapshot = this.getSnapshot(materializedCandidate)
-      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+      if (
+        !this.snapshotImprovesWithoutFixedCopperRegression(
+          candidateSnapshot,
+          baselineSnapshot,
+        )
+      ) {
+        continue
+      }
 
       let acceptedRoutes = materializedCandidate
       let acceptedSnapshot = candidateSnapshot
@@ -1838,7 +2071,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         const postCandidateSnapshot = this.getSnapshot(
           materializedPostCandidate,
         )
-        if (postCandidateSnapshot.count >= acceptedSnapshot.count) continue
+        if (
+          !this.snapshotImprovesWithoutFixedCopperRegression(
+            postCandidateSnapshot,
+            acceptedSnapshot,
+          )
+        ) {
+          continue
+        }
 
         acceptedRoutes = materializedPostCandidate
         acceptedSnapshot = postCandidateSnapshot
@@ -2008,7 +2248,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.finalOwnerDrcEvaluations += 1
     this.cleanupCandidateAttempts += 1
     const candidateSnapshot = this.getSnapshot(materializedCandidate)
-    if (candidateSnapshot.count >= snapshot.count) return undefined
+    if (
+      !this.snapshotImprovesWithoutFixedCopperRegression(
+        candidateSnapshot,
+        snapshot,
+      )
+    ) {
+      return undefined
+    }
 
     this.finalOwnerCandidatesAccepted += 1
     this.cleanupCandidatesAccepted += 1
@@ -2177,27 +2424,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private normalizeViaMetadataFromLayerTransitions(
     routes: HighDensityRoute[],
   ): HighDensityRoute[] {
-    return materializeRoutes(routes).map((route) => {
-      const seenViaLocations = new Set<string>()
-      const vias = route.route.flatMap((point, pointIndex) => {
-        const nextPoint = route.route[pointIndex + 1]
-        if (
-          !nextPoint ||
-          point.z === nextPoint.z ||
-          point.x !== nextPoint.x ||
-          point.y !== nextPoint.y
-        ) {
-          return []
-        }
-
-        const locationKey = `${point.x}:${point.y}`
-        if (seenViaLocations.has(locationKey)) return []
-        seenViaLocations.add(locationKey)
-        return [{ x: point.x, y: point.y }]
-      })
-
-      return { ...route, vias }
-    })
+    return normalizePipeline9ViaMetadataFromLayerTransitions(routes)
   }
 
   private getCanonicalNetForRoute(route: HighDensityRoute): string | undefined {
@@ -2336,7 +2563,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       this.postRepairSameNetViaMergeDrcEvaluations += 1
       this.cleanupCandidateAttempts += 1
       const candidateSnapshot = this.getSnapshot(materializedCandidate)
-      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+      if (
+        !this.snapshotImprovesWithoutFixedCopperRegression(
+          candidateSnapshot,
+          baselineSnapshot,
+        )
+      ) {
+        continue
+      }
 
       this.postRepairSameNetViaMergeCandidatesAccepted += 1
       this.cleanupCandidatesAccepted += 1
@@ -2631,12 +2865,23 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       this.sharedTerminalCompositeDrcEvaluations += 1
       this.cleanupCandidateAttempts += 1
       const relocatedSnapshot = this.getSnapshot(atomicCandidate)
-      if (relocatedSnapshot.count < baselineSnapshot.count) {
+      if (
+        this.snapshotImprovesWithoutFixedCopperRegression(
+          relocatedSnapshot,
+          baselineSnapshot,
+        )
+      ) {
         this.sharedTerminalCompositeCandidatesAccepted += 1
         this.cleanupCandidatesAccepted += 1
         return atomicCandidate
       }
-      if (relocatedSnapshot.count > baselineSnapshot.count) continue
+      if (
+        relocatedSnapshot.count > baselineSnapshot.count ||
+        this.getFixedCopperIssueScore(relocatedSnapshot) >
+          this.getFixedCopperIssueScore(baselineSnapshot)
+      ) {
+        continue
+      }
 
       const relocatedErrorIds = new Set(
         relocatedSnapshot.errors.map((error, errorIndex) =>
@@ -2736,7 +2981,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       this.sharedTerminalCompositeDrcEvaluations += 1
       this.cleanupCandidateAttempts += 1
       const candidateSnapshot = this.getSnapshot(atomicCandidate)
-      if (candidateSnapshot.count >= baselineSnapshot.count) continue
+      if (
+        !this.snapshotImprovesWithoutFixedCopperRegression(
+          candidateSnapshot,
+          baselineSnapshot,
+        )
+      ) {
+        continue
+      }
 
       this.sharedTerminalCompositeCandidatesAccepted += 1
       this.cleanupCandidatesAccepted += 1
@@ -2912,7 +3164,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.postFinalCompositeDrcEvaluations += 1
     this.cleanupCandidateAttempts += 1
     const rawCandidateSnapshot = this.getSnapshot(rawCandidate)
-    if (rawCandidateSnapshot.count < snapshot.count) {
+    if (
+      this.snapshotImprovesWithoutFixedCopperRegression(
+        rawCandidateSnapshot,
+        snapshot,
+      )
+    ) {
       this.postFinalCompositeCandidatesAccepted += 1
       this.cleanupCandidatesAccepted += 1
       return { routes: rawCandidate, snapshot: rawCandidateSnapshot }
@@ -2950,7 +3207,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.postFinalCompositeDrcEvaluations += 1
     this.cleanupCandidateAttempts += 1
     const atomicCandidateSnapshot = this.getSnapshot(atomicCandidate)
-    if (atomicCandidateSnapshot.count >= snapshot.count) return undefined
+    if (
+      !this.snapshotImprovesWithoutFixedCopperRegression(
+        atomicCandidateSnapshot,
+        snapshot,
+      )
+    ) {
+      return undefined
+    }
 
     this.postFinalCompositeCandidatesAccepted += 1
     this.cleanupCandidatesAccepted += 1
@@ -3280,7 +3544,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.anchoredFixedCopperDrcEvaluations += 1
     this.cleanupCandidateAttempts += 1
     const candidateSnapshot = this.getSnapshot(materializedCandidate)
-    if (candidateSnapshot.count >= snapshot.count) return undefined
+    if (
+      !this.snapshotImprovesWithoutFixedCopperRegression(
+        candidateSnapshot,
+        snapshot,
+      )
+    ) {
+      return undefined
+    }
 
     this.anchoredFixedCopperCandidatesAccepted += 1
     this.cleanupCandidatesAccepted += 1
@@ -3569,7 +3840,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       const primarySnapshot =
         this.evaluateFixedCopperCompositeCandidate(materializedPrimary)
       if (!primarySnapshot) return undefined
-      if (primarySnapshot.count < baselineSnapshot.count) {
+      if (
+        this.snapshotImprovesWithoutFixedCopperRegression(
+          primarySnapshot,
+          baselineSnapshot,
+        )
+      ) {
         return this.acceptFixedCopperCompositeCandidate(
           materializedPrimary,
           primarySnapshot,
@@ -3651,7 +3927,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           const followupSnapshot =
             this.evaluateFixedCopperCompositeCandidate(materializedFollowup)
           if (!followupSnapshot) break
-          if (followupSnapshot.count < baselineSnapshot.count) {
+          if (
+            this.snapshotImprovesWithoutFixedCopperRegression(
+              followupSnapshot,
+              baselineSnapshot,
+            )
+          ) {
             return this.acceptFixedCopperCompositeCandidate(
               materializedFollowup,
               followupSnapshot,
@@ -3674,7 +3955,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         workingSnapshot = bestOwnerCandidate.snapshot
       }
 
-      if (workingSnapshot.count < baselineSnapshot.count) {
+      if (
+        this.snapshotImprovesWithoutFixedCopperRegression(
+          workingSnapshot,
+          baselineSnapshot,
+        )
+      ) {
         return this.acceptFixedCopperCompositeCandidate(
           workingRoutes,
           workingSnapshot,
@@ -3895,7 +4181,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             this.finalEndpointSlideDrcEvaluations += 1
             this.cleanupCandidateAttempts += 1
             const candidateSnapshot = this.getSnapshot(materializedCandidate)
-            if (candidateSnapshot.count >= snapshot.count) continue
+            if (
+              !this.snapshotImprovesWithoutFixedCopperRegression(
+                candidateSnapshot,
+                snapshot,
+              )
+            ) {
+              continue
+            }
 
             this.finalEndpointSlideCandidatesAccepted += 1
             this.finalEndpointSlideRelocatedBranches += branches.length
@@ -3946,6 +4239,292 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       if (!acceptedCandidate) break
       improvedRoutes = acceptedCandidate.routes
       snapshot = acceptedCandidate.snapshot
+    }
+
+    return improvedRoutes
+  }
+
+  private tryInterpolatedFixedOverlapLayerBridge(
+    routes: HighDensityRoute[],
+    error: DrcError,
+    maxIssueCountIncrease: number,
+  ): HighDensityRoute[] | undefined {
+    if (getErrorType(error) !== "pcb_trace_error") return undefined
+    const center = this.getErrorCenter(error)
+    if (!center) return undefined
+    const snapshot = this.getSnapshot(routes)
+    const routeIndex = this.getCandidateRouteIndexesForError(
+      error,
+      snapshot,
+    )[0]
+    const route = routeIndex === undefined ? undefined : routes[routeIndex]
+    if (!route || route.route.length < 2) return undefined
+
+    const cumulativeDistances = [0]
+    for (let index = 0; index < route.route.length - 1; index += 1) {
+      cumulativeDistances.push(
+        cumulativeDistances[index]! +
+          getPointDistance(route.route[index]!, route.route[index + 1]!),
+      )
+    }
+    let nearestSegmentIndex = -1
+    let nearestProjection = 0
+    let nearestDistance = Number.POSITIVE_INFINITY
+    for (
+      let segmentIndex = 0;
+      segmentIndex < route.route.length - 1;
+      segmentIndex += 1
+    ) {
+      const start = route.route[segmentIndex]!
+      const end = route.route[segmentIndex + 1]!
+      if (start.z !== end.z) continue
+      const segmentLength = getPointDistance(start, end)
+      if (segmentLength <= POSITION_EPSILON) continue
+      const distance = getPointToSegmentDistance(center, start, end)
+      if (distance >= nearestDistance) continue
+      const deltaX = end.x - start.x
+      const deltaY = end.y - start.y
+      nearestDistance = distance
+      nearestSegmentIndex = segmentIndex
+      nearestProjection = Math.max(
+        0,
+        Math.min(
+          1,
+          ((center.x - start.x) * deltaX +
+            (center.y - start.y) * deltaY) /
+            (segmentLength * segmentLength),
+        ),
+      )
+    }
+    if (nearestSegmentIndex < 0) return undefined
+
+    const sourceZ = route.route[nearestSegmentIndex]!.z
+    let sameLayerStart = nearestSegmentIndex
+    let sameLayerEnd = nearestSegmentIndex + 1
+    while (
+      sameLayerStart > 0 &&
+      route.route[sameLayerStart - 1]!.z === sourceZ
+    ) {
+      sameLayerStart -= 1
+    }
+    while (
+      sameLayerEnd < route.route.length - 1 &&
+      route.route[sameLayerEnd + 1]!.z === sourceZ
+    ) {
+      sameLayerEnd += 1
+    }
+    const projectedRouteDistance =
+      cumulativeDistances[nearestSegmentIndex]! +
+      nearestProjection *
+        getPointDistance(
+          route.route[nearestSegmentIndex]!,
+          route.route[nearestSegmentIndex + 1]!,
+        )
+
+    const getAnchor = (
+      routeDistance: number,
+    ):
+      | {
+          segmentIndex: number
+          point: HighDensityRoute["route"][number]
+        }
+      | undefined => {
+      for (
+        let segmentIndex = sameLayerStart;
+        segmentIndex < sameLayerEnd;
+        segmentIndex += 1
+      ) {
+        const startDistance = cumulativeDistances[segmentIndex]!
+        const endDistance = cumulativeDistances[segmentIndex + 1]!
+        if (routeDistance > endDistance + POSITION_EPSILON) continue
+        const segmentLength = endDistance - startDistance
+        if (segmentLength <= POSITION_EPSILON) continue
+        const start = route.route[segmentIndex]!
+        const end = route.route[segmentIndex + 1]!
+        const fraction = Math.max(
+          0,
+          Math.min(1, (routeDistance - startDistance) / segmentLength),
+        )
+        return {
+          segmentIndex,
+          point: {
+            x: start.x + (end.x - start.x) * fraction,
+            y: start.y + (end.y - start.y) * fraction,
+            z: sourceZ,
+            traceThickness: route.traceThickness,
+          },
+        }
+      }
+      return undefined
+    }
+
+    const targetErrorIdentity = this.getDrcErrorIdentity(error)
+    const baselineFixedScore = this.getFixedCopperIssueScore(snapshot)
+    let bestCandidate:
+      | { routes: HighDensityRoute[]; snapshot: DrcSnapshot }
+      | undefined
+    for (const halfSpan of [0.35, 0.5, 0.75, 1, 1.5, 2, 3]) {
+      const startDistance = Math.max(
+        cumulativeDistances[sameLayerStart]!,
+        projectedRouteDistance - halfSpan,
+      )
+      const endDistance = Math.min(
+        cumulativeDistances[sameLayerEnd]!,
+        projectedRouteDistance + halfSpan,
+      )
+      const startAnchor = getAnchor(startDistance)
+      const endAnchor = getAnchor(endDistance)
+      if (
+        !startAnchor ||
+        !endAnchor ||
+        startAnchor.segmentIndex > endAnchor.segmentIndex
+      ) {
+        continue
+      }
+      for (
+        let targetZ = 0;
+        targetZ < this.params.srj.layerCount;
+        targetZ += 1
+      ) {
+        if (targetZ === sourceZ || !this.hasLocalCleanupBudget()) continue
+        const bridgeRoute = [
+          ...route.route.slice(0, startAnchor.segmentIndex + 1),
+          { ...startAnchor.point },
+          {
+            ...startAnchor.point,
+            z: targetZ,
+            pcb_port_id: undefined,
+          },
+          {
+            ...endAnchor.point,
+            z: targetZ,
+            pcb_port_id: undefined,
+          },
+          { ...endAnchor.point },
+          ...route.route.slice(endAnchor.segmentIndex + 1),
+        ]
+        const candidateRoutes = cloneRoutes(routes)
+        candidateRoutes[routeIndex] = { ...route, route: bridgeRoute }
+        const materializedCandidate = materializeRoutes(candidateRoutes)
+        if (
+          !routeHasValidLayerTransitions(materializedCandidate[routeIndex]!) ||
+          !this.candidatePreservesTerminals(materializedCandidate)
+        ) {
+          continue
+        }
+
+        this.cleanupCandidateAttempts += 1
+        this.localCleanupDrcEvaluations += 1
+        const candidateSnapshot = this.getSnapshot(materializedCandidate)
+        const candidateFixedScore =
+          this.getFixedCopperIssueScore(candidateSnapshot)
+        const targetWasRemoved = !candidateSnapshot.errors.some(
+          (candidateError) =>
+            this.getDrcErrorIdentity(candidateError) === targetErrorIdentity,
+        )
+        if (
+          !targetWasRemoved ||
+          candidateFixedScore > baselineFixedScore ||
+          candidateSnapshot.count > snapshot.count + maxIssueCountIncrease
+        ) {
+          continue
+        }
+        if (
+          !bestCandidate ||
+          candidateFixedScore <
+            this.getFixedCopperIssueScore(bestCandidate.snapshot) ||
+          (candidateFixedScore ===
+            this.getFixedCopperIssueScore(bestCandidate.snapshot) &&
+            candidateSnapshot.count < bestCandidate.snapshot.count)
+        ) {
+          bestCandidate = {
+            routes: materializedCandidate,
+            snapshot: candidateSnapshot,
+          }
+        }
+      }
+    }
+
+    if (!bestCandidate) return undefined
+    this.cleanupCandidatesAccepted += 1
+    this.consecutiveLocalCleanupDrcMisses = 0
+    return bestCandidate.routes
+  }
+
+  private runFinalFixedOverlapLayerDetour(
+    routes: HighDensityRoute[],
+    options: {
+      drcEvaluationLimit?: number
+      maxIssueCountIncrease?: number
+    } = {},
+  ): HighDensityRoute[] {
+    let improvedRoutes = routes
+    const drcEvaluationLimit =
+      options.drcEvaluationLimit ??
+      MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS
+    const baseEvaluationLimit = this.selectedLocalCleanupDrcEvaluationLimit
+    const baseConsecutiveMissLimit =
+      this.selectedConsecutiveLocalCleanupDrcMissLimit
+    const evaluationsBeforeSweep = this.localCleanupDrcEvaluations
+    this.selectedLocalCleanupDrcEvaluationLimit =
+      evaluationsBeforeSweep + drcEvaluationLimit
+    this.selectedConsecutiveLocalCleanupDrcMissLimit =
+      drcEvaluationLimit
+    this.consecutiveLocalCleanupDrcMisses = 0
+
+    try {
+      while (
+        this.localCleanupDrcEvaluations - evaluationsBeforeSweep <
+          drcEvaluationLimit &&
+        this.hasLocalCleanupBudget()
+      ) {
+        const snapshot = this.getSnapshot(improvedRoutes)
+        if (snapshot.count === 0) break
+        let nextRoutes: HighDensityRoute[] | undefined
+
+        for (const error of snapshot.errors) {
+          if (getErrorType(error) !== "pcb_trace_error") continue
+          const primaryTraceId =
+            typeof error.pcb_trace_id === "string"
+              ? error.pcb_trace_id
+              : undefined
+          const otherTraceId = getRawOtherTraceId(error)
+          const primaryIsCandidate = Boolean(
+            primaryTraceId &&
+              snapshot.traceRouteIndexById.has(primaryTraceId),
+          )
+          const otherIsCandidate = Boolean(
+            otherTraceId && snapshot.traceRouteIndexById.has(otherTraceId),
+          )
+          if (primaryIsCandidate === otherIsCandidate) continue
+
+          nextRoutes = this.tryInterpolatedFixedOverlapLayerBridge(
+            improvedRoutes,
+            error,
+            options.maxIssueCountIncrease ?? 2,
+          )
+          nextRoutes ??= this.tryLocalTraceLayerDetour(
+            improvedRoutes,
+            error,
+            {
+              preferFixedCopperIssueReduction: true,
+              maxIssueCountIncrease: options.maxIssueCountIncrease,
+            },
+          )
+          if (nextRoutes) break
+          if (!this.hasLocalCleanupBudget()) break
+        }
+
+        if (!nextRoutes) break
+        this.finalFixedOverlapLayerDetourCandidatesAccepted += 1
+        improvedRoutes = nextRoutes
+      }
+    } finally {
+      this.finalFixedOverlapLayerDetourDrcEvaluations +=
+        this.localCleanupDrcEvaluations - evaluationsBeforeSweep
+      this.selectedLocalCleanupDrcEvaluationLimit = baseEvaluationLimit
+      this.selectedConsecutiveLocalCleanupDrcMissLimit =
+        baseConsecutiveMissLimit
     }
 
     return improvedRoutes
@@ -4231,7 +4810,14 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           this.finalContinuityTerminalViaDrcEvaluations += 1
           this.cleanupCandidateAttempts += 1
           const candidateSnapshot = this.getSnapshot(materializedCandidate)
-          if (candidateSnapshot.count >= snapshot.count) continue
+          if (
+            !this.snapshotImprovesWithoutFixedCopperRegression(
+              candidateSnapshot,
+              snapshot,
+            )
+          ) {
+            continue
+          }
 
           this.finalContinuityTerminalViaCandidatesAccepted += 1
           this.cleanupCandidatesAccepted += 1
@@ -4253,7 +4839,9 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
   private runPipeline9Cleanup(routes: HighDensityRoute[]): HighDensityRoute[] {
     this.selectAdaptiveCleanupLimits()
-    let improvedRoutes = this.unlockCleanupTerminals(routes)
+    let improvedRoutes = this.normalizeViaMetadataFromLayerTransitions(
+      this.unlockCleanupTerminals(routes),
+    )
     improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
 
     for (let pass = 0; pass < MAX_CLEANUP_PASSES; pass += 1) {
@@ -4284,6 +4872,13 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       improvedRoutes = nextRoutes
     }
     improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
+    improvedRoutes =
+      this.runFinalFixedOverlapLayerDetour(improvedRoutes, {
+        drcEvaluationLimit:
+          MAX_EARLY_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS,
+        maxIssueCountIncrease: 2,
+      })
+    improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
 
     for (let round = 0; round < MAX_B01_PHASE_ROUNDS; round += 1) {
       const issueCountBeforeRound = this.getSnapshot(improvedRoutes).count
@@ -4323,8 +4918,13 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
     improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes)
     improvedRoutes = this.runFixedCopperCompositeRepair(improvedRoutes)
+    improvedRoutes =
+      this.runFinalFixedOverlapLayerDetour(improvedRoutes)
+    improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
     improvedRoutes = this.runFinalEndpointSlideCleanup(improvedRoutes)
     improvedRoutes = this.runFinalContinuityTerminalViaBridge(improvedRoutes)
+    improvedRoutes =
+      this.normalizeViaMetadataFromLayerTransitions(improvedRoutes)
 
     return this.restoreTerminalIds(improvedRoutes)
   }
@@ -4337,10 +4937,32 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       this.solved = false
     }
 
-    this.outputHdRoutes = this.runPipeline9Cleanup(this.outputHdRoutes)
+    const inheritedRepairSnapshot = this.getSnapshot(this.outputHdRoutes)
+    const initialHypergraphSnapshot = this.getSnapshot(this.initialHdRoutes)
+    const inheritedFixedCopperIssueCount = this.getFixedCopperIssueCount(
+      inheritedRepairSnapshot,
+    )
+    const initialFixedCopperIssueCount = this.getFixedCopperIssueCount(
+      initialHypergraphSnapshot,
+    )
+    const cleanupInputRoutes =
+      initialFixedCopperIssueCount < inheritedFixedCopperIssueCount ||
+      (initialFixedCopperIssueCount === inheritedFixedCopperIssueCount &&
+        initialHypergraphSnapshot.count < inheritedRepairSnapshot.count)
+        ? this.initialHdRoutes
+        : this.outputHdRoutes
+    this.outputHdRoutes = this.runPipeline9Cleanup(cleanupInputRoutes)
     const finalSnapshot = this.getSnapshot(this.outputHdRoutes)
     this.stats = {
       ...this.stats,
+      pipeline9InheritedRepairDrcIssueCount: inheritedRepairSnapshot.count,
+      pipeline9InheritedRepairFixedCopperIssueCount:
+        inheritedFixedCopperIssueCount,
+      pipeline9InitialHypergraphDrcIssueCount: initialHypergraphSnapshot.count,
+      pipeline9InitialHypergraphFixedCopperIssueCount:
+        initialFixedCopperIssueCount,
+      pipeline9CleanupUsedInitialHypergraphRoutes:
+        cleanupInputRoutes === this.initialHdRoutes,
       finalDrcIssueCount: finalSnapshot.count,
       pipeline9DrcCleanupCandidateAttempts: this.cleanupCandidateAttempts,
       pipeline9DrcCleanupCandidatesAccepted: this.cleanupCandidatesAccepted,
@@ -4475,6 +5097,24 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS,
       pipeline9FinalContinuityTerminalViaDrcEvaluationLimit:
         MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS,
+      pipeline9FinalFixedOverlapLayerDetourDrcEvaluations:
+        this.finalFixedOverlapLayerDetourDrcEvaluations,
+      pipeline9FinalFixedOverlapLayerDetourCandidatesAccepted:
+        this.finalFixedOverlapLayerDetourCandidatesAccepted,
+      pipeline9FinalFixedOverlapLayerDetourDrcEvaluationLimit:
+        MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS,
+      pipeline9FinalFixedOverlapBestRemovedTargetIssueCount:
+        Number.isFinite(
+          this.finalFixedOverlapBestRemovedTargetIssueCount,
+        )
+          ? this.finalFixedOverlapBestRemovedTargetIssueCount
+          : undefined,
+      pipeline9FinalFixedOverlapBestRemovedTargetFixedScore:
+        Number.isFinite(
+          this.finalFixedOverlapBestRemovedTargetFixedScore,
+        )
+          ? this.finalFixedOverlapBestRemovedTargetFixedScore
+          : undefined,
     }
     this.progress = 1
     this.solved = true

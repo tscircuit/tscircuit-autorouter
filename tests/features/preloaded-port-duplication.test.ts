@@ -7,7 +7,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 
-test("congestion duplicates do not inherit preloaded port ownership", () => {
+test("preloaded port ownership preserves the original graph topology", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
     {
       capacityMeshNodeId: "left",
@@ -70,6 +70,14 @@ test("congestion duplicates do not inherit preloaded port ownership", () => {
         distToCentermostPortOnZ: 0,
         cramped: false,
         _preloadedFixedNetIds: ["fixed-root"],
+        _preloadedTracePortAssignments: [
+          {
+            traceId: "fixed-trace",
+            fixedNetId: "fixed-root",
+            routePosition: 0,
+            z: 0,
+          },
+        ],
       },
       {
         segmentPortPointId: "middle-right",
@@ -128,10 +136,9 @@ test("congestion duplicates do not inherit preloaded port ownership", () => {
   )
 
   expect(sourcePort?.d?._preloadedFixedNetIds).toEqual(["fixed-root"])
-  expect(duplicatePorts.length).toBeGreaterThan(0)
+  expect(sourcePort?.d?._preloadedTracePortAssignments).toHaveLength(1)
   expect(
-    duplicatePorts.every(
-      (port: any) => port.d?._preloadedFixedNetIds === undefined,
-    ),
-  ).toBe(true)
+    serializedGraph.ports.filter((port: any) => !port.d?._tinyTerminal),
+  ).toHaveLength(graph.ports.length)
+  expect(duplicatePorts).toHaveLength(0)
 })

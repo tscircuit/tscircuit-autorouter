@@ -9,12 +9,12 @@ test("Pipeline9 preserves the srj23 sample 32 capacity topology", async () => {
     effort: 1,
   })
 
-  while (!solver.failed && !solver.portPointPathingSolver?.solved) {
+  while (!solver.failed && !solver.preloadedTraceGraphSolver?.solved) {
     solver.step()
   }
 
   expect(solver.failed).toBe(false)
-  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(solver.preloadedTraceGraphSolver?.solved).toBe(true)
   expect(solver.preloadedTraceGraphSolver?.stats).toMatchObject({
     topologyChanged: false,
     inputBoundaryCount:
