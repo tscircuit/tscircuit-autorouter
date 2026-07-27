@@ -8,10 +8,9 @@ test(
   async () => {
     const failures: Array<{ sampleNumber: number; errors: unknown[] }> = []
 
-    for (const sampleNumber of [
-      8, 14, 21, 23, 27, 29, 32, 51, 55, 57, 58, 62, 64, 68, 72, 74, 83, 94, 97,
-      107,
-    ]) {
+    // Keep this regression test bounded so the regular CI suite stays below its
+    // 15-minute job limit. The benchmark workflow covers all 107 samples.
+    for (const sampleNumber of [14, 21, 68]) {
       const { scenario } = await loadScenarioBySampleNumber(
         "srj23",
         sampleNumber,
