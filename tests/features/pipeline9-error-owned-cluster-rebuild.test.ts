@@ -306,7 +306,7 @@ test.each([
   },
   {
     initialDrcIssueCount: 20,
-    expectedLocalLimit: 300,
+    expectedLocalLimit: 150,
     expectedConsecutiveMissLimit: 64,
     expectedB01Limit: 200_000,
   },
@@ -391,33 +391,51 @@ test("Pipeline9 bounds consecutive fruitless local DRC evaluations and resets af
     selectedConsecutiveLocalCleanupDrcMissLimit: number
     candidateImprovesSnapshot: (
       routes: HighDensityRoute[],
-      currentIssueCount: number,
+      currentSnapshot: unknown,
       source: "local",
     ) => boolean
+    getSnapshot: (routes: HighDensityRoute[]) => unknown
     hasLocalCleanupBudget: () => boolean
   }
   privateSolver.selectedLocalCleanupDrcEvaluationLimit = 10
   privateSolver.selectedConsecutiveLocalCleanupDrcMissLimit = 2
+  const baselineSnapshot = privateSolver.getSnapshot(hdRoutes)
 
-  expect(privateSolver.candidateImprovesSnapshot(hdRoutes, 2, "local")).toBe(
-    false,
-  )
+  expect(
+    privateSolver.candidateImprovesSnapshot(
+      hdRoutes,
+      baselineSnapshot,
+      "local",
+    ),
+  ).toBe(false)
   expect(privateSolver.consecutiveLocalCleanupDrcMisses).toBe(1)
 
   reportedIssueCount = 1
-  expect(privateSolver.candidateImprovesSnapshot(hdRoutes, 2, "local")).toBe(
-    true,
-  )
+  expect(
+    privateSolver.candidateImprovesSnapshot(
+      hdRoutes,
+      baselineSnapshot,
+      "local",
+    ),
+  ).toBe(true)
   expect(privateSolver.consecutiveLocalCleanupDrcMisses).toBe(0)
 
   reportedIssueCount = 2
-  expect(privateSolver.candidateImprovesSnapshot(hdRoutes, 2, "local")).toBe(
-    false,
-  )
+  expect(
+    privateSolver.candidateImprovesSnapshot(
+      hdRoutes,
+      baselineSnapshot,
+      "local",
+    ),
+  ).toBe(false)
   expect(privateSolver.hasLocalCleanupBudget()).toBe(true)
-  expect(privateSolver.candidateImprovesSnapshot(hdRoutes, 2, "local")).toBe(
-    false,
-  )
+  expect(
+    privateSolver.candidateImprovesSnapshot(
+      hdRoutes,
+      baselineSnapshot,
+      "local",
+    ),
+  ).toBe(false)
   expect(privateSolver.hasLocalCleanupBudget()).toBe(false)
   expect(privateSolver.maxConsecutiveLocalCleanupDrcMisses).toBe(2)
 })

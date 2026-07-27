@@ -888,7 +888,7 @@ const createPreloadedTraceId = (
 export const createRelaxedDrcTraceSet = (
   inputSrj: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],
-  srjWithPointPairs?: SimpleRouteJson,
+  _srjWithPointPairs?: SimpleRouteJson,
 ): SimplifiedPcbTrace[] => {
   const usedTraceIds = new Set(traces.map((trace) => trace.pcb_trace_id))
   const originalPreloadedTraces = inputSrj.traces ?? []
@@ -904,22 +904,6 @@ export const createRelaxedDrcTraceSet = (
   )
   const canonicalNetIdByOriginalTraceId =
     resolvePreloadedTraceCanonicalNetIds(inputSrj)
-  const pointPairCanonicalNameByAlias = new Map<string, string>()
-  for (const connection of srjWithPointPairs?.connections ?? []) {
-    const canonicalName =
-      connection.__rootConnectionNames?.[0] ??
-      connection.__netConnectionName ??
-      connection.name
-    for (const alias of [
-      connection.name,
-      connection.__netConnectionName,
-      ...(connection.__rootConnectionNames ?? []),
-    ]) {
-      if (typeof alias === "string" && alias.length > 0) {
-        pointPairCanonicalNameByAlias.set(alias, canonicalName)
-      }
-    }
-  }
   const preloadedTraceIdByOriginalId = new Map<string, string>()
   for (const [index, trace] of originalPreloadedTraces.entries()) {
     if (originalTraceIdCounts.get(trace.pcb_trace_id) !== 1) continue
@@ -928,15 +912,9 @@ export const createRelaxedDrcTraceSet = (
       renamedPreloadedTraceIds[index]!,
     )
   }
-  const getPreloadedCanonicalName = (trace: SimplifiedPcbTrace) => {
-    const resolvedCanonicalName =
-      canonicalNetIdByOriginalTraceId.get(trace.pcb_trace_id) ??
-      trace.connection_name
-    return (
-      pointPairCanonicalNameByAlias.get(resolvedCanonicalName) ??
-      resolvedCanonicalName
-    )
-  }
+  const getPreloadedCanonicalName = (trace: SimplifiedPcbTrace) =>
+    canonicalNetIdByOriginalTraceId.get(trace.pcb_trace_id) ??
+    trace.connection_name
   const preloadedTraces = originalPreloadedTraces.map((trace, index) => ({
     ...trace,
     connection_name: getPreloadedCanonicalName(trace),
