@@ -5,12 +5,14 @@ import {
   type HighDensityRouteObstacle,
   type NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 type Pipeline9B01RerouterParams = {
   srj: SimpleRouteJson
@@ -57,6 +59,7 @@ const B01_GRID_STEP = 0.05
 const B01_LOW_RESOLUTION_CELL_SIZE = 0.2
 const MAX_B01_ROUTING_WINDOW_SIZE = 15
 const MAX_TERMINAL_VIA_ESCAPE_CANDIDATES = 64
+const RELAXED_VIA_TRACE_CLEARANCE = 0.1
 
 const pointsAreEqual = (
   left: HighDensityRoute["route"][number] | undefined,
@@ -443,6 +446,10 @@ export class Pipeline9B01Rerouter {
   private readonly connMap?: ConnectivityMap
   private readonly terminalObstacles: Obstacle[]
   private readonly fixedObstacles: HighDensityObstacle[]
+  private readonly preloadedObstaclesByTraceId = new Map<
+    string,
+    HighDensityRouteObstacle[]
+  >()
   private readonly candidateObstacleCache = new WeakMap<
     HighDensityRoute[],
     Map<string, HighDensityRouteObstacle[]>
@@ -460,14 +467,17 @@ export class Pipeline9B01Rerouter {
       params.srj.minViaDiameter ??
       0.3
     const preloadedTraceObstacles = (params.srj.traces ?? []).flatMap(
-      (trace, traceIndex) =>
-        convertPreloadedTraceToRouteObstacles(
+      (trace, traceIndex) => {
+        const obstacles = convertPreloadedTraceToRouteObstacles(
           trace,
           traceIndex,
           params.srj.layerCount,
           defaultViaDiameter,
           params.connMap,
-        ),
+        )
+        this.preloadedObstaclesByTraceId.set(trace.pcb_trace_id, obstacles)
+        return obstacles
+      },
     )
     const baseRectObstacles = this.terminalObstacles.map(
       (obstacle, obstacleIndex) =>
@@ -479,6 +489,118 @@ export class Pipeline9B01Rerouter {
         ),
     )
     this.fixedObstacles = [...baseRectObstacles, ...preloadedTraceObstacles]
+  }
+
+  getPreloadedTraceIdForDrcTraceId(
+    drcTraceId: string | undefined,
+  ): string | undefined {
+    if (!drcTraceId) return undefined
+    for (const traceId of this.preloadedObstaclesByTraceId.keys()) {
+      if (
+        drcTraceId === traceId ||
+        drcTraceId.endsWith(`_${traceId}`) ||
+        drcTraceId.includes(`_${traceId}_`)
+      ) {
+        return traceId
+      }
+    }
+    return undefined
+  }
+
+  countRouteOverlapsWithPreloadedTrace(
+    route: HighDensityRoute,
+    preloadedTraceId: string,
+  ): number {
+    const fixedObstacles =
+      this.preloadedObstaclesByTraceId.get(preloadedTraceId) ?? []
+    let overlapCount = 0
+
+    for (const fixedObstacle of fixedObstacles) {
+      for (
+        let fixedIndex = 0;
+        fixedIndex < fixedObstacle.route.length - 1;
+        fixedIndex += 1
+      ) {
+        const fixedStart = fixedObstacle.route[fixedIndex]!
+        const fixedEnd = fixedObstacle.route[fixedIndex + 1]!
+        if (fixedStart.z !== fixedEnd.z) continue
+        const requiredDistance =
+          fixedObstacle.traceThickness / 2 + route.traceThickness / 2
+
+        for (
+          let candidateIndex = 0;
+          candidateIndex < route.route.length - 1;
+          candidateIndex += 1
+        ) {
+          const candidateStart = route.route[candidateIndex]!
+          const candidateEnd = route.route[candidateIndex + 1]!
+          if (
+            candidateStart.z !== candidateEnd.z ||
+            candidateStart.z !== fixedStart.z
+          ) {
+            continue
+          }
+          if (
+            minimumDistanceBetweenSegments(
+              candidateStart,
+              candidateEnd,
+              fixedStart,
+              fixedEnd,
+            ) <
+            requiredDistance - SAME_POINT_EPSILON
+          ) {
+            overlapCount += 1
+          }
+        }
+      }
+    }
+
+    overlapCount += this.getRouteViaCentersOverlappingPreloadedTrace(
+      route,
+      preloadedTraceId,
+    ).length
+
+    return overlapCount
+  }
+
+  getRouteViaCentersOverlappingPreloadedTrace(
+    route: HighDensityRoute,
+    preloadedTraceId: string,
+  ): Array<{ x: number; y: number }> {
+    const fixedObstacles =
+      this.preloadedObstaclesByTraceId.get(preloadedTraceId) ?? []
+    const candidateVias = getRouteVias(route.route)
+    const overlappingVias: Array<{ x: number; y: number }> = []
+
+    for (const candidateVia of candidateVias) {
+      let overlaps = false
+      for (const fixedObstacle of fixedObstacles) {
+        const requiredDistance =
+          fixedObstacle.traceThickness / 2 +
+          route.viaDiameter / 2 +
+          RELAXED_VIA_TRACE_CLEARANCE
+        for (
+          let fixedIndex = 0;
+          fixedIndex < fixedObstacle.route.length - 1;
+          fixedIndex += 1
+        ) {
+          const fixedStart = fixedObstacle.route[fixedIndex]!
+          const fixedEnd = fixedObstacle.route[fixedIndex + 1]!
+          if (fixedStart.z !== fixedEnd.z) continue
+          if (
+            pointToSegmentDistance(candidateVia, fixedStart, fixedEnd) <
+            requiredDistance - SAME_POINT_EPSILON
+          ) {
+            overlaps = true
+            break
+          }
+        }
+        if (overlaps) break
+      }
+      if (overlaps) overlappingVias.push(candidateVia)
+    }
+
+    return overlappingVias
   }
 
   private getOwningTerminalObstacles(

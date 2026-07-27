@@ -103,12 +103,7 @@ const PRELOADED_TERMINAL_MATCH_TOLERANCE = 1e-3
 const ENDPOINT_SLIDE_RADII = [
   0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.3,
 ] as const
-const VIA_MICRO_SHIFT_RADII = [
-  ...ENDPOINT_SLIDE_RADII,
-  0.4,
-  0.5,
-  0.75,
-] as const
+const VIA_MICRO_SHIFT_RADII = [...ENDPOINT_SLIDE_RADII, 0.4, 0.5, 0.75] as const
 const MAX_VIA_GROUPS_PER_ROUTE = 3
 const MAX_VIA_MICRO_SHIFT_DRC_EVALUATIONS_PER_SWEEP = 128
 const MAX_VIA_MICRO_SHIFT_SNAPSHOT_ISSUES = 8
@@ -123,7 +118,7 @@ const DEFAULT_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES =
 const HIGH_INITIAL_DRC_MAX_CONSECUTIVE_LOCAL_CLEANUP_DRC_MISSES = 64
 const MAX_LOCAL_LAYER_DETOUR_EXPANSION = 6
 const MAX_B01_FULL_ATTEMPTS_PER_ROUND = 18
-const MAX_B01_INTERIOR_ATTEMPTS_PER_ROUND = 24
+const MAX_B01_INTERIOR_ATTEMPTS_PER_ROUND = 48
 const MAX_B01_FIXED_ONLY_ATTEMPTS_PER_ROUND = 8
 const DEFAULT_MAX_B01_TOTAL_ITERATIONS = 300_000
 const HIGH_INITIAL_DRC_MAX_B01_TOTAL_ITERATIONS = 200_000
@@ -173,7 +168,7 @@ const MAX_FINAL_ENDPOINT_SLIDE_DRC_EVALUATIONS = 32
 const MAX_FINAL_CONTINUITY_TERMINAL_VIA_ATTEMPTS = 32
 const MAX_FINAL_CONTINUITY_TERMINAL_VIA_DRC_EVALUATIONS = 8
 const MAX_EARLY_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS = 128
-const MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS = 64
+const MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS = 192
 const POST_FINAL_COMPOSITE_INTERIOR_EXPANSIONS = [4, 8] as const
 const POST_FINAL_COMPOSITE_TERMINAL_PROXIMITY = 4
 const FULL_B01_VARIANTS = [
@@ -467,6 +462,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private finalOwnerDrcEvaluations = 0
   private finalOwnerCandidatesAccepted = 0
   private finalOwnerIterations = 0
+  private finalOwnerIterationLimit = MAX_FINAL_OWNER_B01_ITERATIONS
   private postRepairSameNetViaMergeAttempts = 0
   private postRepairSameNetViaMergeDrcEvaluations = 0
   private postRepairSameNetViaMergeCandidatesAccepted = 0
@@ -525,27 +521,32 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     })
     this.terminalConstraints = normalizedParams.hdRoutes.flatMap(
       (route, routeIndex) =>
-      (["start", "end"] as const).flatMap((endpoint) => {
-        const point = endpoint === "start" ? route.route[0] : route.route.at(-1)
-        if (!point) return []
-        const traceRadius =
-          (route.traceThickness ?? params.srj.minTraceWidth) / 2
-        const owningObstacles = params.originalObstacles.filter(
-          (obstacle) =>
-            obstacleSharesRouteNet(obstacle, route) &&
-            obstacleAppliesToLayer(obstacle, point.z, params.srj.layerCount) &&
-            pointFitsInsideObstacle(point, obstacle, 0),
-        )
-        return [
-          {
-            routeIndex,
-            endpoint,
-            originalPoint: { ...point },
-            traceRadius,
-            owningObstacles,
-          },
-        ]
-      }),
+        (["start", "end"] as const).flatMap((endpoint) => {
+          const point =
+            endpoint === "start" ? route.route[0] : route.route.at(-1)
+          if (!point) return []
+          const traceRadius =
+            (route.traceThickness ?? params.srj.minTraceWidth) / 2
+          const owningObstacles = params.originalObstacles.filter(
+            (obstacle) =>
+              obstacleSharesRouteNet(obstacle, route) &&
+              obstacleAppliesToLayer(
+                obstacle,
+                point.z,
+                params.srj.layerCount,
+              ) &&
+              pointFitsInsideObstacle(point, obstacle, 0),
+          )
+          return [
+            {
+              routeIndex,
+              endpoint,
+              originalPoint: { ...point },
+              traceRadius,
+              owningObstacles,
+            },
+          ]
+        }),
     )
   }
 
@@ -558,15 +559,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     )
   }
 
-  private isFixedCopperIssue(
-    error: DrcError,
-    snapshot: DrcSnapshot,
-  ): boolean {
+  private isFixedCopperIssue(error: DrcError, snapshot: DrcSnapshot): boolean {
     const errorType = getErrorType(error)
     const primaryTraceId =
-      typeof error.pcb_trace_id === "string"
-        ? error.pcb_trace_id
-        : undefined
+      typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
     const otherTraceId = getRawOtherTraceId(error)
     const primaryIsCandidate = Boolean(
       primaryTraceId && snapshot.traceRouteIndexById.has(primaryTraceId),
@@ -578,11 +574,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     ) {
       return true
     }
-    if (
-      errorType !== "pcb_trace_error" ||
-      !primaryTraceId ||
-      !otherTraceId
-    ) {
+    if (errorType !== "pcb_trace_error" || !primaryTraceId || !otherTraceId) {
       return false
     }
     const otherIsCandidate = snapshot.traceRouteIndexById.has(otherTraceId)
@@ -861,13 +853,43 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     if (!errorCenter) return undefined
 
     const snapshot = this.getSnapshot(routes)
-    const viaGroups = this.getCandidateRouteIndexesForError(error, snapshot)
-      .flatMap((routeIndex) => {
-        const route = routes[routeIndex]
-        if (!route) return []
-        return this.getViaTransitionGroups(route, routeIndex, errorCenter)
-      })
-      .toSorted((left, right) => left.distanceToError - right.distanceToError)
+    const preloadedTraceId =
+      errorType === "pcb_via_trace_clearance_error"
+        ? this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+            typeof error.pcb_trace_id === "string"
+              ? error.pcb_trace_id
+              : getRawOtherTraceId(error),
+          )
+        : undefined
+    const viaGroups: ViaTransitionGroup[] = []
+    const seenViaGroups = new Set<string>()
+    for (const routeIndex of this.getCandidateRouteIndexesForError(
+      error,
+      snapshot,
+    )) {
+      const route = routes[routeIndex]
+      if (!route) continue
+      const overlappingViaCenters = preloadedTraceId
+        ? this.b01Rerouter.getRouteViaCentersOverlappingPreloadedTrace(
+            route,
+            preloadedTraceId,
+          )
+        : []
+      const referenceCenters =
+        overlappingViaCenters.length > 0 ? overlappingViaCenters : [errorCenter]
+      for (const referenceCenter of referenceCenters) {
+        for (const viaGroup of this.getViaTransitionGroups(
+          route,
+          routeIndex,
+          referenceCenter,
+        )) {
+          const key = `${viaGroup.routeIndex}:${viaGroup.indexes.join(",")}`
+          if (seenViaGroups.has(key)) continue
+          seenViaGroups.add(key)
+          viaGroups.push(viaGroup)
+        }
+      }
+    }
     if (viaGroups.length === 0) return undefined
 
     for (const viaGroup of viaGroups) {
@@ -929,12 +951,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           this.viaMicroShiftAttempts += 1
           sweepBudget.remaining -= 1
           const materializedCandidate = materializeRoutes(candidateRoutes)
-          if (
-            this.candidateImprovesSnapshot(
-              materializedCandidate,
-              snapshot,
-            )
-          ) {
+          if (this.candidateImprovesSnapshot(materializedCandidate, snapshot)) {
             this.viaMicroShiftsAccepted += 1
             return materializedCandidate
           }
@@ -1079,12 +1096,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             point.y = candidatePoint.y
           }
           const materializedCandidate = materializeRoutes(candidateRoutes)
-          if (
-            this.candidateImprovesSnapshot(
-              materializedCandidate,
-              snapshot,
-            )
-          ) {
+          if (this.candidateImprovesSnapshot(materializedCandidate, snapshot)) {
             return materializedCandidate
           }
         }
@@ -1259,8 +1271,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
               )
             }
             const isEligible =
-              (candidateFixedCopperIssueScore <
-                baselineFixedCopperIssueScore ||
+              (candidateFixedCopperIssueScore < baselineFixedCopperIssueScore ||
                 (candidateFixedCopperIssueScore ===
                   baselineFixedCopperIssueScore &&
                   targetErrorWasRemoved)) &&
@@ -1293,12 +1304,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             }
             continue
           }
-          if (
-            this.candidateImprovesSnapshot(
-              materializedCandidate,
-              snapshot,
-            )
-          ) {
+          if (this.candidateImprovesSnapshot(materializedCandidate, snapshot)) {
             return materializedCandidate
           }
         }
@@ -1350,12 +1356,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           if (!changed) break
 
           const materializedCandidate = materializeRoutes(candidateRoutes)
-          if (
-            this.candidateImprovesSnapshot(
-              materializedCandidate,
-              snapshot,
-            )
-          ) {
+          if (this.candidateImprovesSnapshot(materializedCandidate, snapshot)) {
             return materializedCandidate
           }
           candidateRoutes = cloneRoutes(materializedCandidate)
@@ -1393,11 +1394,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     candidateRoutes[options.routeIndex] = result.route
     const materializedCandidate = materializeRoutes(candidateRoutes)
     if (
-      !this.candidateImprovesSnapshot(
-        materializedCandidate,
-        snapshot,
-        "b01",
-      )
+      !this.candidateImprovesSnapshot(materializedCandidate, snapshot, "b01")
     ) {
       return undefined
     }
@@ -1562,6 +1559,29 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       if (seenWindows.has(key)) return
       seenWindows.add(key)
       windows.push({ startIndex, endIndex })
+    }
+    const addWindowIfB01Sized = (startIndex: number, endIndex: number) => {
+      const start = route.route[startIndex]
+      const end = route.route[endIndex]
+      if (
+        !start ||
+        !end ||
+        Math.abs(start.x - end.x) > 15 + POSITION_EPSILON ||
+        Math.abs(start.y - end.y) > 15 + POSITION_EPSILON
+      ) {
+        return
+      }
+      addRawWindow(startIndex, endIndex)
+    }
+    for (const expansion of [0, 1, 2, 4, 8, 12, 16, 24]) {
+      addWindowIfB01Sized(
+        Math.max(0, nearestSegmentIndex - expansion),
+        lastRouteIndex,
+      )
+      addWindowIfB01Sized(
+        0,
+        Math.min(lastRouteIndex, nearestSegmentIndex + 1 + expansion),
+      )
     }
     if (nearestSegmentIndex === 0) {
       for (const endIndex of [2, 4, 8]) {
@@ -2141,7 +2161,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private getRemainingFinalOwnerIterations(): number {
     return Math.max(
       0,
-      MAX_FINAL_OWNER_B01_ITERATIONS - this.finalOwnerIterations,
+      this.finalOwnerIterationLimit - this.finalOwnerIterations,
     )
   }
 
@@ -3477,6 +3497,47 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     )
   }
 
+  private hasFixedTraceGeometryProgress(
+    baselineRoutes: HighDensityRoute[],
+    candidateRoutes: HighDensityRoute[],
+    snapshot: DrcSnapshot,
+    routeIndex: number,
+  ): boolean {
+    const baselineRoute = baselineRoutes[routeIndex]
+    const candidateRoute = candidateRoutes[routeIndex]
+    if (!baselineRoute || !candidateRoute) return false
+
+    for (const error of snapshot.errors) {
+      if (
+        !this.getCandidateRouteIndexesForError(error, snapshot).includes(
+          routeIndex,
+        )
+      ) {
+        continue
+      }
+      const preloadedTraceId =
+        this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+          typeof error.pcb_trace_id === "string"
+            ? error.pcb_trace_id
+            : getRawOtherTraceId(error),
+        )
+      if (!preloadedTraceId) continue
+      const baselineOverlapCount =
+        this.b01Rerouter.countRouteOverlapsWithPreloadedTrace(
+          baselineRoute,
+          preloadedTraceId,
+        )
+      const candidateOverlapCount =
+        this.b01Rerouter.countRouteOverlapsWithPreloadedTrace(
+          candidateRoute,
+          preloadedTraceId,
+        )
+      if (candidateOverlapCount < baselineOverlapCount) return true
+    }
+
+    return false
+  }
+
   private tryAnchoredFixedCopperCandidate(
     routes: HighDensityRoute[],
     snapshot: DrcSnapshot,
@@ -3544,12 +3605,21 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     this.anchoredFixedCopperDrcEvaluations += 1
     this.cleanupCandidateAttempts += 1
     const candidateSnapshot = this.getSnapshot(materializedCandidate)
-    if (
-      !this.snapshotImprovesWithoutFixedCopperRegression(
-        candidateSnapshot,
+    const snapshotImproved = this.snapshotImprovesWithoutFixedCopperRegression(
+      candidateSnapshot,
+      snapshot,
+    )
+    const fixedGeometryImproved =
+      candidateSnapshot.count <= snapshot.count &&
+      this.getFixedCopperIssueScore(candidateSnapshot) <=
+        this.getFixedCopperIssueScore(snapshot) &&
+      this.hasFixedTraceGeometryProgress(
+        routes,
+        materializedCandidate,
         snapshot,
+        routeIndex,
       )
-    ) {
+    if (!snapshotImproved && !fixedGeometryImproved) {
       return undefined
     }
 
@@ -3580,19 +3650,38 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       >()
       for (const error of snapshot.errors) {
         const center = this.getErrorCenter(error)
-        if (!center) continue
         for (const routeIndex of this.getCandidateRouteIndexesForError(
           error,
           snapshot,
         )) {
-          const centers = centersByRouteIndex.get(routeIndex) ?? []
-          if (
-            !centers.some(
-              (existingCenter) =>
-                getPointDistance(existingCenter, center) <= POSITION_EPSILON,
+          const preloadedTraceId =
+            this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+              typeof error.pcb_trace_id === "string"
+                ? error.pcb_trace_id
+                : getRawOtherTraceId(error),
             )
-          ) {
-            centers.push(center)
+          const viaCenters =
+            getErrorType(error) === "pcb_via_trace_clearance_error" &&
+            preloadedTraceId &&
+            improvedRoutes[routeIndex]
+              ? this.b01Rerouter.getRouteViaCentersOverlappingPreloadedTrace(
+                  improvedRoutes[routeIndex]!,
+                  preloadedTraceId,
+                )
+              : []
+          const repairCenters = [...viaCenters, ...(center ? [center] : [])]
+          if (repairCenters.length === 0) continue
+          const centers = centersByRouteIndex.get(routeIndex) ?? []
+          for (const repairCenter of repairCenters) {
+            if (
+              !centers.some(
+                (existingCenter) =>
+                  getPointDistance(existingCenter, repairCenter) <=
+                  POSITION_EPSILON,
+              )
+            ) {
+              centers.push(repairCenter)
+            }
           }
           centersByRouteIndex.set(routeIndex, centers)
         }
@@ -4253,10 +4342,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     const center = this.getErrorCenter(error)
     if (!center) return undefined
     const snapshot = this.getSnapshot(routes)
-    const routeIndex = this.getCandidateRouteIndexesForError(
-      error,
-      snapshot,
-    )[0]
+    const routeIndex = this.getCandidateRouteIndexesForError(error, snapshot)[0]
     const route = routeIndex === undefined ? undefined : routes[routeIndex]
     if (!route || route.route.length < 2) return undefined
 
@@ -4290,8 +4376,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         0,
         Math.min(
           1,
-          ((center.x - start.x) * deltaX +
-            (center.y - start.y) * deltaY) /
+          ((center.x - start.x) * deltaX + (center.y - start.y) * deltaY) /
             (segmentLength * segmentLength),
         ),
       )
@@ -4360,10 +4445,21 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
     const targetErrorIdentity = this.getDrcErrorIdentity(error)
     const baselineFixedScore = this.getFixedCopperIssueScore(snapshot)
+    const fixedTraceId = this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+      typeof error.pcb_trace_id === "string"
+        ? error.pcb_trace_id
+        : getRawOtherTraceId(error),
+    )
+    const baselineTargetOverlapCount = fixedTraceId
+      ? this.b01Rerouter.countRouteOverlapsWithPreloadedTrace(
+          route,
+          fixedTraceId,
+        )
+      : 0
     let bestCandidate:
       | { routes: HighDensityRoute[]; snapshot: DrcSnapshot }
       | undefined
-    for (const halfSpan of [0.35, 0.5, 0.75, 1, 1.5, 2, 3]) {
+    for (const halfSpan of [0.35, 0.5, 0.75, 1, 1.5, 2, 3, 5, 8, 12, 20, 40]) {
       const startDistance = Math.max(
         cumulativeDistances[sameLayerStart]!,
         projectedRouteDistance - halfSpan,
@@ -4422,8 +4518,17 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
           (candidateError) =>
             this.getDrcErrorIdentity(candidateError) === targetErrorIdentity,
         )
+        const targetOverlapCount = fixedTraceId
+          ? this.b01Rerouter.countRouteOverlapsWithPreloadedTrace(
+              materializedCandidate[routeIndex]!,
+              fixedTraceId,
+            )
+          : baselineTargetOverlapCount
+        const targetGeometryImproved =
+          fixedTraceId !== undefined &&
+          targetOverlapCount < baselineTargetOverlapCount
         if (
-          !targetWasRemoved ||
+          (!targetWasRemoved && !targetGeometryImproved) ||
           candidateFixedScore > baselineFixedScore ||
           candidateSnapshot.count > snapshot.count + maxIssueCountIncrease
         ) {
@@ -4468,8 +4573,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     const evaluationsBeforeSweep = this.localCleanupDrcEvaluations
     this.selectedLocalCleanupDrcEvaluationLimit =
       evaluationsBeforeSweep + drcEvaluationLimit
-    this.selectedConsecutiveLocalCleanupDrcMissLimit =
-      drcEvaluationLimit
+    this.selectedConsecutiveLocalCleanupDrcMissLimit = drcEvaluationLimit
     this.consecutiveLocalCleanupDrcMisses = 0
 
     try {
@@ -4490,8 +4594,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
               : undefined
           const otherTraceId = getRawOtherTraceId(error)
           const primaryIsCandidate = Boolean(
-            primaryTraceId &&
-              snapshot.traceRouteIndexById.has(primaryTraceId),
+            primaryTraceId && snapshot.traceRouteIndexById.has(primaryTraceId),
           )
           const otherIsCandidate = Boolean(
             otherTraceId && snapshot.traceRouteIndexById.has(otherTraceId),
@@ -4503,14 +4606,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             error,
             options.maxIssueCountIncrease ?? 2,
           )
-          nextRoutes ??= this.tryLocalTraceLayerDetour(
-            improvedRoutes,
-            error,
-            {
-              preferFixedCopperIssueReduction: true,
-              maxIssueCountIncrease: options.maxIssueCountIncrease,
-            },
-          )
+          nextRoutes ??= this.tryLocalTraceLayerDetour(improvedRoutes, error, {
+            preferFixedCopperIssueReduction: true,
+            maxIssueCountIncrease: options.maxIssueCountIncrease,
+          })
           if (nextRoutes) break
           if (!this.hasLocalCleanupBudget()) break
         }
@@ -4872,12 +4971,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       improvedRoutes = nextRoutes
     }
     improvedRoutes = this.runViaMicroShiftCleanup(improvedRoutes)
-    improvedRoutes =
-      this.runFinalFixedOverlapLayerDetour(improvedRoutes, {
-        drcEvaluationLimit:
-          MAX_EARLY_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS,
-        maxIssueCountIncrease: 2,
-      })
+    improvedRoutes = this.runFinalFixedOverlapLayerDetour(improvedRoutes, {
+      drcEvaluationLimit: MAX_EARLY_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS,
+      maxIssueCountIncrease: 2,
+    })
     improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
 
     for (let round = 0; round < MAX_B01_PHASE_ROUNDS; round += 1) {
@@ -4918,8 +5015,9 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
     improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes)
     improvedRoutes = this.runFixedCopperCompositeRepair(improvedRoutes)
-    improvedRoutes =
-      this.runFinalFixedOverlapLayerDetour(improvedRoutes)
+    improvedRoutes = this.runFinalFixedOverlapLayerDetour(improvedRoutes)
+    this.finalOwnerIterationLimit += MAX_FINAL_OWNER_B01_ITERATIONS
+    improvedRoutes = this.runB01FinalErrorOwnerSweep(improvedRoutes)
     improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
     improvedRoutes = this.runFinalEndpointSlideCleanup(improvedRoutes)
     improvedRoutes = this.runFinalContinuityTerminalViaBridge(improvedRoutes)
@@ -5004,7 +5102,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       pipeline9FinalOwnerDrcEvaluations: this.finalOwnerDrcEvaluations,
       pipeline9FinalOwnerCandidatesAccepted: this.finalOwnerCandidatesAccepted,
       pipeline9FinalOwnerIterations: this.finalOwnerIterations,
-      pipeline9FinalOwnerIterationLimit: MAX_FINAL_OWNER_B01_ITERATIONS,
+      pipeline9FinalOwnerIterationLimit: this.finalOwnerIterationLimit,
       pipeline9PostRepairSameNetViaMergeAttempts:
         this.postRepairSameNetViaMergeAttempts,
       pipeline9PostRepairSameNetViaMergeDrcEvaluations:
@@ -5103,18 +5201,16 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         this.finalFixedOverlapLayerDetourCandidatesAccepted,
       pipeline9FinalFixedOverlapLayerDetourDrcEvaluationLimit:
         MAX_FINAL_FIXED_OVERLAP_LAYER_DETOUR_DRC_EVALUATIONS,
-      pipeline9FinalFixedOverlapBestRemovedTargetIssueCount:
-        Number.isFinite(
-          this.finalFixedOverlapBestRemovedTargetIssueCount,
-        )
-          ? this.finalFixedOverlapBestRemovedTargetIssueCount
-          : undefined,
-      pipeline9FinalFixedOverlapBestRemovedTargetFixedScore:
-        Number.isFinite(
-          this.finalFixedOverlapBestRemovedTargetFixedScore,
-        )
-          ? this.finalFixedOverlapBestRemovedTargetFixedScore
-          : undefined,
+      pipeline9FinalFixedOverlapBestRemovedTargetIssueCount: Number.isFinite(
+        this.finalFixedOverlapBestRemovedTargetIssueCount,
+      )
+        ? this.finalFixedOverlapBestRemovedTargetIssueCount
+        : undefined,
+      pipeline9FinalFixedOverlapBestRemovedTargetFixedScore: Number.isFinite(
+        this.finalFixedOverlapBestRemovedTargetFixedScore,
+      )
+        ? this.finalFixedOverlapBestRemovedTargetFixedScore
+        : undefined,
     }
     this.progress = 1
     this.solved = true

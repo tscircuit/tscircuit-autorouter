@@ -102,3 +102,68 @@ test("Pipeline9 B01 keeps off-grid endpoint layer transitions vertical", () => {
     }),
   ).toBe(true)
 })
+
+test("Pipeline9 B01 measures hidden fixed-trace crossings and offending vias", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    minViaDiameter: 0.3,
+    bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+    obstacles: [],
+    connections: [],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "fixed_wall",
+        connection_name: "fixed_net",
+        route: [
+          { route_type: "wire", x: 0, y: -2, width: 0.1, layer: "top" },
+          { route_type: "wire", x: 0, y: 2, width: 0.1, layer: "top" },
+        ],
+      },
+    ],
+  }
+  const rerouter = new Pipeline9B01Rerouter({
+    srj,
+    baseObstacles: [],
+  })
+  const twiceCrossingRoute: HighDensityRoute = {
+    connectionName: "candidate",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    vias: [],
+    route: [
+      { x: -1, y: -1, z: 0 },
+      { x: 1, y: 0, z: 0 },
+      { x: -1, y: 1, z: 0 },
+    ],
+  }
+  const viaRoute: HighDensityRoute = {
+    connectionName: "candidate_via",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    vias: [{ x: 0.2, y: 0 }],
+    route: [
+      { x: -1, y: 0, z: 0 },
+      { x: 0.2, y: 0, z: 0 },
+      { x: 0.2, y: 0, z: 1 },
+      { x: 1, y: 0, z: 1 },
+    ],
+  }
+
+  expect(
+    rerouter.countRouteOverlapsWithPreloadedTrace(
+      twiceCrossingRoute,
+      "fixed_wall",
+    ),
+  ).toBe(2)
+  expect(
+    rerouter.getRouteViaCentersOverlappingPreloadedTrace(
+      viaRoute,
+      "fixed_wall",
+    ),
+  ).toEqual([{ x: 0.2, y: 0 }])
+  expect(
+    rerouter.getPreloadedTraceIdForDrcTraceId("preloaded_0_fixed_wall"),
+  ).toBe("fixed_wall")
+})
