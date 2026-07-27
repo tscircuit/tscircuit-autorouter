@@ -23,6 +23,7 @@ export type RawPort = {
   cramped?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
+  _preloadedFixedNetIds?: string[]
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {

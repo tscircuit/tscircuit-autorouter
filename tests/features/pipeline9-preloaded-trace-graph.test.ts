@@ -5,7 +5,7 @@ import scenario from "./preexisting-connected-traces/srj/preexisting-connected-t
   type: "json",
 }
 
-test("Pipeline9 projects preloaded copper into hypergraph regions without topology obstacles", () => {
+test("Pipeline9 loads preexisting copper into ports without changing capacity topology", () => {
   const srj = structuredClone(scenario) as SimpleRouteJson
   const preloadedTrace = srj.traces?.[0]
   if (!preloadedTrace) {
@@ -17,6 +17,20 @@ test("Pipeline9 projects preloaded copper into hypergraph regions without topolo
     maxNodeDimension: 3,
     effort: 0.5,
   })
+  const traceFreeSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    { ...structuredClone(srj), traces: undefined },
+    {
+      targetMinCapacity: 0.75,
+      maxNodeDimension: 3,
+      effort: 0.5,
+    },
+  )
+  while (
+    !traceFreeSolver.failed &&
+    !traceFreeSolver.preloadedTraceGraphSolver?.solved
+  ) {
+    traceFreeSolver.step()
+  }
   solver.solve()
 
   const preprocessedSrj =
@@ -30,11 +44,64 @@ test("Pipeline9 projects preloaded copper into hypergraph regions without topolo
   expect(solver.preloadedTraceGraphSolver?.stats).toMatchObject({
     preloadedTraceCount: 1,
     preloadedTraceShapeCount: 1,
+    topologyChanged: false,
   })
+  const getCapacityTopology = (
+    pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  ) =>
+    pipeline.capacityNodes?.map((node) => ({
+      capacityMeshNodeId: node.capacityMeshNodeId,
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      layer: node.layer,
+      availableZ: node.availableZ,
+      adjacentNodeIds: node._adjacentNodeIds,
+    }))
+  const getPortTopology = (
+    pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  ) =>
+    pipeline.preloadedTraceGraphSolver?.getOutput().map((segment) => ({
+      edgeId: segment.edgeId,
+      nodeIds: segment.nodeIds,
+      start: segment.start,
+      end: segment.end,
+      availableZ: segment.availableZ,
+      ports: segment.portPoints.map((portPoint) => ({
+        segmentPortPointId: portPoint.segmentPortPointId,
+        x: portPoint.x,
+        y: portPoint.y,
+        availableZ: portPoint.availableZ,
+        nodeIds: portPoint.nodeIds,
+        edgeId: portPoint.edgeId,
+        distToCentermostPortOnZ: portPoint.distToCentermostPortOnZ,
+        cramped: portPoint.cramped,
+      })),
+    }))
+  expect(getCapacityTopology(solver)).toEqual(
+    getCapacityTopology(traceFreeSolver),
+  )
+  expect(getPortTopology(solver)).toEqual(getPortTopology(traceFreeSolver))
+  expect(
+    solver.preloadedTraceGraphSolver
+      ?.getOutput()
+      .flatMap((segment) => segment.portPoints)
+      .some((portPoint) =>
+        portPoint._preloadedFixedNetIds?.includes(srj.connections[0]!.name),
+      ),
+  ).toBe(true)
+  expect(
+    Number(solver.portPointPathingSolver?.stats.preloadedPortCount),
+  ).toBeGreaterThan(0)
   expect(
     solver.capacityNodes?.some((node) =>
-      node._preloadedFixedNetIds?.includes(srj.connections[0]!.name),
+      node.capacityMeshNodeId.includes("__preloaded_"),
     ),
-  ).toBe(true)
+  ).toBe(false)
+  expect(
+    solver.capacityNodes?.some(
+      (node) => (node._preloadedFixedNetIds?.length ?? 0) > 0,
+    ),
+  ).toBe(false)
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(1)
 })

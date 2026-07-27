@@ -79,6 +79,7 @@ type TinyPortMetadata = {
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
+  _preloadedFixedNetIds?: string[]
 }
 
 type LoadedTinyGraph = {
@@ -271,6 +272,7 @@ const toSerializedPortData = (
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
+    _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
   }
 }
 
@@ -627,11 +629,91 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+const applyPreloadedPortReservations = (
+  solver: TinyHyperGraphSolver & LoadedTinyGraph,
+) => {
+  const netIndexByAlias = new Map<string, number>()
+  let nextFixedNetIndex = 0
+
+  for (
+    let routeIndex = 0;
+    routeIndex < solver.problem.routeNet.length;
+    routeIndex++
+  ) {
+    const routeNetIndex = solver.problem.routeNet[routeIndex]!
+    nextFixedNetIndex = Math.max(nextFixedNetIndex, routeNetIndex + 1)
+    const routeMetadata = solver.problem.routeMetadata?.[routeIndex]
+    const simpleRouteConnection = routeMetadata?.simpleRouteConnection
+    for (const alias of [
+      routeMetadata?.connectionId,
+      routeMetadata?.mutuallyConnectedNetworkId,
+      simpleRouteConnection?.name,
+      simpleRouteConnection?.__netConnectionName,
+      ...(simpleRouteConnection?.__rootConnectionNames ?? []),
+    ]) {
+      if (typeof alias === "string" && alias.length > 0) {
+        netIndexByAlias.set(alias, routeNetIndex)
+      }
+    }
+  }
+  for (const regionNetIndex of solver.problem.regionNetId) {
+    if (regionNetIndex >= 0) {
+      nextFixedNetIndex = Math.max(nextFixedNetIndex, regionNetIndex + 1)
+    }
+  }
+
+  const fixedNetIndexById = new Map<string, number>()
+  const getFixedNetIndex = (fixedNetId: string) => {
+    const activeNetIndex = netIndexByAlias.get(fixedNetId)
+    if (activeNetIndex !== undefined) return activeNetIndex
+
+    let fixedNetIndex = fixedNetIndexById.get(fixedNetId)
+    if (fixedNetIndex === undefined) {
+      fixedNetIndex = nextFixedNetIndex++
+      fixedNetIndexById.set(fixedNetId, fixedNetIndex)
+    }
+    return fixedNetIndex
+  }
+
+  let preloadedPortCount = 0
+  const problemSetup = solver.problemSetup
+  for (let portId = 0; portId < solver.topology.portCount; portId++) {
+    const fixedNetIds =
+      solver.topology.portMetadata?.[portId]?._preloadedFixedNetIds
+    if (!Array.isArray(fixedNetIds) || fixedNetIds.length === 0) continue
+
+    preloadedPortCount++
+    const reservedNetIds = [
+      ...new Set(fixedNetIds.map(getFixedNetIndex)),
+    ].sort((left, right) => left - right)
+    const endpointNetIds = problemSetup.portEndpointNetIds[portId]!
+    for (const reservedNetId of reservedNetIds) {
+      endpointNetIds.add(reservedNetId)
+    }
+
+    const existingReservation =
+      problemSetup.portEndpointReservationNetId[portId]!
+    const combinedReservations = new Set(reservedNetIds)
+    if (existingReservation >= 0) {
+      combinedReservations.add(existingReservation)
+    } else if (existingReservation === -2) {
+      combinedReservations.add(-2)
+    }
+    problemSetup.portEndpointReservationNetId[portId] =
+      combinedReservations.size === 1
+        ? [...combinedReservations][0]!
+        : -2
+  }
+
+  return preloadedPortCount
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
   crampedPortPenaltyCount = 0
+  preloadedPortCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
 
@@ -738,6 +820,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const loadedSolver = solver as typeof solver & LoadedTinyGraph
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
+    }
+    if (solver instanceof TinyHyperGraphSolver) {
+      this.preloadedPortCount = Math.max(
+        this.preloadedPortCount,
+        applyPreloadedPortReservations(
+          solver as TinyHyperGraphSolver & LoadedTinyGraph,
+        ),
+      )
     }
 
     this.configuredSolvers.add(solver)
@@ -932,6 +1022,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver.metadataPortPenaltyCount,
       crampedPortPenalty: this.tinyPipelineSolver.crampedPortTraversalPenalty,
       crampedPortPenaltyCount: this.tinyPipelineSolver.crampedPortPenaltyCount,
+      preloadedPortCount: this.tinyPipelineSolver.preloadedPortCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),

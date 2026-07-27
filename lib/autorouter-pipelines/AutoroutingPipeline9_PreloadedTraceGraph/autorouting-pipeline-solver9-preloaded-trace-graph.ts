@@ -129,25 +129,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
     preprocessStep.solverClass =
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
 
-    const subdivisionStageIndex = pipelineDef.findIndex(
-      (step) => step.solverName === "nodeDimensionSubdivisionSolver",
+    const crampedPortStageIndex = pipelineDef.findIndex(
+      (step) => step.solverName === "necessaryCrampedPortPointSolver",
     )
-    if (subdivisionStageIndex === -1) {
-      throw new Error("Pipeline9 could not find the node subdivision stage")
+    if (crampedPortStageIndex === -1) {
+      throw new Error("Pipeline9 could not find the cramped-port stage")
     }
-    pipelineDef.splice(subdivisionStageIndex + 1, 0, {
+    pipelineDef.splice(crampedPortStageIndex + 1, 0, {
       solverName: "preloadedTraceGraphSolver",
       solverClass: PreloadedTraceGraphSolver,
       getConstructorParams: (pipeline) => [
-        pipeline.capacityNodes!,
+        pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
+          pipeline.necessaryCrampedPortPointSolver!.getOutput(),
         pipeline.originalSrj,
       ],
-      onSolved: (pipeline) => {
-        const pipeline9 =
-          pipeline as AutoroutingPipelineSolver9_PreloadedTraceGraph
-        pipeline9.capacityNodes =
-          pipeline9.preloadedTraceGraphSolver!.getOutput()
-      },
     })
 
     for (const solverName of [

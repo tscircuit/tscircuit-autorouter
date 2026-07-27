@@ -6,7 +6,6 @@ import {
 } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
-  CapacityMeshNode,
   SimpleRouteJson,
   SimplifiedPcbTrace,
 } from "lib/types"
@@ -133,24 +132,38 @@ test("shared resolver propagates obstacle-only evidence through an A-MID-C trace
   })
 })
 
-test("preloaded graph assigns the canonical net to a middle-only cell", () => {
-  const middleOnlyNode: CapacityMeshNode = {
-    capacityMeshNodeId: "middle-only",
-    center: { x: 0, y: 0 },
-    width: 0.02,
-    height: 0.02,
-    layer: "top",
+test("preloaded graph assigns the canonical net to a middle trace port", () => {
+  const middlePort = {
+    segmentPortPointId: "middle-port",
+    x: 0,
+    y: 0,
     availableZ: [0],
+    nodeIds: ["left", "right"] as [string, string],
+    edgeId: "middle-edge",
+    connectionName: null,
+    distToCentermostPortOnZ: 0,
+    cramped: false,
   }
   const solver = new PreloadedTraceGraphSolver(
-    [middleOnlyNode],
+    [
+      {
+        edgeId: "middle-edge",
+        nodeIds: ["left", "right"],
+        start: { x: 0, y: -1 },
+        end: { x: 0, y: 1 },
+        availableZ: [0],
+        portPoints: [middlePort],
+      },
+    ],
     makePreloadedTraceChain(),
   )
 
   solver.solve()
 
   expect(solver.getOutput()).toHaveLength(1)
-  expect(solver.getOutput()[0]?._preloadedFixedNetIds).toEqual(["root-net"])
+  expect(
+    solver.getOutput()[0]?.portPoints[0]?._preloadedFixedNetIds,
+  ).toEqual(["root-net"])
 })
 
 test("relaxed DRC namespaces trace links before canonical conversion", () => {

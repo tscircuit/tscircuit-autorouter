@@ -27,6 +27,8 @@ export interface SegmentPortPoint {
   cramped: boolean
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
   tinyHypergraphPortPenalty?: number
+  /** Canonical fixed-net ids loaded onto this existing graph port. */
+  _preloadedFixedNetIds?: string[]
 }
 
 export interface SharedEdgeSegment {

@@ -215,6 +215,7 @@ export function buildHyperGraph(params: {
         cramped: spp.cramped,
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
+        _preloadedFixedNetIds: spp._preloadedFixedNetIds,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

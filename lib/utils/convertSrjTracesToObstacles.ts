@@ -81,9 +81,9 @@ const createSegmentObstacle = ({
       x: (start.x + end.x) / 2,
       y: (start.y + end.y) / 2,
     },
-    // Pipeline9 uses square-cap rectangles so the projected hypergraph
-    // reservation includes one trace radius beyond each route point. Other
-    // pipelines retain their legacy centerline obstacle geometry.
+    // Pipeline9 uses square-cap rectangles for downstream physical-clearance
+    // and DRC stages. Hypergraph preloading is port-based and does not consume
+    // these rectangles or alter the capacity topology.
     width:
       length +
       (includeSquareCaps ? Math.max(width, MIN_OBSTACLE_DIMENSION) : 0),
