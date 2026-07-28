@@ -22,8 +22,7 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
       srjWithApproximatingRects,
     )
 
-    this.outputSrj =
-      traces === undefined ? outputSrj : { ...outputSrj, traces }
+    this.outputSrj = traces === undefined ? outputSrj : { ...outputSrj, traces }
     this.solved = true
   }
 }

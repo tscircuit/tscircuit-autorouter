@@ -189,9 +189,13 @@ function definePipelineStep<
 >(
   solverName: keyof AutoroutingPipelineSolver9_PreloadedTraceGraph,
   solverClass: T,
-  getConstructorParams: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => P,
+  getConstructorParams: (
+    instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  ) => P,
   opts: {
-    onSolved?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
+    onSolved?: (
+      instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+    ) => void
   } = {},
 ): PipelineStep<T> {
   return {

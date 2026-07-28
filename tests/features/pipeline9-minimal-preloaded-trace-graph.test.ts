@@ -45,14 +45,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   })
   expect(
     solver.capacityNodes?.map(
-      ({
-        capacityMeshNodeId,
-        center,
-        width,
-        height,
-        layer,
-        availableZ,
-      }) => ({
+      ({ capacityMeshNodeId, center, width, height, layer, availableZ }) => ({
         capacityMeshNodeId,
         center,
         width,
@@ -63,14 +56,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     ),
   ).toEqual(
     traceFreeSolver.capacityNodes?.map(
-      ({
-        capacityMeshNodeId,
-        center,
-        width,
-        height,
-        layer,
-        availableZ,
-      }) => ({
+      ({ capacityMeshNodeId, center, width, height, layer, availableZ }) => ({
         capacityMeshNodeId,
         center,
         width,
