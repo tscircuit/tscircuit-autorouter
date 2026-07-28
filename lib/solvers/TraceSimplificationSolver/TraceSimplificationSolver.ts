@@ -71,6 +71,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
+   *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -83,6 +84,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
     },
   ) {
     super()
@@ -229,6 +231,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_removal":
           this.activeSubSolver = new UselessViaRemovalSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
@@ -250,6 +253,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_merging":
           this.activeSubSolver = new SameNetViaMergerSolver({
             inputHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
@@ -265,6 +269,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             connMap: this.simplificationConfig.connMap,
             colorMap: { ...this.simplificationConfig.colorMap },

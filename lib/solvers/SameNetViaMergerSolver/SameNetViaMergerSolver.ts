@@ -14,6 +14,8 @@ import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
+  /** Routed copper that participates in collision checks but is never changed. */
+  otherHdRoutes?: HighDensityRoute[]
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
@@ -59,7 +61,11 @@ const getNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
 ): string => {
-  const net = connMap.idToNetMap[route.connectionName]
+  const net =
+    connMap.idToNetMap[route.connectionName] ??
+    (route.rootConnectionName
+      ? connMap.idToNetMap[route.rootConnectionName]
+      : undefined)
   if (!net) {
     throw new Error(
       `SameNetViaMergerSolver could not find net for route "${route.connectionName}"`,
@@ -214,7 +220,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
       "flatbush",
       this.input.obstacles,
     )
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.inputHdRoutes)
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.inputHdRoutes,
+      ...(this.input.otherHdRoutes ?? []),
+    ])
     this.vias = []
     this.offendingVias = []
     this.connMap = input.connMap

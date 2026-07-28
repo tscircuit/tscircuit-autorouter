@@ -69,6 +69,25 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
   TAIL_JUMP_RATIO: number = 0.8
 
+  private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean {
+    const inputRouteIds = [
+      this.inputRoute.connectionName,
+      this.inputRoute.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
+    const otherRouteIds = [
+      otherRoute.connectionName,
+      otherRoute.rootConnectionName,
+    ].filter((id): id is string => id !== undefined)
+
+    return inputRouteIds.some((inputRouteId) =>
+      otherRouteIds.some(
+        (otherRouteId) =>
+          inputRouteId === otherRouteId ||
+          this.connMap.areIdsConnected(inputRouteId, otherRouteId),
+      ),
+    )
+  }
+
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0],
   ) {
@@ -130,12 +149,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     this.filteredObstaclePathSegments = this.otherHdRoutes.flatMap(
       (hdRoute) => {
-        if (
-          this.connMap.areIdsConnected(
-            this.inputRoute.connectionName,
-            hdRoute.connectionName,
-          )
-        ) {
+        if (this.isSameNetRoute(hdRoute)) {
           return []
         }
 
@@ -158,12 +172,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     this.segmentTree = new SegmentTree(this.filteredObstaclePathSegments)
 
     this.filteredVias = this.otherHdRoutes.flatMap((hdRoute) => {
-      if (
-        this.connMap.areIdsConnected(
-          this.inputRoute.connectionName,
-          hdRoute.connectionName,
-        )
-      ) {
+      if (this.isSameNetRoute(hdRoute)) {
         return []
       }
 
@@ -256,12 +265,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // Collect jumper pads from other routes as obstacles
     this.filteredJumperPads = this.otherHdRoutes.flatMap((hdRoute) => {
-      if (
-        this.connMap.areIdsConnected(
-          this.inputRoute.connectionName,
-          hdRoute.connectionName,
-        )
-      ) {
+      if (this.isSameNetRoute(hdRoute)) {
         return []
       }
 

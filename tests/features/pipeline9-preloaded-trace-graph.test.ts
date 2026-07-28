@@ -103,6 +103,24 @@ test("Pipeline9 loads preexisting copper into ports without changing capacity to
       (node) => (node._preloadedFixedNetIds?.length ?? 0) > 0,
     ),
   ).toBe(false)
+  const traceSimplificationStep = solver.pipelineDef.find(
+    (candidate) => candidate.solverName === "traceSimplificationSolver",
+  )
+  const [traceSimplificationParams] =
+    traceSimplificationStep!.getConstructorParams(solver)
+  const immutablePreloadedRoutes = (
+    traceSimplificationParams as {
+      otherHdRoutes?: Array<{ connectionName: string }>
+    }
+  ).otherHdRoutes
+  expect(immutablePreloadedRoutes?.length).toBeGreaterThan(0)
+  expect(
+    solver.traceSimplificationSolver?.simplifiedHdRoutes.some((route) =>
+      immutablePreloadedRoutes?.some(
+        (fixedRoute) => fixedRoute.connectionName === route.connectionName,
+      ),
+    ),
+  ).toBe(false)
   for (const solverName of [
     "uniformPortDistributionSolver",
     "highDensityRouteSolver",

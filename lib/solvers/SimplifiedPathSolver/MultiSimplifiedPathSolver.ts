@@ -20,6 +20,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   activeSubSolver: SingleSimplifiedPathSolver | null = null
 
   unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
+  otherHdRoutes: HighDensityIntraNodeRoute[]
   obstacles: Obstacle[]
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -28,6 +29,8 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
+    /** Routed copper that participates in collision checks but is never changed. */
+    otherHdRoutes?: HighDensityIntraNodeRoute[]
     obstacles: Obstacle[]
     connMap?: ConnectivityMap
     colorMap?: Record<string, string>
@@ -38,11 +41,12 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
 
     this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
+    this.otherHdRoutes = params.otherHdRoutes ?? []
     const inferredLayerCount =
       Math.max(
         2,
-        ...params.unsimplifiedHdRoutes.flatMap((r) =>
-          r.route.map((p) => p.z + 1),
+        ...[...params.unsimplifiedHdRoutes, ...this.otherHdRoutes].flatMap(
+          (r) => r.route.map((p) => p.z + 1),
         ),
       ) || 2
     this.obstacles = createObjectsWithZLayers(
@@ -68,9 +72,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
 
       this.activeSubSolver = new SingleSimplifiedPathSolver5({
         inputRoute: hdRoute,
-        otherHdRoutes: this.unsimplifiedHdRoutes
-          .slice(this.currentUnsimplifiedHdRouteIndex + 1)
-          .concat(this.simplifiedHdRoutes),
+        otherHdRoutes: this.otherHdRoutes.concat(
+          this.unsimplifiedHdRoutes
+            .slice(this.currentUnsimplifiedHdRouteIndex + 1)
+            .concat(this.simplifiedHdRoutes),
+        ),
         obstacles: this.obstacles,
         connMap: this.connMap,
         colorMap: this.colorMap,

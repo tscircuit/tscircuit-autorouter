@@ -5,6 +5,7 @@ import {
   AutoroutingPipelineSolver7_MultiGraph,
   type AutoroutingPipelineSolverOptions,
 } from "../AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { convertPreloadedTraceToRouteObstacles } from "./pipeline9-b01-rerouter"
 import { Pipeline9ExactDrcRepairSolver } from "./pipeline9-exact-drc-repair-solver"
 import { lockPipeline9TerminalLayers } from "./lock-pipeline9-terminal-layers"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
@@ -135,6 +136,36 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
           ...params,
           preserveDistinctTerminalSnaps: true,
           preserveTerminalLayers: true,
+        },
+        ...remainingParams,
+      ]
+    }
+
+    const traceSimplificationStep = pipelineDef.find(
+      (step) => step.solverName === "traceSimplificationSolver",
+    )
+    if (!traceSimplificationStep) {
+      throw new Error("Pipeline9 could not find the trace simplification stage")
+    }
+    const getBaseTraceSimplificationParams =
+      traceSimplificationStep.getConstructorParams
+    traceSimplificationStep.getConstructorParams = (pipeline) => {
+      const [params, ...remainingParams] =
+        getBaseTraceSimplificationParams(pipeline)
+      const preloadedHdRoutes = (pipeline.srj.traces ?? []).flatMap(
+        (trace, traceIndex) =>
+          convertPreloadedTraceToRouteObstacles(
+            trace,
+            traceIndex,
+            pipeline.srj.layerCount,
+            pipeline.viaDiameter,
+            pipeline.connMap,
+          ),
+      )
+      return [
+        {
+          ...params,
+          otherHdRoutes: preloadedHdRoutes,
         },
         ...remainingParams,
       ]

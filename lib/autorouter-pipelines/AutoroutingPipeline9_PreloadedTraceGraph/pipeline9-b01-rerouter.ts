@@ -150,7 +150,7 @@ const convertCandidateRouteToObstacle = (
   vias: getRouteVias(route.route),
 })
 
-const convertPreloadedTraceToRouteObstacles = (
+export const convertPreloadedTraceToRouteObstacles = (
   trace: SimplifiedPcbTrace,
   traceIndex: number,
   layerCount: number,
