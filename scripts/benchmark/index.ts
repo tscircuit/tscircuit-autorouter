@@ -1,22 +1,19 @@
 #!/usr/bin/env bun
 
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
-import { appendFile, readFile, writeFile } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import * as os from "node:os"
 import * as path from "node:path"
 import * as readline from "node:readline"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
   BenchmarkReport,
-  BenchmarkSnapshot,
-  BenchmarkSnapshotWithImage,
   BenchmarkTask,
   FailureSummary,
   SolverRunSummary,
   WorkerChildMessage,
   WorkerProgress,
   WorkerResult,
-  WorkerResultWithImage,
   WorkerTaskMessage,
 } from "./benchmark-types"
 import {
@@ -53,17 +50,8 @@ type WorkerSlot = {
 }
 
 type WorkerExecutionResult = {
-  result: WorkerResultWithImage
+  result: WorkerResult
   restartWorker: boolean
-}
-
-type BenchmarkSnapshotWriter = {
-  writeSnapshot: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
-  finish: () => Promise<void>
-}
-
-type RunBenchmarkTasksOptions = {
-  onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
 }
 
 const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
@@ -71,7 +59,6 @@ const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
 const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
-const BENCHMARK_SNAPSHOTS_HTML_PATH = "benchmark-snapshots.html"
 
 const formatTime = (timeMs: number | null) => {
   if (timeMs === null) {
@@ -85,491 +72,6 @@ const formatAverage = (value: number | null) => {
     return "n/a"
   }
   return value.toFixed(2)
-}
-
-const escapeHtml = (value: unknown): string =>
-  String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-
-export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
-  let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "")
-  // Keep the generated root background in the same user-space coordinates as
-  // the circuit so changing the root viewBox pans and zooms them together.
-  const openingSvgTag = sanitizedSvg.match(/<svg\b[^>]*>/i)?.[0]
-  const viewBoxValues = openingSvgTag
-    ?.match(/\bviewBox=["']([^"']+)["']/i)?.[1]
-    ?.trim()
-    .split(/[\s,]+/)
-    .map(Number)
-  const svgContentsStart = openingSvgTag
-    ? sanitizedSvg.indexOf(openingSvgTag) + openingSvgTag.length
-    : -1
-  const rootBackgroundMatch =
-    svgContentsStart >= 0
-      ? sanitizedSvg.slice(svgContentsStart).match(/^(\s*)(<rect\b[^>]*\/?>)/i)
-      : null
-
-  if (
-    viewBoxValues?.length === 4 &&
-    viewBoxValues.every(Number.isFinite) &&
-    rootBackgroundMatch &&
-    /\bwidth=["']100%["']/i.test(rootBackgroundMatch[2]) &&
-    /\bheight=["']100%["']/i.test(rootBackgroundMatch[2])
-  ) {
-    const [x, y, width, height] = viewBoxValues
-    const backgroundRectWithViewBoxBounds = rootBackgroundMatch[2]
-      .replace(/\s+(?:x|y)=["'][^"']*["']/gi, "")
-      .replace(/\bwidth=["']100%["']/i, `x="${x}" y="${y}" width="${width}"`)
-      .replace(/\bheight=["']100%["']/i, `height="${height}"`)
-    const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length
-    sanitizedSvg =
-      sanitizedSvg.slice(0, backgroundStart) +
-      backgroundRectWithViewBoxBounds +
-      sanitizedSvg.slice(backgroundStart + rootBackgroundMatch[2].length)
-  }
-  sanitizedSvg = sanitizedSvg.replace(
-    /<g\b[^>]*\bid=["']crosshair["'][\s\S]*?<\/g>/gi,
-    "",
-  )
-  sanitizedSvg = sanitizedSvg.replace(
-    /<g\b[^>]*>\s*<circle\b(?=[^>]*\bdata-type=["']point["'])[^>]*(?:\/>|>\s*<\/circle>)\s*<\/g>/gi,
-    "",
-  )
-  sanitizedSvg = sanitizedSvg.replace(
-    /<text\b(?=[^>]*\bdata-label=["']Cursor["'])[\s\S]*?<\/text>/gi,
-    "",
-  )
-  return sanitizedSvg
-}
-
-export const createSnapshotCardHtml = (
-  snapshot: BenchmarkSnapshotWithImage,
-  snapshotIndex: number,
-): string => {
-  const snapshotLabel = escapeHtml(snapshot.label)
-  const snapshotDescriptionId = `snapshot-${snapshotIndex}-description`
-  const sanitizedImageSvg = sanitizeBenchmarkSnapshotSvg(snapshot.imageSvg)
-
-  return `<section class="snapshot">
-  <h2>${snapshotLabel}</h2>
-  <dl>
-    <div><dt>Dataset</dt><dd>${escapeHtml(snapshot.datasetName)}</dd></div>
-    <div><dt>Solver</dt><dd>${escapeHtml(snapshot.solverName)}</dd></div>
-    <div><dt>Sample</dt><dd>${escapeHtml(snapshot.sampleNumber)}</dd></div>
-    <div><dt>Scenario</dt><dd>${escapeHtml(snapshot.scenarioName)}</dd></div>
-    <div><dt>Time</dt><dd>${escapeHtml(formatTime(snapshot.elapsedTimeMs))}</dd></div>
-    <div><dt>Trace Count</dt><dd>${escapeHtml(snapshot.traceCount)}</dd></div>
-    <div><dt>Via</dt><dd>${escapeHtml(snapshot.viaCount)}</dd></div>
-    <div><dt>DRC Issue Count</dt><dd>${escapeHtml(snapshot.drcErrorCount ?? "n/a")}</dd></div>
-    <div><dt>Relaxed DRC</dt><dd>${snapshot.relaxedDrcPassed ? "passed" : "failed"}</dd></div>
-  </dl>
-  <div class="snapshot-viewer" data-snapshot-viewer>
-    <div class="viewer-toolbar" role="toolbar" aria-label="Snapshot View Controls">
-      <p class="viewer-hint">Scroll to zoom. Zoom, then drag to pan.</p>
-      <button type="button" data-viewer-action="reset" aria-label="Reset View">Reset</button>
-      <button type="button" data-viewer-action="fullscreen" aria-label="Enter Fullscreen" aria-pressed="false">Enter Fullscreen</button>
-    </div>
-    <div id="${snapshotDescriptionId}" class="sr-only">Scroll or use the plus and minus keys to zoom. After zooming, drag or use arrow keys to pan ${snapshotLabel}.</div>
-    <div class="snapshot-image" data-viewer-viewport tabindex="0" role="img" aria-label="${snapshotLabel}" aria-describedby="${snapshotDescriptionId}">${sanitizedImageSvg}</div>
-  </div>
-</section>`
-}
-
-const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Benchmark Snapshots</title>
-  <style>
-    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #171717; background: #f5f5f4; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 32px; overflow-x: hidden; }
-    button { font: inherit; }
-    .skip-link { position: fixed; left: 16px; top: 16px; z-index: 20; transform: translateY(-64px); border: 1px solid #a3a3a3; border-radius: 6px; background: #fff; color: #171717; padding: 8px 12px; text-decoration: none; box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
-    .skip-link:focus-visible { transform: translateY(0); outline: 3px solid #525252; outline-offset: 2px; }
-    main { max-width: 1160px; margin: 0 auto; }
-    h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; text-wrap: balance; }
-    p { margin: 0 0 24px; color: #525252; }
-    .snapshot, .empty { margin: 24px 0; padding: 20px; border: 1px solid #d4d4d4; border-radius: 8px; background: #fbfbfa; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
-    .snapshot { content-visibility: auto; contain-intrinsic-size: 860px; }
-    h2 { margin: 0 0 14px; font-size: 18px; line-height: 1.3; text-wrap: balance; overflow-wrap: anywhere; }
-    dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; margin: 0 0 18px; }
-    dl div { min-width: 0; }
-    dt { font-size: 12px; color: #737373; }
-    dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
-    .snapshot-viewer { border: 1px solid #d4d4d4; border-radius: 8px; background: #f5f5f4; overflow: hidden; }
-    .viewer-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; min-height: 48px; padding: 8px; border-bottom: 1px solid #e5e5e5; background: #fafaf9; }
-    .viewer-hint { margin: 0 auto 0 0; color: #525252; font-size: 13px; }
-    .viewer-toolbar button { min-height: 32px; border: 1px solid #a3a3a3; border-radius: 6px; background: #fff; color: #171717; padding: 5px 10px; cursor: pointer; touch-action: manipulation; }
-    .viewer-toolbar button:hover { background: #f5f5f5; border-color: #737373; }
-    .viewer-toolbar button:active { background: #e5e5e5; }
-    .viewer-toolbar button:focus-visible, .snapshot-image:focus-visible { outline: 3px solid #525252; outline-offset: 2px; }
-    .snapshot-image { display: grid; place-items: start; width: 100%; min-height: 320px; max-height: 72vh; aspect-ratio: 1 / 1; overflow: hidden; background: #fbfbfa; cursor: grab; touch-action: pan-y pinch-zoom; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .snapshot-image.is-zoomed { touch-action: none; }
-    .snapshot-image.is-panning { cursor: grabbing; }
-    .snapshot-image svg { display: block; width: 100%; height: 100%; }
-    body.has-full-size-viewer { overflow: hidden; }
-    .snapshot.has-full-size-viewer { content-visibility: visible; contain: none; }
-    .snapshot-viewer.is-full-size { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; border: 0; border-radius: 0; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: #f5f5f4; }
-    .snapshot-viewer.is-full-size .viewer-toolbar { flex: 0 0 auto; border: 1px solid #d4d4d4; border-radius: 8px 8px 0 0; }
-    .snapshot-viewer.is-full-size .snapshot-image { flex: 1 1 auto; min-height: 0; max-height: none; aspect-ratio: auto; border: 1px solid #d4d4d4; border-top: 0; border-radius: 0 0 8px 8px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-    @media (max-width: 720px) {
-      body { padding: 16px; }
-      .snapshot, .empty { padding: 14px; }
-      .viewer-toolbar { justify-content: flex-start; }
-      .viewer-hint { flex-basis: 100%; }
-      .snapshot-image { min-height: 260px; }
-    }
-  </style>
-</head>
-<body>
-  <a class="skip-link" href="#benchmark-snapshots-main">Skip To Snapshots</a>
-  <main id="benchmark-snapshots-main">
-    <h1>Benchmark Snapshots</h1>
-    <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as inline SVG for crisp offline viewing at any zoom.</p>
-`
-
-const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
-  <script>
-    (() => {
-      const minScale = 1
-      const maxScale = 20
-
-      const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
-
-      const getButton = (viewer, action) =>
-        viewer.querySelector('[data-viewer-action="' + action + '"]')
-
-      const updateFullSizeButton = (viewer, isFullSize) => {
-        const button = getButton(viewer, "fullscreen")
-        if (!button) return
-        button.textContent = isFullSize ? "Exit Fullscreen" : "Enter Fullscreen"
-        button.setAttribute(
-          "aria-label",
-          isFullSize ? "Exit Fullscreen" : "Enter Fullscreen",
-        )
-        button.setAttribute("aria-pressed", String(isFullSize))
-      }
-
-      const setViewerFullSize = (viewer, isFullSize) => {
-        const currentViewer = document.querySelector(
-          "[data-snapshot-viewer].is-full-size",
-        )
-        if (isFullSize && currentViewer && currentViewer !== viewer) {
-          currentViewer.classList.remove("is-full-size")
-          currentViewer
-            .closest(".snapshot")
-            ?.classList.remove("has-full-size-viewer")
-          updateFullSizeButton(currentViewer, false)
-        }
-        viewer.classList.toggle("is-full-size", isFullSize)
-        viewer
-          .closest(".snapshot")
-          ?.classList.toggle("has-full-size-viewer", isFullSize)
-        document.body.classList.toggle("has-full-size-viewer", isFullSize)
-        updateFullSizeButton(viewer, isFullSize)
-      }
-
-      const applyView = (state) => {
-        const boundedScale = clamp(state.scale, minScale, maxScale)
-        state.scale = boundedScale
-        if (boundedScale === minScale) {
-          state.viewBox = { ...state.baseViewBox }
-        }
-        state.viewport.classList.toggle("is-zoomed", boundedScale > minScale)
-        state.svg.setAttribute(
-          "viewBox",
-          [
-            state.viewBox.x,
-            state.viewBox.y,
-            state.viewBox.width,
-            state.viewBox.height,
-          ].join(" "),
-        )
-      }
-
-      const zoomAt = (state, clientX, clientY, nextScale) => {
-        const matrix = state.svg.getScreenCTM()
-        if (!matrix) return
-        const screenPoint = state.svg.createSVGPoint()
-        screenPoint.x = clientX
-        screenPoint.y = clientY
-        const point = screenPoint.matrixTransform(matrix.inverse())
-        const ratioX = (point.x - state.viewBox.x) / state.viewBox.width
-        const ratioY = (point.y - state.viewBox.y) / state.viewBox.height
-        const scale = clamp(nextScale, minScale, maxScale)
-        const width = state.baseViewBox.width / scale
-        const height = state.baseViewBox.height / scale
-        state.viewBox = {
-          x: point.x - ratioX * width,
-          y: point.y - ratioY * height,
-          width,
-          height,
-        }
-        state.scale = scale
-        applyView(state)
-      }
-
-      const zoomFromCenter = (state, multiplier) => {
-        const rect = state.viewport.getBoundingClientRect()
-        zoomAt(
-          state,
-          rect.left + rect.width / 2,
-          rect.top + rect.height / 2,
-          state.scale * multiplier,
-        )
-      }
-
-      const resetView = (state) => {
-        state.scale = 1
-        state.viewBox = { ...state.baseViewBox }
-        applyView(state)
-      }
-
-      const getScreenScale = (svg) => {
-        const matrix = svg.getScreenCTM()
-        if (!matrix) return { x: 1, y: 1 }
-        return {
-          x: Math.hypot(matrix.a, matrix.b),
-          y: Math.hypot(matrix.c, matrix.d),
-        }
-      }
-
-      const getPointerDistance = (pointers) => {
-        const first = pointers[0]
-        const second = pointers[1]
-        const deltaX = first.clientX - second.clientX
-        const deltaY = first.clientY - second.clientY
-        return Math.hypot(deltaX, deltaY)
-      }
-
-      const getPointerCenter = (pointers) => {
-        const first = pointers[0]
-        const second = pointers[1]
-        return {
-          clientX: (first.clientX + second.clientX) / 2,
-          clientY: (first.clientY + second.clientY) / 2,
-        }
-      }
-
-      const initViewer = (viewer) => {
-        const viewport = viewer.querySelector("[data-viewer-viewport]")
-        const svg = viewport?.querySelector("svg")
-        if (!viewport || !svg) return
-
-        const svgViewBox = svg.viewBox.baseVal
-        if (svgViewBox.width <= 0 || svgViewBox.height <= 0) return
-        const baseViewBox = {
-          x: svgViewBox.x,
-          y: svgViewBox.y,
-          width: svgViewBox.width,
-          height: svgViewBox.height,
-        }
-
-        svg.querySelector("#crosshair")?.remove()
-        svg.querySelectorAll("script").forEach((script) => script.remove())
-
-        const state = {
-          viewer,
-          viewport,
-          svg,
-          baseViewBox,
-          viewBox: { ...baseViewBox },
-          scale: 1,
-          pointers: new Map(),
-          dragStart: null,
-          pinchStart: null,
-        }
-
-        const fullscreenButton = getButton(viewer, "fullscreen")
-
-        getButton(viewer, "reset")?.addEventListener("click", () => {
-          resetView(state)
-        })
-        fullscreenButton?.addEventListener("click", () => {
-          setViewerFullSize(viewer, !viewer.classList.contains("is-full-size"))
-        })
-
-        viewport.addEventListener(
-          "wheel",
-          (event) => {
-            if (state.scale === minScale && !event.ctrlKey && event.deltaY > 0) {
-              return
-            }
-            event.preventDefault()
-            const multiplier = Math.exp(-event.deltaY * 0.001)
-            zoomAt(state, event.clientX, event.clientY, state.scale * multiplier)
-          },
-          { passive: false },
-        )
-
-        viewport.addEventListener("keydown", (event) => {
-          const panStep = event.shiftKey ? 80 : 32
-          if (event.key === "+" || event.key === "=") {
-            event.preventDefault()
-            zoomFromCenter(state, 1.25)
-          }
-          if (event.key === "-" || event.key === "_") {
-            event.preventDefault()
-            zoomFromCenter(state, 0.8)
-          }
-          if (event.key === "0") {
-            event.preventDefault()
-            resetView(state)
-          }
-          if (state.scale > minScale && event.key === "ArrowLeft") {
-            event.preventDefault()
-            state.viewBox.x -= panStep / getScreenScale(svg).x
-            applyView(state)
-          }
-          if (state.scale > minScale && event.key === "ArrowRight") {
-            event.preventDefault()
-            state.viewBox.x += panStep / getScreenScale(svg).x
-            applyView(state)
-          }
-          if (state.scale > minScale && event.key === "ArrowUp") {
-            event.preventDefault()
-            state.viewBox.y -= panStep / getScreenScale(svg).y
-            applyView(state)
-          }
-          if (state.scale > minScale && event.key === "ArrowDown") {
-            event.preventDefault()
-            state.viewBox.y += panStep / getScreenScale(svg).y
-            applyView(state)
-          }
-        })
-
-        viewport.addEventListener("pointerdown", (event) => {
-          state.pointers.set(event.pointerId, event)
-          viewport.setPointerCapture?.(event.pointerId)
-          if (state.pointers.size === 1 && state.scale > minScale) {
-            state.dragStart = {
-              clientX: event.clientX,
-              clientY: event.clientY,
-              viewBoxX: state.viewBox.x,
-              viewBoxY: state.viewBox.y,
-              screenScale: getScreenScale(svg),
-            }
-            viewport.classList.add("is-panning")
-          }
-          if (state.pointers.size === 2) {
-            const pointers = [...state.pointers.values()]
-            state.pinchStart = {
-              distance: getPointerDistance(pointers),
-              scale: state.scale,
-            }
-          }
-        })
-
-        viewport.addEventListener("pointermove", (event) => {
-          if (!state.pointers.has(event.pointerId)) return
-          state.pointers.set(event.pointerId, event)
-          if (state.pointers.size === 2 && state.pinchStart) {
-            const pointers = [...state.pointers.values()]
-            const center = getPointerCenter(pointers)
-            const distance = getPointerDistance(pointers)
-            zoomAt(
-              state,
-              center.clientX,
-              center.clientY,
-              state.pinchStart.scale * (distance / state.pinchStart.distance),
-            )
-            return
-          }
-          if (state.dragStart && state.scale > minScale) {
-            state.viewBox.x =
-              state.dragStart.viewBoxX -
-              (event.clientX - state.dragStart.clientX) /
-                state.dragStart.screenScale.x
-            state.viewBox.y =
-              state.dragStart.viewBoxY -
-              (event.clientY - state.dragStart.clientY) /
-                state.dragStart.screenScale.y
-            applyView(state)
-          }
-        })
-
-        const finishPointer = (event) => {
-          state.pointers.delete(event.pointerId)
-          if (state.pointers.size < 2) {
-            state.pinchStart = null
-            state.dragStart = null
-            if (state.pointers.size === 1 && state.scale > minScale) {
-              const pointer = [...state.pointers.values()][0]
-              state.dragStart = {
-                clientX: pointer.clientX,
-                clientY: pointer.clientY,
-                viewBoxX: state.viewBox.x,
-                viewBoxY: state.viewBox.y,
-                screenScale: getScreenScale(svg),
-              }
-            }
-          }
-          if (state.pointers.size === 0) {
-            state.dragStart = null
-            viewport.classList.remove("is-panning")
-          }
-        }
-
-        viewport.addEventListener("pointerup", finishPointer)
-        viewport.addEventListener("pointercancel", finishPointer)
-        viewport.addEventListener("lostpointercapture", finishPointer)
-        applyView(state)
-      }
-
-      document.querySelectorAll("[data-snapshot-viewer]").forEach(initViewer)
-      document.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape") return
-        const viewer = document.querySelector(
-          "[data-snapshot-viewer].is-full-size",
-        )
-        if (viewer) setViewerFullSize(viewer, false)
-      })
-    })()
-  </script>
-</body>
-</html>
-`
-
-export const createBenchmarkSnapshotWriter = async (
-  htmlPath: string,
-): Promise<BenchmarkSnapshotWriter> => {
-  let snapshotCount = 0
-  let pendingWrite = Promise.resolve()
-
-  await writeFile(htmlPath, BENCHMARK_SNAPSHOTS_HTML_START)
-
-  return {
-    writeSnapshot: async (snapshot) => {
-      snapshotCount += 1
-      const snapshotIndex = snapshotCount
-      pendingWrite = pendingWrite.then(() =>
-        appendFile(
-          htmlPath,
-          `${createSnapshotCardHtml(snapshot, snapshotIndex)}\n`,
-        ),
-      )
-      await pendingWrite
-    },
-    finish: async () => {
-      const htmlParts: string[] = []
-      if (snapshotCount === 0) {
-        htmlParts.push(
-          `    <section class="empty"><p>No solved benchmark snapshots were produced for this run.</p></section>`,
-        )
-      }
-      htmlParts.push(BENCHMARK_SNAPSHOTS_HTML_END)
-      pendingWrite = pendingWrite.then(() =>
-        appendFile(htmlPath, `${htmlParts.join("\n")}\n`),
-      )
-      await pendingWrite
-    },
-  }
 }
 
 const formatDurationLabel = (timeMs: number) => {
@@ -1081,7 +583,7 @@ const createFailedResult = (
   error: string,
   didTimeout = false,
   latestProgress?: WorkerProgress,
-): WorkerResultWithImage => ({
+): WorkerResult => ({
   solverName: task.solverName,
   scenarioName: task.scenarioName,
   sampleNumber: task.sampleNumber,
@@ -1177,7 +679,7 @@ const executeTaskOnWorker = (
     const startedAtMs = performance.now()
     let settled = false
 
-    const finish = (result: WorkerResultWithImage, restartWorker: boolean) => {
+    const finish = (result: WorkerResult, restartWorker: boolean) => {
       if (settled) {
         return
       }
@@ -1292,7 +794,6 @@ const runBenchmarkTasks = async (
   tasks: BenchmarkTask[],
   concurrency: number,
   sampleTimeoutMs?: number,
-  options: RunBenchmarkTasksOptions = {},
 ) => {
   const workerCount = Math.min(concurrency, tasks.length)
   const heartbeatIntervalMs = getHeartbeatIntervalMs()
@@ -1366,23 +867,11 @@ const runBenchmarkTasks = async (
         return
       }
 
-      const { result: workerResult, restartWorker } = await executeTaskOnWorker(
+      const { result, restartWorker } = await executeTaskOnWorker(
         slot,
         request,
         sampleTimeoutMs,
       )
-      if (workerResult.benchmarkSnapshot) {
-        await options.onBenchmarkSnapshot?.(workerResult.benchmarkSnapshot)
-      }
-      let result: WorkerResult = workerResult
-      if (workerResult.benchmarkSnapshot) {
-        const { imageSvg, ...benchmarkSnapshot } =
-          workerResult.benchmarkSnapshot
-        result = {
-          ...workerResult,
-          benchmarkSnapshot,
-        }
-      }
       results[request.taskId - 1] = result
       completedTaskCount += 1
 
@@ -1544,17 +1033,7 @@ const main = async () => {
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
   )
 
-  const snapshotWriter = await createBenchmarkSnapshotWriter(
-    BENCHMARK_SNAPSHOTS_HTML_PATH,
-  )
-  let results: WorkerResult[]
-  try {
-    results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
-      onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
-    })
-  } finally {
-    await snapshotWriter.finish()
-  }
+  const results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs)
   const rows = solvers.map((solver) =>
     summarizeSolverResults(
       solver,
@@ -1580,9 +1059,6 @@ const main = async () => {
   const timeoutSummaryText = formatFailureSummary(timeoutSummary)
   const failureSummary = summarizeFailures(results)
   const failureSummaryText = formatFailureSummary(failureSummary)
-  const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
-    result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
-  )
   const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
   const report: BenchmarkReport = {
     version: 1,
@@ -1593,7 +1069,7 @@ const main = async () => {
     solverFailureSummary,
     timeoutSummary,
     failureSummary,
-    snapshots,
+    snapshots: [],
     tests: results,
   }
   await Bun.write("benchmark-result.txt", output)
@@ -1609,9 +1085,7 @@ const main = async () => {
   console.log(timeoutSummaryText)
   console.log("\nTop failure buckets:")
   console.log(failureSummaryText)
-  console.log(
-    `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
-  )
+  console.log("Results written to benchmark-result.txt and benchmark-result.json")
 }
 
 if (import.meta.main) {
