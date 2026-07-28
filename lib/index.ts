@@ -62,6 +62,11 @@ export { PortfolioSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 export {
+  DrcGuardedTraceSimplificationSolver,
+  type DrcGuardedTraceSimplificationDecision,
+  type DrcGuardedTraceSimplificationSolverParams,
+} from "./solvers/TraceSimplificationSolver/drc-guarded-trace-simplification-solver"
+export {
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
 } from "high-density-repair03/lib"
