@@ -524,11 +524,14 @@ export const createBenchmarkHistoryDashboard = (
   const runs = [...allRuns].sort((left, right) =>
     left.createdAt.localeCompare(right.createdAt),
   )
-  const points = getDashboardPoints(runs.slice(-DASHBOARD_RUN_LIMIT)).map(
+  const totalRunCount = runs.length
+  const dashboardRuns = runs.slice(-DASHBOARD_RUN_LIMIT)
+  const points = getDashboardPoints(dashboardRuns).map(
     ({ samples: _samples, ...point }) => point,
   )
   const data = JSON.stringify({
-    runs,
+    runs: dashboardRuns,
+    totalRunCount,
     points,
     dashboardRunLimit: DASHBOARD_RUN_LIMIT,
   })
@@ -786,7 +789,7 @@ function renderHeader() {
   }
   const datasets = new Set(dashboardData.points.map((point) => point.datasetName))
   getRequiredElement('header-facts').innerHTML =
-    '<span class="fact"><strong>' + dashboardData.runs.length + '</strong> stored runs</span>' +
+    '<span class="fact"><strong>' + (dashboardData.totalRunCount ?? dashboardData.runs.length) + '</strong> stored runs</span>' +
     '<span class="fact"><strong>' + Math.min(dashboardData.dashboardRunLimit, dashboardData.runs.length) +
     '</strong> runs charted</span><span class="fact"><strong>' + datasets.size +
     '</strong> datasets</span>' + (latestRun
