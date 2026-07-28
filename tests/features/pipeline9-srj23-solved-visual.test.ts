@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const SAMPLE_NUMBERS = [1, 10, 23]
 
@@ -34,13 +34,11 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
     })
     expect(errors).toHaveLength(0)
 
-    const svg = getSvgFromGraphicsObject(solver.visualizeFinalOutput(), {
-      backgroundColor: "white",
-      svgWidth: 640,
-      svgHeight: 640,
-    })
-    await expect(svg).toMatchSvgSnapshot(import.meta.path, {
-      svgName: scenarioName,
-    })
+    await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+      import.meta.path,
+      {
+        svgName: scenarioName,
+      },
+    )
   }
 })
