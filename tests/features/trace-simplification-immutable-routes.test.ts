@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
@@ -31,10 +32,10 @@ const immutableRoute: HighDensityRoute = {
   vias: [],
 }
 
-const solve = (otherHdRoutes: HighDensityRoute[] = []) => {
+const createTraceSimplifier = (otherHdRoutes: HighDensityRoute[] = []) => {
   const connMap = new ConnectivityMap({})
   connMap.addConnections([["fixed", "fixed_piece"]])
-  const solver = new TraceSimplificationSolver({
+  return new TraceSimplificationSolver({
     hdRoutes: [structuredClone(editableRoute)],
     otherHdRoutes,
     obstacles: [],
@@ -43,6 +44,10 @@ const solve = (otherHdRoutes: HighDensityRoute[] = []) => {
     defaultViaDiameter: 0.3,
     layerCount: 2,
   })
+}
+
+const solve = (otherHdRoutes: HighDensityRoute[] = []) => {
+  const solver = createTraceSimplifier(otherHdRoutes)
   solver.solve()
   expect(solver.failed).toBe(false)
   return solver.simplifiedHdRoutes
@@ -98,6 +103,17 @@ test("trace simplification avoids immutable routed traces without emitting or mu
     getMinimumRouteDistance(routesWithFixedCopper[0]!, immutableRoute),
   ).toBeGreaterThanOrEqual(0.25)
   expect(immutableRoute).toEqual(immutableSnapshot)
+})
+
+test("trace simplification visualizes immutable routed peers", () => {
+  const solver = createTraceSimplifier([immutableRoute])
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "immutable-routed-peer" },
+  )
 })
 
 test("via removal keeps a layer detour that crosses an immutable route", () => {

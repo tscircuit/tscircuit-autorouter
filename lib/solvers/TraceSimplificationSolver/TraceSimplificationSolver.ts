@@ -332,6 +332,38 @@ export class TraceSimplificationSolver extends BaseSolver {
       })
     }
 
+    // Draw immutable routed copper as subdued, dashed layer-colored peers.
+    for (const route of this.simplificationConfig.otherHdRoutes ?? []) {
+      for (let i = 0; i < route.route.length - 1; i++) {
+        const current = route.route[i]
+        const next = route.route[i + 1]
+        if (current.z !== next.z) continue
+
+        visualization.lines.push({
+          points: [
+            { x: current.x, y: current.y },
+            { x: next.x, y: next.y },
+          ],
+          strokeColor:
+            current.z === 0
+              ? "rgba(160, 32, 32, 0.55)"
+              : "rgba(32, 32, 160, 0.55)",
+          strokeWidth: route.traceThickness,
+          strokeDash: [0.08, 0.08],
+          label: `${route.connectionName} immutable (z=${current.z})`,
+        })
+      }
+
+      for (const via of route.vias) {
+        visualization.circles.push({
+          center: { x: via.x, y: via.y },
+          radius: route.viaDiameter / 2,
+          fill: "rgba(96, 96, 96, 0.45)",
+          label: `${route.connectionName} immutable via`,
+        })
+      }
+    }
+
     // Draw output routes and vias
     for (const route of this.hdRoutes) {
       if (route.route.length === 0) continue
