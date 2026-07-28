@@ -191,7 +191,6 @@ yalc.lock
 hypergraph
 benchmark-result.txt
 benchmark-result.json
-benchmark-snapshots.html
 profile-solvers.json
 result-*
 tmp

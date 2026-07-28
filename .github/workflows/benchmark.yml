@@ -938,7 +938,6 @@ jobs:
             ./benchmark-result.txt
             ./benchmark-result.json
             ./benchmark-best-vias.json
-            ./benchmark-snapshots.html
             ./benchmark-result-pr.txt
             ./benchmark-result-pr.json
             ./benchmark-result-main.txt
@@ -1449,9 +1448,30 @@ jobs:
             git -C .benchmark-history push origin HEAD:benchmark-history
           fi
 
-      - name: Upload benchmark history dashboard
-        uses: actions/upload-artifact@v4
+      - name: Clear benchmark history credential rewrite
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git config --global --unset-all url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf
+
+      - name: Checkout benchmark dashboard
+        uses: actions/checkout@v4
         with:
-          name: benchmark-history-dashboard
-          path: ./benchmark-history.html
-          overwrite: true
+          repository: tscircuit/autorouter-benchmark-dashboard
+          ref: main
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          path: .benchmark-dashboard
+
+      - name: Publish benchmark history dashboard
+        run: |
+          set -euo pipefail
+
+          cp benchmark-history.html .benchmark-dashboard/index.html
+          git -C .benchmark-dashboard config user.name "github-actions[bot]"
+          git -C .benchmark-dashboard config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C .benchmark-dashboard add index.html
+          if git -C .benchmark-dashboard diff --cached --quiet; then
+            echo "Benchmark dashboard is unchanged."
+          else
+            git -C .benchmark-dashboard commit -m "Update benchmark dashboard for workflow ${{ github.run_id }}"
+            git -C .benchmark-dashboard push origin HEAD:main
+          fi
