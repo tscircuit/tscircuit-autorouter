@@ -1085,7 +1085,9 @@ const main = async () => {
   console.log(timeoutSummaryText)
   console.log("\nTop failure buckets:")
   console.log(failureSummaryText)
-  console.log("Results written to benchmark-result.txt and benchmark-result.json")
+  console.log(
+    "Results written to benchmark-result.txt and benchmark-result.json",
+  )
 }
 
 if (import.meta.main) {
