@@ -71,6 +71,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
+   *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -83,6 +84,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
     },
   ) {
     super()
@@ -229,6 +231,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_removal":
           this.activeSubSolver = new UselessViaRemovalSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
@@ -250,6 +253,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "via_merging":
           this.activeSubSolver = new SameNetViaMergerSolver({
             inputHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
@@ -265,6 +269,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
             unsimplifiedHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
             connMap: this.simplificationConfig.connMap,
             colorMap: { ...this.simplificationConfig.colorMap },
@@ -325,6 +330,38 @@ export class TraceSimplificationSolver extends BaseSolver {
         fill: fillColor,
         label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
       })
+    }
+
+    // Draw immutable routed copper as subdued, dashed layer-colored peers.
+    for (const route of this.simplificationConfig.otherHdRoutes ?? []) {
+      for (let i = 0; i < route.route.length - 1; i++) {
+        const current = route.route[i]
+        const next = route.route[i + 1]
+        if (current.z !== next.z) continue
+
+        visualization.lines.push({
+          points: [
+            { x: current.x, y: current.y },
+            { x: next.x, y: next.y },
+          ],
+          strokeColor:
+            current.z === 0
+              ? "rgba(160, 32, 32, 0.55)"
+              : "rgba(32, 32, 160, 0.55)",
+          strokeWidth: route.traceThickness,
+          strokeDash: [0.08, 0.08],
+          label: `${route.connectionName} immutable (z=${current.z})`,
+        })
+      }
+
+      for (const via of route.vias) {
+        visualization.circles.push({
+          center: { x: via.x, y: via.y },
+          radius: route.viaDiameter / 2,
+          fill: "rgba(96, 96, 96, 0.45)",
+          label: `${route.connectionName} immutable via`,
+        })
+      }
     }
 
     // Draw output routes and vias

@@ -13,6 +13,8 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
+  /** Routed copper that participates in collision checks but is never changed. */
+  otherHdRoutes?: ReadonlyArray<HighDensityRoute>
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
@@ -52,9 +54,10 @@ export class UselessViaRemovalSolver extends BaseSolver {
       "flatbush",
       this.input.obstacles,
     )
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(
-      this.unsimplifiedHdRoutes,
-    )
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.unsimplifiedHdRoutes,
+      ...(input.otherHdRoutes ?? []),
+    ])
   }
 
   _step() {
