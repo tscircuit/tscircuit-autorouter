@@ -8,6 +8,13 @@ import type {
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
 
+export interface PreloadedTracePortAssignment {
+  traceId: string
+  fixedNetId: string
+  routePosition: number
+  z: number
+}
+
 export interface SegmentPortPoint {
   segmentPortPointId: string
   x: number
@@ -27,6 +34,10 @@ export interface SegmentPortPoint {
   cramped: boolean
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
   tinyHypergraphPortPenalty?: number
+  /** Canonical fixed-net ids loaded onto this existing graph port. */
+  _preloadedFixedNetIds?: string[]
+  /** Ordered crossings used to create serialized graph assignments. */
+  _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 
 export interface SharedEdgeSegment {
