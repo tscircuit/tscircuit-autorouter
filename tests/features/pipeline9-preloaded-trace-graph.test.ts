@@ -103,5 +103,48 @@ test("Pipeline9 loads preexisting copper into ports without changing capacity to
       (node) => (node._preloadedFixedNetIds?.length ?? 0) > 0,
     ),
   ).toBe(false)
+  for (const solverName of [
+    "uniformPortDistributionSolver",
+    "highDensityRouteSolver",
+    "highDensityRepairSolver",
+    "traceSimplificationSolver",
+    "lengthMatchingSolver",
+    "traceWidthSolver",
+    "globalDrcForceImproveSolver",
+    "exactGeometryDrcForceImproveSolver",
+  ]) {
+    const step = solver.pipelineDef.find(
+      (candidate) => candidate.solverName === solverName,
+    )
+    expect(step, `Expected Pipeline9 stage ${solverName}`).toBeDefined()
+    const [rawParams] = step!.getConstructorParams(solver)
+    const params = rawParams as {
+      obstacles?: Array<{ obstacleId?: string }>
+      srj?: { obstacles?: Array<{ obstacleId?: string }> }
+    }
+    const obstacles = params.obstacles ?? params.srj?.obstacles ?? []
+    expect(
+      obstacles.some((obstacle: { obstacleId?: string }) =>
+        obstacle.obstacleId?.startsWith("trace_obstacle_"),
+      ),
+      `${solverName} should not receive approximation rectangles for preloaded traces`,
+    ).toBe(false)
+    const stageSolver = (
+      solver as unknown as Record<
+        string,
+        { visualize: () => { rects?: unknown[] } } | undefined
+      >
+    )[solverName]
+    expect(
+      stageSolver,
+      `Expected instantiated Pipeline9 stage ${solverName}`,
+    ).toBeDefined()
+    expect(
+      (stageSolver!.visualize().rects ?? []).some((rect) =>
+        JSON.stringify(rect).includes("trace_obstacle_"),
+      ),
+      `${solverName} should not visualize approximation rectangles for preloaded traces`,
+    ).toBe(false)
+  }
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(1)
 })

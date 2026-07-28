@@ -152,10 +152,30 @@ const MAX_POST_FINAL_COMPOSITE_DRC_EVALUATIONS = 12
 const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS = 32
 const MAX_POST_FINAL_COMPOSITE_SAME_NET_VIA_MERGER_ITERATIONS_PER_ATTEMPT = 8
 const ANCHORED_FIXED_COPPER_HALF_SPAN = 7
+const RESIDUAL_ANCHORED_FIXED_COPPER_HALF_SPANS = [2, 4, 7] as const
+const MAX_EARLY_SHORT_ANCHORED_INITIAL_DRC_ISSUES = 50
+const MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ATTEMPTS = 16
+const MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS = 16
+const MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ITERATIONS = 80_000
 const MAX_ANCHORED_FIXED_COPPER_ATTEMPTS = 96
 const MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS = 48
 const MAX_ANCHORED_FIXED_COPPER_ITERATIONS = 480_000
 const MAX_ANCHORED_FIXED_COPPER_ITERATIONS_PER_ATTEMPT = 12_000
+const MAX_FINAL_ANCHORED_FIXED_COPPER_ATTEMPTS = 48
+const MAX_FINAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS = 24
+const MAX_FINAL_ANCHORED_FIXED_COPPER_ITERATIONS = 240_000
+const MAX_TOTAL_ANCHORED_FIXED_COPPER_ATTEMPTS =
+  MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ATTEMPTS +
+  MAX_ANCHORED_FIXED_COPPER_ATTEMPTS +
+  MAX_FINAL_ANCHORED_FIXED_COPPER_ATTEMPTS
+const MAX_TOTAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS =
+  MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS +
+  MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS +
+  MAX_FINAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+const MAX_TOTAL_ANCHORED_FIXED_COPPER_ITERATIONS =
+  MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ITERATIONS +
+  MAX_ANCHORED_FIXED_COPPER_ITERATIONS +
+  MAX_FINAL_ANCHORED_FIXED_COPPER_ITERATIONS
 const MAX_FIXED_COPPER_COMPOSITE_RESIDUAL = 2
 const MAX_FIXED_COPPER_COMPOSITE_PRIMARY_ATTEMPTS = 4
 const MAX_FIXED_COPPER_COMPOSITE_FOLLOWUP_ATTEMPTS = 6
@@ -845,7 +865,8 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     const errorType = getErrorType(error)
     if (
       errorType !== "pcb_via_clearance_error" &&
-      errorType !== "pcb_via_trace_clearance_error"
+      errorType !== "pcb_via_trace_clearance_error" &&
+      errorType !== "pcb_trace_error"
     ) {
       return undefined
     }
@@ -853,14 +874,24 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     if (!errorCenter) return undefined
 
     const snapshot = this.getSnapshot(routes)
+    if (errorType === "pcb_trace_error" && snapshot.count > 2) {
+      return undefined
+    }
     const preloadedTraceId =
-      errorType === "pcb_via_trace_clearance_error"
-        ? this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+      errorType === "pcb_via_trace_clearance_error" ||
+      errorType === "pcb_trace_error"
+        ? (this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
             typeof error.pcb_trace_id === "string"
               ? error.pcb_trace_id
-              : getRawOtherTraceId(error),
-          )
+              : undefined,
+          ) ??
+          this.b01Rerouter.getPreloadedTraceIdForDrcTraceId(
+            getRawOtherTraceId(error),
+          ))
         : undefined
+    if (errorType === "pcb_trace_error" && !preloadedTraceId) {
+      return undefined
+    }
     const viaGroups: ViaTransitionGroup[] = []
     const seenViaGroups = new Set<string>()
     for (const routeIndex of this.getCandidateRouteIndexesForError(
@@ -875,6 +906,12 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             preloadedTraceId,
           )
         : []
+      if (
+        errorType === "pcb_trace_error" &&
+        overlappingViaCenters.length === 0
+      ) {
+        continue
+      }
       const referenceCenters =
         overlappingViaCenters.length > 0 ? overlappingViaCenters : [errorCenter]
       for (const referenceCenter of referenceCenters) {
@@ -3323,6 +3360,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     routes: HighDensityRoute[],
     routeIndex: number,
     centers: ReadonlyArray<{ x: number; y: number }>,
+    halfSpan: number,
   ): AnchoredFixedCopperWindow | undefined {
     const route = routes[routeIndex]
     if (!route || route.route.length < 2 || centers.length === 0) {
@@ -3391,11 +3429,11 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
     const startRouteDistance = Math.max(
       0,
-      Math.min(...projectedRouteDistances) - ANCHORED_FIXED_COPPER_HALF_SPAN,
+      Math.min(...projectedRouteDistances) - halfSpan,
     )
     const endRouteDistance = Math.min(
       totalRouteDistance,
-      Math.max(...projectedRouteDistances) + ANCHORED_FIXED_COPPER_HALF_SPAN,
+      Math.max(...projectedRouteDistances) + halfSpan,
     )
     if (endRouteDistance - startRouteDistance <= POSITION_EPSILON) {
       return undefined
@@ -3493,7 +3531,8 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
   private getRemainingAnchoredFixedCopperIterations(): number {
     return Math.max(
       0,
-      MAX_ANCHORED_FIXED_COPPER_ITERATIONS - this.anchoredFixedCopperIterations,
+      MAX_TOTAL_ANCHORED_FIXED_COPPER_ITERATIONS -
+        this.anchoredFixedCopperIterations,
     )
   }
 
@@ -3546,6 +3585,8 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     options: {
       includeCandidateCopper: boolean
       reverse: boolean
+      halfSpan: number
+      requireSnapshotImprovement?: boolean
     },
   ):
     | {
@@ -3557,6 +3598,7 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       routes,
       routeIndex,
       centers,
+      options.halfSpan,
     )
     if (!anchoredWindow) return undefined
     const iterationLimit = Math.min(
@@ -3565,9 +3607,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     )
     if (
       iterationLimit <= 0 ||
-      this.anchoredFixedCopperAttempts >= MAX_ANCHORED_FIXED_COPPER_ATTEMPTS ||
+      this.anchoredFixedCopperAttempts >=
+        MAX_TOTAL_ANCHORED_FIXED_COPPER_ATTEMPTS ||
       this.anchoredFixedCopperDrcEvaluations >=
-        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+        MAX_TOTAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
     ) {
       return undefined
     }
@@ -3619,7 +3662,10 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
         snapshot,
         routeIndex,
       )
-    if (!snapshotImproved && !fixedGeometryImproved) {
+    if (
+      !snapshotImproved &&
+      (options.requireSnapshotImprovement || !fixedGeometryImproved)
+    ) {
       return undefined
     }
 
@@ -3633,16 +3679,39 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
 
   private runAnchoredFixedCopperRepair(
     routes: HighDensityRoute[],
+    options: {
+      halfSpans?: ReadonlyArray<number>
+      requireSnapshotImprovement?: boolean
+      maxAdditionalAttempts?: number
+      maxAdditionalDrcEvaluations?: number
+      maxAdditionalIterations?: number
+      maximumResidualIssueCount?: number
+    } = {},
   ): HighDensityRoute[] {
     let improvedRoutes = routes
     let snapshot = this.getSnapshot(improvedRoutes)
+    if (
+      options.maximumResidualIssueCount !== undefined &&
+      snapshot.count > options.maximumResidualIssueCount
+    ) {
+      return routes
+    }
+    const attemptLimit =
+      this.anchoredFixedCopperAttempts +
+      (options.maxAdditionalAttempts ?? MAX_ANCHORED_FIXED_COPPER_ATTEMPTS)
+    const drcEvaluationLimit =
+      this.anchoredFixedCopperDrcEvaluations +
+      (options.maxAdditionalDrcEvaluations ??
+        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS)
+    const iterationLimit =
+      this.anchoredFixedCopperIterations +
+      (options.maxAdditionalIterations ?? MAX_ANCHORED_FIXED_COPPER_ITERATIONS)
 
     repairLoop: while (
       snapshot.count > 0 &&
-      this.getRemainingAnchoredFixedCopperIterations() > 0 &&
-      this.anchoredFixedCopperAttempts < MAX_ANCHORED_FIXED_COPPER_ATTEMPTS &&
-      this.anchoredFixedCopperDrcEvaluations <
-        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
+      this.anchoredFixedCopperIterations < iterationLimit &&
+      this.anchoredFixedCopperAttempts < attemptLimit &&
+      this.anchoredFixedCopperDrcEvaluations < drcEvaluationLimit
     ) {
       const centersByRouteIndex = new Map<
         number,
@@ -3696,30 +3765,39 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
             ? [centers, ...centers.map((center) => [center])]
             : [centers]
         for (const centerGroup of centerGroups) {
-          for (const includeCandidateCopper of [true, false]) {
-            for (const reverse of [false, true]) {
-              const candidate = this.tryAnchoredFixedCopperCandidate(
-                improvedRoutes,
-                snapshot,
-                routeIndex,
-                centerGroup,
-                { includeCandidateCopper, reverse },
-              )
-              if (!candidate) {
-                if (
-                  this.getRemainingAnchoredFixedCopperIterations() <= 0 ||
-                  this.anchoredFixedCopperAttempts >=
-                    MAX_ANCHORED_FIXED_COPPER_ATTEMPTS ||
-                  this.anchoredFixedCopperDrcEvaluations >=
-                    MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS
-                ) {
-                  break repairLoop
+          const halfSpans = options.halfSpans ?? [
+            ANCHORED_FIXED_COPPER_HALF_SPAN,
+          ]
+          for (const halfSpan of halfSpans) {
+            for (const includeCandidateCopper of [true, false]) {
+              for (const reverse of [false, true]) {
+                const candidate = this.tryAnchoredFixedCopperCandidate(
+                  improvedRoutes,
+                  snapshot,
+                  routeIndex,
+                  centerGroup,
+                  {
+                    includeCandidateCopper,
+                    reverse,
+                    halfSpan,
+                    requireSnapshotImprovement:
+                      options.requireSnapshotImprovement,
+                  },
+                )
+                if (!candidate) {
+                  if (
+                    this.anchoredFixedCopperIterations >= iterationLimit ||
+                    this.anchoredFixedCopperAttempts >= attemptLimit ||
+                    this.anchoredFixedCopperDrcEvaluations >= drcEvaluationLimit
+                  ) {
+                    break repairLoop
+                  }
+                  continue
                 }
-                continue
+                improvedRoutes = candidate.routes
+                snapshot = candidate.snapshot
+                continue repairLoop
               }
-              improvedRoutes = candidate.routes
-              snapshot = candidate.snapshot
-              continue repairLoop
             }
           }
         }
@@ -5013,6 +5091,20 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     improvedRoutes = this.runPostRepairSameNetViaMerge(improvedRoutes)
     improvedRoutes = this.runSharedTerminalCompositeRepair(improvedRoutes)
     improvedRoutes = this.runPostFinalCompositeRepair(improvedRoutes)
+    if (
+      (this.stats.initialDrcIssueCount ?? Number.POSITIVE_INFINITY) <=
+      MAX_EARLY_SHORT_ANCHORED_INITIAL_DRC_ISSUES
+    ) {
+      improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes, {
+        halfSpans: RESIDUAL_ANCHORED_FIXED_COPPER_HALF_SPANS,
+        requireSnapshotImprovement: true,
+        maxAdditionalAttempts: MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ATTEMPTS,
+        maxAdditionalDrcEvaluations:
+          MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS,
+        maxAdditionalIterations:
+          MAX_EARLY_SHORT_ANCHORED_FIXED_COPPER_ITERATIONS,
+      })
+    }
     improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes)
     improvedRoutes = this.runFixedCopperCompositeRepair(improvedRoutes)
     improvedRoutes = this.runFinalFixedOverlapLayerDetour(improvedRoutes)
@@ -5021,6 +5113,15 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
     improvedRoutes = this.runPostClusterViaMicroShiftCleanup(improvedRoutes)
     improvedRoutes = this.runFinalEndpointSlideCleanup(improvedRoutes)
     improvedRoutes = this.runFinalContinuityTerminalViaBridge(improvedRoutes)
+    improvedRoutes = this.runAnchoredFixedCopperRepair(improvedRoutes, {
+      halfSpans: RESIDUAL_ANCHORED_FIXED_COPPER_HALF_SPANS,
+      requireSnapshotImprovement: true,
+      maxAdditionalAttempts: MAX_FINAL_ANCHORED_FIXED_COPPER_ATTEMPTS,
+      maxAdditionalDrcEvaluations:
+        MAX_FINAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS,
+      maxAdditionalIterations: MAX_FINAL_ANCHORED_FIXED_COPPER_ITERATIONS,
+      maximumResidualIssueCount: 2,
+    })
     improvedRoutes =
       this.normalizeViaMetadataFromLayerTransitions(improvedRoutes)
 
@@ -5153,11 +5254,11 @@ export class Pipeline9ExactDrcRepairSolver extends GlobalDrcBranchPortfolioSolve
       pipeline9AnchoredFixedCopperIterations:
         this.anchoredFixedCopperIterations,
       pipeline9AnchoredFixedCopperAttemptLimit:
-        MAX_ANCHORED_FIXED_COPPER_ATTEMPTS,
+        MAX_TOTAL_ANCHORED_FIXED_COPPER_ATTEMPTS,
       pipeline9AnchoredFixedCopperDrcEvaluationLimit:
-        MAX_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS,
+        MAX_TOTAL_ANCHORED_FIXED_COPPER_DRC_EVALUATIONS,
       pipeline9AnchoredFixedCopperIterationLimit:
-        MAX_ANCHORED_FIXED_COPPER_ITERATIONS,
+        MAX_TOTAL_ANCHORED_FIXED_COPPER_ITERATIONS,
       pipeline9FixedCopperCompositePrimaryAttempts:
         this.fixedCopperCompositePrimaryAttempts,
       pipeline9FixedCopperCompositeFollowupAttempts:

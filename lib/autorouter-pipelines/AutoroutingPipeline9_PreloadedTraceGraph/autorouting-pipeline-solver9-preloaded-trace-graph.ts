@@ -1,8 +1,6 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import {
   AutoroutingPipelineSolver7_MultiGraph,
   type AutoroutingPipelineSolverOptions,
@@ -35,24 +33,6 @@ const getAxisAlignedRepairObstacle = (obstacle: Obstacle): Obstacle => {
       Math.abs(obstacle.height * Math.cos(radians)),
     ccwRotationDegrees: 0,
   }
-}
-
-const getPreloadedTraceGeometryObstacles = (
-  srj: SimpleRouteJson,
-): Obstacle[] => {
-  const traceObstacles = getObstaclesFromSrjTraces(srj, {
-    includeConnectionNameInConnectedTo: true,
-    includeSquareCaps: true,
-    modelJumperPads: true,
-  })
-  if (traceObstacles.length === 0) return []
-
-  return addApproximatingRectsToSrj({
-    ...srj,
-    obstacles: traceObstacles,
-    connections: [],
-    traces: undefined,
-  }).obstacles
 }
 
 const createPadCenteredDrcEvaluator = (
@@ -116,9 +96,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
   ) {
     super(srj, opts)
     const pipelineDef = this.pipelineDef as PipelineStep[]
-    const preloadedTraceGeometryObstacles = getPreloadedTraceGeometryObstacles(
-      this.originalSrj,
-    )
     const preprocessStep = pipelineDef.find(
       (step) => step.solverName === "preprocessSimpleRouteJsonSolver",
     )
@@ -143,36 +120,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
         pipeline.originalSrj,
       ],
     })
-
-    for (const solverName of [
-      "uniformPortDistributionSolver",
-      "highDensityRouteSolver",
-      "highDensityRepairSolver",
-      "traceSimplificationSolver",
-      "lengthMatchingSolver",
-      "traceWidthSolver",
-    ]) {
-      const step = pipelineDef.find(
-        (candidate) => candidate.solverName === solverName,
-      )
-      if (!step) {
-        throw new Error(`Pipeline9 could not find the ${solverName} stage`)
-      }
-      const getBaseParams = step.getConstructorParams
-      step.getConstructorParams = (pipeline) => {
-        const [params, ...remainingParams] = getBaseParams(pipeline)
-        return [
-          {
-            ...params,
-            obstacles: [
-              ...(params.obstacles ?? []),
-              ...preloadedTraceGeometryObstacles,
-            ],
-          },
-          ...remainingParams,
-        ]
-      }
-    }
 
     const stitchStep = pipelineDef.find(
       (step) => step.solverName === "highDensityStitchSolver",
@@ -210,13 +157,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
             pipeline.srjWithPointPairs!.connections,
             pipeline.srj.layerCount,
           ),
-          srj: {
-            ...params.srj,
-            obstacles: [
-              ...params.srj.obstacles,
-              ...preloadedTraceGeometryObstacles,
-            ],
-          },
         },
       ]
     }
@@ -249,10 +189,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends AutoroutingP
           b01BaseObstacles: originalObstacles,
           srj: {
             ...params.srj,
-            obstacles: [
-              ...originalObstacles.map(getAxisAlignedRepairObstacle),
-              ...preloadedTraceGeometryObstacles,
-            ],
+            obstacles: originalObstacles.map(getAxisAlignedRepairObstacle),
           },
         },
       ]
