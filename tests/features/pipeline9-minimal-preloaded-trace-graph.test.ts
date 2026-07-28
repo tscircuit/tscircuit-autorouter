@@ -6,7 +6,7 @@ import scenario from "./preexisting-connected-traces/srj/preexisting-connected-t
   type: "json",
 }
 
-test("Pipeline9 is Pipeline7 plus trace preprocessing and hypergraph preloading", () => {
+test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => {
   const srj = structuredClone(scenario) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     targetMinCapacity: 0.75,
@@ -25,6 +25,7 @@ test("Pipeline9 is Pipeline7 plus trace preprocessing and hypergraph preloading"
     effort: 0.1,
   })
 
+  expect(solver).not.toBeInstanceOf(AutoroutingPipelineSolver7_MultiGraph)
   solver.solveUntilPhase("portPointPathingSolver")
   traceFreeSolver.solveUntilPhase("portPointPathingSolver")
 
