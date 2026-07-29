@@ -32,14 +32,11 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
-  const engine = new AutoroutingDrcEngine(
-    engineSrj as RepairSimpleRouteJson,
-    {
-      connMap: conversionOptions.connMap,
-      traceClearance: AUTOROUTING_TRACE_CLEARANCE,
-      viaClearance: AUTOROUTING_VIA_CLEARANCE,
-    },
-  )
+  const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
+    connMap: conversionOptions.connMap,
+    traceClearance: AUTOROUTING_TRACE_CLEARANCE,
+    viaClearance: AUTOROUTING_VIA_CLEARANCE,
+  })
 
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes

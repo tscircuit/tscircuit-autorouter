@@ -52,4 +52,4 @@ test("bugreport46 stitch does not leave stitchable same-layer gaps at effort 2x"
     .filter(({ bestGap }) => bestGap <= MAX_STITCH_GAP_DISTANCE_3)
 
   expect(nearGapConnections).toEqual([])
-}, 120_000)
+})

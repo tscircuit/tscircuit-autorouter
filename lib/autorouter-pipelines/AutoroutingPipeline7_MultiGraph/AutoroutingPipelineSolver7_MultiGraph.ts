@@ -653,17 +653,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
-        const autoroutingDrcEvaluator =
-          createPipeline7AutoroutingDrcEvaluator({
-            connections: cms.netToPointPairsSolver?.newConnections ?? [],
-            originalConnections: cms.originalSrj.connections,
-            layerCount: cms.srj.layerCount,
-            obstacles: cms.srj.obstacles,
-            defaultViaHoleDiameter: cms.viaHoleDiameter,
-            connMap: cms.connMap,
-            srjWithPointPairs: cms.srjWithPointPairs!,
-            originalSrj: cms.originalSrj,
-          })
+        const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
+          connMap: cms.connMap,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+        })
 
         return [
           {
