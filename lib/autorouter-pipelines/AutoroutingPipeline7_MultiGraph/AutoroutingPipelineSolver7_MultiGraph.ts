@@ -1,5 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
+import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -226,7 +226,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingSolver?: LengthMatchingSolver
+  postProcessingSolver?: PostProcessingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -614,21 +614,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("lengthMatchingSolver", LengthMatchingSolver, (cms) => [
-      {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        originalConnections: cms.srj.connections,
-        differentialPairs: cms.srj.differentialPairs,
-        obstacles: cms.srj.obstacles,
-        bounds: cms.srj.bounds,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-        layerCount: cms.srj.layerCount,
-        colorMap: cms.colorMap,
-      },
-    ]),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
-        hdRoutes: cms.lengthMatchingSolver!.getOutput().matchedHdRoutes,
+        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
@@ -697,6 +685,61 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep("postProcessingSolver", PostProcessingSolver, (cms) => {
+      const netToPointPairsSolver = cms.netToPointPairsSolver
+      if (!netToPointPairsSolver)
+        throw new Error(
+          "Pipeline7: post-processing requires NetToPointPairsSolver output",
+        )
+      const connections = netToPointPairsSolver.newConnections
+      const finalHdConnectionNames = new Map<string, string>()
+      for (const pair of cms.srj.differentialPairs ?? []) {
+        for (const connectionName of pair.connectionNames) {
+          const matchingConnections = connections.filter(
+            (connection) =>
+              connection.name === connectionName ||
+              connection.__rootConnectionNames?.includes(connectionName) ||
+              connection.__netConnectionName === connectionName,
+          )
+          if (matchingConnections.length !== 1)
+            throw new Error(
+              `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
+            )
+          finalHdConnectionNames.set(
+            connectionName,
+            matchingConnections[0]!.name,
+          )
+        }
+      }
+      const differentialPairs = (cms.srj.differentialPairs ?? []).map(
+        (pair) => {
+          const connectionNames = pair.connectionNames.map((connectionName) => {
+            const finalHdConnectionName =
+              finalHdConnectionNames.get(connectionName)
+            if (!finalHdConnectionName)
+              throw new Error(
+                `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
+              )
+            return finalHdConnectionName
+          }) as [string, string]
+          if (connectionNames[0] === connectionNames[1])
+            throw new Error(
+              `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
+            )
+          return { ...pair, connectionNames }
+        },
+      )
+      return [
+        {
+          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          differentialPairs,
+          obstacles: cms.srj.obstacles,
+          bounds: cms.srj.bounds,
+          layerCount: cms.srj.layerCount,
+          allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
+        },
+      ]
+    }),
   ]
 
   constructor(
@@ -784,6 +827,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (pipelineStepDef.solverName === "postProcessingSolver")
+      this.MAX_ITERATIONS = Math.max(
+        this.MAX_ITERATIONS,
+        this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
+      )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
@@ -829,7 +877,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const lengthMatchingViz = this.lengthMatchingSolver?.visualize()
+    const postProcessingViz = this.postProcessingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -952,10 +1000,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       highDensityRepairViz,
       highDensityStitchViz,
       traceSimplificationViz,
-      lengthMatchingViz,
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      postProcessingViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1033,10 +1081,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.postProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
-      this.lengthMatchingSolver?.getOutput().matchedHdRoutes ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
