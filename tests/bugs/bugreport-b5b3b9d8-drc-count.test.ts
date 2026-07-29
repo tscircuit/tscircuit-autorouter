@@ -41,5 +41,5 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     viaClearance: 0.1,
   })
 
-  expect(errors).toHaveLength(2)
+  expect(errors).toHaveLength(1)
 })

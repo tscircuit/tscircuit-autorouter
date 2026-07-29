@@ -68,7 +68,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
+import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -653,7 +653,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
-        const relaxedDrcEvaluator = createPipeline7RelaxedDrcEvaluator({
+        const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
           layerCount: cms.srj.layerCount,
@@ -671,8 +671,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
-            drcEvaluator: relaxedDrcEvaluator,
-            viaInPadDrcEvaluator: relaxedDrcEvaluator,
+            drcEvaluator: autoroutingDrcEvaluator,
+            viaInPadDrcEvaluator: autoroutingDrcEvaluator,
             maxIterations: 32,
             enableLargeBoardBroadFallback: false,
             enableTargetedErrorSweep: true,
