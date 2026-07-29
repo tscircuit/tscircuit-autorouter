@@ -70,7 +70,14 @@ test("Pipeline7 runs HD-route post-processing after final DRC", () => {
 
   const postProcessingParams = params as any
   expect(Object.keys(postProcessingParams).sort()).toEqual(
-    ["bounds", "differentialPairs", "hdRoutes", "layerCount", "obstacles"].sort(),
+    [
+      "allowViaInPad",
+      "bounds",
+      "differentialPairs",
+      "hdRoutes",
+      "layerCount",
+      "obstacles",
+    ].sort(),
   )
   expect(postProcessingParams.differentialPairs).toEqual([
     {
