@@ -686,6 +686,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             drcEvaluator: relaxedDrcEvaluator,
             viaInPadDrcEvaluator: relaxedDrcEvaluator,
             maxIterations: 32,
+            maxCandidateEvaluations: 12,
             enableLargeBoardBroadFallback: false,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,

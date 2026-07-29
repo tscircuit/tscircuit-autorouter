@@ -70,6 +70,7 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
     netToPointPairsSolver: { newConnections: [] },
   } as any)
   expect((exactGeometryDrcParams as any).maxIterations).toBe(32)
+  expect((exactGeometryDrcParams as any).maxCandidateEvaluations).toBe(12)
   expect((exactGeometryDrcParams as any).drcEvaluator).toBeFunction()
   expect((exactGeometryDrcParams as any).viaInPadDrcEvaluator).toBe(
     (exactGeometryDrcParams as any).drcEvaluator,
