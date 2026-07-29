@@ -56,42 +56,34 @@ const getConnectedPointKeys = (
   return connected
 }
 
-test(
-  "repro117 standalone simple route pipeline4 snapshot",
-  () => {
-    const solver = getSolvedRepro117()
+test("repro117 standalone simple route pipeline4 snapshot", () => {
+  const solver = getSolvedRepro117()
 
-    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
-    )
-  },
-)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
+})
 
-test(
-  "repro117 keeps cmn_68 same-root mst route fragments connected",
-  () => {
-    const solver = getSolvedRepro117()
+test("repro117 keeps cmn_68 same-root mst route fragments connected", () => {
+  const solver = getSolvedRepro117()
 
-    const cmn68 =
-      solver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_68")?.node
+  const cmn68 =
+    solver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_68")?.node
 
-    expect(cmn68).toBeDefined()
+  expect(cmn68).toBeDefined()
 
-    const targetPortPoints =
-      cmn68!.portPoints.filter(
-        (point) =>
-          point.connectionName ===
-          "source_trace_5__source_trace_26__source_trace_28_mst1",
-      ) ?? []
-    const targetPortKeys = targetPortPoints.map(pointKey)
-    const connectedPointKeys = getConnectedPointKeys(
-      solver.highDensityRouteSolver?.routes ?? [],
-      "source_trace_5__source_trace_26__source_trace_28_mst1",
-      targetPortKeys[0]!,
-    )
+  const targetPortPoints =
+    cmn68!.portPoints.filter(
+      (point) =>
+        point.connectionName ===
+        "source_trace_5__source_trace_26__source_trace_28_mst1",
+    ) ?? []
+  const targetPortKeys = targetPortPoints.map(pointKey)
+  const connectedPointKeys = getConnectedPointKeys(
+    solver.highDensityRouteSolver?.routes ?? [],
+    "source_trace_5__source_trace_26__source_trace_28_mst1",
+    targetPortKeys[0]!,
+  )
 
-    expect(targetPortKeys.every((key) => connectedPointKeys.has(key))).toBe(
-      true,
-    )
-  },
-)
+  expect(targetPortKeys.every((key) => connectedPointKeys.has(key))).toBe(true)
+})
