@@ -1430,7 +1430,7 @@ jobs:
           bun scripts/benchmark/benchmark-history.ts record \
             --report ./benchmark-artifact/benchmark-result.json \
             --history-dir ./.benchmark-history/history \
-            --out benchmark-history.html \
+            --out-dir benchmark-dashboard \
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --metadata ./benchmark-artifact/benchmark-run-metadata.json
 
@@ -1465,10 +1465,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          cp benchmark-history.html .benchmark-dashboard/index.html
+          rm -rf .benchmark-dashboard/data
+          cp benchmark-dashboard/index.html .benchmark-dashboard/index.html
+          cp benchmark-dashboard/index.css .benchmark-dashboard/index.css
+          cp benchmark-dashboard/index.js .benchmark-dashboard/index.js
+          cp -R benchmark-dashboard/data .benchmark-dashboard/data
           git -C .benchmark-dashboard config user.name "github-actions[bot]"
           git -C .benchmark-dashboard config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C .benchmark-dashboard add index.html
+          git -C .benchmark-dashboard add -A -- index.html index.css index.js data
           if git -C .benchmark-dashboard diff --cached --quiet; then
             echo "Benchmark dashboard is unchanged."
           else

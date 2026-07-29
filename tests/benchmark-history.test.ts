@@ -1,13 +1,14 @@
 import { expect, test } from "bun:test"
 import { existsSync } from "node:fs"
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { BenchmarkReport } from "../scripts/benchmark/benchmark-types"
 import {
   appendHistoryRun,
-  createBenchmarkHistoryDashboard,
+  createBenchmarkHistoryDashboardIndex,
   getDashboardPoints,
+  writeBenchmarkHistoryDashboard,
   readHistoryRuns,
   type BenchmarkHistoryRun,
 } from "../scripts/benchmark/benchmark-history"
@@ -73,7 +74,7 @@ const makeRun = (runId: string): BenchmarkHistoryRun => ({
   } satisfies BenchmarkReport,
 })
 
-test("benchmark history retains full sample records and embeds a self-contained dashboard", async () => {
+test("benchmark history retains full sample records and publishes a static dashboard", async () => {
   const directory = await mkdtemp(join(tmpdir(), "benchmark-history-"))
   await appendHistoryRun({ historyDirectory: directory, run: makeRun("1") })
   const runs = await appendHistoryRun({
@@ -104,17 +105,34 @@ test("benchmark history retains full sample records and embeds a self-contained 
       },
     },
   ])
-  const dashboard = createBenchmarkHistoryDashboard(runs)
-  const fullDashboard = createBenchmarkHistoryDashboard(
+  const dashboardDirectory = await mkdtemp(
+    join(tmpdir(), "benchmark-history-dashboard-"),
+  )
+  const fullDashboardDirectory = await mkdtemp(
+    join(tmpdir(), "benchmark-history-full-dashboard-"),
+  )
+  await writeBenchmarkHistoryDashboard({
+    outputDirectory: dashboardDirectory,
+    runs,
+  })
+  await writeBenchmarkHistoryDashboard({
+    outputDirectory: fullDashboardDirectory,
+    runs: Array.from({ length: 101 }, (_, index) => makeRun(String(index + 1))),
+  })
+  const dashboard = await readFile(
+    join(dashboardDirectory, "index.html"),
+    "utf8",
+  )
+  const dashboardScript = await readFile(
+    join(dashboardDirectory, "index.js"),
+    "utf8",
+  )
+  const dashboardData = JSON.parse(
+    await readFile(join(dashboardDirectory, "data", "index.json"), "utf8"),
+  )
+  const fullDashboardData = createBenchmarkHistoryDashboardIndex(
     Array.from({ length: 101 }, (_, index) => makeRun(String(index + 1))),
   )
-  const dashboardScript = dashboard.match(/<script>\n([\s\S]*)<\/script>/)?.[1]
-  const dashboardData = dashboard.match(
-    /<script id="benchmark-history-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1]
-  const fullDashboardData = fullDashboard.match(
-    /<script id="benchmark-history-data" type="application\/json">([\s\S]*?)<\/script>/,
-  )?.[1]
   const cliDirectory = await mkdtemp(join(tmpdir(), "benchmark-history-cli-"))
   const reportPath = join(cliDirectory, "report.json")
   const metadataPath = join(cliDirectory, "metadata.json")
@@ -138,8 +156,8 @@ test("benchmark history retains full sample records and embeds a self-contained 
       reportPath,
       "--history-dir",
       join(cliDirectory, "history"),
-      "--out",
-      join(cliDirectory, "dashboard.html"),
+      "--out-dir",
+      join(cliDirectory, "dashboard"),
       "--run-url",
       "https://example.com/runs/987654321",
       "--metadata",
@@ -171,8 +189,8 @@ test("benchmark history retains full sample records and embeds a self-contained 
       reportPath,
       "--history-dir",
       join(cliDirectory, "invalid-history"),
-      "--out",
-      join(cliDirectory, "invalid-dashboard.html"),
+      "--out-dir",
+      join(cliDirectory, "invalid-dashboard"),
       "--run-url",
       "https://example.com/runs/987654321",
       "--metadata",
@@ -353,28 +371,37 @@ test("benchmark history retains full sample records and embeds a self-contained 
     "dataset01",
     "dataset02",
   ])
-  expect(dashboard).toContain("benchmark-history-data")
-  expect(dashboard).toContain('"sampleNumber":1')
-  if (!dashboardData || !fullDashboardData || !dashboardScript) {
-    throw new Error("Dashboard did not contain its expected scripts")
-  }
-  const parsedDashboardData = JSON.parse(dashboardData)
-  const parsedFullDashboardData = JSON.parse(fullDashboardData)
-  expect(parsedDashboardData.points).toHaveLength(2)
-  expect(parsedDashboardData.points[0]).not.toHaveProperty("samples")
-  expect(parsedDashboardData.runs[0]?.report.tests).toHaveLength(2)
-  expect(parsedFullDashboardData.runs).toHaveLength(101)
-  expect(parsedFullDashboardData.points).toHaveLength(100)
-  expect(parsedFullDashboardData.points[0]?.runId).toBe("2-1")
+  expect(dashboard).toContain('href="./index.css"')
+  expect(dashboard).toContain('src="./index.js"')
+  expect(dashboard).not.toContain("benchmark-history-data")
+  expect(dashboard).not.toContain('"sampleNumber":1')
+  expect(dashboardData.points).toHaveLength(2)
+  expect(dashboardData.points[0]).not.toHaveProperty("samples")
+  expect(dashboardData.runs[0]).not.toHaveProperty("report")
+  expect(dashboardData.runs[0]).not.toHaveProperty("metadata")
+  expect(dashboardData.runs[0]?.path).toBe("runs/1-1.json")
+  expect(
+    JSON.parse(
+      await readFile(
+        join(dashboardDirectory, "data", "runs", "1-1.json"),
+        "utf8",
+      ),
+    ).report.tests,
+  ).toHaveLength(2)
+  expect(fullDashboardData.runs).toHaveLength(101)
+  expect(fullDashboardData.points).toHaveLength(100)
+  expect(fullDashboardData.points[0]?.runId).toBe("2-1")
   expect(dashboard).not.toContain("Largest regressions in view")
   expect(dashboard).toContain("Current health")
   expect(dashboard).toContain("Recent comparable runs")
   expect(dashboard).toContain("Copy summary")
   expect(dashboard).toContain("Export CSV")
-  expect(dashboard).toContain("Solve time")
-  expect(dashboard).toContain("Average vias")
+  expect(dashboardScript).toContain("Solve time")
+  expect(dashboardScript).toContain("Average vias")
   expect(dashboard).toContain('role="img"')
   expect(dashboardScript).toContain("data-metric")
+  expect(dashboardScript).toContain("./data/index.json")
+  expect(dashboardScript).toContain("loadRun")
   expect(dashboardScript).toContain("axis in")
   expect(() => new Function(dashboardScript)).not.toThrow()
   expect(recordProcess.stderr.toString()).toBe("")
@@ -384,6 +411,15 @@ test("benchmark history retains full sample records and embeds a self-contained 
     "Invalid benchmark metadata fields",
   )
   expect(recordedCliRun?.runId).toBe("987654321-2")
+  expect(existsSync(join(cliDirectory, "dashboard", "index.html"))).toBeTrue()
+  expect(
+    existsSync(join(cliDirectory, "dashboard", "data", "index.json")),
+  ).toBeTrue()
+  expect(
+    existsSync(
+      join(cliDirectory, "dashboard", "data", "runs", "987654321-2.json"),
+    ),
+  ).toBeTrue()
   expect(recordedCliRun?.createdAt).toBe("2026-02-03T04:05:06.000Z")
   expect(recordedCliRun?.runner).toBe("metadata-runner")
 })
