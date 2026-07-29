@@ -60,6 +60,11 @@ export interface SimpleRouteJson {
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
   buses?: Array<SimpleRouteBus>
+  /**
+   * Allows DRC repair to place layer transitions inside connected pads.
+   * Defaults to false because via-in-pad generally requires filled and capped vias.
+   */
+  allowViaInPad?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces

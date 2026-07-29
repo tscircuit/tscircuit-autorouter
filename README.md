@@ -60,6 +60,7 @@ interface SimpleRouteJson {
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   buses?: Array<SimpleRouteBus>
+  allowViaInPad?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   traces?: SimplifiedPcbTraces // Optional for input
 }
@@ -91,6 +92,10 @@ interface SimpleRouteBus {
 `maxLengthSkew` records the maximum permitted routed-length difference for the
 bus. Bus metadata is preserved in the output so routing implementations can
 apply the constraint without losing the original membership or ordering.
+
+Via-in-pad repair is disabled by default because it generally requires filled
+and capped vias. Set `allowViaInPad: true` only when the fabrication process
+supports it.
 
 ### Output Format
 
