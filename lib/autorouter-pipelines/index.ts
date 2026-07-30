@@ -21,3 +21,4 @@ export {
   AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
 } from "./AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./AutoroutingPipeline8/AutoroutingPipelineSolver8"
+export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"

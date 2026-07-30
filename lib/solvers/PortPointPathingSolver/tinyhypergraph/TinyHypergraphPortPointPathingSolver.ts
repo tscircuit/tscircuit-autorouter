@@ -1,6 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -16,7 +17,6 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
-  SelectiveReripTinyHyperGraphSolver,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
@@ -32,10 +32,18 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import {
+  getSerializedPreloadedTraceStats,
+  isPreloadedTraceConnectionId,
+  serializePreloadedTraceAssignments,
+} from "./serializePreloadedTraceAssignments"
 
 type RouteMetadata = {
   connectionId: string
   mutuallyConnectedNetworkId: string
+  startRegionId?: string
+  endRegionId?: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
 }
 
@@ -62,6 +70,9 @@ type TinyBounds = {
 
 type TinyRegionMetadata = {
   bounds?: TinyBounds
+  netId?: number
+  NetId?: number
+  serializedRegionId?: string
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
@@ -79,6 +90,8 @@ type TinyPortMetadata = {
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
+  _preloadedFixedNetIds?: string[]
+  _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 
 type LoadedTinyGraph = {
@@ -271,6 +284,8 @@ const toSerializedPortData = (
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
+    _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
+    _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
 }
 
@@ -458,12 +473,14 @@ const buildSerializedTinyGraph = (
     } as SerializedTinySolvedRoute)
   }
 
-  return {
+  const serializedHyperGraph = {
     regions,
     ports,
     connections,
     solvedRoutes,
   } satisfies SerializedHyperGraph
+  serializePreloadedTraceAssignments(serializedHyperGraph)
+  return serializedHyperGraph
 }
 
 const buildInputNodesWithPortPoints = (
@@ -568,6 +585,50 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
   }
 }
 
+const clearPreloadedEndpointRegionNetIds = (loaded: LoadedTinyGraph) => {
+  const regionIndexBySerializedId = new Map<string, number>()
+  loaded.topology.regionMetadata?.forEach((metadata, regionIndex) => {
+    if (typeof metadata.serializedRegionId === "string") {
+      regionIndexBySerializedId.set(metadata.serializedRegionId, regionIndex)
+    }
+  })
+
+  const activeEndpointRegionIds = new Set<string>()
+  for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
+    if (isPreloadedTraceConnectionId(routeMetadata.connectionId)) continue
+    if (typeof routeMetadata.startRegionId === "string") {
+      activeEndpointRegionIds.add(routeMetadata.startRegionId)
+    }
+    if (typeof routeMetadata.endRegionId === "string") {
+      activeEndpointRegionIds.add(routeMetadata.endRegionId)
+    }
+  }
+
+  for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
+    if (!isPreloadedTraceConnectionId(routeMetadata.connectionId)) continue
+    for (const serializedRegionId of [
+      routeMetadata.startRegionId,
+      routeMetadata.endRegionId,
+    ]) {
+      if (
+        typeof serializedRegionId !== "string" ||
+        activeEndpointRegionIds.has(serializedRegionId)
+      ) {
+        continue
+      }
+      const regionIndex = regionIndexBySerializedId.get(serializedRegionId)
+      if (regionIndex === undefined) continue
+      const metadata = loaded.topology.regionMetadata?.[regionIndex]
+      const hasExplicitNetId =
+        typeof metadata?.netId === "number" ||
+        typeof metadata?.NetId === "number"
+      if (!hasExplicitNetId) {
+        loaded.problem.regionNetId[regionIndex] = -1
+      }
+    }
+  }
+}
+
 const applyPortMetadataPenalties = (
   loaded: LoadedTinyGraph,
   crampedPortTraversalPenalty: number,
@@ -632,6 +693,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
   crampedPortPenaltyCount = 0
+  preloadedPortCount = 0
+  preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
 
@@ -642,6 +705,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
+    const preloadedStats = getSerializedPreloadedTraceStats(
+      inputProblem.serializedHyperGraph,
+    )
+    this.preloadedPortCount = preloadedStats.preloadedPortCount
+    this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
     if (useSelectiveReripRouting) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
@@ -651,7 +719,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = SelectiveReripTinyHyperGraphSolver
+      solveGraphStep.solverClass =
+        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+    }
+    if (preloadedStats.preloadedAssignmentCount > 0) {
+      this.pipelineDef = this.pipelineDef.filter(
+        (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
+      )
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -662,6 +736,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
     applyTerminalRegionNetIds(loaded)
+    clearPreloadedEndpointRegionNetIds(loaded)
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
       metadataPortPenaltyCount,
@@ -697,11 +772,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver = new SelectiveReripTinyHyperGraphSolver(
-        topology,
-        problem,
-        this.getSolveGraphOptions(),
-      )
+      this.initialVisualizationSolver =
+        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+          topology,
+          problem,
+          this.getSolveGraphOptions(),
+        )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
@@ -738,6 +814,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const loadedSolver = solver as typeof solver & LoadedTinyGraph
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
+      clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
     this.configuredSolvers.add(solver)
@@ -827,7 +904,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const preloadedTraceStats =
+      getSerializedPreloadedTraceStats(serializedGraph)
+    const hasPreloadedTraceOccupancy =
+      preloadedTraceStats.preloadedPortCount > 0
     const shouldRunDuplicateCongestedPortPrepass =
+      !hasPreloadedTraceOccupancy &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
@@ -857,7 +939,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         graphForTiny = duplicateCongestedPortSolver.getOutput()
       }
     } else {
-      this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
+      this.duplicateCongestedPortError = hasPreloadedTraceOccupancy
+        ? "Skipped to preserve preloaded port topology"
+        : `Skipped for ${connections.length} connections`
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -932,6 +1016,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver.metadataPortPenaltyCount,
       crampedPortPenalty: this.tinyPipelineSolver.crampedPortTraversalPenalty,
       crampedPortPenaltyCount: this.tinyPipelineSolver.crampedPortPenaltyCount,
+      preloadedPortCount: this.tinyPipelineSolver.preloadedPortCount,
+      preloadedFixedSegmentCount:
+        this.tinyPipelineSolver.preloadedFixedSegmentCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
@@ -1037,8 +1124,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const originalRegion = this.originalRegionById.get(originalRegionId)
       if (!originalRegion) continue
 
-      const portPointsInPairs = regionSegments[regionId].map(
-        ([routeId, fromPortId, toPortId]) => {
+      const portPointsInPairs = regionSegments[regionId]
+        .filter(([routeId]) => {
+          const connectionId = this.getRouteMetadata(
+            solvedTinySolver,
+            routeId,
+          )?.connectionId
+          return (
+            typeof connectionId !== "string" ||
+            !isPreloadedTraceConnectionId(connectionId)
+          )
+        })
+        .map(([routeId, fromPortId, toPortId]) => {
           const startPoint = this.createAssignedPortPoint(
             solvedTinySolver,
             routeId,
@@ -1054,8 +1151,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             endPoint.prevPortPointId = startPoint.portPointId
           }
           return [startPoint, endPoint] satisfies [PortPoint, PortPoint]
-        },
-      )
+        })
       const portPoints = portPointsInPairs.flat()
 
       if (portPoints.length === 0) {

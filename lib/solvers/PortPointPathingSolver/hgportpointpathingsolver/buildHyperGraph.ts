@@ -206,6 +206,10 @@ export function buildHyperGraph(params: {
     )
 
     for (const z of spp.availableZ) {
+      const preloadedTracePortAssignments =
+        spp._preloadedTracePortAssignments?.filter(
+          (assignment) => assignment.z === z,
+        )
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
         x: spp.x,
@@ -215,6 +219,18 @@ export function buildHyperGraph(params: {
         cramped: spp.cramped,
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
+        _preloadedFixedNetIds:
+          preloadedTracePortAssignments &&
+          preloadedTracePortAssignments.length > 0
+            ? [
+                ...new Set(
+                  preloadedTracePortAssignments.map(
+                    (assignment) => assignment.fixedNetId,
+                  ),
+                ),
+              ].sort()
+            : undefined,
+        _preloadedTracePortAssignments: preloadedTracePortAssignments,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

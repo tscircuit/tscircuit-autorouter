@@ -19,6 +19,7 @@ import {
   AutoroutingPipelineSolver3_HgPortPointPathing,
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver7_MultiGraph,
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
 } from "../lib"
 import {
   PipelineStageDebugRunner,
@@ -37,7 +38,7 @@ import {
   toSimpleRouteJson,
 } from "./benchmark/scenarios"
 
-type PipelineId = 1 | 2 | 3 | 4 | 7
+type PipelineId = 1 | 2 | 3 | 4 | 7 | 9
 
 type SolverOptions = {
   effort?: number
@@ -95,6 +96,10 @@ const PIPELINE_SOLVERS: Record<
     solverName: "AutoroutingPipelineSolver7_MultiGraph",
     SolverConstructor: AutoroutingPipelineSolver7_MultiGraph,
   },
+  9: {
+    solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    SolverConstructor: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  },
 }
 
 const printHelp = () => {
@@ -105,7 +110,7 @@ const printHelp = () => {
       "  ./run-sample.sh [--pipeline 7] --sample 1 [--dataset dataset01]",
       "",
       "Options:",
-      "  --pipeline N     Pipeline to run (1, 2, 3, 4, or 7; defaults to 7)",
+      "  --pipeline N     Pipeline to run (1, 2, 3, 4, 7, or 9; defaults to 7)",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
       `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
@@ -113,7 +118,7 @@ const printHelp = () => {
       "  --png-size N     Square PNG size in pixels, min 1024 (default: 1536)",
       "  --stop-after-stage NAME  Stop after capturing a pipeline stage",
       "  --ai-visuals     Also write SVG, GraphicsObject JSON, and per-step PNGs",
-      "  --net-colors     Pipeline 7: color every visualization by net and write aggregate artifacts (implies --ai-visuals)",
+      "  --net-colors     Pipelines 7/9: color every visualization by net and write aggregate artifacts (implies --ai-visuals)",
       "  --effort N       Override solver effort",
       "  -h, --help       Show this help",
       "",
@@ -303,7 +308,7 @@ const parseArgs = (): RunSampleOptions => {
     if (arg === "--pipeline") {
       const pipelineId = parsePositiveInt(args[i + 1] ?? "", "--pipeline")
       if (!(pipelineId in PIPELINE_SOLVERS)) {
-        throw new Error("--pipeline must be one of 1, 2, 3, 4, or 7")
+        throw new Error("--pipeline must be one of 1, 2, 3, 4, 7, or 9")
       }
       options.pipeline = pipelineId as PipelineId
       i += 1
@@ -396,8 +401,10 @@ const parseArgs = (): RunSampleOptions => {
     throw new Error("--png-size must be at least 1024")
   }
 
-  if (options.netColors && options.pipeline !== 7) {
-    throw new Error("--net-colors is currently supported by pipeline 7 only")
+  if (options.netColors && options.pipeline !== 7 && options.pipeline !== 9) {
+    throw new Error(
+      "--net-colors is currently supported by pipelines 7 and 9 only",
+    )
   }
 
   return options
