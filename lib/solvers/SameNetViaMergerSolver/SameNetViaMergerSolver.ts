@@ -35,15 +35,20 @@ type Via = {
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
 
+const tryGetNetForRoute = (
+  connMap: ConnectivityMap,
+  route: HighDensityRoute,
+): string | undefined =>
+  connMap.idToNetMap[route.connectionName] ??
+  (route.rootConnectionName
+    ? connMap.idToNetMap[route.rootConnectionName]
+    : undefined)
+
 const getNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
 ): string => {
-  const net =
-    connMap.idToNetMap[route.connectionName] ??
-    (route.rootConnectionName
-      ? connMap.idToNetMap[route.rootConnectionName]
-      : undefined)
+  const net = tryGetNetForRoute(connMap, route)
   if (!net) {
     throw new Error(
       `SameNetViaMergerSolver could not find net for route "${route.connectionName}"`,
@@ -117,7 +122,9 @@ const canMoveViaTo = (
 
     for (const { conflictingRoute, distance } of conflictingRoutes) {
       if (conflictingRoute.connectionName === route.connectionName) continue
-      if (getNetForRoute(context.connMap, conflictingRoute) === viaToRemove.net)
+      if (
+        tryGetNetForRoute(context.connMap, conflictingRoute) === viaToRemove.net
+      )
         continue
 
       const minDistance =

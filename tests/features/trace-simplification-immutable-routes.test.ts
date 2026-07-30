@@ -376,3 +376,47 @@ test("same-net via merging collision-checks immutable routes without emitting th
   expect(countViaLocations(guardedRoutes)).toBe(2)
   expect(immutableRoute).toEqual(immutableSnapshot)
 })
+
+test("same-net via merging treats unmapped immutable routes as blocking copper", () => {
+  const makeViaRoute = (
+    connectionName: string,
+    viaX: number,
+  ): HighDensityRoute => ({
+    connectionName,
+    traceThickness: 0.15,
+    viaDiameter: 0.3,
+    route: [
+      { x: viaX - 0.25, y: 0, z: 0 },
+      { x: viaX, y: 0, z: 0 },
+      { x: viaX, y: 0, z: 1 },
+      { x: viaX - 0.25, y: 0, z: 1 },
+    ],
+    vias: [{ x: viaX, y: 0 }],
+  })
+  const immutableSnapshot = structuredClone(immutableRoute)
+  const solver = new SameNetViaMergerSolver({
+    inputHdRoutes: [
+      makeViaRoute("editable_a", -0.25),
+      makeViaRoute("editable_b", 0.25),
+    ],
+    otherHdRoutes: [immutableRoute],
+    obstacles: [],
+    colorMap: {},
+    layerCount: 2,
+    connMap: new ConnectivityMap({
+      editable_net: ["editable_a", "editable_b"],
+    }),
+  })
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(
+    new Set(
+      solver
+        .getMergedViaHdRoutes()!
+        .flatMap((route) => route.vias.map((via) => `${via.x}:${via.y}`)),
+    ).size,
+  ).toBe(2)
+  expect(immutableRoute).toEqual(immutableSnapshot)
+})
