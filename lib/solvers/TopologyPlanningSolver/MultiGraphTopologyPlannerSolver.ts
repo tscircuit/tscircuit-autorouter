@@ -7,6 +7,7 @@ import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detecto
 import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { getExpandedGlobalTopologySrj } from "./get-expanded-global-topology-srj"
 import { getGlobalMeshNodesForTopologyMerging } from "./get-global-mesh-nodes-for-topology-merging"
 import {
   ComponentTopologyBatchSolver,
@@ -32,6 +33,7 @@ export interface MultiGraphTopologyPlannerSolverParams {
   componentDetectionOutput?: DetectedComponent[]
   viaDiameter?: number
   obstacleMargin?: number
+  expandGlobalTopologyBounds?: boolean
   brokenSrj?: {
     componentsAsObstaclesSrj: SimpleRouteJson
     components: SerializedTopologyComponentInput[]
@@ -195,8 +197,20 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
 
   /** Adapts the global no-connection SRJ into the RectDiffPipeline input shape. */
   private getGlobalTopologySolverInput() {
+    // Component-local plans have their own bounds and are merged in a separate
+    // coordinate frame. Expand only all-global plans here.
+    const globalTopologySrj =
+      this.inputProblem.expandGlobalTopologyBounds &&
+      this.normalizedInput.components.length === 0
+        ? getExpandedGlobalTopologySrj({
+            inputSrj: this.normalizedInput.globalNoConnectionSrj,
+            viaDiameter: this.inputProblem.viaDiameter,
+            obstacleMargin: this.inputProblem.obstacleMargin,
+          })
+        : this.normalizedInput.globalNoConnectionSrj
+
     return {
-      simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
+      simpleRouteJson: globalTopologySrj as any,
       maxGapFillPasses: 4,
     }
   }

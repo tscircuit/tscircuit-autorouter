@@ -4,7 +4,7 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-const SAMPLE_NUMBERS = [1, 10, 23]
+const SAMPLE_NUMBERS = [1, 10, 23, 101]
 
 test("Pipeline9 visually solves representative SRJ23 samples", async () => {
   for (const sampleNumber of SAMPLE_NUMBERS) {
@@ -41,4 +41,4 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
       },
     )
   }
-})
+}, 20_000)
