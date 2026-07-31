@@ -8,7 +8,12 @@ const MAX_BGA_PAD_ASPECT_RATIO = 1.5
 const MIN_INTERIOR_PAD_COUNT = 1
 const AXIS_CLUSTER_EPSILON = 1e-3
 
-export function clusterAxisValues(values: number[]) {
+type BgaGridRow = {
+  y: number
+  obstaclesByX: Map<number, Obstacle>
+}
+
+export function clusterAxisValues(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
   const clustered: number[] = []
 
@@ -25,7 +30,7 @@ export function clusterAxisValues(values: number[]) {
   return clustered
 }
 
-function hasUniformDimensionWithinTolerance(values: number[]) {
+function hasUniformDimensionWithinTolerance(values: number[]): boolean {
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
 
@@ -34,7 +39,7 @@ function hasUniformDimensionWithinTolerance(values: number[]) {
   return maxValue / minValue <= 1 + MAX_BGA_PAD_SIZE_VARIANCE
 }
 
-function hasUniformPadDimensions(memberObstacles: Obstacle[]) {
+function hasUniformPadDimensions(memberObstacles: Obstacle[]): boolean {
   return (
     hasUniformDimensionWithinTolerance(
       memberObstacles.map((obstacle) => obstacle.width),
@@ -58,7 +63,7 @@ function hasInteriorPads(
   memberObstacles: Obstacle[],
   rowAxisValues: number[],
   columnAxisValues: number[],
-) {
+): boolean {
   if (rowAxisValues.length < MIN_BGA_AXIS_COUNT) return false
   if (columnAxisValues.length < MIN_BGA_AXIS_COUNT) return false
 
@@ -79,7 +84,7 @@ function hasInteriorPads(
   return interiorPadCount >= MIN_INTERIOR_PAD_COUNT
 }
 
-export function isBgaLikeComponent(memberObstacles: Obstacle[]) {
+function isDirectBgaLikeComponent(memberObstacles: Obstacle[]): boolean {
   if (!hasUniformPadDimensions(memberObstacles)) return false
   if (!hasBgaLikePadAspectRatio(memberObstacles)) return false
 
@@ -107,6 +112,96 @@ export function isBgaLikeComponent(memberObstacles: Obstacle[]) {
   }
 
   return true
+}
+
+function getPadGeometryKey(obstacle: Obstacle): string {
+  return [
+    Math.round(obstacle.width / AXIS_CLUSTER_EPSILON),
+    Math.round(obstacle.height / AXIS_CLUSTER_EPSILON),
+    obstacle.layers.join(","),
+  ].join(":")
+}
+
+function hasUniformPitch(values: number[]): boolean {
+  if (values.length < MIN_BGA_AXIS_COUNT) return false
+
+  const sortedValues = [...values].sort((a, b) => a - b)
+  const pitch = sortedValues[1]! - sortedValues[0]!
+  if (pitch <= AXIS_CLUSTER_EPSILON) return false
+
+  return sortedValues.every(
+    (value, index) =>
+      index === 0 ||
+      Math.abs(value - sortedValues[index - 1]! - pitch) <=
+        AXIS_CLUSTER_EPSILON,
+  )
+}
+
+function getRowsForPadGeometry(obstacles: Obstacle[]): BgaGridRow[] {
+  const rowsByY = new Map<number, BgaGridRow>()
+
+  for (const obstacle of obstacles) {
+    const yKey = Math.round(obstacle.center.y / AXIS_CLUSTER_EPSILON)
+    const xKey = Math.round(obstacle.center.x / AXIS_CLUSTER_EPSILON)
+    const row = rowsByY.get(yKey) ?? {
+      y: obstacle.center.y,
+      obstaclesByX: new Map<number, Obstacle>(),
+    }
+    row.obstaclesByX.set(xKey, obstacle)
+    rowsByY.set(yKey, row)
+  }
+
+  return [...rowsByY.values()]
+}
+
+function findLargestCompleteGrid(obstacles: Obstacle[]): Obstacle[] {
+  const rows = getRowsForPadGeometry(obstacles)
+  let largestGrid: Obstacle[] = []
+
+  for (const candidateRow of rows) {
+    const xKeys = [...candidateRow.obstaclesByX.keys()]
+    if (
+      !hasUniformPitch(
+        [...candidateRow.obstaclesByX.values()].map(
+          (obstacle) => obstacle.center.x,
+        ),
+      )
+    ) {
+      continue
+    }
+
+    const matchingRows = rows.filter((row) =>
+      xKeys.every((xKey) => row.obstaclesByX.has(xKey)),
+    )
+    if (!hasUniformPitch(matchingRows.map((row) => row.y))) continue
+
+    const grid = matchingRows.flatMap((row) =>
+      xKeys.map((xKey) => row.obstaclesByX.get(xKey)!),
+    )
+    if (grid.length > largestGrid.length) largestGrid = grid
+  }
+
+  return largestGrid
+}
+
+export function getBgaLikeObstacleSubset(
+  memberObstacles: Obstacle[],
+): Obstacle[] | null {
+  if (isDirectBgaLikeComponent(memberObstacles)) return memberObstacles
+
+  const geometryGroups = Map.groupBy(memberObstacles, getPadGeometryKey)
+  let largestGrid: Obstacle[] = []
+
+  for (const geometryGroup of geometryGroups.values()) {
+    const grid = findLargestCompleteGrid(geometryGroup)
+    if (grid.length > largestGrid.length) largestGrid = grid
+  }
+
+  return largestGrid.length > 0 ? largestGrid : null
+}
+
+export function isBgaLikeComponent(memberObstacles: Obstacle[]): boolean {
+  return getBgaLikeObstacleSubset(memberObstacles) !== null
 }
 
 export class BgaComponentDetector implements ComponentDetector {

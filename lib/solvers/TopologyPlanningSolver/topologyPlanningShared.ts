@@ -10,6 +10,7 @@ import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detecto
 import {
   createComponentObstacleSrj,
   createReplacementObstacleForComponent,
+  isObstacleInDetectedComponent,
 } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import {
@@ -158,8 +159,8 @@ function serializeDetectedComponents({
   inputSrj: SimpleRouteJson
 }): SerializedTopologyComponentInput[] {
   return detectedComponents.map((detectedComponent) => {
-    const memberObstacles = inputSrj.obstacles.filter(
-      (obstacle) => obstacle.componentId === detectedComponent.componentId,
+    const memberObstacles = inputSrj.obstacles.filter((obstacle) =>
+      isObstacleInDetectedComponent(obstacle, detectedComponent),
     )
 
     return {
