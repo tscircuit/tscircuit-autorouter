@@ -808,7 +808,7 @@ export const AutoroutingPipelineDebugger = ({
         drcResult = evaluateRelaxedDrc({
           inputSrj: srj,
           srjWithPointPairs: solver.srjWithPointPairs ?? srj,
-          traces,
+          routedTraces: traces,
         })
       } else {
         const circuitJson =

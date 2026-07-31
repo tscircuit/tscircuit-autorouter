@@ -64,7 +64,7 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
   const benchmarkResult = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs,
-    traces,
+    routedTraces: traces,
   })
   const exactEvaluator = createPipeline7RelaxedDrcEvaluator({
     ...conversionOptions,

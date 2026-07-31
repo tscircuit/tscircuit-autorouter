@@ -220,11 +220,20 @@ const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
 function createSourceTraces(
   srj: SimpleRouteJson,
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
+  sourceSrj = srj,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
+  const connections =
+    sourceSrj === srj
+      ? srj.connections
+      : [...srj.connections, ...sourceSrj.connections]
+  const obstacles =
+    sourceSrj === srj
+      ? srj.obstacles
+      : sourceSrj.obstacles
 
   // Process each connection to create a source_trace
-  srj.connections.forEach((connection) => {
+  connections.forEach((connection) => {
     // Extract port IDs from the connection points
     const connectedPortIds = connection.pointsToConnect
       .filter((point) => point.pcb_port_id)
@@ -261,7 +270,7 @@ function createSourceTraces(
       ]
 
       for (const endpoint of endpoints) {
-        for (const obstacle of srj.obstacles) {
+        for (const obstacle of obstacles) {
           if (pointToBoxDistance(endpoint, obstacle) <= 0) {
             obstaclesContainingEndpoints.push(obstacle)
           }
@@ -631,6 +640,7 @@ export type ConvertToCircuitJsonOptions = {
   minViaDiameter?: number
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
+  includeOriginalConnections?: boolean
 }
 
 export function convertToCircuitJson(
@@ -643,6 +653,7 @@ export function convertToCircuitJson(
     minViaDiameter,
     minViaHoleDiameter,
     originalSrj,
+    includeOriginalConnections = false,
   } = options
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
@@ -660,10 +671,24 @@ export function convertToCircuitJson(
   const circuitJson: AnyCircuitElement[] = []
 
   // Add source traces from connection information
-  circuitJson.push(...createSourceTraces(srjWithPointPairs, routes))
+  circuitJson.push(
+    ...createSourceTraces(
+      srjWithPointPairs,
+      routes,
+      includeOriginalConnections && originalSrj
+        ? originalSrj
+        : srjWithPointPairs,
+    ),
+  )
 
   // Add PCB ports for connection points
-  circuitJson.push(...createPcbPorts(srjWithPointPairs))
+  circuitJson.push(
+    ...createPcbPorts(
+      includeOriginalConnections && originalSrj
+        ? originalSrj
+        : srjWithPointPairs,
+    ),
+  )
 
   // Add PCB pads / plated holes represented by SRJ obstacles
   circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))

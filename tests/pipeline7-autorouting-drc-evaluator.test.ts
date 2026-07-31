@@ -69,7 +69,7 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
   const referenceResult = evaluateRelaxedDrc({
     inputSrj: srjWithPointPairs,
     srjWithPointPairs,
-    traces,
+    routedTraces: traces,
   })
   const evaluator = createPipeline7AutoroutingDrcEvaluator(conversionOptions)
   const optimizedResult = evaluator({ traces: [], routes })

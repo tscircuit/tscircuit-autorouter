@@ -65,7 +65,7 @@ test("pipeline7 dataset01 circuit107 stitch output stays open between two termin
   const { errors } = evaluateRelaxedDrc({
     inputSrj: circuit107,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    traces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
 
   expect(errors).toHaveLength(0)

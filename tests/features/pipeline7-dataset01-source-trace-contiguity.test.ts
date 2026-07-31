@@ -25,7 +25,7 @@ test("pipeline7 dataset01 circuit003 keeps same-net obstacle IDs out of contigui
   const { circuitJson, errors } = evaluateRelaxedDrc({
     inputSrj: circuit003,
     srjWithPointPairs,
-    traces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   const sourceTrace19 = circuitJson.find(
     (

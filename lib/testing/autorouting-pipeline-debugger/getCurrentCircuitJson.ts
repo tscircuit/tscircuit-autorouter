@@ -1,5 +1,5 @@
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 type SolverLike = {
   netToPointPairsSolver?: {
@@ -7,10 +7,8 @@ type SolverLike = {
   }
   srjWithPointPairs?: any
   originalSrj?: SimpleRouteJson
-  getOutputSimplifiedPcbTraces: () => any
-  srj: {
-    minTraceWidth?: number
-  }
+  getOutputSimplifiedPcbTraces: () => SimplifiedPcbTrace[]
+  srj: SimpleRouteJson
 }
 
 export const getCurrentCircuitJson = (
@@ -28,16 +26,19 @@ export const getCurrentCircuitJson = (
     return null
   }
 
-  const routes = solver.getOutputSimplifiedPcbTraces()
-  if (!routes) {
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  if (!routedTraces) {
     onError?.(
       "No routed traces available yet. Run routing first, then try again.",
     )
     return null
   }
+  const inputSrj = solver.originalSrj ?? solver.srj
+  const jointTraces = [...(inputSrj.traces ?? []), ...routedTraces]
 
-  return convertToCircuitJson(srjWithPointPairs, routes, {
-    minTraceWidth: solver.srj.minTraceWidth,
-    originalSrj: solver.originalSrj,
+  return convertToCircuitJson(srjWithPointPairs, jointTraces, {
+    minTraceWidth: inputSrj.minTraceWidth,
+    originalSrj: inputSrj,
+    includeOriginalConnections: (inputSrj.traces?.length ?? 0) > 0,
   })
 }

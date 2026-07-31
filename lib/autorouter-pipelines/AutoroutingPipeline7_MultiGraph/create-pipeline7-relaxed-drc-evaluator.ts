@@ -26,7 +26,7 @@ export const createPipeline7RelaxedDrcEvaluator = (
     const { errors, errorsWithCenters } = evaluateRelaxedDrc({
       inputSrj: conversionOptions.originalSrj,
       srjWithPointPairs: conversionOptions.srjWithPointPairs,
-      traces,
+      routedTraces: traces,
     })
 
     return {
