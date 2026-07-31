@@ -22,6 +22,21 @@ export interface ComponentTopologyGeneratorSolverParams {
 
 export type ComponentTopologyGeneratorSolverOutput = CapacityMeshNode[]
 
+export function isObstacleInDetectedComponent(
+  obstacle: Obstacle,
+  detectedComponent: DetectedComponent,
+): boolean {
+  if (obstacle.componentId !== detectedComponent.componentId) return false
+
+  const { bounds } = detectedComponent
+  return (
+    obstacle.center.x >= bounds.minX &&
+    obstacle.center.x <= bounds.maxX &&
+    obstacle.center.y >= bounds.minY &&
+    obstacle.center.y <= bounds.maxY
+  )
+}
+
 export function createReplacementObstacleForComponent({
   detectedComponent,
   inputSrj,
@@ -29,8 +44,8 @@ export function createReplacementObstacleForComponent({
   detectedComponent: DetectedComponent
   inputSrj: SimpleRouteJson
 }): Obstacle & { obstacleId: string } {
-  const memberObstacles = inputSrj.obstacles.filter(
-    (obstacle) => obstacle.componentId === detectedComponent.componentId,
+  const memberObstacles = inputSrj.obstacles.filter((obstacle) =>
+    isObstacleInDetectedComponent(obstacle, detectedComponent),
   )
   const zLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
   const layers = zLayers.map((z) => mapZToLayerName(z, inputSrj.layerCount))
@@ -62,17 +77,14 @@ export function createComponentObstacleSrj({
   detectedComponents: DetectedComponent[]
   inputSrj: SimpleRouteJson
 }): SimpleRouteJson {
-  const detectedComponentIds = new Set(
-    detectedComponents.map((component) => component.componentId),
-  )
-
   return {
     ...structuredClone(inputSrj),
     obstacles: [
       ...inputSrj.obstacles.filter(
         (obstacle) =>
-          !obstacle.componentId ||
-          !detectedComponentIds.has(obstacle.componentId),
+          !detectedComponents.some((detectedComponent) =>
+            isObstacleInDetectedComponent(obstacle, detectedComponent),
+          ),
       ),
       ...detectedComponents.map((detectedComponent) =>
         createReplacementObstacleForComponent({
