@@ -33,7 +33,7 @@ export default () => {
     const loadDataset = async () => {
       try {
         const datasetModule = await import(
-          "@tsci/dataset-srj23-partially-routed-subcircuits",
+          "@tsci/dataset-srj23-partially-routed-subcircuits"
         )
         const indexed = Object.entries(datasetModule)
           .map(([key, value]) => {
