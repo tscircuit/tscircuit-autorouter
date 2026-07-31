@@ -227,10 +227,7 @@ function createSourceTraces(
     sourceSrj === srj
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
-  const obstacles =
-    sourceSrj === srj
-      ? srj.obstacles
-      : sourceSrj.obstacles
+  const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
