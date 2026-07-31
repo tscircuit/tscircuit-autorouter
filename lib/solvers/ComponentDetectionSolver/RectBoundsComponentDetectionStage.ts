@@ -10,6 +10,7 @@ import type {
   ComponentDetectionSolverParams,
   DetectedComponent,
 } from "./ComponentDetectionSolver"
+import { getBgaLikeObstacleSubset } from "./detectors/bga/BgaComponentDetector"
 import { detectComponentKind, type ComponentKind } from "./detectors"
 
 /**
@@ -243,7 +244,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       grouped[obstacle.componentId].push(obstacle)
     }
 
-    const detectedEntries = Object.entries(grouped).filter(
+    const detectedEntries = Object.entries(grouped).flatMap(
       ([componentId, memberObstacles]) => {
         const boardBounds = this.inputSrj.bounds
         const hasOutOfBoundsObstacle = memberObstacles.some((obstacle) => {
@@ -257,17 +258,22 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         })
 
         if (hasOutOfBoundsObstacle) {
-          return false
+          return []
         }
 
         const componentKind = detectComponentKind({
           memberObstacles,
           inputSrj: this.inputSrj,
         })
-        if (!componentKind) return false
+        if (!componentKind) return []
 
         componentKinds[componentId] = componentKind
-        return true
+        const detectedObstacles =
+          componentKind === "bga"
+            ? getBgaLikeObstacleSubset(memberObstacles)!
+            : memberObstacles
+
+        return [[componentId, detectedObstacles] as const]
       },
     )
 
