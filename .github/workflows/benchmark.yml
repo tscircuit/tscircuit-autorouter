@@ -938,6 +938,7 @@ jobs:
             ./benchmark-result.txt
             ./benchmark-result.json
             ./benchmark-best-vias.json
+            ./benchmark-snapshots.html
             ./benchmark-result-pr.txt
             ./benchmark-result-pr.json
             ./benchmark-result-main.txt
