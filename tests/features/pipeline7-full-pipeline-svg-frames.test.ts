@@ -51,7 +51,7 @@ test("solver svg frames capture selected pipeline7 frames for a zero-drc circuit
   const { errors } = evaluateRelaxedDrc({
     inputSrj: circuit003,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    traces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
 
   expect(errors).toHaveLength(0)

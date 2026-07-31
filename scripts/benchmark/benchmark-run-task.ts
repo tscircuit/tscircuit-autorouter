@@ -372,7 +372,7 @@ export const runTask = async (
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,
       srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
-      traces,
+      routedTraces: traces,
     })
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])

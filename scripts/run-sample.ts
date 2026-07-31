@@ -532,7 +532,7 @@ const main = async () => {
     const drcResult = evaluateRelaxedDrc({
       inputSrj: input.scenario,
       srjWithPointPairs: pipelineSolver.srjWithPointPairs ?? input.scenario,
-      traces,
+      routedTraces: traces,
     })
     const circuitJson = drcResult.circuitJson.map(toUnknownRecord)
     relaxedDrcPassed = drcResult.errors.length === 0

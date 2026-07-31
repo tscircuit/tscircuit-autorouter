@@ -8,7 +8,8 @@ import { convertToCircuitJson } from "./utils/convertToCircuitJson"
 export interface EvaluateRelaxedDrcInput {
   inputSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
-  traces: SimplifiedPcbTrace[]
+  /** Newly routed traces. Input traces are always included automatically. */
+  routedTraces: SimplifiedPcbTrace[]
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -20,11 +21,16 @@ export interface EvaluateRelaxedDrcResult extends GetDrcErrorsResult {
 export const evaluateRelaxedDrc = ({
   inputSrj,
   srjWithPointPairs,
-  traces,
+  routedTraces,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
-  const circuitJson = convertToCircuitJson(srjWithPointPairs, traces, {
+  const preloadedTraces = inputSrj.traces ?? []
+  const jointTraces = [...preloadedTraces, ...routedTraces]
+  const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
+    ...(preloadedTraces.length > 0
+      ? { originalSrj: inputSrj, includeOriginalConnections: true }
+      : {}),
   })
 
   return {
