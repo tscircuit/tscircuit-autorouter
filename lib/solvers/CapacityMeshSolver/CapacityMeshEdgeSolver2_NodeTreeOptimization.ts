@@ -1,13 +1,14 @@
+import { distance } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
+import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
+import { areNodesBordering } from "lib/utils/areNodesBordering"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
-import { distance } from "@tscircuit/math-utils"
-import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { hasViaAccessOverlap } from "../NodeDimensionSubdivisionSolver/add-target-via-access-layers"
 import { CapacityMeshEdgeSolver } from "./CapacityMeshEdgeSolver"
-import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
 
 export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEdgeSolver {
   override getSolverName(): string {
@@ -18,8 +19,11 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
   private currentNodeIndex: number
   private edgeSet: Set<string>
 
-  constructor(public nodes: CapacityMeshNode[]) {
-    super(nodes)
+  constructor(
+    public nodes: CapacityMeshNode[],
+    viaDiameter?: number,
+  ) {
+    super(nodes, viaDiameter)
     this.MAX_ITERATIONS = 10e6
     this.nodeTree = new CapacityNodeTree(this.nodes)
     this.currentNodeIndex = 0
@@ -43,7 +47,8 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
 
     for (const B of maybeAdjNodes) {
       const areBordering = areNodesBordering(A, B)
-      if (!areBordering) continue
+      const haveViaAccessOverlap = hasViaAccessOverlap(A, B, this.viaDiameter)
+      if (!areBordering && !haveViaAccessOverlap) continue
       const strawNodesWithSameParent =
         A._strawNode &&
         B._strawNode &&

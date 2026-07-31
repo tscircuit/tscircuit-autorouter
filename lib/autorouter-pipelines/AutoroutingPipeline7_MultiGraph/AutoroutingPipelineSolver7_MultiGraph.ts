@@ -1,5 +1,5 @@
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -9,13 +9,16 @@ import {
 } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import {
+  ComponentDetectionSolver,
+  type DetectedComponent,
+} from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -29,11 +32,11 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
-  convertSrjToGraphicsObject,
   type TraceColorMode,
+  convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
@@ -90,6 +93,61 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
     instance: AutoroutingPipelineSolver7_MultiGraph,
   ) => ConstructorParameters<T>
   onSolved?: (instance: AutoroutingPipelineSolver7_MultiGraph) => void
+}
+
+const MIN_DENSE_COMPONENT_PAD_COUNT = 90
+const MAX_DENSE_COMPONENT_ASPECT_RATIO = 1.5
+
+export function getPartiallyDetectedDenseComponentBounds(
+  obstacles: SimpleRouteJson["obstacles"],
+  detectedComponents: readonly DetectedComponent[],
+): SimpleRouteJson["bounds"][] {
+  const obstaclesByComponentId = Map.groupBy(
+    obstacles.filter(
+      (obstacle): obstacle is typeof obstacle & { componentId: string } =>
+        Boolean(obstacle.componentId),
+    ),
+    (obstacle) => obstacle.componentId,
+  )
+
+  return [...obstaclesByComponentId.values()].flatMap((componentObstacles) => {
+    if (componentObstacles.length < MIN_DENSE_COMPONENT_PAD_COUNT) return []
+
+    const bounds = componentObstacles.reduce<SimpleRouteJson["bounds"]>(
+      (result, obstacle) => ({
+        minX: Math.min(result.minX, obstacle.center.x - obstacle.width / 2),
+        maxX: Math.max(result.maxX, obstacle.center.x + obstacle.width / 2),
+        minY: Math.min(result.minY, obstacle.center.y - obstacle.height / 2),
+        maxY: Math.max(result.maxY, obstacle.center.y + obstacle.height / 2),
+      }),
+      {
+        minX: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        minY: Number.POSITIVE_INFINITY,
+        maxY: Number.NEGATIVE_INFINITY,
+      },
+    )
+    const width = bounds.maxX - bounds.minX
+    const height = bounds.maxY - bounds.minY
+    const aspectRatio =
+      Math.max(width, height) / Math.max(Math.min(width, height), 1e-6)
+    if (aspectRatio > MAX_DENSE_COMPONENT_ASPECT_RATIO) return []
+
+    const componentId = componentObstacles[0]!.componentId
+    const fullyDetected = detectedComponents.some(
+      (component) =>
+        component.componentId === componentId &&
+        componentObstacles.every(
+          (obstacle) =>
+            obstacle.center.x >= component.bounds.minX &&
+            obstacle.center.x <= component.bounds.maxX &&
+            obstacle.center.y >= component.bounds.minY &&
+            obstacle.center.y <= component.bounds.maxY,
+        ),
+    )
+
+    return fullyDetected ? [] : [bounds]
+  })
 }
 
 /**
@@ -373,6 +431,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         cms.maxNodeDimension,
         cms.maxNodeRatio,
         cms.minNodeArea,
+        {
+          layerCount: cms.srj.layerCount,
+          viaDiameter: cms.viaDiameter,
+          componentBounds: getPartiallyDetectedDenseComponentBounds(
+            cms.srj.obstacles,
+            cms.componentDetectionSolver!.getOutput(),
+          ),
+        },
       ],
       {
         onSolved: (cms) => {
@@ -383,7 +449,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "edgeSolver",
       CapacityMeshEdgeSolver2_NodeTreeOptimization,
-      (cms) => [cms.capacityNodes!],
+      (cms) => [cms.capacityNodes!, cms.viaDiameter],
       {
         onSolved: (cms) => {
           cms.capacityEdges = cms.edgeSolver?.edges!

@@ -1,7 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -16,23 +16,23 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
-  orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  type TinyHyperGraphSectionPipelineInput,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
-  TinyHyperGraphSolver,
-  type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  TinyHyperGraphSolver,
   type TinyHyperGraphSolverOptions,
+  orderConnectionsByNetCardinality,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
+import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
   isPreloadedTraceConnectionId,
@@ -141,6 +141,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const LARGE_GRAPH_CONNECTION_COUNT = 500
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -208,6 +209,42 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
+
+function compareConnectionsByConstraint(
+  left: TinyRouteConnection,
+  right: TinyRouteConnection,
+): number {
+  const [leftStart, leftEnd] = left.simpleRouteConnection.pointsToConnect
+  const [rightStart, rightEnd] = right.simpleRouteConnection.pointsToConnect
+  const leftEndLayers = getConnectionPointLayers(leftEnd!)
+  const rightEndLayers = getConnectionPointLayers(rightEnd!)
+  const leftChangesLayer = !getConnectionPointLayers(leftStart!).some((layer) =>
+    leftEndLayers.includes(layer),
+  )
+  const rightChangesLayer = !getConnectionPointLayers(rightStart!).some(
+    (layer) => rightEndLayers.includes(layer),
+  )
+  const layerChangePriority =
+    Number(rightChangesLayer) - Number(leftChangesLayer)
+  if (layerChangePriority !== 0) return layerChangePriority
+
+  return (
+    Math.hypot(leftStart!.x - leftEnd!.x, leftStart!.y - leftEnd!.y) -
+    Math.hypot(rightStart!.x - rightEnd!.x, rightStart!.y - rightEnd!.y)
+  )
+}
+
+function orderLargeGraphConnections(
+  connections: readonly TinyRouteConnection[],
+): TinyRouteConnection[] {
+  const constraintOrderedConnections = [...connections].sort(
+    compareConnectionsByConstraint,
+  )
+  return orderConnectionsByNetCardinality(
+    constraintOrderedConnections,
+    getTinyRouteConnectionNetId,
+  )
+}
 
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
@@ -891,12 +928,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
-    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
-          tinyRouteConnections,
-          getTinyRouteConnectionNetId,
-        )
-      : tinyRouteConnections
+    let connections = tinyRouteConnections
+    if (params.flags.USE_SELECTIVE_RERIP_ROUTING) {
+      connections =
+        connections.length >= LARGE_GRAPH_CONNECTION_COUNT
+          ? orderLargeGraphConnections(connections)
+          : orderConnectionsByNetCardinality(
+              connections,
+              getTinyRouteConnectionNetId,
+            )
+    }
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
         connection.connectionId,
