@@ -209,7 +209,9 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   srj21: async () =>
     (await import("@tsci/0hmX.multi-component-dataset-srj01")) as DatasetModule,
   srj23: async () =>
-    (await import("@tsci/0hmX.45-degree-trace-srj23")) as DatasetModule,
+    (await import(
+      "@tsci/dataset-srj23-partially-routed-subcircuits"
+    )) as DatasetModule,
   srj24: async () => {
     const module = (await import("@tscircuit/dataset-srj24")) as DatasetModule
     const dataset = module.dataset

@@ -50,9 +50,9 @@ test("benchmark datasets load in sample order", async () => {
   expect(srj20Scenarios[199][0]).toBe("sample200Circuit")
   expect(srj20Scenarios[0][1].connections.length).toBeGreaterThan(0)
 
-  expect(srj23Scenarios).toHaveLength(107)
+  expect(srj23Scenarios).toHaveLength(76)
   expect(srj23Scenarios[0][0]).toBe("circuit001")
-  expect(srj23Scenarios[106][0]).toBe("circuit107")
+  expect(srj23Scenarios[75][0]).toBe("circuit106")
   expect(srj23Scenarios[0][1].connections.length).toBeGreaterThan(0)
 
   expect(srj24Scenarios).toHaveLength(10)
@@ -81,8 +81,8 @@ test("benchmark datasets load in sample order", async () => {
   expect(sample20.totalSamples).toBe(200)
 
   const sample23 = await loadScenarioBySampleNumber("srj23", 23)
-  expect(sample23.scenarioName).toBe("circuit023")
-  expect(sample23.totalSamples).toBe(107)
+  expect(sample23.scenarioName).toBe("circuit029")
+  expect(sample23.totalSamples).toBe(76)
 
   const sample24 = await loadScenarioBySampleNumber("srj24", 10)
   expect(sample24.scenarioName).toBe("sample010")

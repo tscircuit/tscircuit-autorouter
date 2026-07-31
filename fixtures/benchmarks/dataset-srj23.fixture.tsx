@@ -32,7 +32,9 @@ export default () => {
     /** Load and index all `circuitNNN` exports from the dataset package. */
     const loadDataset = async () => {
       try {
-        const datasetModule = await import("@tsci/0hmX.45-degree-trace-srj23")
+        const datasetModule = await import(
+          "@tsci/dataset-srj23-partially-routed-subcircuits"
+        )
         const indexed = Object.entries(datasetModule)
           .map(([key, value]) => {
             const match = key.match(circuitKeyRegex)
@@ -50,7 +52,7 @@ export default () => {
 
         if (indexed.length === 0) {
           setError(
-            "No circuits were found in @tsci/0hmX.45-degree-trace-srj23.",
+            "No circuits were found in @tsci/dataset-srj23-partially-routed-subcircuits.",
           )
           setIsLoading(false)
           return
