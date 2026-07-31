@@ -3,6 +3,7 @@ import {
   getCapacityMeshNodeBounds,
   isValidCapacityBounds,
 } from "../TopologyPlanningSolver/capacity-node-geometry"
+import { getTopologyMergingNodesWithCrossLayerTargetAccess } from "./get-cross-layer-target-access"
 import type {
   PreparedTopologyMergingNode,
   TopologyMergingSolverParams,
@@ -12,7 +13,6 @@ export type PreparedTopologyMergingInput = {
   preparedNodes: PreparedTopologyMergingNode[]
   preparedNodeBySourceKey: Map<string, PreparedTopologyMergingNode>
 }
-
 export function prepareTopologyMergingInput(
   inputProblem: TopologyMergingSolverParams,
 ): PreparedTopologyMergingInput {
@@ -20,13 +20,16 @@ export function prepareTopologyMergingInput(
 
   const preparedNodes: PreparedTopologyMergingNode[] = []
   const preparedNodeBySourceKey = new Map<string, PreparedTopologyMergingNode>()
+  const mergingNodeByInputNode =
+    getTopologyMergingNodesWithCrossLayerTargetAccess(inputProblem)
   for (
     let groupIndex = 0;
     groupIndex < inputProblem.nodeGroups.length;
     groupIndex++
   ) {
     const group = inputProblem.nodeGroups[groupIndex]!
-    for (const node of group.nodes) {
+    for (const inputNode of group.nodes) {
+      const node = mergingNodeByInputNode.get(inputNode)!
       const preparedNode: PreparedTopologyMergingNode = {
         sourceKey: `${group.groupId}:${node.capacityMeshNodeId}`,
         groupIndex,
@@ -49,6 +52,13 @@ function validateTopologyMergingInput(
   }
   if (inputProblem.layerCount <= 0) {
     throw new Error("TopologyMergingSolver: layerCount must be positive")
+  }
+  if (
+    inputProblem.viaDiameter !== undefined &&
+    (!Number.isFinite(inputProblem.viaDiameter) ||
+      inputProblem.viaDiameter <= 0)
+  ) {
+    throw new Error("TopologyMergingSolver: viaDiameter must be positive")
   }
   if (inputProblem.nodeGroups.length === 0) {
     throw new Error(

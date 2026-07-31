@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import { getBoundsIntersection } from "../TopologyPlanningSolver/capacity-node-geometry"
 import type {
   PreparedTopologyMergingNode,
   TopologyMergingLayerTopology,
@@ -131,9 +132,11 @@ export function getLayerTopologiesForCoveredNodes({
 export function restoreAuthoritativeTargetRegions({
   regions,
   preparedNodeBySourceKey,
+  nodeGroups,
 }: {
   regions: TopologyMergingRegion[]
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  nodeGroups: readonly TopologyMergingNodeGroup[]
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
   for (const region of regions) {
@@ -146,13 +149,36 @@ export function restoreAuthoritativeTargetRegions({
     }
   }
 
+  const restorableCandidates = [...topologyModesBySourceKey.entries()]
+    .filter(
+      ([, topologyModes]) =>
+        topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+    )
+    .map(([sourceKey]) => sourceKey)
+  const globalTargetCandidates = restorableCandidates.flatMap((sourceKey) => {
+    const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+    return preparedNode && !nodeGroups[preparedNode.groupIndex]!.isComponent
+      ? [preparedNode]
+      : []
+  })
   const restorableSourceKeys = new Set(
-    [...topologyModesBySourceKey.entries()]
-      .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+    restorableCandidates.filter((sourceKey) => {
+      const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+      if (!preparedNode) return false
+      if (!nodeGroups[preparedNode.groupIndex]!.isComponent) return true
+
+      // Keep a component target atomized where a global target owns the same
+      // layer; restoring its original bounds would reintroduce the overlap the
+      // topology merge just resolved.
+      return !globalTargetCandidates.some(
+        (globalTarget) =>
+          globalTarget.node.availableZ.some((z) =>
+            preparedNode.node.availableZ.includes(z),
+          ) &&
+          getBoundsIntersection(globalTarget.bounds, preparedNode.bounds) !==
+            null,
       )
-      .map(([sourceKey]) => sourceKey),
+    }),
   )
   if (restorableSourceKeys.size === 0) return regions
 
