@@ -21,6 +21,10 @@ export type BenchmarkSnapshot = {
   drcErrorCount?: number
 }
 
+export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
+  imageSvg: string
+}
+
 export type WorkerTaskMessage = {
   taskId: number
   task: BenchmarkTask
@@ -39,7 +43,9 @@ export type WorkerProgress = {
   activeSubSolverIterations?: number
 }
 
-export type WorkerResult = {
+export type WorkerResult<
+  TBenchmarkSnapshot extends BenchmarkSnapshot = BenchmarkSnapshot,
+> = {
   solverName: string
   scenarioName: string
   sampleNumber: number
@@ -57,7 +63,10 @@ export type WorkerResult = {
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+  benchmarkSnapshot?: TBenchmarkSnapshot
 }
+
+export type WorkerResultWithImage = WorkerResult<BenchmarkSnapshotWithImage>
 
 export type FailureSummary = {
   failureKind: string
@@ -69,7 +78,7 @@ export type FailureSummary = {
 
 export type WorkerResultMessage = {
   taskId: number
-  result: WorkerResult
+  result: WorkerResultWithImage
 }
 
 export type WorkerProgressMessage = {
