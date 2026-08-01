@@ -1,0 +1,31 @@
+{
+  "connectionName": "source_net_7",
+  "start": {
+    "x": 0,
+    "y": 0,
+    "z": 0,
+    "pcb_port_id": "pcb_port_start"
+  },
+  "end": {
+    "x": 1,
+    "y": 0,
+    "z": 0,
+    "pcb_port_id": "pcb_port_end"
+  },
+  "hdRoutes": [
+    {
+      "connectionName": "source_net_7",
+      "startPcbPortId": "pcb_port_start",
+      "endPcbPortId": "pcb_port_end",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "route": [
+        { "x": 0.6, "y": 0.3, "z": 0 },
+        { "x": 0.4, "y": 0.3, "z": 0 }
+      ],
+      "vias": [],
+      "jumpers": []
+    }
+  ],
+  "preserveTerminalPcbPortIds": true
+}
