@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
-test("single stitch uses preserved terminal IDs when geometry suggests the opposite orientation", () => {
+test("single stitch uses preserved terminal IDs when geometry suggests the opposite orientation", async () => {
   const route: HighDensityIntraNodeRoute = {
     connectionName: "conn",
     startPcbPortId: "pcb_port_start",
@@ -36,4 +37,9 @@ test("single stitch uses preserved terminal IDs when geometry suggests the oppos
     { x: 0.6, y: 0, z: 0 },
     { x: 0, y: 0, z: 0 },
   ])
+
+  const svg = getSvgFromGraphicsObject(solver.visualize(), {
+    backgroundColor: "white",
+  })
+  await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
