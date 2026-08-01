@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="0,0 4.6,0" data-type="line" data-label="" points="62.65734265734267,515.9455035635681 577.3426573426573,515.9455035635681" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="5.594405594405593"/></g><g><polyline data-points="4.6,0 4.6,3.1" data-type="line" data-label="" points="577.3426573426573,515.9455035635681 577.3426573426573,169.0923567104213" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="5.594405594405593"/></g><g><polyline data-points="4.6,3.1 0,3.1" data-type="line" data-label="" points="577.3426573426573,169.0923567104213 62.65734265734267,169.0923567104213" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="5.594405594405593"/></g><g><polyline data-points="0,3.1 0,0" data-type="line" data-label="" points="62.65734265734267,169.0923567104213 62.65734265734267,515.9455035635681" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="5.594405594405593"/></g><g><polyline data-points="0.7901666666666665,2.585 4.790166666666666,2.585" data-type="line" data-label="" points="151.06759906759902,226.7147343327989 598.6200466200464,226.7147343327989" fill="none" stroke="rgba(60,70,80,0.6)" stroke-width="2.7972027972027966"/></g><g><polyline data-points="1.3901666666666666,0.5850000000000002 1.3901666666666666,2.835" data-type="line" data-label="" points="218.20046620046617,450.4909581090226 218.20046620046617,198.74270636077097" fill="none" stroke="rgba(180,90,20,0.9)" stroke-width="3.916083916083916" stroke-dasharray="0.08 0.06"/></g><g><rect data-type="rect" data-label="Duplicate-congested-port prepass gate step:1 layer:all" data-x="2.3" data-y="1.55" x="62.65734265734267" y="169.0923567104213" width="514.6853146853146" height="346.85314685314677" fill="rgba(255,255,255,0)" stroke="rgba(25,25,25,0.42)" stroke-width="0.008937500000000001"/></g><circle data-type="circle" data-label="" data-x="1.1234999999999997" data-y="2.085" cx="188.36363636363632" cy="282.65879027685486" r="13.426573426573423" fill="rgba(40,170,95,0.8)" stroke="rgba(20,105,55,1)" stroke-width="0.008937500000000001"/><circle data-type="circle" data-label="" data-x="3.5934999999999997" data-y="0.9850000000000002" cx="464.72727272727263" cy="405.7357133537779" r="13.426573426573423" fill="rgba(205,65,65,0.8)" stroke="rgba(140,30,30,1)" stroke-width="0.008937500000000001"/><text data-type="text" data-label="0" data-x="0.7901666666666665" data-y="2.665" x="151.06759906759902" y="217.76368538174995" fill="black" font-size="12.307692307692305" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">0</text><text data-type="text" data-label="1,200 connections" data-x="4.790166666666666" data-y="2.665" x="598.6200466200464" y="217.76368538174995" fill="black" font-size="12.307692307692305" font-family="sans-serif" text-anchor="end" dominant-baseline="text-after-edge">1,200 connections</text><text data-type="text" data-label="current prepass cutoff: 180" data-x="1.3901666666666666" data-y="2.865" x="218.20046620046617" y="195.38606300412755" fill="black" font-size="12.307692307692305" font-family="sans-serif" text-anchor="middle" dominant-baseline="text-after-edge">current prepass cutoff: 180</text><text data-type="text" data-label="100-connection graph: prepass runs" data-x="1.1234999999999997" data-y="1.8850000000000002" x="188.36363636363632" y="305.0364126544772" fill="black" font-size="14.545454545454543" font-family="sans-serif" text-anchor="middle" dominant-baseline="text-before-edge">100-connection graph: prepass runs</text><text data-type="text" data-label="srj24 sample 4: prepass skipped" data-x="3.5934999999999997" data-y="0.7850000000000001" x="464.72727272727263" y="428.11333573140024" fill="black" font-size="14.545454545454543" font-family="sans-serif" text-anchor="middle" dominant-baseline="text-before-edge">srj24 sample 4: prepass skipped</text><text data-type="text" data-label="green = prepass runs · red = skipped by the production cutoff" data-x="0.7901666666666665" data-y="0.3350000000000002" x="151.06759906759902" y="478.4629860810506" fill="black" font-size="11.188811188811187" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">green = prepass runs · red = skipped by the production cutoff</text><text data-type="text" data-label="Duplicate-congested-port prepass gate" data-x="0" data-y="3.5025258761987796" x="62.65734265734267" y="124.05449643643198" fill="rgb(18,18,18)" font-size="22.436151468409527" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">Duplicate-congested-port prepass gate</text><text data-type="text" data-label="step:1" data-x="1.3054054054054052" data-y="3.27794" x="208.71668871668868" y="149.18298608105067" fill="rgb(190,92,12)" font-size="22.436151468409527" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">step:1</text><text data-type="text" data-label=" layer:all" data-x="2.051351351351351" data-y="3.27794" x="292.1791721791721" y="149.18298608105067" fill="rgb(120,58,175)" font-size="22.436151468409527" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge"> layer:all</text><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":111.88811188811187,"c":0,"e":62.65734265734267,"b":0,"d":-111.88811188811187,"f":515.9455035635681};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>

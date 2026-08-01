@@ -140,7 +140,17 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+export const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+
+export const shouldRunDuplicateCongestedPortPrepass = ({
+  hasPreloadedTraceOccupancy,
+  connectionCount,
+}: {
+  hasPreloadedTraceOccupancy: boolean
+  connectionCount: number
+}) =>
+  !hasPreloadedTraceOccupancy &&
+  connectionCount <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -908,11 +918,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
-    const shouldRunDuplicateCongestedPortPrepass =
-      !hasPreloadedTraceOccupancy &&
-      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
+    const shouldRunDuplicateCongestedPortPrepassForGraph =
+      shouldRunDuplicateCongestedPortPrepass({
+        hasPreloadedTraceOccupancy,
+        connectionCount: connections.length,
+      })
     let graphForTiny = serializedGraph
-    if (shouldRunDuplicateCongestedPortPrepass) {
+    if (shouldRunDuplicateCongestedPortPrepassForGraph) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
         serializedGraph,
         {
