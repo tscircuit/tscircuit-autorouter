@@ -10,7 +10,9 @@ type EndpointInput = Pick<
   | "y"
   | "connectionName"
   | "rootConnectionName"
->
+> & {
+  duplicatedFromPortId?: string
+}
 
 const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
   [
@@ -32,6 +34,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
   [
     {
       portPointId: "ce50427_pp3_z0::0::dup2",
+      duplicatedFromPortId: "ce50427_pp3_z0::0",
       x: 25.229999999999997,
       y: 7.7958333333333325,
       connectionName: "source_trace_178__source_net_178",
@@ -39,6 +42,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
     },
     {
       portPointId: "ce46611_pp6_z0::0::dup6",
+      duplicatedFromPortId: "ce46611_pp6_z0::0",
       x: 23.589999999999996,
       y: 9.380357142857141,
       connectionName: "source_trace_178__source_net_178",
@@ -48,6 +52,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
   [
     {
       portPointId: "ce50427_pp3_z0::0::dup1",
+      duplicatedFromPortId: "ce50427_pp3_z0::0",
       x: 25.229999999999997,
       y: 7.779166666666666,
       connectionName: "source_trace_177__source_net_177",
@@ -55,6 +60,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
     },
     {
       portPointId: "ce46611_pp6_z0::0::dup5",
+      duplicatedFromPortId: "ce46611_pp6_z0::0",
       x: 23.589999999999996,
       y: 9.373214285714285,
       connectionName: "source_trace_177__source_net_177",
@@ -71,6 +77,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
     },
     {
       portPointId: "ce46611_pp6_z0::0::dup4",
+      duplicatedFromPortId: "ce46611_pp6_z0::0",
       x: 23.589999999999996,
       y: 9.366071428571427,
       connectionName: "source_trace_176__source_net_176",
@@ -80,6 +87,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
   [
     {
       portPointId: "ce50399_pp0_z0::0::dup2",
+      duplicatedFromPortId: "ce50399_pp0_z0::0",
       x: 23.74416666666666,
       y: 6.754999999999999,
       connectionName: "source_trace_170__source_net_170",
@@ -87,6 +95,7 @@ const pairInputs: Array<readonly [EndpointInput, EndpointInput]> = [
     },
     {
       portPointId: "ce46611_pp6_z0::0::dup3",
+      duplicatedFromPortId: "ce46611_pp6_z0::0",
       x: 23.589999999999996,
       y: 9.35892857142857,
       connectionName: "source_trace_170__source_net_170",

@@ -2,6 +2,8 @@ export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
   portPointId?: string
+  /** Original boundary port when pathing split a congested port into alternatives. */
+  duplicatedFromPortId?: string
   pcb_port_id?: string
   x: number
   y: number

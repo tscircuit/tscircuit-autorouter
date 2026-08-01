@@ -1103,6 +1103,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      duplicatedFromPortId:
+        typeof portMetadata?.duplicatedFromPortId === "string"
+          ? portMetadata.duplicatedFromPortId
+          : undefined,
       ...(this.params.preserveTerminalPcbPortIds &&
       typeof portMetadata?.pcb_port_id === "string"
         ? { pcb_port_id: portMetadata.pcb_port_id }
