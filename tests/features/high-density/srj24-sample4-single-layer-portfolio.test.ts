@@ -6,7 +6,9 @@ import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolv
 import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
 import { srj24Sample4SingleLayerNode } from "./fixtures/srj24-sample4-single-layer-node.fixture"
 
-test("visualizes the srj24 sample 4 single-layer portfolio rejection", async () => {
+test("visualizes srj24 sample 4 duplicated single-layer ports", async () => {
+  const routePairCount =
+    srj24Sample4SingleLayerNode.portPointsInPairs?.length ?? 0
   const inputSolver = new SingleLayerNoDifferentRootIntersectionsIntraNodeSolver(
     {
       nodeWithPortPoints: srj24Sample4SingleLayerNode,
@@ -30,14 +32,14 @@ test("visualizes the srj24 sample 4 single-layer portfolio rejection", async () 
   const svg = getGraphicsSvgFrames({
     frames: [
       {
-        name: "Production input: 5 route pairs on z0",
+        name: `Exact input: ${routePairCount} z0 pairs (blue ports)`,
         step: 0,
         graphics: inputSolver.visualize(),
       },
       {
         name: portfolio.solved
-          ? "Portfolio result: single-layer routes"
-          : "Issue: single-layer solver rejected",
+          ? `Result: ${portfolio.solvedRoutes.length}/${routePairCount} cyan routes (some overlap)`
+          : "Issue: duplicate-port routes not admitted",
         step: portfolio.iterations,
         graphics: mergeGraphics(
           inputSolver.visualize(),
