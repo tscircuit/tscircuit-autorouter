@@ -15,7 +15,18 @@ import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
-type ConnectionPoint = { x: number; y: number; z: number }
+type ConnectionPoint = {
+  x: number
+  y: number
+  z: number
+  portPointId?: string
+}
+
+type UnsolvedConnection = {
+  connectionName: string
+  rootConnectionName?: string
+  points: ConnectionPoint[]
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -49,6 +60,26 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
   return deduped
 }
 
+const getSharedPhysicalSegmentKey = (
+  connection: UnsolvedConnection,
+): string | null => {
+  if (connection.points.length !== 2) return null
+
+  // Coordinates can overlap by accident. Matching the root net and both port
+  // identities limits reuse to logical routes that describe the same copper.
+  const endpointKeys = connection.points.map((point) =>
+    point.portPointId ? `${point.portPointId}:${pointKey(point)}` : null,
+  )
+  if (!endpointKeys[0] || !endpointKeys[1]) return null
+
+  return `${connection.rootConnectionName ?? connection.connectionName}:${endpointKeys.sort().join("|")}`
+}
+
+const pointsMatch = (
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number },
+) => Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6 && a.z === b.z
+
 export class IntraNodeRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "IntraNodeRouteSolver"
@@ -56,13 +87,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
-  unsolvedConnections: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }[]
+  unsolvedConnections: UnsolvedConnection[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
   rootConnectionNameByConnectionName: Map<string, string>
+  solvedRouteByPhysicalSegment: Map<string, HighDensityIntraNodeRoute>
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -78,6 +106,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   MAX_POSTROUTE_REPAIR_ATTEMPTS = 2
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
+  activeConnection: UnsolvedConnection | null = null
   connMap?: ConnectivityMap
 
   // Legacy compat
@@ -120,6 +149,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       x,
       y,
       z,
+      portPointId,
     } of nodeWithPortPoints.portPoints) {
       if (rootConnectionName) {
         this.rootConnectionNameByConnectionName.set(
@@ -129,7 +159,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       }
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
-        { x, y, z: z ?? 0 },
+        { x, y, z: z ?? 0, portPointId },
       ])
     }
     this.originalConnectionPointsByName = new Map(
@@ -149,6 +179,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       })),
     )
     this.rerouteAttemptsByConnection = new Map()
+    this.solvedRouteByPhysicalSegment = new Map()
+    this.stats.sharedPhysicalSegmentReuseCount = 0
 
     if (this.hyperParameters.SHUFFLE_SEED) {
       this.unsolvedConnections = cloneAndShuffleArray(
@@ -218,11 +250,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
   }
 
-  private getSingleRouteSolverOpts(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
+  private getSingleRouteSolverOpts(unsolvedConnection: UnsolvedConnection) {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
     return {
       connectionName,
@@ -264,11 +292,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
   }
 
-  private trySolveSamePointLayerChange(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
+  private trySolveSamePointLayerChange(unsolvedConnection: UnsolvedConnection) {
     const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
     const obstacleChecker =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
@@ -292,7 +316,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         pt.z !== arr[idx - 1].z,
     )
 
-    this.solvedRoutes.push({
+    const solvedRoute: HighDensityIntraNodeRoute = {
       connectionName: unsolvedConnection.connectionName,
       rootConnectionName: unsolvedConnection.rootConnectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
@@ -300,15 +324,58 @@ export class IntraNodeRouteSolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],
-    })
+    }
+    this.solvedRoutes.push(solvedRoute)
+    this.rememberSolvedPhysicalSegment(unsolvedConnection, solvedRoute)
     return true
   }
 
-  private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
+  private rememberSolvedPhysicalSegment(
+    connection: UnsolvedConnection,
+    route: HighDensityIntraNodeRoute,
+  ) {
+    const key = getSharedPhysicalSegmentKey(connection)
+    if (key && !this.solvedRouteByPhysicalSegment.has(key)) {
+      this.solvedRouteByPhysicalSegment.set(key, route)
+    }
+  }
+
+  private tryReuseSolvedPhysicalSegment(connection: UnsolvedConnection) {
+    if (
+      (this.rerouteAttemptsByConnection.get(connection.connectionName) ?? 0) > 0
+    ) {
+      return false
+    }
+
+    const key = getSharedPhysicalSegmentKey(connection)
+    const solvedRoute = key
+      ? this.solvedRouteByPhysicalSegment.get(key)
+      : undefined
+    if (!solvedRoute) return false
+
+    const reverseRoute = !pointsMatch(
+      connection.points[0],
+      solvedRoute.route[0],
+    )
+    // The stitcher still needs one route per logical MST connection, so copy
+    // the geometry while retaining the current connection's identity.
+    this.solvedRoutes.push({
+      ...solvedRoute,
+      connectionName: connection.connectionName,
+      rootConnectionName: connection.rootConnectionName,
+      route: (reverseRoute
+        ? solvedRoute.route.slice().reverse()
+        : solvedRoute.route
+      ).map((point) => ({ ...point })),
+      vias: solvedRoute.vias.map((via) => ({ ...via })),
+    })
+    this.stats.sharedPhysicalSegmentReuseCount++
+    return true
+  }
+
+  private queueExtraBranchesForMultiPointConnection(
+    unsolvedConnection: UnsolvedConnection,
+  ) {
     const [origin, ...extraPoints] = dedupeConnectionPoints(
       unsolvedConnection.points,
     )
@@ -410,11 +477,15 @@ export class IntraNodeRouteSolver extends BaseSolver {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
       if (this.activeSubSolver.solved) {
-        this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
+        const solvedRoute = this.activeSubSolver.solvedPath!
+        this.solvedRoutes.push(solvedRoute)
+        this.rememberSolvedPhysicalSegment(this.activeConnection!, solvedRoute)
         this.activeSubSolver = null
+        this.activeConnection = null
       } else if (this.activeSubSolver.failed) {
         this.failedSubSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
+        this.activeConnection = null
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
       }
@@ -463,6 +534,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         return
       }
     }
+    if (this.tryReuseSolvedPhysicalSegment(unsolvedConnection)) return
     if (unsolvedConnection.points.length === 2) {
       const [A, B] = unsolvedConnection.points
       const sameX = Math.abs(A.x - B.x) < 1e-6
@@ -484,6 +556,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
         this.getSingleRouteSolverOpts(unsolvedConnection),
       )
+    this.activeConnection = unsolvedConnection
   }
 
   visualize(): GraphicsObject {
