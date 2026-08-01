@@ -677,6 +677,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             maxIterations: 32,
             enableLargeBoardBroadFallback: false,
             enableRouteDisjointBatching: true,
+            routeDisjointBatchMinDrcCount: 20,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
             enableSafeTraceLayerMoves: true,
