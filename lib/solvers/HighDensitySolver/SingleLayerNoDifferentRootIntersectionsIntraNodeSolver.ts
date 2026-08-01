@@ -321,7 +321,17 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
       )
     }
 
-    return [...pointCountByConnection.values()].some((count) => count > 2)
+    const occupiedEdges = new Set(
+      node.portPoints.map((point) => getEdge(point, bounds)),
+    )
+    const hasDuplicatedFourEdgeJunction =
+      occupiedEdges.size === 4 &&
+      node.portPoints.some((point) => point.duplicatedFromPortId)
+    const hasMultiSegmentConnection = [
+      ...pointCountByConnection.values(),
+    ].some((count) => count > 2)
+
+    return hasDuplicatedFourEdgeJunction || hasMultiSegmentConnection
   }
 
   private buildTaskGroups() {
