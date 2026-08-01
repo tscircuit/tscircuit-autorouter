@@ -327,7 +327,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestScore = Infinity
 
     if (this.initialTaggedRoute && this.initialTaggedRouteMatchedOn) {
-      closestRouteIndex = this.remainingHdRoutes.indexOf(this.initialTaggedRoute)
+      closestRouteIndex = this.remainingHdRoutes.indexOf(
+        this.initialTaggedRoute,
+      )
       matchedOn = this.initialTaggedRouteMatchedOn
       bestScore = -Infinity
       this.initialTaggedRoute = undefined
