@@ -29,15 +29,16 @@ export function prepareTopologyMergingInput(
   ) {
     const group = inputProblem.nodeGroups[groupIndex]!
     for (const inputNode of group.nodes) {
-      const node = mergingNodeByInputNode.get(inputNode)!
-      const preparedNode: PreparedTopologyMergingNode = {
-        sourceKey: `${group.groupId}:${node.capacityMeshNodeId}`,
-        groupIndex,
-        node,
-        bounds: getCapacityMeshNodeBounds(node),
+      for (const node of mergingNodeByInputNode.get(inputNode)!) {
+        const preparedNode: PreparedTopologyMergingNode = {
+          sourceKey: `${group.groupId}:${node.capacityMeshNodeId}`,
+          groupIndex,
+          node,
+          bounds: getCapacityMeshNodeBounds(node),
+        }
+        preparedNodes.push(preparedNode)
+        preparedNodeBySourceKey.set(preparedNode.sourceKey, preparedNode)
       }
-      preparedNodes.push(preparedNode)
-      preparedNodeBySourceKey.set(preparedNode.sourceKey, preparedNode)
     }
   }
 

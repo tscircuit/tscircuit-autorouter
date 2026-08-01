@@ -489,23 +489,23 @@ function createCapacityRegionGraphics({
       }
     }),
   )
-  const multilayerTarget = nodes.find(
-    (node) => node._containsTarget && node.availableZ.length === LAYER_COUNT,
+  const accessRegion = nodes.find(
+    (node) => node._containsTarget && node.availableZ.length > 1,
   )
 
   return {
     rects,
     lines: [
-      ...(multilayerTarget
+      ...(accessRegion
         ? [
             {
               points: [
-                { x: multilayerTarget.center.x, y: layerY(0) },
-                { x: multilayerTarget.center.x, y: layerY(2) },
+                { x: accessRegion.center.x, y: layerY(0) },
+                { x: accessRegion.center.x, y: layerY(2) },
               ],
-              strokeColor: "rgba(190,25,25,0.9)",
+              strokeColor: "rgba(20,145,70,0.95)",
               strokeWidth: 0.06,
-              label: "one ordinary CapacityMeshNode spans z0–z2",
+              label: "aligned z0/z2 access region",
             },
           ]
         : []),
@@ -549,7 +549,7 @@ function createCapacityRegionGraphics({
         x: 0,
         y: -0.9,
         text: pathExists
-          ? "Result: terminals share a normal multi-layer region"
+          ? "Result: adjacent access region connects the targets"
           : "Issue: aligned slices exist, but no region changes layer",
         anchorSide: "top_center",
         fontSize: 0.12,
@@ -559,7 +559,7 @@ function createCapacityRegionGraphics({
         x: 0,
         y: -1.12,
         text: pathExists
-          ? "z1 stays free; it only proves that the via can pass"
+          ? "z1 stays free and only proves via clearance"
           : "Red = target-owned routing capacity, not physical copper",
         anchorSide: "top_center",
         fontSize: 0.1,

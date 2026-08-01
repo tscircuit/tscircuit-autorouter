@@ -77,27 +77,62 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
+    const adjacentNodeIds = new Map<string, string[]>()
+    for (const edge of this.edges) {
+      const [nodeAId, nodeBId] = edge.nodeIds
+      adjacentNodeIds.set(nodeAId, [
+        ...(adjacentNodeIds.get(nodeAId) ?? []),
+        nodeBId,
+      ])
+      adjacentNodeIds.set(nodeBId, [
+        ...(adjacentNodeIds.get(nodeBId) ?? []),
+        nodeAId,
+      ])
+    }
+
+    const routableTargetNodeIds = new Set<string>()
+    const pendingTargetNodeIds: string[] = []
+    for (const targetNode of targetNodes) {
+      const hasDirectRoutingEdge = (
+        adjacentNodeIds.get(targetNode.capacityMeshNodeId) ?? []
+      ).some((nodeId) => {
+        const adjacentNode = nodeById.get(nodeId)
+        return (
+          adjacentNode &&
+          !adjacentNode._containsObstacle &&
+          !adjacentNode._containsTarget
+        )
+      })
+      if (!hasDirectRoutingEdge) continue
+      routableTargetNodeIds.add(targetNode.capacityMeshNodeId)
+      pendingTargetNodeIds.push(targetNode.capacityMeshNodeId)
+    }
+
+    // A target can be split into ordinary aligned regions. Routing access to
+    // one region is access to every touching region of that same target.
+    while (pendingTargetNodeIds.length > 0) {
+      const targetNodeId = pendingTargetNodeIds.pop()!
+      const targetNode = nodeById.get(targetNodeId)!
+      for (const adjacentNodeId of adjacentNodeIds.get(targetNodeId) ?? []) {
+        const adjacentNode = nodeById.get(adjacentNodeId)
+        if (
+          !adjacentNode?._containsTarget ||
+          adjacentNode._targetConnectionName !==
+            targetNode._targetConnectionName ||
+          routableTargetNodeIds.has(adjacentNodeId)
+        ) {
+          continue
+        }
+        routableTargetNodeIds.add(adjacentNodeId)
+        pendingTargetNodeIds.push(adjacentNodeId)
+      }
+    }
+
     for (const targetNode of targetNodes) {
       if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
         continue
       }
-
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
-        const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
-
-        return (
-          !otherNode._containsObstacle &&
-          !otherNode._containsTarget &&
-          this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
-      if (hasRoutingEdge) continue
+      if (routableTargetNodeIds.has(targetNode.capacityMeshNodeId)) continue
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,

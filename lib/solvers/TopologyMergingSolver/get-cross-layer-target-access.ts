@@ -146,14 +146,14 @@ function addCrossLayerAccessToTarget({
   crossLayerAccessNodes: readonly CapacityMeshNode[]
   blockerNodes: readonly CapacityMeshNode[]
   viaDiameter: number | undefined
-}): CapacityMeshNode {
+}): CapacityMeshNode[] {
   if (
     viaDiameter === undefined ||
     !node._containsTarget ||
     !node._containsObstacle ||
     Math.min(node.width, node.height) < viaDiameter
   ) {
-    return node
+    return [node]
   }
 
   const crossLayerSameNetTargets = crossLayerAccessNodes.filter(
@@ -163,7 +163,7 @@ function addCrossLayerAccessToTarget({
       shareConnectionAlias(node, candidate) &&
       getCrossLayerAccessOverlap(node, candidate) !== null,
   )
-  if (crossLayerSameNetTargets.length === 0) return node
+  if (crossLayerSameNetTargets.length === 0) return [node]
 
   const crossLayerAccessOverlaps = crossLayerAccessNodes.flatMap(
     (candidate) => {
@@ -177,7 +177,7 @@ function addCrossLayerAccessToTarget({
       return bounds ? [{ bounds, availableZ: [...candidate.availableZ] }] : []
     },
   )
-  if (crossLayerAccessOverlaps.length === 0) return node
+  if (crossLayerAccessOverlaps.length === 0) return [node]
 
   const nodeBounds = getCapacityMeshNodeBounds(node)
   const blockerBounds = blockerNodes.flatMap((candidate) => {
@@ -200,7 +200,7 @@ function addCrossLayerAccessToTarget({
     blockerBounds,
     targetLayers: node.availableZ,
   })
-  if (!reachableZ) return node
+  if (!reachableZ) return [node]
 
   // Free component layers prove that a via can pass through the footprint;
   // only layers with a same-net target become target-owned routing capacity.
@@ -208,9 +208,45 @@ function addCrossLayerAccessToTarget({
     ...node.availableZ,
     ...crossLayerSameNetTargets.flatMap((target) => target.availableZ),
   ])
-  const availableZ = reachableZ.filter((z) => targetZ.has(z))
+  const accessZ = reachableZ.filter((z) => targetZ.has(z))
+  const targetIntersections = crossLayerSameNetTargets.flatMap((target) => {
+    const intersection = getCrossLayerAccessOverlap(node, target)
+    return intersection ? [intersection] : []
+  })
+  // Preserve full-height columns so a legal access strip is not fragmented by
+  // the shorter target on the other layer.
+  const xCoordinates = getCanonicalCoordinates([
+    nodeBounds.minX,
+    nodeBounds.maxX,
+    ...targetIntersections.flatMap((bounds) => [bounds.minX, bounds.maxX]),
+  ])
+  const slices = xCoordinates.slice(0, -1).map((minX, index) => {
+    const maxX = xCoordinates[index + 1]!
+    const width = maxX - minX
+    const centerX = (minX + maxX) / 2
+    const isCrossLayerTargetColumn = targetIntersections.some(
+      (bounds) => centerX >= bounds.minX && centerX <= bounds.maxX,
+    )
+    const availableZ =
+      !isCrossLayerTargetColumn && Math.min(width, node.height) >= viaDiameter
+        ? accessZ
+        : node.availableZ
 
-  return { ...node, availableZ, layer: `z${availableZ.join(",")}` }
+    return {
+      ...node,
+      capacityMeshNodeId: `${node.capacityMeshNodeId}:cross-layer-slice:${index}`,
+      center: { x: centerX, y: node.center.y },
+      width,
+      availableZ,
+      layer: `z${availableZ.join(",")}`,
+    }
+  })
+
+  return slices.some(
+    ({ availableZ }) => availableZ.length > node.availableZ.length,
+  )
+    ? slices
+    : [node]
 }
 
 /**
@@ -225,7 +261,7 @@ export function getTopologyMergingNodesWithCrossLayerTargetAccess({
 }: {
   nodeGroups: readonly TopologyMergingNodeGroup[]
   viaDiameter: number | undefined
-}): Map<CapacityMeshNode, CapacityMeshNode> {
+}): Map<CapacityMeshNode, CapacityMeshNode[]> {
   const allNodes = nodeGroups.flatMap((group) => group.nodes)
   const componentNodes = nodeGroups
     .filter((group) => group.isComponent)
@@ -239,7 +275,7 @@ export function getTopologyMergingNodesWithCrossLayerTargetAccess({
             // The global target remains authoritative; component nodes only prove
             // which additional layers are physically reachable inside its bounds.
             group.isComponent
-              ? node
+              ? [node]
               : addCrossLayerAccessToTarget({
                   node,
                   crossLayerAccessNodes: componentNodes,
