@@ -18,6 +18,8 @@ type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
+const GROWTH_SEARCH_BUDGET_FRACTION = 1 / 4
+
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
@@ -110,6 +112,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  growthRetryIterationLimit?: number
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -147,9 +150,35 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.scaleFactor,
       ),
     })
-    if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
-      this.activeSubSolver.MAX_ITERATIONS =
-        this.constructorParams.maxInnerIterationsPerGrowthAttempt
+    const explicitIterationLimit =
+      this.constructorParams.maxInnerIterationsPerGrowthAttempt
+    if (explicitIterationLimit) {
+      this.activeSubSolver.iterationLimitCap = explicitIterationLimit
+    } else if (this.growthAttempts === 0) {
+      // Preserve most adaptive search for the true physical geometry.
+      this.activeSubSolver.adaptiveIterationLimitFraction =
+        1 - GROWTH_SEARCH_BUDGET_FRACTION
+    } else {
+      // Larger temporary geometries must not create larger search budgets.
+      this.activeSubSolver.iterationLimitCap =
+        this.growthRetryIterationLimit
+    }
+    this.activeSubSolver.preferSolvedSegmentProgress = this.growthAttempts > 0
+    this.activeSubSolver.initializeSolvers()
+
+    if (
+      this.growthAttempts === 0 &&
+      !explicitIterationLimit &&
+      this.maxGrowthAttempts > 0
+    ) {
+      this.growthRetryIterationLimit = Math.max(
+        1,
+        Math.ceil(
+          (this.activeSubSolver.MAX_ITERATIONS *
+            GROWTH_SEARCH_BUDGET_FRACTION) /
+            this.maxGrowthAttempts,
+        ),
+      )
     }
   }
 

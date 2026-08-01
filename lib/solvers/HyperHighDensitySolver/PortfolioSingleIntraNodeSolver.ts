@@ -48,6 +48,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  iterationLimitCap?: number
+  adaptiveIterationLimitFraction?: number
+  preferSolvedSegmentProgress = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -296,9 +299,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     // Keep one supervisor step available to observe that the current
     // portfolio is exhausted and expand it before BaseSolver can fail.
-    this.MAX_ITERATIONS = Math.max(
+    const dynamicIterationLimit = Math.max(
       this.iterations + 1,
       this.iterations + remainingSupervisorIterations,
+    )
+    const adaptiveIterationLimit =
+      this.adaptiveSearchExpanded &&
+      this.adaptiveIterationLimitFraction !== undefined
+        ? Math.max(
+            this.iterations + 1,
+            Math.ceil(
+              dynamicIterationLimit * this.adaptiveIterationLimitFraction,
+            ),
+          )
+        : Number.POSITIVE_INFINITY
+    this.MAX_ITERATIONS = Math.min(
+      dynamicIterationLimit,
+      this.iterationLimitCap ?? Number.POSITIVE_INFINITY,
+      adaptiveIterationLimit,
     )
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
@@ -393,7 +411,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeH(solver: IntraNodeRouteSolver) {
-    if (this.adaptiveSearchExpanded) {
+    if (this.adaptiveSearchExpanded || this.preferSolvedSegmentProgress) {
       return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)
