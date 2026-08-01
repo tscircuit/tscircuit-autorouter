@@ -706,7 +706,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             maxIterations: 32,
             enableLargeBoardBroadFallback: false,
             enableRouteDisjointBatching: true,
-            routeDisjointBatchMinDrcCount: 20,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
             enableViaInPadLayerMoves: true,
