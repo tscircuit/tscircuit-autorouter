@@ -52,6 +52,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  private initialTaggedRoute?: HighDensityIntraNodeRoute
+  private initialTaggedRouteMatchedOn?: "first" | "last"
 
   constructor(opts: {
     connectionName: string
@@ -214,9 +216,33 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
     ) {
-      throw new Error(
-        `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
+      const taggedTerminal =
+        closestFirstRoutePcbPortId === opts.start.pcb_port_id
+          ? opts.start
+          : opts.end
+      const taggedTerminalDistance = distance(
+        taggedTerminal,
+        closestFirstRoutePoint,
       )
+      const canStitchFromTaggedTerminal =
+        taggedTerminal.z === closestFirstRoutePoint.z
+          ? taggedTerminalDistance <= MAX_STITCH_GAP_DISTANCE_3
+          : taggedTerminalDistance < GEOMETRIC_TOLERANCE &&
+            (!this.allowedLayerTransitionPointKeys ||
+              this.allowedLayerTransitionPointKeys.has(
+                getXyPointKey(closestFirstRoutePoint),
+              ))
+      if (!canStitchFromTaggedTerminal) {
+        throw new Error(
+          `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
+        )
+      }
+
+      this.start = taggedTerminal
+      this.end = taggedTerminal === opts.start ? opts.end : opts.start
+      this.initialTaggedRoute = firstRoute
+      this.initialTaggedRouteMatchedOn =
+        closestFirstRoutePoint === firstRouteFirstPoint ? "first" : "last"
     }
 
     this.mergedHdRoute = {
@@ -299,6 +325,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
     let bestScore = Infinity
+
+    if (this.initialTaggedRoute && this.initialTaggedRouteMatchedOn) {
+      closestRouteIndex = this.remainingHdRoutes.indexOf(this.initialTaggedRoute)
+      matchedOn = this.initialTaggedRouteMatchedOn
+      bestScore = -Infinity
+      this.initialTaggedRoute = undefined
+      this.initialTaggedRouteMatchedOn = undefined
+    }
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
