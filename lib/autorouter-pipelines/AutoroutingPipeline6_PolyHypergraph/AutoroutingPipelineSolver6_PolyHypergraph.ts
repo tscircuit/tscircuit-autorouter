@@ -291,6 +291,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           effort: cms.effort,
+          enableRouteDisjointBatching: false,
         },
       ],
     ),

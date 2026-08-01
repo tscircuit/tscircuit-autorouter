@@ -433,6 +433,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           effort: cms.effort,
+          enableRouteDisjointBatching: false,
         },
       ],
     ),

@@ -489,6 +489,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           effort: cms.effort,
+          enableRouteDisjointBatching: false,
         },
       ],
     ),
