@@ -1,32 +1,48 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
-import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { mergeGraphics, type GraphicsObject } from "graphics-debug"
+import type { Obstacle, SimpleRouteConnection } from "lib/types"
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
-import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
-import { safeTransparentize } from "../colors"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  type FindValidStitchPath,
+  type IsValidStitchSegment,
+  type IsTerminalCoveredByTrace,
+  SingleHighDensityRouteStitchSolver3,
+} from "./SingleHighDensityRouteStitchSolver3"
+import { createCachedStitchGapValidator } from "./create-cached-stitch-gap-validator"
+import { createStitchSegmentRouter } from "./create-stitch-segment-validator"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
   snapIslandEndpointToNearestTerminal,
+  type EndpointKey,
+  type EndpointPathSelection,
+  type IsValidStitchGap,
+  type StitchRepairPolicy,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
+import {
+  visualizeSingleHighDensityRouteStitchSolver3,
+  type StitchVisualizationInput,
+} from "./visualize-single-high-density-route-stitch-solver3"
 
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
+  stitchRepairPolicy: StitchRepairPolicy
 }
+
+type ConnectionName = string
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -36,19 +52,28 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   unsolvedRoutes: UnsolvedRoute3[]
   activeSolver: SingleHighDensityRouteStitchSolver3 | null = null
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []
+  private completedStitchAttempts: StitchVisualizationInput[] = []
   colorMap: Record<string, string> = {}
   defaultTraceThickness: number
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  stitchRepairPolicy: StitchRepairPolicy
+  private isValidStitchSegment?: IsValidStitchSegment
+  private findValidStitchPath?: FindValidStitchPath
+  private isTerminalCoveredByTrace?: IsTerminalCoveredByTrace
+  private isValidStitchGap!: IsValidStitchGap
   private endpointIndex = new EndpointClusterIndex()
 
-  private canStitchBetweenTerminals(params: {
-    connectionName: string
-    hdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
-  }) {
+  private canStitchBetweenTerminals(
+    params: {
+      connectionName: string
+      hdRoutes: HighDensityIntraNodeRoute[]
+      start: Point3
+      end: Point3
+    },
+    stitchRepairPolicy: StitchRepairPolicy,
+  ): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
@@ -59,6 +84,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isValidStitchSegment: this.isValidStitchSegment,
+      isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
+      stitchRepairPolicy,
     })
 
     while (
@@ -88,6 +116,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
   }
 
+  private getStitchRepairPolicyBetweenTerminals(
+    selection: {
+      connectionName: string
+      hdRoutes: HighDensityIntraNodeRoute[]
+      start: Point3
+      end: Point3
+    },
+    allowedRepairPolicy: StitchRepairPolicy,
+  ): StitchRepairPolicy | null {
+    if (this.canStitchBetweenTerminals(selection, "validated_only")) {
+      return "validated_only"
+    }
+    return allowedRepairPolicy === "allow_drc_repair"
+      ? "allow_drc_repair"
+      : null
+  }
+
   private getSharedRootPathRoutes(params: {
     connectionName: string
     rootConnectionName?: string
@@ -95,7 +140,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allHdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+  }): EndpointPathSelection | null {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
 
@@ -110,15 +155,18 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       return null
     }
 
-    const pathRoutes = selectRoutesAlongEndpointPath({
+    const pathSelection = selectRoutesAlongEndpointPath({
       connectionName: params.connectionName,
       hdRoutes: sameRootRoutes,
       start: params.start,
       end: params.end,
       endpointIndex: this.endpointIndex,
-      canStitchBetweenTerminals: (selection) =>
-        this.canStitchBetweenTerminals(selection),
+      getStitchRepairPolicyBetweenTerminals: (selection) =>
+        this.getStitchRepairPolicyBetweenTerminals(selection, "validated_only"),
+      isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+      stitchRepairPolicy: "validated_only",
     })
+    const pathRoutes = pathSelection.hdRoutes
 
     const includesSharedRootBridge = pathRoutes.some(
       (route) => !currentRouteSet.has(route),
@@ -128,7 +176,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return pathSelection
   }
 
   constructor(params: {
@@ -139,23 +187,47 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    obstacles?: Obstacle[]
+    connMap?: { areIdsConnected: (a: string, b: string) => boolean }
+    minTraceToPadEdgeClearance?: number
+    stitchRepairPolicy?: StitchRepairPolicy
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.stitchRepairPolicy = params.stitchRepairPolicy ?? "validated_only"
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+
+    if (params.obstacles || params.connMap) {
+      const stitchSegmentRouter = createStitchSegmentRouter({
+        hdRoutes: canonicalHdRoutes,
+        obstacles: params.obstacles ?? [],
+        layerCount: params.layerCount,
+        connMap: params.connMap,
+        minClearance: params.minTraceToPadEdgeClearance ?? 0.1,
+      })
+      this.isValidStitchSegment = stitchSegmentRouter.isValidSegment
+      this.findValidStitchPath = stitchSegmentRouter.findValidPath
+      this.isTerminalCoveredByTrace =
+        stitchSegmentRouter.isTerminalCoveredByTrace
+    }
 
     const firstRoute = canonicalHdRoutes[0]
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
     this.defaultViaDiameter =
       firstRoute?.viaDiameter ?? params.defaultViaDiameter ?? 0.3
+    this.isValidStitchGap = createCachedStitchGapValidator({
+      traceThickness: this.defaultTraceThickness,
+      isValidStitchSegment: this.isValidStitchSegment,
+      findValidStitchPath: this.findValidStitchPath,
+    })
 
     const routeIslandConnectivityMap = new ConnectivityMap({})
     const routeIslandConnections: Array<string[]> = []
-    const pointHashCounts = new Map<string, number>()
+    const pointHashCounts = new Map<EndpointKey, number>()
 
     for (let i = 0; i < canonicalHdRoutes.length; i++) {
       const hdRoute = canonicalHdRoutes[i]
@@ -202,7 +274,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       ])
 
       const possibleEndpointsByHash = new Map<
-        string,
+        EndpointKey,
         { x: number; y: number; z: number }
       >()
       const possibleEndpoints2 = []
@@ -284,25 +356,34 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
       }
 
-      const selectedHdRoutes = selectRoutesAlongEndpointPath({
+      const pathSelection = selectRoutesAlongEndpointPath({
         connectionName: hdRoutes[0].connectionName,
         hdRoutes,
         start,
         end,
         endpointIndex: this.endpointIndex,
-        canStitchBetweenTerminals: (selection) =>
-          this.canStitchBetweenTerminals(selection),
+        getStitchRepairPolicyBetweenTerminals: (selection) =>
+          this.getStitchRepairPolicyBetweenTerminals(
+            selection,
+            this.stitchRepairPolicy,
+          ),
+        isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+        stitchRepairPolicy: this.stitchRepairPolicy,
       })
 
       this.unsolvedRoutes.push({
         connectionName: hdRoutes[0].connectionName,
-        hdRoutes: selectedHdRoutes,
+        hdRoutes: pathSelection.hdRoutes,
         start,
         end,
+        stitchRepairPolicy: pathSelection.stitchRepairPolicy,
       })
     }
 
-    const unsolvedRoutesByConnection = new Map<string, UnsolvedRoute3[]>()
+    const unsolvedRoutesByConnection = new Map<
+      ConnectionName,
+      UnsolvedRoute3[]
+    >()
     for (const unsolvedRoute of this.unsolvedRoutes) {
       const routes = unsolvedRoutesByConnection.get(
         unsolvedRoute.connectionName,
@@ -349,7 +430,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
-      const sharedRootPathRoutes =
+      const sharedRootPathSelection =
         unsolvedRoutes.length > 1
           ? this.getSharedRootPathRoutes({
               connectionName,
@@ -363,26 +444,38 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             })
           : null
 
-      if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
+      if (
+        !hasDegenerateRoute &&
+        !hasStitchableGap &&
+        !sharedRootPathSelection
+      ) {
         return unsolvedRoutes
       }
+
+      const pathSelection = sharedRootPathSelection
+        ? sharedRootPathSelection
+        : selectRoutesAlongEndpointPath({
+            connectionName,
+            hdRoutes,
+            start,
+            end,
+            endpointIndex: this.endpointIndex,
+            getStitchRepairPolicyBetweenTerminals: (selection) =>
+              this.getStitchRepairPolicyBetweenTerminals(
+                selection,
+                this.stitchRepairPolicy,
+              ),
+            isValidStitchGap: (gap) => this.isValidStitchGap(gap),
+            stitchRepairPolicy: this.stitchRepairPolicy,
+          })
 
       return [
         {
           connectionName,
-          hdRoutes:
-            sharedRootPathRoutes ??
-            selectRoutesAlongEndpointPath({
-              connectionName,
-              hdRoutes,
-              start,
-              end,
-              endpointIndex: this.endpointIndex,
-              canStitchBetweenTerminals: (selection) =>
-                this.canStitchBetweenTerminals(selection),
-            }),
+          hdRoutes: pathSelection.hdRoutes,
           start,
           end,
+          stitchRepairPolicy: pathSelection.stitchRepairPolicy,
         },
       ]
     })
@@ -390,12 +483,22 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.MAX_ITERATIONS = 100e3
   }
 
-  _step() {
+  _step(): void {
     if (this.activeSolver) {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
+          this.completedStitchAttempts.push({
+            inputHdRoutes: this.activeSolver.inputHdRoutes,
+            mergedHdRoute: this.activeSolver.mergedHdRoute,
+            remainingHdRoutes: [],
+            start: this.activeSolver.start,
+            end: this.activeSolver.end,
+            colorMap: this.colorMap,
+            stitchRepairPolicy: this.activeSolver.stitchRepairPolicy,
+            isValidStitchSegment: this.isValidStitchSegment,
+          })
         }
         this.activeSolver = null
       } else if (this.activeSolver.failed) {
@@ -422,11 +525,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isValidStitchSegment: this.isValidStitchSegment,
+      findValidStitchPath: this.findValidStitchPath,
+      isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
+      stitchRepairPolicy: unsolvedRoute.stitchRepairPolicy,
     })
   }
 
   visualize(): GraphicsObject {
-    const graphics: GraphicsObject = {
+    let graphics: GraphicsObject = {
       points: [],
       lines: [],
       circles: [],
@@ -434,70 +541,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       title: "Multiple High Density Route Stitch Solver 3",
     }
 
-    if (this.activeSolver) {
-      const activeSolverGraphics = this.activeSolver.visualize()
-      if (activeSolverGraphics.points?.length) {
-        graphics.points?.push(...activeSolverGraphics.points)
-      }
-      if (activeSolverGraphics.lines?.length) {
-        graphics.lines?.push(...activeSolverGraphics.lines)
-      }
-      if (activeSolverGraphics.circles?.length) {
-        graphics.circles?.push(...activeSolverGraphics.circles)
-      }
-      if (activeSolverGraphics.rects?.length) {
-        if (!graphics.rects) graphics.rects = []
-        graphics.rects.push(...activeSolverGraphics.rects)
-      }
+    for (const completedAttempt of this.completedStitchAttempts) {
+      graphics = mergeGraphics(
+        graphics,
+        visualizeSingleHighDensityRouteStitchSolver3(completedAttempt),
+      )
     }
 
-    for (const [i, mergedRoute] of this.mergedHdRoutes.entries()) {
-      const solvedColor =
-        this.colorMap[mergedRoute.connectionName] ??
-        `hsl(120, 100%, ${40 + ((i * 10) % 40)}%)`
-
-      for (let j = 0; j < mergedRoute.route.length - 1; j++) {
-        const p1 = mergedRoute.route[j]
-        const p2 = mergedRoute.route[j + 1]
-        const segmentColor =
-          p1.z !== 0 ? safeTransparentize(solvedColor, 0.5) : solvedColor
-
-        graphics.lines?.push({
-          points: [
-            { x: p1.x, y: p1.y },
-            { x: p2.x, y: p2.y },
-          ],
-          strokeColor: segmentColor,
-          strokeWidth: mergedRoute.traceThickness,
-        })
-      }
-
-      for (const point of mergedRoute.route) {
-        const pointColor =
-          point.z !== 0 ? safeTransparentize(solvedColor, 0.5) : solvedColor
-        graphics.points?.push({
-          x: point.x,
-          y: point.y,
-          color: pointColor,
-        })
-      }
-
-      for (const via of mergedRoute.vias) {
-        graphics.circles?.push({
-          center: { x: via.x, y: via.y },
-          radius: mergedRoute.viaDiameter / 2,
-          fill: solvedColor,
-        })
-      }
-
-      if (mergedRoute.jumpers && mergedRoute.jumpers.length > 0) {
-        const jumperGraphics = getJumpersGraphics(mergedRoute.jumpers, {
-          color: solvedColor,
-          label: mergedRoute.connectionName,
-        })
-        graphics.rects!.push(...(jumperGraphics.rects ?? []))
-        graphics.lines!.push(...(jumperGraphics.lines ?? []))
-      }
+    if (this.activeSolver) {
+      graphics = mergeGraphics(graphics, this.activeSolver.visualize())
     }
 
     return graphics
