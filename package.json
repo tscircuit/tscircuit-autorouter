@@ -93,6 +93,7 @@
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3d"
   },
   "dependencies": {
+    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#63b719d6fb1c16f2eece688717a7c85ceba86f87",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"

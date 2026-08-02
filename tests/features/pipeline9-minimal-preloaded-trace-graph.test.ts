@@ -67,7 +67,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     ),
   )
 
-  const pipeline7Stages = new Map(
+  const pipeline7Stages = new Map<string, unknown>(
     pipeline7.pipelineDef.map((step) => [step.solverName, step.solverClass]),
   )
   expect(solver.pipelineDef).toHaveLength(pipeline7.pipelineDef.length + 1)
@@ -80,7 +80,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   ]) {
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)
-        ?.solverClass,
+        ?.solverClass as unknown,
     ).toBe(pipeline7Stages.get(stageName))
   }
 
