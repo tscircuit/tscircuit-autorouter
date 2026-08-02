@@ -440,6 +440,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleLayerNoDifferentRootIntersectionsIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         traceWidth: this.constructorParams.traceWidth,
+        traceClearance: 0.1,
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
     }

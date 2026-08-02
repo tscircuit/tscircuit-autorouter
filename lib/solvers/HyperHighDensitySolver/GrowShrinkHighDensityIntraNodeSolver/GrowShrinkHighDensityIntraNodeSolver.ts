@@ -6,11 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
-import {
-  createInvalidDirectConnectionRoutes,
-  createInvalidSameLayerCrossingRoutes,
-  hasImpossibleSameLayerCrossingGeometry,
-} from "./invalidSameLayerCrossingGeometry"
+import { createInvalidDirectConnectionRoutes } from "./invalidSameLayerCrossingGeometry"
 
 type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof PortfolioSingleIntraNodeSolver
@@ -123,19 +119,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
-    if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
-      this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
-        this.nodeWithPortPoints,
-        params.traceWidth ?? 0.15,
-        params.viaDiameter ?? 0.3,
-      )
-      this.solved = true
-      this.progress = 1
-      this.stats = {
-        invalidGeometryFallback: true,
-        reason: "single-layer node has same-layer crossings",
-      }
-    }
   }
 
   getConstructorParams() {

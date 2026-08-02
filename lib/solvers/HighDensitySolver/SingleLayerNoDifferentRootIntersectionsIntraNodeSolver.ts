@@ -2,6 +2,7 @@ import {
   distance,
   doSegmentsIntersect,
   pointToSegmentDistance,
+  segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type {
@@ -29,7 +30,7 @@ type ObstacleSegment = {
 }
 
 const EPS = 1e-6
-const POINT_OFFSET = 0.02
+const DEFAULT_TRACE_CLEARANCE = 0.1
 
 const pointKey = (point: Point2) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)}`
@@ -89,10 +90,13 @@ const segmentIntersectsForeignPort = (
   A: Point2,
   B: Point2,
   foreignPorts: Point2[],
+  minimumCenterlineDistance: number,
 ) => {
   for (const port of foreignPorts) {
-    if (samePoint(port, A) || samePoint(port, B)) continue
-    if (pointToSegmentDistance(port, A, B) < 1e-4) {
+    if (
+      pointToSegmentDistance(port, A, B) <
+      minimumCenterlineDistance - EPS
+    ) {
       return true
     }
   }
@@ -103,17 +107,14 @@ const segmentIntersectsObstacles = (
   A: Point2,
   B: Point2,
   obstacleSegments: ObstacleSegment[],
+  minimumCenterlineDistance: number,
 ) => {
   for (const segment of obstacleSegments) {
     if (
-      samePoint(A, segment.A) ||
-      samePoint(A, segment.B) ||
-      samePoint(B, segment.A) ||
-      samePoint(B, segment.B)
+      doSegmentsIntersect(A, B, segment.A, segment.B) ||
+      segmentToSegmentMinDistance(A, B, segment.A, segment.B) <
+        minimumCenterlineDistance - EPS
     ) {
-      continue
-    }
-    if (doSegmentsIntersect(A, B, segment.A, segment.B)) {
       return true
     }
   }
@@ -172,12 +173,14 @@ const findPath = ({
   bounds,
   obstacleSegments,
   foreignPorts,
+  minimumCenterlineDistance,
 }: {
   A: Point3
   B: Point3
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   obstacleSegments: ObstacleSegment[]
   foreignPorts: Point2[]
+  minimumCenterlineDistance: number
 }) => {
   const candidatePoints: Point2[] = [
     { x: A.x, y: A.y },
@@ -197,8 +200,12 @@ const findPath = ({
   ]
 
   for (const point of basePoints) {
-    for (const dx of [-POINT_OFFSET, 0, POINT_OFFSET]) {
-      for (const dy of [-POINT_OFFSET, 0, POINT_OFFSET]) {
+    for (const dx of [-minimumCenterlineDistance, 0, minimumCenterlineDistance]) {
+      for (const dy of [
+        -minimumCenterlineDistance,
+        0,
+        minimumCenterlineDistance,
+      ]) {
         const candidate = { x: point.x + dx, y: point.y + dy }
         if (!isInsideBounds(candidate, bounds)) continue
         candidatePoints.push(candidate)
@@ -244,10 +251,24 @@ const findPath = ({
     for (const nextKey of queue) {
       const nextNode = nodeByKey.get(nextKey)!
       if (samePoint(currentNode, nextNode)) continue
-      if (segmentIntersectsObstacles(currentNode, nextNode, obstacleSegments)) {
+      if (
+        segmentIntersectsObstacles(
+          currentNode,
+          nextNode,
+          obstacleSegments,
+          minimumCenterlineDistance,
+        )
+      ) {
         continue
       }
-      if (segmentIntersectsForeignPort(currentNode, nextNode, foreignPorts)) {
+      if (
+        segmentIntersectsForeignPort(
+          currentNode,
+          nextNode,
+          foreignPorts,
+          minimumCenterlineDistance,
+        )
+      ) {
         continue
       }
 
@@ -288,17 +309,20 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
 
   nodeWithPortPoints: NodeWithPortPoints
   traceWidth: number
+  traceClearance: number
   viaDiameter: number
   solvedRoutes: HighDensityIntraNodeRoute[] = []
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
     traceWidth?: number
+    traceClearance?: number
     viaDiameter?: number
   }) {
     super()
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.traceWidth = params.traceWidth ?? 0.15
+    this.traceClearance = params.traceClearance ?? DEFAULT_TRACE_CLEARANCE
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.MAX_ITERATIONS = 1
   }
@@ -380,6 +404,7 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
           bounds,
           obstacleSegments,
           foreignPorts,
+          minimumCenterlineDistance: this.traceWidth + this.traceClearance,
         })
 
         if (!path || path.length < 2) {
