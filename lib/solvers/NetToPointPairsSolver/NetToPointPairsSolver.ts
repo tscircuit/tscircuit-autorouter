@@ -4,7 +4,7 @@ import {
   SimpleRouteJson,
 } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { buildLayerAwareMinimumSpanningTree } from "./buildLayerAwareMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
@@ -172,9 +172,10 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
-    })
+    const edges = buildLayerAwareMinimumSpanningTree(
+      connection.pointsToConnect,
+      zeroWeightEdges,
+    )
 
     let mstIdx = 0
     for (const edge of edges) {
