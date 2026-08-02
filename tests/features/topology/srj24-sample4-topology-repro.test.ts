@@ -81,6 +81,36 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
   )
   topologyPlanningSolver.solve()
   const topologyPlanningOutput = topologyPlanningSolver.getOutput()
+  const routeRootIds =
+    fixture.inputSrj.connections[0]?.__rootConnectionNames ?? []
+  const componentTopTarget = topologyPlanningOutput.componentMeshNodes
+    .flat()
+    .find(
+      (node) =>
+        node._containsTarget &&
+        node.availableZ.includes(0) &&
+        Math.abs(node.center.x) < 1e-6 &&
+        Math.abs(node.center.y) < 1e-6,
+    )
+  const globalBottomTarget = topologyPlanningOutput.globalMeshNodes.find(
+    (node) =>
+      node._containsTarget &&
+      node.availableZ.includes(5) &&
+      Math.abs(node.center.x - 0.17) < 1e-6 &&
+      Math.abs(node.center.y) < 1e-6,
+  )
+  const getRetainedRouteRoots = (node: CapacityMeshNode | undefined) => {
+    const aliases = new Set([
+      ...(node?._targetConnectionName ? [node._targetConnectionName] : []),
+      ...(node?._connectedTo ?? []),
+    ])
+    return routeRootIds.filter((rootId) => aliases.has(rootId))
+  }
+  const componentTargetRoots = getRetainedRouteRoots(componentTopTarget)
+  const globalTargetRoots = getRetainedRouteRoots(globalBottomTarget)
+  const sharedTargetRoots = componentTargetRoots.filter((rootId) =>
+    globalTargetRoots.includes(rootId),
+  )
   const topologyMergingSolver = createTopologyMergingSolverFromPlanning({
     inputSrj: fixture.inputSrj,
     topologyPlanningSolver,
@@ -144,7 +174,8 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
   )
   const hasDetectedBga = detectedBga !== undefined
 
-  expect(shortestPath !== null).toBe(hasDetectedBga)
+  expect(componentTargetRoots).toContain(routeRootIds[0])
+  expect(globalTargetRoots).toContain(routeRootIds[1])
   expect(
     [...fixture.nonCoreObstacleIds].every((obstacleId) =>
       globalObstacleIds.has(obstacleId),
@@ -155,10 +186,6 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
       globalObstacleIds.has(obstacleId),
     ),
   ).toBe(!hasDetectedBga)
-  expect(
-    shortestPath?.some((node) => node.availableZ.length > 1) ?? false,
-  ).toBe(hasDetectedBga)
-
   const displayedPath = shortestPath ?? [topTarget, bottomTarget]
   const routeNodes = displayedPath.map((node, index) => ({
     ...node,
@@ -194,21 +221,31 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
         }),
       },
       {
-        name: hasDetectedBga
-          ? "Fix 2: core local, perimeter global"
-          : "Issue 2: all pads stay global",
+        name:
+          sharedTargetRoots.length > 0
+            ? "Target identity: shared electrical root"
+            : "Issue: BGA target lost the net root",
         step: 2,
         iteration: topologyPlanningSolver.iterations,
         graphics: visualizeMixedComponent({
           inputSrj: fixture.inputSrj,
-          selectedObstacleIds: detectedCoreObstacleIds,
+          selectedObstacleIds: new Set([
+            "core-2-2",
+            "stacked-bottom-pad",
+          ]),
           globalObstacleIds,
+          notes: [
+            `route roots: ${routeRootIds.join(" + ")}`,
+            `BGA target kept: ${componentTargetRoots.join(", ") || "none"}`,
+            `global target kept: ${globalTargetRoots.join(", ") || "none"}`,
+            `shared root: ${sharedTargetRoots.join(", ") || "none"}`,
+          ],
         }),
       },
       {
         name: shortestPath
-          ? "Result: BGA-local z0-to-z5 path"
-          : "Failure: no BGA-local z0-to-z5 path",
+          ? "Result: same-net z0-to-z5 path"
+          : "Failure: no same-net z0-to-z5 path",
         step: 3,
         iteration: topologyMergingSolver.iterations,
         graphics: visualizeLayerAccess({

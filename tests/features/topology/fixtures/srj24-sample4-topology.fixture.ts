@@ -19,6 +19,9 @@ type VisualizedCapacityMeshNode = CapacityMeshNode & {
 const BGA_COMPONENT_ID = "mixed-pad-bga"
 const BGA_TOP_PORT_ID = "bga-top-port"
 const BOTTOM_PORT_ID = "bottom-port"
+const BGA_TARGET_ROOT_ID = "source_trace_3"
+const GLOBAL_TARGET_ROOT_ID = "source_net_3"
+const ROUTE_CONNECTION_ID = `${BGA_TARGET_ROOT_ID}__${GLOBAL_TARGET_ROOT_ID}_mst1`
 const GRID_COORDINATES = [-1.3, -0.65, 0, 0.65, 1.3]
 
 function createPad({
@@ -131,7 +134,7 @@ export function createSrj24Sample4TopologyFixture(): Srj24Sample4TopologyFixture
     width: 0.59,
     height: 0.64,
     layer: "bottom",
-    connectedTo: [BOTTOM_PORT_ID],
+    connectedTo: [BOTTOM_PORT_ID, GLOBAL_TARGET_ROOT_ID],
   })
 
   return {
@@ -143,7 +146,11 @@ export function createSrj24Sample4TopologyFixture(): Srj24Sample4TopologyFixture
       obstacles: [...bgaCore, ...nonCoreObstacles, bottomPad],
       connections: [
         {
-          name: "stacked-terminal-net",
+          name: ROUTE_CONNECTION_ID,
+          __rootConnectionNames: [
+            BGA_TARGET_ROOT_ID,
+            GLOBAL_TARGET_ROOT_ID,
+          ],
           pointsToConnect: [
             { pointId: BGA_TOP_PORT_ID, x: 0, y: 0, layer: "top" },
             { pointId: BOTTOM_PORT_ID, x: 0.17, y: 0, layer: "bottom" },
@@ -165,10 +172,12 @@ export function visualizeMixedComponent({
   inputSrj,
   selectedObstacleIds = new Set(),
   globalObstacleIds = new Set(),
+  notes = [],
 }: {
   inputSrj: SimpleRouteJson
   selectedObstacleIds?: ReadonlySet<string>
   globalObstacleIds?: ReadonlySet<string | undefined>
+  notes?: string[]
 }): GraphicsObject {
   return {
     rects: inputSrj.obstacles.map((obstacle) => {
@@ -193,6 +202,13 @@ export function visualizeMixedComponent({
         label: obstacle.obstacleId,
       }
     }),
+    texts: notes.map((text, index) => ({
+      x: 0,
+      y: -3.15 - index * 0.28,
+      text,
+      anchorSide: "top_center",
+      fontSize: 0.15,
+    })),
   }
 }
 
@@ -220,6 +236,14 @@ export function visualizeLayerAccess({
       fontSize: 0.18,
     })
   }
+
+  texts.push({
+    x: Math.max(0, nodes.length - 1) * 0.7,
+    y: -3.05,
+    text: "Columns are graph regions, not physical X distance",
+    anchorSide: "top_center",
+    fontSize: 0.13,
+  })
 
   for (const node of nodes) {
     const x = xByNodeId.get(node.capacityMeshNodeId)!
