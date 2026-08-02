@@ -40,24 +40,27 @@ export function doesBoundsContainPoint(
 
 export function compactTopologyMergingRegions(
   regions: TopologyMergingRegion[],
+  firstDirection: "horizontal" | "vertical" = "horizontal",
 ): TopologyMergingRegion[] {
   let compactedRegions = regions
+  const secondDirection =
+    firstDirection === "horizontal" ? "vertical" : "horizontal"
 
   while (true) {
-    const horizontallyCompacted = compactRegionsInDirection(
+    const firstCompacted = compactRegionsInDirection(
       compactedRegions,
-      "horizontal",
+      firstDirection,
     )
-    const verticallyCompacted = compactRegionsInDirection(
-      horizontallyCompacted,
-      "vertical",
+    const secondCompacted = compactRegionsInDirection(
+      firstCompacted,
+      secondDirection,
     )
 
-    if (verticallyCompacted.length === compactedRegions.length) {
-      return verticallyCompacted
+    if (secondCompacted.length === compactedRegions.length) {
+      return secondCompacted
     }
 
-    compactedRegions = verticallyCompacted
+    compactedRegions = secondCompacted
   }
 }
 
