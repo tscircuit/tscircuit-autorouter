@@ -1,5 +1,6 @@
 import type { Point3 } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
+import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { safeTransparentize } from "../colors"
@@ -19,6 +20,7 @@ export type StitchVisualizationInput = {
   start: StitchTerminal
   end: StitchTerminal
   colorMap: Record<string, string>
+  obstacles: Obstacle[]
   stitchRepairPolicy: StitchRepairPolicy
   isValidStitchSegment?: IsValidStitchSegment
 }
@@ -29,6 +31,54 @@ const getSegmentKey = (start: Point3, end: Point3): StitchSegmentKey => {
   return startKey.localeCompare(endKey) <= 0
     ? `${startKey}:${endKey}`
     : `${endKey}:${startKey}`
+}
+
+const getInputSegmentKeys = (
+  inputHdRoutes: HighDensityIntraNodeRoute[],
+): Set<StitchSegmentKey> => {
+  const inputSegmentKeys = new Set<StitchSegmentKey>()
+  for (const inputHdRoute of inputHdRoutes) {
+    for (
+      let pointIndex = 0;
+      pointIndex < inputHdRoute.route.length - 1;
+      pointIndex++
+    ) {
+      inputSegmentKeys.add(
+        getSegmentKey(
+          inputHdRoute.route[pointIndex]!,
+          inputHdRoute.route[pointIndex + 1]!,
+        ),
+      )
+    }
+  }
+  return inputSegmentKeys
+}
+
+const addObstacleGraphics = ({
+  graphics,
+  obstacles,
+  steps,
+}: {
+  graphics: GraphicsObject
+  obstacles: Obstacle[]
+  steps: number[]
+}): void => {
+  for (const obstacle of obstacles) {
+    for (const step of steps) {
+      graphics.rects!.push({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        ccwRotationDegrees: obstacle.ccwRotationDegrees,
+        fill: "rgba(100, 116, 139, 0.18)",
+        stroke: "#64748b",
+        label: obstacle.obstacleId
+          ? `Blocking obstacle: ${obstacle.obstacleId}`
+          : "Blocking obstacle",
+        step,
+      })
+    }
+  }
 }
 
 const addRouteToGraphics = ({
@@ -95,6 +145,54 @@ const addRouteToGraphics = ({
   )
 }
 
+const addNewStitchSegments = ({
+  graphics,
+  hdRoute,
+  inputHdRoutes,
+  isValidStitchSegment,
+}: {
+  graphics: GraphicsObject
+  hdRoute: HighDensityIntraNodeRoute
+  inputHdRoutes: HighDensityIntraNodeRoute[]
+  isValidStitchSegment?: IsValidStitchSegment
+}): void => {
+  const inputSegmentKeys = getInputSegmentKeys(inputHdRoutes)
+  for (
+    let pointIndex = 0;
+    pointIndex < hdRoute.route.length - 1;
+    pointIndex++
+  ) {
+    const start = hdRoute.route[pointIndex]!
+    const end = hdRoute.route[pointIndex + 1]!
+    if (start.z !== end.z) continue
+    if (inputSegmentKeys.has(getSegmentKey(start, end))) continue
+
+    const isValidated =
+      !isValidStitchSegment ||
+      isValidStitchSegment({
+        connectionName: hdRoute.connectionName,
+        start,
+        end,
+        traceThickness: hdRoute.traceThickness,
+      })
+    graphics.lines!.push({
+      points: [
+        { x: start.x, y: start.y },
+        { x: end.x, y: end.y },
+      ],
+      strokeColor: isValidated ? "#f97316" : "#dc2626",
+      strokeDash: isValidated
+        ? undefined
+        : [hdRoute.traceThickness, hdRoute.traceThickness * 0.6],
+      strokeWidth: hdRoute.traceThickness,
+      label: isValidated
+        ? "Validated stitch segment"
+        : "Provisional stitch segment",
+      step: 2,
+    })
+  }
+}
+
 const addRepairRequiredSegments = ({
   graphics,
   hdRoute,
@@ -106,21 +204,7 @@ const addRepairRequiredSegments = ({
   inputHdRoutes: HighDensityIntraNodeRoute[]
   isValidStitchSegment: IsValidStitchSegment
 }): void => {
-  const inputSegmentKeys = new Set<StitchSegmentKey>()
-  for (const inputHdRoute of inputHdRoutes) {
-    for (
-      let pointIndex = 0;
-      pointIndex < inputHdRoute.route.length - 1;
-      pointIndex++
-    ) {
-      inputSegmentKeys.add(
-        getSegmentKey(
-          inputHdRoute.route[pointIndex]!,
-          inputHdRoute.route[pointIndex + 1]!,
-        ),
-      )
-    }
-  }
+  const inputSegmentKeys = getInputSegmentKeys(inputHdRoutes)
 
   for (
     let pointIndex = 0;
@@ -146,8 +230,8 @@ const addRepairRequiredSegments = ({
         { x: end.x, y: end.y },
       ],
       strokeColor: "#dc2626",
-      strokeDash: "4 3",
-      strokeWidth: Math.max(hdRoute.traceThickness * 1.75, 0.2),
+      strokeDash: [hdRoute.traceThickness, hdRoute.traceThickness * 0.6],
+      strokeWidth: hdRoute.traceThickness,
       label: "Requires downstream DRC repair",
       step: 3,
     })
@@ -157,6 +241,9 @@ const addRepairRequiredSegments = ({
 export const visualizeSingleHighDensityRouteStitchSolver3 = (
   stitchState: StitchVisualizationInput,
 ): GraphicsObject => {
+  const hasRepairHandoffStep =
+    stitchState.stitchRepairPolicy === "allow_drc_repair" &&
+    Boolean(stitchState.isValidStitchSegment)
   const graphics: GraphicsObject = {
     points: [
       {
@@ -167,11 +254,25 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
         step: 1,
       },
       {
+        x: stitchState.start.x,
+        y: stitchState.start.y,
+        color: "green",
+        label: "Connection start",
+        step: 2,
+      },
+      {
         x: stitchState.end.x,
         y: stitchState.end.y,
         color: "red",
         label: "Connection end",
         step: 1,
+      },
+      {
+        x: stitchState.end.x,
+        y: stitchState.end.y,
+        color: "red",
+        label: "Connection end",
+        step: 2,
       },
     ],
     lines: [],
@@ -179,6 +280,11 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
     rects: [],
     title: "Single High Density Route Stitch Solver 3",
   }
+  addObstacleGraphics({
+    graphics,
+    obstacles: stitchState.obstacles,
+    steps: hasRepairHandoffStep ? [1, 2, 3] : [1, 2],
+  })
 
   const inputRoutes =
     stitchState.inputHdRoutes.length > 0
@@ -206,11 +312,30 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
     step: 2,
     label: `Stitched output: ${mergedHdRoute.connectionName}`,
   })
+  addNewStitchSegments({
+    graphics,
+    hdRoute: mergedHdRoute,
+    inputHdRoutes: stitchState.inputHdRoutes,
+    isValidStitchSegment: stitchState.isValidStitchSegment,
+  })
 
-  if (
-    stitchState.stitchRepairPolicy === "allow_drc_repair" &&
-    stitchState.isValidStitchSegment
-  ) {
+  if (hasRepairHandoffStep && stitchState.isValidStitchSegment) {
+    graphics.points!.push(
+      {
+        x: stitchState.start.x,
+        y: stitchState.start.y,
+        color: "green",
+        label: "Connection start",
+        step: 3,
+      },
+      {
+        x: stitchState.end.x,
+        y: stitchState.end.y,
+        color: "red",
+        label: "Connection end",
+        step: 3,
+      },
+    )
     for (const inputHdRoute of stitchState.inputHdRoutes) {
       addRouteToGraphics({
         graphics,
@@ -220,6 +345,13 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
         label: "Existing copper around the repair handoff",
       })
     }
+    addRouteToGraphics({
+      graphics,
+      hdRoute: mergedHdRoute,
+      color: safeTransparentize("#16a34a", 0.3),
+      step: 3,
+      label: `Repair handoff output: ${mergedHdRoute.connectionName}`,
+    })
     addRepairRequiredSegments({
       graphics,
       hdRoute: mergedHdRoute,

@@ -54,6 +54,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   mergedHdRoutes: HighDensityIntraNodeRoute[] = []
   private completedStitchAttempts: StitchVisualizationInput[] = []
   colorMap: Record<string, string> = {}
+  obstacles: Obstacle[]
   defaultTraceThickness: number
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
@@ -87,6 +88,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       isValidStitchSegment: this.isValidStitchSegment,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
       stitchRepairPolicy,
+      obstacles: this.obstacles,
     })
 
     while (
@@ -194,6 +196,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   }) {
     super()
     this.colorMap = params.colorMap ?? {}
+    this.obstacles = params.obstacles ?? []
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
@@ -496,6 +499,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             start: this.activeSolver.start,
             end: this.activeSolver.end,
             colorMap: this.colorMap,
+            obstacles: this.obstacles,
             stitchRepairPolicy: this.activeSolver.stitchRepairPolicy,
             isValidStitchSegment: this.isValidStitchSegment,
           })
@@ -529,6 +533,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       findValidStitchPath: this.findValidStitchPath,
       isTerminalCoveredByTrace: this.isTerminalCoveredByTrace,
       stitchRepairPolicy: unsolvedRoute.stitchRepairPolicy,
+      obstacles: this.obstacles,
     })
   }
 
