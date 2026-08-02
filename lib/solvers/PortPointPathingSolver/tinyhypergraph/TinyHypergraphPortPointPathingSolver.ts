@@ -929,6 +929,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         serializedGraph,
         {
           duplicatePortProximity: 0.05,
+          ...(params.minTraceWidth !== undefined
+            ? {
+                minimumDuplicatePortSpacing:
+                  params.minTraceWidth + (params.traceClearance ?? 0),
+                duplicatePortWidth: params.minTraceWidth,
+              }
+            : {}),
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: true,
@@ -944,8 +951,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
       duplicateCongestedPortSolver.solve()
       if (duplicateCongestedPortSolver.failed) {
-        this.duplicateCongestedPortError =
-          duplicateCongestedPortSolver.error ?? "unknown error"
+        throw new Error(
+          `Duplicate congested port prepass failed: ${duplicateCongestedPortSolver.error ?? "unknown error"}`,
+        )
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
