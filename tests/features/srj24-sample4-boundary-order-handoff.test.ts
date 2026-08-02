@@ -36,6 +36,8 @@ const findDifferentNetSingleLayerCrossings = (
   const crossings: Crossing[] = []
 
   for (const node of nodes) {
+    if (node.availableZ.length !== 1) continue
+
     const pairs = node.portPointsInPairs ?? []
     for (let firstIndex = 0; firstIndex < pairs.length; firstIndex++) {
       const first = pairs[firstIndex]!
