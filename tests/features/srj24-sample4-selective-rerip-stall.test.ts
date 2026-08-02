@@ -92,10 +92,12 @@ const getInputNodeSummary = ({
   groupId,
   isComponent,
   node,
+  routeRootIds,
 }: {
   groupId: string
   isComponent: boolean
   node: CapacityMeshNode
+  routeRootIds: readonly string[]
 }) => ({
   groupId,
   isComponent,
@@ -107,7 +109,12 @@ const getInputNodeSummary = ({
   containsObstacle: node._containsObstacle,
   containsTarget: node._containsTarget,
   targetConnectionName: node._targetConnectionName,
-  connectedTo: node._connectedTo,
+  connectedToCount: node._connectedTo?.length ?? 0,
+  retainedRouteRoots: routeRootIds.filter(
+    (rootId) =>
+      node._targetConnectionName === rootId ||
+      node._connectedTo?.includes(rootId),
+  ),
 })
 
 const getDistanceToInputNode = (
@@ -154,6 +161,12 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
     currentRouteId === undefined
       ? undefined
       : tinySolver.problem.routeMetadata?.[currentRouteId]
+  const currentRouteRootIds =
+    (
+      currentRouteMetadata?.simpleRouteConnection as
+        | { __rootConnectionNames?: string[] }
+        | undefined
+    )?.__rootConnectionNames ?? []
   const startPortId =
     currentRouteId === undefined
       ? undefined
@@ -209,7 +222,35 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
             getDistanceToInputNode(right.node, endpointMidpoint),
         )
         .slice(0, 100)
-        .map(getInputNodeSummary)
+        .map(({ groupId, isComponent, node }) =>
+          getInputNodeSummary({
+            groupId,
+            isComponent,
+            node,
+            routeRootIds: currentRouteRootIds,
+          }),
+        )
+    : []
+  const nearbyMergedNodes = endpointMidpoint
+    ? solver
+        .topologyMergingSolver!.getOutput()
+        .filter(
+          (node) => getDistanceToInputNode(node, endpointMidpoint) <= 0.5,
+        )
+        .sort(
+          (left, right) =>
+            getDistanceToInputNode(left, endpointMidpoint) -
+            getDistanceToInputNode(right, endpointMidpoint),
+        )
+        .slice(0, 100)
+        .map((node) =>
+          getInputNodeSummary({
+            groupId: "merged",
+            isComponent: node._isComponentTopologyNode === true,
+            node,
+            routeRootIds: currentRouteRootIds,
+          }),
+        )
     : []
   const committedRouteIds = new Set(
     tinySolver.state.regionSegments.flatMap((segments) =>
@@ -232,6 +273,10 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
         committedRouteCount: committedRouteIds.size,
         pendingRouteCount: tinySolver.state.unroutedRoutes.length,
         currentRouteId,
+        currentRouteNetId:
+          currentRouteId === undefined
+            ? undefined
+            : tinySolver.problem.routeNet[currentRouteId],
         currentRouteMetadata,
         startPort:
           startPortId === undefined
@@ -243,6 +288,7 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
             : getPortSummary(tinySolver, endPortId),
         endpointMidpoint,
         nearbyTopologyInputNodes,
+        nearbyMergedNodes,
         nearbyRegions,
         bestCandidatePath: getCandidatePath(tinySolver),
         candidateQueueLength: tinySolver.state.candidateQueue.length,
