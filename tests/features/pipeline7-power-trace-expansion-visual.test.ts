@@ -28,6 +28,10 @@ const addPanelTitle = (svg: string, title: string): string => {
 
 test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressions", async (): Promise<void> => {
   const scenarios = await loadScenarios("srj27")
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   const failedScenarios: string[] = []
   const preExpansionDrcPasses: string[] = []
   const postExpansionDrcPasses: string[] = []
@@ -112,7 +116,7 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
           normalizeSize: false,
         },
       ),
-    ).toMatchSvgSnapshot(import.meta.path, { svgName: scenarioName })
+    ).toMatchSvgSnapshot(snapshotPath, { svgName: scenarioName })
   }
 
   expect(failedScenarios).toEqual(["sample001"])
