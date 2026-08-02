@@ -12,7 +12,7 @@ import {
   createSrj24Sample4TopologyFixture,
   visualizeLayerAccess,
   visualizeMixedComponent,
-} from "./fixtures/srj24-sample4-topology.fixture"
+} from "./fixtures/srj24-sample4-topology-test-data"
 
 function getShortestPath({
   nodes,
