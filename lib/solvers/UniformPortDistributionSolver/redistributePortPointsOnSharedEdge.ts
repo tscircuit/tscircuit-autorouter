@@ -7,11 +7,13 @@ import { PortPointWithOwnerPair, SharedEdge } from "./types"
 export const redistributePortPointsOnSharedEdge = ({
   sharedEdge,
   portPoints,
+  planarOrderScoreByPortPointId,
   minimumPortSpacing,
   minimumEdgeInset,
 }: {
   sharedEdge: SharedEdge
   portPoints: PortPointWithOwnerPair[]
+  planarOrderScoreByPortPointId?: Map<string, number>
   minimumPortSpacing?: number
   minimumEdgeInset?: number
 }): PortPointWithOwnerPair[] => {
@@ -34,9 +36,20 @@ export const redistributePortPointsOnSharedEdge = ({
     const portsOnZ = portsByZ.get(z)!
     const count = portsOnZ.length
 
-    portsOnZ.sort((a, b) =>
-      sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,
-    )
+    portsOnZ.sort((a, b) => {
+      const axisDifference =
+        sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y
+      if (Math.abs(axisDifference) > epsilon) return axisDifference
+
+      const scoreA = a.portPointId
+        ? planarOrderScoreByPortPointId?.get(a.portPointId)
+        : undefined
+      const scoreB = b.portPointId
+        ? planarOrderScoreByPortPointId?.get(b.portPointId)
+        : undefined
+      if (scoreA === undefined || scoreB === undefined) return 0
+      return scoreA - scoreB
+    })
 
     const legacySpacing = sharedEdge.length / count
     const legacyEdgeInset = legacySpacing / 2
@@ -48,8 +61,7 @@ export const redistributePortPointsOnSharedEdge = ({
         legacyEdgeInset + epsilon < minimumEdgeInset)
     const physicalSpacing = minimumPortSpacing ?? 0
     const requiredSpan = (count - 1) * physicalSpacing
-    const availableCenterSpan =
-      sharedEdge.length - 2 * (minimumEdgeInset ?? 0)
+    const availableCenterSpan = sharedEdge.length - 2 * (minimumEdgeInset ?? 0)
     const canFitPhysicalSpacing =
       needsPhysicalSpacing && requiredSpan <= availableCenterSpan + epsilon
     const physicalStart = (sharedEdge.length - requiredSpan) / 2

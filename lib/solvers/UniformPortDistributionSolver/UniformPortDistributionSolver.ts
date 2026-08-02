@@ -13,6 +13,7 @@ import {
 } from "./types"
 import { determineOwnerPair } from "./determineOwnerPair"
 import { getOwnerPairKey } from "./getOwnerPairKey"
+import { getPlanarPortOrderScore } from "./getPlanarPortOrderScore"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
@@ -42,6 +43,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   }
 
   mapOfNodeIdToBounds = new Map<string, Bounds>()
+  mapOfNodeIdToNode = new Map<string, NodeWithPortPoints>()
   mapOfOwnerPairToPortPoints = new Map<OwnerPairKey, PortPointWithOwnerPair[]>()
   mapOfOwnerPairToSharedEdge = new Map<OwnerPairKey, SharedEdge>()
   ownerPairsToProcess: OwnerPairKey[] = []
@@ -51,6 +53,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
     for (const node of input.nodeWithPortPoints) {
+      this.mapOfNodeIdToNode.set(node.capacityMeshNodeId, node)
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
         getBoundsFromNodeWithPortPoints(node),
@@ -134,6 +137,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
+      planarOrderScoreByPortPointId: new Map(
+        family.flatMap((portPoint) => {
+          if (!portPoint.portPointId) return []
+          const score = getPlanarPortOrderScore({
+            portPoint,
+            sharedEdge,
+            nodeById: this.mapOfNodeIdToNode,
+            boundsByNodeId: this.mapOfNodeIdToBounds,
+          })
+          return score === null ? [] : [[portPoint.portPointId, score]]
+        }),
+      ),
       minimumPortSpacing:
         this.input.minTraceWidth === undefined
           ? undefined
