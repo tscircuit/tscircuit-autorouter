@@ -35,6 +35,9 @@ type SolverInstance = {
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
+  exactGeometryDrcForceImproveSolver?: {
+    stats?: Record<string, unknown>
+  }
 }
 
 type SolverOptions = {
@@ -67,6 +70,28 @@ type FailureInfo = {
 }
 
 const DEFAULT_PROGRESS_INTERVAL_MS = 1000
+
+const getSerializableStats = (
+  stats: Record<string, unknown> | undefined,
+): Record<string, string | number | boolean | null> | undefined => {
+  if (!stats) return undefined
+
+  const serializableStats = Object.fromEntries(
+    Object.entries(stats).filter((entry) => {
+      const value = entry[1]
+      return (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+      )
+    }),
+  )
+
+  return Object.keys(serializableStats).length > 0
+    ? serializableStats
+    : undefined
+}
 
 const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
   traces.reduce(
@@ -450,6 +475,9 @@ export const runTask = async (
       relaxedDrcPassed,
       viaCount,
       benchmarkSnapshot,
+      solverStats: getSerializableStats(
+        solver.exactGeometryDrcForceImproveSolver?.stats,
+      ),
       ...drcSummary,
     }
   } catch (error) {

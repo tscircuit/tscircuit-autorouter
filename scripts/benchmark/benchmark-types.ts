@@ -60,6 +60,7 @@ export type WorkerResult<
     message: string
     count: number
   }>
+  solverStats?: Record<string, string | number | boolean | null>
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
