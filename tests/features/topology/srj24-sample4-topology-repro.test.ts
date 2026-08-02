@@ -1,8 +1,6 @@
 import { expect, test } from "bun:test"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
-import type { CapacityMeshEdge, CapacityMeshNode } from "lib/types"
+import type { CapacityMeshNode } from "lib/types"
 import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
 import {
   createTopologyMergingSolverFromPlanning,
@@ -13,58 +11,6 @@ import {
   visualizeLayerAccess,
   visualizeMixedComponent,
 } from "./fixtures/srj24-sample4-topology.fixture"
-
-function getShortestPath({
-  nodes,
-  edges,
-  startNode,
-  endNode,
-  allowedNodeIds,
-}: {
-  nodes: CapacityMeshNode[]
-  edges: CapacityMeshEdge[]
-  startNode: CapacityMeshNode
-  endNode: CapacityMeshNode
-  allowedNodeIds: ReadonlySet<string>
-}): CapacityMeshNode[] | null {
-  const nodeById = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
-  const adjacentNodeIds = new Map<string, string[]>()
-  for (const edge of edges) {
-    const [firstNodeId, secondNodeId] = edge.nodeIds
-    if (!allowedNodeIds.has(firstNodeId) || !allowedNodeIds.has(secondNodeId)) {
-      continue
-    }
-    adjacentNodeIds.set(firstNodeId, [
-      ...(adjacentNodeIds.get(firstNodeId) ?? []),
-      secondNodeId,
-    ])
-    adjacentNodeIds.set(secondNodeId, [
-      ...(adjacentNodeIds.get(secondNodeId) ?? []),
-      firstNodeId,
-    ])
-  }
-
-  const previousNodeId = new Map<string, string>()
-  const visitedNodeIds = new Set([startNode.capacityMeshNodeId])
-  const pendingNodeIds = [startNode.capacityMeshNodeId]
-  while (pendingNodeIds.length > 0) {
-    const nodeId = pendingNodeIds.shift()!
-    if (nodeId === endNode.capacityMeshNodeId) break
-    for (const adjacentNodeId of adjacentNodeIds.get(nodeId) ?? []) {
-      if (visitedNodeIds.has(adjacentNodeId)) continue
-      visitedNodeIds.add(adjacentNodeId)
-      previousNodeId.set(adjacentNodeId, nodeId)
-      pendingNodeIds.push(adjacentNodeId)
-    }
-  }
-  if (!visitedNodeIds.has(endNode.capacityMeshNodeId)) return null
-
-  const pathNodeIds = [endNode.capacityMeshNodeId]
-  while (pathNodeIds[0] !== startNode.capacityMeshNodeId) {
-    pathNodeIds.unshift(previousNodeId.get(pathNodeIds[0]!)!)
-  }
-  return pathNodeIds.map((nodeId) => nodeById.get(nodeId)!)
-}
 
 test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
   const fixture = createSrj24Sample4TopologyFixture()
@@ -116,42 +62,29 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
     topologyPlanningSolver,
   })
   topologyMergingSolver.solve()
-  const subdivisionSolver = new NodeDimensionSubdivisionSolver(
-    topologyMergingSolver.getOutput(),
-    16,
-    6,
-    0.01,
-  )
-  subdivisionSolver.solve()
-  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(
-    subdivisionSolver.outputNodes,
-  )
-  edgeSolver.solve()
-
-  const topTarget = subdivisionSolver.outputNodes.find(
-    (node) =>
-      node._containsTarget &&
-      Math.abs(node.center.x) < 1e-6 &&
-      Math.abs(node.center.y) < 1e-6,
-  )!
-  const bottomTarget = subdivisionSolver.outputNodes.find(
-    (node) =>
-      node._containsTarget &&
-      Math.abs(node.center.x - 0.17) < 1e-6 &&
-      Math.abs(node.center.y) < 1e-6,
-  )!
-  const componentNodeIds = new Set(
-    subdivisionSolver.outputNodes
-      .filter((node) => node._isComponentTopologyNode || node._containsTarget)
-      .map((node) => node.capacityMeshNodeId),
-  )
-  const shortestPath = getShortestPath({
-    nodes: subdivisionSolver.outputNodes,
-    edges: edgeSolver.edges,
-    startNode: topTarget,
-    endNode: bottomTarget,
-    allowedNodeIds: componentNodeIds,
-  })
+  const bottomPadBounds = {
+    minX: 0.17 - 0.59 / 2,
+    maxX: 0.17 + 0.59 / 2,
+    minY: -0.64 / 2,
+    maxY: 0.64 / 2,
+  }
+  const crossLayerTargetAccess = topologyMergingSolver
+    .getOutput()
+    .find((node) => {
+      const minX = node.center.x - node.width / 2
+      const maxX = node.center.x + node.width / 2
+      const minY = node.center.y - node.height / 2
+      const maxY = node.center.y + node.height / 2
+      return (
+        node._containsTarget &&
+        node.availableZ.includes(0) &&
+        node.availableZ.includes(5) &&
+        minX >= bottomPadBounds.minX - 1e-6 &&
+        maxX <= bottomPadBounds.maxX + 1e-6 &&
+        minY >= bottomPadBounds.minY - 1e-6 &&
+        maxY <= bottomPadBounds.maxY + 1e-6
+      )
+    })
 
   const globalObstacleIds = new Set(
     topologyPlanningOutput.globalNoConnectionSrj.obstacles.map(
@@ -176,6 +109,9 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
 
   expect(componentTargetRoots).toContain(routeRootIds[0])
   expect(globalTargetRoots).toContain(routeRootIds[1])
+  expect(crossLayerTargetAccess !== undefined).toBe(
+    sharedTargetRoots.length > 0,
+  )
   expect(
     [...fixture.nonCoreObstacleIds].every((obstacleId) =>
       globalObstacleIds.has(obstacleId),
@@ -186,20 +122,33 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
       globalObstacleIds.has(obstacleId),
     ),
   ).toBe(!hasDetectedBga)
-  const displayedPath = shortestPath ?? [topTarget, bottomTarget]
-  const routeNodes = displayedPath.map((node, index) => ({
-    ...node,
-    capacityMeshNodeId: `route-${index}`,
-    _isBgaViaRegion: node.availableZ.length > 1,
-  }))
-  const routeEdges = shortestPath
-    ? routeNodes.slice(1).map((node, index) => ({
-        capacityMeshEdgeId: `route-edge-${index}`,
-        nodeIds: [
-          routeNodes[index]!.capacityMeshNodeId,
-          node.capacityMeshNodeId,
-        ] as [string, string],
-      }))
+  const accessNodes = [
+    { ...componentTopTarget!, capacityMeshNodeId: "BGA target" },
+    ...(crossLayerTargetAccess
+      ? [
+          {
+            ...crossLayerTargetAccess,
+            capacityMeshNodeId: "regular access region",
+            _isBgaViaRegion: true,
+          },
+        ]
+      : []),
+    { ...globalBottomTarget!, capacityMeshNodeId: "global target" },
+  ]
+  const accessEdges = crossLayerTargetAccess
+    ? [
+        {
+          capacityMeshEdgeId: "top-to-access",
+          nodeIds: ["BGA target", "regular access region"] as [string, string],
+        },
+        {
+          capacityMeshEdgeId: "access-to-bottom",
+          nodeIds: ["regular access region", "global target"] as [
+            string,
+            string,
+          ],
+        },
+      ]
     : []
   const svg = getGraphicsSvgFrames({
     frames: [
@@ -243,14 +192,14 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
         }),
       },
       {
-        name: shortestPath
-          ? "Result: same-net z0-to-z5 path"
-          : "Failure: no same-net z0-to-z5 path",
+        name: crossLayerTargetAccess
+          ? "Result: regular z0/z5 access region"
+          : "Failure: no regular z0/z5 access region",
         step: 3,
         iteration: topologyMergingSolver.iterations,
         graphics: visualizeLayerAccess({
-          nodes: routeNodes,
-          edges: routeEdges,
+          nodes: accessNodes,
+          edges: accessEdges,
         }),
       },
     ],
