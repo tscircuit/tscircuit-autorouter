@@ -7,6 +7,7 @@ import {
   createTopologyPlanningSolverForMerging,
 } from "tests/fixtures/topology-merging-test-utils"
 import {
+  BOTTOM_PAD_CENTER,
   createSrj24Sample4TopologyFixture,
   visualizeLayerAccess,
   visualizeMixedComponent,
@@ -42,8 +43,8 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
     (node) =>
       node._containsTarget &&
       node.availableZ.includes(5) &&
-      Math.abs(node.center.x - 0.17) < 1e-6 &&
-      Math.abs(node.center.y) < 1e-6,
+      Math.abs(node.center.x - BOTTOM_PAD_CENTER.x) < 1e-6 &&
+      Math.abs(node.center.y - BOTTOM_PAD_CENTER.y) < 1e-6,
   )
   const getRetainedRouteRoots = (node: CapacityMeshNode | undefined) => {
     const aliases = new Set([
@@ -63,10 +64,10 @@ test("shows the srj24 sample 4 topology gap", async (): Promise<void> => {
   })
   topologyMergingSolver.solve()
   const bottomPadBounds = {
-    minX: 0.17 - 0.59 / 2,
-    maxX: 0.17 + 0.59 / 2,
-    minY: -0.64 / 2,
-    maxY: 0.64 / 2,
+    minX: BOTTOM_PAD_CENTER.x - 0.59 / 2,
+    maxX: BOTTOM_PAD_CENTER.x + 0.59 / 2,
+    minY: BOTTOM_PAD_CENTER.y - 0.64 / 2,
+    maxY: BOTTOM_PAD_CENTER.y + 0.64 / 2,
   }
   const crossLayerTargetAccess = topologyMergingSolver
     .getOutput()

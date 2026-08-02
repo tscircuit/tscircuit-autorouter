@@ -23,6 +23,7 @@ const BGA_TARGET_ROOT_ID = "source_trace_3"
 const GLOBAL_TARGET_ROOT_ID = "source_net_3"
 const ROUTE_CONNECTION_ID = `${BGA_TARGET_ROOT_ID}__${GLOBAL_TARGET_ROOT_ID}_mst1`
 const GRID_COORDINATES = [-1.3, -0.65, 0, 0.65, 1.3]
+export const BOTTOM_PAD_CENTER = { x: 0.17, y: -0.325 }
 
 function createPad({
   obstacleId,
@@ -129,8 +130,7 @@ export function createSrj24Sample4TopologyFixture(): Srj24Sample4TopologyFixture
   const bottomPad = createPad({
     obstacleId: "stacked-bottom-pad",
     componentId: "bottom-component",
-    x: 0.17,
-    y: 0,
+    ...BOTTOM_PAD_CENTER,
     width: 0.59,
     height: 0.64,
     layer: "bottom",
@@ -153,7 +153,11 @@ export function createSrj24Sample4TopologyFixture(): Srj24Sample4TopologyFixture
           ],
           pointsToConnect: [
             { pointId: BGA_TOP_PORT_ID, x: 0, y: 0, layer: "top" },
-            { pointId: BOTTOM_PORT_ID, x: 0.17, y: 0, layer: "bottom" },
+            {
+              pointId: BOTTOM_PORT_ID,
+              ...BOTTOM_PAD_CENTER,
+              layer: "bottom",
+            },
           ],
         },
       ],
