@@ -67,10 +67,13 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     ),
   )
 
-  const pipeline7Stages = new Map(
+  const pipeline7Stages = new Map<string, unknown>(
     pipeline7.pipelineDef.map((step) => [step.solverName, step.solverClass]),
   )
-  expect(solver.pipelineDef).toHaveLength(pipeline7.pipelineDef.length + 1)
+  const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
+    (step) => step.solverName !== "powerTraceExpansionSolver",
+  ).length
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 1)
   for (const stageName of [
     "highDensityRouteSolver",
     "highDensityRepairSolver",
@@ -80,7 +83,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   ]) {
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)
-        ?.solverClass,
+        ?.solverClass as unknown,
     ).toBe(pipeline7Stages.get(stageName))
   }
 

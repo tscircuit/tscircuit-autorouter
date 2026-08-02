@@ -1,5 +1,6 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
+import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -67,6 +68,7 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
+import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -80,6 +82,7 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
+  powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -227,6 +230,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   postProcessingSolver?: PostProcessingSolver
+  powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -741,6 +745,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ]
     }),
+    definePipelineStep(
+      "powerTraceExpansionSolver",
+      PowerTraceExpansionSolver,
+      (cms) => [
+        {
+          ...cms.originalSrj,
+          traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
+          fixedTraces: cms.originalSrj.traces ?? [],
+        },
+        cms.opts.powerTraceExpansion ?? {},
+      ],
+    ),
   ]
 
   constructor(
@@ -828,7 +844,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    if (pipelineStepDef.solverName === "postProcessingSolver")
+    if (
+      pipelineStepDef.solverName === "postProcessingSolver" ||
+      pipelineStepDef.solverName === "powerTraceExpansionSolver"
+    )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
@@ -1096,6 +1115,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       throw new Error("Cannot get output before solving is complete")
     }
 
+    if (this.powerTraceExpansionSolver) {
+      return this.powerTraceExpansionSolver.getOutput()
+    }
+
+    return this.getPrePowerTraceOutputSimplifiedPcbTraces()
+  }
+
+  getPrePowerTraceOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     return convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
