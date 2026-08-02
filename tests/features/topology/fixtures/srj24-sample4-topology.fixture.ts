@@ -204,10 +204,10 @@ export function visualizeMixedComponent({
     }),
     texts: notes.map((text, index) => ({
       x: 0,
-      y: -3.15 - index * 0.28,
+      y: -2.85 - index * 0.3,
       text,
       anchorSide: "top_center",
-      fontSize: 0.15,
+      fontSize: 0.2,
     })),
   }
 }
@@ -233,7 +233,7 @@ export function visualizeLayerAccess({
       y: 2.5 - z,
       text: `z${z}`,
       anchorSide: "center_right",
-      fontSize: 0.18,
+      fontSize: 0.22,
     })
   }
 
@@ -242,7 +242,7 @@ export function visualizeLayerAccess({
     y: -3.05,
     text: "Columns are graph regions, not physical X distance",
     anchorSide: "top_center",
-    fontSize: 0.13,
+    fontSize: 0.18,
   })
 
   for (const node of nodes) {
@@ -252,7 +252,7 @@ export function visualizeLayerAccess({
       y: 3.05,
       text: node.capacityMeshNodeId,
       anchorSide: "bottom_center",
-      fontSize: 0.13,
+      fontSize: 0.18,
     })
     for (const z of node.availableZ) {
       rects.push({
