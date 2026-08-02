@@ -257,6 +257,11 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
       segments.map(([routeId]) => routeId),
     ),
   )
+  const selectedLayerTransitionRegionId =
+    currentRouteId === undefined
+      ? undefined
+      : tinySolver.problemSetup.layerAwareRouteHeuristic
+          .layerTransitionRegionIdByRoute[currentRouteId]
   console.log(
     "srj24 sample 4 selective-rerip summary",
     JSON.stringify({
@@ -298,6 +303,19 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
         committedRouteCount: committedRouteIds.size,
         pendingRouteCount: tinySolver.state.unroutedRoutes.length,
         currentRouteId,
+        currentRouteStartZ:
+          startPortId === undefined
+            ? undefined
+            : tinySolver.topology.portZ[startPortId],
+        currentRouteEndZ:
+          endPortId === undefined
+            ? undefined
+            : tinySolver.topology.portZ[endPortId],
+        selectedLayerTransitionRegion:
+          selectedLayerTransitionRegionId === undefined ||
+          selectedLayerTransitionRegionId === -1
+            ? undefined
+            : getRegionSummary(tinySolver, selectedLayerTransitionRegionId),
         currentRouteNetId:
           currentRouteId === undefined
             ? undefined
