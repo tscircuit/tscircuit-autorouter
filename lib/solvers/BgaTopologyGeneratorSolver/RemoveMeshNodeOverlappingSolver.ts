@@ -1,17 +1,73 @@
-import {
-  doBoundsOverlap,
-  getBoundFromCenteredRect,
-} from "@tscircuit/math-utils"
+import { getBoundFromCenteredRect, type Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  getBoundsIntersection,
+  getCapacityMeshNodeBounds,
+  isValidCapacityBounds,
+} from "../TopologyPlanningSolver/capacity-node-geometry"
 
 export type RemoveMeshNodeOverlappingSolverInput = {
   meshNodes: CapacityMeshNode[]
   obstacles: Obstacle[]
   layerCount: number
+}
+
+function createNodeFromBounds({
+  node,
+  bounds,
+  availableZ,
+  suffix,
+}: {
+  node: CapacityMeshNode
+  bounds: Bounds
+  availableZ: number[]
+  suffix: string
+}): CapacityMeshNode {
+  return {
+    ...node,
+    capacityMeshNodeId: `${node.capacityMeshNodeId}:${suffix}`,
+    center: {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    },
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
+    availableZ,
+    layer: `z${availableZ.join(",")}`,
+  }
+}
+
+function subtractBounds(bounds: Bounds, overlap: Bounds): Bounds[] {
+  return [
+    {
+      minX: bounds.minX,
+      maxX: overlap.minX,
+      minY: bounds.minY,
+      maxY: bounds.maxY,
+    },
+    {
+      minX: overlap.maxX,
+      maxX: bounds.maxX,
+      minY: bounds.minY,
+      maxY: bounds.maxY,
+    },
+    {
+      minX: overlap.minX,
+      maxX: overlap.maxX,
+      minY: bounds.minY,
+      maxY: overlap.minY,
+    },
+    {
+      minX: overlap.minX,
+      maxX: overlap.maxX,
+      minY: overlap.maxY,
+      maxY: bounds.maxY,
+    },
+  ].filter(isValidCapacityBounds)
 }
 
 export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
@@ -58,17 +114,14 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
         continue
       }
 
-      const overlapsObstacle: boolean = doBoundsOverlap(
-        getBoundFromCenteredRect(node),
+      const nodeBounds = getCapacityMeshNodeBounds(node)
+      const overlapBounds = getBoundsIntersection(
+        nodeBounds,
         getBoundFromCenteredRect(obstacle),
       )
 
-      if (!overlapsObstacle) {
+      if (!overlapBounds) {
         nextMeshNodes.push(node)
-        continue
-      }
-
-      if (node.availableZ.length === 1) {
         continue
       }
 
@@ -76,14 +129,26 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
         (z) => !obstacleAvailableZ.includes(z),
       )
 
-      for (const z of nodeFreeLayers) {
-        const nextMeshNode: CapacityMeshNode = {
-          ...node,
-          capacityMeshNodeId: `${node.capacityMeshNodeId}:z${z}`,
-          availableZ: [z],
-          layer: `z${z}`,
-        }
-        nextMeshNodes.push(nextMeshNode)
+      nextMeshNodes.push(
+        ...subtractBounds(nodeBounds, overlapBounds).map((bounds, index) =>
+          createNodeFromBounds({
+            node,
+            bounds,
+            availableZ: [...node.availableZ],
+            suffix: `outside-${this.obstacleQueueIndex}-${index}`,
+          }),
+        ),
+      )
+
+      if (nodeFreeLayers.length > 0) {
+        nextMeshNodes.push(
+          createNodeFromBounds({
+            node,
+            bounds: overlapBounds,
+            availableZ: nodeFreeLayers,
+            suffix: `under-${this.obstacleQueueIndex}`,
+          }),
+        )
       }
     }
 
