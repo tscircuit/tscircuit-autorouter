@@ -951,9 +951,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
       duplicateCongestedPortSolver.solve()
       if (duplicateCongestedPortSolver.failed) {
-        throw new Error(
-          `Duplicate congested port prepass failed: ${duplicateCongestedPortSolver.error ?? "unknown error"}`,
-        )
+        this.duplicateCongestedPortError =
+          duplicateCongestedPortSolver.error ?? "unknown error"
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
