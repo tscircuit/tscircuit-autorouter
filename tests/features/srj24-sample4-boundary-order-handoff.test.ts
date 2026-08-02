@@ -93,6 +93,9 @@ test(
 
     const afterUniform = solver.uniformPortDistributionSolver!.getOutput()
     const afterCrossings = findDifferentNetSingleLayerCrossings(afterUniform)
+    const affectedNodeIds = new Set(
+      [...beforeCrossings, ...afterCrossings].map(({ nodeId }) => nodeId),
+    )
 
     console.log(
       "srj24 sample 4 boundary-order handoff",
@@ -100,6 +103,12 @@ test(
         {
           beforeUniform: beforeCrossings,
           afterUniform: afterCrossings,
+          affectedNodesBeforeUniform: beforeUniform.filter((node) =>
+            affectedNodeIds.has(node.capacityMeshNodeId),
+          ),
+          affectedNodesAfterUniform: afterUniform.filter((node) =>
+            affectedNodeIds.has(node.capacityMeshNodeId),
+          ),
         },
         null,
         2,
