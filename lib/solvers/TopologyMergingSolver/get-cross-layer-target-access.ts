@@ -5,10 +5,14 @@ import {
   getCapacityMeshNodeBounds,
 } from "../TopologyPlanningSolver/capacity-node-geometry"
 import {
+  compactTopologyMergingRegions,
   doesBoundsContainPoint,
   getCanonicalCoordinates,
 } from "./topology-merging-regions"
-import type { TopologyMergingNodeGroup } from "./topology-merging-types"
+import type {
+  TopologyMergingNodeGroup,
+  TopologyMergingRegion,
+} from "./topology-merging-types"
 
 type CrossLayerAccessOverlap = {
   bounds: Bounds
@@ -68,36 +72,78 @@ function getReachableLayers({
   return [...reachableLayers].sort((a, b) => a - b)
 }
 
-function getUniformCrossLayerAccess({
+function createTargetAccessRegion(
+  bounds: Bounds,
+  availableZ: number[],
+): TopologyMergingRegion {
+  return {
+    bounds,
+    availableZ,
+    sourceKeys: [],
+    topologyMode: "target-passthrough",
+    topologySignature: `cross-layer-target:${availableZ.join(",")}`,
+  }
+}
+
+function getViaCapableAccessArea({
+  regions,
+  targetLayers,
+  viaDiameter,
+}: {
+  regions: TopologyMergingRegion[]
+  targetLayers: number[]
+  viaDiameter: number
+}): number {
+  return regions.reduce((area, region) => {
+    const addsLayer = region.availableZ.some(
+      (z) => !targetLayers.includes(z),
+    )
+    const width = region.bounds.maxX - region.bounds.minX
+    const height = region.bounds.maxY - region.bounds.minY
+    return addsLayer && Math.min(width, height) >= viaDiameter
+      ? area + width * height
+      : area
+  }, 0)
+}
+
+function getAlignedTargetAccessRegions({
   targetBounds,
-  crossLayerAccessOverlaps,
+  freeAccessOverlaps,
+  sameNetTargetBounds,
   blockerBounds,
   targetLayers,
+  targetConnectionLayers,
+  viaDiameter,
 }: {
   targetBounds: Bounds
-  crossLayerAccessOverlaps: CrossLayerAccessOverlap[]
+  freeAccessOverlaps: CrossLayerAccessOverlap[]
+  sameNetTargetBounds: Bounds[]
   blockerBounds: Bounds[]
   targetLayers: number[]
-}): number[] | null {
+  targetConnectionLayers: ReadonlySet<number>
+  viaDiameter: number
+}): TopologyMergingRegion[] {
   const xCoordinates = getCanonicalCoordinates([
     targetBounds.minX,
     targetBounds.maxX,
-    ...crossLayerAccessOverlaps.flatMap(({ bounds }) => [
+    ...freeAccessOverlaps.flatMap(({ bounds }) => [
       bounds.minX,
       bounds.maxX,
     ]),
+    ...sameNetTargetBounds.flatMap((bounds) => [bounds.minX, bounds.maxX]),
     ...blockerBounds.flatMap((bounds) => [bounds.minX, bounds.maxX]),
   ])
   const yCoordinates = getCanonicalCoordinates([
     targetBounds.minY,
     targetBounds.maxY,
-    ...crossLayerAccessOverlaps.flatMap(({ bounds }) => [
+    ...freeAccessOverlaps.flatMap(({ bounds }) => [
       bounds.minY,
       bounds.maxY,
     ]),
+    ...sameNetTargetBounds.flatMap((bounds) => [bounds.minY, bounds.maxY]),
     ...blockerBounds.flatMap((bounds) => [bounds.minY, bounds.maxY]),
   ])
-  let uniformAvailableZ: number[] | undefined
+  const regions: TopologyMergingRegion[] = []
 
   for (let xIndex = 0; xIndex < xCoordinates.length - 1; xIndex++) {
     for (let yIndex = 0; yIndex < yCoordinates.length - 1; yIndex++) {
@@ -114,26 +160,68 @@ function getUniformCrossLayerAccess({
       const isBlocked = blockerBounds.some((blocker) =>
         doesBoundsContainPoint(blocker, center),
       )
-      if (isBlocked) return null
-
-      const accessLayers = crossLayerAccessOverlaps.flatMap((candidate) =>
+      const isOtherLayerTarget = sameNetTargetBounds.some((otherTarget) =>
+        doesBoundsContainPoint(otherTarget, center),
+      )
+      const accessLayers = freeAccessOverlaps.flatMap((candidate) =>
         doesBoundsContainPoint(candidate.bounds, center)
           ? candidate.availableZ
           : [],
       )
-      const availableZ = getReachableLayers({ targetLayers, accessLayers })
-      if (!availableZ.some((z) => !targetLayers.includes(z))) return null
-      if (
-        uniformAvailableZ &&
-        uniformAvailableZ.join(",") !== availableZ.join(",")
-      ) {
-        return null
-      }
-      uniformAvailableZ = availableZ
+      const reachableZ =
+        isBlocked || isOtherLayerTarget
+          ? targetLayers
+          : getReachableLayers({ targetLayers, accessLayers })
+      const targetAccessZ = reachableZ.filter((z) =>
+        targetConnectionLayers.has(z),
+      )
+      const availableZ = targetAccessZ.some(
+        (z) => !targetLayers.includes(z),
+      )
+        ? targetAccessZ
+        : targetLayers
+      regions.push(createTargetAccessRegion(bounds, availableZ))
     }
   }
 
-  return uniformAvailableZ ?? null
+  // The same free cells can form either short rows or a via-sized column.
+  // Keep the rectangular decomposition with more physically usable access.
+  const horizontalFirstRegions = compactTopologyMergingRegions(
+    regions,
+    "horizontal",
+  )
+  const verticalFirstRegions = compactTopologyMergingRegions(
+    regions,
+    "vertical",
+  )
+  const horizontalAccessArea = getViaCapableAccessArea({
+    regions: horizontalFirstRegions,
+    targetLayers,
+    viaDiameter,
+  })
+  const verticalAccessArea = getViaCapableAccessArea({
+    regions: verticalFirstRegions,
+    targetLayers,
+    viaDiameter,
+  })
+  const alignedRegions =
+    verticalAccessArea > horizontalAccessArea
+      ? verticalFirstRegions
+      : horizontalFirstRegions
+  const compactedRegions = alignedRegions.map(
+    (region) => {
+      const addsLayer = region.availableZ.some(
+        (z) => !targetLayers.includes(z),
+      )
+      const width = region.bounds.maxX - region.bounds.minX
+      const height = region.bounds.maxY - region.bounds.minY
+      return addsLayer && Math.min(width, height) < viaDiameter
+        ? createTargetAccessRegion(region.bounds, targetLayers)
+        : region
+    },
+  )
+
+  return compactTopologyMergingRegions(compactedRegions)
 }
 
 function addCrossLayerAccessToTarget({
@@ -165,19 +253,17 @@ function addCrossLayerAccessToTarget({
   )
   if (crossLayerSameNetTargets.length === 0) return [node]
 
-  const crossLayerAccessOverlaps = crossLayerAccessNodes.flatMap(
+  const freeAccessOverlaps = crossLayerAccessNodes.flatMap(
     (candidate) => {
       if (candidate === node) return []
       const isFree = !candidate._containsObstacle
-      const isSameNetTarget =
-        candidate._containsTarget && shareConnectionAlias(node, candidate)
-      if (!isFree && !isSameNetTarget) return []
+      if (!isFree) return []
 
       const bounds = getCrossLayerAccessOverlap(node, candidate)
       return bounds ? [{ bounds, availableZ: [...candidate.availableZ] }] : []
     },
   )
-  if (crossLayerAccessOverlaps.length === 0) return [node]
+  if (freeAccessOverlaps.length === 0) return [node]
 
   const nodeBounds = getCapacityMeshNodeBounds(node)
   const blockerBounds = blockerNodes.flatMap((candidate) => {
@@ -194,58 +280,45 @@ function addCrossLayerAccessToTarget({
     )
     return intersection ? [intersection] : []
   })
-  const reachableZ = getUniformCrossLayerAccess({
-    targetBounds: nodeBounds,
-    crossLayerAccessOverlaps,
-    blockerBounds,
-    targetLayers: node.availableZ,
-  })
-  if (!reachableZ) return [node]
-
   // Free component layers prove that a via can pass through the footprint;
   // only layers with a same-net target become target-owned routing capacity.
-  const targetZ = new Set([
+  const targetConnectionLayers = new Set([
     ...node.availableZ,
     ...crossLayerSameNetTargets.flatMap((target) => target.availableZ),
   ])
-  const accessZ = reachableZ.filter((z) => targetZ.has(z))
-  const targetIntersections = crossLayerSameNetTargets.flatMap((target) => {
+  const sameNetTargetBounds = crossLayerSameNetTargets.flatMap((target) => {
     const intersection = getCrossLayerAccessOverlap(node, target)
     return intersection ? [intersection] : []
   })
-  // Preserve full-height columns so a legal access strip is not fragmented by
-  // the shorter target on the other layer.
-  const xCoordinates = getCanonicalCoordinates([
-    nodeBounds.minX,
-    nodeBounds.maxX,
-    ...targetIntersections.flatMap((bounds) => [bounds.minX, bounds.maxX]),
-  ])
-  const slices = xCoordinates.slice(0, -1).map((minX, index) => {
-    const maxX = xCoordinates[index + 1]!
-    const width = maxX - minX
-    const centerX = (minX + maxX) / 2
-    const isCrossLayerTargetColumn = targetIntersections.some(
-      (bounds) => centerX >= bounds.minX && centerX <= bounds.maxX,
-    )
-    const availableZ =
-      !isCrossLayerTargetColumn && Math.min(width, node.height) >= viaDiameter
-        ? accessZ
-        : node.availableZ
-
+  const regions = getAlignedTargetAccessRegions({
+    targetBounds: nodeBounds,
+    freeAccessOverlaps,
+    sameNetTargetBounds,
+    blockerBounds,
+    targetLayers: node.availableZ,
+    targetConnectionLayers,
+    viaDiameter,
+  })
+  const alignedNodes = regions.map((region, index) => {
+    const { bounds, availableZ } = region
     return {
       ...node,
-      capacityMeshNodeId: `${node.capacityMeshNodeId}:cross-layer-slice:${index}`,
-      center: { x: centerX, y: node.center.y },
-      width,
+      capacityMeshNodeId: `${node.capacityMeshNodeId}:cross-layer-region:${index}`,
+      center: {
+        x: (bounds.minX + bounds.maxX) / 2,
+        y: (bounds.minY + bounds.maxY) / 2,
+      },
+      width: bounds.maxX - bounds.minX,
+      height: bounds.maxY - bounds.minY,
       availableZ,
       layer: `z${availableZ.join(",")}`,
     }
   })
 
-  return slices.some(
+  return alignedNodes.some(
     ({ availableZ }) => availableZ.length > node.availableZ.length,
   )
-    ? slices
+    ? alignedNodes
     : [node]
 }
 
@@ -272,7 +345,7 @@ export function getTopologyMergingNodesWithCrossLayerTargetAccess({
         (node) =>
           [
             node,
-            // The global target remains authoritative; component nodes only prove
+            // The global target remains authoritative; component nodes prove
             // which additional layers are physically reachable inside its bounds.
             group.isComponent
               ? [node]
