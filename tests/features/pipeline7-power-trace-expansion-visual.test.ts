@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { stackSvgsHorizontally } from "stack-svgs"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { loadScenarios } from "../../scripts/benchmark/scenarios"
 
@@ -27,28 +26,50 @@ const addPanelTitle = (svg: string, title: string): string => {
   )}</g></svg>`
 }
 
-test("power expansion visually solves the SRJ27 dataset without DRC errors", async (): Promise<void> => {
+test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressions", async (): Promise<void> => {
   const scenarios = await loadScenarios("srj27")
+  const failedScenarios: string[] = []
+  const preExpansionDrcPasses: string[] = []
+  const postExpansionDrcPasses: string[] = []
 
   for (const [scenarioName, scenario] of scenarios) {
     const input = structuredClone(scenario)
-    const solver = new PowerTraceExpansionSolver(input)
-    solver.solve()
+    const solver = new AutoroutingPipelineSolver7_MultiGraph(input)
+    try {
+      solver.solve()
+    } catch {
+      failedScenarios.push(scenarioName)
+      continue
+    }
 
+    if (!solver.solved || solver.failed) {
+      failedScenarios.push(scenarioName)
+      continue
+    }
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
 
-    const output = solver.getOutput()
-    const circuitJson = convertToCircuitJson(
-      { ...input, traces: output },
-      output,
-      {
-        minTraceWidth: input.minTraceWidth,
-        originalSrj: input,
-        includeOriginalConnections: true,
-      },
-    )
-    expect(getDrcErrors(circuitJson).errors).toEqual([])
+    const preExpansionOutput =
+      solver.getPrePowerTraceOutputSimplifiedPcbTraces()
+    const output = solver.getOutputSimplifiedPcbTraces()
+    const srjWithPointPairs = solver.srjWithPointPairs ?? input
+    const preExpansionDrc = evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs,
+      routedTraces: preExpansionOutput,
+    })
+    const postExpansionDrc = evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs,
+      routedTraces: output,
+    })
+    if (preExpansionDrc.errors.length === 0) {
+      preExpansionDrcPasses.push(scenarioName)
+      expect(postExpansionDrc.errors).toEqual([])
+    }
+    if (postExpansionDrc.errors.length === 0) {
+      postExpansionDrcPasses.push(scenarioName)
+    }
 
     const renderOptions = {
       backgroundColor: "white",
@@ -58,16 +79,33 @@ test("power expansion visually solves the SRJ27 dataset without DRC errors", asy
       convertSrjToGraphicsObject(input, { traceColorMode: "layer" }),
       renderOptions,
     )
+    const preExpansionSvg = getSvgFromGraphicsObject(
+      convertSrjToGraphicsObject(
+        { ...input, traces: preExpansionOutput },
+        { traceColorMode: "layer" },
+      ),
+      renderOptions,
+    )
     const outputSvg = getSvgFromGraphicsObject(
-      solver.visualize(),
+      convertSrjToGraphicsObject(
+        { ...input, traces: output },
+        { traceColorMode: "layer" },
+      ),
       renderOptions,
     )
 
     await expect(
       stackSvgsHorizontally(
         [
-          addPanelTitle(inputSvg, "ROUTED SRJ INPUT"),
-          addPanelTitle(outputSvg, "POWER-EXPANDED OUTPUT · 0 DRC ERRORS"),
+          addPanelTitle(inputSvg, "SRJ27 INPUT"),
+          addPanelTitle(
+            preExpansionSvg,
+            `PIPELINE7 PRE-EXPANSION · ${preExpansionDrc.errors.length} DRC ERRORS`,
+          ),
+          addPanelTitle(
+            outputSvg,
+            `POWER-EXPANDED · ${postExpansionDrc.errors.length} DRC ERRORS`,
+          ),
         ],
         {
           gap: 12,
@@ -76,4 +114,17 @@ test("power expansion visually solves the SRJ27 dataset without DRC errors", asy
       ),
     ).toMatchSvgSnapshot(import.meta.path, { svgName: scenarioName })
   }
+
+  expect(failedScenarios).toEqual(["sample001"])
+  expect(preExpansionDrcPasses).toEqual(["sample005"])
+  expect(postExpansionDrcPasses).toEqual([
+    "sample003",
+    "sample004",
+    "sample005",
+  ])
+  expect(
+    preExpansionDrcPasses.every((scenarioName) =>
+      postExpansionDrcPasses.includes(scenarioName),
+    ),
+  ).toBe(true)
 })

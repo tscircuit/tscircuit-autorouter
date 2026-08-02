@@ -752,6 +752,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         {
           ...cms.originalSrj,
           traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
+          fixedTraces: cms.originalSrj.traces ?? [],
         },
         cms.opts.powerTraceExpansion ?? {},
       ],
