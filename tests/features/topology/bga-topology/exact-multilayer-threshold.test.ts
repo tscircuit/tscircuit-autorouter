@@ -25,10 +25,12 @@ test("shows multilayer topology for equal BGA gaps", async () => {
     frames: [
       {
         name: "Input: equal physical BGA gaps",
+        step: 0,
         graphics: fixture.physicalGapGraphics,
       },
       {
         name: "Generated topology from those gaps",
+        step: 1,
         graphics: fixture.topologyIdentityGraphics,
       },
     ],

@@ -74,7 +74,7 @@ function getPhysicalGapGraphics(
         y: -6.48,
         text: "Both gaps are designed as 0.396 x 0.396 mm",
         anchorSide: "top_center" as const,
-        fontSize: 0.1,
+        fontSize: 0.16,
       },
     ],
   }
