@@ -13,8 +13,12 @@ test(
   () => {
     const solver = new AutoroutingPipelineSolver(srj)
     solver.solve()
+    const snapshotPath =
+      process.platform === "linux"
+        ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+        : import.meta.path
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
+      snapshotPath,
     )
   },
   { timeout: 600_000 },
