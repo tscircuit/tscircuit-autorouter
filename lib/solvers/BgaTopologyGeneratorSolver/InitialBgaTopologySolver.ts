@@ -11,7 +11,7 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
-import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
+import { getObstacleTargetConnectionNames } from "./getObstacleTargetConnectionNames"
 
 const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
 
@@ -221,10 +221,11 @@ function createObstacleMeshNode(
     mapLayerNameToZ(layerName, srj.layerCount),
   )
   const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
-  const targetConnectionName = getObstacleTargetConnectionName({
+  const targetConnectionNames = getObstacleTargetConnectionNames({
     obstacle,
     srj,
   })
+  const targetConnectionName = targetConnectionNames[0]
 
   return {
     capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
@@ -233,6 +234,7 @@ function createObstacleMeshNode(
       ? {
           _containsTarget: true,
           _targetConnectionName: targetConnectionName,
+          _connectedTo: targetConnectionNames,
         }
       : {}),
     center: obstacle.center,
