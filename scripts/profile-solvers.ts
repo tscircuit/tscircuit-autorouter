@@ -21,11 +21,13 @@ type SolverRecord = {
   iterations: number
   maxIterations: number
   scenarioName: string
+  stats: Record<string, string | number | boolean | null>
 }
 
 type ProfileOptions = {
   scenarioName?: string
   scenarioLimit?: number
+  sampleNumbers?: number[]
   datasetName: DatasetName
   effort?: number
   concurrency: number
@@ -156,6 +158,7 @@ BaseSolver.prototype.step = function (
         iterations: this.iterations,
         maxIterations: this.MAX_ITERATIONS,
         scenarioName: currentScenarioName,
+        stats: getSerializableStats(this.stats),
       })
     }
   }
@@ -177,6 +180,40 @@ const parseDurationArg = (rawValue: string, flagName: string) => {
 
   return amount * multiplier
 }
+
+const parseSampleNumbersArg = (rawValue: string) => {
+  const sampleNumbers = rawValue
+    .split(",")
+    .map((part) => Number.parseInt(part.trim(), 10))
+
+  if (
+    sampleNumbers.length === 0 ||
+    sampleNumbers.some(
+      (sampleNumber) => !Number.isFinite(sampleNumber) || sampleNumber < 1,
+    )
+  ) {
+    throw new Error(
+      "--sample-numbers must be comma-separated positive integers",
+    )
+  }
+
+  return sampleNumbers
+}
+
+const getSerializableStats = (
+  stats: Record<string, unknown>,
+): Record<string, string | number | boolean | null> =>
+  Object.fromEntries(
+    Object.entries(stats).filter((entry) => {
+      const value = entry[1]
+      return (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+      )
+    }),
+  )
 
 const parseArgs = (): ProfileOptions => {
   const args = process.argv.slice(2)
@@ -207,6 +244,13 @@ const parseArgs = (): ProfileOptions => {
         throw new Error("--scenario-limit requires a value")
       }
       options.scenarioLimit = Number.parseInt(rawScenarioLimit, 10)
+      i += 1
+    } else if (arg === "--sample-numbers") {
+      const rawSampleNumbers = args[i + 1]
+      if (!rawSampleNumbers || rawSampleNumbers.startsWith("-")) {
+        throw new Error("--sample-numbers requires a value")
+      }
+      options.sampleNumbers = parseSampleNumbersArg(rawSampleNumbers)
       i += 1
     } else if (arg === "--dataset") {
       const rawDatasetName = args[i + 1]
@@ -251,11 +295,12 @@ const parseArgs = (): ProfileOptions => {
     } else if (arg === "-h" || arg === "--help") {
       console.log(
         [
-          "Usage: bun scripts/profile-solvers.ts [--scenario NAME] [--scenario-limit N] [--dataset NAME] [--effort N] [--concurrency N] [--sample-timeout DURATION]",
+          "Usage: bun scripts/profile-solvers.ts [--scenario NAME] [--scenario-limit N] [--sample-numbers N[,N...]] [--dataset NAME] [--effort N] [--concurrency N] [--sample-timeout DURATION]",
           "",
           "Options:",
           "  --scenario NAME      Run only the named scenario",
           "  --scenario-limit N   Run only first N scenarios",
+          "  --sample-numbers N   Run only the comma-separated sample numbers",
           `  --dataset NAME       Dataset to profile: ${DATASET_OPTIONS_LABEL}`,
           "  --effort N           Override scenario effort multiplier",
           "  --concurrency N      Number of worker processes to use, or auto",
@@ -287,6 +332,10 @@ const parseArgs = (): ProfileOptions => {
     throw new Error("--concurrency must be a positive integer")
   }
 
+  if (options.scenarioName && options.sampleNumbers) {
+    throw new Error("--scenario and --sample-numbers cannot be combined")
+  }
+
   return options
 }
 
@@ -296,9 +345,23 @@ const loadScenarios = async (options: ProfileOptions) => {
     effort: options.effort,
   })
 
-  return options.scenarioName
-    ? allScenarios.filter(([name]) => name === options.scenarioName)
-    : allScenarios
+  if (options.scenarioName) {
+    return allScenarios.filter(([name]) => name === options.scenarioName)
+  }
+
+  if (options.sampleNumbers) {
+    return options.sampleNumbers.map((sampleNumber) => {
+      const scenario = allScenarios[sampleNumber - 1]
+      if (!scenario) {
+        throw new Error(
+          `Sample ${sampleNumber} is out of range for dataset ${options.datasetName} (${allScenarios.length} samples)`,
+        )
+      }
+      return scenario
+    })
+  }
+
+  return allScenarios
 }
 
 const getPercentile = (values: number[], p: number): number | null => {
@@ -890,12 +953,22 @@ const main = async () => {
     scenarioCount: scenarios.length,
     scenarioName: opts.scenarioName ?? null,
     scenarioLimit: opts.scenarioLimit ?? null,
+    sampleNumbers: opts.sampleNumbers ?? null,
     effort: opts.effort ?? null,
     concurrency: opts.concurrency,
     workerCount,
     totalTimeMs,
     solved,
     failed,
+    solverStats: records
+      .filter((record) => Object.keys(record.stats).length > 0)
+      .map(({ name, scenarioName, success, iterations, stats }) => ({
+        solverName: name,
+        scenarioName,
+        success,
+        iterations,
+        stats,
+      })),
     rows: rows.map(
       (r): ProfileSolverRow => ({
         solverName: r.name,

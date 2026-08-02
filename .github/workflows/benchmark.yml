@@ -99,6 +99,7 @@ jobs:
                 if (
                   [
                     '--scenario-limit',
+                    '--sample-numbers',
                     '--dataset',
                     '--effort',
                     '--concurrency',
