@@ -8,6 +8,31 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 const PATHING_ITERATION_LIMIT = 250_000
 
+const summarizePort = (solver: TinyHyperGraphSolver, portId: number) => ({
+  portId,
+  x: solver.topology.portX[portId],
+  y: solver.topology.portY[portId],
+  routingCostX:
+    solver.topology.portRoutingCostX?.[portId] ??
+    solver.topology.portX[portId],
+  routingCostY:
+    solver.topology.portRoutingCostY?.[portId] ??
+    solver.topology.portY[portId],
+  z: solver.topology.portZ[portId],
+  incidentRegions: solver.topology.incidentPortRegion[portId].map(
+    (regionId) => ({
+      regionId,
+      center: {
+        x: solver.topology.regionCenterX[regionId],
+        y: solver.topology.regionCenterY[regionId],
+      },
+      availableZMask: solver.topology.regionAvailableZMask?.[regionId],
+      metadata: solver.topology.regionMetadata?.[regionId],
+    }),
+  ),
+  metadata: solver.topology.portMetadata?.[portId],
+})
+
 const getDirectedHopCount = (
   solver: TinyHyperGraphSolver,
   routeId: number,
@@ -115,10 +140,14 @@ test("diagnose srj24 sample 4 directed-hop pathing stall", async () => {
         committedRouteCount: committedRouteIds.size,
         pendingRouteCount: tinySolver.state.unroutedRoutes.length,
         routeId,
+        routeNetId: tinySolver.problem.routeNet[routeId],
+        routeMetadata: tinySolver.problem.routeMetadata?.[routeId],
         startPortId,
         endPortId,
         startZ: tinySolver.topology.portZ[startPortId],
         endZ: tinySolver.topology.portZ[endPortId],
+        startPort: summarizePort(tinySolver, startPortId),
+        endPort: summarizePort(tinySolver, endPortId),
         directedHopHeuristicPresent: directedHopCounts !== undefined,
         reachableDirectedHopCount: finiteHopCounts.length,
         minDirectedHopCount:
