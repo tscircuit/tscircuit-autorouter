@@ -219,6 +219,45 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
 
+const requiresLayerChange = (connection: TinyRouteConnection): boolean => {
+  const [start, end] = connection.simpleRouteConnection.pointsToConnect
+  if (!start || !end) return false
+
+  const endLayers = new Set(getConnectionPointLayers(end))
+  return getConnectionPointLayers(start).every(
+    (layer) => !endLayers.has(layer),
+  )
+}
+
+const orderSelectiveReripConnections = (
+  connections: TinyRouteConnection[],
+): TinyRouteConnection[] => {
+  const orderedByNetSize = orderConnectionsByNetCardinality(
+    connections,
+    getTinyRouteConnectionNetId,
+  )
+  const connectionsByNet = new Map<string, TinyRouteConnection[]>()
+
+  for (const connection of orderedByNetSize) {
+    const netId = getTinyRouteConnectionNetId(connection)
+    const netConnections = connectionsByNet.get(netId) ?? []
+    netConnections.push(connection)
+    connectionsByNet.set(netId, netConnections)
+  }
+
+  return [...connectionsByNet.values()].flatMap((netConnections) =>
+    netConnections
+      .map((connection, index) => ({ connection, index }))
+      .sort(
+        (left, right) =>
+          Number(requiresLayerChange(right.connection)) -
+            Number(requiresLayerChange(left.connection)) ||
+          left.index - right.index,
+      )
+      .map(({ connection }) => connection),
+  )
+}
+
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
 
@@ -902,10 +941,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.connections,
     )
     const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
-          tinyRouteConnections,
-          getTinyRouteConnectionNetId,
-        )
+      ? orderSelectiveReripConnections(tinyRouteConnections)
       : tinyRouteConnections
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
