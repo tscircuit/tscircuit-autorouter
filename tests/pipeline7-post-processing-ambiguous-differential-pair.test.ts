@@ -28,7 +28,9 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
       },
     ],
   })
-  const postProcessingStep = solver.pipelineDef.at(-1)!
+  const postProcessingStep = solver.pipelineDef.find(
+    (step) => step.solverName === "postProcessingSolver",
+  )!
 
   expect(() =>
     postProcessingStep.getConstructorParams({

@@ -753,7 +753,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           ...cms.originalSrj,
           traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
         },
-        cms.opts.powerTraceExpansion!,
+        cms.opts.powerTraceExpansion ?? {},
       ],
     ),
   ]
@@ -768,11 +768,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
-    if (mutableOpts.powerTraceExpansion === undefined) {
-      this.pipelineDef = this.pipelineDef.filter(
-        (step) => step.solverName !== "powerTraceExpansionSolver",
-      )
-    }
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort

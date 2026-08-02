@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 
-test("Pipeline7 runs HD-route post-processing after final DRC", () => {
+test("Pipeline7 runs post-processing before default power expansion", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -30,8 +30,19 @@ test("Pipeline7 runs HD-route post-processing after final DRC", () => {
       },
     ],
   })
-  const postProcessingStep = solver.pipelineDef.at(-1)
+  const powerTraceExpansionStep = solver.pipelineDef.at(-1)
+  const postProcessingStep = solver.pipelineDef.at(-2)
+  expect(powerTraceExpansionStep?.solverName).toBe(
+    "powerTraceExpansionSolver",
+  )
   expect(postProcessingStep?.solverName).toBe("postProcessingSolver")
+
+  const powerTraceParams = powerTraceExpansionStep!.getConstructorParams({
+    ...solver,
+    getPrePowerTraceOutputSimplifiedPcbTraces: () => [],
+  } as any)
+  expect(powerTraceParams).toHaveLength(2)
+  expect(powerTraceParams[1]).toEqual({})
 
   const [params] = postProcessingStep!.getConstructorParams({
     ...solver,
