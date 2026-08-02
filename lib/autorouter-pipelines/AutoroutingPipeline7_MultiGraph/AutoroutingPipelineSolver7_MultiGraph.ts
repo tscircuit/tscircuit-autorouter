@@ -478,7 +478,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
-              USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_SELECTIVE_RERIP_ROUTING: false,
             },
             weights: {
               SHUFFLE_SEED: 0,
