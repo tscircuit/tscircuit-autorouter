@@ -41,8 +41,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
               .componentId,
           markedComponentObstacles:
             bgaTopologyGeneratorSolver.markedComponentObstacles,
-          unmarkedComponentObstacles:
-            bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
+          unmarkedComponentObstacles: [],
           viaDiameter: bgaTopologyGeneratorSolver.inputProblem.viaDiameter,
         },
       ],
@@ -54,7 +53,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
         {
           meshNodes:
             bgaTopologyGeneratorSolver.initialTopologySolver.getOutput(),
-          obstacles: bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
+          obstacles: [],
           layerCount:
             bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
         },
@@ -67,8 +66,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
         {
           meshNodes:
             bgaTopologyGeneratorSolver.removeMeshNodeOverlappingWithUnmarkedObstacle.getOutput(),
-          unmarkedComponentObstacles:
-            bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
+          unmarkedComponentObstacles: [],
           layerCount:
             bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
         },
