@@ -515,6 +515,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          traceClearance: 0.1,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },

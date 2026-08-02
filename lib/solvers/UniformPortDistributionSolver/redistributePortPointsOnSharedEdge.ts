@@ -7,11 +7,17 @@ import { PortPointWithOwnerPair, SharedEdge } from "./types"
 export const redistributePortPointsOnSharedEdge = ({
   sharedEdge,
   portPoints,
+  minimumPortSpacing,
+  minimumEdgeInset,
 }: {
   sharedEdge: SharedEdge
   portPoints: PortPointWithOwnerPair[]
+  minimumPortSpacing?: number
+  minimumEdgeInset?: number
 }): PortPointWithOwnerPair[] => {
   if (portPoints.length === 0) return []
+
+  const epsilon = 1e-9
 
   const portsByZ = new Map<number, PortPointWithOwnerPair[]>()
   for (const portPoint of portPoints) {
@@ -32,16 +38,34 @@ export const redistributePortPointsOnSharedEdge = ({
       sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,
     )
 
+    const legacySpacing = sharedEdge.length / count
+    const legacyEdgeInset = legacySpacing / 2
+    const needsPhysicalSpacing =
+      count > 1 &&
+      minimumPortSpacing !== undefined &&
+      minimumEdgeInset !== undefined &&
+      (legacySpacing + epsilon < minimumPortSpacing ||
+        legacyEdgeInset + epsilon < minimumEdgeInset)
+    const physicalSpacing = minimumPortSpacing ?? 0
+    const requiredSpan = (count - 1) * physicalSpacing
+    const availableCenterSpan =
+      sharedEdge.length - 2 * (minimumEdgeInset ?? 0)
+    const canFitPhysicalSpacing =
+      needsPhysicalSpacing && requiredSpan <= availableCenterSpan + epsilon
+    const physicalStart = (sharedEdge.length - requiredSpan) / 2
+
     for (let i = 0; i < count; i++) {
-      const fraction = (2 * i + 1) / (2 * count)
+      const distanceAlongEdge = canFitPhysicalSpacing
+        ? physicalStart + i * physicalSpacing
+        : sharedEdge.length * ((2 * i + 1) / (2 * count))
       const x =
         sharedEdge.orientation === "horizontal"
-          ? sharedEdge.x1 + sharedEdge.length * fraction
+          ? sharedEdge.x1 + distanceAlongEdge
           : sharedEdge.x1
       const y =
         sharedEdge.orientation === "horizontal"
           ? sharedEdge.y1
-          : sharedEdge.y1 + sharedEdge.length * fraction
+          : sharedEdge.y1 + distanceAlongEdge
       redistributed.push({ ...portsOnZ[i], x, y })
     }
   }
