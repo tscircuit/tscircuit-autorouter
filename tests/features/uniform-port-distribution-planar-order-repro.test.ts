@@ -16,9 +16,7 @@ const colorByRoot: Record<string, string> = {
 test("visualizes sample 4 duplicated-port ordering on a single-layer node", () => {
   const distributionSolver = new UniformPortDistributionSolver({
     nodeWithPortPoints: structuredClone(sample4PlanarPortOrderNodes),
-    inputNodesWithPortPoints: structuredClone(
-      sample4PlanarPortOrderInputNodes,
-    ),
+    inputNodesWithPortPoints: structuredClone(sample4PlanarPortOrderInputNodes),
     obstacles: [],
     minTraceWidth: 0.1,
     traceClearance: 0.1,

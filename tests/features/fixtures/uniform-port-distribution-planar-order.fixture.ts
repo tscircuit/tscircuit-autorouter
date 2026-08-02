@@ -44,12 +44,7 @@ export const sample4PlanarPortOrderNodes: NodeWithPortPoints[] = [
     width: 1.64,
     height: 0.37,
     availableZ: [5],
-    portPoints: [
-      source175Top,
-      source175Shared,
-      source169Top,
-      source169Shared,
-    ],
+    portPoints: [source175Top, source175Shared, source169Top, source169Shared],
     portPointsInPairs: [
       [source175Top, source175Shared],
       [source169Top, source169Shared],
@@ -66,8 +61,8 @@ export const sample4PlanarPortOrderNodes: NodeWithPortPoints[] = [
   },
 ]
 
-export const sample4PlanarPortOrderInputNodes =
-  sample4PlanarPortOrderNodes.map((node) => ({
+export const sample4PlanarPortOrderInputNodes = sample4PlanarPortOrderNodes.map(
+  (node) => ({
     ...node,
     portPoints: node.portPoints.map((portPoint) => ({
       ...portPoint,
@@ -76,4 +71,5 @@ export const sample4PlanarPortOrderInputNodes =
         : ([leftNodeId, leftNodeId] as [string, string]),
       distToCentermostPortOnZ: 0,
     })),
-  }))
+  }),
+)
