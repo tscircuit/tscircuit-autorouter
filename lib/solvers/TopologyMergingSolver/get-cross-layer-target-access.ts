@@ -17,6 +17,7 @@ import type {
 type CrossLayerAccessOverlap = {
   bounds: Bounds
   availableZ: number[]
+  isTarget: boolean
 }
 
 const getConnectionAliases = (node: CapacityMeshNode): string[] => [
@@ -205,6 +206,7 @@ function getAlignedCrossLayerAccessRegions({
         doesBoundsContainPoint(blocker, center),
       )
       const accessLayers = crossLayerAccessOverlaps.flatMap((candidate) =>
+        !candidate.isTarget &&
         doesBoundsContainPoint(candidate.bounds, center)
           ? candidate.availableZ
           : [],
@@ -280,7 +282,15 @@ function addCrossLayerAccessToTarget({
       if (!isFree && !isSameNetTarget) return []
 
       const bounds = getCrossLayerAccessOverlap(node, candidate)
-      return bounds ? [{ bounds, availableZ: [...candidate.availableZ] }] : []
+      return bounds
+        ? [
+            {
+              bounds,
+              availableZ: [...candidate.availableZ],
+              isTarget: !isFree,
+            },
+          ]
+        : []
     },
   )
   if (crossLayerAccessOverlaps.length === 0) return [node]
@@ -312,12 +322,12 @@ function addCrossLayerAccessToTarget({
     ...node.availableZ,
     ...crossLayerSameNetTargets.flatMap((target) => target.availableZ),
   ])
+  const targetIntersections = crossLayerSameNetTargets.flatMap((target) => {
+    const intersection = getCrossLayerAccessOverlap(node, target)
+    return intersection ? [intersection] : []
+  })
   if (reachableZ) {
     const accessZ = reachableZ.filter((z) => targetConnectionLayers.has(z))
-    const targetIntersections = crossLayerSameNetTargets.flatMap((target) => {
-      const intersection = getCrossLayerAccessOverlap(node, target)
-      return intersection ? [intersection] : []
-    })
     // Preserve the existing uniform-target behavior. Partial access below is
     // only needed when different XY areas have different layer roles.
     const xCoordinates = getCanonicalCoordinates([
@@ -353,6 +363,13 @@ function addCrossLayerAccessToTarget({
       ? slices
       : [node]
   }
+
+  const hasViaSizedTargetOverlap = targetIntersections.some(
+    (bounds) =>
+      Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) >=
+      viaDiameter,
+  )
+  if (hasViaSizedTargetOverlap) return [node]
 
   const regions = getAlignedCrossLayerAccessRegions({
     targetBounds: nodeBounds,
