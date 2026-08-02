@@ -11,12 +11,12 @@ test("shows a BGA gap partially covered by a target on one layer", async () => {
   const svg = getGraphicsSvgFrames({
     frames: [
       {
-        name: "Physical input: BGA gap and two targets",
+        name: "Input: real XY overlap",
         step: 0,
         graphics: fixture.inputGraphics,
       },
       {
-        name: "BGA topology after partial target overlap",
+        name: "Output: topology regions by layer",
         step: 1,
         graphics: fixture.outputGraphics,
       },

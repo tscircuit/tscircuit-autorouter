@@ -100,14 +100,14 @@ function getInputGraphics({
       {
         x: -2.475,
         y: -6.58,
-        text: "Real XY geometry (millimetres)",
+        text: "Real board geometry (mm)",
         anchorSide: "bottom_center",
         fontSize: 0.08,
       },
       {
         x: -2.475,
         y: -7.57,
-        text: "The blue gap overlaps the bottom target on z5",
+        text: "The bottom pad covers only part of the blue gap on z5",
         anchorSide: "top_center",
         fontSize: 0.07,
       },
@@ -128,7 +128,7 @@ function getLayerRowGraphics(nodes: CapacityMeshNode[]): GraphicsObject {
     texts.push({
       x: -3.82,
       y: rowY,
-      text: `z${z}`,
+      text: z === 0 ? "z0 top" : z === 5 ? "z5 bottom" : `z${z}`,
       anchorSide: "center_right",
       fontSize: 0.11,
     })
@@ -171,7 +171,7 @@ function getLayerRowGraphics(nodes: CapacityMeshNode[]): GraphicsObject {
           ? "rgba(175,20,20,0.95)"
           : "rgba(20,105,165,0.95)",
         strokeWidth: 0.04,
-        label: `one node on z${node.availableZ.join(",z")}`,
+        label: `one regular region on z${node.availableZ.join(",z")}; not a trace`,
       })
     }
   }
@@ -180,16 +180,23 @@ function getLayerRowGraphics(nodes: CapacityMeshNode[]): GraphicsObject {
     {
       x: -2.78,
       y: 3.08,
-      text: "x position and width are the real board geometry",
+      text: "Box x-position and width use the real board geometry",
       anchorSide: "bottom_center",
       fontSize: 0.11,
     },
     {
       x: -2.78,
-      y: -3.05,
-      text: "Red = target capacity; blue = free capacity",
+      y: -2.93,
+      text: "Blue boxes = ordinary free regions; red boxes = target regions",
       anchorSide: "top_center",
-      fontSize: 0.1,
+      fontSize: 0.085,
+    },
+    {
+      x: -2.78,
+      y: -3.14,
+      text: "Vertical blue bar = one region shared across layers (not a trace)",
+      anchorSide: "top_center",
+      fontSize: 0.078,
     },
   )
 
