@@ -201,7 +201,7 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
             getDistanceToRegion(tinySolver, left.regionId, endpointMidpoint) -
             getDistanceToRegion(tinySolver, right.regionId, endpointMidpoint),
         )
-        .slice(0, 50)
+        .slice(0, 30)
     : []
   const nearbyTopologyInputNodes = endpointMidpoint
     ? solver.topologyMergingSolver!.inputProblem.nodeGroups
@@ -221,7 +221,7 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
             getDistanceToInputNode(left.node, endpointMidpoint) -
             getDistanceToInputNode(right.node, endpointMidpoint),
         )
-        .slice(0, 100)
+        .slice(0, 30)
         .map(({ groupId, isComponent, node }) =>
           getInputNodeSummary({
             groupId,
@@ -242,7 +242,7 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
             getDistanceToInputNode(left, endpointMidpoint) -
             getDistanceToInputNode(right, endpointMidpoint),
         )
-        .slice(0, 100)
+        .slice(0, 30)
         .map((node) =>
           getInputNodeSummary({
             groupId: "merged",
@@ -315,11 +315,11 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
         nearbyTopologyInputNodes,
         nearbyMergedNodes,
         nearbyRegions,
-        bestCandidatePath: getCandidatePath(tinySolver),
+        bestCandidatePathTail: getCandidatePath(tinySolver).slice(-20),
         candidateQueueLength: tinySolver.state.candidateQueue.length,
         ripCount: tinySolver.state.ripCount,
-        neverSuccessfullyRoutedRoutes:
-          tinySolver.getNeverSuccessfullyRoutedRoutes(),
+        neverSuccessfullyRoutedRouteCount:
+          tinySolver.getNeverSuccessfullyRoutedRoutes().length,
         selectiveRipCount: tinyStats.selectiveRipCount,
         selectivelyRippedRouteCount: tinyStats.selectivelyRippedRouteCount,
         globalReripCount: tinyStats.globalReripCount,
@@ -330,8 +330,6 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
         lastRepeatedOwnerRouteIds: tinyStats.lastRepeatedOwnerRouteIds,
         lastAlternateOwnerRouteIds: tinyStats.lastAlternateOwnerRouteIds,
         lastRippedRouteIds: tinyStats.lastRippedRouteIds,
-        neverSuccessfullyRoutedRouteCount:
-          tinyStats.neverSuccessfullyRoutedRouteCount,
       },
       null,
       2,
