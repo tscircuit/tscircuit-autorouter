@@ -14,6 +14,7 @@ import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionNames } from "./getObstacleTargetConnectionNames"
 
 const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+const BGA_DIMENSION_EPSILON = 1e-6
 
 export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
@@ -94,7 +95,8 @@ function createMeshNodesFromBgaGap(input: {
 }): CapacityMeshNode[] {
   const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
   const isLargeEnoughForMultiLayer =
-    bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
+    bgaGap.width >= multiLayerThreshold - BGA_DIMENSION_EPSILON &&
+    bgaGap.height >= multiLayerThreshold - BGA_DIMENSION_EPSILON
   let orientationKey: string = "d"
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
   if (bgaGap.orientation === "vertical") orientationKey = "v"
@@ -161,8 +163,8 @@ function createMeshNodeFromMissingBgaSlot(input: {
     height: missingBgaSlot.height,
   })
   const isLargeEnoughForMultiLayer =
-    missingBgaSlot.width > multiLayerThreshold &&
-    missingBgaSlot.height > multiLayerThreshold
+    missingBgaSlot.width >= multiLayerThreshold - BGA_DIMENSION_EPSILON &&
+    missingBgaSlot.height >= multiLayerThreshold - BGA_DIMENSION_EPSILON
 
   if (!isLargeEnoughForMultiLayer) {
     return freeLayers.map((z) => ({
