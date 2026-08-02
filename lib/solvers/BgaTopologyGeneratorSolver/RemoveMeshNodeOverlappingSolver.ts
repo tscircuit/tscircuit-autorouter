@@ -9,11 +9,15 @@ import {
   getCapacityMeshNodeBounds,
   isValidCapacityBounds,
 } from "../TopologyPlanningSolver/capacity-node-geometry"
+import { BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR } from "./InitialBgaTopologySolver"
+
+const BGA_DIMENSION_EPSILON = 1e-6
 
 export type RemoveMeshNodeOverlappingSolverInput = {
   meshNodes: CapacityMeshNode[]
   obstacles: Obstacle[]
   layerCount: number
+  viaDiameter: number
 }
 
 function createNodeFromBounds({
@@ -39,6 +43,42 @@ function createNodeFromBounds({
     availableZ,
     layer: `z${availableZ.join(",")}`,
   }
+}
+
+function createNodesFromBounds({
+  node,
+  bounds,
+  availableZ,
+  suffix,
+  viaDiameter,
+}: {
+  node: CapacityMeshNode
+  bounds: Bounds
+  availableZ: number[]
+  suffix: string
+  viaDiameter: number
+}): CapacityMeshNode[] {
+  const width = bounds.maxX - bounds.minX
+  const height = bounds.maxY - bounds.minY
+  const multilayerThreshold =
+    viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR
+
+  if (
+    availableZ.length <= 1 ||
+    (width >= multilayerThreshold - BGA_DIMENSION_EPSILON &&
+      height >= multilayerThreshold - BGA_DIMENSION_EPSILON)
+  ) {
+    return [createNodeFromBounds({ node, bounds, availableZ, suffix })]
+  }
+
+  return availableZ.map((z) =>
+    createNodeFromBounds({
+      node,
+      bounds,
+      availableZ: [z],
+      suffix: `${suffix}-z${z}`,
+    }),
+  )
 }
 
 function subtractBounds(bounds: Bounds, overlap: Bounds): Bounds[] {
@@ -130,23 +170,25 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
       )
 
       nextMeshNodes.push(
-        ...subtractBounds(nodeBounds, overlapBounds).map((bounds, index) =>
-          createNodeFromBounds({
+        ...subtractBounds(nodeBounds, overlapBounds).flatMap((bounds, index) =>
+          createNodesFromBounds({
             node,
             bounds,
             availableZ: [...node.availableZ],
             suffix: `outside-${this.obstacleQueueIndex}-${index}`,
+            viaDiameter: this.inputProblem.viaDiameter,
           }),
         ),
       )
 
       if (nodeFreeLayers.length > 0) {
         nextMeshNodes.push(
-          createNodeFromBounds({
+          ...createNodesFromBounds({
             node,
             bounds: overlapBounds,
             availableZ: nodeFreeLayers,
             suffix: `under-${this.obstacleQueueIndex}`,
+            viaDiameter: this.inputProblem.viaDiameter,
           }),
         )
       }

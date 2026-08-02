@@ -13,7 +13,7 @@ import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionNames } from "./getObstacleTargetConnectionNames"
 
-const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+export const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
 const BGA_DIMENSION_EPSILON = 1e-6
 
 export type InitialBgaTopologySolverInput = {

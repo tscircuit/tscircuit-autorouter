@@ -242,6 +242,7 @@ export function createPartialTargetOverlapFixture() {
     meshNodes: initialNodes,
     obstacles: [bottomTarget],
     layerCount: inputSrj.layerCount,
+    viaDiameter: VIA_DIAMETER,
   })
   removalSolver.solve()
   const outputNodes = removalSolver.getOutput()

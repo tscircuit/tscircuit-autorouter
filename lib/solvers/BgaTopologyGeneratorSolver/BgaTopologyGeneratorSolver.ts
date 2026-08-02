@@ -16,6 +16,7 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
@@ -43,7 +44,11 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
             bgaTopologyGeneratorSolver.markedComponentObstacles,
           unmarkedComponentObstacles:
             bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
-          viaDiameter: bgaTopologyGeneratorSolver.inputProblem.viaDiameter,
+          viaDiameter:
+            bgaTopologyGeneratorSolver.inputProblem.viaDiameter ??
+            getViaDimensions(
+              bgaTopologyGeneratorSolver.inputProblem.inputSrj,
+            ).padDiameter,
         },
       ],
     ),
@@ -57,6 +62,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           obstacles: bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
           layerCount:
             bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
+          viaDiameter: bgaTopologyGeneratorSolver.inputProblem.viaDiameter,
         },
       ],
     ),
