@@ -258,6 +258,31 @@ test("srj24 sample 4 finishes selective-rerip port pathing", async (): Promise<v
     ),
   )
   console.log(
+    "srj24 sample 4 selective-rerip summary",
+    JSON.stringify({
+      regionCount: tinySolver.topology.regionCount,
+      portCount: tinySolver.topology.portCount,
+      routeCount: tinySolver.problem.routeCount,
+      committedRouteCount: committedRouteIds.size,
+      pendingRouteCount: tinySolver.state.unroutedRoutes.length,
+      currentRouteId,
+      candidateQueueLength: tinySolver.state.candidateQueue.length,
+      ripCount: tinySolver.state.ripCount,
+      selectiveRipCount: tinyStats.selectiveRipCount,
+      selectivelyRippedRouteCount: tinyStats.selectivelyRippedRouteCount,
+      globalReripCount: tinyStats.globalReripCount,
+      globalReripReason: tinyStats.globalReripReason,
+      maxFailedOwnerPairCount: tinyStats.maxFailedOwnerPairCount,
+      lastFailedRouteId: tinyStats.lastFailedRouteId,
+      lastDirectOwnerRouteIds: tinyStats.lastDirectOwnerRouteIds,
+      lastRepeatedOwnerRouteIds: tinyStats.lastRepeatedOwnerRouteIds,
+      lastAlternateOwnerRouteIds: tinyStats.lastAlternateOwnerRouteIds,
+      lastRippedRouteIds: tinyStats.lastRippedRouteIds,
+      neverSuccessfullyRoutedRouteCount:
+        tinyStats.neverSuccessfullyRoutedRouteCount,
+    }),
+  )
+  console.log(
     "srj24 sample 4 selective-rerip stall",
     JSON.stringify(
       {
