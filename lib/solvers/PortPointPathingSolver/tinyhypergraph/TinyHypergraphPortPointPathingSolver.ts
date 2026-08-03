@@ -1025,6 +1025,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         routeAttemptCountByRouteId: Uint32Array
         routeSuccessCountByRouteId: Uint32Array
       }
+      const routeSearchStats = (
+        currentTinySolver as unknown as {
+          getSelectiveReripStats?: () => {
+            currentRouteSearchIterationCount?: number
+            topRouteSearchIterationCounts?: Array<{
+              routeId: number
+              totalIterations: number
+              maxAttemptIterations: number
+            }>
+          }
+        }
+      ).getSelectiveReripStats?.()
       const routeAttemptCounts = [...routeCounters.routeAttemptCountByRouteId]
       const routeSuccessCounts = [...routeCounters.routeSuccessCountByRouteId]
       this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
@@ -1070,6 +1082,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         neverSuccessfulRoutes: currentTinySolver
           .getNeverSuccessfullyRoutedRoutes()
           .slice(0, 25),
+        currentRouteSearchIterationCount:
+          routeSearchStats?.currentRouteSearchIterationCount,
+        topRouteSearchIterationCounts:
+          routeSearchStats?.topRouteSearchIterationCounts,
         stats: primitiveStats,
       })}`
     }
