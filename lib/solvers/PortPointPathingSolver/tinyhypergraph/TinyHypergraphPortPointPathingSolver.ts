@@ -1021,10 +1021,29 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             typeof value === "boolean",
         ),
       )
+      const routeCounters = currentTinySolver as unknown as {
+        routeAttemptCountByRouteId: Uint32Array
+        routeSuccessCountByRouteId: Uint32Array
+      }
+      const routeAttemptCounts = [...routeCounters.routeAttemptCountByRouteId]
+      const routeSuccessCounts = [...routeCounters.routeSuccessCountByRouteId]
       this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
         routeCount: currentTinySolver.problem.routeCount,
+        iterations: currentTinySolver.iterations,
         committedRouteCount: committedRouteIds.size,
         pendingRouteCount: currentTinySolver.state.unroutedRoutes.length,
+        queuedCandidateCount: currentTinySolver.state.candidateQueue.length,
+        attemptedRouteCount: routeAttemptCounts.filter((count) => count > 0)
+          .length,
+        retriedRouteCount: routeAttemptCounts.filter((count) => count > 1)
+          .length,
+        totalRouteAttemptCount: routeAttemptCounts.reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+        maxRouteAttemptCount: Math.max(...routeAttemptCounts),
+        successfulRouteCount: routeSuccessCounts.filter((count) => count > 0)
+          .length,
         currentRouteId,
         currentRouteMetadata:
           currentRouteId === undefined
