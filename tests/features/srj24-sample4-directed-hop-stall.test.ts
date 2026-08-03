@@ -6,8 +6,6 @@ import type { CapacityMeshNode } from "lib/types"
 import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-const PATHING_ITERATION_LIMIT = 250_000
-
 const END_TARGET_BOUNDS = {
   minX: 1.27 - 0.59 / 2,
   maxX: 1.27 + 0.59 / 2,
@@ -68,7 +66,6 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   solver.step()
 
   const pathingSolver = solver.portPointPathingSolver!
-  pathingSolver.MAX_ITERATIONS = PATHING_ITERATION_LIMIT
 
   while (
     solver.getCurrentPhase() === "portPointPathingSolver" &&
