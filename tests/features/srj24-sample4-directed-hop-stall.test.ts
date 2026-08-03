@@ -67,7 +67,7 @@ test("diagnose sample 4 topology at the stalled route", async () => {
 
   const pathingSolver = solver.portPointPathingSolver!
   while (
-    pathingSolver.activeSubSolver === null &&
+    !pathingSolver.activeSubSolver &&
     !solver.failed &&
     !solver.solved
   ) {
