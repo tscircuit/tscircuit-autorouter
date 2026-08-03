@@ -66,6 +66,7 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   solver.step()
 
   const pathingSolver = solver.portPointPathingSolver!
+  const tinySolver = pathingSolver.activeSubSolver as TinyHyperGraphSolver
 
   while (
     solver.getCurrentPhase() === "portPointPathingSolver" &&
@@ -105,7 +106,6 @@ test("diagnose sample 4 topology at the stalled route", async () => {
     ),
   )
 
-  const tinySolver = pathingSolver.activeSubSolver as TinyHyperGraphSolver
   const routeId = tinySolver.state.currentRouteId!
   const startPortId = tinySolver.problem.routeStartPort[routeId]!
   const endPortId = tinySolver.problem.routeEndPort[routeId]!
@@ -147,8 +147,16 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   console.error(
     "SRJ24_SAMPLE4_STATE",
     JSON.stringify({
+      pathingSolved: pathingSolver.solved,
+      pathingFailed: pathingSolver.failed,
+      pathingError: pathingSolver.error?.message,
       pathingIterations: pathingSolver.iterations,
+      tinySolved: tinySolver.solved,
+      tinyFailed: tinySolver.failed,
+      tinyError: tinySolver.error?.message,
       tinyIterations: tinySolver.iterations,
+      tinyMaxIterations: tinySolver.MAX_ITERATIONS,
+      tinyStats: tinySolver.stats,
       committedRouteCount: committedRouteIds.size,
       pendingRouteCount: tinySolver.state.unroutedRoutes.length,
       routeId,
