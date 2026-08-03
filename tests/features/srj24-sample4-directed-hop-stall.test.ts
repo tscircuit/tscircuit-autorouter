@@ -1,9 +1,39 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { getTopologyMergingNodesWithCrossLayerTargetAccess } from "lib/solvers/TopologyMergingSolver/get-cross-layer-target-access"
+import { getCapacityMeshNodeBounds } from "lib/solvers/TopologyPlanningSolver/capacity-node-geometry"
+import type { CapacityMeshNode } from "lib/types"
 import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 const PATHING_ITERATION_LIMIT = 250_000
+
+const END_TARGET_BOUNDS = {
+  minX: 1.27 - 0.59 / 2,
+  maxX: 1.27 + 0.59 / 2,
+  minY: -2.9 - 0.64 / 2,
+  maxY: -2.9 + 0.64 / 2,
+}
+
+const overlapsEndTarget = (node: CapacityMeshNode): boolean => {
+  const bounds = getCapacityMeshNodeBounds(node)
+  return !(
+    bounds.maxX <= END_TARGET_BOUNDS.minX ||
+    bounds.minX >= END_TARGET_BOUNDS.maxX ||
+    bounds.maxY <= END_TARGET_BOUNDS.minY ||
+    bounds.minY >= END_TARGET_BOUNDS.maxY
+  )
+}
+
+const summarizeNode = (node: CapacityMeshNode) => ({
+  id: node.capacityMeshNodeId,
+  bounds: getCapacityMeshNodeBounds(node),
+  availableZ: node.availableZ,
+  containsObstacle: node._containsObstacle,
+  containsTarget: node._containsTarget,
+  targetConnectionName: node._targetConnectionName,
+  connectedTo: node._connectedTo,
+})
 
 const summarizePort = (solver: TinyHyperGraphSolver, portId: number) => ({
   portId,
@@ -44,6 +74,36 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   ) {
     solver.step()
   }
+
+  const mergingInput = solver.topologyMergingSolver!.inputProblem
+  const preparedAccess = getTopologyMergingNodesWithCrossLayerTargetAccess({
+    nodeGroups: mergingInput.nodeGroups,
+    viaDiameter: mergingInput.viaDiameter,
+  })
+  console.error(
+    "SRJ24_SAMPLE4_MERGING_INPUT",
+    JSON.stringify(
+      mergingInput.nodeGroups.flatMap((group) =>
+        group.nodes
+          .filter(overlapsEndTarget)
+          .map((node) => ({
+            groupId: group.groupId,
+            isComponent: group.isComponent,
+            ...summarizeNode(node),
+            prepared: preparedAccess.get(node)!.map(summarizeNode),
+          })),
+      ),
+    ),
+  )
+  console.error(
+    "SRJ24_SAMPLE4_MERGING_OUTPUT",
+    JSON.stringify(
+      solver.topologyMergingSolver!
+        .getOutput()
+        .filter(overlapsEndTarget)
+        .map(summarizeNode),
+    ),
+  )
 
   const tinySolver = pathingSolver.activeSubSolver as TinyHyperGraphSolver
   const routeId = tinySolver.state.currentRouteId!
