@@ -1044,6 +1044,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         maxRouteAttemptCount: Math.max(...routeAttemptCounts),
         successfulRouteCount: routeSuccessCounts.filter((count) => count > 0)
           .length,
+        pendingRoutes: currentTinySolver.state.unroutedRoutes
+          .slice(0, 50)
+          .map((routeId) => ({
+            routeId,
+            attempts: routeAttemptCounts[routeId],
+            successes: routeSuccessCounts[routeId],
+            metadata: currentTinySolver.problem.routeMetadata?.[routeId],
+          })),
+        retriedRoutes: routeAttemptCounts
+          .map((attempts, routeId) => ({
+            routeId,
+            attempts,
+            successes: routeSuccessCounts[routeId],
+          }))
+          .filter(({ attempts }) => attempts > 1)
+          .sort((left, right) => right.attempts - left.attempts)
+          .slice(0, 50),
         currentRouteId,
         currentRouteMetadata:
           currentRouteId === undefined
