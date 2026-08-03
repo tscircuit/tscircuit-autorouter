@@ -1,12 +1,15 @@
 #!/usr/bin/env bun
 
 import { createHash } from "node:crypto"
+import { mkdirSync, writeFileSync } from "node:fs"
+import path from "node:path"
 import {
   isMainThread,
   parentPort,
   Worker,
   workerData,
 } from "node:worker_threads"
+import { gzipSync } from "node:zlib"
 import stableStringify from "fast-json-stable-stringify"
 import {
   GlobalDrcForceImproveSolver,
@@ -33,6 +36,7 @@ type WorkerInput = {
   sampleNumber: number
   repetitions: number
   sampleTimeoutMs: number
+  inputsOutDir?: string
 }
 
 type BenchmarkReport = {
@@ -177,6 +181,33 @@ const buildFreshRepairInput = async ({
 const runSample = async (input: WorkerInput): Promise<SampleResult> => {
   const { sampleId, scenarioName, params } =
     await buildFreshRepairInput(input)
+  if (input.inputsOutDir) {
+    const {
+      connMap: _connMap,
+      drcEvaluator: _drcEvaluator,
+      autoroutingDrcEngine: _autoroutingDrcEngine,
+      ...serializableParams
+    } = params
+    mkdirSync(input.inputsOutDir, { recursive: true })
+    writeFileSync(
+      path.join(input.inputsOutDir, `${sampleId}.json.gz`),
+      gzipSync(
+        JSON.stringify({
+          version: 1,
+          dataset: "srj18",
+          sampleId,
+          scenarioName,
+          provenance: {
+            repository: "tscircuit/tscircuit-autorouter",
+            commit: Bun.env.AUTOROUTER_COMMIT ?? "unknown",
+            pipeline: "AutoroutingPipelineSolver7_MultiGraph",
+            repairStage: TARGET_PHASE,
+          },
+          params: serializableParams,
+        }),
+      ) as unknown as Uint8Array<ArrayBuffer>,
+    )
+  }
   const inputHash = getInputHash(params)
   const initialDrc = getDrcSnapshot(
     params.srj,
@@ -286,6 +317,7 @@ const runMain = async (): Promise<void> => {
     "--out",
     "srj18-cleanroom-baseline.json",
   )
+  const inputsOutDir = parseString(args, "--inputs-out-dir", "")
   const results: SampleResult[] = []
 
   for (let offset = 0; offset < SAMPLE_COUNT; offset += concurrency) {
@@ -295,7 +327,12 @@ const runMain = async (): Promise<void> => {
     )
     const batchResults = await Promise.all(
       batch.map((sampleNumber) =>
-        runWorker({ sampleNumber, repetitions, sampleTimeoutMs }),
+        runWorker({
+          sampleNumber,
+          repetitions,
+          sampleTimeoutMs,
+          ...(inputsOutDir ? { inputsOutDir } : {}),
+        }),
       ),
     )
     results.push(...batchResults)
