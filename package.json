@@ -80,7 +80,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#3a32de99c13dc7cbe893de364a62becaef1561fd",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#2d1db3638c4cb1fbd6c4fc9194fe94f591aa0aca",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",
