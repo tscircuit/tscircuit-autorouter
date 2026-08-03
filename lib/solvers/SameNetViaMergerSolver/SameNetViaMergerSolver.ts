@@ -35,6 +35,26 @@ type Via = {
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
 
+const getTransitionLayersAtVia = (
+  route: HighDensityRoute,
+  via: { x: number; y: number },
+): number[] => {
+  const transitionLayers = new Set<number>()
+
+  for (let i = 1; i < route.route.length; i++) {
+    const previousPoint = route.route[i - 1]
+    const currentPoint = route.route[i]
+    if (previousPoint.z === currentPoint.z) continue
+    if (previousPoint.x !== via.x || previousPoint.y !== via.y) continue
+    if (currentPoint.x !== via.x || currentPoint.y !== via.y) continue
+
+    transitionLayers.add(previousPoint.z)
+    transitionLayers.add(currentPoint.z)
+  }
+
+  return [...transitionLayers]
+}
+
 const tryGetNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
@@ -230,12 +250,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const route = this.mergedViaHdRoutes[i]
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
-        const layers = [...new Set(route.route.map((p) => p.z))]
-        if (layers.length === 0) {
-          throw new Error(
-            `SameNetViaMergerSolver found via on route "${route.connectionName}" with no route points`,
-          )
-        }
+        const layers = getTransitionLayersAtVia(route, viaPoint)
+        if (layers.length === 0) continue
 
         const via: Via = {
           x: viaPoint.x,
