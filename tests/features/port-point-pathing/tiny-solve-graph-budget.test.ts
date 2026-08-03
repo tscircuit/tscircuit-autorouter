@@ -5,7 +5,7 @@ import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
 
 const SMALL_GRAPH_CONNECTION_COUNT = 100
 const SAMPLE4_CONNECTION_COUNT = 841
-const MAX_DISPLAY_ITERATIONS = 12_000_000
+const MAX_DISPLAY_ITERATIONS = 32_000_000
 const CHART_HEIGHT = 4
 
 const toChartHeight = (iterations: number) =>
@@ -103,15 +103,15 @@ test("Tiny solveGraph budget grows with the number of routes", async () => {
       },
       {
         x: 0.58,
-        y: toChartHeight(6_000_000),
-        text: "6M",
+        y: toChartHeight(16_000_000),
+        text: "16M",
         anchorSide: "center_right",
         fontSize: 0.12,
       },
       {
         x: 0.58,
-        y: toChartHeight(12_000_000),
-        text: "12M iterations",
+        y: toChartHeight(32_000_000),
+        text: "32M iterations",
         anchorSide: "center_right",
         fontSize: 0.12,
       },
