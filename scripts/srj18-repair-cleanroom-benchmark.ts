@@ -165,7 +165,9 @@ const buildFreshRepairInput = async ({
 
   const phase = pipeline.pipelineDef[pipeline.currentPipelineStepIndex]
   if (!phase || phase.solverName !== TARGET_PHASE) {
-    throw new Error(`Pipeline boundary mismatch at ${pipeline.getCurrentPhase()}`)
+    throw new Error(
+      `Pipeline boundary mismatch at ${pipeline.getCurrentPhase()}`,
+    )
   }
   const [params] = phase.getConstructorParams(pipeline) as [
     GlobalDrcForceImproveSolverParams,
@@ -180,8 +182,7 @@ const buildFreshRepairInput = async ({
 }
 
 const runSample = async (input: WorkerInput): Promise<SampleResult> => {
-  const { sampleId, scenarioName, params } =
-    await buildFreshRepairInput(input)
+  const { sampleId, scenarioName, params } = await buildFreshRepairInput(input)
   if (input.inputsOutDir) {
     const {
       connMap: _connMap,
@@ -314,11 +315,7 @@ const runMain = async (): Promise<void> => {
     "--sample-timeout-ms",
     1_800_000,
   )
-  const outputPath = parseString(
-    args,
-    "--out",
-    "srj18-cleanroom-baseline.json",
-  )
+  const outputPath = parseString(args, "--out", "srj18-cleanroom-baseline.json")
   const inputsOutDir = parseString(args, "--inputs-out-dir", "")
   const results: SampleResult[] = []
 
