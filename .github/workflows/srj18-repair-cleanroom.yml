@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: ${{ inputs.repair03_ref || '6229e2cf93144e07890dfc18dcf5077584fd6e0b' }}
+          ref: ${{ inputs.repair03_ref || '4549635e8c34aa63e7928272b5630aaccf5638fb' }}
           path: .cleanroom/high-density-repair03
 
       - name: Setup Bun
