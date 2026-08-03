@@ -154,6 +154,7 @@ const getTinyViaSizeOptions = (
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  connectionCountScale = 1,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
@@ -161,13 +162,16 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(
+      2_000_000 * effortScale * connectionCountScale,
+    ),
   }
 }
 
 const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  connectionCountScale = 1,
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
@@ -175,7 +179,9 @@ const getTinyHyperGraphSectionSolverOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
-    MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(
+      1_000_000 * effortScale * connectionCountScale,
+    ),
   }
 }
 
@@ -183,18 +189,27 @@ const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
   minViaPadDiameter?: number,
-): TinyHyperGraphSectionPipelineInput => ({
-  serializedHyperGraph,
-  createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
-  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
-    effort,
-    minViaPadDiameter,
-  ),
-  sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-    effort,
-    minViaPadDiameter,
-  ),
-})
+): TinyHyperGraphSectionPipelineInput => {
+  const connectionCount = serializedHyperGraph.connections?.length ?? 0
+  const connectionCountScale = Math.max(
+    1,
+    connectionCount / MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS,
+  )
+  return {
+    serializedHyperGraph,
+    createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
+    solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
+      effort,
+      minViaPadDiameter,
+      connectionCountScale,
+    ),
+    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
+      effort,
+      minViaPadDiameter,
+      connectionCountScale,
+    ),
+  }
+}
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,

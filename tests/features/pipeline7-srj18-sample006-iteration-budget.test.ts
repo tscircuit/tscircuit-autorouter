@@ -26,7 +26,7 @@ const getConnectionGraphics = (
   }
 }
 
-test("repro: six-layer SRJ18 sample006 exhausts tiny-hypergraph iterations", async (): Promise<void> => {
+test("six-layer SRJ18 sample006 routes with a scaled tiny-hypergraph budget", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 6)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     cacheProvider: null,
@@ -44,10 +44,8 @@ test("repro: six-layer SRJ18 sample006 exhausts tiny-hypergraph iterations", asy
 
   expect(scenario.layerCount).toBe(6)
   expect(scenario.connections).toHaveLength(290)
-  expect(solver.portPointPathingSolver?.solved).toBe(false)
-  expect(solver.portPointPathingSolver?.failed).toBe(true)
-  expect(solver.portPointPathingSolver?.error).toContain(
-    "ran out of iterations",
-  )
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(solver.portPointPathingSolver?.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.error).toBeNull()
   expect(getConnectionGraphics(solver)).toMatchGraphicsSvg(import.meta.path)
 })
