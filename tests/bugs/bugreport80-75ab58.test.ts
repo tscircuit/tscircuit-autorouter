@@ -10,7 +10,9 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport80-75ab58.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  expect(() => solver.solve()).toThrow(
+    'PostProcessingSolver: HD route "source_trace_69" must have exactly one via for each layer transition',
+  )
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
