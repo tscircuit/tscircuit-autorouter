@@ -35,7 +35,7 @@ function createBottomTarget(): Obstacle {
     componentId: "other-component",
     type: "rect",
     layers: ["bottom"],
-    center: { x: -2.63, y: -7.125 },
+    center: { x: -2.63, y: -6.8 },
     width: 0.59,
     height: 0.64,
     connectedTo: ["pcb_port_1063"],
