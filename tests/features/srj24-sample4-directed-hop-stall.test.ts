@@ -74,13 +74,37 @@ test("diagnose sample 4 topology at the stalled route", async () => {
     solver.step()
   }
   const tinySolver = pathingSolver.activeSubSolver as TinyHyperGraphSolver
+  const routeExpansionCount = new Map<number, number>()
+  const routeAttemptCount = new Map<number, number>()
+  let lastActiveRouteId: number | undefined
 
   while (
     solver.getCurrentPhase() === "portPointPathingSolver" &&
     !solver.failed &&
     !solver.solved
   ) {
+    const routeIdBeforeStep = tinySolver.state.currentRouteId
+    const tinyIterationsBeforeStep = tinySolver.iterations
     solver.step()
+    const routeIdAfterStep = tinySolver.state.currentRouteId
+    const attributedRouteId = routeIdBeforeStep ?? routeIdAfterStep
+    if (attributedRouteId !== undefined) {
+      routeExpansionCount.set(
+        attributedRouteId,
+        (routeExpansionCount.get(attributedRouteId) ?? 0) +
+          (tinySolver.iterations - tinyIterationsBeforeStep),
+      )
+    }
+    if (
+      routeIdAfterStep !== undefined &&
+      routeIdAfterStep !== lastActiveRouteId
+    ) {
+      routeAttemptCount.set(
+        routeIdAfterStep,
+        (routeAttemptCount.get(routeIdAfterStep) ?? 0) + 1,
+      )
+    }
+    lastActiveRouteId = routeIdAfterStep
   }
 
   const mergingInput = solver.topologyMergingSolver!.inputProblem
@@ -171,6 +195,17 @@ test("diagnose sample 4 topology at the stalled route", async () => {
       ).length,
       committedRouteCount: committedRouteIds.size,
       pendingRouteCount: tinySolver.state.unroutedRoutes.length,
+      candidateQueueSize: tinySolver.state.candidateQueue.length,
+      topRouteSearches: [...routeExpansionCount]
+        .map(([expandedRouteId, expansions]) => ({
+          routeId: expandedRouteId,
+          expansions,
+          attempts: routeAttemptCount.get(expandedRouteId) ?? 0,
+          connectionId:
+            tinySolver.problem.routeMetadata?.[expandedRouteId]?.connectionId,
+        }))
+        .sort((left, right) => right.expansions - left.expansions)
+        .slice(0, 20),
       routeId,
       routeNetId: tinySolver.problem.routeNet[routeId],
       routeMetadata: tinySolver.problem.routeMetadata?.[routeId],
