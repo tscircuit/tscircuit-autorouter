@@ -1,6 +1,9 @@
 name: SRJ18 Repair Cleanroom
 
 on:
+  push:
+    branches:
+      - agent/srj18-cleanroom-baseline
   workflow_dispatch:
     inputs:
       repair03_ref:
@@ -34,7 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: ${{ inputs.repair03_ref }}
+          ref: ${{ inputs.repair03_ref || 'b183a7acfa51d9d1c07ec9637d2b9a765554f439' }}
           path: .cleanroom/high-density-repair03
 
       - name: Setup Bun
@@ -85,8 +88,8 @@ jobs:
           EVALUATOR_SHA256: ${{ steps.provenance.outputs.evaluator_hash }}
         run: |
           bun scripts/srj18-repair-cleanroom-benchmark.ts \
-            --concurrency "${{ inputs.concurrency }}" \
-            --repetitions "${{ inputs.repetitions }}" \
+            --concurrency "${{ inputs.concurrency || '4' }}" \
+            --repetitions "${{ inputs.repetitions || '3' }}" \
             --sample-timeout-ms 1800000 \
             --out srj18-cleanroom-baseline.json
 
