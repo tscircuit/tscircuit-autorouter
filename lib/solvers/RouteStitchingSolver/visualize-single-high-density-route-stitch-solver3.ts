@@ -193,6 +193,34 @@ const addNewStitchSegments = ({
   }
 }
 
+const addNewStitchVias = ({
+  graphics,
+  hdRoute,
+  inputHdRoutes,
+}: {
+  graphics: GraphicsObject
+  hdRoute: HighDensityIntraNodeRoute
+  inputHdRoutes: HighDensityIntraNodeRoute[]
+}): void => {
+  const inputViaKeys = new Set(
+    inputHdRoutes.flatMap((inputRoute) =>
+      inputRoute.vias.map((via) => `${via.x.toFixed(6)},${via.y.toFixed(6)}`),
+    ),
+  )
+  for (const via of hdRoute.vias) {
+    const viaKey = `${via.x.toFixed(6)},${via.y.toFixed(6)}`
+    if (inputViaKeys.has(viaKey)) continue
+    graphics.circles!.push({
+      center: via,
+      radius: hdRoute.viaDiameter * 0.7,
+      fill: "rgba(147, 51, 234, 0.25)",
+      stroke: "#7e22ce",
+      label: "Canonical stitch layer transition",
+      step: 2,
+    })
+  }
+}
+
 const addRepairRequiredSegments = ({
   graphics,
   hdRoute,
@@ -317,6 +345,11 @@ export const visualizeSingleHighDensityRouteStitchSolver3 = (
     hdRoute: mergedHdRoute,
     inputHdRoutes: stitchState.inputHdRoutes,
     isValidStitchSegment: stitchState.isValidStitchSegment,
+  })
+  addNewStitchVias({
+    graphics,
+    hdRoute: mergedHdRoute,
+    inputHdRoutes: stitchState.inputHdRoutes,
   })
 
   if (hasRepairHandoffStep && stitchState.isValidStitchSegment) {
