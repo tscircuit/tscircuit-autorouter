@@ -56,6 +56,13 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     const preExpansionOutput =
       solver.getPrePowerTraceOutputSimplifiedPcbTraces()
     const output = solver.getOutputSimplifiedPcbTraces()
+    const preExpansionViaCount = preExpansionOutput
+      .flatMap((trace) => trace.route)
+      .filter((point) => point.route_type === "via").length
+    const postExpansionViaCount = output
+      .flatMap((trace) => trace.route)
+      .filter((point) => point.route_type === "via").length
+    expect(postExpansionViaCount).toBeLessThanOrEqual(preExpansionViaCount)
     const srjWithPointPairs = solver.srjWithPointPairs ?? input
     const preExpansionDrc = evaluateRelaxedDrc({
       inputSrj: input,

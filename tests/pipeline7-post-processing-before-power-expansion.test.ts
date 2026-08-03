@@ -41,7 +41,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   } as any)
   expect(powerTraceParams).toHaveLength(2)
   expect((powerTraceParams[0] as any).fixedTraces).toEqual([])
-  expect(powerTraceParams[1]).toEqual({})
+  expect(powerTraceParams[1]).toEqual({ allowNewVias: false })
 
   const [params] = postProcessingStep!.getConstructorParams({
     ...solver,
