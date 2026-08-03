@@ -120,8 +120,14 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
   }
 
   expect(failedScenarios).toEqual([])
-  expect(preExpansionDrcPasses).toEqual(["sample005"])
+  expect(preExpansionDrcPasses).toEqual([
+    "sample002",
+    "sample003",
+    "sample005",
+  ])
   expect(postExpansionDrcPasses).toEqual([
+    "sample001",
+    "sample002",
     "sample003",
     "sample004",
     "sample005",
