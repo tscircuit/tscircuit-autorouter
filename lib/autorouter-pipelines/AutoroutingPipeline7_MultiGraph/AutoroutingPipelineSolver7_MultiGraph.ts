@@ -1,5 +1,4 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
@@ -69,6 +68,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
+import { SafePostProcessingSolver } from "./SafePostProcessingSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -229,7 +229,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postProcessingSolver?: PostProcessingSolver
+  postProcessingSolver?: SafePostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -690,61 +690,67 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep("postProcessingSolver", PostProcessingSolver, (cms) => {
-      const netToPointPairsSolver = cms.netToPointPairsSolver
-      if (!netToPointPairsSolver)
-        throw new Error(
-          "Pipeline7: post-processing requires NetToPointPairsSolver output",
-        )
-      const connections = netToPointPairsSolver.newConnections
-      const finalHdConnectionNames = new Map<string, string>()
-      for (const pair of cms.srj.differentialPairs ?? []) {
-        for (const connectionName of pair.connectionNames) {
-          const matchingConnections = connections.filter(
-            (connection) =>
-              connection.name === connectionName ||
-              connection.__rootConnectionNames?.includes(connectionName) ||
-              connection.__netConnectionName === connectionName,
+    definePipelineStep(
+      "postProcessingSolver",
+      SafePostProcessingSolver,
+      (cms) => {
+        const netToPointPairsSolver = cms.netToPointPairsSolver
+        if (!netToPointPairsSolver)
+          throw new Error(
+            "Pipeline7: post-processing requires NetToPointPairsSolver output",
           )
-          if (matchingConnections.length !== 1)
-            throw new Error(
-              `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
+        const connections = netToPointPairsSolver.newConnections
+        const finalHdConnectionNames = new Map<string, string>()
+        for (const pair of cms.srj.differentialPairs ?? []) {
+          for (const connectionName of pair.connectionNames) {
+            const matchingConnections = connections.filter(
+              (connection) =>
+                connection.name === connectionName ||
+                connection.__rootConnectionNames?.includes(connectionName) ||
+                connection.__netConnectionName === connectionName,
             )
-          finalHdConnectionNames.set(
-            connectionName,
-            matchingConnections[0]!.name,
-          )
-        }
-      }
-      const differentialPairs = (cms.srj.differentialPairs ?? []).map(
-        (pair) => {
-          const connectionNames = pair.connectionNames.map((connectionName) => {
-            const finalHdConnectionName =
-              finalHdConnectionNames.get(connectionName)
-            if (!finalHdConnectionName)
+            if (matchingConnections.length !== 1)
               throw new Error(
-                `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
+                `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
               )
-            return finalHdConnectionName
-          }) as [string, string]
-          if (connectionNames[0] === connectionNames[1])
-            throw new Error(
-              `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
+            finalHdConnectionNames.set(
+              connectionName,
+              matchingConnections[0]!.name,
             )
-          return { ...pair, connectionNames }
-        },
-      )
-      return [
-        {
-          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
-          differentialPairs,
-          obstacles: cms.srj.obstacles,
-          bounds: cms.srj.bounds,
-          layerCount: cms.srj.layerCount,
-          allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
-        },
-      ]
-    }),
+          }
+        }
+        const differentialPairs = (cms.srj.differentialPairs ?? []).map(
+          (pair) => {
+            const connectionNames = pair.connectionNames.map(
+              (connectionName) => {
+                const finalHdConnectionName =
+                  finalHdConnectionNames.get(connectionName)
+                if (!finalHdConnectionName)
+                  throw new Error(
+                    `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
+                  )
+                return finalHdConnectionName
+              },
+            ) as [string, string]
+            if (connectionNames[0] === connectionNames[1])
+              throw new Error(
+                `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
+              )
+            return { ...pair, connectionNames }
+          },
+        )
+        return [
+          {
+            hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+            differentialPairs,
+            obstacles: cms.srj.obstacles,
+            bounds: cms.srj.bounds,
+            layerCount: cms.srj.layerCount,
+            allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
+          },
+        ]
+      },
+    ),
     definePipelineStep(
       "powerTraceExpansionSolver",
       PowerTraceExpansionSolver,
