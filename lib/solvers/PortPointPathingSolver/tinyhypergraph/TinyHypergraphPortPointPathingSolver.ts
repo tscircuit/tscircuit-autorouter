@@ -75,6 +75,7 @@ type TinyRegionMetadata = {
   serializedRegionId?: string
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
+  _isComponentTopologyNode?: boolean
   _offBoardConnectionId?: string
 }
 
@@ -97,6 +98,7 @@ type TinyPortMetadata = {
 type LoadedTinyGraph = {
   topology: {
     portCount: number
+    incidentPortRegion: number[][]
     portMetadata?: TinyPortMetadata[]
     regionMetadata?: Array<TinyRegionMetadata & { _tinyTerminalNetId?: string }>
   }
@@ -266,6 +268,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    _isComponentTopologyNode: region.d._isComponentTopologyNode,
     ...(netId !== undefined ? { netId } : {}),
   }
 }
@@ -641,11 +644,21 @@ const applyPortMetadataPenalties = (
 
   for (let portId = 0; portId < loaded.topology.portCount; portId++) {
     const metadata = loaded.topology.portMetadata?.[portId]
+    const touchesComponentTopology = loaded.topology.incidentPortRegion[
+      portId
+    ]?.some(
+      (regionId) =>
+        loaded.topology.regionMetadata?.[regionId]?._isComponentTopologyNode,
+    )
     if (typeof metadata?.duplicatedFromPortId === "string") {
       portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
       duplicatePortPenaltyCount++
     }
-    if (metadata?.cramped && crampedPortTraversalPenalty > 0) {
+    if (
+      metadata?.cramped &&
+      !touchesComponentTopology &&
+      crampedPortTraversalPenalty > 0
+    ) {
       portPenalty[portId] += crampedPortTraversalPenalty
       crampedPortPenaltyCount++
     }
