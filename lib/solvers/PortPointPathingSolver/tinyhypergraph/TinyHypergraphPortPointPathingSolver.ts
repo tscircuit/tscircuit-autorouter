@@ -313,6 +313,28 @@ const getTinyRouteConnectionsOrThrow = (
   })
 }
 
+const orderConnectionsByEndpointConstraint = (
+  connections: TinyRouteConnection[],
+) =>
+  connections
+    .map((connection, index) => ({ connection, index }))
+    .sort((left, right) => {
+      const leftStartPortCount = left.connection.startRegion.ports.length
+      const leftEndPortCount = left.connection.endRegion.ports.length
+      const rightStartPortCount = right.connection.startRegion.ports.length
+      const rightEndPortCount = right.connection.endRegion.ports.length
+
+      return (
+        Math.min(leftStartPortCount, leftEndPortCount) -
+          Math.min(rightStartPortCount, rightEndPortCount) ||
+        leftStartPortCount +
+          leftEndPortCount -
+          (rightStartPortCount + rightEndPortCount) ||
+        left.index - right.index
+      )
+    })
+    .map(({ connection }) => connection)
+
 const buildSerializedTinyGraph = (
   params: TinyHypergraphInput,
 ): SerializedHyperGraph => {
@@ -892,9 +914,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.connections,
     )
     const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
-          tinyRouteConnections,
-          getTinyRouteConnectionNetId,
+      ? orderConnectionsByEndpointConstraint(
+          orderConnectionsByNetCardinality(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          ),
         )
       : tinyRouteConnections
     this.rootConnectionNameByConnectionId = new Map(
