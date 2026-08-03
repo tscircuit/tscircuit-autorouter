@@ -2,11 +2,7 @@ import { expect, test } from "bun:test"
 import { SafePostProcessingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/SafePostProcessingSolver"
 
 test("Pipeline7 preserves routed copper when opposite-side pair terminals cannot be coupled", () => {
-  const createPad = (
-    x: number,
-    y: number,
-    connectionName?: string,
-  ) => ({
+  const createPad = (x: number, y: number, connectionName?: string) => ({
     type: "rect" as const,
     layers: ["top"],
     center: { x, y },
