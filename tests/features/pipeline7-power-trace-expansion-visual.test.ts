@@ -119,9 +119,10 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     ).toMatchSvgSnapshot(snapshotPath, { svgName: scenarioName })
   }
 
-  expect(failedScenarios).toEqual(["sample001"])
+  expect(failedScenarios).toEqual([])
   expect(preExpansionDrcPasses).toEqual(["sample005"])
   expect(postExpansionDrcPasses).toEqual([
+    "sample001",
     "sample003",
     "sample004",
     "sample005",
