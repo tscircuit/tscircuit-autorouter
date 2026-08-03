@@ -299,6 +299,24 @@ function addCrossLayerAccessToTarget({
     targetConnectionLayers,
     viaDiameter,
   })
+  if (node.capacityMeshNodeId === "cmn_1672") {
+    console.error(
+      "SRJ24_SAMPLE4_TARGET_ACCESS",
+      JSON.stringify({
+        viaDiameter,
+        targetLayers: node.availableZ,
+        targetConnectionLayers: [...targetConnectionLayers],
+        sameNetTargets: crossLayerSameNetTargets.map((target) => ({
+          id: target.capacityMeshNodeId,
+          bounds: getCapacityMeshNodeBounds(target),
+          availableZ: target.availableZ,
+        })),
+        freeAccessOverlaps,
+        blockerBounds,
+        regions,
+      }),
+    )
+  }
   const alignedNodes = regions.map((region, index) => {
     const { bounds, availableZ } = region
     return {
