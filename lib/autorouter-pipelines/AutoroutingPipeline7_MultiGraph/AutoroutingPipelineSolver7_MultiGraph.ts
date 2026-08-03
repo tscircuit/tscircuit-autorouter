@@ -230,7 +230,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postProcessingSolver?: PostProcessingSolver
+  lengthMatchingPostProcessingSolver?: PostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -691,61 +691,67 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep("postProcessingSolver", PostProcessingSolver, (cms) => {
-      const netToPointPairsSolver = cms.netToPointPairsSolver
-      if (!netToPointPairsSolver)
-        throw new Error(
-          "Pipeline7: post-processing requires NetToPointPairsSolver output",
-        )
-      const connections = netToPointPairsSolver.newConnections
-      const finalHdConnectionNames = new Map<string, string>()
-      for (const pair of cms.srj.differentialPairs ?? []) {
-        for (const connectionName of pair.connectionNames) {
-          const matchingConnections = connections.filter(
-            (connection) =>
-              connection.name === connectionName ||
-              connection.__rootConnectionNames?.includes(connectionName) ||
-              connection.__netConnectionName === connectionName,
+    definePipelineStep(
+      "lengthMatchingPostProcessingSolver",
+      PostProcessingSolver,
+      (cms) => {
+        const netToPointPairsSolver = cms.netToPointPairsSolver
+        if (!netToPointPairsSolver)
+          throw new Error(
+            "Pipeline7: length-matching post-processing requires NetToPointPairsSolver output",
           )
-          if (matchingConnections.length !== 1)
-            throw new Error(
-              `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
+        const connections = netToPointPairsSolver.newConnections
+        const finalHdConnectionNames = new Map<string, string>()
+        for (const pair of cms.srj.differentialPairs ?? []) {
+          for (const connectionName of pair.connectionNames) {
+            const matchingConnections = connections.filter(
+              (connection) =>
+                connection.name === connectionName ||
+                connection.__rootConnectionNames?.includes(connectionName) ||
+                connection.__netConnectionName === connectionName,
             )
-          finalHdConnectionNames.set(
-            connectionName,
-            matchingConnections[0]!.name,
-          )
-        }
-      }
-      const differentialPairs = (cms.srj.differentialPairs ?? []).map(
-        (pair) => {
-          const connectionNames = pair.connectionNames.map((connectionName) => {
-            const finalHdConnectionName =
-              finalHdConnectionNames.get(connectionName)
-            if (!finalHdConnectionName)
+            if (matchingConnections.length !== 1)
               throw new Error(
-                `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
+                `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
               )
-            return finalHdConnectionName
-          }) as [string, string]
-          if (connectionNames[0] === connectionNames[1])
-            throw new Error(
-              `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
+            finalHdConnectionNames.set(
+              connectionName,
+              matchingConnections[0]!.name,
             )
-          return { ...pair, connectionNames }
-        },
-      )
-      return [
-        {
-          hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
-          differentialPairs,
-          obstacles: cms.srj.obstacles,
-          bounds: cms.srj.bounds,
-          layerCount: cms.srj.layerCount,
-          allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
-        },
-      ]
-    }),
+          }
+        }
+        const differentialPairs = (cms.srj.differentialPairs ?? []).map(
+          (pair) => {
+            const connectionNames = pair.connectionNames.map(
+              (connectionName) => {
+                const finalHdConnectionName =
+                  finalHdConnectionNames.get(connectionName)
+                if (!finalHdConnectionName)
+                  throw new Error(
+                    `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
+                  )
+                return finalHdConnectionName
+              },
+            ) as [string, string]
+            if (connectionNames[0] === connectionNames[1])
+              throw new Error(
+                `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
+              )
+            return { ...pair, connectionNames }
+          },
+        )
+        return [
+          {
+            hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+            differentialPairs,
+            obstacles: cms.srj.obstacles,
+            bounds: cms.srj.bounds,
+            layerCount: cms.srj.layerCount,
+            allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
+          },
+        ]
+      },
+    ),
     definePipelineStep(
       "powerTraceExpansionSolver",
       PowerTraceExpansionSolver,
@@ -856,7 +862,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (
-      pipelineStepDef.solverName === "postProcessingSolver" ||
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
     )
       this.MAX_ITERATIONS = Math.max(
@@ -908,7 +914,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const postProcessingViz = this.postProcessingSolver?.visualize()
+    const lengthMatchingPostProcessingViz =
+      this.lengthMatchingPostProcessingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -1034,7 +1041,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      postProcessingViz,
+      lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1112,7 +1119,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
-      this.postProcessingSolver?.getOutput().hdRoutes ??
+      this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
