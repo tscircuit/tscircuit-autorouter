@@ -141,6 +141,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 export const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 1_000
+const MIN_SOLVE_GRAPH_ITERATIONS = 2_000_000
+const SOLVE_GRAPH_ITERATIONS_PER_CONNECTION = 5_000
 
 export const shouldRunDuplicateCongestedPortPrepass = ({
   hasPreloadedTraceOccupancy,
@@ -163,15 +165,20 @@ const getTinyViaSizeOptions = (
 
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
+  connectionCount: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
+  const graphSizeIterations =
+    connectionCount * SOLVE_GRAPH_ITERATIONS_PER_CONNECTION
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(
+      Math.max(MIN_SOLVE_GRAPH_ITERATIONS, graphSizeIterations) * effortScale,
+    ),
   }
 }
 
@@ -198,6 +205,7 @@ const getTinyHyperGraphPipelineInput = (
   createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
   solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
     effort,
+    serializedHyperGraph.connections.length,
     minViaPadDiameter,
   ),
   sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
