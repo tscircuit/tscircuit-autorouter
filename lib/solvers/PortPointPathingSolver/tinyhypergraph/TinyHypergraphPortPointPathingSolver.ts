@@ -1045,6 +1045,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const routeAttemptCounts = [...routeCounters.routeAttemptCountByRouteId]
       const routeSuccessCounts = [...routeCounters.routeSuccessCountByRouteId]
       this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
+        inputPortCount: this.params.graph.ports.length,
+        inputRegionCount: this.params.graph.regions.length,
+        tinyPortCount: currentTinySolver.topology.portCount,
+        tinyRegionCount: currentTinySolver.topology.regionCount,
+        duplicatedPortCount: this.duplicatedPortCount,
+        duplicateCongestedPortSourceCount:
+          this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
         routeCount: currentTinySolver.problem.routeCount,
         iterations: currentTinySolver.iterations,
         committedRouteCount: committedRouteIds.size,
