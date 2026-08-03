@@ -15,11 +15,11 @@ test("Pipeline7 bypasses signal-only traces without changing their DRC result", 
   const postPower = solver.getOutputSimplifiedPcbTraces()
   expect(postPower).toEqual(prePower)
 
-  const getErrorIds = (traces: SimplifiedPcbTraces) =>
+  const getErrors = (traces: SimplifiedPcbTraces) =>
     evaluateRelaxedDrc({
       inputSrj,
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces: traces,
-    }).errors.map((error) => error.pcb_trace_error_id)
-  expect(getErrorIds(postPower)).toEqual(getErrorIds(prePower))
+    }).errors
+  expect(getErrors(postPower)).toEqual(getErrors(prePower))
 })

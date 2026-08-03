@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { getPowerTraceExpansionConnectionNames } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import type { SimpleRouteJson } from "lib/types"
@@ -34,10 +35,10 @@ test("Pipeline7 selects only connections with a significant requested width incr
   const powerStep = solver.pipelineDef.find(
     (step) => step.solverName === "powerTraceExpansionSolver",
   )!
-  const [, defaultOptions] = powerStep.getConstructorParams({
+  const defaultOptions = powerStep.getConstructorParams({
     ...solver,
     getPrePowerTraceOutputSimplifiedPcbTraces: () => [],
-  } as any)
+  } as any)[1] as PowerTraceExpanderOptions
   expect(defaultOptions.onlyConnectionNames).toEqual(["POWER"])
 
   const explicitlyTargetedSolver = new AutoroutingPipelineSolver7_MultiGraph(
@@ -47,9 +48,9 @@ test("Pipeline7 selects only connections with a significant requested width incr
   const explicitPowerStep = explicitlyTargetedSolver.pipelineDef.find(
     (step) => step.solverName === "powerTraceExpansionSolver",
   )!
-  const [, explicitOptions] = explicitPowerStep.getConstructorParams({
+  const explicitOptions = explicitPowerStep.getConstructorParams({
     ...explicitlyTargetedSolver,
     getPrePowerTraceOutputSimplifiedPcbTraces: () => [],
-  } as any)
+  } as any)[1] as PowerTraceExpanderOptions
   expect(explicitOptions.onlyConnectionNames).toEqual(["USB_P"])
 })
