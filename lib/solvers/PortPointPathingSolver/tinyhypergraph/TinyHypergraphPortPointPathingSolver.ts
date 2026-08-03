@@ -1104,6 +1104,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             ] as { mutuallyConnectedNetworkId?: string } | undefined
           )?.mutuallyConnectedNetworkId,
         })),
+        cachedPathDiagnostics: (
+          currentTinySolver.stats as
+            | { cachedPathDiagnostics?: unknown }
+            | undefined
+        )?.cachedPathDiagnostics,
         stats: primitiveStats,
       })}`
     }
