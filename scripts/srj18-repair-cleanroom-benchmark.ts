@@ -95,6 +95,7 @@ const getInputHash = (params: GlobalDrcForceImproveSolverParams): string =>
   hashValue({
     srj: params.srj,
     hdRoutes: params.hdRoutes,
+    connectivityNetMap: params.connMap?.netMap ?? null,
     effort: params.effort,
     maxIterations: params.maxIterations,
     enableLargeBoardBroadFallback: params.enableLargeBoardBroadFallback,
@@ -193,7 +194,7 @@ const runSample = async (input: WorkerInput): Promise<SampleResult> => {
       path.join(input.inputsOutDir, `${sampleId}.json.gz`),
       gzipSync(
         JSON.stringify({
-          version: 1,
+          version: 2,
           dataset: "srj18",
           sampleId,
           scenarioName,
@@ -203,6 +204,7 @@ const runSample = async (input: WorkerInput): Promise<SampleResult> => {
             pipeline: "AutoroutingPipelineSolver7_MultiGraph",
             repairStage: TARGET_PHASE,
           },
+          connectivityNetMap: params.connMap?.netMap ?? null,
           params: serializableParams,
         }),
       ) as unknown as Uint8Array<ArrayBuffer>,
