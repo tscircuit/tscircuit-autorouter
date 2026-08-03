@@ -1,0 +1,99 @@
+name: SRJ18 Repair Cleanroom
+
+on:
+  workflow_dispatch:
+    inputs:
+      repair03_ref:
+        description: Exact high-density-repair03 ref
+        required: true
+        type: string
+      concurrency:
+        description: Fixed worker concurrency
+        required: false
+        default: "4"
+        type: string
+      repetitions:
+        description: Repair repetitions per sample
+        required: false
+        default: "3"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout autorouter
+        uses: actions/checkout@v4
+
+      - name: Checkout repair03
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-repair03
+          ref: ${{ inputs.repair03_ref }}
+          path: .cleanroom/high-density-repair03
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - name: Install locked dependencies
+        run: |
+          bun install --frozen-lockfile
+          bun install --cwd .cleanroom/high-density-repair03 --frozen-lockfile
+
+      - name: Inject exact repair03 checkout
+        run: |
+          mv node_modules/high-density-repair03 node_modules/high-density-repair03-pinned
+          ln -s "$GITHUB_WORKSPACE/.cleanroom/high-density-repair03" node_modules/high-density-repair03
+
+      - name: Record immutable provenance
+        id: provenance
+        run: |
+          echo "autorouter_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "repair03_commit=$(git -C .cleanroom/high-density-repair03 rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "autorouter_lock=$(sha256sum bun.lock | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "repair03_lock=$(sha256sum .cleanroom/high-density-repair03/bun.lock | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          evaluator_hash="$(
+            find .cleanroom/high-density-repair03/lib/drc \
+              .cleanroom/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts \
+              .cleanroom/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/drcPresets.ts \
+              .cleanroom/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/getDrcErrors.ts \
+              .cleanroom/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/netUtils.ts \
+              .cleanroom/high-density-repair03/lib/solvers/utils/convertToCircuitJson.ts \
+              .cleanroom/high-density-repair03/lib/utils/convertHdRouteToSimplifiedRoute.ts \
+              .cleanroom/high-density-repair03/lib/utils/mapZToLayerName.ts \
+              -type f -print0 |
+              sort -z |
+              xargs -0 sha256sum |
+              sha256sum |
+              cut -d' ' -f1
+          )"
+          echo "evaluator_hash=$evaluator_hash" >> "$GITHUB_OUTPUT"
+
+      - name: Run fresh SRJ18 baseline
+        env:
+          AUTOROUTER_COMMIT: ${{ steps.provenance.outputs.autorouter_commit }}
+          REPAIR03_COMMIT: ${{ steps.provenance.outputs.repair03_commit }}
+          AUTOROUTER_LOCK_SHA256: ${{ steps.provenance.outputs.autorouter_lock }}
+          REPAIR03_LOCK_SHA256: ${{ steps.provenance.outputs.repair03_lock }}
+          EVALUATOR_SHA256: ${{ steps.provenance.outputs.evaluator_hash }}
+        run: |
+          bun scripts/srj18-repair-cleanroom-benchmark.ts \
+            --concurrency "${{ inputs.concurrency }}" \
+            --repetitions "${{ inputs.repetitions }}" \
+            --sample-timeout-ms 1800000 \
+            --out srj18-cleanroom-baseline.json
+
+      - name: Upload fresh baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: srj18-cleanroom-baseline
+          path: srj18-cleanroom-baseline.json
+          if-no-files-found: error
