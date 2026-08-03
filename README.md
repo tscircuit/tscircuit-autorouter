@@ -86,12 +86,24 @@ interface SimpleRouteBus {
   busId: string
   connectionNames: string[] // Ordered SimpleRouteConnection names
   maxLengthSkew?: number // Maximum routed-length difference in millimeters
+  traceWidth?: number // Resolved copper width in millimeters
+  allowedLayers?: string[] // Legal routing layers, including terminal layers
+}
+
+interface DifferentialPair {
+  connectionNames: [string, string]
+  lengthTolerance: number // Maximum pair skew in millimeters
+  traceGap?: number // Resolved edge-to-edge copper gap in millimeters
+  maxUncoupledLength?: number // Maximum uncoupled length in millimeters
 }
 ```
 
 `maxLengthSkew` records the maximum permitted routed-length difference for the
 bus. Bus metadata is preserved in the output so routing implementations can
 apply the constraint without losing the original membership or ordering.
+`traceWidth`, `traceGap`, and `allowedLayers` are resolved routing geometry;
+stackup-aware impedance targets should be converted to these dimensions before
+creating SimpleRouteJson.
 
 Via-in-pad repair is disabled by default because it generally requires filled
 and capped vias. Set `allowViaInPad: true` only when the fabrication process
