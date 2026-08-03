@@ -629,7 +629,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        hdRoutes: lockHdRouteTerminals(
+          cms.traceSimplificationSolver!.simplifiedHdRoutes,
+          cms.netToPointPairsSolver?.newConnections ?? [],
+          new Map(
+            (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map((route) => [
+              route.connectionName,
+              route,
+            ]),
+          ),
+        ),
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
