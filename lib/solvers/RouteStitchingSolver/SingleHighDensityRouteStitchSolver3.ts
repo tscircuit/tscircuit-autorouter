@@ -1314,29 +1314,6 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
     const mergedAnchor =
       this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]!
-    const candidateAnchor = pointsToAdd[0]
-    const stitchLayerTransition =
-      candidateAnchor && mergedAnchor.z !== candidateAnchor.z
-        ? { x: candidateAnchor.x, y: candidateAnchor.y }
-        : undefined
-
-    if (stitchLayerTransition) {
-      const transitionStart = {
-        ...stitchLayerTransition,
-        z: mergedAnchor.z,
-      }
-      if (distance(mergedAnchor, transitionStart) >= GEOMETRIC_TOLERANCE) {
-        throw new Error(
-          `Layer-changing stitch for "${this.mergedHdRoute.connectionName}" exceeds the endpoint tolerance`,
-        )
-      }
-      if (
-        mergedAnchor.x !== transitionStart.x ||
-        mergedAnchor.y !== transitionStart.y
-      ) {
-        this.mergedHdRoute.route.push(transitionStart)
-      }
-    }
 
     if (bestStitchPath && bestStitchPath.length > 2) {
       this.mergedHdRoute.route.push(
@@ -1362,15 +1339,6 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     this.mergedHdRoute.vias.push(...hdRouteToMerge.vias)
-    if (
-      stitchLayerTransition &&
-      !this.mergedHdRoute.vias.some(
-        (via) =>
-          distance(via, stitchLayerTransition) < GEOMETRIC_TOLERANCE,
-      )
-    ) {
-      this.mergedHdRoute.vias.push(stitchLayerTransition)
-    }
 
     if (hdRouteToMerge.jumpers) {
       this.mergedHdRoute.jumpers!.push(...hdRouteToMerge.jumpers)

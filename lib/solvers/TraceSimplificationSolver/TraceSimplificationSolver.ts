@@ -25,20 +25,6 @@ const pointInsideObstacle = (
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
-const getDiagonalLayerTransition = (route: HighDensityRoute) => {
-  for (let pointIndex = 1; pointIndex < route.route.length; pointIndex += 1) {
-    const previousPoint = route.route[pointIndex - 1]!
-    const point = route.route[pointIndex]!
-    if (
-      previousPoint.z !== point.z &&
-      (previousPoint.x !== point.x || previousPoint.y !== point.y)
-    ) {
-      return { pointIndex, previousPoint, point }
-    }
-  }
-  return undefined
-}
-
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
  * via removal, via merging, and path simplification phases. It reduces redundant vias
@@ -206,14 +192,6 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.hdRoutes = this.markThroughObstacleSegments(
             this.extractResult(this.activeSubSolver),
           )
-        }
-
-        for (const route of this.hdRoutes) {
-          const diagonalTransition = getDiagonalLayerTransition(route)
-          if (!diagonalTransition) continue
-          this.failed = true
-          this.error = `Trace simplification ${this.currentPhase} loop ${this.simplificationPipelineLoops} created a diagonal layer transition on "${route.connectionName}" before point ${diagonalTransition.pointIndex}: ${JSON.stringify(diagonalTransition.previousPoint)} -> ${JSON.stringify(diagonalTransition.point)}`
-          return
         }
 
         // Clear activeSubSolver
