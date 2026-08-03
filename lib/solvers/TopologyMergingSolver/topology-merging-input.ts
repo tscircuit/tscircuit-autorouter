@@ -50,6 +50,13 @@ function validateTopologyMergingInput(
   if (inputProblem.layerCount <= 0) {
     throw new Error("TopologyMergingSolver: layerCount must be positive")
   }
+  if (
+    inputProblem.viaDiameter !== undefined &&
+    (!Number.isFinite(inputProblem.viaDiameter) ||
+      inputProblem.viaDiameter <= 0)
+  ) {
+    throw new Error("TopologyMergingSolver: viaDiameter must be positive")
+  }
   if (inputProblem.nodeGroups.length === 0) {
     throw new Error(
       "TopologyMergingSolver: at least one node group is required",
