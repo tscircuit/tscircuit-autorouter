@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { DifferentialPairPostProcessingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
 
 const getRouteLength = (route: Array<{ x: number; y: number }>): number => {
@@ -155,4 +156,9 @@ test("Pipeline7 length matches asymmetric terminals without changing endpoints",
     Math.abs(getRouteLength(first.route) - getRouteLength(second.route)),
   ).toBeLessThanOrEqual(0.05)
   expect(outputRoutes).not.toEqual(originalRoutes)
+  expect(
+    getSvgFromGraphicsObject(solver.visualize(), {
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
