@@ -1034,6 +1034,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
               totalIterations: number
               maxAttemptIterations: number
             }>
+            failedOwnerPairs?: Array<{
+              failedRouteId: number
+              ownerRouteId: number
+              count: number
+            }>
           }
         }
       ).getSelectiveReripStats?.()
@@ -1086,6 +1091,19 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           routeSearchStats?.currentRouteSearchIterationCount,
         topRouteSearchIterationCounts:
           routeSearchStats?.topRouteSearchIterationCounts,
+        failedOwnerPairs: routeSearchStats?.failedOwnerPairs?.map((pair) => ({
+          ...pair,
+          failedNetId: (
+            currentTinySolver.problem.routeMetadata?.[
+              pair.failedRouteId
+            ] as { mutuallyConnectedNetworkId?: string } | undefined
+          )?.mutuallyConnectedNetworkId,
+          ownerNetId: (
+            currentTinySolver.problem.routeMetadata?.[
+              pair.ownerRouteId
+            ] as { mutuallyConnectedNetworkId?: string } | undefined
+          )?.mutuallyConnectedNetworkId,
+        })),
         stats: primitiveStats,
       })}`
     }
