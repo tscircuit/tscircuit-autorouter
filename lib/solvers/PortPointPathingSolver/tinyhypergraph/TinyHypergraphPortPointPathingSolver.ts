@@ -161,7 +161,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(1 * effortScale),
   }
 }
 
@@ -1013,6 +1013,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ),
       )
       this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
+        inputPortCount: this.params.graph.ports.length,
+        inputRegionCount: this.params.graph.regions.length,
+        tinyPortCount: currentTinySolver.topology.portCount,
+        tinyRegionCount: currentTinySolver.topology.regionCount,
+        duplicatedPortCount: this.duplicatedPortCount,
+        duplicateCongestedPortSourceCount:
+          this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
         routeCount: currentTinySolver.problem.routeCount,
         committedRouteCount: committedRouteIds.size,
         pendingRouteCount: currentTinySolver.state.unroutedRoutes.length,
