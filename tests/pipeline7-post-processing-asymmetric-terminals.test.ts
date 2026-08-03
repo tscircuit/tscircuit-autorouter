@@ -1,7 +1,17 @@
 import { expect, test } from "bun:test"
-import { SafePostProcessingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/SafePostProcessingSolver"
+import { DifferentialPairPostProcessingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
 
-test("Pipeline7 preserves routed copper when opposite-side pair terminals cannot be coupled", () => {
+const getRouteLength = (route: Array<{ x: number; y: number }>): number => {
+  let length = 0
+  for (let index = 1; index < route.length; index++) {
+    const previous = route[index - 1]!
+    const point = route[index]!
+    length += Math.hypot(point.x - previous.x, point.y - previous.y)
+  }
+  return length
+}
+
+test("Pipeline7 length matches asymmetric terminals without changing endpoints", () => {
   const createPad = (x: number, y: number, connectionName?: string) => ({
     type: "rect" as const,
     layers: ["top"],
@@ -88,17 +98,25 @@ test("Pipeline7 preserves routed copper when opposite-side pair terminals cannot
     layerCount: 2,
   }
   const originalRoutes = structuredClone(params.hdRoutes)
-  const solver = new SafePostProcessingSolver(params)
+  const solver = new DifferentialPairPostProcessingSolver(params)
 
   solver.solve()
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  expect(solver.usedFallback).toBe(true)
-  expect(solver.stats).toEqual({
-    phase: "fallback",
-    reason: "no-valid-candidate",
-    pair: "source_trace_0/source_trace_1",
-  })
-  expect(solver.getOutput().hdRoutes).toEqual(originalRoutes)
+  const outputRoutes = solver.getOutput().hdRoutes
+  const routesByName = new Map(
+    outputRoutes.map((route) => [route.connectionName, route]),
+  )
+  const first = routesByName.get("source_trace_0")!
+  const second = routesByName.get("source_trace_1")!
+
+  expect(first.route[0]).toEqual(originalRoutes[1]!.route[0])
+  expect(first.route.at(-1)).toEqual(originalRoutes[1]!.route.at(-1))
+  expect(second.route[0]).toEqual(originalRoutes[0]!.route[0])
+  expect(second.route.at(-1)).toEqual(originalRoutes[0]!.route.at(-1))
+  expect(
+    Math.abs(getRouteLength(first.route) - getRouteLength(second.route)),
+  ).toBeLessThanOrEqual(0.05)
+  expect(outputRoutes).not.toEqual(originalRoutes)
 })
