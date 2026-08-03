@@ -1,16 +1,42 @@
-import { getBoundFromCenteredRect, type Bounds } from "@tscircuit/math-utils"
+import {
+  getBoundFromCenteredRect,
+  type Bounds,
+} from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
+import {
+  getBoundsIntersection,
+  getCapacityMeshNodeBounds,
+} from "lib/solvers/TopologyPlanningSolver/capacity-node-geometry"
+import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 
 const COMPONENT_ID = "pcb_component_9"
-const CONNECTION_NAME = "source_trace_3__source_net_3_mst24"
+const CONNECTION_NAME = "source_trace_3__source_net_3_mst25"
 const ROOT_CONNECTION_NAMES = ["source_trace_3", "source_net_3"]
+const TARGET_ALIASES = [CONNECTION_NAME, ...ROOT_CONNECTION_NAMES]
 const PAD_SIZE = 0.254
 const VIA_DIAMETER = 0.33
 const X_COORDINATES = [-3.45, -2.8, -2.15]
-const Y_COORDINATES = [-6.15, -5.5]
-const TARGET_GAP_NODE_PREFIX = `cmn_d_${COMPONENT_ID}_0_1_`
+const Y_COORDINATES = [-7.45, -6.8]
+const COMPONENT_BOUNDS = {
+  minX: -3.9,
+  maxX: -1.8,
+  minY: -7.9,
+  maxY: -6.35,
+}
+
+const COLORS = {
+  component: "rgba(45,45,45,0.65)",
+  freeFill: "rgba(35,145,205,0.16)",
+  freeStroke: "rgba(20,105,165,0.72)",
+  targetFill: "rgba(225,45,45,0.24)",
+  targetStroke: "rgba(175,20,20,0.88)",
+  accessFill: "rgba(35,175,90,0.28)",
+  accessStroke: "rgba(15,125,60,0.95)",
+  otherPadFill: "rgba(115,125,140,0.16)",
+  otherPadStroke: "rgba(80,90,105,0.55)",
+}
 
 function createMarkedPads(): Obstacle[] {
   return Y_COORDINATES.flatMap((y, row) =>
@@ -23,7 +49,7 @@ function createMarkedPads(): Obstacle[] {
       width: PAD_SIZE,
       height: PAD_SIZE,
       connectedTo:
-        x === -2.8 && y === -6.15 ? ["pcb_port_309"] : [],
+        x === -2.8 && y === -6.8 ? ["pcb_port_310"] : [],
     })),
   )
 }
@@ -34,172 +60,196 @@ function createBottomTarget(): Obstacle {
     componentId: "other-component",
     type: "rect",
     layers: ["bottom"],
-    center: { x: -2.63, y: -5.825 },
+    center: { x: -2.63, y: -7.125 },
     width: 0.59,
     height: 0.64,
-    connectedTo: ["pcb_port_775"],
+    connectedTo: ["pcb_port_1063"],
   }
 }
 
-function isTargetGapNode(node: CapacityMeshNode): boolean {
-  return node.capacityMeshNodeId.includes(TARGET_GAP_NODE_PREFIX)
-}
-
-function isConnectionTarget(node: CapacityMeshNode): boolean {
-  return (
-    node._targetConnectionName !== undefined &&
-    ROOT_CONNECTION_NAMES.some(
-      (name) =>
-        node._targetConnectionName === name || node._connectedTo?.includes(name),
-    )
+function hasTargetAlias(node: CapacityMeshNode): boolean {
+  return TARGET_ALIASES.some(
+    (alias) =>
+      node._targetConnectionName === alias ||
+      node._connectedTo?.includes(alias),
   )
 }
 
-function getInputGraphics({
+function createGlobalTargetNode(bottomTarget: Obstacle): CapacityMeshNode {
+  return {
+    capacityMeshNodeId: "global-bottom-target",
+    center: bottomTarget.center,
+    width: bottomTarget.width,
+    height: bottomTarget.height,
+    layer: "z5",
+    availableZ: [5],
+    _containsObstacle: true,
+    _containsTarget: true,
+    _targetConnectionName: CONNECTION_NAME,
+    _connectedTo: [...TARGET_ALIASES],
+  }
+}
+
+function isInsideBounds(node: CapacityMeshNode, bounds: Bounds): boolean {
+  const nodeBounds = getCapacityMeshNodeBounds(node)
+  return (
+    nodeBounds.minX >= bounds.minX - 1e-6 &&
+    nodeBounds.maxX <= bounds.maxX + 1e-6 &&
+    nodeBounds.minY >= bounds.minY - 1e-6 &&
+    nodeBounds.maxY <= bounds.maxY + 1e-6
+  )
+}
+
+function getComponentOutline() {
+  return {
+    center: {
+      x: (COMPONENT_BOUNDS.minX + COMPONENT_BOUNDS.maxX) / 2,
+      y: (COMPONENT_BOUNDS.minY + COMPONENT_BOUNDS.maxY) / 2,
+    },
+    width: COMPONENT_BOUNDS.maxX - COMPONENT_BOUNDS.minX,
+    height: COMPONENT_BOUNDS.maxY - COMPONENT_BOUNDS.minY,
+    fill: "rgba(0,0,0,0)",
+    stroke: COLORS.component,
+    label: "BGA local topology bounds",
+  }
+}
+
+function createInputGraphics({
   markedPads,
   bottomTarget,
-  targetGap,
 }: {
   markedPads: Obstacle[]
   bottomTarget: Obstacle
-  targetGap: CapacityMeshNode
 }): GraphicsObject {
-  const topTarget = markedPads.find(
-    (pad) => pad.center.x === -2.8 && pad.center.y === -6.15,
-  )!
-
   return {
     rects: [
-      {
-        center: targetGap.center,
-        width: targetGap.width,
-        height: targetGap.height,
-        fill: "rgba(35,145,205,0.16)",
-        stroke: "rgba(20,105,165,0.9)",
-        label: "BGA routing gap",
-      },
-      {
-        center: topTarget.center,
-        width: topTarget.width,
-        height: topTarget.height,
-        fill: "rgba(225,45,45,0.28)",
-        stroke: "rgba(175,20,20,0.9)",
-        label: "same-net top target (z0)",
-      },
+      getComponentOutline(),
+      ...markedPads.map((pad) => {
+        const isTopTarget = pad.connectedTo.includes("pcb_port_310")
+        return {
+          center: pad.center,
+          width: pad.width,
+          height: pad.height,
+          fill: isTopTarget ? COLORS.targetFill : COLORS.otherPadFill,
+          stroke: isTopTarget ? COLORS.targetStroke : COLORS.otherPadStroke,
+          label: isTopTarget ? "top target z0" : "top BGA pad",
+        }
+      }),
       {
         center: bottomTarget.center,
         width: bottomTarget.width,
         height: bottomTarget.height,
-        fill: "rgba(225,45,45,0.18)",
-        stroke: "rgba(175,20,20,0.9)",
-        label: "same-net bottom target (z5)",
+        fill: COLORS.targetFill,
+        stroke: COLORS.targetStroke,
+        label: "bottom target z5",
       },
     ],
     texts: [
       {
-        x: -2.475,
-        y: -5.3,
-        text: "Real board geometry (mm)",
+        x: -2.85,
+        y: -6.22,
+        text: "Exact mst25 board geometry (mm)",
         anchorSide: "bottom_center",
-        fontSize: 0.08,
+        fontSize: 0.07,
       },
       {
-        x: -2.475,
-        y: -6.5,
-        text: "The bottom pad covers only part of the blue gap on z5",
+        x: -2.85,
+        y: -8.02,
+        text: "Red = physical targets; gray = other top-layer pads",
         anchorSide: "top_center",
-        fontSize: 0.07,
+        fontSize: 0.06,
       },
     ],
   }
 }
 
-function getLayerRowGraphics(nodes: CapacityMeshNode[]): GraphicsObject {
-  const relevantNodes = nodes.filter(
-    (node) => isTargetGapNode(node) || isConnectionTarget(node),
+function createOutputGraphics({
+  outputNodes,
+  bottomTarget,
+  accessRegions,
+}: {
+  outputNodes: CapacityMeshNode[]
+  bottomTarget: Obstacle
+  accessRegions: CapacityMeshNode[]
+}): GraphicsObject {
+  const bottomTargetBounds = getBoundFromCenteredRect(bottomTarget)
+  const accessRegionIds = new Set(
+    accessRegions.map((node) => node.capacityMeshNodeId),
   )
-  const rects: NonNullable<GraphicsObject["rects"]> = []
-  const lines: NonNullable<GraphicsObject["lines"]> = []
-  const texts: NonNullable<GraphicsObject["texts"]> = []
-
-  for (let z = 0; z < 6; z++) {
-    const rowY = 2.5 - z
-    texts.push({
-      x: -3.82,
-      y: rowY,
-      text: z === 0 ? "z0 top" : z === 5 ? "z5 bottom" : `z${z}`,
-      anchorSide: "center_right",
-      fontSize: 0.11,
-    })
-    lines.push({
-      points: [
-        { x: -3.72, y: rowY - 0.24 },
-        { x: -1.85, y: rowY - 0.24 },
-      ],
-      strokeColor: "rgba(40,40,40,0.14)",
-      strokeWidth: 0.008,
-    })
-  }
-
-  for (const node of relevantNodes) {
-    const bounds: Bounds = getBoundFromCenteredRect(node)
-    for (const z of node.availableZ) {
-      rects.push({
-        center: { x: node.center.x, y: 2.5 - z },
-        width: node.width,
-        height: 0.42,
-        fill: node._containsTarget
-          ? "rgba(225,45,45,0.25)"
-          : "rgba(35,145,205,0.2)",
-        stroke: node._containsTarget
-          ? "rgba(175,20,20,0.9)"
-          : "rgba(20,105,165,0.9)",
-        label: `${node.capacityMeshNodeId}\navailableZ: ${node.availableZ.join(",")}`,
-      })
-    }
-
-    if (node.availableZ.length > 1) {
-      const minZ = Math.min(...node.availableZ)
-      const maxZ = Math.max(...node.availableZ)
-      lines.push({
-        points: [
-          { x: bounds.maxX - 0.025, y: 2.5 - minZ },
-          { x: bounds.maxX - 0.025, y: 2.5 - maxZ },
-        ],
-        strokeColor: node._containsTarget
-          ? "rgba(175,20,20,0.95)"
-          : "rgba(20,105,165,0.95)",
-        strokeWidth: 0.04,
-        label: `one regular region on z${node.availableZ.join(",z")}; not a trace`,
-      })
-    }
-  }
-
-  texts.push(
-    {
-      x: -2.78,
-      y: 3.08,
-      text: "Box x-position and width use the real board geometry",
-      anchorSide: "bottom_center",
-      fontSize: 0.11,
-    },
-    {
-      x: -2.78,
-      y: -2.93,
-      text: "Blue boxes = ordinary free regions; red boxes = target regions",
-      anchorSide: "top_center",
-      fontSize: 0.085,
-    },
-    {
-      x: -2.78,
-      y: -3.14,
-      text: "Vertical blue bar = one region shared across layers (not a trace)",
-      anchorSide: "top_center",
-      fontSize: 0.078,
-    },
+  const relevantNodes = outputNodes.filter(
+    (node) =>
+      getBoundsIntersection(
+        getCapacityMeshNodeBounds(node),
+        bottomTargetBounds,
+      ) !== null,
+  )
+  const orderedNodes = [...relevantNodes].sort(
+    (left, right) =>
+      Number(left._containsTarget) - Number(right._containsTarget) ||
+      left.availableZ.length - right.availableZ.length,
   )
 
-  return { rects, lines, texts }
+  return {
+    rects: [
+      getComponentOutline(),
+      ...orderedNodes.map((node) => {
+        const isAccess = accessRegionIds.has(node.capacityMeshNodeId)
+        const isTarget = node._containsTarget === true
+        return {
+          center: node.center,
+          width: node.width,
+          height: node.height,
+          fill: isAccess
+            ? COLORS.accessFill
+            : isTarget
+              ? COLORS.targetFill
+              : COLORS.freeFill,
+          stroke: isAccess
+            ? COLORS.accessStroke
+            : isTarget
+              ? COLORS.targetStroke
+              : COLORS.freeStroke,
+          strokeWidth: isAccess ? 0.025 : 0.01,
+          label: `${node.capacityMeshNodeId}\navailableZ: ${node.availableZ.join(",")}`,
+        }
+      }),
+      {
+        center: bottomTarget.center,
+        width: bottomTarget.width,
+        height: bottomTarget.height,
+        fill: "rgba(0,0,0,0)",
+        stroke: COLORS.targetStroke,
+        strokeWidth: 0.018,
+        label: "physical bottom target boundary",
+      },
+    ],
+    circles: accessRegions.map((node) => ({
+      center: node.center,
+      radius: VIA_DIAMETER / 2,
+      fill: "rgba(35,175,90,0.08)",
+      stroke: COLORS.accessStroke,
+      label: `${VIA_DIAMETER.toFixed(2)} mm via fits`,
+    })),
+    texts: [
+      {
+        x: -2.85,
+        y: -6.22,
+        text: "Merged capacity regions at the same XY scale",
+        anchorSide: "bottom_center",
+        fontSize: 0.07,
+      },
+      {
+        x: -2.85,
+        y: -8.02,
+        text:
+          accessRegions.length > 0
+            ? "Green = legal z0↔z5 access; circle = real via diameter"
+            : "Issue: no via-sized z0↔z5 region inside the target",
+        anchorSide: "top_center",
+        fontSize: 0.06,
+      },
+    ],
+  }
 }
 
 export function createPartialTargetOverlapFixture() {
@@ -218,39 +268,73 @@ export function createPartialTargetOverlapFixture() {
         pointsToConnect: [
           {
             x: -2.8,
-            y: -6.15,
+            y: -6.8,
             layer: "top",
-            pointId: "pcb_port_309",
+            pointId: "pcb_port_310",
           },
           {
             x: -2.63,
-            y: -5.825,
+            y: -7.125,
             layer: "bottom",
-            pointId: "pcb_port_775",
+            pointId: "pcb_port_1063",
           },
         ],
       },
     ],
-    bounds: { minX: -3.9, maxX: -1.8, minY: -6.6, maxY: -5.2 },
+    bounds: COMPONENT_BOUNDS,
   }
   const bgaSolver = new BgaTopologyGeneratorSolver({
     inputSrj,
     detectedComponent: {
       componentId: COMPONENT_ID,
       componentKind: "bga",
-      bounds: { ...inputSrj.bounds, __type: "rect" },
+      bounds: { ...COMPONENT_BOUNDS, __type: "rect" },
     },
     viaDiameter: VIA_DIAMETER,
   })
   bgaSolver.solve()
-  const initialNodes = bgaSolver.initialTopologySolver.getOutput()
-  const targetGap = initialNodes.find(isTargetGapNode)!
-  const outputNodes = bgaSolver.getOutput().routingRegions
+
+  const topologySolver = new TopologyMergingSolver({
+    layerCount: inputSrj.layerCount,
+    viaDiameter: VIA_DIAMETER,
+    nodeGroups: [
+      {
+        groupId: "global",
+        isComponent: false,
+        nodes: [createGlobalTargetNode(bottomTarget)],
+      },
+      {
+        groupId: COMPONENT_ID,
+        isComponent: true,
+        nodes: bgaSolver.getOutput().routingRegions,
+      },
+    ],
+  })
+  topologySolver.solve()
+  if (topologySolver.failed) {
+    throw new Error(topologySolver.error ?? "Topology merging failed")
+  }
+
+  const bottomTargetBounds = getBoundFromCenteredRect(bottomTarget)
+  const outputNodes = topologySolver.getOutput()
+  const accessRegions = outputNodes.filter(
+    (node) =>
+      node._containsTarget === true &&
+      hasTargetAlias(node) &&
+      node.availableZ.includes(0) &&
+      node.availableZ.includes(5) &&
+      node.width >= VIA_DIAMETER - 1e-6 &&
+      node.height >= VIA_DIAMETER - 1e-6 &&
+      isInsideBounds(node, bottomTargetBounds),
+  )
 
   return {
-    initialTargetGap: targetGap,
-    outputTargetGapNodes: outputNodes.filter(isTargetGapNode),
-    inputGraphics: getInputGraphics({ markedPads, bottomTarget, targetGap }),
-    outputGraphics: getLayerRowGraphics(outputNodes),
+    accessRegions,
+    inputGraphics: createInputGraphics({ markedPads, bottomTarget }),
+    outputGraphics: createOutputGraphics({
+      outputNodes,
+      bottomTarget,
+      accessRegions,
+    }),
   }
 }

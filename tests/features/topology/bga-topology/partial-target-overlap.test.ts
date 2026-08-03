@@ -2,29 +2,27 @@ import { expect, test } from "bun:test"
 import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
 import { createPartialTargetOverlapFixture } from "./fixtures/partial-target-overlap.fixture"
 
-test("shows a BGA gap partially covered by a target on one layer", async () => {
+test("provides via-sized cross-layer access inside a partially covered target", async () => {
   const fixture = createPartialTargetOverlapFixture()
-
-  expect(fixture.initialTargetGap.availableZ).toEqual([0, 1, 2, 3, 4, 5])
-  expect(fixture.outputTargetGapNodes.length).toBeGreaterThan(0)
 
   const svg = getGraphicsSvgFrames({
     frames: [
       {
-        name: "Input: real XY overlap",
+        name: "Input: exact mst25 geometry",
         step: 0,
         graphics: fixture.inputGraphics,
       },
       {
-        name: "Output: topology regions by layer",
+        name: "Output: merged regions",
         step: 1,
         graphics: fixture.outputGraphics,
       },
     ],
     columns: 2,
     cellWidth: 2.4,
-    cellHeight: 6.6,
+    cellHeight: 2,
   })
 
   await expect(svg).toMatchSvgSnapshot(import.meta.path, { scale: 2 })
+  expect(fixture.accessRegions.length).toBeGreaterThan(0)
 })
