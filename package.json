@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.738",
+  "version": "0.0.740",
   "type": "module",
   "files": [
     "dist"
@@ -45,7 +45,7 @@
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#c1575da7944fedd9eb8dd0b3e5aeeaa7ed443b41",
     "@tscircuit/math-utils": "^0.0.36",
-    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#f234d312ff0d15262cfeefb4c0a5f5b6047d7cee",
+    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#2ebc65792485c6154c237204abd75a5ea0c52be0",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#ba0f5e0356fa95572c44b2c5539b1a159bd6c7b6",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",

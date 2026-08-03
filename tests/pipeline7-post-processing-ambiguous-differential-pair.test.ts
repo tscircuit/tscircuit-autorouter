@@ -28,12 +28,12 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
       },
     ],
   })
-  const postProcessingStep = solver.pipelineDef.find(
-    (step) => step.solverName === "postProcessingSolver",
+  const lengthMatchingPostProcessingStep = solver.pipelineDef.find(
+    (step) => step.solverName === "lengthMatchingPostProcessingSolver",
   )!
 
   expect(() =>
-    postProcessingStep.getConstructorParams({
+    lengthMatchingPostProcessingStep.getConstructorParams({
       ...solver,
       netToPointPairsSolver: {
         newConnections: [

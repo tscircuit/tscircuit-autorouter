@@ -71,6 +71,7 @@ import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { SafePostProcessingSolver } from "./SafePostProcessingSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
+import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -229,7 +230,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postProcessingSolver?: SafePostProcessingSolver
+  lengthMatchingPostProcessingSolver?: SafePostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -691,13 +692,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "postProcessingSolver",
+      "lengthMatchingPostProcessingSolver",
       SafePostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
           throw new Error(
-            "Pipeline7: post-processing requires NetToPointPairsSolver output",
+            "Pipeline7: length-matching post-processing requires NetToPointPairsSolver output",
           )
         const connections = netToPointPairsSolver.newConnections
         const finalHdConnectionNames = new Map<string, string>()
@@ -754,17 +755,24 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "powerTraceExpansionSolver",
       PowerTraceExpansionSolver,
-      (cms) => [
-        {
-          ...cms.originalSrj,
-          traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
-          fixedTraces: cms.originalSrj.traces ?? [],
-        },
-        {
-          allowNewVias: false,
-          ...cms.opts.powerTraceExpansion,
-        },
-      ],
+      (cms) => {
+        const configuredOptions = cms.opts.powerTraceExpansion ?? {}
+        const onlyConnectionNames =
+          configuredOptions.onlyConnectionNames ??
+          getPowerTraceExpansionConnectionNames(cms.originalSrj)
+        return [
+          {
+            ...cms.originalSrj,
+            traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
+            fixedTraces: cms.originalSrj.traces ?? [],
+          },
+          {
+            allowNewVias: false,
+            ...configuredOptions,
+            onlyConnectionNames,
+          },
+        ]
+      },
     ),
   ]
 
@@ -854,7 +862,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (
-      pipelineStepDef.solverName === "postProcessingSolver" ||
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
     )
       this.MAX_ITERATIONS = Math.max(
@@ -906,7 +914,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const postProcessingViz = this.postProcessingSolver?.visualize()
+    const lengthMatchingPostProcessingViz =
+      this.lengthMatchingPostProcessingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -1032,7 +1041,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      postProcessingViz,
+      lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1110,7 +1119,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
-      this.postProcessingSolver?.getOutput().hdRoutes ??
+      this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
