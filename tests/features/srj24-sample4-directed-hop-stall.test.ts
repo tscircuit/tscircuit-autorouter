@@ -66,6 +66,13 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   solver.step()
 
   const pathingSolver = solver.portPointPathingSolver!
+  while (
+    pathingSolver.activeSubSolver === null &&
+    !solver.failed &&
+    !solver.solved
+  ) {
+    solver.step()
+  }
   const tinySolver = pathingSolver.activeSubSolver as TinyHyperGraphSolver
 
   while (
@@ -77,6 +84,7 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   }
 
   const mergingInput = solver.topologyMergingSolver!.inputProblem
+  const mergingOutput = solver.topologyMergingSolver!.getOutput()
   const preparedAccess = getTopologyMergingNodesWithCrossLayerTargetAccess({
     nodeGroups: mergingInput.nodeGroups,
     viaDiameter: mergingInput.viaDiameter,
@@ -99,10 +107,7 @@ test("diagnose sample 4 topology at the stalled route", async () => {
   console.error(
     "SRJ24_SAMPLE4_MERGING_OUTPUT",
     JSON.stringify(
-      solver.topologyMergingSolver!
-        .getOutput()
-        .filter(overlapsEndTarget)
-        .map(summarizeNode),
+      mergingOutput.filter(overlapsEndTarget).map(summarizeNode),
     ),
   )
 
@@ -157,6 +162,13 @@ test("diagnose sample 4 topology at the stalled route", async () => {
       tinyIterations: tinySolver.iterations,
       tinyMaxIterations: tinySolver.MAX_ITERATIONS,
       tinyStats: tinySolver.stats,
+      graphRegionCount: tinySolver.topology.regionCount,
+      graphPortCount: tinySolver.topology.portCount,
+      graphRouteCount: tinySolver.problem.routeCount,
+      mergedRegionCount: mergingOutput.length,
+      crossLayerTargetRegionCount: mergingOutput.filter(
+        (node) => node._containsTarget && node.availableZ.length > 1,
+      ).length,
       committedRouteCount: committedRouteIds.size,
       pendingRouteCount: tinySolver.state.unroutedRoutes.length,
       routeId,
