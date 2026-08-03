@@ -8,12 +8,12 @@ test("provides via-sized cross-layer access inside a partially covered target", 
   const svg = getGraphicsSvgFrames({
     frames: [
       {
-        name: "Input: exact mst25 geometry",
+        name: "Input: exact sample 4 mst8 target",
         step: 0,
         graphics: fixture.inputGraphics,
       },
       {
-        name: "Output: merged regions",
+        name: "Output: ordinary merged regions",
         step: 1,
         graphics: fixture.outputGraphics,
       },

@@ -194,16 +194,16 @@ function createInputGraphics(): GraphicsObject {
       {
         x: 1.27,
         y: -2.36,
-        text: "Exact stalled mst8 target geometry (mm)",
+        text: "Same physical XY scale (mm)",
         anchorSide: "bottom_center",
-        fontSize: 0.035,
+        fontSize: 0.055,
       },
       {
         x: 1.27,
         y: -3.45,
-        text: "Red: z0 target · Blue: z5 target · Cyan: component-free cells",
+        text: "Red z0 · blue z5 · cyan free z0-z4",
         anchorSide: "top_center",
-        fontSize: 0.03,
+        fontSize: 0.05,
       },
     ],
   }
@@ -284,19 +284,19 @@ function createOutputGraphics({
       {
         x: 1.27,
         y: -2.36,
-        text: "Merged regions at the same XY scale",
+        text: "Same physical XY scale (mm)",
         anchorSide: "bottom_center",
-        fontSize: 0.035,
+        fontSize: 0.055,
       },
       {
         x: 1.27,
         y: -3.45,
         text:
           accessRegions.length > 0
-            ? "Green: ordinary z0/z5 region · Circle: real via diameter"
-            : "Issue: horizontal compaction cuts the legal vertical strip into short rows",
+            ? "Green z0/z5 region · circle Ø0.33 via"
+            : "Missing: no Ø0.33 z0/z5 region",
         anchorSide: "top_center",
-        fontSize: 0.03,
+        fontSize: 0.05,
       },
     ],
   }
