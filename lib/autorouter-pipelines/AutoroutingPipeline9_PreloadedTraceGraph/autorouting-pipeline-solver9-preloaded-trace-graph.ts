@@ -232,7 +232,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  postProcessingSolver?: PostProcessingSolver
+  lengthMatchingPostProcessingSolver?: PostProcessingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -714,11 +714,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep("postProcessingSolver", PostProcessingSolver, (cms) => {
+    definePipelineStep("lengthMatchingPostProcessingSolver", PostProcessingSolver, (cms) => {
       const netToPointPairsSolver = cms.netToPointPairsSolver
       if (!netToPointPairsSolver)
         throw new Error(
-          "Pipeline9: post-processing requires NetToPointPairsSolver output",
+          "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
         )
       const connections = netToPointPairsSolver.newConnections
       const finalHdConnectionNames = new Map<string, string>()
@@ -856,7 +856,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    if (pipelineStepDef.solverName === "postProcessingSolver")
+    if (pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver")
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
@@ -906,7 +906,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const postProcessingViz = this.postProcessingSolver?.visualize()
+    const lengthMatchingPostProcessingViz =
+      this.lengthMatchingPostProcessingSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -1032,7 +1033,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      postProcessingViz,
+      lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1110,7 +1111,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
-      this.postProcessingSolver?.getOutput().hdRoutes ??
+      this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

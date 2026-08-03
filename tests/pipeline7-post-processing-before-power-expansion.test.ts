@@ -31,9 +31,11 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     ],
   })
   const powerTraceExpansionStep = solver.pipelineDef.at(-1)
-  const postProcessingStep = solver.pipelineDef.at(-2)
+  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-2)
   expect(powerTraceExpansionStep?.solverName).toBe("powerTraceExpansionSolver")
-  expect(postProcessingStep?.solverName).toBe("postProcessingSolver")
+  expect(lengthMatchingPostProcessingStep?.solverName).toBe(
+    "lengthMatchingPostProcessingSolver",
+  )
 
   const powerTraceParams = powerTraceExpansionStep!.getConstructorParams({
     ...solver,
@@ -43,7 +45,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   expect((powerTraceParams[0] as any).fixedTraces).toEqual([])
   expect(powerTraceParams[1]).toEqual({ allowNewVias: false })
 
-  const [params] = postProcessingStep!.getConstructorParams({
+  const [params] = lengthMatchingPostProcessingStep!.getConstructorParams({
     ...solver,
     netToPointPairsSolver: {
       newConnections: solver.srj.connections.map((connection) => ({
@@ -78,8 +80,8 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     },
   } as any)
 
-  const postProcessingParams = params as any
-  expect(Object.keys(postProcessingParams).sort()).toEqual(
+  const lengthMatchingPostProcessingParams = params as any
+  expect(Object.keys(lengthMatchingPostProcessingParams).sort()).toEqual(
     [
       "allowViaInPad",
       "bounds",
@@ -89,22 +91,24 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       "obstacles",
     ].sort(),
   )
-  expect(postProcessingParams.differentialPairs).toEqual([
+  expect(lengthMatchingPostProcessingParams.differentialPairs).toEqual([
     {
       connectionNames: ["PAIR_P_mst0", "PAIR_N_mst0"],
       lengthTolerance: 0.01,
     },
   ])
   expect(
-    postProcessingParams.hdRoutes.map((route: any) => route.connectionName),
+    lengthMatchingPostProcessingParams.hdRoutes.map(
+      (route: any) => route.connectionName,
+    ),
   ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
 
-  const postProcessingSolver = new (postProcessingStep!.solverClass as any)(
-    postProcessingParams,
-  )
-  postProcessingSolver.solve()
+  const lengthMatchingPostProcessingSolver = new (
+    lengthMatchingPostProcessingStep!.solverClass as any
+  )(lengthMatchingPostProcessingParams)
+  lengthMatchingPostProcessingSolver.solve()
   expect(
-    postProcessingSolver
+    lengthMatchingPostProcessingSolver
       .getOutput()
       .hdRoutes.map((route: any) => route.connectionName),
   ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
