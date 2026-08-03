@@ -142,6 +142,7 @@ const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 export const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 1_000
 const MIN_SOLVE_GRAPH_ITERATIONS = 2_000_000
+const SOLVE_GRAPH_ITERATIONS_PER_CONNECTION = 5_000
 
 export const shouldRunDuplicateCongestedPortPrepass = ({
   hasPreloadedTraceOccupancy,
@@ -157,10 +158,17 @@ const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
 export const getTinyHyperGraphSolveGraphMaxIterations = ({
   effort,
+  connectionCount,
 }: {
   effort: number
   connectionCount: number
-}) => Math.ceil(MIN_SOLVE_GRAPH_ITERATIONS * getEffortScale(effort))
+}) =>
+  Math.ceil(
+    Math.max(
+      MIN_SOLVE_GRAPH_ITERATIONS,
+      connectionCount * SOLVE_GRAPH_ITERATIONS_PER_CONNECTION,
+    ) * getEffortScale(effort),
+  )
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
