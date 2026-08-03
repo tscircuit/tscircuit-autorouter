@@ -45,6 +45,15 @@ jobs:
         with:
           bun-version: 1.3.9
 
+      - name: Resolve Linux dependency locks
+        run: |
+          mv bun.lock bun.lock.host
+          sed -i 's/save = false/save = true/' bunfig.toml
+          bun install --lockfile-only --save-text-lockfile
+          mv .cleanroom/high-density-repair03/bun.lock .cleanroom/high-density-repair03/bun.lock.host
+          bun install --cwd .cleanroom/high-density-repair03 --lockfile-only --save-text-lockfile
+          cp .cleanroom/high-density-repair03/bun.lock repair03-linux.bun.lock
+
       - name: Install locked dependencies
         run: |
           bun install --frozen-lockfile
@@ -94,9 +103,19 @@ jobs:
             --out srj18-cleanroom-baseline.json
 
       - name: Upload fresh baseline
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: srj18-cleanroom-baseline
           path: srj18-cleanroom-baseline.json
+          if-no-files-found: error
+
+      - name: Upload Linux dependency locks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: srj18-cleanroom-linux-locks
+          path: |
+            bun.lock
+            repair03-linux.bun.lock
           if-no-files-found: error
