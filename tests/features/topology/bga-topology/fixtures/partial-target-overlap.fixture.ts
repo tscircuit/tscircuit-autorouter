@@ -3,13 +3,13 @@ import type { GraphicsObject } from "graphics-debug"
 import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 
-const COMPONENT_ID = "sample4-bga"
-const CONNECTION_NAME = "source_trace_3__source_net_3_mst25"
+const COMPONENT_ID = "pcb_component_9"
+const CONNECTION_NAME = "source_trace_3__source_net_3_mst24"
 const ROOT_CONNECTION_NAMES = ["source_trace_3", "source_net_3"]
 const PAD_SIZE = 0.254
 const VIA_DIAMETER = 0.33
 const X_COORDINATES = [-3.45, -2.8, -2.15]
-const Y_COORDINATES = [-7.45, -6.8]
+const Y_COORDINATES = [-6.15, -5.5]
 const TARGET_GAP_NODE_PREFIX = `cmn_d_${COMPONENT_ID}_0_1_`
 
 function createMarkedPads(): Obstacle[] {
@@ -23,7 +23,7 @@ function createMarkedPads(): Obstacle[] {
       width: PAD_SIZE,
       height: PAD_SIZE,
       connectedTo:
-        x === -2.8 && y === -6.8 ? ["pcb_port_310"] : [],
+        x === -2.8 && y === -6.15 ? ["pcb_port_309"] : [],
     })),
   )
 }
@@ -34,10 +34,10 @@ function createBottomTarget(): Obstacle {
     componentId: "other-component",
     type: "rect",
     layers: ["bottom"],
-    center: { x: -2.63, y: -6.8 },
+    center: { x: -2.63, y: -5.825 },
     width: 0.59,
     height: 0.64,
-    connectedTo: ["pcb_port_1063"],
+    connectedTo: ["pcb_port_775"],
   }
 }
 
@@ -65,7 +65,7 @@ function getInputGraphics({
   targetGap: CapacityMeshNode
 }): GraphicsObject {
   const topTarget = markedPads.find(
-    (pad) => pad.center.x === -2.8 && pad.center.y === -6.8,
+    (pad) => pad.center.x === -2.8 && pad.center.y === -6.15,
   )!
 
   return {
@@ -98,14 +98,14 @@ function getInputGraphics({
     texts: [
       {
         x: -2.475,
-        y: -6.58,
+        y: -5.3,
         text: "Real board geometry (mm)",
         anchorSide: "bottom_center",
         fontSize: 0.08,
       },
       {
         x: -2.475,
-        y: -7.57,
+        y: -6.5,
         text: "The bottom pad covers only part of the blue gap on z5",
         anchorSide: "top_center",
         fontSize: 0.07,
@@ -218,20 +218,20 @@ export function createPartialTargetOverlapFixture() {
         pointsToConnect: [
           {
             x: -2.8,
-            y: -6.8,
+            y: -6.15,
             layer: "top",
-            pointId: "pcb_port_310",
+            pointId: "pcb_port_309",
           },
           {
             x: -2.63,
-            y: -7.125,
+            y: -5.825,
             layer: "bottom",
-            pointId: "pcb_port_1063",
+            pointId: "pcb_port_775",
           },
         ],
       },
     ],
-    bounds: { minX: -3.9, maxX: -1.8, minY: -7.9, maxY: -6.3 },
+    bounds: { minX: -3.9, maxX: -1.8, minY: -6.6, maxY: -5.2 },
   }
   const bgaSolver = new BgaTopologyGeneratorSolver({
     inputSrj,
