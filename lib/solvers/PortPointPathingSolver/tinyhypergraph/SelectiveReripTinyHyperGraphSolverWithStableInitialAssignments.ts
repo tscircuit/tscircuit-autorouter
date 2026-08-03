@@ -2,7 +2,7 @@ import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
 
 const LARGE_PROBLEM_ROUTE_COUNT = 500
-const LARGE_PROBLEM_HEURISTIC_WEIGHT = 256
+const LARGE_PROBLEM_HEURISTIC_WEIGHT = 1_024
 
 /**
  * Selective rerips may move a preloaded assignment when it is the blocker.
