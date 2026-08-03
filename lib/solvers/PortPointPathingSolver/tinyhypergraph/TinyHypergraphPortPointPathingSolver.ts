@@ -997,6 +997,37 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
     this.progress = this.tinyPipelineSolver.progress
+    if (this.failed && currentTinySolver) {
+      const currentRouteId = currentTinySolver.state.currentRouteId
+      const committedRouteIds = new Set(
+        currentTinySolver.state.regionSegments.flatMap((segments) =>
+          segments.map(([routeId]) => routeId),
+        ),
+      )
+      const primitiveStats = Object.fromEntries(
+        Object.entries(currentTinySolver.stats ?? {}).filter(
+          ([, value]) =>
+            typeof value === "number" ||
+            typeof value === "string" ||
+            typeof value === "boolean",
+        ),
+      )
+      this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
+        routeCount: currentTinySolver.problem.routeCount,
+        committedRouteCount: committedRouteIds.size,
+        pendingRouteCount: currentTinySolver.state.unroutedRoutes.length,
+        currentRouteId,
+        currentRouteMetadata:
+          currentRouteId === undefined
+            ? undefined
+            : currentTinySolver.problem.routeMetadata?.[currentRouteId],
+        ripCount: currentTinySolver.state.ripCount,
+        neverSuccessfulRoutes: currentTinySolver
+          .getNeverSuccessfullyRoutedRoutes()
+          .slice(0, 25),
+        stats: primitiveStats,
+      })}`
+    }
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
