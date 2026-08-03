@@ -1,7 +1,6 @@
 import { getBoundFromCenteredRect, type Bounds } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
-import { RemoveMeshNodeOverlappingWithUnmarkedObstacle } from "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver"
+import { BgaTopologyGeneratorSolver } from "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 
 const COMPONENT_ID = "sample4-bga"
@@ -43,7 +42,7 @@ function createBottomTarget(): Obstacle {
 }
 
 function isTargetGapNode(node: CapacityMeshNode): boolean {
-  return node.capacityMeshNodeId.startsWith(TARGET_GAP_NODE_PREFIX)
+  return node.capacityMeshNodeId.includes(TARGET_GAP_NODE_PREFIX)
 }
 
 function isConnectionTarget(node: CapacityMeshNode): boolean {
@@ -234,24 +233,19 @@ export function createPartialTargetOverlapFixture() {
     ],
     bounds: { minX: -3.9, maxX: -1.8, minY: -7.9, maxY: -6.3 },
   }
-  const initialSolver = new InitialBgaTopologySolver({
-    srj: inputSrj,
-    componentBounds: inputSrj.bounds,
-    componentId: COMPONENT_ID,
-    markedComponentObstacles: markedPads,
-    unmarkedComponentObstacles: [bottomTarget],
+  const bgaSolver = new BgaTopologyGeneratorSolver({
+    inputSrj,
+    detectedComponent: {
+      componentId: COMPONENT_ID,
+      componentKind: "bga",
+      bounds: { ...inputSrj.bounds, __type: "rect" },
+    },
     viaDiameter: VIA_DIAMETER,
   })
-  initialSolver.solve()
-  const initialNodes = initialSolver.getOutput()
+  bgaSolver.solve()
+  const initialNodes = bgaSolver.initialTopologySolver.getOutput()
   const targetGap = initialNodes.find(isTargetGapNode)!
-  const removalSolver = new RemoveMeshNodeOverlappingWithUnmarkedObstacle({
-    meshNodes: initialNodes,
-    obstacles: [bottomTarget],
-    layerCount: inputSrj.layerCount,
-  })
-  removalSolver.solve()
-  const outputNodes = removalSolver.getOutput()
+  const outputNodes = bgaSolver.getOutput().routingRegions
 
   return {
     initialTargetGap: targetGap,
