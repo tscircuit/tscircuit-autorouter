@@ -91,8 +91,31 @@ test("same-net via merger canonicalizes duplicate physical vias before batching"
       frames: [
         {
           name: "Before: duplicate site scheduled twice",
+          step: 1,
           graphics: {
             ...routeGraphics,
+            lines: [
+              ...(routeGraphics.lines ?? []),
+              {
+                points: [
+                  { x: 0, y: 0.035 },
+                  { x: 0.2, y: 0 },
+                ],
+                strokeColor: "#f59e0b",
+                strokeWidth: 0.025,
+                label: "first scheduled move",
+              },
+              {
+                points: [
+                  { x: 0, y: -0.035 },
+                  { x: 0.2, y: 0 },
+                ],
+                strokeColor: "#dc2626",
+                strokeWidth: 0.025,
+                strokeDash: "0.04 0.025",
+                label: "stale duplicate move",
+              },
+            ],
             circles: [
               {
                 center: { x: 0, y: 0.035 },
@@ -116,26 +139,25 @@ test("same-net via merger canonicalizes duplicate physical vias before batching"
                 label: "nearby keep site",
               },
             ],
-            arrows: [
-              {
-                start: { x: 0, y: 0.035 },
-                end: { x: 0.2, y: 0 },
-                color: "#f59e0b",
-                label: "first scheduled move",
-              },
-              {
-                start: { x: 0, y: -0.035 },
-                end: { x: 0.2, y: 0 },
-                color: "#dc2626",
-                label: "stale duplicate move",
-              },
-            ],
           },
         },
         {
           name: "After: one candidate per physical site",
+          step: 2,
           graphics: {
             ...routeGraphics,
+            lines: [
+              ...(routeGraphics.lines ?? []),
+              {
+                points: [
+                  { x: 0.2, y: 0 },
+                  { x: 0, y: 0 },
+                ],
+                strokeColor: "#16a34a",
+                strokeWidth: 0.025,
+                label: "single deterministic merge",
+              },
+            ],
             circles: [
               {
                 center: { x: 0, y: 0 },
@@ -150,14 +172,6 @@ test("same-net via merger canonicalizes duplicate physical vias before batching"
                 fill: "rgba(37, 99, 235, 0.35)",
                 stroke: "#1d4ed8",
                 label: "nearby transition site",
-              },
-            ],
-            arrows: [
-              {
-                start: { x: 0.2, y: 0 },
-                end: { x: 0, y: 0 },
-                color: "#16a34a",
-                label: "single deterministic merge",
               },
             ],
           },
