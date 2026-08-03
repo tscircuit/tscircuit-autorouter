@@ -3,10 +3,11 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
+import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
 const CONNECTION_COUNT = 181
 
-test("large graphs skip duplicate-congested-port repair", () => {
+test("large graphs sample duplicate-congested-port repair work", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
     { capacityMeshNodeId: "west", x: -2 },
     { capacityMeshNodeId: "center", x: 0 },
@@ -99,12 +100,23 @@ test("large graphs skip duplicate-congested-port repair", () => {
     },
   })
 
+  const tinyPipeline = (
+    solver as unknown as {
+      tinyPipelineSolver: {
+        getInitialVisualizationSolver: () => TinyHyperGraphSolver
+      }
+    }
+  ).tinyPipelineSolver
+  const tinySolver = tinyPipeline.getInitialVisualizationSolver()
   solver.step()
 
+  expect(tinySolver.problem.routeCount).toBe(CONNECTION_COUNT)
   expect(solver.stats).toMatchObject({
-    duplicateCongestedPortSourceCount: 0,
-    duplicateCongestedPortCount: 0,
-    duplicateCongestedPortFallbackToOriginal: true,
-    duplicateCongestedPortError: `Skipped for ${CONNECTION_COUNT} connections`,
+    duplicateCongestedPortSourceCount: 2,
+    duplicateCongestedPortCount: 62,
+    duplicateCongestedPortFallbackToOriginal: false,
+    duplicateCongestedPortPrepassConnectionCount: 32,
+    duplicateCongestedPortInputConnectionCount: CONNECTION_COUNT,
+    duplicateCongestedPortPrepassSampled: true,
   })
 })

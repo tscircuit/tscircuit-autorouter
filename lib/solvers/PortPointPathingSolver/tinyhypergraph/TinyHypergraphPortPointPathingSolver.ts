@@ -140,7 +140,35 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const MAX_CONNECTIONS_FOR_FULL_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE = 32
+
+const getDuplicateCongestedPortPrepassGraph = (
+  serializedGraph: SerializedHyperGraph,
+): SerializedHyperGraph => {
+  const connections = serializedGraph.connections ?? []
+  if (
+    connections.length <=
+    MAX_CONNECTIONS_FOR_FULL_DUPLICATE_CONGESTED_PORT_PREPASS
+  ) {
+    return serializedGraph
+  }
+  const lastConnectionIndex = connections.length - 1
+  return {
+    ...serializedGraph,
+    // Spread bounded work across the full ordered list instead of ignoring its tail.
+    connections: Array.from(
+      { length: LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE },
+      (_, sampleIndex) =>
+        connections[
+          Math.round(
+            (sampleIndex * lastConnectionIndex) /
+              (LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE - 1),
+          )
+        ]!,
+    ),
+  }
+}
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -877,6 +905,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
+  private duplicateCongestedPortPrepassConnectionCount = 0
   private duplicatedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
@@ -908,13 +937,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
-    const shouldRunDuplicateCongestedPortPrepass =
-      !hasPreloadedTraceOccupancy &&
-      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
-    if (shouldRunDuplicateCongestedPortPrepass) {
+    if (!hasPreloadedTraceOccupancy) {
+      const prepassGraph =
+        getDuplicateCongestedPortPrepassGraph(serializedGraph)
+      this.duplicateCongestedPortPrepassConnectionCount =
+        prepassGraph.connections?.length ?? 0
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-        serializedGraph,
+        prepassGraph,
         {
           duplicatePortProximity: 0.05,
           routeSolveOptions: {
@@ -936,12 +966,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           duplicateCongestedPortSolver.error ?? "unknown error"
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-        graphForTiny = duplicateCongestedPortSolver.getOutput()
+        graphForTiny = {
+          ...duplicateCongestedPortSolver.getOutput(),
+          connections: serializedGraph.connections,
+        }
       }
     } else {
-      this.duplicateCongestedPortError = hasPreloadedTraceOccupancy
-        ? "Skipped to preserve preloaded port topology"
-        : `Skipped for ${connections.length} connections`
+      this.duplicateCongestedPortError =
+        "Skipped to preserve preloaded port topology"
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -1008,6 +1040,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),
+      duplicateCongestedPortPrepassConnectionCount:
+        this.duplicateCongestedPortPrepassConnectionCount,
+      duplicateCongestedPortInputConnectionCount:
+        this.params.connections.length,
+      duplicateCongestedPortPrepassSampled:
+        this.duplicateCongestedPortPrepassConnectionCount > 0 &&
+        this.duplicateCongestedPortPrepassConnectionCount <
+          this.params.connections.length,
       duplicateCongestedPortPenalty:
         this.duplicatedPortCount > 0 ? DUPLICATE_PORT_TRAVERSAL_PENALTY : 0,
       duplicateCongestedPortPenaltyCount:
