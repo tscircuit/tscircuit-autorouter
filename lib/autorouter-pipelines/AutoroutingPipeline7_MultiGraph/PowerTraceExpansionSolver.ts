@@ -1,7 +1,7 @@
 import {
-  PowerTraceExpanderSolver,
   type PowerTraceExpanderInput,
   type PowerTraceExpanderOptions,
+  PowerTraceExpanderSolver,
 } from "@tscircuit/power-trace-expander"
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
@@ -20,21 +20,30 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       inputSrj as unknown as PowerTraceExpanderInput,
       options,
     )
+    if (options.onlyConnectionNames?.length === 0) {
+      this.MAX_ITERATIONS = 1
+      this.progress = 1
+      this.solved = true
+      this.stats = { selectedTraceCount: 0, bypassed: true }
+      return
+    }
+
     this.MAX_ITERATIONS = this.powerTraceExpanderSolver.MAX_ITERATIONS + 1
   }
 
   override _step(): void {
-    this.powerTraceExpanderSolver.step()
-    this.progress = this.powerTraceExpanderSolver.progress
-    this.stats = this.powerTraceExpanderSolver.stats
+    const solver = this.powerTraceExpanderSolver
+    solver.step()
+    this.progress = solver.progress
+    this.stats = solver.stats
 
-    if (this.powerTraceExpanderSolver.failed) {
-      this.error = this.powerTraceExpanderSolver.error
+    if (solver.failed) {
+      this.error = solver.error
       this.failed = true
       return
     }
 
-    if (this.powerTraceExpanderSolver.solved) this.solved = true
+    if (solver.solved) this.solved = true
   }
 
   override getConstructorParams(): readonly [
@@ -56,8 +65,7 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     return convertSrjToGraphicsObject(
       {
         ...this.inputSrj,
-        traces:
-          this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces,
+        traces: this.getOutput(),
       },
       { traceColorMode: "layer" },
     )

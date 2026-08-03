@@ -71,6 +71,7 @@ import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
+import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -748,17 +749,24 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "powerTraceExpansionSolver",
       PowerTraceExpansionSolver,
-      (cms) => [
-        {
-          ...cms.originalSrj,
-          traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
-          fixedTraces: cms.originalSrj.traces ?? [],
-        },
-        {
-          allowNewVias: false,
-          ...cms.opts.powerTraceExpansion,
-        },
-      ],
+      (cms) => {
+        const configuredOptions = cms.opts.powerTraceExpansion ?? {}
+        const onlyConnectionNames =
+          configuredOptions.onlyConnectionNames ??
+          getPowerTraceExpansionConnectionNames(cms.originalSrj)
+        return [
+          {
+            ...cms.originalSrj,
+            traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
+            fixedTraces: cms.originalSrj.traces ?? [],
+          },
+          {
+            allowNewVias: false,
+            ...configuredOptions,
+            onlyConnectionNames,
+          },
+        ]
+      },
     ),
   ]
 
