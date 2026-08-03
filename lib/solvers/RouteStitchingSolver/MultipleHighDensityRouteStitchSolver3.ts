@@ -44,6 +44,20 @@ export type UnsolvedRoute3 = {
 
 type ConnectionName = string
 
+const getDiagonalLayerTransition = (route: HighDensityIntraNodeRoute) => {
+  for (let pointIndex = 1; pointIndex < route.route.length; pointIndex += 1) {
+    const previousPoint = route.route[pointIndex - 1]!
+    const point = route.route[pointIndex]!
+    if (
+      previousPoint.z !== point.z &&
+      (previousPoint.x !== point.x || previousPoint.y !== point.y)
+    ) {
+      return { pointIndex, previousPoint, point }
+    }
+  }
+  return undefined
+}
+
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "MultipleHighDensityRouteStitchSolver3"
@@ -203,6 +217,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.stitchRepairPolicy = params.stitchRepairPolicy ?? "validated_only"
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+
+    for (const route of canonicalHdRoutes) {
+      const diagonalTransition = getDiagonalLayerTransition(route)
+      if (!diagonalTransition) continue
+      throw new Error(
+        `Route stitch input "${route.connectionName}" has a diagonal layer transition before point ${diagonalTransition.pointIndex}: ${JSON.stringify(diagonalTransition.previousPoint)} -> ${JSON.stringify(diagonalTransition.point)}`,
+      )
+    }
 
     if (params.obstacles || params.connMap) {
       const stitchSegmentRouter = createStitchSegmentRouter({
@@ -491,6 +513,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
+          const diagonalTransition = getDiagonalLayerTransition(
+            this.activeSolver.mergedHdRoute,
+          )
+          if (diagonalTransition) {
+            this.failed = true
+            this.error = `Route stitch output "${this.activeSolver.mergedHdRoute.connectionName}" created a diagonal layer transition before point ${diagonalTransition.pointIndex}: ${JSON.stringify(diagonalTransition.previousPoint)} -> ${JSON.stringify(diagonalTransition.point)}`
+            return
+          }
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
           this.completedStitchAttempts.push({
             inputHdRoutes: this.activeSolver.inputHdRoutes,
