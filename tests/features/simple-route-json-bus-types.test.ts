@@ -28,6 +28,16 @@ test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
         busId: "data",
         connectionNames: ["data0", "data1"],
         maxLengthSkew: 0.1,
+        traceWidth: 0.12,
+        allowedLayers: ["top"],
+      },
+    ],
+    differentialPairs: [
+      {
+        connectionNames: ["data0", "data1"],
+        lengthTolerance: 0.05,
+        traceGap: 0.1,
+        maxUncoupledLength: 0.5,
       },
     ],
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
@@ -37,4 +47,7 @@ test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
   solver.solve()
 
   expect(solver.getOutputSimpleRouteJson().buses).toEqual(srj.buses)
+  expect(solver.getOutputSimpleRouteJson().differentialPairs).toEqual(
+    srj.differentialPairs,
+  )
 })

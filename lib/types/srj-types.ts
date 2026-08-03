@@ -76,7 +76,12 @@ export interface SimpleRouteJson {
 
 export interface DifferentialPair {
   connectionNames: [string, string]
+  /** Maximum permitted routed-length difference in millimeters. */
   lengthTolerance: number
+  /** Resolved edge-to-edge copper gap in millimeters. */
+  traceGap?: number
+  /** Maximum permitted length routed without pair coupling, in millimeters. */
+  maxUncoupledLength?: number
 }
 
 export interface SimpleRouteBus {
@@ -85,6 +90,10 @@ export interface SimpleRouteBus {
   connectionNames: string[]
   /** Maximum permitted routed-length difference in millimeters. */
   maxLengthSkew?: number
+  /** Resolved copper width in millimeters for members without an override. */
+  traceWidth?: number
+  /** Layers on which this bus may be routed, including its terminal layers. */
+  allowedLayers?: string[]
 }
 
 export interface Obstacle {
