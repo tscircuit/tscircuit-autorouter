@@ -1,111 +1,15 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { GraphicsObject } from "graphics-debug"
+import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import {
-  ConnectionPoint,
-  SimpleRouteConnection,
-  SimpleRouteJson,
-} from "lib/types"
+  areIdsInitiallyConnected,
+  getInitiallyConnectedMapFromSimpleRouteJson,
+} from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
-import { GraphicsObject } from "graphics-debug"
+import { getInitiallyConnectedZeroWeightEdges } from "./get-initially-connected-zero-weight-edges"
 import { mergeConnections } from "./mergeConnections"
-import { seededRandom } from "lib/utils/cloneAndShuffleArray"
-
-export const getExternalConnectionState = (
-  connection: SimpleRouteConnection,
-  srj?: SimpleRouteJson,
-): {
-  pointIdToGroup: Map<string, number>
-  zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }>
-} => {
-  const externalGroups = connection.externallyConnectedPointIds ?? []
-  const routedTraceGroups = getTraceConnectedPointGroups(connection, srj)
-  const allExternalGroups = [...externalGroups, ...routedTraceGroups]
-  const pointIdToGroup = new Map<string, number>()
-  const pointById = new Map<string, ConnectionPoint>()
-
-  for (const point of connection.pointsToConnect) {
-    if (point.pointId) {
-      pointById.set(point.pointId, point)
-    }
-  }
-
-  const zeroWeightEdges: Array<{
-    from: ConnectionPoint
-    to: ConnectionPoint
-    weight: number
-  }> = []
-
-  allExternalGroups.forEach((group, idx) => {
-    const groupPoints = group
-      .map((pointId) => pointById.get(pointId))
-      .filter((point): point is ConnectionPoint => Boolean(point))
-
-    for (const point of groupPoints) {
-      if (point.pointId) {
-        pointIdToGroup.set(point.pointId, idx)
-      }
-    }
-
-    const representativePoint = groupPoints[0]
-    if (!representativePoint) {
-      return
-    }
-
-    for (let i = 1; i < groupPoints.length; i++) {
-      zeroWeightEdges.push({
-        from: representativePoint,
-        to: groupPoints[i]!,
-        weight: 0,
-      })
-    }
-  })
-
-  return { pointIdToGroup, zeroWeightEdges }
-}
-
-const getTraceConnectedPointGroups = (
-  connection: SimpleRouteConnection,
-  srj: SimpleRouteJson | undefined,
-): string[][] => {
-  if (!srj?.traces?.length) return []
-
-  const connectionPointIds = new Set(
-    connection.pointsToConnect
-      .map((point) => point.pointId)
-      .filter((pointId): pointId is string => Boolean(pointId)),
-  )
-
-  if (connectionPointIds.size === 0) return []
-
-  const routedTraceGroups: string[][] = []
-  for (const trace of srj.traces) {
-    const traceConnectsTo = trace.connectsTo ?? []
-    if (traceConnectsTo.length < 2) continue
-
-    const connectedPointIds = traceConnectsTo.filter((connectsTo) =>
-      connectionPointIds.has(connectsTo),
-    )
-    if (connectedPointIds.length >= 2) {
-      routedTraceGroups.push(connectedPointIds)
-    }
-  }
-
-  return routedTraceGroups
-}
-
-export const areExternallyConnected = (
-  pointIdToGroup: Map<string, number>,
-  a: { pointId?: string },
-  b: { pointId?: string },
-) => {
-  if (!a.pointId || !b.pointId) return false
-  const g1 = pointIdToGroup.get(a.pointId)
-  const g2 = pointIdToGroup.get(b.pointId)
-  return g1 !== undefined && g1 === g2
-}
 
 /**
  * Converts a net containing many points to connect into an array of point pair
@@ -127,6 +31,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
+  initiallyConnectedMap: ConnectivityMap
 
   constructor(
     public ogSrj: SimpleRouteJson,
@@ -135,6 +40,8 @@ export class NetToPointPairsSolver extends BaseSolver {
     super()
     this.unprocessedConnections = mergeConnections([...ogSrj.connections])
     this.newConnections = []
+    this.initiallyConnectedMap =
+      getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
   }
 
   _step() {
@@ -144,23 +51,22 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
 
-    // ----------------------------------------------
-    // 1.  Detect externally-connected point groups
-    // ----------------------------------------------
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+    const zeroWeightEdges = getInitiallyConnectedZeroWeightEdges(
       connection,
-      this.ogSrj,
+      this.initiallyConnectedMap,
     )
 
     if (connection.pointsToConnect.length === 2) {
+      const [startPoint, endPoint] = connection.pointsToConnect
       if (
-        areExternallyConnected(
-          pointIdToGroup,
-          connection.pointsToConnect[0],
-          connection.pointsToConnect[1],
+        startPoint?.pointId &&
+        endPoint?.pointId &&
+        areIdsInitiallyConnected(
+          this.initiallyConnectedMap,
+          startPoint.pointId,
+          endPoint.pointId,
         )
       ) {
-        // No routing required – they are already connected off-board
         return
       }
       this.newConnections.push({
@@ -178,7 +84,17 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     let mstIdx = 0
     for (const edge of edges) {
-      if (areExternallyConnected(pointIdToGroup, edge.from, edge.to)) continue
+      if (
+        edge.from.pointId &&
+        edge.to.pointId &&
+        areIdsInitiallyConnected(
+          this.initiallyConnectedMap,
+          edge.from.pointId,
+          edge.to.pointId,
+        )
+      ) {
+        continue
+      }
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,

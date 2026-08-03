@@ -17,6 +17,25 @@ export interface EvaluateRelaxedDrcResult extends GetDrcErrorsResult {
   circuitJson: AnyCircuitElement[]
 }
 
+/**
+ * Combines existing and newly routed copper. A routed trace with an existing
+ * PCB trace id is an intentional mutation and replaces that preloaded trace.
+ */
+export const combinePreloadedAndRoutedTraces = (
+  preloadedTraces: SimplifiedPcbTrace[],
+  routedTraces: SimplifiedPcbTrace[],
+): SimplifiedPcbTrace[] => {
+  const replacedTraceIds = new Set(
+    routedTraces.map((trace) => trace.pcb_trace_id),
+  )
+  return [
+    ...preloadedTraces.filter(
+      (trace) => !replacedTraceIds.has(trace.pcb_trace_id),
+    ),
+    ...routedTraces,
+  ]
+}
+
 /** Converts routed traces and evaluates them using the benchmark relaxed DRC. */
 export const evaluateRelaxedDrc = ({
   inputSrj,
@@ -24,7 +43,10 @@ export const evaluateRelaxedDrc = ({
   routedTraces,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
-  const jointTraces = [...preloadedTraces, ...routedTraces]
+  const jointTraces = combinePreloadedAndRoutedTraces(
+    preloadedTraces,
+    routedTraces,
+  )
   const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,

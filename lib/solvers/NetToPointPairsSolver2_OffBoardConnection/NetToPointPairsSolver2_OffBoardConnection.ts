@@ -4,12 +4,10 @@ import {
   ConnectionPoint,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
-import {
-  areExternallyConnected,
-  getExternalConnectionState,
-  NetToPointPairsSolver,
-} from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import { areIdsInitiallyConnected } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import { getInitiallyConnectedZeroWeightEdges } from "../NetToPointPairsSolver/get-initially-connected-zero-weight-edges"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -124,17 +122,20 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
+    const zeroWeightEdges = getInitiallyConnectedZeroWeightEdges(
       currentConnection,
-      this.ogSrj,
+      this.initiallyConnectedMap,
     )
 
     if (currentConnection.pointsToConnect.length === 2) {
+      const [startPoint, endPoint] = currentConnection.pointsToConnect
       if (
-        areExternallyConnected(
-          pointIdToGroup,
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
+        startPoint?.pointId &&
+        endPoint?.pointId &&
+        areIdsInitiallyConnected(
+          this.initiallyConnectedMap,
+          startPoint.pointId,
+          endPoint.pointId,
         )
       ) {
         return
@@ -161,7 +162,15 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
-      if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
+      if (
+        mstEdge.from.pointId &&
+        mstEdge.to.pointId &&
+        areIdsInitiallyConnected(
+          this.initiallyConnectedMap,
+          mstEdge.from.pointId,
+          mstEdge.to.pointId,
+        )
+      ) {
         continue
       }
 

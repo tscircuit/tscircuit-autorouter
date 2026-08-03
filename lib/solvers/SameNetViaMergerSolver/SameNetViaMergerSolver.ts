@@ -30,6 +30,7 @@ type Via = {
   net: string
   routeIndex: number
   layers: number[]
+  mutable: boolean
 }
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
@@ -41,7 +42,10 @@ const tryGetNetForRoute = (
 ): string | undefined =>
   connMap.idToNetMap[route.connectionName] ??
   (route.rootConnectionName
-    ? connMap.idToNetMap[route.rootConnectionName]
+    ? (connMap.idToNetMap[route.rootConnectionName] ??
+      (connMap.netMap[route.rootConnectionName]
+        ? route.rootConnectionName
+        : undefined))
     : undefined)
 
 const getNetForRoute = (
@@ -226,8 +230,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.vias = []
     this.viasByNet = new Map<string, Via[]>()
 
-    for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
-      const route = this.mergedViaHdRoutes[i]
+    const addRouteVias = (
+      route: HighDensityRoute,
+      routeIndex: number,
+      mutable: boolean,
+    ) => {
+      if (route.vias.length === 0) return
+      const net = mutable
+        ? getNetForRoute(this.connMap, route)
+        : tryGetNetForRoute(this.connMap, route)
+      if (!net) return
+
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
         const layers = [...new Set(route.route.map((p) => p.z))]
@@ -241,9 +254,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
           x: viaPoint.x,
           y: viaPoint.y,
           diameter: route.viaDiameter,
-          net: getNetForRoute(this.connMap, route),
+          net,
           layers,
-          routeIndex: i,
+          routeIndex,
+          mutable,
         }
         this.vias.push(via)
         const list = this.viasByNet.get(via.net)
@@ -251,12 +265,28 @@ export class SameNetViaMergerSolver extends BaseSolver {
         else this.viasByNet.set(via.net, [via])
       }
     }
+
+    for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
+      addRouteVias(this.mergedViaHdRoutes[i]!, i, true)
+    }
+    for (let i = 0; i < (this.input.otherHdRoutes?.length ?? 0); i++) {
+      addRouteVias(
+        this.input.otherHdRoutes![i]!,
+        this.mergedViaHdRoutes.length + i,
+        false,
+      )
+    }
   }
 
   private getViaKey(via: Via): string {
-    return [via.routeIndex, via.x, via.y, via.layers.join(","), via.net].join(
-      ":",
-    )
+    return [
+      via.mutable ? "mutable" : "immutable",
+      via.routeIndex,
+      via.x,
+      via.y,
+      via.layers.join(","),
+      via.net,
+    ].join(":")
   }
 
   private dedupeRouteVias(route: HighDensityRoute): void {
@@ -312,6 +342,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
               if (candidateIndex === viaIndex) continue
 
               const candidate = viasInNet[candidateIndex]
+              if (!candidate.mutable) continue
 
               const pairDx = keep.x - candidate.x
               const pairDy = keep.y - candidate.y
@@ -321,7 +352,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const nearMergeDistance =
                 directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
 
-              if (squaredDistance === 0) continue
+              if (squaredDistance === 0) {
+                if (!keep.mutable) remove.push(candidate)
+                continue
+              }
 
               if (
                 squaredDistance <=
@@ -354,6 +388,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
       if (b.remove.length !== a.remove.length) {
         return b.remove.length - a.remove.length
       }
+      if (a.keep.mutable !== b.keep.mutable) {
+        return a.keep.mutable ? 1 : -1
+      }
       if (b.keep.layers.length !== a.keep.layers.length) {
         return b.keep.layers.length - a.keep.layers.length
       }
@@ -381,6 +418,11 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true): void {
+    if (!viaToRemove.mutable) {
+      throw new Error(
+        "SameNetViaMergerSolver cannot mutate an immutable via anchor",
+      )
+    }
     const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
     if (!routeToUpdate) {
       throw new Error(
@@ -433,10 +475,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
       route[routePointIndex] = { ...point, x: viaKeep.x, y: viaKeep.y }
     }
 
-    routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
+    routeToUpdate.vias = routeToUpdate.vias.flatMap((vx) => {
       if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
       replacedVia = true
-      return { x: viaKeep.x, y: viaKeep.y }
+      return viaKeep.mutable ? [{ x: viaKeep.x, y: viaKeep.y }] : []
     })
     if (!replacedVia) {
       throw new Error(

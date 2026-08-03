@@ -97,7 +97,9 @@ export const lockHdRouteTerminals = (
           pcb_port_id: endTerminal.pcb_port_id,
         }
       }
-      return point
+      const interiorPoint = { ...point }
+      delete interiorPoint.pcb_port_id
+      return interiorPoint
     })
 
     return { ...hdRoute, route }
