@@ -32,7 +32,10 @@ const summarizeNode = (node: CapacityMeshNode) => ({
   containsObstacle: node._containsObstacle,
   containsTarget: node._containsTarget,
   targetConnectionName: node._targetConnectionName,
-  connectedTo: node._connectedTo,
+  rootAliases: node._connectedTo?.filter((alias) =>
+    alias.startsWith("source_"),
+  ),
+  connectedToCount: node._connectedTo?.length ?? 0,
 })
 
 const summarizePort = (solver: TinyHyperGraphSolver, portId: number) => ({
