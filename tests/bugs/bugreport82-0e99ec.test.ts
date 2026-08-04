@@ -14,7 +14,7 @@ test("bugreport82-0e99ec.json", () => {
   const output = solver.getOutputSimpleRouteJson()
   const postProcessingOutput =
     solver.lengthMatchingPostProcessingSolver!.getOutput()
-  const returnedNonIdealRoute = postProcessingOutput.hdRoutes.find(
+  const returnedFallbackRoute = postProcessingOutput.hdRoutes.find(
     (route) => route.connectionName === "source_net_8_mst3",
   )
   const prePostProcessingRoute = solver
@@ -23,8 +23,8 @@ test("bugreport82-0e99ec.json", () => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(returnedNonIdealRoute).toEqual(prePostProcessingRoute)
-  expect(output.nonIdealRouteIssues).toEqual([
+  expect(returnedFallbackRoute).toEqual(prePostProcessingRoute)
+  expect(output.autoroutingErrors).toEqual([
     {
       type: "post_processing_error",
       stage: "coupled-rerouting",

@@ -176,5 +176,5 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
   ).toBeUndefined()
   const output = solver.getOutputSimpleRouteJson()
   expect(output.traces).toHaveLength(2)
-  expect(output.nonIdealRouteIssues).toEqual([])
+  expect(output.autoroutingErrors).toEqual([])
 })

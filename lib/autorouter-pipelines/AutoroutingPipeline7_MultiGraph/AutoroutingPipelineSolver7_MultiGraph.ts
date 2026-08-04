@@ -71,8 +71,8 @@ import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import {
+  type AutoroutingError,
   DifferentialPairPostProcessingSolver,
-  type NonIdealRouteIssue,
 } from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -91,7 +91,7 @@ interface CapacityMeshSolverOptions {
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 export type AutoroutingPipelineOutput = SimpleRouteJson & {
-  nonIdealRouteIssues: NonIdealRouteIssue[]
+  autoroutingErrors: AutoroutingError[]
 }
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -1189,9 +1189,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return {
       ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
-      nonIdealRouteIssues:
+      autoroutingErrors:
         this.lengthMatchingPostProcessingSolver?.getOutput()
-          .nonIdealRouteIssues ?? [],
+          .autoroutingErrors ?? [],
     }
   }
 }
