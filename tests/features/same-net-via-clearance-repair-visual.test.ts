@@ -1,0 +1,127 @@
+import { expect, test } from "bun:test"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import type { SimpleRouteJson } from "lib/types"
+import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver"
+import type {
+  HighDensityRoute,
+  SimpleRouteJson as RepairSimpleRouteJson,
+} from "high-density-repair03/lib"
+import {
+  getGraphicsSvgFrames,
+  type GraphicsSvgFrame,
+} from "../fixtures/solver-svg-frames"
+
+const FOCUS_BOUNDS = {
+  minX: -13.5,
+  maxX: 2,
+  minY: -8.5,
+  maxY: -4.5,
+}
+
+const isInFocus = (point: { x: number; y: number }) =>
+  point.x >= FOCUS_BOUNDS.minX &&
+  point.x <= FOCUS_BOUNDS.maxX &&
+  point.y >= FOCUS_BOUNDS.minY &&
+  point.y <= FOCUS_BOUNDS.maxY
+
+test("shows dataset 18 sample 11's production exact DRC repair", async () => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 11)
+  const pipeline = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
+    cacheProvider: null,
+  })
+
+  pipeline.solveUntilPhase("exactGeometryDrcForceImproveSolver")
+  expect(pipeline.failed).toBe(false)
+
+  const srj = pipeline.srjWithPointPairs as SimpleRouteJson
+  const inputRoutes = pipeline.globalDrcForceImproveSolver!.getOutput()
+  const conversionOptions = {
+    connections: pipeline.netToPointPairsSolver?.newConnections ?? [],
+    originalConnections: pipeline.originalSrj.connections,
+    layerCount: srj.layerCount,
+    obstacles: srj.obstacles,
+    defaultViaHoleDiameter: pipeline.viaHoleDiameter,
+    connMap: pipeline.connMap,
+    srjWithPointPairs: srj,
+    originalSrj: pipeline.originalSrj,
+  }
+  const evaluateBenchmarkDrc = (routes: HighDensityRoute[]) => {
+    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      ...conversionOptions,
+      hdRoutes: routes,
+    })
+
+    return evaluateRelaxedDrc({
+      inputSrj: pipeline.originalSrj,
+      srjWithPointPairs: srj,
+      routedTraces,
+    })
+  }
+  const autoroutingDrcEvaluator =
+    createPipeline7AutoroutingDrcEvaluator(conversionOptions)
+  const viewer = new VisualizedGlobalDrcForceImproveSolver({
+    srj: srj as unknown as RepairSimpleRouteJson,
+    hdRoutes: inputRoutes,
+    connMap: pipeline.connMap,
+    drcEvaluator: autoroutingDrcEvaluator,
+    viaHoleDiameter: pipeline.viaHoleDiameter,
+    maxIterations: 1,
+    enableLargeBoardBroadFallback: false,
+    enablePostSolveClearanceRelaxation: false,
+  })
+  const focusGraphics = (routes: HighDensityRoute[]) => {
+    viewer.outputHdRoutes = routes
+    const graphics = viewer.visualize()
+    return {
+      ...graphics,
+      lines: graphics.lines?.filter((line) => line.points.some(isInFocus)),
+      circles: graphics.circles?.filter((circle) => isInFocus(circle.center)),
+      points: graphics.points?.filter(isInFocus),
+      rects: graphics.rects?.filter(
+        (rect) => rect.label !== "board bounds" && isInFocus(rect.center),
+      ),
+    }
+  }
+
+  const inputDrc = evaluateBenchmarkDrc(inputRoutes)
+  const frames: GraphicsSvgFrame[] = [
+    {
+      name: `Exact DRC input: ${inputDrc.errors.length} benchmark errors`,
+      step: 0,
+      graphics: focusGraphics(inputRoutes),
+    },
+  ]
+
+  pipeline.step()
+  while (
+    pipeline.getCurrentPhase() === "exactGeometryDrcForceImproveSolver" &&
+    !pipeline.failed
+  ) {
+    pipeline.step()
+  }
+
+  const exactSolver = pipeline.exactGeometryDrcForceImproveSolver!
+  const outputRoutes = exactSolver.getOutput()
+  const outputDrc = evaluateBenchmarkDrc(outputRoutes)
+  frames.push({
+    name: `Exact DRC output: ${outputDrc.errors.length} benchmark errors`,
+    step: "end",
+    graphics: focusGraphics(outputRoutes),
+  })
+
+  expect(inputDrc.errors.length).toBeGreaterThan(0)
+  expect(pipeline.failed).toBe(false)
+  expect(exactSolver.solved).toBe(true)
+
+  await expect(
+    getGraphicsSvgFrames({
+      frames,
+      columns: 2,
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
+}, 360_000)
