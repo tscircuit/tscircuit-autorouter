@@ -7,6 +7,10 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
+type DifferentialPairPostProcessingSolverParams = PostProcessingSolverParams & {
+  obstacleMargin?: number
+}
+
 /** Applies the post-processing algorithm implied by each pair's constraints. */
 export class DifferentialPairPostProcessingSolver extends BaseSolver {
   readonly lengthMatchingSolver?: LengthMatchingSolver
@@ -16,7 +20,9 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
   private phase: "length-matching" | "coupled-rerouting" | "complete"
   private outputHdRoutes?: PostProcessingSolverParams["hdRoutes"]
 
-  constructor(public readonly inputProblem: PostProcessingSolverParams) {
+  constructor(
+    public readonly inputProblem: DifferentialPairPostProcessingSolverParams,
+  ) {
     super()
     this.lengthOnlyPairs = inputProblem.differentialPairs.filter(
       (pair) =>
@@ -61,10 +67,7 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
         obstacles: inputProblem.obstacles,
         bounds: inputProblem.bounds,
         layerCount: inputProblem.layerCount,
-        obstacleMargin: Math.max(
-          0,
-          ...inputProblem.hdRoutes.map((route) => route.traceThickness),
-        ),
+        obstacleMargin: inputProblem.obstacleMargin,
       })
       this.phase = "length-matching"
       this.MAX_ITERATIONS = this.lengthMatchingSolver.MAX_ITERATIONS + 2
@@ -125,7 +128,9 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
     }
   }
 
-  override getConstructorParams(): [PostProcessingSolverParams] {
+  override getConstructorParams(): [
+    DifferentialPairPostProcessingSolverParams,
+  ] {
     return [this.inputProblem]
   }
 
