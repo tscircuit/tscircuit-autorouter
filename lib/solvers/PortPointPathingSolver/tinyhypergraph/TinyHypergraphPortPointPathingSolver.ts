@@ -124,6 +124,14 @@ type FinalBlockerStats = {
     regionId: number
     segments: Array<[number, number, number]>
   }>
+  lastDirectBlockerPortSegments?: Array<{
+    portId: number
+    assignedNetId: number
+    segments: Array<{
+      regionId: number
+      segment: [number, number, number]
+    }>
+  }>
   lastFailedRouteId?: number
 }
 
@@ -215,6 +223,8 @@ const getFinalBlockerRegionNeighborhoods = (
         solver.topology.portRoutingCostY?.[portId] ??
         solver.topology.portY[portId],
       assignedNetId: solver.state.portAssignment[portId],
+      endpointReservationNetId:
+        solver.problemSetup.portEndpointReservationNetId[portId],
     }
   }
   const blockerRegionIds = new Set(
@@ -273,6 +283,62 @@ const getFinalBlockerRegionNeighborhoods = (
       ).map(summarizeSegment),
     }
   })
+}
+
+const getFinalBlockerPortNeighborhoods = (
+  solver: TinyHyperGraphSolver,
+  blockerPortSegments: NonNullable<
+    FinalBlockerStats["lastDirectBlockerPortSegments"]
+  >,
+) => {
+  const summarizeRegion = (regionId: number) => {
+    const metadata = asTinyRegionMetadata(
+      solver.topology.regionMetadata?.[regionId],
+    )
+    return {
+      regionId,
+      serializedRegionId: metadata.serializedRegionId,
+      center: metadata.center,
+      width: metadata.width,
+      height: metadata.height,
+      availableZ: metadata.availableZ,
+      reservedNetId: solver.problem.regionNetId[regionId],
+    }
+  }
+  const summarizePort = (portId: number) => {
+    const metadata = asTinyPortMetadata(
+      solver.topology.portMetadata?.[portId],
+    )
+    return {
+      portId,
+      serializedPortId: metadata.serializedPortId,
+      x: solver.topology.portX[portId],
+      y: solver.topology.portY[portId],
+      z: solver.topology.portZ[portId],
+      endpointReservationNetId:
+        solver.problemSetup.portEndpointReservationNetId[portId],
+    }
+  }
+
+  return blockerPortSegments.map(({ portId, assignedNetId, segments }) => ({
+    port: {
+      ...summarizePort(portId),
+      assignedNetIdAtFailure: assignedNetId,
+    },
+    adjacentRegions: (solver.topology.incidentPortRegion[portId] ?? []).map(
+      summarizeRegion,
+    ),
+    committedSegmentsAtFailure: segments.map(
+      ({ regionId, segment: [routeId, fromPortId, toPortId] }) => ({
+        region: summarizeRegion(regionId),
+        routeId,
+        netId: solver.problem.routeNet[routeId],
+        metadata: solver.problem.routeMetadata?.[routeId],
+        from: summarizePort(fromPortId),
+        to: summarizePort(toPortId),
+      }),
+    ),
+  }))
 }
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
@@ -1166,6 +1232,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const resources = blockerStats.lastDirectBlockerResources ?? []
       const blockerRegionSegments =
         blockerStats.lastDirectBlockerRegionSegments ?? []
+      const blockerPortSegments =
+        blockerStats.lastDirectBlockerPortSegments ?? []
       const relevantRouteIds = new Set<number>()
       if (blockerStats.lastFailedRouteId !== undefined) {
         relevantRouteIds.add(blockerStats.lastFailedRouteId)
@@ -1189,6 +1257,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             currentTinySolver,
             resources,
             blockerRegionSegments,
+          ),
+          ports: getFinalBlockerPortNeighborhoods(
+            currentTinySolver,
+            blockerPortSegments,
           ),
         },
       )}`
