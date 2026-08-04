@@ -9,11 +9,14 @@ import { canSectionMoveToLayer } from "lib/solvers/UselessViaRemovalSolver/can-s
 import { rebuildAndValidateRouteVias } from "./rebuild-and-validate-route-vias"
 
 const pathLength = (points: HighDensityRoute["route"]): number =>
-  points.slice(1).reduce(
-    (length, point, index) =>
-      length + Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y),
-    0,
-  )
+  points
+    .slice(1)
+    .reduce(
+      (length, point, index) =>
+        length +
+        Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y),
+      0,
+    )
 
 const crossesOutline = (
   points: HighDensityRoute["route"],
@@ -32,8 +35,9 @@ const crossesOutline = (
   )
 
 const getLayerTransitionCount = (route: HighDensityRoute): number =>
-  route.route.slice(1).filter((point, index) => point.z !== route.route[index]!.z)
-    .length
+  route.route
+    .slice(1)
+    .filter((point, index) => point.z !== route.route[index]!.z).length
 
 export type SameLayerSpanCollapseCandidate = {
   route: HighDensityRoute
@@ -61,15 +65,31 @@ export const getSameLayerSpanCollapseCandidates = ({
   const candidates: SameLayerSpanCollapseCandidate[] = []
   const candidateKeys = new Set<string>()
   const originalTransitionCount = getLayerTransitionCount(route)
-  for (let startSectionIndex = 0; startSectionIndex < sections.length - 2; startSectionIndex++) {
+  for (
+    let startSectionIndex = 0;
+    startSectionIndex < sections.length - 2;
+    startSectionIndex++
+  ) {
     const startSection = sections[startSectionIndex]!
-    for (let endSectionIndex = sections.length - 1; endSectionIndex >= startSectionIndex + 2; endSectionIndex--) {
+    for (
+      let endSectionIndex = sections.length - 1;
+      endSectionIndex >= startSectionIndex + 2;
+      endSectionIndex--
+    ) {
       const endSection = sections[endSectionIndex]!
       if (startSection.z !== endSection.z) continue
       const start = startSection.points[startSection.points.length - 1]!
       const end = endSection.points[0]!
-      const removed = route.route.slice(startSection.endIndex, endSection.startIndex + 1)
-      if (removed.some((point) => point.insideJumperPad || point.toNextSegmentType)) continue
+      const removed = route.route.slice(
+        startSection.endIndex,
+        endSection.startIndex + 1,
+      )
+      if (
+        removed.some(
+          (point) => point.insideJumperPad || point.toNextSegmentType,
+        )
+      )
+        continue
 
       for (const candidatePath of calculate45DegreePaths(start, end)) {
         const replacement = candidatePath.map((point, index) =>
@@ -81,22 +101,25 @@ export const getSameLayerSpanCollapseCandidates = ({
         )
         if (pathLength(replacement) > pathLength(removed) + 1e-6) continue
         if (crossesOutline(replacement, outline)) continue
-        if (!canSectionMoveToLayer({
-          currentSection: {
-            startIndex: startSection.endIndex,
-            endIndex: endSection.startIndex,
-            z: start.z,
-            points: replacement,
-          },
-          targetZ: start.z,
-          route,
-          hdRouteSHI,
-          obstacleSHI,
-          connMap,
-          defaultTraceThickness: route.traceThickness,
-          obstacleMargin: 0.15,
-          traceMargin: 0.1,
-        })) continue
+        if (
+          !canSectionMoveToLayer({
+            currentSection: {
+              startIndex: startSection.endIndex,
+              endIndex: endSection.startIndex,
+              z: start.z,
+              points: replacement,
+            },
+            targetZ: start.z,
+            route,
+            hdRouteSHI,
+            obstacleSHI,
+            connMap,
+            defaultTraceThickness: route.traceThickness,
+            obstacleMargin: 0.15,
+            traceMargin: 0.1,
+          })
+        )
+          continue
 
         const candidate = rebuildAndValidateRouteVias({
           ...route,

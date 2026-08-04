@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { FinalViaOptimizationSolver } from "lib/solvers/FinalViaOptimizationSolver/FinalViaOptimizationSolver"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -39,28 +41,31 @@ test("final via optimization accepts only a DRC-safe converted via reduction", (
       ],
     },
   ]
-  const noErrors = (() => ({ errors: [] })) as DrcEvaluator
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  const conversionOptions = {
+    connections: srj.connections,
+    originalConnections: srj.connections,
+    layerCount: srj.layerCount,
+    obstacles: srj.obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+    srjWithPointPairs: srj,
+    originalSrj: srj,
+  }
   const solver = new FinalViaOptimizationSolver({
     hdRoutes,
     originalSrj: srj,
     obstacles: [],
     layerCount: 2,
-    connMap: getConnectivityMapFromSimpleRouteJson(srj),
-    productionDrcEvaluator: noErrors,
-    relaxedDrcEvaluator: noErrors,
+    connMap,
+    productionDrcEvaluator:
+      createPipeline7AutoroutingDrcEvaluator(conversionOptions),
+    relaxedDrcEvaluator: createPipeline7RelaxedDrcEvaluator(conversionOptions),
     convert: (routes) =>
-      routes.map((route) => ({
-        type: "pcb_trace" as const,
-        pcb_trace_id: route.connectionName,
-        connection_name: route.connectionName,
-        route: route.vias.map((via) => ({
-          route_type: "via" as const,
-          x: via.x,
-          y: via.y,
-          from_layer: "top",
-          to_layer: "bottom",
-        })),
-      })),
+      convertPipeline7HdRoutesToSimplifiedPcbTraces({
+        ...conversionOptions,
+        hdRoutes: routes,
+      }),
   })
 
   solver.solve()

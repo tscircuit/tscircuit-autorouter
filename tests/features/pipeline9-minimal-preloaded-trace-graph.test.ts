@@ -80,6 +80,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     "highDensityStitchSolver",
     "globalDrcForceImproveSolver",
     "exactGeometryDrcForceImproveSolver",
+    "finalViaOptimizationSolver",
   ]) {
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)

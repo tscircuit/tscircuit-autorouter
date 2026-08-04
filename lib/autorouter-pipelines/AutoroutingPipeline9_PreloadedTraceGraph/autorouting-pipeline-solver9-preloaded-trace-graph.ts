@@ -65,12 +65,14 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { FinalViaOptimizationSolver } from "../../solvers/FinalViaOptimizationSolver/FinalViaOptimizationSolver"
 import { convertPreloadedTraceToHdRoutes } from "./convert-preloaded-traces-to-hd-routes"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7RelaxedDrcEvaluator } from "../AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator"
+import { createPipeline7AutoroutingDrcEvaluator } from "../AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -233,6 +235,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: PostProcessingSolver
+  finalViaOptimizationSolver?: FinalViaOptimizationSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -775,6 +778,41 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "finalViaOptimizationSolver",
+      FinalViaOptimizationSolver,
+      (cms) => {
+        const conversionOptions = {
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
+          connMap: cms.connMap,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+        }
+        return [
+          {
+            hdRoutes:
+              cms.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes,
+            originalSrj: cms.originalSrj,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            connMap: cms.connMap,
+            convert: (hdRoutes: HighDensityRoute[]) =>
+              convertPipeline7HdRoutesToSimplifiedPcbTraces({
+                ...conversionOptions,
+                hdRoutes,
+              }),
+            productionDrcEvaluator:
+              createPipeline7AutoroutingDrcEvaluator(conversionOptions),
+            relaxedDrcEvaluator:
+              createPipeline7RelaxedDrcEvaluator(conversionOptions),
+          },
+        ]
+      },
+    ),
   ]
 
   constructor(
@@ -862,7 +900,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    if (pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver")
+    if (
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
+      pipelineStepDef.solverName === "finalViaOptimizationSolver"
+    )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
@@ -1117,6 +1158,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.finalViaOptimizationSolver?.getOutput() ??
       this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??

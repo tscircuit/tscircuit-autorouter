@@ -1,10 +1,7 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import type { SimplifiedPcbTraces } from "lib/types"
+import { getDrcSnapshot } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-
-type DrcResult =
-  | Array<Record<string, unknown>>
-  | { errors: Array<Record<string, unknown>> }
 
 export type RouteQualitySnapshot = {
   productionDrcErrorCount: number
@@ -14,22 +11,10 @@ export type RouteQualitySnapshot = {
   totalTraceLength: number
 }
 
-const getErrors = (result: DrcResult): Array<Record<string, unknown>> =>
-  Array.isArray(result) ? result : result.errors
-
-const getIssueSeverity = (error: Record<string, unknown>): number => {
-  if (typeof error.severity === "number") return error.severity
-  if (error.severity === "error") return 3
-  if (error.severity === "warning") return 2
-  return 1
-}
-
 const getTraceLength = (traces: SimplifiedPcbTraces): number => {
   let length = 0
   for (const trace of traces) {
-    let previousWire:
-      | { x: number; y: number; layer: string }
-      | undefined
+    let previousWire: { x: number; y: number; layer: string } | undefined
     for (const segment of trace.route) {
       if (segment.route_type !== "wire") {
         previousWire = undefined
@@ -50,30 +35,33 @@ const getTraceLength = (traces: SimplifiedPcbTraces): number => {
 /** Creates the production-output quality tuple used for transactional acceptance. */
 export const createRouteQualitySnapshot = ({
   hdRoutes,
+  srj,
   convert,
   productionDrcEvaluator,
   relaxedDrcEvaluator,
 }: {
   hdRoutes: HighDensityRoute[]
+  srj: SimpleRouteJson
   convert: (routes: HighDensityRoute[]) => SimplifiedPcbTraces
   productionDrcEvaluator: DrcEvaluator
   relaxedDrcEvaluator: DrcEvaluator
 }): RouteQualitySnapshot => {
   const traces = convert(hdRoutes)
-  const productionErrors = getErrors(
-    productionDrcEvaluator({ traces: traces as any, routes: hdRoutes }) as DrcResult,
+  const productionSnapshot = getDrcSnapshot(
+    srj as any,
+    hdRoutes as any,
+    productionDrcEvaluator as any,
   )
-  const relaxedErrors = getErrors(
-    relaxedDrcEvaluator({ traces: traces as any, routes: hdRoutes }) as DrcResult,
+  const relaxedSnapshot = getDrcSnapshot(
+    srj as any,
+    hdRoutes as any,
+    relaxedDrcEvaluator as any,
   )
 
   return {
-    productionDrcErrorCount: productionErrors.length,
-    productionDrcIssueScore: productionErrors.reduce(
-      (score, error) => score + getIssueSeverity(error),
-      0,
-    ),
-    relaxedDrcErrorCount: relaxedErrors.length,
+    productionDrcErrorCount: productionSnapshot.count,
+    productionDrcIssueScore: productionSnapshot.issueScore,
+    relaxedDrcErrorCount: relaxedSnapshot.count,
     outputViaCount: traces.reduce(
       (count, trace) =>
         count +

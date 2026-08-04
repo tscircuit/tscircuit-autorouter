@@ -797,8 +797,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         }
         return [
           {
-            hdRoutes: cms.lengthMatchingPostProcessingSolver!.getOutput()
-              .hdRoutes,
+            hdRoutes:
+              cms.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes,
             originalSrj: cms.originalSrj,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,

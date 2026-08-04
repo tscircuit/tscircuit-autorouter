@@ -54,7 +54,9 @@ export const getProtectedConnectionNames = ({
       protectedNames.add(name)
     }
   }
-  for (const connectionName of getPowerTraceExpansionConnectionNames(originalSrj)) {
+  for (const connectionName of getPowerTraceExpansionConnectionNames(
+    originalSrj,
+  )) {
     for (const name of resolveFinalConnectionNames(
       connectionName,
       finalConnectionNames,
