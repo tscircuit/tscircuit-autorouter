@@ -276,6 +276,25 @@ const dedupeAdjacentPoints = (points: RoutePoint[]): RoutePoint[] => {
   return deduped
 }
 
+const materializeImpliedLayerTransitions = (
+  points: RoutePoint[],
+): RoutePoint[] => {
+  const materialized: RoutePoint[] = []
+  for (const point of points) {
+    const previousPoint = materialized.at(-1)
+    if (
+      previousPoint &&
+      previousPoint.z !== point.z &&
+      (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||
+        Math.abs(previousPoint.y - point.y) > POINT_EPSILON)
+    ) {
+      materialized.push({ ...point, z: previousPoint.z })
+    }
+    materialized.push(point)
+  }
+  return materialized
+}
+
 const orientReplacementPoints = (
   replacement: HighDensityRoute,
   section: FixedRouteSection,
@@ -326,7 +345,9 @@ export const spliceFixedRouteSection = (
 ): PreloadedHighDensityRoute => {
   const firstSourceRoute = section.sourceRoutes[0]!
   const lastSourceRoute = section.sourceRoutes.at(-1)!
-  const replacementPoints = orientReplacementPoints(replacement, section)
+  const replacementPoints = materializeImpliedLayerTransitions(
+    orientReplacementPoints(replacement, section),
+  )
   const route = dedupeAdjacentPoints([
     ...firstSourceRoute.route.slice(0, section.start.segmentIndex + 1),
     section.start.point,
