@@ -79,6 +79,7 @@ type TinyRegionMetadata = {
 }
 
 type TinyPortMetadata = {
+  serializedPortId?: string
   x?: number
   y?: number
   z?: number
@@ -1020,6 +1021,44 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           segments.map(([routeId]) => routeId),
         ),
       )
+      const ownerRouteIdsByPortId = new Map<number, Set<number>>()
+      for (const segments of currentTinySolver.state.regionSegments) {
+        for (const [routeId, fromPortId, toPortId] of segments) {
+          for (const portId of [fromPortId, toPortId]) {
+            const ownerRouteIds =
+              ownerRouteIdsByPortId.get(portId) ?? new Set<number>()
+            ownerRouteIds.add(routeId)
+            ownerRouteIdsByPortId.set(portId, ownerRouteIds)
+          }
+        }
+      }
+      const bottleneckBoundaryOccupancy =
+        currentTinySolver.topology.portMetadata?.flatMap(
+          (rawMetadata, portId) => {
+            const metadata = asTinyPortMetadata(rawMetadata)
+            if (
+              !metadata.serializedPortId?.startsWith("ce46263_") ||
+              metadata.z !== 0
+            ) {
+              return []
+            }
+            const ownerRouteIds = [...(ownerRouteIdsByPortId.get(portId) ?? [])]
+            return [
+              {
+                portId,
+                serializedPortId: metadata.serializedPortId,
+                x: metadata.x,
+                y: metadata.y,
+                assignedNetId:
+                  currentTinySolver.state.portAssignment[portId],
+                ownerRouteIds,
+                ownerConnections: ownerRouteIds.map((routeId) =>
+                  currentTinySolver.problem.routeMetadata?.[routeId],
+                ),
+              },
+            ]
+          },
+        ) ?? []
       const primitiveStats = Object.fromEntries(
         Object.entries(currentTinySolver.stats ?? {}).filter(
           ([, value]) =>
@@ -1090,6 +1129,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
               availableLaneCount !== undefined &&
               availableLaneCount < useCount,
           ) ?? [],
+        bottleneckBoundaryOccupancy,
         stats: primitiveStats,
       })}`
     }
