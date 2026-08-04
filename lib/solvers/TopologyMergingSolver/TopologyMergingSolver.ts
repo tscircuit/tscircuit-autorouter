@@ -15,6 +15,7 @@ import {
   getLayerTopologiesForCoveredNodes,
   mergeViaCompatibleFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
+  splitUndersizedAlignedFreeRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -86,7 +87,19 @@ export class TopologyMergingSolver extends BaseSolver {
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
       nodeGroups: this.inputProblem.nodeGroups,
     })
-    const compactedRegions = compactTopologyMergingRegions(topologyRegions)
+    const compactedAlignedRegions =
+      compactTopologyMergingRegions(topologyRegions)
+    const viaSizedRegions =
+      this.inputProblem.viaDiameter === undefined
+        ? compactedAlignedRegions
+        : splitUndersizedAlignedFreeRegions({
+            regions: compactedAlignedRegions,
+            minimumViaFootprint:
+              this.inputProblem.viaDiameter +
+              (this.inputProblem.viaFootprintMargin ?? 0),
+            preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          })
+    const compactedRegions = compactTopologyMergingRegions(viaSizedRegions)
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
@@ -201,24 +214,20 @@ export class TopologyMergingSolver extends BaseSolver {
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
       })
-      const cellIsViaSized =
-        this.inputProblem.viaDiameter !== undefined &&
-        Math.min(maxX - minX, maxY - minY) >=
-          this.inputProblem.viaDiameter +
-            (this.inputProblem.viaFootprintMargin ?? 0)
-      const layerTopologies = cellIsViaSized
-        ? mergeViaCompatibleFreeLayerTopologies({
-            layerTopologies: rawLayerTopologies,
-            canUseSourceAsFreeSpace: (sourceKey) => {
-              const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
-              return Boolean(
-                node &&
-                  !node._containsObstacle &&
-                  !node._isVirtualOffboard,
-              )
-            },
-          })
-        : rawLayerTopologies
+      const layerTopologies =
+        this.inputProblem.viaDiameter !== undefined
+          ? mergeViaCompatibleFreeLayerTopologies({
+              layerTopologies: rawLayerTopologies,
+              canUseSourceAsFreeSpace: (sourceKey) => {
+                const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
+                return Boolean(
+                  node &&
+                    !node._containsObstacle &&
+                    !node._isVirtualOffboard,
+                )
+              },
+            })
+          : rawLayerTopologies
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },
