@@ -1004,6 +1004,86 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
     this.progress = this.tinyPipelineSolver.progress
+    if (this.failed && currentTinySolver) {
+      const currentRouteId = currentTinySolver.state.currentRouteId
+      const committedRouteIds = new Set(
+        currentTinySolver.state.regionSegments.flatMap((segments) =>
+          segments.map(([routeId]) => routeId),
+        ),
+      )
+      const primitiveStats = Object.fromEntries(
+        Object.entries(currentTinySolver.stats ?? {}).filter(
+          ([, value]) =>
+            typeof value === "number" ||
+            typeof value === "string" ||
+            typeof value === "boolean",
+        ),
+      )
+      const blockerStats = currentTinySolver.stats as {
+        failedOwnerPairs?: unknown
+        lastDirectBlockerResources?: unknown
+      }
+      const routeCounters = currentTinySolver as unknown as {
+        routeAttemptCountByRouteId: Uint32Array
+        routeSuccessCountByRouteId: Uint32Array
+      }
+      const routeAttemptCounts = [...routeCounters.routeAttemptCountByRouteId]
+      const routeSuccessCounts = [...routeCounters.routeSuccessCountByRouteId]
+      this.error = `${this.error}\nPathing diagnostic: ${JSON.stringify({
+        routeCount: currentTinySolver.problem.routeCount,
+        iterations: currentTinySolver.iterations,
+        committedRouteCount: committedRouteIds.size,
+        pendingRouteCount: currentTinySolver.state.unroutedRoutes.length,
+        queuedCandidateCount: currentTinySolver.state.candidateQueue.length,
+        attemptedRouteCount: routeAttemptCounts.filter((count) => count > 0)
+          .length,
+        retriedRouteCount: routeAttemptCounts.filter((count) => count > 1)
+          .length,
+        totalRouteAttemptCount: routeAttemptCounts.reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+        maxRouteAttemptCount: Math.max(...routeAttemptCounts),
+        successfulRouteCount: routeSuccessCounts.filter((count) => count > 0)
+          .length,
+        pendingRoutes: currentTinySolver.state.unroutedRoutes
+          .slice(0, 50)
+          .map((routeId) => ({
+            routeId,
+            attempts: routeAttemptCounts[routeId],
+            successes: routeSuccessCounts[routeId],
+            metadata: currentTinySolver.problem.routeMetadata?.[routeId],
+          })),
+        retriedRoutes: routeAttemptCounts
+          .map((attempts, routeId) => ({
+            routeId,
+            attempts,
+            successes: routeSuccessCounts[routeId],
+          }))
+          .filter(({ attempts }) => attempts > 1)
+          .sort((left, right) => right.attempts - left.attempts)
+          .slice(0, 50),
+        currentRouteId,
+        currentRouteMetadata:
+          currentRouteId === undefined
+            ? undefined
+            : currentTinySolver.problem.routeMetadata?.[currentRouteId],
+        ripCount: currentTinySolver.state.ripCount,
+        neverSuccessfulRoutes: currentTinySolver
+          .getNeverSuccessfullyRoutedRoutes()
+          .slice(0, 25),
+        failedOwnerPairs: blockerStats.failedOwnerPairs,
+        lastDirectBlockerResources:
+          blockerStats.lastDirectBlockerResources,
+        duplicateCongestedPortCapacityLimited:
+          this.duplicateCongestedPortReport?.duplicatedPorts.filter(
+            ({ availableLaneCount, useCount }) =>
+              availableLaneCount !== undefined &&
+              availableLaneCount < useCount,
+          ) ?? [],
+        stats: primitiveStats,
+      })}`
+    }
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
