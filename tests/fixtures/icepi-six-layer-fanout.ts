@@ -20,6 +20,7 @@ type FanoutConnection = readonly [
 // coordinates, layers, port ids, pad sizes, and six-layer rules come from the
 // production board input; unrelated local nets only preserve its >180-route
 // scale boundary.
+// biome-ignore format: Keep each physical route on one line for fixture review.
 const ICEPI_FANOUT: readonly FanoutConnection[] = [
   ["source_trace_0", [16, 1.65, "top", "pcb_port_905"], [18.53, 13.82, "top", "pcb_port_1015"]],
   ["source_trace_1", [17.3, 4.9, "top", "pcb_port_938"], [19.33, 13.02, "top", "pcb_port_1020"]],
@@ -67,30 +68,29 @@ const createIcePiFanoutConnections = (): SimpleRouteConnection[] =>
   ICEPI_FANOUT.map(([name, start, end]) => ({
     name,
     source_trace_id: name,
-    width: 0.1,
     nominalTraceWidth: 0.1,
     pointsToConnect: [toRoutePoint(start), toRoutePoint(end)],
   }))
 
 const createIcePiPadObstacles = (
-  connections: SimpleRouteConnection[],
+  connections: readonly FanoutConnection[],
 ): Obstacle[] => {
   const padByPortId = new Map<
     string,
     {
-      point: SimpleRouteConnection["pointsToConnect"][number]
+      point: FanoutPoint
       connectionNames: string[]
     }
   >()
 
-  for (const connection of connections) {
-    for (const point of connection.pointsToConnect) {
-      const pcbPortId = point.pcb_port_id!
+  for (const [connectionName, start, end] of connections) {
+    for (const point of [start, end] as const) {
+      const pcbPortId = point[3]
       const pad = padByPortId.get(pcbPortId) ?? {
         point,
         connectionNames: [],
       }
-      pad.connectionNames.push(connection.name)
+      pad.connectionNames.push(connectionName)
       padByPortId.set(pcbPortId, pad)
     }
   }
@@ -98,12 +98,12 @@ const createIcePiPadObstacles = (
   return [...padByPortId].map(
     ([pcbPortId, { point, connectionNames }]) => ({
       type: "rect",
-      layers: [point.layer],
-      center: { x: point.x, y: point.y },
+      layers: [point[2]],
+      center: { x: point[0], y: point[1] },
       width:
-        point.layer === "bottom" ? 0.54 : point.y > 10 ? 0.36 : 0.24,
+        point[2] === "bottom" ? 0.54 : point[1] > 10 ? 0.36 : 0.24,
       height:
-        point.layer === "bottom" ? 0.64 : point.y > 10 ? 0.36 : 0.24,
+        point[2] === "bottom" ? 0.64 : point[1] > 10 ? 0.36 : 0.24,
       connectedTo: [pcbPortId, ...connectionNames],
     }),
   )
@@ -131,7 +131,6 @@ export const getIcePiSixLayerFanoutRepro = (): SimpleRouteJson => {
       const y = -27 + row * 0.55
       const connection: SimpleRouteConnection = {
         name: `local_board_net_${localConnectionIndex}`,
-        width: 0.1,
         nominalTraceWidth: 0.1,
         pointsToConnect: [
           { x, y, layer: "top" },
@@ -153,11 +152,7 @@ export const getIcePiSixLayerFanoutRepro = (): SimpleRouteJson => {
     minViaPadDiameter: 0.4,
     minTraceToPadEdgeClearance: 0.1,
     minViaEdgeToPadEdgeClearance: 0.1,
-    minViaHoleEdgeToViaHoleEdgeClearance: 0.1,
-    minPlatedHoleDrillEdgeToDrillEdgeClearance: 0.15,
-    minPadEdgeToPadEdgeClearance: 0.08,
-    minBoardEdgeClearance: 0.2,
-    obstacles: createIcePiPadObstacles(fanoutConnections),
+    obstacles: createIcePiPadObstacles(ICEPI_FANOUT),
     connections,
   }
 }

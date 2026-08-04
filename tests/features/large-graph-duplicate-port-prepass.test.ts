@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  getSvgFromGraphicsObject,
-  type GraphicsObject,
-} from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { getIcePiSixLayerFanoutRepro } from "../fixtures/icepi-six-layer-fanout"
 
@@ -17,13 +14,9 @@ const isInFanoutView = (point: { x: number; y: number }) =>
 const getFanoutVisualization = (graphics: GraphicsObject): GraphicsObject => ({
   coordinateSystem: graphics.coordinateSystem,
   title: graphics.title,
-  circles: graphics.circles?.filter((circle) =>
-    isInFanoutView(circle.center),
-  ),
+  circles: graphics.circles?.filter((circle) => isInFanoutView(circle.center)),
   points: graphics.points?.filter(isInFanoutView),
-  lines: graphics.lines?.filter((line) =>
-    line.points.some(isInFanoutView),
-  ),
+  lines: graphics.lines?.filter((line) => line.points.some(isInFanoutView)),
   rects: [
     ...(graphics.rects?.filter(
       (rect) =>
