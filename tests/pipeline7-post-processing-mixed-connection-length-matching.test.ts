@@ -12,11 +12,7 @@ const getRouteLength = (route: Array<{ x: number; y: number }>): number => {
 }
 
 test("Pipeline7 length matches the mixed-selector Core fixture", () => {
-  const createPad = (
-    x: number,
-    y: number,
-    connectedTo: string[] = [],
-  ) => ({
+  const createPad = (x: number, y: number, connectedTo: string[] = []) => ({
     type: "rect" as const,
     layers: ["top"],
     center: { x, y },
