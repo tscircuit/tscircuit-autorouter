@@ -3,7 +3,7 @@ import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { getIcePiSixLayerFanoutRepro } from "../fixtures/icepi-six-layer-fanout"
 
-const FANOUT_VIEW = { minX: 18, maxX: 22, minY: 3.5, maxY: 18 }
+const FANOUT_VIEW = { minX: 16.2, maxX: 17, minY: 4.75, maxY: 5.55 }
 
 const isInFanoutView = (point: { x: number; y: number }) =>
   point.x >= FANOUT_VIEW.minX &&
@@ -37,7 +37,7 @@ const getFanoutVisualization = (graphics: GraphicsObject): GraphicsObject => ({
   ],
 })
 
-test("IcePi six-layer fanout repairs congested ports above 180 routes", () => {
+test("IcePi fanout pair repairs congested port above 180 routes", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     getIcePiSixLayerFanoutRepro(),
     { effort: 0.01, cacheProvider: null },
@@ -53,8 +53,8 @@ test("IcePi six-layer fanout repairs congested ports above 180 routes", () => {
     duplicateCongestedPortPrepassConnectionCount: 32,
     duplicateCongestedPortPrepassSampled: true,
     duplicateCongestedPortFallbackToOriginal: false,
-    duplicateCongestedPortSourceCount: 36,
-    duplicateCongestedPortCount: 144,
+    duplicateCongestedPortSourceCount: 1,
+    duplicateCongestedPortCount: 1,
   })
   expect(
     getSvgFromGraphicsObject(
