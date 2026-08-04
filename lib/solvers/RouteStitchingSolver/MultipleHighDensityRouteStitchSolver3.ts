@@ -8,6 +8,10 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
+import {
+  createRouteStitchClearanceValidator,
+  type IsStitchSegmentClear,
+} from "./create-route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
@@ -42,6 +46,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
   private endpointIndex = new EndpointClusterIndex()
+  private isStitchSegmentClear: IsStitchSegmentClear
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -59,6 +64,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isStitchSegmentClear: this.isStitchSegmentClear,
+      requireClearStitches: true,
     })
 
     while (
@@ -147,6 +154,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+    this.isStitchSegmentClear = createRouteStitchClearanceValidator({
+      hdRoutes: canonicalHdRoutes,
+    })
 
     const firstRoute = canonicalHdRoutes[0]
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
@@ -422,6 +432,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isStitchSegmentClear: this.isStitchSegmentClear,
     })
   }
 
