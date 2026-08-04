@@ -9,11 +9,11 @@ import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
-import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import { loadScenarioBySampleNumber } from "../scripts/benchmark/scenarios"
 import {
   getGraphicsSvgFrames,
   type GraphicsSvgFrame,
-} from "../fixtures/solver-svg-frames"
+} from "./fixtures/solver-svg-frames"
 
 test("shows dataset 18 sample 10's remaining exact DRC errors", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
@@ -62,12 +62,11 @@ test("shows dataset 18 sample 10's remaining exact DRC errors", async () => {
   })
   const inputDrc = evaluateBenchmarkDrc(inputRoutes)
   viewer.outputHdRoutes = inputRoutes
-  const inputGraphics = viewer.visualize()
   const frames: GraphicsSvgFrame[] = [
     {
       name: `Exact DRC input: ${inputDrc.errors.length} benchmark errors`,
       step: 0,
-      graphics: inputGraphics,
+      graphics: viewer.visualize(),
     },
   ]
 
