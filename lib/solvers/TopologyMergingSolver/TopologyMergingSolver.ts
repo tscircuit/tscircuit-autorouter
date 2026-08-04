@@ -13,6 +13,7 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
+  mergeViaCompatibleFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
@@ -194,11 +195,28 @@ export class TopologyMergingSolver extends BaseSolver {
       )
       if (coveringNodes.length === 0) continue
 
-      const layerTopologies = getLayerTopologiesForCoveredNodes({
+      const rawLayerTopologies = getLayerTopologiesForCoveredNodes({
         coveringNodes,
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
       })
+      const cellIsViaSized =
+        this.inputProblem.viaDiameter !== undefined &&
+        Math.min(maxX - minX, maxY - minY) >=
+          this.inputProblem.viaDiameter
+      const layerTopologies = cellIsViaSized
+        ? mergeViaCompatibleFreeLayerTopologies({
+            layerTopologies: rawLayerTopologies,
+            canUseSourceAsFreeSpace: (sourceKey) => {
+              const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
+              return Boolean(
+                node &&
+                  !node._containsObstacle &&
+                  !node._isVirtualOffboard,
+              )
+            },
+          })
+        : rawLayerTopologies
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },
