@@ -129,7 +129,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       )
     }
 
+    // Borrowed sibling routes can carry terminals that are internal to this
+    // same-root path. Validate only pieces of the requested connection.
     const taggedPcbPortIds = canonicalHdRoutes
+      .filter((route) => route.connectionName === opts.connectionName)
       .flatMap((route) => [route.startPcbPortId, route.endPcbPortId])
       .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
 
@@ -368,6 +371,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = hdRouteToMerge.route
     } else {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
+    }
+
+    const stitchPoint = pointsToAdd[0]
+    if (stitchPoint && lastMergedPoint.z !== stitchPoint.z) {
+      this.mergedHdRoute.route.push({
+        x: stitchPoint.x,
+        y: stitchPoint.y,
+        z: lastMergedPoint.z,
+      })
+      this.mergedHdRoute.vias.push({ x: stitchPoint.x, y: stitchPoint.y })
     }
 
     if (
