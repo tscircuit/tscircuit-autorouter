@@ -6,11 +6,9 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 type PointPair = NonNullable<NodeWithPortPoints["portPointsInPairs"]>[number]
 
 type Crossing = {
-  nodeId: string
-  firstConnection: string
-  secondConnection: string
-  firstPortIds: [string | undefined, string | undefined]
-  secondPortIds: [string | undefined, string | undefined]
+  node: NodeWithPortPoints
+  first: PointPair
+  second: PointPair
 }
 
 const crossProduct = (
@@ -58,11 +56,9 @@ const findDifferentNetSingleLayerCrossings = (
         if (!segmentsCrossStrictly(first, second)) continue
 
         crossings.push({
-          nodeId: node.capacityMeshNodeId,
-          firstConnection: first[0].connectionName,
-          secondConnection: second[0].connectionName,
-          firstPortIds: [first[0].portPointId, first[1].portPointId],
-          secondPortIds: [second[0].portPointId, second[1].portPointId],
+          node,
+          first,
+          second,
         })
       }
     }
@@ -71,8 +67,40 @@ const findDifferentNetSingleLayerCrossings = (
   return crossings
 }
 
+const summarizePoint = (
+  point: PointPair[number],
+  node: NodeWithPortPoints,
+) => {
+  const bounds = {
+    minX: node.center.x - node.width / 2,
+    maxX: node.center.x + node.width / 2,
+    minY: node.center.y - node.height / 2,
+    maxY: node.center.y + node.height / 2,
+  }
+
+  return {
+    portPointId: point.portPointId,
+    connectionName: point.connectionName,
+    rootConnectionName: point.rootConnectionName,
+    x: point.x,
+    y: point.y,
+    z: point.z,
+    distanceToNodeBoundary: Math.min(
+      Math.abs(point.x - bounds.minX),
+      Math.abs(point.x - bounds.maxX),
+      Math.abs(point.y - bounds.minY),
+      Math.abs(point.y - bounds.maxY),
+    ),
+    insideNodeBounds:
+      point.x >= bounds.minX &&
+      point.x <= bounds.maxX &&
+      point.y >= bounds.minY &&
+      point.y <= bounds.maxY,
+  }
+}
+
 test(
-  "srj24 sample 4 keeps single-layer boundary ordering through uniform distribution",
+  "srj24 sample 4 pathing does not cross different nets in a single-layer node",
   async (): Promise<void> => {
     const { scenario } = await loadScenarioBySampleNumber("srj24", 4, 1)
     const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
@@ -83,39 +111,39 @@ test(
     solver.solveUntilPhase("uniformPortDistributionSolver")
     expect(solver.failed).toBe(false)
 
-    const beforeUniform =
+    const pathingOutput =
       solver.portPointPathingSolver!.getOutput().nodesWithPortPoints
-    const beforeCrossings =
-      findDifferentNetSingleLayerCrossings(beforeUniform)
-
-    solver.solveUntilPhase("highDensityRouteSolver")
-    expect(solver.failed).toBe(false)
-
-    const afterUniform = solver.uniformPortDistributionSolver!.getOutput()
-    const afterCrossings = findDifferentNetSingleLayerCrossings(afterUniform)
-    const affectedNodeIds = new Set(
-      [...beforeCrossings, ...afterCrossings].map(({ nodeId }) => nodeId),
-    )
+    const crossings = findDifferentNetSingleLayerCrossings(pathingOutput)
+    const firstCrossing = crossings[0]
 
     console.log(
-      "srj24 sample 4 boundary-order handoff",
+      "srj24 sample 4 single-layer crossing",
       JSON.stringify(
-        {
-          beforeUniform: beforeCrossings,
-          afterUniform: afterCrossings,
-          affectedNodesBeforeUniform: beforeUniform.filter((node) =>
-            affectedNodeIds.has(node.capacityMeshNodeId),
-          ),
-          affectedNodesAfterUniform: afterUniform.filter((node) =>
-            affectedNodeIds.has(node.capacityMeshNodeId),
-          ),
-        },
+        firstCrossing
+          ? {
+              crossingCount: crossings.length,
+              node: {
+                capacityMeshNodeId:
+                  firstCrossing.node.capacityMeshNodeId,
+                center: firstCrossing.node.center,
+                width: firstCrossing.node.width,
+                height: firstCrossing.node.height,
+                availableZ: firstCrossing.node.availableZ,
+              },
+              firstPair: firstCrossing.first.map((point) =>
+                summarizePoint(point, firstCrossing.node),
+              ),
+              secondPair: firstCrossing.second.map((point) =>
+                summarizePoint(point, firstCrossing.node),
+              ),
+            }
+          : { crossingCount: 0 },
         null,
         2,
       ),
     )
 
-    expect(afterCrossings).toEqual([])
+    expect(crossings.length).toBe(0)
   },
   { timeout: 600_000 },
 )
