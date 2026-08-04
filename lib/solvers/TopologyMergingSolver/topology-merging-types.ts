@@ -14,6 +14,7 @@ export interface TopologyMergingSolverParams {
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
   viaDiameter?: number
+  viaFootprintMargin?: number
 }
 
 export type PreparedTopologyMergingNode = {

@@ -204,7 +204,8 @@ export class TopologyMergingSolver extends BaseSolver {
       const cellIsViaSized =
         this.inputProblem.viaDiameter !== undefined &&
         Math.min(maxX - minX, maxY - minY) >=
-          this.inputProblem.viaDiameter
+          this.inputProblem.viaDiameter +
+            (this.inputProblem.viaFootprintMargin ?? 0)
       const layerTopologies = cellIsViaSized
         ? mergeViaCompatibleFreeLayerTopologies({
             layerTopologies: rawLayerTopologies,

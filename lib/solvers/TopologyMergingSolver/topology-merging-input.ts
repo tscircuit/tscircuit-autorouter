@@ -62,6 +62,15 @@ function validateTopologyMergingInput(
   ) {
     throw new Error("TopologyMergingSolver: viaDiameter must be positive")
   }
+  if (
+    inputProblem.viaFootprintMargin !== undefined &&
+    (!Number.isFinite(inputProblem.viaFootprintMargin) ||
+      inputProblem.viaFootprintMargin < 0)
+  ) {
+    throw new Error(
+      "TopologyMergingSolver: viaFootprintMargin must be non-negative",
+    )
+  }
   if (inputProblem.nodeGroups.length === 0) {
     throw new Error(
       "TopologyMergingSolver: at least one node group is required",
