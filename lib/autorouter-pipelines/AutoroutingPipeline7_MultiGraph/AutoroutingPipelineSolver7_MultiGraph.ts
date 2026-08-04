@@ -65,11 +65,13 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { FinalViaOptimizationSolver } from "../../solvers/FinalViaOptimizationSolver/FinalViaOptimizationSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { DifferentialPairPostProcessingSolver } from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -231,6 +233,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
+  finalViaOptimizationSolver?: FinalViaOptimizationSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -779,6 +782,41 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "finalViaOptimizationSolver",
+      FinalViaOptimizationSolver,
+      (cms) => {
+        const conversionOptions = {
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
+          connMap: cms.connMap,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+        }
+        return [
+          {
+            hdRoutes: cms.lengthMatchingPostProcessingSolver!.getOutput()
+              .hdRoutes,
+            originalSrj: cms.originalSrj,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            connMap: cms.connMap,
+            convert: (hdRoutes: HighDensityRoute[]) =>
+              convertPipeline7HdRoutesToSimplifiedPcbTraces({
+                ...conversionOptions,
+                hdRoutes,
+              }),
+            productionDrcEvaluator:
+              createPipeline7AutoroutingDrcEvaluator(conversionOptions),
+            relaxedDrcEvaluator:
+              createPipeline7RelaxedDrcEvaluator(conversionOptions),
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "powerTraceExpansionSolver",
       PowerTraceExpansionSolver,
       (cms) => {
@@ -889,6 +927,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
+      pipelineStepDef.solverName === "finalViaOptimizationSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
     )
       this.MAX_ITERATIONS = Math.max(
@@ -1145,6 +1184,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     return (
+      this.finalViaOptimizationSolver?.getOutput() ??
       this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
