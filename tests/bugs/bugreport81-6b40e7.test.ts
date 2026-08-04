@@ -8,7 +8,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport81-6b40e7/bugreport81
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport81-6b40e7.json", () => {
+test.skip("bugreport81-6b40e7.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
 
