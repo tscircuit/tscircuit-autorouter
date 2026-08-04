@@ -1,7 +1,7 @@
 import {
   LengthMatchingSolver,
   PostProcessingSolver,
-  type PostProcessingError,
+  type PostProcessingSolverOutput,
   type PostProcessingSolverParams,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
@@ -11,30 +11,14 @@ type DifferentialPairPostProcessingSolverParams = PostProcessingSolverParams & {
   obstacleMargin?: number
 }
 
-export type AutoroutingError = {
-  type: "post_processing_error"
-  stage: "length-matching" | "coupled-rerouting"
-  postProcessingStage?: string
-  message: string
-  connectionName?: string
-  returnedRouteSource: "post-processing-input" | "length-matched"
-}
-
-export type DifferentialPairPostProcessingSolverOutput = {
-  hdRoutes: PostProcessingSolverParams["hdRoutes"]
-  autoroutingErrors: AutoroutingError[]
-}
-
 /** Applies the post-processing algorithm implied by each pair's constraints. */
 export class DifferentialPairPostProcessingSolver extends BaseSolver {
   readonly lengthMatchingSolver?: LengthMatchingSolver
   postProcessingSolver?: PostProcessingSolver
   private readonly lengthOnlyPairs: PostProcessingSolverParams["differentialPairs"]
   private readonly coupledPairs: PostProcessingSolverParams["differentialPairs"]
-  private phase: "length-matching" | "coupled-rerouting" | "complete" =
-    "complete"
+  private phase: "length-matching" | "coupled-rerouting" | "complete"
   private outputHdRoutes?: PostProcessingSolverParams["hdRoutes"]
-  private readonly autoroutingErrors: AutoroutingError[] = []
 
   constructor(
     public readonly inputProblem: DifferentialPairPostProcessingSolverParams,
@@ -76,31 +60,25 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
           }
         }),
       )
-      try {
-        this.lengthMatchingSolver = new LengthMatchingSolver({
-          hdRoutes: inputProblem.hdRoutes,
-          originalConnections,
-          differentialPairs: this.lengthOnlyPairs,
-          obstacles: inputProblem.obstacles,
-          bounds: inputProblem.bounds,
-          layerCount: inputProblem.layerCount,
-          obstacleMargin: inputProblem.obstacleMargin,
-        })
-      } catch (error) {
-        this.finishWithErrorOutput(
-          error,
-          "length-matching",
-          inputProblem.hdRoutes,
-          "post-processing-input",
-        )
-        return
-      }
+      this.lengthMatchingSolver = new LengthMatchingSolver({
+        hdRoutes: inputProblem.hdRoutes,
+        originalConnections,
+        differentialPairs: this.lengthOnlyPairs,
+        obstacles: inputProblem.obstacles,
+        bounds: inputProblem.bounds,
+        layerCount: inputProblem.layerCount,
+        obstacleMargin: inputProblem.obstacleMargin,
+      })
       this.phase = "length-matching"
       this.MAX_ITERATIONS = this.lengthMatchingSolver.MAX_ITERATIONS + 2
       return
     }
+    this.postProcessingSolver = new PostProcessingSolver({
+      ...inputProblem,
+      differentialPairs: this.coupledPairs,
+    })
     this.phase = "coupled-rerouting"
-    this.startPostProcessing(inputProblem.hdRoutes, "post-processing-input")
+    this.MAX_ITERATIONS = this.postProcessingSolver.MAX_ITERATIONS + 1
   }
 
   override getSolverName(): string {
@@ -109,31 +87,11 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
 
   override _step(): void {
     if (this.phase === "length-matching") {
-      try {
-        this.lengthMatchingSolver!.step()
-      } catch (error) {
-        this.finishWithErrorOutput(
-          error,
-          "length-matching",
-          this.inputProblem.hdRoutes,
-          "post-processing-input",
-        )
-        return
-      }
+      this.lengthMatchingSolver!.step()
       this.progress = this.lengthMatchingSolver!.progress
       this.stats = {
         phase: "length-matching",
         ...this.lengthMatchingSolver!.stats,
-      }
-      if (this.lengthMatchingSolver!.failed) {
-        this.finishWithErrorOutput(
-          this.lengthMatchingSolver!.error ??
-            "LengthMatchingSolver failed without an error message",
-          "length-matching",
-          this.inputProblem.hdRoutes,
-          "post-processing-input",
-        )
-        return
       }
       if (!this.lengthMatchingSolver!.solved) return
       const matchedHdRoutes =
@@ -145,117 +103,29 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
         this.progress = 1
         return
       }
+      this.postProcessingSolver = new PostProcessingSolver({
+        ...this.inputProblem,
+        hdRoutes: matchedHdRoutes,
+        differentialPairs: this.coupledPairs,
+      })
+      this.MAX_ITERATIONS += this.postProcessingSolver.MAX_ITERATIONS + 1
       this.phase = "coupled-rerouting"
-      this.startPostProcessing(matchedHdRoutes, "length-matched")
       return
     }
 
     if (this.phase === "coupled-rerouting") {
-      try {
-        this.postProcessingSolver!.step()
-      } catch (error) {
-        this.finishWithErrorOutput(
-          error,
-          "coupled-rerouting",
-          this.postProcessingSolver!.inputProblem.hdRoutes,
-          this.lengthOnlyPairs.length > 0
-            ? "length-matched"
-            : "post-processing-input",
-        )
-        return
-      }
+      this.postProcessingSolver!.step()
       this.progress = this.postProcessingSolver!.progress
       this.stats = {
         phase: "coupled-rerouting",
         ...this.postProcessingSolver!.stats,
       }
-      if (this.postProcessingSolver!.failed) {
-        this.finishWithErrorOutput(
-          this.postProcessingSolver!.error ??
-            "PostProcessingSolver failed without an error message",
-          "coupled-rerouting",
-          this.postProcessingSolver!.inputProblem.hdRoutes,
-          this.lengthOnlyPairs.length > 0
-            ? "length-matched"
-            : "post-processing-input",
-        )
-        return
-      }
       if (!this.postProcessingSolver!.solved) return
-      const output = this.postProcessingSolver!.getOutput()
-      this.outputHdRoutes = output.hdRoutes
-      this.recordPostProcessingErrors(
-        output.postProcessingErrors,
-        this.lengthOnlyPairs.length > 0
-          ? "length-matched"
-          : "post-processing-input",
-      )
+      this.outputHdRoutes = this.postProcessingSolver!.getOutput().hdRoutes
       this.phase = "complete"
       this.solved = true
       this.progress = 1
     }
-  }
-
-  private startPostProcessing(
-    hdRoutes: PostProcessingSolverParams["hdRoutes"],
-    returnedRouteSource: AutoroutingError["returnedRouteSource"],
-  ): void {
-    try {
-      this.postProcessingSolver = new PostProcessingSolver({
-        ...this.inputProblem,
-        hdRoutes,
-        differentialPairs: this.coupledPairs,
-      })
-      this.MAX_ITERATIONS += this.postProcessingSolver.MAX_ITERATIONS + 1
-    } catch (error) {
-      this.finishWithErrorOutput(
-        error,
-        "coupled-rerouting",
-        hdRoutes,
-        returnedRouteSource,
-      )
-    }
-  }
-
-  private recordPostProcessingErrors(
-    errors: PostProcessingError[],
-    returnedRouteSource: AutoroutingError["returnedRouteSource"],
-  ): void {
-    for (const error of errors)
-      this.autoroutingErrors.push({
-        type: error.type,
-        stage: "coupled-rerouting",
-        postProcessingStage: error.stage,
-        message: error.message,
-        ...(error.connectionName
-          ? { connectionName: error.connectionName }
-          : {}),
-        returnedRouteSource,
-      })
-  }
-
-  private finishWithErrorOutput(
-    error: unknown,
-    stage: AutoroutingError["stage"],
-    hdRoutes: PostProcessingSolverParams["hdRoutes"],
-    returnedRouteSource: AutoroutingError["returnedRouteSource"],
-  ): void {
-    const message = error instanceof Error ? error.message : String(error)
-    const connectionName = message.match(
-      /(?:HD route|connection) "([^"]+)"/,
-    )?.[1]
-    this.autoroutingErrors.push({
-      type: "post_processing_error",
-      stage,
-      message,
-      ...(connectionName ? { connectionName } : {}),
-      returnedRouteSource,
-    })
-    this.outputHdRoutes = structuredClone(hdRoutes)
-    this.phase = "complete"
-    this.stats = { phase: "complete", autoroutingErrorCount: 1 }
-    this.progress = 1
-    this.solved = true
   }
 
   override getConstructorParams(): [
@@ -264,15 +134,12 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
     return [this.inputProblem]
   }
 
-  getOutput(): DifferentialPairPostProcessingSolverOutput {
+  getOutput(): PostProcessingSolverOutput {
     if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "DifferentialPairPostProcessingSolver: getOutput() called before completion",
       )
-    return {
-      hdRoutes: structuredClone(this.outputHdRoutes),
-      autoroutingErrors: structuredClone(this.autoroutingErrors),
-    }
+    return { hdRoutes: structuredClone(this.outputHdRoutes) }
   }
 
   override visualize(): GraphicsObject {
@@ -280,7 +147,7 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
       return this.lengthMatchingSolver!.visualize()
     return (
       this.postProcessingSolver?.visualize() ??
-      this.lengthMatchingSolver?.visualize() ?? { lines: [] }
+      this.lengthMatchingSolver!.visualize()
     )
   }
 }

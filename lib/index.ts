@@ -19,11 +19,9 @@ export {
   AutoroutingPipelineSolver6_PolyHypergraph,
 } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
 export {
-  type AutoroutingPipelineOutput,
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
 } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-export type { AutoroutingError } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
 export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"

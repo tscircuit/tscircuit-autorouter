@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import bugReport from "../../fixtures/bug-reports/bugreport82-0e99ec/bugreport82-0e99ec.json" with {
   type: "json",
 }
@@ -9,30 +10,18 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport82-0e99ec.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  let routingError: unknown
 
-  const output = solver.getOutputSimpleRouteJson()
-  const postProcessingOutput =
-    solver.lengthMatchingPostProcessingSolver!.getOutput()
-  const returnedFallbackRoute = postProcessingOutput.hdRoutes.find(
-    (route) => route.connectionName === "source_net_8_mst3",
+  try {
+    solver.solve()
+  } catch (error) {
+    routingError = error
+  }
+
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
   )
-  const prePostProcessingRoute = solver
-    .exactGeometryDrcForceImproveSolver!.getOutput()
-    .find((route) => route.connectionName === "source_net_8_mst3")
-
-  expect(solver.solved).toBe(true)
+  expect(routingError).toBeUndefined()
   expect(solver.failed).toBe(false)
-  expect(returnedFallbackRoute).toEqual(prePostProcessingRoute)
-  expect(output.autoroutingErrors).toEqual([
-    {
-      type: "post_processing_error",
-      stage: "coupled-rerouting",
-      postProcessingStage: "validation",
-      message:
-        'PostProcessingSolver: HD route "source_net_8_mst3" must have exactly one via for each layer transition',
-      connectionName: "source_net_8_mst3",
-      returnedRouteSource: "post-processing-input",
-    },
-  ])
+  expect(solver.solved).toBe(true)
 })

@@ -70,10 +70,7 @@ import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
-import {
-  type AutoroutingError,
-  DifferentialPairPostProcessingSolver,
-} from "./differential-pair-post-processing-solver"
+import { DifferentialPairPostProcessingSolver } from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
@@ -89,10 +86,6 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
-
-export type AutoroutingPipelineOutput = SimpleRouteJson & {
-  autoroutingErrors: AutoroutingError[]
-}
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
@@ -1185,13 +1178,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     })
   }
 
-  getOutputSimpleRouteJson(): AutoroutingPipelineOutput {
+  getOutputSimpleRouteJson(): SimpleRouteJson {
     return {
       ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
-      autoroutingErrors:
-        this.lengthMatchingPostProcessingSolver?.getOutput()
-          .autoroutingErrors ?? [],
     }
   }
 }
