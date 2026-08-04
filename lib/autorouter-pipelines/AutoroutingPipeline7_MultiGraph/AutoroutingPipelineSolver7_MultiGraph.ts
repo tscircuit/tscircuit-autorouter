@@ -477,6 +477,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            minTraceWidth: cms.minTraceWidth,
+            traceClearance: cms.srj.defaultObstacleMargin ?? 0.15,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
