@@ -21,9 +21,7 @@ test("bugreport82-0e99ec.json", () => {
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-  expect(routingError).toBeInstanceOf(Error)
-  expect((routingError as Error).message).toBe(
-    'PostProcessingSolver: HD route "source_net_8_mst3" must have exactly one via for each layer transition',
-  )
-  expect(solver.failed).toBe(true)
+  expect(routingError).toBeUndefined()
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
 })
