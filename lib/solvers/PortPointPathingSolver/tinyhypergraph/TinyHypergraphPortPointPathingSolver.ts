@@ -917,6 +917,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         serializedGraph,
         {
           duplicatePortProximity: 0.05,
+          ...(params.minTraceWidth !== undefined
+            ? {
+                minimumDuplicatePortSpacing:
+                  params.minTraceWidth + (params.traceClearance ?? 0),
+                duplicatePortWidth: params.minTraceWidth,
+              }
+            : {}),
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: true,

@@ -23,6 +23,8 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  minTraceWidth?: number
+  traceClearance?: number
 }
 
 /**
@@ -132,6 +134,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
+      minimumPortSpacing:
+        this.input.minTraceWidth === undefined
+          ? undefined
+          : this.input.minTraceWidth + (this.input.traceClearance ?? 0),
+      minimumEdgeInset:
+        this.input.minTraceWidth === undefined
+          ? undefined
+          : this.input.minTraceWidth / 2,
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)

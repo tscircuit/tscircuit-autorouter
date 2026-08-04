@@ -477,6 +477,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            minTraceWidth: cms.minTraceWidth,
+            traceClearance: 0.1,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -517,6 +519,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          traceClearance: 0.1,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
