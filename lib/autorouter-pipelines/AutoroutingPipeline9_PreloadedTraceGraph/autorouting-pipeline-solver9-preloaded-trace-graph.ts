@@ -352,7 +352,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             layerCount: cms.srj.layerCount,
             viaDiameter: cms.viaDiameter,
-            viaFootprintMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             nodeGroups: [
               {
                 groupId: "global",
