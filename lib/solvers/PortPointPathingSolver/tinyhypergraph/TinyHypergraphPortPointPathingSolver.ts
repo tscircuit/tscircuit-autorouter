@@ -1234,9 +1234,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         blockerStats.lastDirectBlockerRegionSegments ?? []
       const blockerPortSegments =
         blockerStats.lastDirectBlockerPortSegments ?? []
+      const currentRouteId = currentTinySolver.state.currentRouteId
       const relevantRouteIds = new Set<number>()
       if (blockerStats.lastFailedRouteId !== undefined) {
         relevantRouteIds.add(blockerStats.lastFailedRouteId)
+      }
+      if (currentRouteId !== undefined) {
+        relevantRouteIds.add(currentRouteId)
       }
       for (const resource of resources) {
         for (const ownerRouteId of resource.owners) {
@@ -1247,6 +1251,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.error = `${this.error}\nFinal blocker neighborhood diagnostic: ${JSON.stringify(
         {
           lastFailedRouteId: blockerStats.lastFailedRouteId,
+          solverState: {
+            iterations: currentTinySolver.iterations,
+            maxIterations: currentTinySolver.MAX_ITERATIONS,
+            ripCount: currentTinySolver.state.ripCount,
+            currentRouteId,
+            currentRouteNetId: currentTinySolver.state.currentRouteNetId,
+            unroutedRouteCount:
+              currentTinySolver.state.unroutedRoutes.length +
+              (currentRouteId === undefined ? 0 : 1),
+            nextUnroutedRouteIds:
+              currentTinySolver.state.unroutedRoutes.slice(0, 20),
+            neverSuccessfullyRoutedRoutes:
+              currentTinySolver.getNeverSuccessfullyRoutedRoutes(),
+            staticallyUnroutableRoutes:
+              currentTinySolver.getStaticallyUnroutableRoutes(),
+          },
           resources,
           relevantRoutes: [...relevantRouteIds].map((routeId) => ({
             routeId,
