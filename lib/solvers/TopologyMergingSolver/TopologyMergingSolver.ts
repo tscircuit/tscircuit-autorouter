@@ -13,6 +13,7 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
+  getViaCapableAlignedFreeArea,
   mergeViaCompatibleFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
   splitUndersizedAlignedFreeRegions,
@@ -87,16 +88,37 @@ export class TopologyMergingSolver extends BaseSolver {
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
       nodeGroups: this.inputProblem.nodeGroups,
     })
-    const compactedAlignedRegions =
-      compactTopologyMergingRegions(topologyRegions)
-    const viaSizedRegions =
+    const minimumViaFootprint =
       this.inputProblem.viaDiameter === undefined
+        ? undefined
+        : this.inputProblem.viaDiameter +
+          (this.inputProblem.viaFootprintMargin ?? 0)
+    const horizontalFirstRegions = compactTopologyMergingRegions(
+      topologyRegions,
+      "horizontal",
+    )
+    const verticalFirstRegions = compactTopologyMergingRegions(
+      topologyRegions,
+      "vertical",
+    )
+    const compactedAlignedRegions =
+      minimumViaFootprint !== undefined &&
+      getViaCapableAlignedFreeArea({
+        regions: verticalFirstRegions,
+        minimumViaFootprint,
+      }) >
+        getViaCapableAlignedFreeArea({
+          regions: horizontalFirstRegions,
+          minimumViaFootprint,
+        })
+        ? verticalFirstRegions
+        : horizontalFirstRegions
+    const viaSizedRegions =
+      minimumViaFootprint === undefined
         ? compactedAlignedRegions
         : splitUndersizedAlignedFreeRegions({
             regions: compactedAlignedRegions,
-            minimumViaFootprint:
-              this.inputProblem.viaDiameter +
-              (this.inputProblem.viaFootprintMargin ?? 0),
+            minimumViaFootprint,
             preparedNodeBySourceKey: this.preparedNodeBySourceKey,
           })
     const compactedRegions = compactTopologyMergingRegions(viaSizedRegions)

@@ -11,6 +11,13 @@ import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
 const ALIGNED_FREE_TOPOLOGY_MODE = "aligned-free"
 
+const getAlignedFreeTopologySignature = (availableZ: number[]) =>
+  JSON.stringify({ mode: ALIGNED_FREE_TOPOLOGY_MODE, availableZ })
+
+const isAlignedFreeRegion = (region: TopologyMergingRegion) =>
+  region.topologySignature ===
+  getAlignedFreeTopologySignature(region.availableZ)
+
 export function getCanonicalCoordinates(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
   const coordinates: number[] = []
@@ -184,10 +191,7 @@ export function mergeViaCompatibleFreeLayerTopologies({
       availableZ,
       sourceKeys,
       topologyMode,
-      topologySignature: JSON.stringify({
-        mode: ALIGNED_FREE_TOPOLOGY_MODE,
-        availableZ,
-      }),
+      topologySignature: getAlignedFreeTopologySignature(availableZ),
     } satisfies TopologyMergingLayerTopology
   })
 
@@ -206,16 +210,10 @@ export function splitUndersizedAlignedFreeRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   return regions.flatMap((region) => {
-    const isAlignedFreeRegion =
-      region.topologySignature ===
-      JSON.stringify({
-        mode: ALIGNED_FREE_TOPOLOGY_MODE,
-        availableZ: region.availableZ,
-      })
     const width = region.bounds.maxX - region.bounds.minX
     const height = region.bounds.maxY - region.bounds.minY
     if (
-      !isAlignedFreeRegion ||
+      !isAlignedFreeRegion(region) ||
       Math.min(width, height) >= minimumViaFootprint
     ) {
       return [region]
@@ -240,6 +238,23 @@ export function splitUndersizedAlignedFreeRegions({
       } satisfies TopologyMergingRegion
     })
   })
+}
+
+export function getViaCapableAlignedFreeArea({
+  regions,
+  minimumViaFootprint,
+}: {
+  regions: TopologyMergingRegion[]
+  minimumViaFootprint: number
+}): number {
+  return regions.reduce((area, region) => {
+    if (!isAlignedFreeRegion(region)) return area
+    const width = region.bounds.maxX - region.bounds.minX
+    const height = region.bounds.maxY - region.bounds.minY
+    return Math.min(width, height) >= minimumViaFootprint
+      ? area + width * height
+      : area
+  }, 0)
 }
 
 export function restoreAuthoritativeTargetRegions({
