@@ -9,7 +9,8 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport80-75ab58.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
-  expect(() => solver.solve()).toThrow(
-    'LengthMatchingSolver: no same-layer straight segment can tune connection "source_trace_13"',
-  )
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
 })
