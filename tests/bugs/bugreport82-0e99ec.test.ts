@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import bugReport from "../../fixtures/bug-reports/bugreport82-0e99ec/bugreport82-0e99ec.json" with {
   type: "json",
 }
@@ -10,20 +9,38 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport82-0e99ec.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
-  let routingError: unknown
+  solver.solve()
 
-  try {
-    solver.solve()
-  } catch (error) {
-    routingError = error
-  }
+  const output = solver.getOutputSimpleRouteJson({
+    includeNonIdealRouteIssues: true,
+  })
+  const postProcessingOutput =
+    solver.lengthMatchingPostProcessingSolver!.getOutput({
+      includeNonIdealRouteIssues: true,
+    })
+  const returnedNonIdealRoute = postProcessingOutput.hdRoutes.find(
+    (route) => route.connectionName === "source_net_8_mst3",
+  )
+  const prePostProcessingRoute =
+    solver.exactGeometryDrcForceImproveSolver!.getOutput().find(
+      (route) => route.connectionName === "source_net_8_mst3",
+    )
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(returnedNonIdealRoute).toEqual(prePostProcessingRoute)
+  expect(solver.getOutputSimpleRouteJson()).not.toHaveProperty(
+    "nonIdealRouteIssues",
   )
-  expect(routingError).toBeInstanceOf(Error)
-  expect((routingError as Error).message).toBe(
-    'PostProcessingSolver: HD route "source_net_8_mst3" must have exactly one via for each layer transition',
-  )
-  expect(solver.failed).toBe(true)
+  expect(output.nonIdealRouteIssues).toEqual([
+    {
+      type: "post_processing_error",
+      stage: "coupled-rerouting",
+      postProcessingStage: "validation",
+      message:
+        'PostProcessingSolver: HD route "source_net_8_mst3" must have exactly one via for each layer transition',
+      connectionName: "source_net_8_mst3",
+      returnedRouteSource: "post-processing-input",
+    },
+  ])
 })
