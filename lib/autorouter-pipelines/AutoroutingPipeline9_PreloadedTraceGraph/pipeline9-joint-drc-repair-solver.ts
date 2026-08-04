@@ -517,6 +517,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           }
           return {
             ...movableTrace.originalTrace,
+            __replaces_pcb_trace_id: movableTrace.originalTrace.pcb_trace_id,
             route: convertHdRouteToSimplifiedRoute(
               evaluatedRoute,
               params.layerCount,
@@ -723,6 +724,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           movableTrace.originalTrace.pcb_trace_id,
           {
             ...movableTrace.originalTrace,
+            __replaces_pcb_trace_id: movableTrace.originalTrace.pcb_trace_id,
             route: convertHdRouteToSimplifiedRoute(
               outputRoute,
               this.params.layerCount,

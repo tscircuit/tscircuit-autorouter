@@ -161,6 +161,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
     }
     const mutatedTrace: SimplifiedPcbTrace = {
       ...trace,
+      __replaces_pcb_trace_id: trace.pcb_trace_id,
       route: convertHdRouteToSimplifiedRoute(combinedRoute, layerCount, {
         defaultViaHoleDiameter,
         obstacles,

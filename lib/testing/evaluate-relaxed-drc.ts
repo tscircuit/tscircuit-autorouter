@@ -18,15 +18,17 @@ export interface EvaluateRelaxedDrcResult extends GetDrcErrorsResult {
 }
 
 /**
- * Combines existing and newly routed copper. A routed trace with an existing
- * PCB trace id is an intentional mutation and replaces that preloaded trace.
+ * Combines existing and newly routed copper. Only traces with explicit
+ * replacement metadata remove preloaded copper; ids may otherwise collide.
  */
 export const combinePreloadedAndRoutedTraces = (
   preloadedTraces: SimplifiedPcbTrace[],
   routedTraces: SimplifiedPcbTrace[],
 ): SimplifiedPcbTrace[] => {
   const replacedTraceIds = new Set(
-    routedTraces.map((trace) => trace.pcb_trace_id),
+    routedTraces.flatMap((trace) =>
+      trace.__replaces_pcb_trace_id ? [trace.__replaces_pcb_trace_id] : [],
+    ),
   )
   return [
     ...preloadedTraces.filter(

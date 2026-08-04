@@ -44,7 +44,11 @@ export const preparePipeline9DrcRoutedTracesWithMetadata = ({
         pcbTraceId,
         trace.pcb_trace_id,
       )
-      return { ...currentTrace, pcb_trace_id: pcbTraceId }
+      return {
+        ...currentTrace,
+        pcb_trace_id: pcbTraceId,
+        __replaces_pcb_trace_id: trace.pcb_trace_id,
+      }
     })
   const nonCollidingMutatedPreloadedTraces = mutatedPreloadedTraces.filter(
     (trace) => !newTraceIds.has(trace.pcb_trace_id),

@@ -24,15 +24,25 @@ const createTrace = (pcbTraceId: string, y: number): SimplifiedPcbTrace => ({
   ],
 })
 
-test("joint DRC treats matching PCB trace ids as mutations", () => {
+test("joint DRC only replaces preloaded traces with explicit metadata", () => {
   const original = createTrace("existing", 0)
-  const replacement = createTrace("existing", 1)
+  const replacement = {
+    ...createTrace("replacement", 1),
+    __replaces_pcb_trace_id: original.pcb_trace_id,
+  }
+  const collidingOriginal = createTrace("collision", 2)
+  const unmarkedCollision = createTrace("collision", 3)
   const newTrace = createTrace("new", 2)
 
   const jointTraces = combinePreloadedAndRoutedTraces(
-    [original],
-    [replacement, newTrace],
+    [original, collidingOriginal],
+    [replacement, unmarkedCollision, newTrace],
   )
 
-  expect(jointTraces).toEqual([replacement, newTrace])
+  expect(jointTraces).toEqual([
+    collidingOriginal,
+    replacement,
+    unmarkedCollision,
+    newTrace,
+  ])
 })
