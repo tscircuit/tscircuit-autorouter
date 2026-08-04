@@ -17,10 +17,9 @@ test("bugreport82-0e99ec.json", () => {
   const returnedNonIdealRoute = postProcessingOutput.hdRoutes.find(
     (route) => route.connectionName === "source_net_8_mst3",
   )
-  const prePostProcessingRoute =
-    solver.exactGeometryDrcForceImproveSolver!.getOutput().find(
-      (route) => route.connectionName === "source_net_8_mst3",
-    )
+  const prePostProcessingRoute = solver
+    .exactGeometryDrcForceImproveSolver!.getOutput()
+    .find((route) => route.connectionName === "source_net_8_mst3")
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
