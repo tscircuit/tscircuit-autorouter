@@ -9,6 +9,8 @@ import type {
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
+const ALIGNED_FREE_TOPOLOGY_MODE = "aligned-free"
+
 export function getCanonicalCoordinates(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
   const coordinates: number[] = []
@@ -182,13 +184,62 @@ export function mergeViaCompatibleFreeLayerTopologies({
       availableZ,
       sourceKeys,
       topologyMode,
-      topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+      topologySignature: JSON.stringify({
+        mode: ALIGNED_FREE_TOPOLOGY_MODE,
+        availableZ,
+      }),
     } satisfies TopologyMergingLayerTopology
   })
 
   return [...nonFreeTopologies, ...mergedFreeTopologies].sort(
     (a, b) => a.availableZ[0]! - b.availableZ[0]!,
   )
+}
+
+export function splitUndersizedAlignedFreeRegions({
+  regions,
+  minimumViaFootprint,
+  preparedNodeBySourceKey,
+}: {
+  regions: TopologyMergingRegion[]
+  minimumViaFootprint: number
+  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+}): TopologyMergingRegion[] {
+  return regions.flatMap((region) => {
+    const isAlignedFreeRegion =
+      region.topologySignature ===
+      JSON.stringify({
+        mode: ALIGNED_FREE_TOPOLOGY_MODE,
+        availableZ: region.availableZ,
+      })
+    const width = region.bounds.maxX - region.bounds.minX
+    const height = region.bounds.maxY - region.bounds.minY
+    if (
+      !isAlignedFreeRegion ||
+      Math.min(width, height) >= minimumViaFootprint
+    ) {
+      return [region]
+    }
+
+    return region.availableZ.map((z) => {
+      const sourceKeys = region.sourceKeys.filter((sourceKey) =>
+        preparedNodeBySourceKey.get(sourceKey)?.node.availableZ.includes(z),
+      )
+      if (sourceKeys.length === 0) {
+        throw new Error(
+          `TopologyMergingSolver: aligned free region lost layer ${z} provenance`,
+        )
+      }
+      const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
+      return {
+        bounds: { ...region.bounds },
+        availableZ: [z],
+        sourceKeys,
+        topologyMode,
+        topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+      } satisfies TopologyMergingRegion
+    })
+  })
 }
 
 export function restoreAuthoritativeTargetRegions({
@@ -351,6 +402,11 @@ function mergeRegionRun(
     } else {
       previousRegion.bounds.maxY = region.bounds.maxY
     }
+    previousRegion.sourceKeys = [
+      ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+    ].sort()
+    previousRegion.topologyMode =
+      previousRegion.sourceKeys.length === 1 ? "passthrough" : "merged"
   }
 
   return mergedRegions
