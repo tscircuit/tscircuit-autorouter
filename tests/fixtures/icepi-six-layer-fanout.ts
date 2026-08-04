@@ -95,18 +95,14 @@ const createIcePiPadObstacles = (
     }
   }
 
-  return [...padByPortId].map(
-    ([pcbPortId, { point, connectionNames }]) => ({
-      type: "rect",
-      layers: [point[2]],
-      center: { x: point[0], y: point[1] },
-      width:
-        point[2] === "bottom" ? 0.54 : point[1] > 10 ? 0.36 : 0.24,
-      height:
-        point[2] === "bottom" ? 0.64 : point[1] > 10 ? 0.36 : 0.24,
-      connectedTo: [pcbPortId, ...connectionNames],
-    }),
-  )
+  return [...padByPortId].map(([pcbPortId, { point, connectionNames }]) => ({
+    type: "rect",
+    layers: [point[2]],
+    center: { x: point[0], y: point[1] },
+    width: point[2] === "bottom" ? 0.54 : point[1] > 10 ? 0.36 : 0.24,
+    height: point[2] === "bottom" ? 0.64 : point[1] > 10 ? 0.36 : 0.24,
+    connectedTo: [pcbPortId, ...connectionNames],
+  }))
 }
 
 export const getIcePiSixLayerFanoutRepro = (): SimpleRouteJson => {
