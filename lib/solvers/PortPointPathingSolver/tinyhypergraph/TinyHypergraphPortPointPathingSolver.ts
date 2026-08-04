@@ -140,116 +140,6 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_FULL_DUPLICATE_CONGESTED_PORT_PREPASS = 180
-const LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE = 32
-
-const getDuplicateCongestedPortPrepassGraph = (
-  serializedGraph: SerializedHyperGraph,
-): SerializedHyperGraph => {
-  const connections = serializedGraph.connections ?? []
-  if (
-    connections.length <=
-    MAX_CONNECTIONS_FOR_FULL_DUPLICATE_CONGESTED_PORT_PREPASS
-  ) {
-    return serializedGraph
-  }
-  const lastConnectionIndex = connections.length - 1
-  const originalEndpointRegionIds = new Set(
-    connections.flatMap((connection) => [
-      connection.startRegionId,
-      connection.endRegionId,
-    ]),
-  )
-  const removableObstacleRegionIds = new Set(
-    serializedGraph.regions
-      .filter((region) => {
-        const netId = region.d?.netId ?? region.d?.NetId
-        return (
-          region.d?._containsObstacle === true &&
-          (netId === undefined || netId === -1) &&
-          !originalEndpointRegionIds.has(region.regionId)
-        )
-      })
-      .map((region) => region.regionId),
-  )
-  const sampledConnections = Array.from(
-    { length: LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE },
-    (_, sampleIndex) =>
-      connections[
-        Math.round(
-          (sampleIndex * lastConnectionIndex) /
-            (LARGE_GRAPH_DUPLICATE_CONGESTED_PORT_SAMPLE_SIZE - 1),
-        )
-      ]!,
-  )
-  const regionById = new Map(
-    serializedGraph.regions.map((region) => [region.regionId, region]),
-  )
-  const sampledNetIndexByNetworkId = new Map<string, number>()
-  const sampledNetIndexBySerializedNetId = new Map<number, number>()
-  for (const connection of sampledConnections) {
-    const networkId =
-      connection.mutuallyConnectedNetworkId ?? connection.connectionId
-    let sampledNetIndex = sampledNetIndexByNetworkId.get(networkId)
-    if (sampledNetIndex === undefined) {
-      sampledNetIndex = sampledNetIndexByNetworkId.size
-      sampledNetIndexByNetworkId.set(networkId, sampledNetIndex)
-    }
-    for (const endpointRegionId of [
-      connection.startRegionId,
-      connection.endRegionId,
-    ]) {
-      const endpointRegion = regionById.get(endpointRegionId)
-      const serializedNetId =
-        endpointRegion?.d?.netId ?? endpointRegion?.d?.NetId
-      if (typeof serializedNetId === "number" && serializedNetId >= 0) {
-        sampledNetIndexBySerializedNetId.set(
-          serializedNetId,
-          sampledNetIndex,
-        )
-      }
-    }
-  }
-  const blockerNetIndexOffset = sampledNetIndexByNetworkId.size
-  return {
-    ...serializedGraph,
-    // The tiny-hypergraph compatibility loader prunes full-obstacle regions
-    // that are not endpoints of a listed connection. Sampling connections must
-    // not also sample away the topology those routes need to traverse.
-    regions: serializedGraph.regions
-      .filter(
-        (region) => !removableObstacleRegionIds.has(region.regionId),
-      )
-      .map((region) => ({
-        ...region,
-        d: (() => {
-          const serializedNetId = region.d?.netId ?? region.d?.NetId
-          const remappedNetId =
-            typeof serializedNetId === "number" && serializedNetId >= 0
-              ? (sampledNetIndexBySerializedNetId.get(serializedNetId) ??
-                blockerNetIndexOffset + serializedNetId)
-              : serializedNetId
-          return {
-            ...region.d,
-            _containsObstacle: false,
-            ...(region.d?.netId !== undefined
-              ? { netId: remappedNetId }
-              : {}),
-            ...(region.d?.NetId !== undefined
-              ? { NetId: remappedNetId }
-              : {}),
-          }
-        })(),
-      })),
-    ports: serializedGraph.ports.filter(
-      (port) =>
-        !removableObstacleRegionIds.has(port.region1Id) &&
-        !removableObstacleRegionIds.has(port.region2Id),
-    ),
-    // Spread bounded work across the full ordered list instead of ignoring its tail.
-    connections: sampledConnections,
-  }
-}
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -986,7 +876,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
-  private duplicateCongestedPortPrepassConnectionCount = 0
   private duplicatedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
@@ -1020,12 +909,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       preloadedTraceStats.preloadedPortCount > 0
     let graphForTiny = serializedGraph
     if (!hasPreloadedTraceOccupancy) {
-      const prepassGraph =
-        getDuplicateCongestedPortPrepassGraph(serializedGraph)
-      this.duplicateCongestedPortPrepassConnectionCount =
-        prepassGraph.connections?.length ?? 0
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-        prepassGraph,
+        serializedGraph,
         {
           duplicatePortProximity: 0.05,
           routeSolveOptions: {
@@ -1047,10 +932,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           duplicateCongestedPortSolver.error ?? "unknown error"
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-        graphForTiny = {
-          ...duplicateCongestedPortSolver.getOutput(),
-          connections: serializedGraph.connections,
-        }
+        graphForTiny = duplicateCongestedPortSolver.getOutput()
       }
     } else {
       this.duplicateCongestedPortError =
@@ -1121,14 +1003,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),
-      duplicateCongestedPortPrepassConnectionCount:
-        this.duplicateCongestedPortPrepassConnectionCount,
-      duplicateCongestedPortInputConnectionCount:
-        this.params.connections.length,
-      duplicateCongestedPortPrepassSampled:
-        this.duplicateCongestedPortPrepassConnectionCount > 0 &&
-        this.duplicateCongestedPortPrepassConnectionCount <
-          this.params.connections.length,
       duplicateCongestedPortPenalty:
         this.duplicatedPortCount > 0 ? DUPLICATE_PORT_TRAVERSAL_PENALTY : 0,
       duplicateCongestedPortPenaltyCount:

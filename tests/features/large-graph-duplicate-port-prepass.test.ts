@@ -49,9 +49,6 @@ test("IcePi fanout pair repairs congested port above 180 routes", () => {
 
   const pathingSolver = solver.portPointPathingSolver!
   expect(pathingSolver.stats).toMatchObject({
-    duplicateCongestedPortInputConnectionCount: 181,
-    duplicateCongestedPortPrepassConnectionCount: 32,
-    duplicateCongestedPortPrepassSampled: true,
     duplicateCongestedPortFallbackToOriginal: false,
     duplicateCongestedPortSourceCount: 1,
     duplicateCongestedPortCount: 1,
