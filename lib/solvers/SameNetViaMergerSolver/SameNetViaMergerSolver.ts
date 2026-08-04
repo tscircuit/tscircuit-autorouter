@@ -16,6 +16,8 @@ export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
   /** Routed copper that participates in collision checks but is never changed. */
   otherHdRoutes?: ReadonlyArray<HighDensityRoute>
+  /** Explicit connection metadata for routes whose names are not in connMap. */
+  netByConnectionName?: ReadonlyMap<string, string>
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
@@ -35,32 +37,24 @@ type Via = {
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
-const POSITION_EPSILON = 1e-9
-
-const positionsMatch = (
-  left: Pick<Via, "x" | "y">,
-  right: Pick<Via, "x" | "y">,
-) =>
-  Math.abs(left.x - right.x) <= POSITION_EPSILON &&
-  Math.abs(left.y - right.y) <= POSITION_EPSILON
 
 const tryGetNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
+  netByConnectionName?: ReadonlyMap<string, string>,
 ): string | undefined =>
+  netByConnectionName?.get(route.connectionName) ??
   connMap.idToNetMap[route.connectionName] ??
   (route.rootConnectionName
-    ? (connMap.idToNetMap[route.rootConnectionName] ??
-      (connMap.netMap[route.rootConnectionName]
-        ? route.rootConnectionName
-        : undefined))
+    ? connMap.idToNetMap[route.rootConnectionName]
     : undefined)
 
 const getNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
+  netByConnectionName?: ReadonlyMap<string, string>,
 ): string => {
-  const net = tryGetNetForRoute(connMap, route)
+  const net = tryGetNetForRoute(connMap, route, netByConnectionName)
   if (!net) {
     throw new Error(
       `SameNetViaMergerSolver could not find net for route "${route.connectionName}"`,
@@ -92,6 +86,7 @@ const canMoveViaTo = (
     mergedViaHdRoutes: HighDensityRoute[]
     hdRouteSHI: HighDensityRouteSpatialIndex
     obstacleSHI: ObstacleSpatialHashIndex
+    netByConnectionName?: ReadonlyMap<string, string>
   },
 ): boolean => {
   const route = context.mergedViaHdRoutes[viaToRemove.routeIndex]
@@ -106,8 +101,8 @@ const canMoveViaTo = (
     const prev = route.route[i - 1]
     const curr = route.route[i]
     if (prev.z === curr.z) continue
-    if (!positionsMatch(prev, viaToRemove)) continue
-    if (!positionsMatch(curr, viaToRemove)) continue
+    if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
+    if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
 
     transitionLayers.add(prev.z)
     transitionLayers.add(curr.z)
@@ -135,7 +130,11 @@ const canMoveViaTo = (
     for (const { conflictingRoute, distance } of conflictingRoutes) {
       if (conflictingRoute.connectionName === route.connectionName) continue
       if (
-        tryGetNetForRoute(context.connMap, conflictingRoute) === viaToRemove.net
+        tryGetNetForRoute(
+          context.connMap,
+          conflictingRoute,
+          context.netByConnectionName,
+        ) === viaToRemove.net
       )
         continue
 
@@ -191,6 +190,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
+  netByConnectionName?: ReadonlyMap<string, string>
 
   obstacleSHI: ObstacleSpatialHashIndex
   hdRouteSHI: HighDensityRouteSpatialIndex
@@ -228,6 +228,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.vias = []
     this.offendingVias = []
     this.connMap = input.connMap
+    this.netByConnectionName = input.netByConnectionName
 
     this.viasByNet = new Map<string, Via[]>()
 
@@ -245,8 +246,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
     ) => {
       if (route.vias.length === 0) return
       const net = mutable
-        ? getNetForRoute(this.connMap, route)
-        : tryGetNetForRoute(this.connMap, route)
+        ? getNetForRoute(this.connMap, route, this.netByConnectionName)
+        : tryGetNetForRoute(this.connMap, route, this.netByConnectionName)
       if (!net) return
 
       for (let j = 0; j < route.vias.length; j++) {
@@ -380,6 +381,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
                   mergedViaHdRoutes: this.mergedViaHdRoutes,
                   hdRouteSHI: this.hdRouteSHI,
                   obstacleSHI: this.obstacleSHI,
+                  netByConnectionName: this.netByConnectionName,
                 })
               ) {
                 remove.push(candidate)
@@ -446,13 +448,14 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const prev = route[j - 1]
       const curr = route[j]
       if (prev.z === curr.z) continue
-      if (!positionsMatch(prev, viaToRemove)) continue
-      if (!positionsMatch(curr, viaToRemove)) continue
+      if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
+      if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
 
       let clusterStartIndex = j - 1
       while (
         clusterStartIndex > 0 &&
-        positionsMatch(route[clusterStartIndex - 1]!, viaToRemove)
+        route[clusterStartIndex - 1]!.x === viaToRemove.x &&
+        route[clusterStartIndex - 1]!.y === viaToRemove.y
       ) {
         clusterStartIndex--
       }
@@ -460,7 +463,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
       let clusterEndIndex = j
       while (
         clusterEndIndex < route.length - 1 &&
-        positionsMatch(route[clusterEndIndex + 1]!, viaToRemove)
+        route[clusterEndIndex + 1]!.x === viaToRemove.x &&
+        route[clusterEndIndex + 1]!.y === viaToRemove.y
       ) {
         clusterEndIndex++
       }
@@ -482,7 +486,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     routeToUpdate.vias = routeToUpdate.vias.flatMap((vx) => {
-      if (!positionsMatch(vx, viaToRemove)) return vx
+      if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
       replacedVia = true
       return viaKeep.mutable ? [{ x: viaKeep.x, y: viaKeep.y }] : []
     })

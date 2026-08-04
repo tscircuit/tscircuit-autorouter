@@ -18,9 +18,17 @@ export const mergePipeline9MovablePreloadedVias = ({
   layerCount: number
   connMap: ConnectivityMap
 }): HighDensityRoute[] => {
+  const netByConnectionName = new Map(
+    [...routes, ...otherHdRoutes].flatMap((route) =>
+      route.rootConnectionName
+        ? [[route.connectionName, route.rootConnectionName] as const]
+        : [],
+    ),
+  )
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: routes,
     otherHdRoutes,
+    netByConnectionName,
     obstacles,
     colorMap,
     layerCount,

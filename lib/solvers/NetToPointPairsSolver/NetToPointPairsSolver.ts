@@ -2,13 +2,9 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
-import {
-  areIdsInitiallyConnected,
-  getInitiallyConnectedMapFromSimpleRouteJson,
-} from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
-import { getInitiallyConnectedZeroWeightEdges } from "./get-initially-connected-zero-weight-edges"
+import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
 
 /**
@@ -31,17 +27,17 @@ export class NetToPointPairsSolver extends BaseSolver {
 
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
-  initiallyConnectedMap: ConnectivityMap
+  initiallyConnectedMap?: ConnectivityMap
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
+    initiallyConnectedMap?: ConnectivityMap,
   ) {
     super()
     this.unprocessedConnections = mergeConnections([...ogSrj.connections])
     this.newConnections = []
-    this.initiallyConnectedMap =
-      getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
+    this.initiallyConnectedMap = initiallyConnectedMap
   }
 
   _step() {
@@ -51,22 +47,16 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
 
-    const zeroWeightEdges = getInitiallyConnectedZeroWeightEdges(
-      connection,
-      this.initiallyConnectedMap,
-    )
+    const { zeroWeightEdges, arePointsConnected } =
+      getInitiallyConnectedStateForConnection(
+        connection,
+        this.ogSrj,
+        this.initiallyConnectedMap,
+      )
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
-      if (
-        startPoint?.pointId &&
-        endPoint?.pointId &&
-        areIdsInitiallyConnected(
-          this.initiallyConnectedMap,
-          startPoint.pointId,
-          endPoint.pointId,
-        )
-      ) {
+      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
       this.newConnections.push({
@@ -84,15 +74,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     let mstIdx = 0
     for (const edge of edges) {
-      if (
-        edge.from.pointId &&
-        edge.to.pointId &&
-        areIdsInitiallyConnected(
-          this.initiallyConnectedMap,
-          edge.from.pointId,
-          edge.to.pointId,
-        )
-      ) {
+      if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
       this.newConnections.push({

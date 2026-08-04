@@ -40,6 +40,7 @@ test("same-net via merging reuses an immutable via without mutating it", () => {
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: [editableRoute],
     otherHdRoutes: [immutableRoute],
+    netByConnectionName: new Map([["preloaded_fixed_0", "net0"]]),
     obstacles: [],
     colorMap: {},
     layerCount: 2,
