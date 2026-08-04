@@ -18,12 +18,16 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
-import { convertPreloadedTraceToHdRoutes } from "./convert-preloaded-traces-to-hd-routes"
+import {
+  convertPreloadedTraceToHdRoutes,
+  type PreloadedHighDensityRoute,
+} from "./convert-preloaded-traces-to-hd-routes"
 import { applyPipeline9TargetedObstacleDetours } from "./apply-pipeline9-targeted-obstacle-detours"
 import { applyPipeline9TerminalEscapeRelocations } from "./apply-pipeline9-terminal-escape-relocations"
 import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01-repairs"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
+import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -288,6 +292,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
   readonly movablePreloadedTraces: MovablePreloadedTrace[]
+  readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
@@ -338,6 +343,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         movablePreloadedTraceIds.add(originalTraceId)
       }
     }
+    for (const traceId of getPipeline9PreloadedTraceIdsInInitialDrcRegions({
+      errorsWithCenters: currentDrc.errorsWithCenters as unknown as Array<
+        Record<string, unknown>
+      >,
+      traces: params.updatedPreloadedTraces,
+      layerCount: params.layerCount,
+      defaultViaDiameter: params.defaultViaDiameter,
+      connMap: params.connMap,
+    })) {
+      movablePreloadedTraceIds.add(traceId)
+    }
 
     this.movablePreloadedTraces = [...movablePreloadedTraceIds].map(
       (traceId, movableTraceIndex) => {
@@ -364,6 +380,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.movablePreloadedTraces.map(
         (movableTrace) => movableTrace.syntheticConnectionName,
       ),
+    )
+    this.fixedPreloadedObstacleRoutes = params.updatedPreloadedTraces.flatMap(
+      (trace, traceIndex) =>
+        movablePreloadedTraceIds.has(trace.pcb_trace_id)
+          ? []
+          : convertPreloadedTraceToHdRoutes(
+              trace,
+              traceIndex,
+              params.layerCount,
+              params.defaultViaDiameter,
+              params.connMap,
+            ),
     )
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
@@ -563,6 +591,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
       srj: this.params.srj,
       routes: initialTerminalEscapeResult.routes,
+      fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,

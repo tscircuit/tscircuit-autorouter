@@ -20,7 +20,9 @@ export const getPipeline9DrcErrors = (
   routes: HighDensityRoute[],
 ): Pipeline9DrcError[] => {
   const result = drcEvaluator({ hdRoutes: routes, traces: [] })
-  return (Array.isArray(result) ? result : result.errors) as Pipeline9DrcError[]
+  return (
+    Array.isArray(result) ? result : (result.errorsWithCenters ?? result.errors)
+  ) as Pipeline9DrcError[]
 }
 
 const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>

@@ -69,6 +69,7 @@ const asRegionalRoutes = (
 
 const getRegionalCandidate = ({
   routes,
+  fixedObstacleRoutes,
   routeIndex,
   center,
   regionSize,
@@ -81,6 +82,7 @@ const getRegionalCandidate = ({
   effort,
 }: {
   routes: HighDensityRoute[]
+  fixedObstacleRoutes: PreloadedHighDensityRoute[]
   routeIndex: number
   center: { x: number; y: number }
   regionSize: number
@@ -120,7 +122,7 @@ const getRegionalCandidate = ({
   )
   const solver = new Pipeline9HighDensitySolver({
     nodePortPoints: [movableProblem.nodeWithPortPoints],
-    fixedHdRoutes: fixedRoutes,
+    fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes],
     connMap,
     colorMap,
     obstacles: srj.obstacles,
@@ -141,19 +143,12 @@ const getRegionalCandidate = ({
   )
   if (!replacement) return undefined
 
-  const candidateRouteByOriginalIndex = new Map<number, HighDensityRoute>(
-    solver
-      .getUpdatedFixedHdRoutes()
-      .map((route) => [route.preloadedTraceIndex, route]),
-  )
-  candidateRouteByOriginalIndex.set(
-    routeIndex,
-    spliceFixedRouteSection(movableSection, replacement),
-  )
   return {
-    routes: [...candidateRouteByOriginalIndex]
-      .sort(([leftIndex], [rightIndex]) => leftIndex - rightIndex)
-      .map(([, route]) => route),
+    routes: routes.map((route, candidateRouteIndex) =>
+      candidateRouteIndex === routeIndex
+        ? spliceFixedRouteSection(movableSection, replacement)
+        : route,
+    ),
     usedFallback: Number(solver.stats.fallbackNodeCount ?? 0) > 0,
   }
 }
@@ -239,6 +234,7 @@ const getRegularRegionalCandidate = ({
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
   routes,
+  fixedObstacleRoutes,
   newConnections,
   syntheticConnectionNames,
   drcEvaluator,
@@ -251,6 +247,7 @@ export const applyPipeline9RegionalB01Repairs = ({
 }: {
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
+  fixedObstacleRoutes: PreloadedHighDensityRoute[]
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
@@ -304,6 +301,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         for (const regionSize of REGION_SIZES) {
           const candidate = getRegionalCandidate({
             routes: currentRoutes,
+            fixedObstacleRoutes,
             routeIndex,
             center,
             regionSize,
