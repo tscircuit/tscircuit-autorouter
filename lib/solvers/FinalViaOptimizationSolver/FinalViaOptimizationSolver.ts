@@ -14,6 +14,10 @@ import { getProtectedConnectionNames } from "./get-protected-connection-names"
 import { getSameLayerSpanCollapseCandidates } from "./try-collapse-same-layer-span"
 
 const MAX_CANDIDATE_ATTEMPTS = 32
+// Geometry-only discovery must also be bounded: some pathological boards have
+// thousands of post-processed routes. Routes with the most layer transitions
+// are scanned first, so this limit preserves the highest-value opportunities.
+const MAX_INITIAL_ROUTE_SCANS = 512
 
 type PendingCandidate = {
   connectionName: string
@@ -91,6 +95,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
   private readonly acceptedRouteRescanQueue: string[] = []
   private readonly protectedConnectionNames: Set<string>
   private readonly obstacleSHI: ObstacleSpatialHashIndex
+  private hdRouteSHI: HighDensityRouteSpatialIndex
   private initialRouteScanIndex = 0
   private candidateEvaluations = 0
   private quality: RouteQualitySnapshot
@@ -117,9 +122,14 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       "flatbush",
       createObjectsWithZLayers(input.obstacles, input.layerCount),
     )
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
     this.eligibleConnectionNames = this.hdRoutes
       .filter(
         (route) =>
+          route.route.filter(
+            (point, index) =>
+              index > 0 && point.z !== route.route[index - 1]!.z,
+          ).length >= 2 &&
           !isProtectedRoute(
             route,
             this.protectedConnectionNames,
@@ -127,8 +137,17 @@ export class FinalViaOptimizationSolver extends BaseSolver {
             input.connMap,
           ),
       )
+      .sort((a, b) => {
+        const transitionCount = (route: HighDensityRoute) =>
+          route.route.filter(
+            (point, index) =>
+              index > 0 && point.z !== route.route[index - 1]!.z,
+          ).length
+        const transitionDelta = transitionCount(b) - transitionCount(a)
+        if (transitionDelta !== 0) return transitionDelta
+        return a.connectionName.localeCompare(b.connectionName)
+      })
       .map((route) => route.connectionName)
-      .sort()
     this.quality = createRouteQualitySnapshot({
       hdRoutes: this.hdRoutes,
       srj: input.originalSrj,
@@ -144,6 +163,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       scannedEligibleRouteCount: 0,
       rescannedAcceptedRouteCount: 0,
       candidateEvaluationBudget: MAX_CANDIDATE_ATTEMPTS,
+      initialRouteScanBudget: MAX_INITIAL_ROUTE_SCANS,
       candidateEvaluationCount: 0,
       acceptedCandidateCount: 0,
       rejectedByCollisionCount: 0,
@@ -168,7 +188,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       throw new Error("FinalViaOptimizationSolver route index is invalid")
     const candidates = getSameLayerSpanCollapseCandidates({
       route: structuredClone(route),
-      hdRouteSHI: new HighDensityRouteSpatialIndex(this.hdRoutes),
+      hdRouteSHI: this.hdRouteSHI,
       obstacleSHI: this.obstacleSHI,
       connMap: this.input.connMap,
       outline: this.input.originalSrj.outline,
@@ -272,7 +292,10 @@ export class FinalViaOptimizationSolver extends BaseSolver {
   }
 
   _step(): void {
-    if (this.initialRouteScanIndex < this.eligibleConnectionNames.length) {
+    if (
+      this.initialRouteScanIndex < this.eligibleConnectionNames.length &&
+      this.initialRouteScanIndex < MAX_INITIAL_ROUTE_SCANS
+    ) {
       const connectionName =
         this.eligibleConnectionNames[this.initialRouteScanIndex++]!
       this.scanRoute(connectionName, false)
@@ -349,6 +372,9 @@ export class FinalViaOptimizationSolver extends BaseSolver {
     }
 
     this.hdRoutes = candidateRoutes
+    // The collision index is immutable, so refresh it only after an accepted
+    // mutation (at most MAX_CANDIDATE_ATTEMPTS times), never once per scan.
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
     this.quality = candidateQuality
     this.stats.acceptedCandidateCount++
     this.removeStaleCandidates(candidate.connectionName)

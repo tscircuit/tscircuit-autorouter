@@ -4,9 +4,9 @@ import { FinalViaOptimizationSolver } from "lib/solvers/FinalViaOptimizationSolv
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("final via optimization scans every route while bounding converted DRC candidates", () => {
+const createSolver = (routeCount: number) => {
   const connectionNames = Array.from(
-    { length: 40 },
+    { length: routeCount },
     (_, index) => `trace_${String(index).padStart(2, "0")}`,
   )
   const srj = {
@@ -42,7 +42,7 @@ test("final via optimization scans every route while bounding converted DRC cand
     }),
   )
   const noErrors = (() => ({ errors: [] })) as DrcEvaluator
-  const solver = new FinalViaOptimizationSolver({
+  return new FinalViaOptimizationSolver({
     hdRoutes,
     originalSrj: srj,
     obstacles: [],
@@ -64,10 +64,24 @@ test("final via optimization scans every route while bounding converted DRC cand
         })),
       })),
   })
+}
+
+test("final via optimization scans every eligible route while bounding converted DRC candidates", () => {
+  const solver = createSolver(40)
 
   solver.solve()
 
   expect(solver.stats.scannedEligibleRouteCount).toBe(40)
   expect(solver.stats.candidateEvaluationCount).toBe(32)
   expect(solver.stats.acceptedCandidateCount).toBe(32)
+})
+
+test("final via optimization bounds initial geometry discovery on very large boards", () => {
+  const solver = createSolver(513)
+
+  solver.solve()
+
+  expect(solver.stats.initialRouteScanBudget).toBe(512)
+  expect(solver.stats.scannedEligibleRouteCount).toBe(512)
+  expect(solver.stats.candidateEvaluationCount).toBe(32)
 })
