@@ -772,6 +772,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
+            obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
             allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
           },
         ]
