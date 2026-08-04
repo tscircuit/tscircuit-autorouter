@@ -312,6 +312,7 @@ function addCrossLayerAccessToTarget({
       height: bounds.maxY - bounds.minY,
       availableZ,
       layer: `z${availableZ.join(",")}`,
+      _targetReservedZ: [...node.availableZ],
     }
   })
 

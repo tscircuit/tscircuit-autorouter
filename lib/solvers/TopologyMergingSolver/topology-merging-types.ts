@@ -50,6 +50,7 @@ export type TopologyMergingRegionMetadata = Pick<
   | "_completelyInsideObstacle"
   | "_containsTarget"
   | "_targetConnectionName"
+  | "_targetReservedZ"
   | "_isVirtualOffboard"
   | "_offboardNetName"
   | "_offBoardConnectionId"

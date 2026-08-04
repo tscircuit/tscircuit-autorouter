@@ -73,6 +73,7 @@ type TinyRegionMetadata = {
   netId?: number
   NetId?: number
   serializedRegionId?: string
+  _targetReservedZ?: number[]
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
@@ -266,6 +267,9 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    ...(regionMetadata._targetReservedZ
+      ? { reservedZ: [...regionMetadata._targetReservedZ] }
+      : {}),
     ...(netId !== undefined ? { netId } : {}),
   }
 }

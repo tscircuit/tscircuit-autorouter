@@ -267,6 +267,15 @@ function getOutputNodeMetadata({
   const connectedTo = Array.from(
     new Set(sourceNodes.flatMap((node) => node._connectedTo ?? [])),
   )
+  const targetReservedZ = Array.from(
+    new Set(
+      sourceNodes.flatMap((node) =>
+        node._containsTarget
+          ? (node._targetReservedZ ?? node.availableZ)
+          : [],
+      ),
+    ),
+  ).sort((a, b) => a - b)
 
   return {
     _containsObstacle:
@@ -276,6 +285,8 @@ function getOutputNodeMetadata({
     _containsTarget:
       sourceNodes.some((node) => node._containsTarget) || undefined,
     _targetConnectionName: targetConnectionName,
+    _targetReservedZ:
+      targetReservedZ.length > 0 ? targetReservedZ : undefined,
     _isVirtualOffboard:
       sourceNodes.some((node) => node._isVirtualOffboard) || undefined,
     _offboardNetName: offboardNetName,

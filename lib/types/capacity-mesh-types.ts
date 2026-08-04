@@ -19,6 +19,8 @@ export interface CapacityMeshNode {
   _containsObstacle?: boolean
   _containsTarget?: boolean
   _targetConnectionName?: string
+  /** Layers where this region is occupied by its target net. */
+  _targetReservedZ?: number[]
   _strawNode?: boolean
   _strawParentCapacityMeshNodeId?: CapacityMeshNodeId
   _isVirtualOffboard?: boolean
