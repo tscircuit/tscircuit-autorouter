@@ -132,6 +132,65 @@ export function getLayerTopologiesForCoveredNodes({
   return [...layerTopologyBySignature.values()]
 }
 
+export function mergeViaCompatibleFreeLayerTopologies({
+  layerTopologies,
+  canUseSourceAsFreeSpace,
+}: {
+  layerTopologies: TopologyMergingLayerTopology[]
+  canUseSourceAsFreeSpace: (sourceKey: string) => boolean
+}): TopologyMergingLayerTopology[] {
+  const freeTopologies = layerTopologies.filter(
+    (topology) =>
+      topology.sourceKeys.length > 0 &&
+      topology.sourceKeys.every(canUseSourceAsFreeSpace) &&
+      topology.availableZ.every(
+        (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
+      ),
+  )
+  if (freeTopologies.length < 2) return layerTopologies
+
+  const nonFreeTopologies = layerTopologies.filter(
+    (topology) => !freeTopologies.includes(topology),
+  )
+  const sortedFreeTopologies = [...freeTopologies].sort(
+    (a, b) => a.availableZ[0]! - b.availableZ[0]!,
+  )
+  const freeRuns: TopologyMergingLayerTopology[][] = []
+
+  for (const topology of sortedFreeTopologies) {
+    const currentRun = freeRuns[freeRuns.length - 1]
+    const currentMaxZ = currentRun
+      ? Math.max(...currentRun.flatMap(({ availableZ }) => availableZ))
+      : Number.NEGATIVE_INFINITY
+    const nextMinZ = Math.min(...topology.availableZ)
+    if (currentRun && nextMinZ === currentMaxZ + 1) {
+      currentRun.push(topology)
+    } else {
+      freeRuns.push([topology])
+    }
+  }
+
+  const mergedFreeTopologies = freeRuns.map((run) => {
+    if (run.length === 1) return run[0]!
+
+    const availableZ = [...new Set(run.flatMap((item) => item.availableZ))]
+      .sort((a, b) => a - b)
+    const sourceKeys = [...new Set(run.flatMap((item) => item.sourceKeys))]
+      .sort()
+    const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
+    return {
+      availableZ,
+      sourceKeys,
+      topologyMode,
+      topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+    } satisfies TopologyMergingLayerTopology
+  })
+
+  return [...nonFreeTopologies, ...mergedFreeTopologies].sort(
+    (a, b) => a.availableZ[0]! - b.availableZ[0]!,
+  )
+}
+
 export function restoreAuthoritativeTargetRegions({
   regions,
   preparedNodeBySourceKey,
