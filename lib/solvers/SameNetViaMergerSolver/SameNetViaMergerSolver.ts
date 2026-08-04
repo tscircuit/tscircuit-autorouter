@@ -102,8 +102,39 @@ const canMoveViaTo = (
   }
 
   if (transitionLayers.size === 0) {
+    const nearestLayerChanges: Array<{
+      prev: HighDensityRoute["route"][number]
+      curr: HighDensityRoute["route"][number]
+      distanceSquared: number
+    }> = []
+    for (let i = 1; i < route.route.length; i++) {
+      const prev = route.route[i - 1]
+      const curr = route.route[i]
+      if (prev.z === curr.z) continue
+
+      const prevDx = prev.x - viaToRemove.x
+      const prevDy = prev.y - viaToRemove.y
+      const currDx = curr.x - viaToRemove.x
+      const currDy = curr.y - viaToRemove.y
+      nearestLayerChanges.push({
+        prev,
+        curr,
+        distanceSquared: Math.min(
+          prevDx * prevDx + prevDy * prevDy,
+          currDx * currDx + currDy * currDy,
+        ),
+      })
+    }
+    nearestLayerChanges.sort((a, b) => a.distanceSquared - b.distanceSquared)
+    const nearestSummary = nearestLayerChanges
+      .slice(0, 3)
+      .map(
+        ({ prev, curr }) =>
+          `(${prev.x}, ${prev.y}, z${prev.z})->(${curr.x}, ${curr.y}, z${curr.z})`,
+      )
+      .join(", ")
     throw new Error(
-      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y})`,
+      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${route.connectionName}"; nearest layer changes: ${nearestSummary || "none"}`,
     )
   }
 
