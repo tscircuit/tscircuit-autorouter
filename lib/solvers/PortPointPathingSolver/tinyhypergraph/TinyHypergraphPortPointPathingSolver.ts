@@ -1021,6 +1021,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             typeof value === "boolean",
         ),
       )
+      const blockerStats = currentTinySolver.stats as {
+        failedOwnerPairs?: unknown
+        lastDirectBlockerResources?: unknown
+      }
       const routeCounters = currentTinySolver as unknown as {
         routeAttemptCountByRouteId: Uint32Array
         routeSuccessCountByRouteId: Uint32Array
@@ -1070,6 +1074,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         neverSuccessfulRoutes: currentTinySolver
           .getNeverSuccessfullyRoutedRoutes()
           .slice(0, 25),
+        failedOwnerPairs: blockerStats.failedOwnerPairs,
+        lastDirectBlockerResources:
+          blockerStats.lastDirectBlockerResources,
+        duplicateCongestedPortCapacityLimited:
+          this.duplicateCongestedPortReport?.duplicatedPorts.filter(
+            ({ availableLaneCount, useCount }) =>
+              availableLaneCount !== undefined &&
+              availableLaneCount < useCount,
+          ) ?? [],
         stats: primitiveStats,
       })}`
     }
