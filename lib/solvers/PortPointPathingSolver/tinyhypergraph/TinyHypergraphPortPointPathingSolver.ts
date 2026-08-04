@@ -697,6 +697,40 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+const addCapacityLimitedSourcePortPenalties = (
+  graph: SerializedHyperGraph,
+  report: DuplicateCongestedPortSolverReport,
+): SerializedHyperGraph => {
+  const capacityLimitedSourcePortIds = new Set(
+    report.duplicatedPorts
+      .filter(
+        ({ availableLaneCount, useCount }) =>
+          availableLaneCount !== undefined && availableLaneCount < useCount,
+      )
+      .map(({ sourcePortId }) => sourcePortId),
+  )
+  if (capacityLimitedSourcePortIds.size === 0) return graph
+
+  return {
+    ...graph,
+    ports: graph.ports.map((port) => {
+      if (!capacityLimitedSourcePortIds.has(port.portId)) return port
+
+      const metadata = asTinyPortMetadata(port.d)
+      const existingPenalty = Number(metadata.tinyHypergraphPortPenalty ?? 0)
+      return {
+        ...port,
+        d: {
+          ...metadata,
+          tinyHypergraphPortPenalty:
+            (Number.isFinite(existingPenalty) ? existingPenalty : 0) +
+            DUPLICATE_PORT_TRAVERSAL_PENALTY,
+        },
+      }
+    }),
+  }
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
@@ -952,7 +986,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           duplicateCongestedPortSolver.error ?? "unknown error"
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-        graphForTiny = duplicateCongestedPortSolver.getOutput()
+        graphForTiny = addCapacityLimitedSourcePortPenalties(
+          duplicateCongestedPortSolver.getOutput(),
+          duplicateCongestedPortSolver.report,
+        )
       }
     } else {
       this.duplicateCongestedPortError = hasPreloadedTraceOccupancy
