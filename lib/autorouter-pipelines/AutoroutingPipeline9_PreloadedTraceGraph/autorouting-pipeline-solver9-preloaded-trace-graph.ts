@@ -62,6 +62,7 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
@@ -607,10 +608,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
           )
+        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes
+        const netByConnectionName = getPipeline9NetByConnectionName(
+          [...newHdRoutes, ...preloadedHdRoutes],
+          cms.connMap,
+        )
 
         return [
           {
-            hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
+            hdRoutes: newHdRoutes,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
@@ -619,6 +625,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
+            netByConnectionName,
             iterations: 2,
           },
         ]

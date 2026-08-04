@@ -72,6 +72,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
    *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
+   *   - netByConnectionName: Explicit net metadata for synthetic route names
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -85,6 +86,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
+      readonly netByConnectionName?: ReadonlyMap<string, string>
     },
   ) {
     super()
@@ -254,6 +256,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.activeSubSolver = new SameNetViaMergerSolver({
             inputHdRoutes: this.hdRoutes,
             otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
+            netByConnectionName: this.simplificationConfig.netByConnectionName,
             obstacles: [...this.simplificationConfig.obstacles],
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,

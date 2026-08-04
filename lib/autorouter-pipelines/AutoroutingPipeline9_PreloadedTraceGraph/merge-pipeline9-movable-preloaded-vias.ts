@@ -2,6 +2,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 
 export const mergePipeline9MovablePreloadedVias = ({
   routes,
@@ -18,12 +19,9 @@ export const mergePipeline9MovablePreloadedVias = ({
   layerCount: number
   connMap: ConnectivityMap
 }): HighDensityRoute[] => {
-  const netByConnectionName = new Map(
-    [...routes, ...otherHdRoutes].flatMap((route) =>
-      route.rootConnectionName
-        ? [[route.connectionName, route.rootConnectionName] as const]
-        : [],
-    ),
+  const netByConnectionName = getPipeline9NetByConnectionName(
+    [...routes, ...otherHdRoutes],
+    connMap,
   )
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: routes,
