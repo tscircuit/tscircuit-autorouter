@@ -373,16 +373,6 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
-    const stitchPoint = pointsToAdd[0]
-    if (stitchPoint && lastMergedPoint.z !== stitchPoint.z) {
-      this.mergedHdRoute.route.push({
-        x: stitchPoint.x,
-        y: stitchPoint.y,
-        z: lastMergedPoint.z,
-      })
-      this.mergedHdRoute.vias.push({ x: stitchPoint.x, y: stitchPoint.y })
-    }
-
     if (
       pointsToAdd.length > 0 &&
       distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
