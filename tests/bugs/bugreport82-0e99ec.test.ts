@@ -11,13 +11,9 @@ test("bugreport82-0e99ec.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
 
-  const output = solver.getOutputSimpleRouteJson({
-    includeNonIdealRouteIssues: true,
-  })
+  const output = solver.getOutputSimpleRouteJson()
   const postProcessingOutput =
-    solver.lengthMatchingPostProcessingSolver!.getOutput({
-      includeNonIdealRouteIssues: true,
-    })
+    solver.lengthMatchingPostProcessingSolver!.getOutput()
   const returnedNonIdealRoute = postProcessingOutput.hdRoutes.find(
     (route) => route.connectionName === "source_net_8_mst3",
   )
@@ -29,9 +25,6 @@ test("bugreport82-0e99ec.json", () => {
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(returnedNonIdealRoute).toEqual(prePostProcessingRoute)
-  expect(solver.getOutputSimpleRouteJson()).not.toHaveProperty(
-    "nonIdealRouteIssues",
-  )
   expect(output.nonIdealRouteIssues).toEqual([
     {
       type: "post_processing_error",

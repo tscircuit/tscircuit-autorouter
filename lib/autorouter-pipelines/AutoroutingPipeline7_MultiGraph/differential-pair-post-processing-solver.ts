@@ -22,7 +22,7 @@ export type NonIdealRouteIssue = {
 
 export type DifferentialPairPostProcessingSolverOutput = {
   hdRoutes: PostProcessingSolverParams["hdRoutes"]
-  nonIdealRouteIssues?: NonIdealRouteIssue[]
+  nonIdealRouteIssues: NonIdealRouteIssue[]
 }
 
 /** Applies the post-processing algorithm implied by each pair's constraints. */
@@ -182,12 +182,10 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
         return
       }
       if (!this.postProcessingSolver!.solved) return
-      const output = this.postProcessingSolver!.getOutput({
-        includeNonIdealRouteIssues: true,
-      })
+      const output = this.postProcessingSolver!.getOutput()
       this.outputHdRoutes = output.hdRoutes
       this.recordPostProcessingIssues(
-        output.nonIdealRouteIssues ?? [],
+        output.nonIdealRouteIssues,
         this.lengthOnlyPairs.length > 0
           ? "length-matched"
           : "post-processing-input",
@@ -207,7 +205,6 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
         ...this.inputProblem,
         hdRoutes,
         differentialPairs: this.coupledPairs,
-        allowNonIdealOutput: true,
       })
       this.MAX_ITERATIONS += this.postProcessingSolver.MAX_ITERATIONS + 1
     } catch (error) {
@@ -265,18 +262,14 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
     return [this.inputProblem]
   }
 
-  getOutput(options: {
-    includeNonIdealRouteIssues?: boolean
-  } = {}): DifferentialPairPostProcessingSolverOutput {
+  getOutput(): DifferentialPairPostProcessingSolverOutput {
     if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "DifferentialPairPostProcessingSolver: getOutput() called before completion",
       )
     return {
       hdRoutes: structuredClone(this.outputHdRoutes),
-      ...(options.includeNonIdealRouteIssues
-        ? { nonIdealRouteIssues: structuredClone(this.nonIdealRouteIssues) }
-        : {}),
+      nonIdealRouteIssues: structuredClone(this.nonIdealRouteIssues),
     }
   }
 

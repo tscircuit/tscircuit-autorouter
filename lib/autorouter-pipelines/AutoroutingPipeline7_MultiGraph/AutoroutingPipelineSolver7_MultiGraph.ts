@@ -91,11 +91,7 @@ interface CapacityMeshSolverOptions {
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 export type AutoroutingPipelineOutput = SimpleRouteJson & {
-  nonIdealRouteIssues?: NonIdealRouteIssue[]
-}
-
-export type GetAutoroutingPipelineOutputOptions = {
-  includeNonIdealRouteIssues?: boolean
+  nonIdealRouteIssues: NonIdealRouteIssue[]
 }
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -1189,19 +1185,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     })
   }
 
-  getOutputSimpleRouteJson(
-    options: GetAutoroutingPipelineOutputOptions = {},
-  ): AutoroutingPipelineOutput {
-    const output: AutoroutingPipelineOutput = {
+  getOutputSimpleRouteJson(): AutoroutingPipelineOutput {
+    return {
       ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
+      nonIdealRouteIssues:
+        this.lengthMatchingPostProcessingSolver?.getOutput()
+          .nonIdealRouteIssues ?? [],
     }
-    if (options.includeNonIdealRouteIssues) {
-      output.nonIdealRouteIssues =
-        this.lengthMatchingPostProcessingSolver?.getOutput({
-          includeNonIdealRouteIssues: true,
-        }).nonIdealRouteIssues ?? []
-    }
-    return output
   }
 }

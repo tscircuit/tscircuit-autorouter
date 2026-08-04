@@ -22,7 +22,6 @@ export {
   type AutoroutingPipelineOutput,
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-  type GetAutoroutingPipelineOutputOptions,
 } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export type { NonIdealRouteIssue } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
