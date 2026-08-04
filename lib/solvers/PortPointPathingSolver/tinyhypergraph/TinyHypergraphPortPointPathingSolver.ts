@@ -1004,6 +1004,52 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
     this.progress = this.tinyPipelineSolver.progress
+    if (this.failed && currentTinySolver) {
+      const blockerStats = currentTinySolver.stats as {
+        failedOwnerPairs?: Array<{
+          failedRouteId: number
+          ownerRouteId: number
+          count: number
+        }>
+        lastDirectBlockerResources?: Array<{
+          owners?: number[]
+        }>
+        lastFailedRouteId?: number
+      }
+      const relevantRouteIds = new Set<number>()
+      if (blockerStats.lastFailedRouteId !== undefined) {
+        relevantRouteIds.add(blockerStats.lastFailedRouteId)
+      }
+      for (const resource of blockerStats.lastDirectBlockerResources ?? []) {
+        for (const ownerRouteId of resource.owners ?? []) {
+          relevantRouteIds.add(ownerRouteId)
+        }
+      }
+
+      const committedRouteIds = new Set(
+        currentTinySolver.state.regionSegments.flatMap((segments) =>
+          segments.map(([routeId]) => routeId),
+        ),
+      )
+      this.error = `${this.error}\nPathing route metadata diagnostic: ${JSON.stringify(
+        {
+          routeCount: currentTinySolver.problem.routeCount,
+          iterations: currentTinySolver.iterations,
+          committedRouteCount: committedRouteIds.size,
+          pendingRouteCount: currentTinySolver.state.unroutedRoutes.length,
+          currentRouteId: currentTinySolver.state.currentRouteId,
+          lastFailedRouteId: blockerStats.lastFailedRouteId,
+          lastDirectBlockerResources:
+            blockerStats.lastDirectBlockerResources,
+          failedOwnerPairs: blockerStats.failedOwnerPairs,
+          relevantRoutes: [...relevantRouteIds].map((routeId) => ({
+            routeId,
+            netId: currentTinySolver.problem.routeNet[routeId],
+            metadata: currentTinySolver.problem.routeMetadata?.[routeId],
+          })),
+        },
+      )}`
+    }
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
