@@ -1020,6 +1020,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (blockerStats.lastFailedRouteId !== undefined) {
         relevantRouteIds.add(blockerStats.lastFailedRouteId)
       }
+      for (const pair of blockerStats.failedOwnerPairs ?? []) {
+        relevantRouteIds.add(pair.failedRouteId)
+        relevantRouteIds.add(pair.ownerRouteId)
+      }
       for (const resource of blockerStats.lastDirectBlockerResources ?? []) {
         for (const ownerRouteId of resource.owners ?? []) {
           relevantRouteIds.add(ownerRouteId)
