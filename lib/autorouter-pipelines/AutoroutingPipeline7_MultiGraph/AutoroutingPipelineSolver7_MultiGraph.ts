@@ -70,7 +70,10 @@ import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
-import { DifferentialPairPostProcessingSolver } from "./differential-pair-post-processing-solver"
+import {
+  DifferentialPairPostProcessingSolver,
+  type NonIdealRouteIssue,
+} from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 
@@ -86,6 +89,14 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
+
+export type AutoroutingPipelineOutput = SimpleRouteJson & {
+  nonIdealRouteIssues?: NonIdealRouteIssue[]
+}
+
+export type GetAutoroutingPipelineOutputOptions = {
+  includeNonIdealRouteIssues?: boolean
+}
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
@@ -1178,10 +1189,19 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     })
   }
 
-  getOutputSimpleRouteJson(): SimpleRouteJson {
-    return {
+  getOutputSimpleRouteJson(
+    options: GetAutoroutingPipelineOutputOptions = {},
+  ): AutoroutingPipelineOutput {
+    const output: AutoroutingPipelineOutput = {
       ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
     }
+    if (options.includeNonIdealRouteIssues) {
+      output.nonIdealRouteIssues =
+        this.lengthMatchingPostProcessingSolver?.getOutput({
+          includeNonIdealRouteIssues: true,
+        }).nonIdealRouteIssues ?? []
+    }
+    return output
   }
 }
