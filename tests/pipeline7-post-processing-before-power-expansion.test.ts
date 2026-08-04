@@ -5,6 +5,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
+    minTraceToPadEdgeClearance: 0.1,
     minViaPadDiameter: 0.3,
     bounds: { minX: 0, minY: 0, maxX: 20, maxY: 10 },
     obstacles: [],
@@ -91,9 +92,11 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       "differentialPairs",
       "hdRoutes",
       "layerCount",
+      "obstacleMargin",
       "obstacles",
     ].sort(),
   )
+  expect(lengthMatchingPostProcessingParams.obstacleMargin).toBe(0.1)
   expect(lengthMatchingPostProcessingParams.differentialPairs).toEqual([
     {
       connectionNames: ["PAIR_P_mst0", "PAIR_N_mst0"],
