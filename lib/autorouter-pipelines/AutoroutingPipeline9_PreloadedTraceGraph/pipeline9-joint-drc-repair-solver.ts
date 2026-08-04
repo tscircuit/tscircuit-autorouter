@@ -28,6 +28,8 @@ import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
+import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
+import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -194,6 +196,13 @@ const getTraceIdsFromDrcErrors = ({
     if (typeof error.pcb_via_id === "string") {
       const traceId = traceIdByViaId.get(error.pcb_via_id)
       if (traceId) traceIds.add(traceId)
+    }
+    if (Array.isArray(error.pcb_via_ids)) {
+      for (const viaId of error.pcb_via_ids) {
+        if (typeof viaId !== "string") continue
+        const traceId = traceIdByViaId.get(viaId)
+        if (traceId) traceIds.add(traceId)
+      }
     }
     const pairPrefix = primaryTraceId ? `overlap_${primaryTraceId}_` : undefined
     if (
@@ -393,6 +402,54 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               params.connMap,
             ),
     )
+    const movableTraceIndexByOriginalTraceId = new Map(
+      this.movablePreloadedTraces.map((movableTrace, movableTraceIndex) => [
+        movableTrace.originalTrace.pcb_trace_id,
+        movableTraceIndex,
+      ]),
+    )
+    for (const originalTraceIds of getPipeline9PreloadedViaPairTraceGroups({
+      errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
+      circuitJson: currentDrc.circuitJson,
+      originalTraceIdByPreparedTraceId:
+        preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+    })) {
+      const movableTraceIndexes = originalTraceIds.flatMap((traceId) => {
+        const movableTraceIndex =
+          movableTraceIndexByOriginalTraceId.get(traceId)
+        return movableTraceIndex === undefined ? [] : [movableTraceIndex]
+      })
+      if (movableTraceIndexes.length === 0) continue
+      const movableTraceIndexSet = new Set(movableTraceIndexes)
+      const mergedRoutes = mergePipeline9MovablePreloadedVias({
+        routes: movableTraceIndexes.map(
+          (movableTraceIndex) =>
+            this.movablePreloadedTraces[movableTraceIndex]!.hdRoute,
+        ),
+        otherHdRoutes: [
+          ...params.newHdRoutes,
+          ...this.fixedPreloadedObstacleRoutes,
+          ...this.movablePreloadedTraces.flatMap(
+            (movableTrace, movableTraceIndex) =>
+              movableTraceIndexSet.has(movableTraceIndex)
+                ? []
+                : [movableTrace.hdRoute],
+          ),
+        ],
+        obstacles: params.obstacles,
+        colorMap: params.colorMap,
+        layerCount: params.layerCount,
+        connMap: params.connMap,
+      })
+      for (
+        let groupIndex = 0;
+        groupIndex < movableTraceIndexes.length;
+        groupIndex++
+      ) {
+        this.movablePreloadedTraces[movableTraceIndexes[groupIndex]!]!.hdRoute =
+          mergedRoutes[groupIndex]!
+      }
+    }
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       movablePreloadedTraceCount: this.movablePreloadedTraces.length,

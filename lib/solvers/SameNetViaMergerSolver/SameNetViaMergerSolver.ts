@@ -35,6 +35,14 @@ type Via = {
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
+const POSITION_EPSILON = 1e-9
+
+const positionsMatch = (
+  left: Pick<Via, "x" | "y">,
+  right: Pick<Via, "x" | "y">,
+) =>
+  Math.abs(left.x - right.x) <= POSITION_EPSILON &&
+  Math.abs(left.y - right.y) <= POSITION_EPSILON
 
 const tryGetNetForRoute = (
   connMap: ConnectivityMap,
@@ -98,8 +106,8 @@ const canMoveViaTo = (
     const prev = route.route[i - 1]
     const curr = route.route[i]
     if (prev.z === curr.z) continue
-    if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-    if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+    if (!positionsMatch(prev, viaToRemove)) continue
+    if (!positionsMatch(curr, viaToRemove)) continue
 
     transitionLayers.add(prev.z)
     transitionLayers.add(curr.z)
@@ -438,14 +446,13 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const prev = route[j - 1]
       const curr = route[j]
       if (prev.z === curr.z) continue
-      if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-      if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+      if (!positionsMatch(prev, viaToRemove)) continue
+      if (!positionsMatch(curr, viaToRemove)) continue
 
       let clusterStartIndex = j - 1
       while (
         clusterStartIndex > 0 &&
-        route[clusterStartIndex - 1]!.x === viaToRemove.x &&
-        route[clusterStartIndex - 1]!.y === viaToRemove.y
+        positionsMatch(route[clusterStartIndex - 1]!, viaToRemove)
       ) {
         clusterStartIndex--
       }
@@ -453,8 +460,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
       let clusterEndIndex = j
       while (
         clusterEndIndex < route.length - 1 &&
-        route[clusterEndIndex + 1]!.x === viaToRemove.x &&
-        route[clusterEndIndex + 1]!.y === viaToRemove.y
+        positionsMatch(route[clusterEndIndex + 1]!, viaToRemove)
       ) {
         clusterEndIndex++
       }
@@ -476,7 +482,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     routeToUpdate.vias = routeToUpdate.vias.flatMap((vx) => {
-      if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
+      if (!positionsMatch(vx, viaToRemove)) return vx
       replacedVia = true
       return viaKeep.mutable ? [{ x: viaKeep.x, y: viaKeep.y }] : []
     })

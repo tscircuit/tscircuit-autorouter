@@ -345,16 +345,16 @@ export const spliceFixedRouteSection = (
 ): PreloadedHighDensityRoute => {
   const firstSourceRoute = section.sourceRoutes[0]!
   const lastSourceRoute = section.sourceRoutes.at(-1)!
-  const replacementPoints = materializeImpliedLayerTransitions(
-    orientReplacementPoints(replacement, section),
+  const replacementPoints = orientReplacementPoints(replacement, section)
+  const route = materializeImpliedLayerTransitions(
+    dedupeAdjacentPoints([
+      ...firstSourceRoute.route.slice(0, section.start.segmentIndex + 1),
+      section.start.point,
+      ...replacementPoints.slice(1, -1),
+      section.end.point,
+      ...lastSourceRoute.route.slice(section.end.segmentIndex + 1),
+    ]),
   )
-  const route = dedupeAdjacentPoints([
-    ...firstSourceRoute.route.slice(0, section.start.segmentIndex + 1),
-    section.start.point,
-    ...replacementPoints.slice(1, -1),
-    section.end.point,
-    ...lastSourceRoute.route.slice(section.end.segmentIndex + 1),
-  ])
 
   return {
     ...firstSourceRoute,
