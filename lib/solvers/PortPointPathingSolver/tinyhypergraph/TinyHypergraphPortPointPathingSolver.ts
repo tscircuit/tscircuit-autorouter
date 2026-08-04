@@ -959,6 +959,61 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ? "Skipped to preserve preloaded port topology"
         : `Skipped for ${connections.length} connections`
     }
+
+    const diagnosticPortId = "ce46263_pp4_z0::0"
+    const originalDiagnosticPort = serializedGraph.ports.find(
+      ({ portId }) => portId === diagnosticPortId,
+    )
+    if (originalDiagnosticPort) {
+      const physicalBoundaryKey = (
+        port: SerializedHyperGraph["ports"][number],
+      ) =>
+        `${[port.region1Id, port.region2Id].sort().join("|")}|z${asTinyPortMetadata(port.d).z}`
+      const boundaryKey = physicalBoundaryKey(originalDiagnosticPort)
+      const describePort = (
+        port: SerializedHyperGraph["ports"][number],
+      ) => {
+        const metadata = asTinyPortMetadata(port.d)
+        return {
+          portId: port.portId,
+          x: metadata.x,
+          y: metadata.y,
+          z: metadata.z,
+          cramped: metadata.cramped,
+          duplicatedFromPortId: metadata.duplicatedFromPortId,
+        }
+      }
+      const describeBoundaryPorts = (graph: SerializedHyperGraph) =>
+        graph.ports
+          .filter((port) => physicalBoundaryKey(port) === boundaryKey)
+          .map(describePort)
+          .sort(
+            (left, right) =>
+              (left.x ?? 0) - (right.x ?? 0) ||
+              (left.y ?? 0) - (right.y ?? 0) ||
+              left.portId.localeCompare(right.portId),
+          )
+      const boundaryRegionIds = [
+        originalDiagnosticPort.region1Id,
+        originalDiagnosticPort.region2Id,
+      ]
+
+      throw new Error(
+        `Sample 4 boundary diagnostic: ${JSON.stringify({
+          sourcePortId: diagnosticPortId,
+          duplicateSummary:
+            this.duplicateCongestedPortReport?.duplicatedPorts.find(
+              ({ sourcePortId }) => sourcePortId === diagnosticPortId,
+            ),
+          regions: serializedGraph.regions
+            .filter(({ regionId }) => boundaryRegionIds.includes(regionId))
+            .map(({ regionId, pointIds, d }) => ({ regionId, pointIds, d })),
+          originalBoundaryPorts: describeBoundaryPorts(serializedGraph),
+          revisedBoundaryPorts: describeBoundaryPorts(graphForTiny),
+        })}`,
+      )
+    }
+
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
