@@ -10,7 +10,10 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
+import {
+  pointToBoxDistance,
+  segmentToBoxMinDistance,
+} from "@tscircuit/math-utils"
 
 export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
@@ -102,8 +105,59 @@ const canMoveViaTo = (
   }
 
   if (transitionLayers.size === 0) {
+    const nearestLayerChanges: Array<{
+      prev: HighDensityRoute["route"][number]
+      curr: HighDensityRoute["route"][number]
+      distanceSquared: number
+    }> = []
+    for (let i = 1; i < route.route.length; i++) {
+      const prev = route.route[i - 1]
+      const curr = route.route[i]
+      if (prev.z === curr.z) continue
+
+      nearestLayerChanges.push({
+        prev,
+        curr,
+        distanceSquared: Math.min(
+          (prev.x - viaToRemove.x) ** 2 + (prev.y - viaToRemove.y) ** 2,
+          (curr.x - viaToRemove.x) ** 2 + (curr.y - viaToRemove.y) ** 2,
+        ),
+      })
+    }
+    nearestLayerChanges.sort((a, b) => a.distanceSquared - b.distanceSquared)
+    const nearestSummary = nearestLayerChanges
+      .slice(0, 3)
+      .map(({ prev, curr }) => {
+        const matchingObstacles = context.obstacleSHI
+          .searchArea(
+            (prev.x + curr.x) / 2,
+            (prev.y + curr.y) / 2,
+            Math.abs(prev.x - curr.x) + 1,
+            Math.abs(prev.y - curr.y) + 1,
+          )
+          .filter(
+            (obstacle) =>
+              obstacle.__zLayers &&
+              obstacle.__zLayers.length > 1 &&
+              obstacleIsSameNet(context.connMap, obstacle, viaToRemove),
+          )
+          .map((obstacle) => ({
+            connectedTo: obstacle.connectedTo,
+            zLayers: obstacle.__zLayers,
+            prevDistance: pointToBoxDistance(prev, obstacle),
+            currDistance: pointToBoxDistance(curr, obstacle),
+          }))
+
+        return JSON.stringify({
+          prev,
+          curr,
+          segmentType: prev.toNextSegmentType ?? "trace",
+          matchingObstacles,
+        })
+      })
+      .join(", ")
     throw new Error(
-      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y})`,
+      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${route.connectionName}"; nearest layer changes: ${nearestSummary || "none"}`,
     )
   }
 
