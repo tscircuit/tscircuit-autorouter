@@ -1,122 +1,72 @@
 import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import {
+  getSvgFromGraphicsObject,
+  type GraphicsObject,
+} from "graphics-debug"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { getIcePiSixLayerFanoutRepro } from "../fixtures/icepi-six-layer-fanout"
 
-const CONNECTION_COUNT = 181
+const FANOUT_VIEW = { minX: 18, maxX: 22, minY: 3.5, maxY: 18 }
 
-test("large graphs sample duplicate-congested-port repair work", () => {
-  const capacityMeshNodes: CapacityMeshNode[] = [
-    { capacityMeshNodeId: "west", x: -2 },
-    { capacityMeshNodeId: "center", x: 0 },
-    { capacityMeshNodeId: "east", x: 2 },
-  ].map(({ capacityMeshNodeId, x }) => ({
-    capacityMeshNodeId,
-    center: { x, y: 0 },
-    width: 2,
-    height: 2,
-    layer: "top",
-    availableZ: [0],
-  }))
-  const simpleRouteJsonConnections: SimpleRouteConnection[] = Array.from(
-    { length: CONNECTION_COUNT },
-    (_, index) => ({
-      name: `route-${index}`,
-      pointsToConnect: [
-        { x: -2, y: 0, layer: "top" },
-        { x: 2, y: 0, layer: "top" },
-      ],
-    }),
-  )
-  const connectivityMap = new ConnectivityMap(
-    Object.fromEntries(
-      simpleRouteJsonConnections.map((connection) => [
-        `net-${connection.name}`,
-        [connection.name],
-      ]),
-    ),
-  )
-  const { graph, connections } = buildHyperGraph({
-    capacityMeshNodes,
-    segmentPortPoints: [
-      {
-        segmentPortPointId: "west-center",
-        x: -1,
-        y: 0,
-        availableZ: [0],
-        nodeIds: ["west", "center"],
-        edgeId: "west-center-edge",
-        connectionName: null,
-        distToCentermostPortOnZ: 0,
-        cramped: false,
+const isInFanoutView = (point: { x: number; y: number }) =>
+  point.x >= FANOUT_VIEW.minX &&
+  point.x <= FANOUT_VIEW.maxX &&
+  point.y >= FANOUT_VIEW.minY &&
+  point.y <= FANOUT_VIEW.maxY
+
+const getFanoutVisualization = (graphics: GraphicsObject): GraphicsObject => ({
+  coordinateSystem: graphics.coordinateSystem,
+  title: graphics.title,
+  circles: graphics.circles?.filter((circle) =>
+    isInFanoutView(circle.center),
+  ),
+  points: graphics.points?.filter(isInFanoutView),
+  lines: graphics.lines?.filter((line) =>
+    line.points.some(isInFanoutView),
+  ),
+  rects: [
+    ...(graphics.rects?.filter(
+      (rect) =>
+        rect.center.x + rect.width / 2 >= FANOUT_VIEW.minX &&
+        rect.center.x - rect.width / 2 <= FANOUT_VIEW.maxX &&
+        rect.center.y + rect.height / 2 >= FANOUT_VIEW.minY &&
+        rect.center.y - rect.height / 2 <= FANOUT_VIEW.maxY,
+    ) ?? []),
+    {
+      center: {
+        x: (FANOUT_VIEW.minX + FANOUT_VIEW.maxX) / 2,
+        y: (FANOUT_VIEW.minY + FANOUT_VIEW.maxY) / 2,
       },
-      {
-        segmentPortPointId: "center-east",
-        x: 1,
-        y: 0,
-        availableZ: [0],
-        nodeIds: ["center", "east"],
-        edgeId: "center-east-edge",
-        connectionName: null,
-        distToCentermostPortOnZ: 0,
-        cramped: false,
-      },
-    ],
-    layerCount: 1,
-    connectivityMap,
-    simpleRouteJsonConnections,
-  })
-  const solver = new TinyHypergraphPortPointPathingSolver({
-    graph,
-    connections,
-    layerCount: 1,
-    effort: 0.01,
-    flags: {
-      FORCE_CENTER_FIRST: true,
-      RIPPING_ENABLED: true,
-      USE_SELECTIVE_RERIP_ROUTING: true,
+      width: FANOUT_VIEW.maxX - FANOUT_VIEW.minX,
+      height: FANOUT_VIEW.maxY - FANOUT_VIEW.minY,
+      stroke: "transparent",
     },
-    weights: {
-      SHUFFLE_SEED: 0,
-      MEMORY_PF_FACTOR: 4,
-      CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-      CENTER_OFFSET_FOCUS_SHIFT: 0,
-      NODE_PF_FACTOR: 0,
-      LAYER_CHANGE_COST: 0,
-      RIPPING_PF_COST: 0,
-      NODE_PF_MAX_PENALTY: 100,
-      BASE_CANDIDATE_COST: 0.6,
-      MAX_ITERATIONS_PER_PATH: 0,
-      RANDOM_WALK_DISTANCE: 0,
-      START_RIPPING_PF_THRESHOLD: 0.3,
-      END_RIPPING_PF_THRESHOLD: 1,
-      MAX_RIPS: 1000,
-      RANDOM_RIP_FRACTION: 0.3,
-      STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-      GREEDY_MULTIPLIER: 0.7,
-      MIN_ALLOWED_BOARD_SCORE: -10000,
-    },
-  })
+  ],
+})
 
-  const tinyPipeline = (
-    solver as unknown as {
-      tinyPipelineSolver: {
-        getInitialVisualizationSolver: () => TinyHyperGraphSolver
-      }
-    }
-  ).tinyPipelineSolver
-  const tinySolver = tinyPipeline.getInitialVisualizationSolver()
+test("IcePi six-layer fanout repairs congested ports above 180 routes", () => {
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(
+    getIcePiSixLayerFanoutRepro(),
+    { effort: 0.01, cacheProvider: null },
+  )
+
+  solver.solveUntilPhase("portPointPathingSolver")
+  solver.step()
   solver.step()
 
-  expect(tinySolver.problem.routeCount).toBe(CONNECTION_COUNT)
-  expect(solver.stats).toMatchObject({
-    duplicateCongestedPortSourceCount: 2,
-    duplicateCongestedPortCount: 62,
-    duplicateCongestedPortFallbackToOriginal: false,
+  const pathingSolver = solver.portPointPathingSolver!
+  expect(pathingSolver.stats).toMatchObject({
+    duplicateCongestedPortInputConnectionCount: 181,
     duplicateCongestedPortPrepassConnectionCount: 32,
-    duplicateCongestedPortInputConnectionCount: CONNECTION_COUNT,
     duplicateCongestedPortPrepassSampled: true,
+    duplicateCongestedPortFallbackToOriginal: false,
+    duplicateCongestedPortSourceCount: 36,
+    duplicateCongestedPortCount: 144,
   })
+  expect(
+    getSvgFromGraphicsObject(
+      getFanoutVisualization(pathingSolver.visualize()),
+      { backgroundColor: "white", svgWidth: 700, svgHeight: 700 },
+    ),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
