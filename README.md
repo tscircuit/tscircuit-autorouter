@@ -179,3 +179,7 @@ bun test
 # Build the library
 bun run build
 ```
+
+## Maintainer resources
+
+Track routing performance and benchmark results in the [Autorouter Benchmark Dashboard](https://autorouter-benchmark-dashboard.vercel.app/).
