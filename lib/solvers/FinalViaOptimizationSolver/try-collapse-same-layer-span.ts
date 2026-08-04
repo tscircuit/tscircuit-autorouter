@@ -31,21 +31,36 @@ const crossesOutline = (
       ),
   )
 
-/** Finds one maximal A→…→A excursion that can safely become same-layer copper. */
-export const tryCollapseSameLayerSpan = ({
+const getLayerTransitionCount = (route: HighDensityRoute): number =>
+  route.route.slice(1).filter((point, index) => point.z !== route.route[index]!.z)
+    .length
+
+export type SameLayerSpanCollapseCandidate = {
+  route: HighDensityRoute
+  removedTransitionCount: number
+  lengthSaved: number
+}
+
+/** Enumerates a small deterministic shortlist of maximal A→…→A collapses. */
+export const getSameLayerSpanCollapseCandidates = ({
   route,
   hdRouteSHI,
   obstacleSHI,
   connMap,
   outline,
+  maxCandidates = 4,
 }: {
   route: HighDensityRoute
   hdRouteSHI: HighDensityRouteSpatialIndex
   obstacleSHI: ObstacleSpatialHashIndex
   connMap: ConnectivityMap
   outline?: ReadonlyArray<{ x: number; y: number }>
-}): HighDensityRoute | null => {
+  maxCandidates?: number
+}): SameLayerSpanCollapseCandidate[] => {
   const sections = breakRouteIntoSections(route)
+  const candidates: SameLayerSpanCollapseCandidate[] = []
+  const candidateKeys = new Set<string>()
+  const originalTransitionCount = getLayerTransitionCount(route)
   for (let startSectionIndex = 0; startSectionIndex < sections.length - 2; startSectionIndex++) {
     const startSection = sections[startSectionIndex]!
     for (let endSectionIndex = sections.length - 1; endSectionIndex >= startSectionIndex + 2; endSectionIndex--) {
@@ -91,9 +106,35 @@ export const tryCollapseSameLayerSpan = ({
             ...route.route.slice(endSection.startIndex + 1),
           ],
         })
-        if (candidate) return candidate
+        if (!candidate) continue
+        const removedTransitionCount =
+          originalTransitionCount - getLayerTransitionCount(candidate)
+        if (removedTransitionCount <= 0) continue
+        const key = candidate.route
+          .map((point) => `${point.x}:${point.y}:${point.z}`)
+          .join("|")
+        if (candidateKeys.has(key)) continue
+        candidateKeys.add(key)
+        candidates.push({
+          route: candidate,
+          removedTransitionCount,
+          lengthSaved: pathLength(removed) - pathLength(replacement),
+        })
       }
     }
   }
-  return null
+  return candidates
+    .sort((a, b) => {
+      if (b.removedTransitionCount !== a.removedTransitionCount) {
+        return b.removedTransitionCount - a.removedTransitionCount
+      }
+      return b.lengthSaved - a.lengthSaved
+    })
+    .slice(0, maxCandidates)
 }
+
+/** Finds the strongest same-layer excursion candidate for existing callers. */
+export const tryCollapseSameLayerSpan = (
+  input: Parameters<typeof getSameLayerSpanCollapseCandidates>[0],
+): HighDensityRoute | null =>
+  getSameLayerSpanCollapseCandidates(input)[0]?.route ?? null

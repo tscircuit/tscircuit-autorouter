@@ -8,7 +8,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { createRouteQualitySnapshot, type RouteQualitySnapshot } from "./create-route-quality-snapshot"
 import { getProtectedConnectionNames } from "./get-protected-connection-names"
-import { tryCollapseSameLayerSpan } from "./try-collapse-same-layer-span"
+import { getSameLayerSpanCollapseCandidates } from "./try-collapse-same-layer-span"
 
 const MAX_CANDIDATE_ATTEMPTS = 32
 
@@ -79,10 +79,10 @@ export class FinalViaOptimizationSolver extends BaseSolver {
   }
 
   hdRoutes: HighDensityRoute[]
-  private readonly candidateConnectionNames: string[]
+  private readonly candidateConnectionQueue: string[]
+  private readonly rejectedCandidateKeys = new Map<string, Set<string>>()
   private readonly protectedConnectionNames: Set<string>
   private readonly obstacleSHI: ObstacleSpatialHashIndex
-  private candidateIndex = 0
   private attempts = 0
   private quality: RouteQualitySnapshot
 
@@ -108,7 +108,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       "flatbush",
       createObjectsWithZLayers(input.obstacles, input.layerCount),
     )
-    this.candidateConnectionNames = this.hdRoutes
+    this.candidateConnectionQueue = this.hdRoutes
       .filter(
         (route) =>
           !isProtectedRoute(
@@ -141,21 +141,45 @@ export class FinalViaOptimizationSolver extends BaseSolver {
     }
   }
 
-  private getCandidateRoutes(routeIndex: number): HighDensityRoute[] | null {
+  private getCandidateRoutes(
+    routeIndex: number,
+  ): Array<{ routes: HighDensityRoute[]; key: string }> {
     const route = this.hdRoutes[routeIndex]
     if (!route)
       throw new Error("FinalViaOptimizationSolver route index is invalid")
-    const candidateRoute = tryCollapseSameLayerSpan({
+    const rejectedKeys = this.rejectedCandidateKeys.get(route.connectionName)
+    const candidates = getSameLayerSpanCollapseCandidates({
       route: structuredClone(route),
       hdRouteSHI: new HighDensityRouteSpatialIndex(this.hdRoutes),
       obstacleSHI: this.obstacleSHI,
       connMap: this.input.connMap,
       outline: this.input.originalSrj.outline,
     })
-    if (!candidateRoute) return null
-    const candidateRoutes = structuredClone(this.hdRoutes)
-    candidateRoutes[routeIndex] = candidateRoute
-    return candidateRoutes
+    return candidates
+      .map(({ route: candidateRoute }) => {
+        const routes = structuredClone(this.hdRoutes)
+        routes[routeIndex] = candidateRoute
+        return {
+          routes,
+          key: candidateRoute.route
+            .map((point) => `${point.x}:${point.y}:${point.z}`)
+            .join("|"),
+        }
+      })
+      .filter(({ key }) => !rejectedKeys?.has(key))
+  }
+
+  private queueAnotherCandidate(connectionName: string): void {
+    if (!this.candidateConnectionQueue.includes(connectionName)) {
+      this.candidateConnectionQueue.push(connectionName)
+    }
+  }
+
+  private rejectCandidate(connectionName: string, key: string): void {
+    const rejectedKeys = this.rejectedCandidateKeys.get(connectionName)
+    if (rejectedKeys) rejectedKeys.add(key)
+    else this.rejectedCandidateKeys.set(connectionName, new Set([key]))
+    this.queueAnotherCandidate(connectionName)
   }
 
   private hasValidRollbackInvariant(candidateRoutes: HighDensityRoute[]): boolean {
@@ -177,7 +201,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
 
   _step(): void {
     if (
-      this.candidateIndex >= this.candidateConnectionNames.length ||
+      this.candidateConnectionQueue.length === 0 ||
       this.attempts >= MAX_CANDIDATE_ATTEMPTS
     ) {
       this.stats.finalOutputViaCount = this.quality.outputViaCount
@@ -187,7 +211,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       return
     }
 
-    const connectionName = this.candidateConnectionNames[this.candidateIndex++]!
+    const connectionName = this.candidateConnectionQueue.shift()!
     const routeIndex = this.hdRoutes.findIndex(
       (route) => route.connectionName === connectionName,
     )
@@ -197,18 +221,32 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       )
     this.attempts++
     this.stats.attemptedCandidateCount++
-    const candidateRoutes = this.getCandidateRoutes(routeIndex)
-    if (!candidateRoutes) {
+    const candidate = this.getCandidateRoutes(routeIndex)[0]
+    if (!candidate) {
       this.stats.rejectedByCollisionCount++
       return
     }
-    if (!this.hasValidRollbackInvariant(candidateRoutes)) {
+    if (!this.hasValidRollbackInvariant(candidate.routes)) {
       this.stats.rejectedByConnectivityCount++
+      this.rejectCandidate(connectionName, candidate.key)
+      return
+    }
+
+    const convertedCandidate = this.input.convert(candidate.routes)
+    const convertedCandidateViaCount = convertedCandidate.reduce(
+      (count, trace) =>
+        count +
+        trace.route.filter((segment) => segment.route_type === "via").length,
+      0,
+    )
+    if (convertedCandidateViaCount >= this.quality.outputViaCount) {
+      this.stats.rejectedByMetadataCount++
+      this.rejectCandidate(connectionName, candidate.key)
       return
     }
 
     const candidateQuality = createRouteQualitySnapshot({
-      hdRoutes: candidateRoutes,
+      hdRoutes: candidate.routes,
       convert: this.input.convert,
       productionDrcEvaluator: this.input.productionDrcEvaluator,
       relaxedDrcEvaluator: this.input.relaxedDrcEvaluator,
@@ -220,6 +258,7 @@ export class FinalViaOptimizationSolver extends BaseSolver {
         this.quality.productionDrcIssueScore
     ) {
       this.stats.rejectedByProductionDrcCount++
+      this.rejectCandidate(connectionName, candidate.key)
       return
     }
     if (
@@ -227,22 +266,27 @@ export class FinalViaOptimizationSolver extends BaseSolver {
       this.quality.relaxedDrcErrorCount
     ) {
       this.stats.rejectedByRelaxedDrcCount++
+      this.rejectCandidate(connectionName, candidate.key)
       return
     }
     if (candidateQuality.outputViaCount >= this.quality.outputViaCount) {
       this.stats.rejectedByMetadataCount++
+      this.rejectCandidate(connectionName, candidate.key)
       return
     }
     if (
       candidateQuality.totalTraceLength > this.quality.totalTraceLength + 1e-6
     ) {
       this.stats.rejectedByTraceLengthCount++
+      this.rejectCandidate(connectionName, candidate.key)
       return
     }
 
-    this.hdRoutes = candidateRoutes
+    this.hdRoutes = candidate.routes
     this.quality = candidateQuality
     this.stats.acceptedCandidateCount++
+    this.rejectedCandidateKeys.delete(connectionName)
+    this.queueAnotherCandidate(connectionName)
   }
 
   getOutput(): HighDensityRoute[] {
