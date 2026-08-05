@@ -88,11 +88,21 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     const compactedAlignedRegions =
       compactTopologyMergingRegions(topologyRegions)
+    const targetAdjacentAlignedRegions = compactedAlignedRegions.flatMap(
+      (region) =>
+        this.doesRegionBorderTarget(region.bounds)
+          ? [region]
+          : splitUndersizedAlignedFreeRegions({
+              regions: [region],
+              minimumViaFootprint: Number.POSITIVE_INFINITY,
+              preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+            }),
+    )
     const viaSizedRegions =
       this.inputProblem.viaDiameter === undefined
-        ? compactedAlignedRegions
+        ? targetAdjacentAlignedRegions
         : splitUndersizedAlignedFreeRegions({
-            regions: compactedAlignedRegions,
+            regions: targetAdjacentAlignedRegions,
             minimumViaFootprint: this.inputProblem.viaDiameter,
             preparedNodeBySourceKey: this.preparedNodeBySourceKey,
           })
@@ -235,5 +245,35 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
+  }
+
+  private doesRegionBorderTarget(
+    bounds: TopologyMergingRegion["bounds"],
+  ): boolean {
+    return this.preparedNodes.some(({ bounds: targetBounds, node }) => {
+      if (!node._containsTarget) return false
+
+      const overlapsTargetVertically =
+        Math.min(bounds.maxY, targetBounds.maxY) -
+          Math.max(bounds.minY, targetBounds.minY) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetSide =
+        Math.abs(bounds.minX - targetBounds.maxX) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxX - targetBounds.minX) <=
+          TOPOLOGY_MERGING_EPSILON
+      if (overlapsTargetVertically && touchesTargetSide) return true
+
+      const overlapsTargetHorizontally =
+        Math.min(bounds.maxX, targetBounds.maxX) -
+          Math.max(bounds.minX, targetBounds.minX) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetTopOrBottom =
+        Math.abs(bounds.minY - targetBounds.maxY) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxY - targetBounds.minY) <=
+          TOPOLOGY_MERGING_EPSILON
+      return overlapsTargetHorizontally && touchesTargetTopOrBottom
+    })
   }
 }
