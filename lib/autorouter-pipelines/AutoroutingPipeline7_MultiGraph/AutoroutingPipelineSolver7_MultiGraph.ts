@@ -268,28 +268,37 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   private logDiagnosticDrc(stage: string, hdRoutes: HighDensityRoute[]) {
     if (process.env.PIPELINE7_LOG_STAGE_DRC !== "1") return
 
-    const evaluateDrc = createPipeline7AutoroutingDrcEvaluator({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
-      originalConnections: this.originalSrj.connections,
-      layerCount: this.srj.layerCount,
-      obstacles: this.srj.obstacles,
-      defaultViaHoleDiameter: this.viaHoleDiameter,
-      connMap: this.connMap,
-      srjWithPointPairs: this.srjWithPointPairs!,
-      originalSrj: this.originalSrj,
-    })
-    const result = evaluateDrc({ hdRoutes })
+    try {
+      const evaluateDrc = createPipeline7AutoroutingDrcEvaluator({
+        connections: this.netToPointPairsSolver?.newConnections ?? [],
+        originalConnections: this.originalSrj.connections,
+        layerCount: this.srj.layerCount,
+        obstacles: this.srj.obstacles,
+        defaultViaHoleDiameter: this.viaHoleDiameter,
+        connMap: this.connMap,
+        srjWithPointPairs: this.srjWithPointPairs!,
+        originalSrj: this.originalSrj,
+      })
+      const result = evaluateDrc({ hdRoutes })
 
-    console.error(
-      `[pipeline7-stage-drc] ${JSON.stringify({
-        stage,
-        errorCount: result.errors.length,
-        viaCount: hdRoutes.reduce(
-          (total, route) => total + route.vias.length,
-          0,
-        ),
-      })}`,
-    )
+      console.error(
+        `[pipeline7-stage-drc] ${JSON.stringify({
+          stage,
+          errorCount: result.errors.length,
+          viaCount: hdRoutes.reduce(
+            (total, route) => total + route.vias.length,
+            0,
+          ),
+        })}`,
+      )
+    } catch (error) {
+      console.error(
+        `[pipeline7-stage-drc] ${JSON.stringify({
+          stage,
+          error: error instanceof Error ? error.message : String(error),
+        })}`,
+      )
+    }
   }
 
   pipelineDef = [
@@ -551,40 +560,53 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
-      const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
-      const fallbackNodes =
-        cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
-      const nodePortPointsSource =
-        uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+    definePipelineStep(
+      "highDensityRouteSolver",
+      HighDensitySolver,
+      (cms) => {
+        const uniformNodes =
+          cms.uniformPortDistributionSolver?.getOutput() ?? []
+        const fallbackNodes =
+          cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+        const nodePortPointsSource =
+          uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
 
-      return [
-        {
-          nodePortPoints: nodePortPointsSource,
-          nodePfById: new Map(
-            (
-              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-              []
-            ).map((node) => [
-              node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
-            ]),
-          ),
-          colorMap: cms.colorMap,
-          connMap: cms.connMap,
-          viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-          useGrowShrinkHighDensityIntraNodeSolver: true,
-          preserveTerminalPcbPortIds: true,
-          growShrinkFallbackToInvalidGeometryOnFailure: true,
+        return [
+          {
+            nodePortPoints: nodePortPointsSource,
+            nodePfById: new Map(
+              (
+                cms.portPointPathingSolver?.getOutput()
+                  .inputNodeWithPortPoints ?? []
+              ).map((node) => [
+                node.capacityMeshNodeId,
+                cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+              ]),
+            ),
+            colorMap: cms.colorMap,
+            connMap: cms.connMap,
+            viaDiameter: cms.viaDiameter,
+            traceWidth: cms.minTraceWidth,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            useGrowShrinkHighDensityIntraNodeSolver: true,
+            preserveTerminalPcbPortIds: true,
+            growShrinkFallbackToInvalidGeometryOnFailure: true,
+          },
+        ]
+      },
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "highDensityRouteSolver",
+            cms.highDensityRouteSolver!.routes,
+          )
         },
-      ]
-    }),
+      },
+    ),
     definePipelineStep(
       "highDensityForceImproveSolver",
       HighDensityForceImproveSolver,
@@ -597,6 +619,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "highDensityForceImproveSolver",
+            cms.highDensityForceImproveSolver!.getOutput(),
+          )
+        },
+      },
     ),
     definePipelineStep(
       "highDensityRepairSolver",
@@ -613,6 +643,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           maxSampleEntries: 80,
         },
       ],
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "highDensityRepairSolver",
+            cms.highDensityRepairSolver!.getOutput(),
+          )
+        },
+      },
     ),
     definePipelineStep(
       "highDensityStitchSolver",
