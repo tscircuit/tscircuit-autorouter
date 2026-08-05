@@ -11,6 +11,10 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport77-07f6a7.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
+  if (solver.failed) {
+    throw new Error(`bugreport77 routing failed: ${String(solver.error)}`)
+  }
+  expect(solver.solved).toBe(true)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

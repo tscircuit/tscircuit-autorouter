@@ -8,6 +8,7 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
+import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
@@ -42,6 +43,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
   private endpointIndex = new EndpointClusterIndex()
+  private clearanceValidator: RouteStitchClearanceValidator
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -59,6 +61,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isStitchSegmentClear: (stitchSegment) =>
+        this.clearanceValidator.isSegmentClear(stitchSegment),
+      stitchClearanceMode: "require_clear",
     })
 
     while (
@@ -147,6 +152,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+    this.clearanceValidator = new RouteStitchClearanceValidator({
+      hdRoutes: canonicalHdRoutes,
+    })
 
     const firstRoute = canonicalHdRoutes[0]
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
@@ -395,6 +403,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
+          this.clearanceValidator.addRoute(this.activeSolver.mergedHdRoute)
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
         }
         this.activeSolver = null
@@ -422,6 +431,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      isStitchSegmentClear: (stitchSegment) =>
+        this.clearanceValidator.isSegmentClear(stitchSegment),
+      stitchClearanceMode: "prefer_clear",
     })
   }
 

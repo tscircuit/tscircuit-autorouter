@@ -4,6 +4,7 @@ import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
+import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import {
   comparePoints,
   compareRoutes,
@@ -15,8 +16,10 @@ import {
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
+const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
+export type StitchClearanceMode = "require_clear" | "prefer_clear"
 export {
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -52,6 +55,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  isStitchSegmentClear: IsStitchSegmentClear
+  stitchClearanceMode: StitchClearanceMode
+
+  private isPlanarStitchClear(start: Point3, end: Point3): boolean {
+    return this.isStitchSegmentClear({
+      connectionName: this.mergedHdRoute.connectionName,
+      start,
+      end,
+      traceThickness: this.mergedHdRoute.traceThickness,
+    })
+  }
 
   constructor(opts: {
     connectionName: string
@@ -63,16 +77,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    isStitchSegmentClear: IsStitchSegmentClear
+    stitchClearanceMode: StitchClearanceMode
   }) {
     super()
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
+    this.isStitchSegmentClear = opts.isStitchSegmentClear
+    this.stitchClearanceMode = opts.stitchClearanceMode
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
       this.end = opts.end
+      const traceThickness = opts.defaultTraceThickness ?? 0.15
       const routePoints = [
         { x: opts.start.x, y: opts.start.y, z: opts.start.z },
       ]
@@ -92,7 +111,25 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         routePoints.push({ x: opts.start.x, y: opts.start.y, z: opts.end.z })
         vias.push({ x: opts.start.x, y: opts.start.y })
       }
-      routePoints.push({ x: opts.end.x, y: opts.end.y, z: opts.end.z })
+
+      const stitchStart = routePoints[routePoints.length - 1]!
+      const stitchEnd = { x: opts.end.x, y: opts.end.y, z: opts.end.z }
+      const stitchSegment = {
+        connectionName: opts.connectionName,
+        start: stitchStart,
+        end: stitchEnd,
+        traceThickness,
+      }
+      if (
+        distance(stitchStart, stitchEnd) > GEOMETRIC_TOLERANCE &&
+        !this.isStitchSegmentClear(stitchSegment) &&
+        this.stitchClearanceMode === "require_clear"
+      ) {
+        this.failed = true
+        this.error = `Terminal stitch for "${opts.connectionName}" violates copper clearance`
+        return
+      }
+      routePoints.push(stitchEnd)
 
       this.mergedHdRoute = {
         connectionName: opts.connectionName,
@@ -107,7 +144,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         vias,
         jumpers: [],
         viaDiameter: opts.defaultViaDiameter ?? 0.3,
-        traceThickness: opts.defaultTraceThickness ?? 0.15,
+        traceThickness,
       }
       this.solved = true
       return
@@ -276,12 +313,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (this.remainingHdRoutes.length === 0) {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+      const terminalPoint = { ...this.end, z: lastMergedPoint.z }
+      const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
-        distance(lastMergedPoint, this.end) > GEOMETRIC_TOLERANCE &&
-        distance(lastMergedPoint, this.end) <=
-          MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        terminalDistance > GEOMETRIC_TOLERANCE &&
+        terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
+        if (
+          !this.isPlanarStitchClear(lastMergedPoint, terminalPoint) &&
+          this.stitchClearanceMode === "require_clear"
+        ) {
+          this.failed = true
+          this.error = `Terminal stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
+          return
+        }
         this.mergedHdRoute.route.push({
           x: this.end.x,
           y: this.end.y,
@@ -299,6 +345,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
     let bestScore = Infinity
+    let blockedByCollision = false
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
@@ -313,7 +360,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
         } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
-          scoreFirst = GAP_PENALTY + distToFirst
+          const isClear = this.isPlanarStitchClear(
+            lastMergedPoint,
+            firstPointInCandidate,
+          )
+          if (isClear || this.stitchClearanceMode === "prefer_clear") {
+            const clearancePenalty = isClear ? 0 : COLLISION_PENALTY
+            scoreFirst = GAP_PENALTY + clearancePenalty + distToFirst
+          } else {
+            blockedByCollision = true
+          }
         }
       } else if (
         distToFirst < GEOMETRIC_TOLERANCE &&
@@ -336,7 +392,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (distToLast < GEOMETRIC_TOLERANCE) {
           scoreLast = distToLast
         } else if (distToLast <= MAX_STITCH_GAP_DISTANCE_3) {
-          scoreLast = GAP_PENALTY + distToLast
+          const isClear = this.isPlanarStitchClear(
+            lastMergedPoint,
+            lastPointInCandidate,
+          )
+          if (isClear || this.stitchClearanceMode === "prefer_clear") {
+            const clearancePenalty = isClear ? 0 : COLLISION_PENALTY
+            scoreLast = GAP_PENALTY + clearancePenalty + distToLast
+          } else {
+            blockedByCollision = true
+          }
         }
       } else if (
         distToLast < GEOMETRIC_TOLERANCE &&
@@ -356,6 +421,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      if (blockedByCollision) {
+        this.failed = true
+        this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
+        return
+      }
       this.remainingHdRoutes = []
       return
     }
