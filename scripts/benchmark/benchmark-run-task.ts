@@ -1,4 +1,5 @@
 import { getSvgFromGraphicsObject } from "graphics-debug"
+import { writeFileSync } from "node:fs"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
@@ -67,6 +68,7 @@ type FailureInfo = {
 }
 
 const DEFAULT_PROGRESS_INTERVAL_MS = 1000
+let wroteSameNetViaMergerInput = false
 
 const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
   traces.reduce(
@@ -279,6 +281,35 @@ const getSolverChain = (solver: SolverInstance): string => {
     }
 
     const name = getSolverInstanceName(current) ?? "UnknownSolver"
+    if (
+      name === "SameNetViaMergerSolver" &&
+      !wroteSameNetViaMergerInput &&
+      state.input &&
+      typeof state.input === "object"
+    ) {
+      const input = state.input as Record<string, unknown>
+      const connMap =
+        input.connMap && typeof input.connMap === "object"
+          ? (input.connMap as Record<string, unknown>)
+          : undefined
+      writeFileSync(
+        "profile-solvers-pr.json",
+        JSON.stringify(
+          {
+            inputHdRoutes: input.inputHdRoutes,
+            otherHdRoutes: input.otherHdRoutes,
+            obstacles: input.obstacles,
+            colorMap: input.colorMap,
+            layerCount: input.layerCount,
+            outline: input.outline,
+            connMapNetMap: connMap?.netMap,
+          },
+          null,
+          2,
+        ),
+      )
+      wroteSameNetViaMergerInput = true
+    }
     chain.push(`${name}(${details.join(",")})`)
     current = current.activeSubSolver
   }

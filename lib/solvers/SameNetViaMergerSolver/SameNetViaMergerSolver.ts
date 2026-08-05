@@ -32,6 +32,8 @@ type Via = {
   layers: number[]
 }
 
+type ViaStateKey = string
+
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
 
@@ -180,6 +182,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
 
+  private seenViaStateIteration = new Map<ViaStateKey, number>()
+  private lastMergeSummary = "none"
+
   obstacleSHI: ObstacleSpatialHashIndex
   hdRouteSHI: HighDensityRouteSpatialIndex
 
@@ -188,6 +193,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
       ...this.mergedViaHdRoutes,
       ...(this.input.otherHdRoutes ?? []),
     ])
+  }
+
+  private getViaStateKey(): ViaStateKey {
+    return this.mergedViaHdRoutes
+      .map((route, routeIndex) => {
+        const viaLocations = route.vias
+          .map((via) => `${via.x}:${via.y}`)
+          .sort()
+        return `${routeIndex}:${viaLocations.join(";")}`
+      })
+      .join("|")
   }
 
   constructor(private input: SameNetViaMergerSolverInput) {
@@ -449,12 +465,32 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   _step(): void {
+    const viaStateKey = this.getViaStateKey()
+    const previousIteration = this.seenViaStateIteration.get(viaStateKey)
+    if (previousIteration !== undefined) {
+      const distinctViaLocationCount = new Set(
+        this.vias.map((via) => `${via.x}:${via.y}`),
+      ).size
+      throw new Error(
+        `SameNetViaMergerSolver repeated its via state after ${this.iterations - previousIteration} iteration(s) with ${this.vias.length} vias at ${distinctViaLocationCount} distinct locations. Previous iteration: ${previousIteration}. Last moves: ${this.lastMergeSummary}`,
+      )
+    }
+    this.seenViaStateIteration.set(viaStateKey, this.iterations)
+
     const groups = this.getOffendingViaGroupsBatch()
 
     if (groups.length === 0) {
       this.solved = true
       return
     }
+
+    this.lastMergeSummary = groups
+      .slice(0, 5)
+      .map(
+        ({ keep, remove }) =>
+          `keep route ${keep.routeIndex} at (${keep.x},${keep.y}); move ${remove.map((via) => `route ${via.routeIndex} from (${via.x},${via.y})`).join(", ")}`,
+      )
+      .join(" | ")
 
     let mergedViaCount = 0
     for (const group of groups) {
