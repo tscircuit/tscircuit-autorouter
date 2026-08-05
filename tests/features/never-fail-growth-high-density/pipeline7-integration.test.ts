@@ -81,6 +81,6 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
   expect(
     (exactGeometryDrcParams as any).enablePostSolveClearanceRelaxation,
   ).toBe(false)
-  expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(8)
+  expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(12)
   expect((exactGeometryDrcParams as any).broadPassMultiplier).toBe(3)
 })
