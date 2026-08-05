@@ -280,11 +280,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         originalSrj: this.originalSrj,
       })
       const result = evaluateDrc({ hdRoutes })
+      const errorCountsByType: Record<string, number> = {}
+      for (const error of result.errors) {
+        errorCountsByType[error.type] =
+          (errorCountsByType[error.type] ?? 0) + 1
+      }
 
       console.error(
         `[pipeline7-stage-drc] ${JSON.stringify({
           stage,
           errorCount: result.errors.length,
+          errorCountsByType,
           viaCount: hdRoutes.reduce(
             (total, route) => total + route.vias.length,
             0,
@@ -600,6 +606,31 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
+          if (process.env.PIPELINE7_LOG_STAGE_DRC === "1") {
+            const invalidFallbackNodes = Array.from(
+              cms.highDensityRouteSolver!.nodeSolveMetadataById.entries(),
+            )
+              .filter(
+                ([, metadata]) =>
+                  metadata.solverType ===
+                  "GrowShrinkHighDensityIntraNodeSolver",
+              )
+              .map(([capacityMeshNodeId, metadata]) => ({
+                capacityMeshNodeId,
+                width: metadata.node.width,
+                height: metadata.node.height,
+                availableZ: metadata.node.availableZ,
+                portPointCount: metadata.node.portPoints.length,
+                routeCount: metadata.routeCount,
+              }))
+
+            console.error(
+              `[pipeline7-high-density-fallbacks] ${JSON.stringify({
+                count: invalidFallbackNodes.length,
+                nodes: invalidFallbackNodes,
+              })}`,
+            )
+          }
           cms.logDiagnosticDrc(
             "highDensityRouteSolver",
             cms.highDensityRouteSolver!.routes,
