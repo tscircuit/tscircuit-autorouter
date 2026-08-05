@@ -1079,6 +1079,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? this.rootConnectionNameByConnectionId.get(routeMetadata.connectionId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const endpointPcbPortIds = new Set(
+      routeMetadata?.simpleRouteConnection?.pointsToConnect
+        .map((point) => point.pcb_port_id)
+        .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined) ??
+        [],
+    )
+    const pcbPortId =
+      typeof portMetadata?.pcb_port_id === "string" &&
+      endpointPcbPortIds.has(portMetadata.pcb_port_id)
+        ? portMetadata.pcb_port_id
+        : undefined
 
     return {
       portPointId: String(
@@ -1091,9 +1102,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
-      ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
+      ...(this.params.preserveTerminalPcbPortIds && pcbPortId
+        ? { pcb_port_id: pcbPortId }
         : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
