@@ -168,8 +168,18 @@ export function joinAlignedFreeLayerTopologies({
     const currentMaxZ = currentRun
       ? Math.max(...currentRun.flatMap(({ availableZ }) => availableZ))
       : Number.NEGATIVE_INFINITY
+    const currentSourceKeys = new Set(
+      currentRun?.flatMap(({ sourceKeys }) => sourceKeys) ?? [],
+    )
     const nextMinZ = Math.min(...topology.availableZ)
-    if (currentRun && nextMinZ === currentMaxZ + 1) {
+    const hasDisjointSources = topology.sourceKeys.every(
+      (sourceKey) => !currentSourceKeys.has(sourceKey),
+    )
+    if (
+      currentRun &&
+      nextMinZ === currentMaxZ + 1 &&
+      hasDisjointSources
+    ) {
       currentRun.push(topology)
     } else {
       freeRuns.push([topology])
