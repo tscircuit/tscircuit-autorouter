@@ -242,37 +242,71 @@ export class TopologyMergingSolver extends BaseSolver {
     const height = region.bounds.maxY - region.bounds.minY
     return (
       Math.min(width, height) >= this.inputProblem.viaDiameter &&
-      this.doesRegionBorderTarget(region.bounds)
+      this.preparedNodes.some((target) =>
+        this.doesRegionConnectAroundTarget(region, target),
+      )
     )
   }
 
-  private doesRegionBorderTarget(
-    bounds: TopologyMergingRegion["bounds"],
+  private doesRegionConnectAroundTarget(
+    region: TopologyMergingRegion,
+    target: PreparedTopologyMergingNode,
   ): boolean {
-    return this.preparedNodes.some(({ bounds: targetBounds, node }) => {
-      if (!node._containsTarget) return false
+    if (!target.node._containsTarget) return false
+    if (!this.doBoundsShareSide(region.bounds, target.bounds)) return false
 
-      const overlapsTargetVertically =
-        Math.min(bounds.maxY, targetBounds.maxY) -
-          Math.max(bounds.minY, targetBounds.minY) >
-        TOPOLOGY_MERGING_EPSILON
-      const touchesTargetSide =
-        Math.abs(bounds.minX - targetBounds.maxX) <=
-          TOPOLOGY_MERGING_EPSILON ||
-        Math.abs(bounds.maxX - targetBounds.minX) <=
-          TOPOLOGY_MERGING_EPSILON
-      if (overlapsTargetVertically && touchesTargetSide) return true
+    const targetLayers = new Set(target.node.availableZ)
+    const containsTargetLayer = region.availableZ.some((z) =>
+      targetLayers.has(z),
+    )
+    const containsOtherLayer = region.availableZ.some(
+      (z) => !targetLayers.has(z),
+    )
+    if (!containsTargetLayer || !containsOtherLayer) return false
 
-      const overlapsTargetHorizontally =
-        Math.min(bounds.maxX, targetBounds.maxX) -
-          Math.max(bounds.minX, targetBounds.minX) >
-        TOPOLOGY_MERGING_EPSILON
-      const touchesTargetTopOrBottom =
-        Math.abs(bounds.minY - targetBounds.maxY) <=
-          TOPOLOGY_MERGING_EPSILON ||
-        Math.abs(bounds.maxY - targetBounds.minY) <=
-          TOPOLOGY_MERGING_EPSILON
-      return overlapsTargetHorizontally && touchesTargetTopOrBottom
+    return region.sourceKeys.some((sourceKey) => {
+      const source = this.preparedNodeBySourceKey.get(sourceKey)
+      if (!source) return false
+
+      const providesOtherLayer = source.node.availableZ.some(
+        (z) => region.availableZ.includes(z) && !targetLayers.has(z),
+      )
+      if (!providesOtherLayer) return false
+
+      // The other-layer free node must continue underneath this target.
+      const overlapWidth =
+        Math.min(source.bounds.maxX, target.bounds.maxX) -
+        Math.max(source.bounds.minX, target.bounds.minX)
+      const overlapHeight =
+        Math.min(source.bounds.maxY, target.bounds.maxY) -
+        Math.max(source.bounds.minY, target.bounds.minY)
+      return (
+        overlapWidth > TOPOLOGY_MERGING_EPSILON &&
+        overlapHeight > TOPOLOGY_MERGING_EPSILON
+      )
     })
+  }
+
+  private doBoundsShareSide(
+    first: TopologyMergingRegion["bounds"],
+    second: TopologyMergingRegion["bounds"],
+  ): boolean {
+    const overlapsVertically =
+      Math.min(first.maxY, second.maxY) -
+        Math.max(first.minY, second.minY) >
+      TOPOLOGY_MERGING_EPSILON
+    const touchesSide =
+      Math.abs(first.minX - second.maxX) <= TOPOLOGY_MERGING_EPSILON ||
+      Math.abs(first.maxX - second.minX) <= TOPOLOGY_MERGING_EPSILON
+    if (overlapsVertically && touchesSide) return true
+
+    const overlapsHorizontally =
+      Math.min(first.maxX, second.maxX) -
+        Math.max(first.minX, second.minX) >
+      TOPOLOGY_MERGING_EPSILON
+    const touchesTopOrBottom =
+      Math.abs(first.minY - second.maxY) <= TOPOLOGY_MERGING_EPSILON ||
+      Math.abs(first.maxY - second.minY) <= TOPOLOGY_MERGING_EPSILON
+    return overlapsHorizontally && touchesTopOrBottom
   }
 }

@@ -201,6 +201,8 @@ export function joinAlignedFreeLayerTopologies({
       topologySignature: JSON.stringify({
         mode: ALIGNED_FREE_TOPOLOGY_MODE,
         availableZ,
+        // Do not compact unrelated free nodes into a board-wide layer bridge.
+        sourceKeys,
       }),
     } satisfies TopologyMergingLayerTopology
   })
@@ -216,6 +218,7 @@ function isAlignedFreeRegion(region: TopologyMergingRegion): boolean {
     JSON.stringify({
       mode: ALIGNED_FREE_TOPOLOGY_MODE,
       availableZ: region.availableZ,
+      sourceKeys: region.sourceKeys,
     })
   )
 }
@@ -384,11 +387,6 @@ function mergeRegionRun(
     } else {
       previousRegion.bounds.maxY = region.bounds.maxY
     }
-    previousRegion.sourceKeys = [
-      ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
-    ].sort()
-    previousRegion.topologyMode =
-      previousRegion.sourceKeys.length === 1 ? "passthrough" : "merged"
   }
 
   return mergedRegions

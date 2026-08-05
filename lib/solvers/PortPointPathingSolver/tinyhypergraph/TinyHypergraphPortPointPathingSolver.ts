@@ -898,6 +898,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
+  private endpointPcbPortIdsByConnectionId: Map<
+    string,
+    Array<string | undefined>
+  >
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -914,6 +918,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connections.map((connection) => [
         connection.connectionId,
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
+      ]),
+    )
+    this.endpointPcbPortIdsByConnectionId = new Map(
+      connections.map((connection) => [
+        connection.connectionId,
+        connection.simpleRouteConnection.pointsToConnect.map(
+          (point) => point.pcb_port_id,
+        ),
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
@@ -1094,10 +1106,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
     const pcbPortId = getPcbPortIdForRoute({
       portalPcbPortId: portMetadata?.pcb_port_id,
-      routeEndpointPcbPortIds:
-        routeMetadata?.simpleRouteConnection?.pointsToConnect.map(
-          (point) => point.pcb_port_id,
-        ),
+      routeEndpointPcbPortIds: routeMetadata
+        ? this.endpointPcbPortIdsByConnectionId.get(routeMetadata.connectionId)
+        : undefined,
     })
 
     return {
