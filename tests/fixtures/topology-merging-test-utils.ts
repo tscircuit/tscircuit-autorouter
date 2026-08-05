@@ -103,7 +103,7 @@ export function createTopologyMergingSolverFromPlanning({
   ]
   return new TopologyMergingSolver({
     layerCount: inputSrj.layerCount,
-    viaDiameter: inputSrj.minViaPadDiameter,
+    viaDiameter: inputSrj.minViaPadDiameter ?? 0.3,
     nodeGroups,
   })
 }

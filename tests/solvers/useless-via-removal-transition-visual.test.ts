@@ -25,7 +25,7 @@ function visualizeRouteSideView(route: HighDensityRoute): GraphicsObject {
           ],
           strokeColor: changesLayer
             ? "#f59e0b"
-            : LAYER_COLORS[point.z] ?? "#334155",
+            : (LAYER_COLORS[point.z] ?? "#334155"),
           strokeWidth: 0.08,
           label: changesLayer
             ? "route layer transition"
