@@ -140,11 +140,27 @@ export function mergeViaCompatibleLayerTopologies({
   canUseSourceAsFreeSpace: (sourceKey: string) => boolean
   canUseSourceAsTarget: (sourceKey: string) => boolean
 }): TopologyMergingLayerTopology[] {
+  const topologyCountByLayer = new Map<number, number>()
+  for (const topology of layerTopologies) {
+    for (const z of topology.availableZ) {
+      topologyCountByLayer.set(z, (topologyCountByLayer.get(z) ?? 0) + 1)
+    }
+  }
+
   const compatibleTopologies = layerTopologies.flatMap((topology) => {
     const hasContiguousLayers = topology.availableZ.every(
       (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
     )
-    if (!hasContiguousLayers || topology.sourceKeys.length === 0) return []
+    const hasExclusiveLayers = topology.availableZ.every(
+      (z) => topologyCountByLayer.get(z) === 1,
+    )
+    if (
+      !hasContiguousLayers ||
+      !hasExclusiveLayers ||
+      topology.sourceKeys.length === 0
+    ) {
+      return []
+    }
 
     const isFree = topology.sourceKeys.every(canUseSourceAsFreeSpace)
     const isTarget = topology.sourceKeys.every(canUseSourceAsTarget)
