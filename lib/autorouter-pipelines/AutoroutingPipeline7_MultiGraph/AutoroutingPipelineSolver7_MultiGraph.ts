@@ -877,6 +877,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
+        if (
+          process.env.PIPELINE7_STOP_AFTER_PHASE ===
+          pipelineStepDef.solverName
+        ) {
+          this.currentPipelineStepIndex = this.pipelineDef.length
+        }
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
         this.failed = true
