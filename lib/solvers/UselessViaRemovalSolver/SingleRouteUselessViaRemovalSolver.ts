@@ -506,6 +506,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     )
     const route: HighDensityRoute["route"] = []
     const vias: HighDensityRoute["vias"] = []
+    const viaLocations = new Set<string>()
 
     for (const point of sectionPoints) {
       const previousPoint = route[route.length - 1]
@@ -521,10 +522,14 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             z: point.z,
           })
         }
-        vias.push({
-          x: previousPoint.x,
-          y: previousPoint.y,
-        })
+        const viaLocation = `${previousPoint.x}:${previousPoint.y}`
+        if (!viaLocations.has(viaLocation)) {
+          vias.push({
+            x: previousPoint.x,
+            y: previousPoint.y,
+          })
+          viaLocations.add(viaLocation)
+        }
       }
       route.push(point)
     }
