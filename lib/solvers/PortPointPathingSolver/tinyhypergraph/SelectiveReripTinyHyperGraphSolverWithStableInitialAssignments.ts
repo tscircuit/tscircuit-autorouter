@@ -20,4 +20,31 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         this.appendSegmentToRegionCache(regionId, fromPortId, toPortId),
     })
   }
+
+  override tryFinalAcceptance() {
+    super.tryFinalAcceptance()
+    if (this.solved) return
+
+    const stats = this.getSelectiveReripStats()
+    const routeIds = [
+      stats.lastFailedRouteId,
+      ...stats.lastDirectOwnerRouteIds,
+      ...stats.lastRepeatedOwnerRouteIds,
+      ...stats.lastAlternateOwnerRouteIds,
+      ...stats.lastRippedRouteIds,
+    ].filter(
+      (routeId, index, routeIdList): routeId is number =>
+        routeId !== undefined && routeIdList.indexOf(routeId) === index,
+    )
+
+    throw new Error(
+      `Selective rerip exhausted: ${JSON.stringify({
+        ...stats,
+        routes: routeIds.map((routeId) => ({
+          routeId,
+          metadata: this.problem.routeMetadata?.[routeId],
+        })),
+      })}`,
+    )
+  }
 }
