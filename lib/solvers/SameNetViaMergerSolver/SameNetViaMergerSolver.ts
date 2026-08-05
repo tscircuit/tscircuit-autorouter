@@ -63,6 +63,49 @@ const getNetForRoute = (
   return net
 }
 
+const getViaTransitionPointIndexes = (
+  route: HighDensityRoute,
+  via: Via,
+): Set<number> => {
+  const indexes = new Set<number>()
+
+  for (let index = route.route.length - 1; index >= 1; index--) {
+    const previousPoint = route.route[index - 1]
+    const currentPoint = route.route[index]
+    if (previousPoint.z === currentPoint.z) continue
+    if (previousPoint.x !== via.x || previousPoint.y !== via.y) continue
+    if (currentPoint.x !== via.x || currentPoint.y !== via.y) continue
+
+    let clusterStartIndex = index - 1
+    while (
+      clusterStartIndex > 0 &&
+      route.route[clusterStartIndex - 1]!.x === via.x &&
+      route.route[clusterStartIndex - 1]!.y === via.y
+    ) {
+      clusterStartIndex--
+    }
+
+    let clusterEndIndex = index
+    while (
+      clusterEndIndex < route.route.length - 1 &&
+      route.route[clusterEndIndex + 1]!.x === via.x &&
+      route.route[clusterEndIndex + 1]!.y === via.y
+    ) {
+      clusterEndIndex++
+    }
+
+    for (
+      let pointIndex = clusterStartIndex;
+      pointIndex <= clusterEndIndex;
+      pointIndex++
+    ) {
+      indexes.add(pointIndex)
+    }
+  }
+
+  return indexes
+}
+
 const obstacleIsSameNet = (
   connMap: ConnectivityMap,
   obstacle: Obstacle,
@@ -94,28 +137,32 @@ const canMoveViaTo = (
     )
   }
 
-  const transitionLayers = new Set<number>()
-  for (let i = 1; i < route.route.length; i++) {
-    const prev = route.route[i - 1]
-    const curr = route.route[i]
-    if (prev.z === curr.z) continue
-    if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-    if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
-
-    transitionLayers.add(prev.z)
-    transitionLayers.add(curr.z)
-  }
-
-  if (transitionLayers.size === 0) {
+  const movedPointIndexes = getViaTransitionPointIndexes(route, viaToRemove)
+  if (movedPointIndexes.size === 0) {
     throw new Error(
-      `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y})`,
+      `SameNetViaMergerSolver could not find route transition for via at (${viaToRemove.x}, ${viaToRemove.y}) on route "${route.connectionName}"`,
     )
   }
 
-  for (const z of transitionLayers) {
+  for (let index = 1; index < route.route.length; index++) {
+    if (
+      !movedPointIndexes.has(index - 1) &&
+      !movedPointIndexes.has(index)
+    ) {
+      continue
+    }
+
+    const previousPoint = route.route[index - 1]
+    const currentPoint = route.route[index]
+    if (previousPoint.z !== currentPoint.z) continue
+
     const traceThickness = route.traceThickness
-    const start = { x: viaToRemove.x, y: viaToRemove.y, z }
-    const end = { x: viaKeep.x, y: viaKeep.y, z }
+    const start = movedPointIndexes.has(index - 1)
+      ? { ...previousPoint, x: viaKeep.x, y: viaKeep.y }
+      : previousPoint
+    const end = movedPointIndexes.has(index)
+      ? { ...currentPoint, x: viaKeep.x, y: viaKeep.y }
+      : currentPoint
 
     if (start.x === end.x && start.y === end.y) continue
 
@@ -155,7 +202,7 @@ const canMoveViaTo = (
           `SameNetViaMergerSolver found obstacle without zLayers near via at (${viaToRemove.x}, ${viaToRemove.y})`,
         )
       }
-      if (!obstacle.__zLayers.includes(z)) continue
+      if (!obstacle.__zLayers.includes(start.z)) continue
       if (obstacleIsSameNet(context.connMap, obstacle, viaToRemove)) continue
       if (segmentToBoxMinDistance(start, end, obstacle) < searchMargin) {
         return false
@@ -411,39 +458,11 @@ export class SameNetViaMergerSolver extends BaseSolver {
       )
     }
 
-    const route = routeToUpdate.route
-    const routePointIndexesToMove = new Set<number>()
+    const routePointIndexesToMove = getViaTransitionPointIndexes(
+      routeToUpdate,
+      viaToRemove,
+    )
     let replacedVia = false
-
-    for (let j = route.length - 1; j >= 1; j--) {
-      const prev = route[j - 1]
-      const curr = route[j]
-      if (prev.z === curr.z) continue
-      if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-      if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
-
-      let clusterStartIndex = j - 1
-      while (
-        clusterStartIndex > 0 &&
-        route[clusterStartIndex - 1]!.x === viaToRemove.x &&
-        route[clusterStartIndex - 1]!.y === viaToRemove.y
-      ) {
-        clusterStartIndex--
-      }
-
-      let clusterEndIndex = j
-      while (
-        clusterEndIndex < route.length - 1 &&
-        route[clusterEndIndex + 1]!.x === viaToRemove.x &&
-        route[clusterEndIndex + 1]!.y === viaToRemove.y
-      ) {
-        clusterEndIndex++
-      }
-
-      for (let k = clusterStartIndex; k <= clusterEndIndex; k++) {
-        routePointIndexesToMove.add(k)
-      }
-    }
 
     if (routePointIndexesToMove.size === 0) {
       throw new Error(
@@ -452,8 +471,12 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     for (const routePointIndex of routePointIndexesToMove) {
-      const point = route[routePointIndex]
-      route[routePointIndex] = { ...point, x: viaKeep.x, y: viaKeep.y }
+      const point = routeToUpdate.route[routePointIndex]
+      routeToUpdate.route[routePointIndex] = {
+        ...point,
+        x: viaKeep.x,
+        y: viaKeep.y,
+      }
     }
 
     routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
