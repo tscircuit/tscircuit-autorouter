@@ -114,13 +114,20 @@ export class TopologyMergingSolver extends BaseSolver {
       const point = { x: -23.755, y: -6.66 }
       const describeRegions = (regions: TopologyMergingRegion[]) =>
         regions.filter((region) => doesBoundsContainPoint(region.bounds, point))
+      const diagnosticAtomicRegions = describeRegions(this.atomicRegions)
+      const relatedSources = [
+        ...new Set(
+          diagnosticAtomicRegions.flatMap((region) => region.sourceKeys),
+        ),
+      ].map((sourceKey) => this.preparedNodeBySourceKey.get(sourceKey))
       throw new Error(
         `Topology target/free diagnostic: ${JSON.stringify({
           source: diagnosticSource,
+          relatedSources,
           targetAccessLayers: this.targetAccessLayersBySourceKey.get(
             diagnosticSource.sourceKey,
           ),
-          atomicRegions: describeRegions(this.atomicRegions),
+          atomicRegions: diagnosticAtomicRegions,
           restoredRegions: describeRegions(topologyRegions),
           compactedAlignedRegions: describeRegions(compactedAlignedRegions),
           viaSizedRegions: describeRegions(viaSizedRegions),
