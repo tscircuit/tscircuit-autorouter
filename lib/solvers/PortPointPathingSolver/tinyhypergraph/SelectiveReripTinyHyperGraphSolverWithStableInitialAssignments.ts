@@ -32,14 +32,12 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       })
     }
 
-    if (unreachableRoutes.length > 0) {
-      throw new Error(
-        `Fixed reservation precheck: ${JSON.stringify({
-          unreachableRouteCount: unreachableRoutes.length,
-          unreachableRoutes: unreachableRoutes.slice(0, 25),
-        })}`,
-      )
-    }
+    throw new Error(
+      `Fixed reservation precheck: ${JSON.stringify({
+        unreachableRouteCount: unreachableRoutes.length,
+        unreachableRoutes: unreachableRoutes.slice(0, 25),
+      })}`,
+    )
   }
 
   override resetRoutingStateForRerip() {

@@ -275,23 +275,25 @@ export function mergeViaCompatibleLayerTopologies({
     const targetItem = run.find(
       ({ targetSourceKeys }) => targetSourceKeys.length > 0,
     )
-    if (!targetItem) return run.map(({ topology }) => topology)
-
     const clearanceZ = [
       ...new Set(run.flatMap(({ topology }) => topology.availableZ)),
     ].sort((a, b) => a - b)
-    const targetAccessZ = targetItem.targetAccessLayers.filter((z) =>
-      clearanceZ.includes(z),
-    )
-    const addsAccessLayer = targetAccessZ.some(
-      (z) => !targetItem.topology.availableZ.includes(z),
-    )
-    if (!addsAccessLayer) return run.map(({ topology }) => topology)
+    const targetAccessZ = targetItem
+      ? targetItem.targetAccessLayers.filter((z) => clearanceZ.includes(z))
+      : clearanceZ
+    if (
+      targetItem &&
+      !targetAccessZ.some(
+        (z) => !targetItem.topology.availableZ.includes(z),
+      )
+    ) {
+      return run.map(({ topology }) => topology)
+    }
 
     const sourceKeys = [
       ...new Set(run.flatMap(({ topology }) => topology.sourceKeys)),
     ].sort()
-    const targetSourceKeys = [...targetItem.targetSourceKeys].sort()
+    const targetSourceKeys = [...(targetItem?.targetSourceKeys ?? [])].sort()
     const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
     return [
       {
