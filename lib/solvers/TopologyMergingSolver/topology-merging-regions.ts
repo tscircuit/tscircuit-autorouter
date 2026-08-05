@@ -202,7 +202,7 @@ export function joinAlignedFreeLayerTopologies({
   )
 }
 
-function isAlignedFreeRegion(region: TopologyMergingRegion): boolean {
+export function isAlignedFreeRegion(region: TopologyMergingRegion): boolean {
   return (
     region.topologySignature ===
     JSON.stringify({

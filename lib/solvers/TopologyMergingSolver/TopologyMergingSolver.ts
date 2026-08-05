@@ -13,6 +13,7 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
+  isAlignedFreeRegion,
   joinAlignedFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
   restoreAlignedFreeLayerTopologies,
@@ -35,6 +36,7 @@ export class TopologyMergingSolver extends BaseSolver {
     string,
     PreparedTopologyMergingNode
   >
+  private readonly targetNodes: PreparedTopologyMergingNode[]
   private readonly outputProvenance: TopologyMergingOutputProvenance = {
     groupIndexesByNodeId: new Map<string, number[]>(),
     sourceKeysByNodeId: new Map<string, string[]>(),
@@ -52,6 +54,7 @@ export class TopologyMergingSolver extends BaseSolver {
       prepareTopologyMergingInput(inputProblem)
     this.preparedNodes = preparedNodes
     this.preparedNodeBySourceKey = preparedNodeBySourceKey
+    this.targetNodes = preparedNodes.filter(({ node }) => node._containsTarget)
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
@@ -88,14 +91,13 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     const compactedAlignedRegions =
       compactTopologyMergingRegions(topologyRegions)
-    const localLayerAccessRegions = compactedAlignedRegions.flatMap(
-      (region) =>
-        this.doesRegionProvideLocalLayerAccess(region)
-          ? [region]
-          : restoreAlignedFreeLayerTopologies({
-              region,
-              preparedNodeBySourceKey: this.preparedNodeBySourceKey,
-            }),
+    const localLayerAccessRegions = compactedAlignedRegions.flatMap((region) =>
+      this.isRegionLargeEnoughForVia(region)
+        ? [region]
+        : restoreAlignedFreeLayerTopologies({
+            region,
+            preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          }),
     )
     const compactedRegions = compactTopologyMergingRegions(
       localLayerAccessRegions,
@@ -224,28 +226,37 @@ export class TopologyMergingSolver extends BaseSolver {
         },
       })
       for (const layerTopology of layerTopologies) {
-        this.atomicRegions.push({
+        const region: TopologyMergingRegion = {
           bounds: { minX, maxX, minY, maxY },
           availableZ: layerTopology.availableZ,
           sourceKeys: layerTopology.sourceKeys,
           topologyMode: layerTopology.topologyMode,
           topologySignature: layerTopology.topologySignature,
-        })
+        }
+        if (
+          !isAlignedFreeRegion(region) ||
+          this.targetNodes.some((target) =>
+            this.doesRegionConnectAroundTarget(region, target),
+          )
+        ) {
+          this.atomicRegions.push(region)
+          continue
+        }
+        this.atomicRegions.push(
+          ...restoreAlignedFreeLayerTopologies({
+            region,
+            preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          }),
+        )
       }
     }
   }
 
-  private doesRegionProvideLocalLayerAccess(
-    region: TopologyMergingRegion,
-  ): boolean {
+  private isRegionLargeEnoughForVia(region: TopologyMergingRegion): boolean {
+    if (!isAlignedFreeRegion(region)) return true
     const width = region.bounds.maxX - region.bounds.minX
     const height = region.bounds.maxY - region.bounds.minY
-    return (
-      Math.min(width, height) >= this.inputProblem.viaDiameter &&
-      this.preparedNodes.some((target) =>
-        this.doesRegionConnectAroundTarget(region, target),
-      )
-    )
+    return Math.min(width, height) >= this.inputProblem.viaDiameter
   }
 
   private doesRegionConnectAroundTarget(
