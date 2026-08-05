@@ -11,11 +11,12 @@ import {
 import {
   compactTopologyMergingRegions,
   doesBoundsContainPoint,
+  finalizeAlignedViaRegions,
   getCanonicalCoordinates,
+  getCrossLayerTargetAccessLayers,
   getLayerTopologiesForCoveredNodes,
   mergeViaCompatibleLayerTopologies,
   restoreAuthoritativeTargetRegions,
-  splitUndersizedAlignedViaRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -40,6 +41,7 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
+  private readonly targetAccessLayersBySourceKey: Map<string, number[]>
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -52,6 +54,8 @@ export class TopologyMergingSolver extends BaseSolver {
       prepareTopologyMergingInput(inputProblem)
     this.preparedNodes = preparedNodes
     this.preparedNodeBySourceKey = preparedNodeBySourceKey
+    this.targetAccessLayersBySourceKey =
+      getCrossLayerTargetAccessLayers(preparedNodes)
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
@@ -91,7 +95,7 @@ export class TopologyMergingSolver extends BaseSolver {
     const viaSizedRegions =
       this.inputProblem.viaDiameter === undefined
         ? compactedAlignedRegions
-        : splitUndersizedAlignedViaRegions({
+        : finalizeAlignedViaRegions({
             regions: compactedAlignedRegions,
             minimumViaFootprint: this.inputProblem.viaDiameter,
             preparedNodeBySourceKey: this.preparedNodeBySourceKey,
@@ -223,14 +227,8 @@ export class TopologyMergingSolver extends BaseSolver {
                     !node._isVirtualOffboard,
                 )
               },
-              canUseSourceAsTarget: (sourceKey) => {
-                const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
-                return Boolean(
-                  node?._containsObstacle &&
-                    node._containsTarget &&
-                    !node._isVirtualOffboard,
-                )
-              },
+              getTargetAccessLayers: (sourceKey) =>
+                this.targetAccessLayersBySourceKey.get(sourceKey),
             })
           : rawLayerTopologies
       for (const layerTopology of layerTopologies) {

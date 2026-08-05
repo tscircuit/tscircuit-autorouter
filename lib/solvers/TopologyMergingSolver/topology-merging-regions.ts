@@ -40,6 +40,60 @@ export function doesBoundsContainPoint(
   )
 }
 
+const getTargetConnectionAliases = (
+  preparedNode: PreparedTopologyMergingNode,
+): string[] => [
+  ...(preparedNode.node._targetConnectionName
+    ? [preparedNode.node._targetConnectionName]
+    : []),
+  ...(preparedNode.node._connectedTo ?? []),
+]
+
+const doPreparedNodeBoundsOverlap = (
+  first: PreparedTopologyMergingNode,
+  second: PreparedTopologyMergingNode,
+): boolean =>
+  Math.max(first.bounds.minX, second.bounds.minX) <
+    Math.min(first.bounds.maxX, second.bounds.maxX) - TOPOLOGY_MERGING_EPSILON &&
+  Math.max(first.bounds.minY, second.bounds.minY) <
+    Math.min(first.bounds.maxY, second.bounds.maxY) - TOPOLOGY_MERGING_EPSILON
+
+export function getCrossLayerTargetAccessLayers(
+  preparedNodes: PreparedTopologyMergingNode[],
+): Map<string, number[]> {
+  const targetNodes = preparedNodes.filter(
+    ({ node }) => node._containsObstacle && node._containsTarget,
+  )
+  const accessLayersBySourceKey = new Map<string, number[]>()
+
+  for (const targetNode of targetNodes) {
+    const targetAliases = new Set(getTargetConnectionAliases(targetNode))
+    const accessLayers = new Set(targetNode.node.availableZ)
+
+    for (const candidate of targetNodes) {
+      if (
+        candidate === targetNode ||
+        !doPreparedNodeBoundsOverlap(targetNode, candidate) ||
+        !getTargetConnectionAliases(candidate).some((alias) =>
+          targetAliases.has(alias),
+        )
+      ) {
+        continue
+      }
+      for (const z of candidate.node.availableZ) accessLayers.add(z)
+    }
+
+    if (accessLayers.size > targetNode.node.availableZ.length) {
+      accessLayersBySourceKey.set(
+        targetNode.sourceKey,
+        [...accessLayers].sort((a, b) => a - b),
+      )
+    }
+  }
+
+  return accessLayersBySourceKey
+}
+
 export function compactTopologyMergingRegions(
   regions: TopologyMergingRegion[],
 ): TopologyMergingRegion[] {
@@ -134,11 +188,11 @@ export function getLayerTopologiesForCoveredNodes({
 export function mergeViaCompatibleLayerTopologies({
   layerTopologies,
   canUseSourceAsFreeSpace,
-  canUseSourceAsTarget,
+  getTargetAccessLayers,
 }: {
   layerTopologies: TopologyMergingLayerTopology[]
   canUseSourceAsFreeSpace: (sourceKey: string) => boolean
-  canUseSourceAsTarget: (sourceKey: string) => boolean
+  getTargetAccessLayers: (sourceKey: string) => number[] | undefined
 }): TopologyMergingLayerTopology[] {
   const topologyCountByLayer = new Map<number, number>()
   for (const topology of layerTopologies) {
@@ -163,9 +217,20 @@ export function mergeViaCompatibleLayerTopologies({
     }
 
     const isFree = topology.sourceKeys.every(canUseSourceAsFreeSpace)
-    const isTarget = topology.sourceKeys.every(canUseSourceAsTarget)
+    const targetAccessLayers =
+      topology.topologyMode === "target-passthrough" &&
+      topology.sourceKeys.length === 1
+        ? getTargetAccessLayers(topology.sourceKeys[0]!)
+        : undefined
+    const isTarget = targetAccessLayers !== undefined
     return isFree || isTarget
-      ? [{ topology, targetSourceKeys: isTarget ? topology.sourceKeys : [] }]
+      ? [
+          {
+            topology,
+            targetSourceKeys: isTarget ? topology.sourceKeys : [],
+            targetAccessLayers: targetAccessLayers ?? [],
+          },
+        ]
       : []
   })
   if (compatibleTopologies.length < 2) return layerTopologies
@@ -204,30 +269,43 @@ export function mergeViaCompatibleLayerTopologies({
     }
   }
 
-  const mergedTopologies = topologyRuns.map((run) => {
-    if (run.length === 1) return run[0]!.topology
+  const mergedTopologies = topologyRuns.flatMap((run) => {
+    if (run.length === 1) return [run[0]!.topology]
 
-    const availableZ = [
-      ...new Set(run.flatMap(({ topology }) => topology.availableZ)),
-    ].sort((a, b) => a - b)
-    const sourceKeys = [
-      ...new Set(run.flatMap(({ topology }) => topology.sourceKeys)),
-    ].sort()
     const targetItem = run.find(
       ({ targetSourceKeys }) => targetSourceKeys.length > 0,
     )
-    const targetSourceKeys = [...(targetItem?.targetSourceKeys ?? [])].sort()
+    if (!targetItem) return run.map(({ topology }) => topology)
+
+    const clearanceZ = [
+      ...new Set(run.flatMap(({ topology }) => topology.availableZ)),
+    ].sort((a, b) => a - b)
+    const targetAccessZ = targetItem.targetAccessLayers.filter((z) =>
+      clearanceZ.includes(z),
+    )
+    const addsAccessLayer = targetAccessZ.some(
+      (z) => !targetItem.topology.availableZ.includes(z),
+    )
+    if (!addsAccessLayer) return run.map(({ topology }) => topology)
+
+    const sourceKeys = [
+      ...new Set(run.flatMap(({ topology }) => topology.sourceKeys)),
+    ].sort()
+    const targetSourceKeys = [...targetItem.targetSourceKeys].sort()
     const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
-    return {
-      availableZ,
-      sourceKeys,
-      topologyMode,
-      topologySignature: JSON.stringify({
-        mode: ALIGNED_VIA_TOPOLOGY_MODE,
-        targetSourceKeys,
-        availableZ,
-      }),
-    } satisfies TopologyMergingLayerTopology
+    return [
+      {
+        availableZ: clearanceZ,
+        sourceKeys,
+        topologyMode,
+        topologySignature: JSON.stringify({
+          mode: ALIGNED_VIA_TOPOLOGY_MODE,
+          targetSourceKeys,
+          targetAccessZ,
+          clearanceZ,
+        }),
+      } satisfies TopologyMergingLayerTopology,
+    ]
   })
 
   return [...incompatibleTopologies, ...mergedTopologies].sort(
@@ -235,7 +313,7 @@ export function mergeViaCompatibleLayerTopologies({
   )
 }
 
-export function splitUndersizedAlignedViaRegions({
+export function finalizeAlignedViaRegions({
   regions,
   minimumViaFootprint,
   preparedNodeBySourceKey,
@@ -248,27 +326,30 @@ export function splitUndersizedAlignedViaRegions({
     const isAlignedViaRegion = region.topologySignature.startsWith(
       ALIGNED_VIA_SIGNATURE_PREFIX,
     )
+    if (!isAlignedViaRegion) return [region]
+
+    const { targetSourceKeys, targetAccessZ, clearanceZ } = JSON.parse(
+      region.topologySignature,
+    ) as {
+      targetSourceKeys: string[]
+      targetAccessZ: number[]
+      clearanceZ: number[]
+    }
     const width = region.bounds.maxX - region.bounds.minX
     const height = region.bounds.maxY - region.bounds.minY
-    if (
-      !isAlignedViaRegion ||
-      Math.min(width, height) >= minimumViaFootprint
-    ) {
-      return [region]
+    if (Math.min(width, height) >= minimumViaFootprint) {
+      return [{ ...region, availableZ: targetAccessZ }]
     }
 
-    const { targetSourceKeys } = JSON.parse(region.topologySignature) as {
-      targetSourceKeys: string[]
-    }
     const targetSourceKeySet = new Set(targetSourceKeys)
 
-    return region.availableZ.map((z) => {
+    return clearanceZ.map((z) => {
       const sourceKeys = region.sourceKeys.filter((sourceKey) =>
         preparedNodeBySourceKey.get(sourceKey)?.node.availableZ.includes(z),
       )
       if (sourceKeys.length === 0) {
         throw new Error(
-          `TopologyMergingSolver: aligned free region lost layer ${z} provenance`,
+          `TopologyMergingSolver: aligned via region lost layer ${z} provenance`,
         )
       }
       const targetKeysOnLayer = sourceKeys.filter((sourceKey) =>
