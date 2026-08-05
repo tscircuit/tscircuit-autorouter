@@ -15,7 +15,7 @@ import {
   getLayerTopologiesForCoveredNodes,
   joinAlignedFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
-  splitAlignedFreeRegionByLayer,
+  restoreAlignedFreeLayerTopologies,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -92,7 +92,7 @@ export class TopologyMergingSolver extends BaseSolver {
       (region) =>
         this.doesRegionProvideLocalLayerAccess(region)
           ? [region]
-          : splitAlignedFreeRegionByLayer({
+          : restoreAlignedFreeLayerTopologies({
               region,
               preparedNodeBySourceKey: this.preparedNodeBySourceKey,
             }),

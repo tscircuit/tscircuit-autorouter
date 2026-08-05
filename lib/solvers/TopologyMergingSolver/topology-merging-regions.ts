@@ -168,18 +168,8 @@ export function joinAlignedFreeLayerTopologies({
     const currentMaxZ = currentRun
       ? Math.max(...currentRun.flatMap(({ availableZ }) => availableZ))
       : Number.NEGATIVE_INFINITY
-    const currentSourceKeys = new Set(
-      currentRun?.flatMap(({ sourceKeys }) => sourceKeys) ?? [],
-    )
     const nextMinZ = Math.min(...topology.availableZ)
-    const hasDisjointSources = topology.sourceKeys.every(
-      (sourceKey) => !currentSourceKeys.has(sourceKey),
-    )
-    if (
-      currentRun &&
-      nextMinZ === currentMaxZ + 1 &&
-      hasDisjointSources
-    ) {
+    if (currentRun && nextMinZ === currentMaxZ + 1) {
       currentRun.push(topology)
     } else {
       freeRuns.push([topology])
@@ -223,7 +213,7 @@ function isAlignedFreeRegion(region: TopologyMergingRegion): boolean {
   )
 }
 
-export function splitAlignedFreeRegionByLayer({
+export function restoreAlignedFreeLayerTopologies({
   region,
   preparedNodeBySourceKey,
 }: {
@@ -232,7 +222,8 @@ export function splitAlignedFreeRegionByLayer({
 }): TopologyMergingRegion[] {
   if (!isAlignedFreeRegion(region)) return [region]
 
-  return region.availableZ.map((z) => {
+  const regionsByTopologySignature = new Map<string, TopologyMergingRegion>()
+  for (const z of region.availableZ) {
     const sourceKeys = region.sourceKeys.filter((sourceKey) =>
       preparedNodeBySourceKey.get(sourceKey)?.node.availableZ.includes(z),
     )
@@ -242,14 +233,26 @@ export function splitAlignedFreeRegionByLayer({
       )
     }
     const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
-    return {
+    const topologySignature = JSON.stringify({
+      mode: topologyMode,
+      sourceKeys,
+    })
+    const existingRegion = regionsByTopologySignature.get(topologySignature)
+    if (existingRegion) {
+      existingRegion.availableZ.push(z)
+      continue
+    }
+
+    regionsByTopologySignature.set(topologySignature, {
       bounds: { ...region.bounds },
       availableZ: [z],
       sourceKeys,
       topologyMode,
-      topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
-    } satisfies TopologyMergingRegion
-  })
+      topologySignature,
+    })
+  }
+
+  return [...regionsByTopologySignature.values()]
 }
 
 export function restoreAuthoritativeTargetRegions({
