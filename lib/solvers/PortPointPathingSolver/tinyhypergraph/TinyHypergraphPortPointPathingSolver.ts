@@ -1032,7 +1032,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver
       while (diagnosticSolver) {
         solverChain.push(diagnosticSolver)
-        diagnosticSolver = diagnosticSolver.activeSubSolver
+        diagnosticSolver =
+          diagnosticSolver.activeSubSolver ??
+          diagnosticSolver.failedSubSolvers?.at(-1)
       }
       const reripSolver = [...solverChain]
         .reverse()
