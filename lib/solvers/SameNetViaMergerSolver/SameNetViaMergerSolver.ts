@@ -38,6 +38,7 @@ type ViaMergeGroup = {
 }
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
+const COPPER_CLEARANCE = 0.1
 const OBSTACLE_MARGIN = 0.1
 
 const tryGetNetForRoute = (
@@ -169,7 +170,7 @@ const canMoveViaTo = (
     const conflictingRoutes = context.hdRouteSHI.getConflictingRoutesForSegment(
       start,
       end,
-      traceThickness / 2,
+      traceThickness / 2 + COPPER_CLEARANCE,
     )
 
     for (const { conflictingRoute } of conflictingRoutes) {
