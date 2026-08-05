@@ -35,13 +35,21 @@ export function solveTopologyMergingTestGroups(
     nodes: CapacityMeshNode[]
     isComponent?: boolean
   }>,
+  options: {
+    layerCount?: number
+    viaDiameter?: number
+  } = {},
 ): CapacityMeshNode[] {
   const nodeGroups: TopologyMergingNodeGroup[] = groups.map((group) => ({
     groupId: group.groupId,
     nodes: group.nodes,
     isComponent: group.isComponent ?? true,
   }))
-  const solver = new TopologyMergingSolver({ layerCount: 4, nodeGroups })
+  const solver = new TopologyMergingSolver({
+    layerCount: options.layerCount ?? 4,
+    viaDiameter: options.viaDiameter ?? 0.3,
+    nodeGroups,
+  })
   solver.solve()
   return solver.getOutput()
 }
@@ -95,6 +103,7 @@ export function createTopologyMergingSolverFromPlanning({
   ]
   return new TopologyMergingSolver({
     layerCount: inputSrj.layerCount,
+    viaDiameter: inputSrj.minViaPadDiameter,
     nodeGroups,
   })
 }

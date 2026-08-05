@@ -351,6 +351,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            viaDiameter: cms.viaDiameter,
             nodeGroups: [
               {
                 groupId: "global",

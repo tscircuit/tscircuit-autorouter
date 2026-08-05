@@ -47,6 +47,15 @@ type RouteMetadata = {
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
 }
 
+export function getPcbPortIdForRoute({
+  portalPcbPortId,
+}: {
+  portalPcbPortId: string | undefined
+  routeEndpointPcbPortIds: Array<string | undefined> | undefined
+}): string | undefined {
+  return portalPcbPortId
+}
+
 type SerializedTinyConnection = NonNullable<
   SerializedHyperGraph["connections"]
 >[number]
@@ -1079,6 +1088,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? this.rootConnectionNameByConnectionId.get(routeMetadata.connectionId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const pcbPortId = getPcbPortIdForRoute({
+      portalPcbPortId: portMetadata?.pcb_port_id,
+      routeEndpointPcbPortIds:
+        routeMetadata?.simpleRouteConnection?.pointsToConnect.map(
+          (point) => point.pcb_port_id,
+        ),
+    })
 
     return {
       portPointId: String(
@@ -1091,9 +1107,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
-      ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
+      ...(this.params.preserveTerminalPcbPortIds && pcbPortId
+        ? { pcb_port_id: pcbPortId }
         : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"

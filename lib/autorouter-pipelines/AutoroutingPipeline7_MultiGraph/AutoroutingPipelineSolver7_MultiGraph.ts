@@ -349,6 +349,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            viaDiameter: cms.viaDiameter,
             nodeGroups: [
               {
                 groupId: "global",
