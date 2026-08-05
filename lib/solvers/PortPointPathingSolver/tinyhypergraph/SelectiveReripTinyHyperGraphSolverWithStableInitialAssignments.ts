@@ -15,6 +15,33 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
     unroutedRouteCount: number
   }> = []
 
+  override _setup() {
+    super._setup()
+    if (this.failed) return
+
+    const unreachableRoutes = []
+    for (let routeId = 0; routeId < this.problem.routeCount; routeId++) {
+      const reachability = this.describeFixedReservationReachability(routeId)
+      if (reachability.found) continue
+      unreachableRoutes.push({
+        routeId,
+        routeMetadata: this.problem.routeMetadata?.[routeId],
+        startPort: this.describePort(this.problem.routeStartPort[routeId]!),
+        endPort: this.describePort(this.problem.routeEndPort[routeId]!),
+        reachability,
+      })
+    }
+
+    if (unreachableRoutes.length > 0) {
+      throw new Error(
+        `Fixed reservation precheck: ${JSON.stringify({
+          unreachableRouteCount: unreachableRoutes.length,
+          unreachableRoutes: unreachableRoutes.slice(0, 25),
+        })}`,
+      )
+    }
+  }
+
   override resetRoutingStateForRerip() {
     super.resetRoutingStateForRerip()
     if (!this.problem.initialAssignments?.length) return
@@ -250,7 +277,11 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
     return {
       found,
       reachedRegionCount: reachedRegionIds.size,
+      reachedRegions: [...reachedRegionIds].slice(0, 50).map(describeRegion),
       reachedPortCount: reachedPortIds.size,
+      reachedPorts: [...reachedPortIds]
+        .slice(0, 50)
+        .map((portId) => this.describePort(portId)),
       blockedRegionCount: blockedRegionIds.size,
       blockedRegions: [...blockedRegionIds].slice(0, 50).map(describeRegion),
       blockedPortCount: blockedPortIds.size,
