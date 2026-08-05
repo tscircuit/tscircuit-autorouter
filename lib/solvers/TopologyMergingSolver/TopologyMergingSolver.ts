@@ -212,7 +212,8 @@ export class TopologyMergingSolver extends BaseSolver {
         layerCount: this.inputProblem.layerCount,
       })
       const layerTopologies =
-        this.inputProblem.viaDiameter !== undefined
+        this.inputProblem.viaDiameter !== undefined &&
+        this.doesCellBorderTarget({ minX, maxX, minY, maxY })
           ? mergeViaCompatibleFreeLayerTopologies({
               layerTopologies: rawLayerTopologies,
               canUseSourceAsFreeSpace: (sourceKey) => {
@@ -235,5 +236,35 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
+  }
+
+  private doesCellBorderTarget(
+    bounds: TopologyMergingRegion["bounds"],
+  ): boolean {
+    return this.preparedNodes.some(({ bounds: targetBounds, node }) => {
+      if (!node._containsTarget) return false
+
+      const overlapsTargetVertically =
+        Math.min(bounds.maxY, targetBounds.maxY) -
+          Math.max(bounds.minY, targetBounds.minY) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetSide =
+        Math.abs(bounds.minX - targetBounds.maxX) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxX - targetBounds.minX) <=
+          TOPOLOGY_MERGING_EPSILON
+      if (overlapsTargetVertically && touchesTargetSide) return true
+
+      const overlapsTargetHorizontally =
+        Math.min(bounds.maxX, targetBounds.maxX) -
+          Math.max(bounds.minX, targetBounds.minX) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetTopOrBottom =
+        Math.abs(bounds.minY - targetBounds.maxY) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxY - targetBounds.minY) <=
+          TOPOLOGY_MERGING_EPSILON
+      return overlapsTargetHorizontally && touchesTargetTopOrBottom
+    })
   }
 }
