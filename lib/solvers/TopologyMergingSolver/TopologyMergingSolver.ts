@@ -264,9 +264,20 @@ export class TopologyMergingSolver extends BaseSolver {
     )
     if (!containsTargetLayer || !containsOtherLayer) return false
 
+    const continuesTargetTopology = region.sourceKeys.some((sourceKey) => {
+      const source = this.preparedNodeBySourceKey.get(sourceKey)
+      return (
+        source?.groupIndex === target.groupIndex &&
+        source.node.availableZ.some(
+          (z) => region.availableZ.includes(z) && targetLayers.has(z),
+        )
+      )
+    })
+    if (!continuesTargetTopology) return false
+
     return region.sourceKeys.some((sourceKey) => {
       const source = this.preparedNodeBySourceKey.get(sourceKey)
-      if (!source) return false
+      if (!source || source.groupIndex === target.groupIndex) return false
 
       const providesOtherLayer = source.node.availableZ.some(
         (z) => region.availableZ.includes(z) && !targetLayers.has(z),
