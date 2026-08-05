@@ -59,11 +59,18 @@ export function createTopologyMergingOutputNodes({
       return preparedNode
     })
     const sourceNodes = sourcePreparedNodes.map(({ node }) => node)
-    const isComponentTopologyNode = sourcePreparedNodes.some(
+    const targetSourcePreparedNodes = sourcePreparedNodes.filter(
+      ({ node }) => node._containsObstacle && node._containsTarget,
+    )
+    const metadataSourcePreparedNodes =
+      targetSourcePreparedNodes.length > 0
+        ? targetSourcePreparedNodes
+        : sourcePreparedNodes
+    const isComponentTopologyNode = metadataSourcePreparedNodes.some(
       ({ groupIndex }) => nodeGroups[groupIndex]!.isComponent,
     )
     const metadata = getOutputNodeMetadata({
-      sourceNodes,
+      sourceNodes: metadataSourcePreparedNodes.map(({ node }) => node),
       isComponentTopologyNode,
     })
     const preservedSourceNode =
