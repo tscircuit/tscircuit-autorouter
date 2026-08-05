@@ -107,6 +107,38 @@ export class TopologyMergingSolver extends BaseSolver {
       nodeGroups: this.inputProblem.nodeGroups,
       provenance: this.outputProvenance,
     })
+    const diagnosticSource = this.preparedNodes.find(
+      ({ node }) => node.capacityMeshNodeId === "cmn_1819",
+    )
+    if (diagnosticSource) {
+      const point = { x: -23.755, y: -6.66 }
+      const describeRegions = (regions: TopologyMergingRegion[]) =>
+        regions.filter((region) => doesBoundsContainPoint(region.bounds, point))
+      throw new Error(
+        `Topology target/free diagnostic: ${JSON.stringify({
+          source: diagnosticSource,
+          targetAccessLayers: this.targetAccessLayersBySourceKey.get(
+            diagnosticSource.sourceKey,
+          ),
+          atomicRegions: describeRegions(this.atomicRegions),
+          restoredRegions: describeRegions(topologyRegions),
+          compactedAlignedRegions: describeRegions(compactedAlignedRegions),
+          viaSizedRegions: describeRegions(viaSizedRegions),
+          compactedRegions: describeRegions(compactedRegions),
+          outputNodes: this.outputNodes.filter((node) =>
+            doesBoundsContainPoint(
+              {
+                minX: node.center.x - node.width / 2,
+                maxX: node.center.x + node.width / 2,
+                minY: node.center.y - node.height / 2,
+                maxY: node.center.y + node.height / 2,
+              },
+              point,
+            ),
+          ),
+        })}`,
+      )
+    }
     validateTopologyMergingOutput({
       nodes: this.outputNodes,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
