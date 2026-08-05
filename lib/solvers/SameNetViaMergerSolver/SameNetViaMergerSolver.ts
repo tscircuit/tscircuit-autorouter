@@ -278,9 +278,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     const directOverlapDistance =
       viaKeep.diameter / 2 + viaToRemove.diameter / 2
 
-    if (squaredDistance <= directOverlapDistance * directOverlapDistance) {
-      return squaredDistance !== 0
-    }
+    if (squaredDistance === 0) return false
 
     const nearMergeDistance =
       directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
