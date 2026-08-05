@@ -212,6 +212,7 @@ export function buildHyperGraph(params: {
         )
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
+        physicalPortGroupId: spp.physicalPortGroupId,
         x: spp.x,
         y: spp.y,
         z,

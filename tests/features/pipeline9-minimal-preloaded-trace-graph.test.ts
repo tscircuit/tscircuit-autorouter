@@ -94,6 +94,29 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     Number(solver.portPointPathingSolver?.stats.preloadedFixedSegmentCount),
   ).toBeGreaterThan(0)
+  expect(
+    Number(
+      solver.portPointPathingSolver?.stats.rejectedForLockedAssignmentCount,
+    ),
+  ).toBeGreaterThan(0)
+  expect(
+    (
+      solver.portPointPathingSolver?.stats.stageStats as
+        | Record<string, { completed?: boolean }>
+        | undefined
+    )?.refinePortalLayers?.completed,
+  ).toBe(true)
+  for (const statName of [
+    "tinyHypergraphMs",
+    "highDensityMs",
+    "stitchingMs",
+    "simplificationMs",
+    "globalDrcMs",
+    "exactDrcMs",
+    "totalRuntimeMs",
+  ]) {
+    expect(Number(solver.stats[statName])).toBeGreaterThanOrEqual(0)
+  }
   const traceSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "traceSimplificationSolver",
   )

@@ -17,6 +17,7 @@ import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentP
 
 export type RawPort = {
   portId: string
+  physicalPortGroupId?: string
   x: number
   y: number
   z: number

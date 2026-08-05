@@ -9,6 +9,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 
 const createPort = (id: string, y: number, z: number): SegmentPortPoint => ({
   segmentPortPointId: id,
+  physicalPortGroupId: `${id}:physical`,
   x: 0,
   y,
   availableZ: [z],
@@ -81,6 +82,7 @@ test("preloaded traces reserve existing ports without changing graph topology", 
       availableZ: segment.availableZ,
       portPoints: segment.portPoints.map((port) => ({
         segmentPortPointId: port.segmentPortPointId,
+        physicalPortGroupId: port.physicalPortGroupId,
         x: port.x,
         y: port.y,
         availableZ: port.availableZ,

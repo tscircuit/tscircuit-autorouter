@@ -45,6 +45,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getAutoroutingPipelineBenchmarkStats } from "lib/utils/getAutoroutingPipelineBenchmarkStats"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -848,6 +849,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
           this.endTimeOfPhase[pipelineStepDef.solverName] -
           this.startTimeOfPhase[pipelineStepDef.solverName]
+        this.stats = getAutoroutingPipelineBenchmarkStats({
+          timeSpentOnPhase: this.timeSpentOnPhase,
+          portalLayerRefinementStats: this.portPointPathingSolver?.stats,
+        })
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
         this.currentPipelineStepIndex++

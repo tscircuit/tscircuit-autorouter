@@ -16,6 +16,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   DuplicateCongestedPortSolver,
+  FixedTopologyPortalLayerRefinementSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -76,9 +77,11 @@ type TinyRegionMetadata = {
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
+  _assignableVia?: boolean
 }
 
 type TinyPortMetadata = {
+  physicalPortGroupId?: string
   x?: number
   y?: number
   z?: number
@@ -266,6 +269,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    _assignableVia: regionMetadata._assignableVia,
     ...(netId !== undefined ? { netId } : {}),
   }
 }
@@ -276,6 +280,7 @@ const toSerializedPortData = (
   const portMetadata = port.d as typeof port.d & TinyPortMetadata
   return {
     portId: port.d.portId,
+    physicalPortGroupId: port.d.physicalPortGroupId,
     x: port.d.x,
     y: port.d.y,
     z: port.d.z,
@@ -753,18 +758,39 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
-    try {
-      super._step()
-    } catch (error) {
-      if (this.tryAcceptSolveGraphWithoutSerializedOutput(error)) {
-        return
-      }
-      if (this.trySkipOptimizeSection(error)) {
-        return
-      }
-      throw error
-    }
+    super._step()
     this.configureSolver(this.activeSubSolver)
+  }
+
+  override getPortalLayerRefinementStageParams(): ReturnType<
+    TinyHyperGraphSectionPipelineSolver["getPortalLayerRefinementStageParams"]
+  > {
+    if (
+      this.pipelineDef.some(
+        (pipelineStep) => pipelineStep.solverName === "optimizeSection",
+      )
+    ) {
+      return super.getPortalLayerRefinementStageParams()
+    }
+
+    const solvedSerializedHyperGraph =
+      this.getStageOutput<SerializedHyperGraph>("solveGraph")
+    if (!solvedSerializedHyperGraph) {
+      throw new Error(
+        "solveGraph did not produce the preloaded graph required for portal-layer refinement",
+      )
+    }
+    const { topology, problem, solution } = this.loadHyperGraph(
+      solvedSerializedHyperGraph,
+    )
+    return [
+      topology,
+      problem,
+      solution,
+      {
+        minViaPadDiameter: this.inputProblem.minViaPadDiameter,
+      },
+    ]
   }
 
   override getInitialVisualizationSolver() {
@@ -785,20 +811,30 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
-    const optimizeSectionSolver =
-      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
+    const refinementSolver =
+      this.getSolver<FixedTopologyPortalLayerRefinementSolver>(
+        "refinePortalLayers",
+      )
+    if (refinementSolver?.solved && !refinementSolver.failed) {
+      if (Number(refinementSolver.stats.acceptedCandidateCount ?? 0) === 0) {
+        const optimizeSectionSolver =
+          this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
+        if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
+          return optimizeSectionSolver.getSolvedSolver()
+        }
 
-    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
-      return optimizeSectionSolver.getSolvedSolver()
-    }
+        const solveGraphSolver =
+          this.getSolver<TinyHyperGraphSolver>("solveGraph")
+        if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
+          return solveGraphSolver
+        }
+      }
 
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
-      return solveGraphSolver
+      return refinementSolver.getRefinedSolver()
     }
 
     throw new Error(
-      "TinyHyperGraph section pipeline does not have a solved graph",
+      "TinyHyperGraph section pipeline does not have a refined solved graph",
     )
   }
 
@@ -818,58 +854,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     }
 
     this.configuredSolvers.add(solver)
-  }
-
-  private trySkipOptimizeSection(error: unknown) {
-    if (this.getCurrentStageName() !== "optimizeSection") {
-      return false
-    }
-
-    const solveGraphOutput =
-      this.getStageOutput<SerializedHyperGraph>("solveGraph")
-
-    if (!solveGraphOutput) {
-      return false
-    }
-
-    this.pipelineOutputs.optimizeSection = solveGraphOutput
-    this.finishWithExistingSolverState({
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private tryAcceptSolveGraphWithoutSerializedOutput(error: unknown) {
-    if (this.getCurrentStageName() !== "solveGraph") {
-      return false
-    }
-
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (!solveGraphSolver?.solved || solveGraphSolver.failed) {
-      return false
-    }
-
-    this.finishWithExistingSolverState({
-      solveGraphSerializationSkipped: true,
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private finishWithExistingSolverState(extraStats: Record<string, unknown>) {
-    this.currentPipelineStageIndex = this.pipelineDef.length
-    this.activeSubSolver = null
-    this.solved = true
-    this.failed = false
-    this.error = null
-    this.stats = {
-      ...this.stats,
-      ...extraStats,
-    }
   }
 }
 
@@ -991,6 +975,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
+    const refinementSolver =
+      this.tinyPipelineSolver.getSolver<FixedTopologyPortalLayerRefinementSolver>(
+        "refinePortalLayers",
+      )
     const currentTinySolver = this.getCurrentTinySolver()
 
     this.solved = this.tinyPipelineSolver.solved
@@ -1023,6 +1011,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
+      ...(refinementSolver?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
@@ -1034,6 +1023,21 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const refinementSolver =
+      this.tinyPipelineSolver.getSolver<FixedTopologyPortalLayerRefinementSolver>(
+        "refinePortalLayers",
+      )
+    if (refinementSolver) {
+      if (
+        refinementSolver.solved &&
+        !refinementSolver.failed &&
+        Number(refinementSolver.stats.acceptedCandidateCount ?? 0) === 0
+      ) {
+        return this.tinyPipelineSolver.getSolvedTinySolver()
+      }
+      return refinementSolver.getRefinedSolver()
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",

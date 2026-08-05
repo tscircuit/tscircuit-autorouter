@@ -40,6 +40,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
     routePosition?: number,
   ) => ({
     segmentPortPointId,
+    physicalPortGroupId: `${segmentPortPointId}:physical`,
     x,
     y,
     availableZ: [0],

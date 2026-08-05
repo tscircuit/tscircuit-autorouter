@@ -17,6 +17,8 @@ export interface PreloadedTracePortAssignment {
 
 export interface SegmentPortPoint {
   segmentPortPointId: string
+  /** Stable identity shared by every layer copy at this physical XY portal. */
+  physicalPortGroupId: string
   x: number
   y: number
   availableZ: number[]
@@ -188,6 +190,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       for (const z of availableZ) {
         crampedPortPoints.push({
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}_cramped`,
+          physicalPortGroupId: `${edge.capacityMeshEdgeId}:cramped:0`,
           x: (overlap.start.x + overlap.end.x) / 2,
           y: (overlap.start.y + overlap.end.y) / 2,
           availableZ: [z],
@@ -280,6 +283,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       for (const z of availableZ) {
         const portPoint: SegmentPortPoint = {
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${i}_z${z}`,
+          physicalPortGroupId: `${edge.capacityMeshEdgeId}:slot:${i}`,
           x,
           y,
           availableZ: [z],

@@ -247,7 +247,8 @@ export const serializePreloadedTraceAssignments = (
         mutuallyConnectedNetworkId: fixedNetIdByTraceId.get(traceId) ?? traceId,
         startRegionId: getEndpointRegionId(firstPort, firstSegment.regionId),
         endRegionId: getEndpointRegionId(lastPort, lastSegment.regionId),
-      }
+        portalLayerRefinementLocked: true,
+      } as SerializedConnection
       connections.push(connection)
       solvedRoutes.push({
         connection: { connectionId },
