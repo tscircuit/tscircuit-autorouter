@@ -258,7 +258,7 @@ jobs:
         env:
           BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
           BENCHMARK_CONCURRENCY: ${{ steps.parse.outputs.benchmark_concurrency }}
-          PIPELINE7_STOP_AFTER_PHASE: traceSimplificationSolver
+          PIPELINE7_STOP_AFTER_PHASE: traceWidthSolver
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           MAIN_BRANCH_BENCHMARK_DATASETS_JSON: ${{ steps.main-datasets.outputs.datasets_json }}
