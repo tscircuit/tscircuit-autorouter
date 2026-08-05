@@ -8,6 +8,8 @@ import type {
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
+const ALIGNED_FREE_TOPOLOGY_MODE = "aligned-free"
+
 export function getCanonicalCoordinates(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
   const coordinates: number[] = []
@@ -126,6 +128,115 @@ export function getLayerTopologiesForCoveredNodes({
   }
 
   return [...layerTopologyBySignature.values()]
+}
+
+export function joinAlignedFreeLayerTopologies({
+  layerTopologies,
+  canUseSourceAsFreeSpace,
+}: {
+  layerTopologies: TopologyMergingLayerTopology[]
+  canUseSourceAsFreeSpace: (sourceKey: string) => boolean
+}): TopologyMergingLayerTopology[] {
+  const topologyCountByLayer = new Map<number, number>()
+  for (const topology of layerTopologies) {
+    for (const z of topology.availableZ) {
+      topologyCountByLayer.set(z, (topologyCountByLayer.get(z) ?? 0) + 1)
+    }
+  }
+
+  const freeTopologies = layerTopologies.filter(
+    (topology) =>
+      topology.sourceKeys.length > 0 &&
+      topology.sourceKeys.every(canUseSourceAsFreeSpace) &&
+      topology.availableZ.every(
+        (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
+      ) &&
+      topology.availableZ.every((z) => topologyCountByLayer.get(z) === 1),
+  )
+  if (freeTopologies.length < 2) return layerTopologies
+
+  const nonFreeTopologies = layerTopologies.filter(
+    (topology) => !freeTopologies.includes(topology),
+  )
+  const sortedFreeTopologies = [...freeTopologies].sort(
+    (a, b) => a.availableZ[0]! - b.availableZ[0]!,
+  )
+  const freeRuns: TopologyMergingLayerTopology[][] = []
+
+  for (const topology of sortedFreeTopologies) {
+    const currentRun = freeRuns[freeRuns.length - 1]
+    const currentMaxZ = currentRun
+      ? Math.max(...currentRun.flatMap(({ availableZ }) => availableZ))
+      : Number.NEGATIVE_INFINITY
+    const nextMinZ = Math.min(...topology.availableZ)
+    if (currentRun && nextMinZ === currentMaxZ + 1) {
+      currentRun.push(topology)
+    } else {
+      freeRuns.push([topology])
+    }
+  }
+
+  const mergedFreeTopologies = freeRuns.map((run) => {
+    if (run.length === 1) return run[0]!
+
+    const availableZ = [...new Set(run.flatMap((item) => item.availableZ))]
+      .sort((a, b) => a - b)
+    const sourceKeys = [...new Set(run.flatMap((item) => item.sourceKeys))]
+      .sort()
+    const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
+    return {
+      availableZ,
+      sourceKeys,
+      topologyMode,
+      topologySignature: JSON.stringify({
+        mode: ALIGNED_FREE_TOPOLOGY_MODE,
+        availableZ,
+      }),
+    } satisfies TopologyMergingLayerTopology
+  })
+
+  return [...nonFreeTopologies, ...mergedFreeTopologies].sort(
+    (a, b) => a.availableZ[0]! - b.availableZ[0]!,
+  )
+}
+
+function isAlignedFreeRegion(region: TopologyMergingRegion): boolean {
+  return (
+    region.topologySignature ===
+    JSON.stringify({
+      mode: ALIGNED_FREE_TOPOLOGY_MODE,
+      availableZ: region.availableZ,
+    })
+  )
+}
+
+export function splitAlignedFreeRegionByLayer({
+  region,
+  preparedNodeBySourceKey,
+}: {
+  region: TopologyMergingRegion
+  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+}): TopologyMergingRegion[] {
+  if (!isAlignedFreeRegion(region)) return [region]
+
+  return region.availableZ.map((z) => {
+    const sourceKeys = region.sourceKeys.filter((sourceKey) =>
+      preparedNodeBySourceKey.get(sourceKey)?.node.availableZ.includes(z),
+    )
+    if (sourceKeys.length === 0) {
+      throw new Error(
+        `TopologyMergingSolver: aligned free region lost layer ${z} provenance`,
+      )
+    }
+    const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
+    return {
+      bounds: { ...region.bounds },
+      availableZ: [z],
+      sourceKeys,
+      topologyMode,
+      topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+    } satisfies TopologyMergingRegion
+  })
 }
 
 export function restoreAuthoritativeTargetRegions({
@@ -263,6 +374,11 @@ function mergeRegionRun(
     } else {
       previousRegion.bounds.maxY = region.bounds.maxY
     }
+    previousRegion.sourceKeys = [
+      ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+    ].sort()
+    previousRegion.topologyMode =
+      previousRegion.sourceKeys.length === 1 ? "passthrough" : "merged"
   }
 
   return mergedRegions

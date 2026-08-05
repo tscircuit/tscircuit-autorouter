@@ -13,7 +13,9 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
+  joinAlignedFreeLayerTopologies,
   restoreAuthoritativeTargetRegions,
+  splitAlignedFreeRegionByLayer,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -84,7 +86,20 @@ export class TopologyMergingSolver extends BaseSolver {
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
-    const compactedRegions = compactTopologyMergingRegions(topologyRegions)
+    const compactedAlignedRegions =
+      compactTopologyMergingRegions(topologyRegions)
+    const localLayerAccessRegions = compactedAlignedRegions.flatMap(
+      (region) =>
+        this.doesRegionProvideLocalLayerAccess(region)
+          ? [region]
+          : splitAlignedFreeRegionByLayer({
+              region,
+              preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+            }),
+    )
+    const compactedRegions = compactTopologyMergingRegions(
+      localLayerAccessRegions,
+    )
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
@@ -194,10 +209,19 @@ export class TopologyMergingSolver extends BaseSolver {
       )
       if (coveringNodes.length === 0) continue
 
-      const layerTopologies = getLayerTopologiesForCoveredNodes({
+      const rawLayerTopologies = getLayerTopologiesForCoveredNodes({
         coveringNodes,
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
+      })
+      const layerTopologies = joinAlignedFreeLayerTopologies({
+        layerTopologies: rawLayerTopologies,
+        canUseSourceAsFreeSpace: (sourceKey) => {
+          const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
+          return Boolean(
+            node && !node._containsObstacle && !node._isVirtualOffboard,
+          )
+        },
       })
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
@@ -209,5 +233,46 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
+  }
+
+  private doesRegionProvideLocalLayerAccess(
+    region: TopologyMergingRegion,
+  ): boolean {
+    const width = region.bounds.maxX - region.bounds.minX
+    const height = region.bounds.maxY - region.bounds.minY
+    return (
+      Math.min(width, height) >= this.inputProblem.viaDiameter &&
+      this.doesRegionBorderTarget(region.bounds)
+    )
+  }
+
+  private doesRegionBorderTarget(
+    bounds: TopologyMergingRegion["bounds"],
+  ): boolean {
+    return this.preparedNodes.some(({ bounds: targetBounds, node }) => {
+      if (!node._containsTarget) return false
+
+      const overlapsTargetVertically =
+        Math.min(bounds.maxY, targetBounds.maxY) -
+          Math.max(bounds.minY, targetBounds.minY) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetSide =
+        Math.abs(bounds.minX - targetBounds.maxX) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxX - targetBounds.minX) <=
+          TOPOLOGY_MERGING_EPSILON
+      if (overlapsTargetVertically && touchesTargetSide) return true
+
+      const overlapsTargetHorizontally =
+        Math.min(bounds.maxX, targetBounds.maxX) -
+          Math.max(bounds.minX, targetBounds.minX) >
+        TOPOLOGY_MERGING_EPSILON
+      const touchesTargetTopOrBottom =
+        Math.abs(bounds.minY - targetBounds.maxY) <=
+          TOPOLOGY_MERGING_EPSILON ||
+        Math.abs(bounds.maxY - targetBounds.minY) <=
+          TOPOLOGY_MERGING_EPSILON
+      return overlapsTargetHorizontally && touchesTargetTopOrBottom
+    })
   }
 }

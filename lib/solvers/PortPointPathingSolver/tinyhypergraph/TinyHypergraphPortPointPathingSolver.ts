@@ -49,11 +49,15 @@ type RouteMetadata = {
 
 export function getPcbPortIdForRoute({
   portalPcbPortId,
+  routeEndpointPcbPortIds,
 }: {
   portalPcbPortId: string | undefined
   routeEndpointPcbPortIds: Array<string | undefined> | undefined
 }): string | undefined {
-  return portalPcbPortId
+  if (!portalPcbPortId) return undefined
+  return routeEndpointPcbPortIds?.includes(portalPcbPortId)
+    ? portalPcbPortId
+    : undefined
 }
 
 type SerializedTinyConnection = NonNullable<
