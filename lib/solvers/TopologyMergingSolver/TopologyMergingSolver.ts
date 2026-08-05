@@ -227,8 +227,15 @@ export class TopologyMergingSolver extends BaseSolver {
                     !node._isVirtualOffboard,
                 )
               },
-              getTargetAccessLayers: (sourceKey) =>
-                this.targetAccessLayersBySourceKey.get(sourceKey),
+              getTargetAccessLayers: (sourceKey) => {
+                const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
+                return node?._containsObstacle && node._containsTarget
+                  ? Array.from(
+                      { length: this.inputProblem.layerCount },
+                      (_, z) => z,
+                    )
+                  : undefined
+              },
             })
           : rawLayerTopologies
       for (const layerTopology of layerTopologies) {
