@@ -264,6 +264,34 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
+
+  private logDiagnosticDrc(stage: string, hdRoutes: HighDensityRoute[]) {
+    if (process.env.PIPELINE7_LOG_STAGE_DRC !== "1") return
+
+    const evaluateDrc = createPipeline7AutoroutingDrcEvaluator({
+      connections: this.netToPointPairsSolver?.newConnections ?? [],
+      originalConnections: this.originalSrj.connections,
+      layerCount: this.srj.layerCount,
+      obstacles: this.srj.obstacles,
+      defaultViaHoleDiameter: this.viaHoleDiameter,
+      connMap: this.connMap,
+      srjWithPointPairs: this.srjWithPointPairs!,
+      originalSrj: this.originalSrj,
+    })
+    const result = evaluateDrc({ hdRoutes })
+
+    console.log(
+      `[pipeline7-stage-drc] ${JSON.stringify({
+        stage,
+        errorCount: result.errors.length,
+        viaCount: hdRoutes.reduce(
+          (total, route) => total + route.vias.length,
+          0,
+        ),
+      })}`,
+    )
+  }
+
   pipelineDef = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
@@ -602,6 +630,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           preserveTerminalPcbPortIds: true,
         },
       ],
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "highDensityStitchSolver",
+            cms.highDensityStitchSolver!.mergedHdRoutes,
+          )
+        },
+      },
     ),
     definePipelineStep(
       "traceSimplificationSolver",
@@ -619,19 +655,39 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           iterations: 2,
         },
       ],
-    ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.srj.obstacles,
-        connMap: cms.connMap,
-        colorMap: cms.colorMap,
-        minTraceWidth: cms.minTraceWidth,
-        connection: cms.srj.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-        layerCount: cms.srj.layerCount,
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "traceSimplificationSolver",
+            cms.traceSimplificationSolver!.simplifiedHdRoutes,
+          )
+        },
       },
-    ]),
+    ),
+    definePipelineStep(
+      "traceWidthSolver",
+      TraceWidthSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          minTraceWidth: cms.minTraceWidth,
+          connection: cms.srj.connections,
+          obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          layerCount: cms.srj.layerCount,
+        },
+      ],
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "traceWidthSolver",
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          )
+        },
+      },
+    ),
     definePipelineStep(
       "globalDrcForceImproveSolver",
       GlobalDrcForceImproveSolver,
@@ -654,6 +710,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enablePostSolveClearanceRelaxation: false,
         },
       ],
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "globalDrcForceImproveSolver",
+            cms.globalDrcForceImproveSolver!.getOutput(),
+          )
+        },
+      },
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
@@ -690,6 +754,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             broadPassMultiplier: 3,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          cms.logDiagnosticDrc(
+            "exactGeometryDrcForceImproveSolver",
+            cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          )
+        },
       },
     ),
     definePipelineStep(
