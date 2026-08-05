@@ -137,13 +137,21 @@ export function mergeViaCompatibleFreeLayerTopologies({
   layerTopologies: TopologyMergingLayerTopology[]
   canUseSourceAsFreeSpace: (sourceKey: string) => boolean
 }): TopologyMergingLayerTopology[] {
+  const topologyCountByLayer = new Map<number, number>()
+  for (const topology of layerTopologies) {
+    for (const z of topology.availableZ) {
+      topologyCountByLayer.set(z, (topologyCountByLayer.get(z) ?? 0) + 1)
+    }
+  }
+
   const freeTopologies = layerTopologies.filter(
     (topology) =>
       topology.sourceKeys.length > 0 &&
       topology.sourceKeys.every(canUseSourceAsFreeSpace) &&
       topology.availableZ.every(
         (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
-      ),
+      ) &&
+      topology.availableZ.every((z) => topologyCountByLayer.get(z) === 1),
   )
   if (freeTopologies.length < 2) return layerTopologies
 
