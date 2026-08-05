@@ -1341,7 +1341,11 @@ const runBenchmarkTasks = async (
           0,
           Math.round(performance.now() - currentTask.startedAtMs),
         )
-        return `worker ${worker.id}: ${currentTask.request.task.scenarioName} ${formatDurationLabel(elapsedTimeMs)}`
+        return (
+          `worker ${worker.id}: ${currentTask.request.task.scenarioName} ` +
+          `${formatDurationLabel(elapsedTimeMs)}` +
+          formatProgressDetails(currentTask.latestProgress)
+        )
       })
       .filter(Boolean)
 
