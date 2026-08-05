@@ -32,6 +32,8 @@ interface PathSegment {
   endDistance: number
 }
 
+const MIN_PATH_CURSOR_SEGMENT_LENGTH = 1e-6
+
 export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private pathSegments: PathSegment[] = []
   private totalPathLength: number = 0
@@ -312,9 +314,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       const start = this.inputRoute.route[i]
       const end = this.inputRoute.route[i + 1]
 
-      // Calculate segment length using Euclidean distance
-      const length =
-        Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2) + i / 10000
+      const physicalLength = Math.hypot(end.x - start.x, end.y - start.y)
+      // Zero-length segments still need an ordered cursor span.
+      const length = Math.max(physicalLength, MIN_PATH_CURSOR_SEGMENT_LENGTH)
 
       this.pathSegments.push({
         start,
