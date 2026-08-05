@@ -8,7 +8,8 @@ import type {
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
-const ALIGNED_FREE_TOPOLOGY_MODE = "aligned-free"
+const ALIGNED_VIA_TOPOLOGY_MODE = "aligned-via"
+const ALIGNED_VIA_SIGNATURE_PREFIX = `{"mode":"${ALIGNED_VIA_TOPOLOGY_MODE}",`
 
 export function getCanonicalCoordinates(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
@@ -130,69 +131,95 @@ export function getLayerTopologiesForCoveredNodes({
   return [...layerTopologyBySignature.values()]
 }
 
-export function mergeViaCompatibleFreeLayerTopologies({
+export function mergeViaCompatibleLayerTopologies({
   layerTopologies,
   canUseSourceAsFreeSpace,
+  canUseSourceAsTarget,
 }: {
   layerTopologies: TopologyMergingLayerTopology[]
   canUseSourceAsFreeSpace: (sourceKey: string) => boolean
+  canUseSourceAsTarget: (sourceKey: string) => boolean
 }): TopologyMergingLayerTopology[] {
-  const freeTopologies = layerTopologies.filter(
-    (topology) =>
-      topology.sourceKeys.length > 0 &&
-      topology.sourceKeys.every(canUseSourceAsFreeSpace) &&
-      topology.availableZ.every(
-        (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
-      ),
-  )
-  if (freeTopologies.length < 2) return layerTopologies
+  const compatibleTopologies = layerTopologies.flatMap((topology) => {
+    const hasContiguousLayers = topology.availableZ.every(
+      (z, index) => index === 0 || z === topology.availableZ[index - 1]! + 1,
+    )
+    if (!hasContiguousLayers || topology.sourceKeys.length === 0) return []
 
-  const nonFreeTopologies = layerTopologies.filter(
-    (topology) => !freeTopologies.includes(topology),
-  )
-  const sortedFreeTopologies = [...freeTopologies].sort(
-    (a, b) => a.availableZ[0]! - b.availableZ[0]!,
-  )
-  const freeRuns: TopologyMergingLayerTopology[][] = []
+    const isFree = topology.sourceKeys.every(canUseSourceAsFreeSpace)
+    const isTarget = topology.sourceKeys.every(canUseSourceAsTarget)
+    return isFree || isTarget
+      ? [{ topology, targetSourceKeys: isTarget ? topology.sourceKeys : [] }]
+      : []
+  })
+  if (compatibleTopologies.length < 2) return layerTopologies
 
-  for (const topology of sortedFreeTopologies) {
-    const currentRun = freeRuns[freeRuns.length - 1]
+  const compatibleTopologySet = new Set(
+    compatibleTopologies.map(({ topology }) => topology),
+  )
+  const incompatibleTopologies = layerTopologies.filter(
+    (topology) => !compatibleTopologySet.has(topology),
+  )
+  const sortedTopologies = [...compatibleTopologies].sort(
+    (a, b) => a.topology.availableZ[0]! - b.topology.availableZ[0]!,
+  )
+  const topologyRuns: typeof compatibleTopologies[] = []
+
+  for (const item of sortedTopologies) {
+    const currentRun = topologyRuns[topologyRuns.length - 1]
     const currentMaxZ = currentRun
-      ? Math.max(...currentRun.flatMap(({ availableZ }) => availableZ))
+      ? Math.max(
+          ...currentRun.flatMap(({ topology }) => topology.availableZ),
+        )
       : Number.NEGATIVE_INFINITY
-    const nextMinZ = Math.min(...topology.availableZ)
-    if (currentRun && nextMinZ === currentMaxZ + 1) {
-      currentRun.push(topology)
+    const nextMinZ = Math.min(...item.topology.availableZ)
+    const currentRunHasTarget = currentRun?.some(
+      ({ targetSourceKeys }) => targetSourceKeys.length > 0,
+    )
+    const nextIsTarget = item.targetSourceKeys.length > 0
+    if (
+      currentRun &&
+      nextMinZ === currentMaxZ + 1 &&
+      !(currentRunHasTarget && nextIsTarget)
+    ) {
+      currentRun.push(item)
     } else {
-      freeRuns.push([topology])
+      topologyRuns.push([item])
     }
   }
 
-  const mergedFreeTopologies = freeRuns.map((run) => {
-    if (run.length === 1) return run[0]!
+  const mergedTopologies = topologyRuns.map((run) => {
+    if (run.length === 1) return run[0]!.topology
 
-    const availableZ = [...new Set(run.flatMap((item) => item.availableZ))]
-      .sort((a, b) => a - b)
-    const sourceKeys = [...new Set(run.flatMap((item) => item.sourceKeys))]
-      .sort()
+    const availableZ = [
+      ...new Set(run.flatMap(({ topology }) => topology.availableZ)),
+    ].sort((a, b) => a - b)
+    const sourceKeys = [
+      ...new Set(run.flatMap(({ topology }) => topology.sourceKeys)),
+    ].sort()
+    const targetItem = run.find(
+      ({ targetSourceKeys }) => targetSourceKeys.length > 0,
+    )
+    const targetSourceKeys = [...(targetItem?.targetSourceKeys ?? [])].sort()
     const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
     return {
       availableZ,
       sourceKeys,
       topologyMode,
       topologySignature: JSON.stringify({
-        mode: ALIGNED_FREE_TOPOLOGY_MODE,
+        mode: ALIGNED_VIA_TOPOLOGY_MODE,
+        targetSourceKeys,
         availableZ,
       }),
     } satisfies TopologyMergingLayerTopology
   })
 
-  return [...nonFreeTopologies, ...mergedFreeTopologies].sort(
+  return [...incompatibleTopologies, ...mergedTopologies].sort(
     (a, b) => a.availableZ[0]! - b.availableZ[0]!,
   )
 }
 
-export function splitUndersizedAlignedFreeRegions({
+export function splitUndersizedAlignedViaRegions({
   regions,
   minimumViaFootprint,
   preparedNodeBySourceKey,
@@ -202,20 +229,22 @@ export function splitUndersizedAlignedFreeRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   return regions.flatMap((region) => {
-    const isAlignedFreeRegion =
-      region.topologySignature ===
-      JSON.stringify({
-        mode: ALIGNED_FREE_TOPOLOGY_MODE,
-        availableZ: region.availableZ,
-      })
+    const isAlignedViaRegion = region.topologySignature.startsWith(
+      ALIGNED_VIA_SIGNATURE_PREFIX,
+    )
     const width = region.bounds.maxX - region.bounds.minX
     const height = region.bounds.maxY - region.bounds.minY
     if (
-      !isAlignedFreeRegion ||
+      !isAlignedViaRegion ||
       Math.min(width, height) >= minimumViaFootprint
     ) {
       return [region]
     }
+
+    const { targetSourceKeys } = JSON.parse(region.topologySignature) as {
+      targetSourceKeys: string[]
+    }
+    const targetSourceKeySet = new Set(targetSourceKeys)
 
     return region.availableZ.map((z) => {
       const sourceKeys = region.sourceKeys.filter((sourceKey) =>
@@ -226,13 +255,28 @@ export function splitUndersizedAlignedFreeRegions({
           `TopologyMergingSolver: aligned free region lost layer ${z} provenance`,
         )
       }
-      const topologyMode = sourceKeys.length === 1 ? "passthrough" : "merged"
+      const targetKeysOnLayer = sourceKeys.filter((sourceKey) =>
+        targetSourceKeySet.has(sourceKey),
+      )
+      const outputSourceKeys =
+        targetKeysOnLayer.length > 0 ? targetKeysOnLayer : sourceKeys
+      const topologyMode =
+        targetKeysOnLayer.length > 0
+          ? targetKeysOnLayer.length === 1
+            ? "target-passthrough"
+            : "target-merged"
+          : outputSourceKeys.length === 1
+            ? "passthrough"
+            : "merged"
       return {
         bounds: { ...region.bounds },
         availableZ: [z],
-        sourceKeys,
+        sourceKeys: outputSourceKeys,
         topologyMode,
-        topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+        topologySignature: JSON.stringify({
+          mode: topologyMode,
+          sourceKeys: outputSourceKeys,
+        }),
       } satisfies TopologyMergingRegion
     })
   })
@@ -376,8 +420,6 @@ function mergeRegionRun(
     previousRegion.sourceKeys = [
       ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
     ].sort()
-    previousRegion.topologyMode =
-      previousRegion.sourceKeys.length === 1 ? "passthrough" : "merged"
   }
 
   return mergedRegions

@@ -13,9 +13,9 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
-  mergeViaCompatibleFreeLayerTopologies,
+  mergeViaCompatibleLayerTopologies,
   restoreAuthoritativeTargetRegions,
-  splitUndersizedAlignedFreeRegions,
+  splitUndersizedAlignedViaRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -91,7 +91,7 @@ export class TopologyMergingSolver extends BaseSolver {
     const viaSizedRegions =
       this.inputProblem.viaDiameter === undefined
         ? compactedAlignedRegions
-        : splitUndersizedAlignedFreeRegions({
+        : splitUndersizedAlignedViaRegions({
             regions: compactedAlignedRegions,
             minimumViaFootprint: this.inputProblem.viaDiameter,
             preparedNodeBySourceKey: this.preparedNodeBySourceKey,
@@ -213,13 +213,21 @@ export class TopologyMergingSolver extends BaseSolver {
       })
       const layerTopologies =
         this.inputProblem.viaDiameter !== undefined
-          ? mergeViaCompatibleFreeLayerTopologies({
+          ? mergeViaCompatibleLayerTopologies({
               layerTopologies: rawLayerTopologies,
               canUseSourceAsFreeSpace: (sourceKey) => {
                 const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
                 return Boolean(
                   node &&
                     !node._containsObstacle &&
+                    !node._isVirtualOffboard,
+                )
+              },
+              canUseSourceAsTarget: (sourceKey) => {
+                const node = this.preparedNodeBySourceKey.get(sourceKey)?.node
+                return Boolean(
+                  node?._containsObstacle &&
+                    node._containsTarget &&
                     !node._isVirtualOffboard,
                 )
               },
