@@ -261,6 +261,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
+            obstacleMargin:
+              this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
           })
           this.extractResult = (s) =>
             (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []

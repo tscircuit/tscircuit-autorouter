@@ -21,6 +21,7 @@ export interface SameNetViaMergerSolverInput {
   layerCount: number
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
+  obstacleMargin?: number
 }
 
 type Via = {
@@ -129,6 +130,7 @@ const canMoveViaTo = (
     mergedViaHdRoutes: HighDensityRoute[]
     hdRouteSHI: HighDensityRouteSpatialIndex
     obstacleSHI: ObstacleSpatialHashIndex
+    obstacleMargin: number
   },
 ): boolean => {
   const route = context.mergedViaHdRoutes[viaToRemove.routeIndex]
@@ -189,7 +191,7 @@ const canMoveViaTo = (
       width: Math.abs(start.x - end.x),
       height: Math.abs(start.y - end.y),
     }
-    const searchMargin = traceThickness / 2 + OBSTACLE_MARGIN
+    const searchMargin = traceThickness / 2 + context.obstacleMargin
     const obstacles = context.obstacleSHI.searchArea(
       segmentBox.centerX,
       segmentBox.centerY,
@@ -337,6 +339,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
       mergedViaHdRoutes: this.mergedViaHdRoutes,
       hdRouteSHI: this.hdRouteSHI,
       obstacleSHI: this.obstacleSHI,
+      obstacleMargin: this.input.obstacleMargin ?? OBSTACLE_MARGIN,
     })
   }
 
