@@ -81,15 +81,10 @@ test("visualizes the physical transition after useless via removal", async (): P
     route: [
       { x: 0, y: 0, z: 0 },
       { x: 1, y: 0, z: 0 },
-      { x: 1, y: 0, z: 1 },
       { x: 2, y: 0, z: 1 },
-      { x: 2, y: 0, z: 2 },
-      { x: 3, y: 0, z: 2 },
+      { x: 3, y: 0, z: 1 },
     ],
-    vias: [
-      { x: 1, y: 0 },
-      { x: 2, y: 0 },
-    ],
+    vias: [{ x: 1, y: 0 }],
   }
   const solver = new SingleRouteUselessViaRemovalSolver({
     obstacleSHI: new ObstacleSpatialHashIndex("flatbush", []),
@@ -107,7 +102,7 @@ test("visualizes the physical transition after useless via removal", async (): P
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "Input: two physical via transitions",
+          name: "Input: via at x=1, next layer starts at x=2",
           graphics: visualizeRouteSideView(route),
         },
         {
