@@ -1026,6 +1026,41 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
+    if (this.failed) {
+      const failedRouteId = Number(this.stats.lastFailedRouteId)
+      const routeIds = [
+        failedRouteId,
+        ...(this.stats.lastDirectOwnerRouteIds ?? []),
+        ...(this.stats.lastRepeatedOwnerRouteIds ?? []),
+        ...(this.stats.lastAlternateOwnerRouteIds ?? []),
+        ...(this.stats.lastRippedRouteIds ?? []),
+      ].filter((routeId, index, routeIdList) =>
+        Number.isInteger(routeId) && routeIdList.indexOf(routeId) === index,
+      )
+      const routeMetadata = (
+        currentTinySolver as unknown as LoadedTinyGraph | undefined
+      )?.problem.routeMetadata
+      this.error = `${this.error}; rerip diagnostics: ${JSON.stringify({
+        selectiveRipCount: this.stats.selectiveRipCount,
+        globalReripCount: this.stats.globalReripCount,
+        globalReripReason: this.stats.globalReripReason,
+        failedOwnerPairCount: this.stats.failedOwnerPairCount,
+        maxFailedOwnerPairCount: this.stats.maxFailedOwnerPairCount,
+        lastFailedRouteId: this.stats.lastFailedRouteId,
+        lastDirectOwnerRouteIds: this.stats.lastDirectOwnerRouteIds,
+        lastRepeatedOwnerRouteIds: this.stats.lastRepeatedOwnerRouteIds,
+        lastAlternateOwnerRouteIds: this.stats.lastAlternateOwnerRouteIds,
+        lastRippedRouteIds: this.stats.lastRippedRouteIds,
+        lastRelaxedSearchExpandedLabelCount:
+          this.stats.lastRelaxedSearchExpandedLabelCount,
+        lastAlternateSearchExpandedLabelCount:
+          this.stats.lastAlternateSearchExpandedLabelCount,
+        routes: routeIds.map((routeId) => ({
+          routeId,
+          metadata: routeMetadata?.[routeId],
+        })),
+      })}`
+    }
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 
