@@ -29,6 +29,8 @@ test("single stitch bridges small same-layer gaps", () => {
         { x: 2, y: 0, z: 0 },
       ]),
     ],
+    isStitchSegmentClear: () => true,
+    stitchClearanceMode: "require_clear",
   })
 
   solver.solve()
@@ -58,6 +60,8 @@ test("single stitch does not bridge large same-layer gaps", () => {
         { x: 3, y: 0, z: 0 },
       ]),
     ],
+    isStitchSegmentClear: () => true,
+    stitchClearanceMode: "require_clear",
   })
 
   solver.solve()
@@ -81,6 +85,8 @@ test("single stitch can cap a modest terminal endpoint gap", () => {
         { x: 0.3, y: 1.1, z: 0 },
       ]),
     ],
+    isStitchSegmentClear: () => true,
+    stitchClearanceMode: "require_clear",
   })
 
   solver.solve()
@@ -118,6 +124,8 @@ test("single stitch accepts fan-out terminal tags", () => {
     end: { x: 10, y: 0, z: 0, pcb_port_id: "pcb_port_end" },
     hdRoutes: terminalFanoutRoutes,
     preserveTerminalPcbPortIds: true,
+    isStitchSegmentClear: () => true,
+    stitchClearanceMode: "require_clear",
   })
 
   expect(solver.mergedHdRoute.startPcbPortId).toBe("pcb_port_start")
