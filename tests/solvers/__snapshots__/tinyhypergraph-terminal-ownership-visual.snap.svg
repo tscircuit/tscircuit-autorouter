@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="0,0 7.593999999999999,0" data-type="line" data-label="" points="40,447.12162233342116 600,447.12162233342116" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="3.6871214116407693"/></g><g><polyline data-points="7.593999999999999,0 7.593999999999999,3" data-type="line" data-label="" points="600,447.12162233342116 600,225.894337634975" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="3.6871214116407693"/></g><g><polyline data-points="7.593999999999999,3 0,3" data-type="line" data-label="" points="600,225.894337634975 40,225.894337634975" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="3.6871214116407693"/></g><g><polyline data-points="0,3 0,0" data-type="line" data-label="" points="40,225.894337634975 40,447.12162233342116" fill="none" stroke="rgba(25,25,25,0.62)" stroke-width="3.6871214116407693"/></g><g><rect data-type="rect" data-label="Issue: foreign same-net terminal is emitted:frame step:unknown layer:all" data-x="3.7969999999999997" data-y="1.5" x="40" y="225.894337634975" width="560" height="221.22728469844617" fill="rgba(255,255,255,0)" stroke="rgba(25,25,25,0.42)" stroke-width="0.013560714285714285"/></g><g><rect data-type="rect" data-label="route terminal ownership" data-x="3" data-y="1.5" x="40" y="225.894337634975" width="442.45456939689234" height="221.22728469844617" fill="#f8fafc" stroke="#64748b" stroke-width="0.013560714285714285"/></g><text data-type="text" data-label="Current route endpoints: pcb_port_954, pcb_port_214" data-x="0.25" data-y="2.55" x="58.43560705820384" y="259.07843033974194" fill="#0f172a" font-size="17.69818277587569" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">Current route endpoints: pcb_port_954, pcb_port_214</text><text data-type="text" data-label="Visited same-net portal: pcb_port_494" data-x="0.25" data-y="1.55" x="58.43560705820384" y="332.8208585725573" fill="#0f172a" font-size="17.69818277587569" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">Visited same-net portal: pcb_port_494</text><text data-type="text" data-label="Emitted pcb_port_id: pcb_port_494" data-x="0.25" data-y="0.55" x="58.43560705820384" y="406.5632868053727" fill="#dc2626" font-size="17.69818277587569" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">Emitted pcb_port_id: pcb_port_494</text><text data-type="text" data-label="Issue: foreign same-net terminal is emitted:frame" data-x="0.060259999999999536" data-y="3.4477200000000003" x="44.443718725309424" y="192.87837766657887" fill="rgb(18,18,18)" font-size="18.140637345272584" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">Issue: foreign same-net terminal is emitted:frame</text><text data-type="text" data-label="step:unknown" data-x="2.11928" data-y="3.1722" x="196.28085330524098" y="213.1958914932842" fill="rgb(190,92,12)" font-size="18.140637345272584" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge">step:unknown</text><text data-type="text" data-label=" layer:all" data-x="3.9495199999999997" data-y="3.1722" x="331.247195154069" y="213.1958914932842" fill="rgb(120,58,175)" font-size="18.140637345272584" font-family="sans-serif" text-anchor="start" dominant-baseline="text-after-edge"> layer:all</text><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":73.74242823281539,"c":0,"e":40,"b":0,"d":-73.74242823281539,"f":447.12162233342116};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
