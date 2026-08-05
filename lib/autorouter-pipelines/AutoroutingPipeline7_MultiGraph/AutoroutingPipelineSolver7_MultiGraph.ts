@@ -280,7 +280,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     })
     const result = evaluateDrc({ hdRoutes })
 
-    console.log(
+    console.error(
       `[pipeline7-stage-drc] ${JSON.stringify({
         stage,
         errorCount: result.errors.length,
