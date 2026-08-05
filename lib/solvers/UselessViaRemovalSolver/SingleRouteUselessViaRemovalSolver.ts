@@ -501,37 +501,18 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   }
 
   getOptimizedHdRoute(): HighDensityRoute {
-    const sectionPoints = this.routeSections.flatMap(
-      (section) => section.points,
-    )
-    const route: HighDensityRoute["route"] = []
+    // TODO reconstruct the route from segments, we will need to recompute the
+    // vias
+    const route = this.routeSections.flatMap((section) => section.points)
     const vias: HighDensityRoute["vias"] = []
-    const viaLocations = new Set<string>()
-
-    for (const point of sectionPoints) {
-      const previousPoint = route[route.length - 1]
-      if (
-        previousPoint &&
-        previousPoint.z !== point.z &&
-        previousPoint.toNextSegmentType !== "through_obstacle"
-      ) {
-        if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
-          route.push({
-            x: previousPoint.x,
-            y: previousPoint.y,
-            z: point.z,
-          })
-        }
-
-        const viaLocation = `${previousPoint.x}:${previousPoint.y}`
-        if (!viaLocations.has(viaLocation)) {
-          vias.push({ x: previousPoint.x, y: previousPoint.y })
-          viaLocations.add(viaLocation)
-        }
+    for (let i = 0; i < route.length - 1; i++) {
+      if (route[i].z !== route[i + 1].z) {
+        vias.push({
+          x: route[i].x,
+          y: route[i].y,
+        })
       }
-      route.push(point)
     }
-
     return {
       connectionName: this.unsimplifiedRoute.connectionName,
       rootConnectionName: this.unsimplifiedRoute.rootConnectionName,
