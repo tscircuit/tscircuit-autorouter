@@ -1027,34 +1027,50 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
     if (this.failed) {
-      const failedRouteId = Number(this.stats.lastFailedRouteId)
+      const solverChain: BaseSolver[] = []
+      let diagnosticSolver: BaseSolver | null | undefined =
+        this.tinyPipelineSolver
+      while (diagnosticSolver) {
+        solverChain.push(diagnosticSolver)
+        diagnosticSolver = diagnosticSolver.activeSubSolver
+      }
+      const reripSolver = [...solverChain]
+        .reverse()
+        .find((solver) => solver.stats.lastFailedRouteId !== undefined)
+      const reripStats = reripSolver?.stats ?? {}
+      const failedRouteId = Number(reripStats.lastFailedRouteId)
       const routeIds = [
         failedRouteId,
-        ...(this.stats.lastDirectOwnerRouteIds ?? []),
-        ...(this.stats.lastRepeatedOwnerRouteIds ?? []),
-        ...(this.stats.lastAlternateOwnerRouteIds ?? []),
-        ...(this.stats.lastRippedRouteIds ?? []),
+        ...(reripStats.lastDirectOwnerRouteIds ?? []),
+        ...(reripStats.lastRepeatedOwnerRouteIds ?? []),
+        ...(reripStats.lastAlternateOwnerRouteIds ?? []),
+        ...(reripStats.lastRippedRouteIds ?? []),
       ].filter((routeId, index, routeIdList) =>
         Number.isInteger(routeId) && routeIdList.indexOf(routeId) === index,
       )
-      const routeMetadata = (
-        currentTinySolver as unknown as LoadedTinyGraph | undefined
-      )?.problem.routeMetadata
+      const routeMetadata = (reripSolver as unknown as LoadedTinyGraph)
+        ?.problem?.routeMetadata
       this.error = `${this.error}; rerip diagnostics: ${JSON.stringify({
-        selectiveRipCount: this.stats.selectiveRipCount,
-        globalReripCount: this.stats.globalReripCount,
-        globalReripReason: this.stats.globalReripReason,
-        failedOwnerPairCount: this.stats.failedOwnerPairCount,
-        maxFailedOwnerPairCount: this.stats.maxFailedOwnerPairCount,
-        lastFailedRouteId: this.stats.lastFailedRouteId,
-        lastDirectOwnerRouteIds: this.stats.lastDirectOwnerRouteIds,
-        lastRepeatedOwnerRouteIds: this.stats.lastRepeatedOwnerRouteIds,
-        lastAlternateOwnerRouteIds: this.stats.lastAlternateOwnerRouteIds,
-        lastRippedRouteIds: this.stats.lastRippedRouteIds,
+        solverChain: solverChain.map((solver) => ({
+          name: solver.getSolverName(),
+          iterations: solver.iterations,
+          maxIterations: solver.MAX_ITERATIONS,
+          error: solver.error,
+        })),
+        selectiveRipCount: reripStats.selectiveRipCount,
+        globalReripCount: reripStats.globalReripCount,
+        globalReripReason: reripStats.globalReripReason,
+        failedOwnerPairCount: reripStats.failedOwnerPairCount,
+        maxFailedOwnerPairCount: reripStats.maxFailedOwnerPairCount,
+        lastFailedRouteId: reripStats.lastFailedRouteId,
+        lastDirectOwnerRouteIds: reripStats.lastDirectOwnerRouteIds,
+        lastRepeatedOwnerRouteIds: reripStats.lastRepeatedOwnerRouteIds,
+        lastAlternateOwnerRouteIds: reripStats.lastAlternateOwnerRouteIds,
+        lastRippedRouteIds: reripStats.lastRippedRouteIds,
         lastRelaxedSearchExpandedLabelCount:
-          this.stats.lastRelaxedSearchExpandedLabelCount,
+          reripStats.lastRelaxedSearchExpandedLabelCount,
         lastAlternateSearchExpandedLabelCount:
-          this.stats.lastAlternateSearchExpandedLabelCount,
+          reripStats.lastAlternateSearchExpandedLabelCount,
         routes: routeIds.map((routeId) => ({
           routeId,
           metadata: routeMetadata?.[routeId],
