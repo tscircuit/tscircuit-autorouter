@@ -1162,6 +1162,7 @@ const formatProgressDetails = (progress?: WorkerProgress) => {
     Number.isFinite(progress.activeSubSolverProgress)
       ? `phaseProgress=${Math.round((progress.activeSubSolverProgress ?? 0) * 100)}%`
       : null,
+    progress.solverChain ? `solverChain=${progress.solverChain}` : null,
   ].filter(Boolean)
 
   return details.length > 0 ? `\nLast progress: ${details.join(", ")}` : ""

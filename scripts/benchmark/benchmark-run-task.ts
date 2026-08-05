@@ -216,6 +216,76 @@ const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
   return solver.constructor?.name
 }
 
+const getSolverChain = (solver: SolverInstance): string => {
+  const chain: string[] = []
+  const visited = new Set<SolverInstance>()
+  let current: SolverInstance | null | undefined = solver
+
+  while (current && !visited.has(current)) {
+    visited.add(current)
+    const state = current as SolverInstance & Record<string, unknown>
+    const details: string[] = []
+
+    if (Number.isFinite(current.iterations)) {
+      details.push(`iterations=${current.iterations}`)
+    }
+    if (typeof state.currentPhase === "string") {
+      details.push(`phase=${state.currentPhase}`)
+    }
+    if (typeof state.simplificationPipelineLoops === "number") {
+      details.push(`loop=${state.simplificationPipelineLoops}`)
+    }
+    if (typeof state.currentUnsimplifiedHdRouteIndex === "number") {
+      const routes = Array.isArray(state.unsimplifiedHdRoutes)
+        ? state.unsimplifiedHdRoutes
+        : []
+      details.push(
+        `routeIndex=${state.currentUnsimplifiedHdRouteIndex}/${routes.length}`,
+      )
+    }
+    if (Array.isArray(state.unprocessedRoutes)) {
+      details.push(`routesRemaining=${state.unprocessedRoutes.length}`)
+    }
+    if (typeof state.currentSectionIndex === "number") {
+      const sections = Array.isArray(state.routeSections)
+        ? state.routeSections
+        : []
+      details.push(`section=${state.currentSectionIndex}/${sections.length}`)
+    }
+
+    const route =
+      state.unsimplifiedRoute && typeof state.unsimplifiedRoute === "object"
+        ? (state.unsimplifiedRoute as Record<string, unknown>)
+        : state.inputRoute && typeof state.inputRoute === "object"
+          ? (state.inputRoute as Record<string, unknown>)
+          : undefined
+    if (typeof route?.connectionName === "string") {
+      details.push(`route=${route.connectionName}`)
+    }
+    if (Array.isArray(route?.route)) {
+      details.push(`points=${route.route.length}`)
+    }
+    if (
+      typeof state.tailDistanceAlongPath === "number" &&
+      typeof state.headDistanceAlongPath === "number" &&
+      typeof state.totalPathLength === "number"
+    ) {
+      const tailDistance = state.tailDistanceAlongPath.toFixed(2)
+      const headDistance = state.headDistanceAlongPath.toFixed(2)
+      const totalDistance = state.totalPathLength.toFixed(2)
+      details.push(
+        `distance=${tailDistance}:${headDistance}/${totalDistance}`,
+      )
+    }
+
+    const name = getSolverInstanceName(current) ?? "UnknownSolver"
+    chain.push(`${name}(${details.join(",")})`)
+    current = current.activeSubSolver
+  }
+
+  return chain.join(" > ")
+}
+
 const getFailureInfo = (
   solver: SolverInstance,
   fallbackError?: string,
@@ -262,6 +332,7 @@ const getProgressInfo = (
     solverIterations: solver.iterations,
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
+    solverChain: getSolverChain(solver),
   }
 }
 
@@ -285,6 +356,9 @@ const solveWithProgress = async (
     }
 
     const elapsedTimeMs = performance.now() - start
+    if (!force && elapsedTimeMs - lastProgressAt < progressIntervalMs) {
+      return
+    }
     const progress = getProgressInfo(task, solver, elapsedTimeMs)
     const progressKey = getProgressKey(progress)
     if (

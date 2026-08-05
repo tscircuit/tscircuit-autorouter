@@ -41,6 +41,7 @@ export type WorkerProgress = {
   solverIterations?: number
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
+  solverChain?: string
 }
 
 export type WorkerResult<
