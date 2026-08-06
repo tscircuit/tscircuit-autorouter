@@ -65,7 +65,12 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { convertPreloadedTraceToHdRoutes } from "./convert-preloaded-traces-to-hd-routes"
+import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
+import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import {
+  convertPreloadedTraceToHdRoutes,
+  type PreloadedHighDensityRoute,
+} from "./convert-preloaded-traces-to-hd-routes"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
@@ -568,6 +573,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             nodePortPoints: nodePortPointsSource,
             fixedHdRoutes,
             connMap: cms.connMap,
+            colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
             viaDiameter: cms.viaDiameter,
@@ -629,8 +635,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "traceSimplificationSolver",
       TraceSimplificationSolver,
       (cms) => {
-        const preloadedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
-          (trace, traceIndex) =>
+        const preloadedHdRoutes =
+          cms.highDensityRouteSolver?.getUpdatedFixedHdRoutes() ??
+          (cms.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
               trace,
               traceIndex,
@@ -638,7 +645,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.viaDiameter,
               cms.connMap,
             ),
-        )
+          )
 
         return [
           {
@@ -803,7 +810,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
-    this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
+    this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 15
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
@@ -1139,12 +1146,50 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
+  private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
+    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+      convertPreloadedTraceToHdRoutes(
+        trace,
+        traceIndex,
+        this.originalSrj.layerCount,
+        this.viaDiameter,
+        this.connMap,
+      ),
+    )
+  }
+
+  private getRegionalPreloadedTraceUpdates() {
+    const originalFixedRoutes = this.getOriginalFixedHdRoutes()
+    return applyFixedRouteReplacementsToPreloadedTraces({
+      originalTraces: this.originalSrj.traces ?? [],
+      originalFixedRoutes,
+      updatedFixedRoutes:
+        this.highDensityRouteSolver?.getUpdatedFixedHdRoutes() ??
+        originalFixedRoutes,
+      replacedConnectionNames: new Set(
+        this.highDensityRouteSolver?.fixedRouteReplacements.keys() ?? [],
+      ),
+      layerCount: this.originalSrj.layerCount,
+      defaultViaHoleDiameter: this.viaHoleDiameter,
+      obstacles: this.originalSrj.obstacles,
+      connMap: this.connMap,
+    })
+  }
+
+  getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
+    return this.getRegionalPreloadedTraceUpdates().updatedPreloadedTraces
+  }
+
+  getMutatedPreloadedTraces(): SimplifiedPcbTraces {
+    return this.getRegionalPreloadedTraceUpdates().mutatedPreloadedTraces
+  }
+
+  private getNewOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved || !this.highDensityRouteSolver) {
       throw new Error("Cannot get output before solving is complete")
     }
 
-    return convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
       hdRoutes: this._getOutputHdRoutes(),
@@ -1153,12 +1198,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
+    return assignUniquePcbTraceIdsToNewTraces(
+      routedTraces,
+      this.originalSrj.traces ?? [],
+    )
+  }
+
+  getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
+    return [
+      ...this.getMutatedPreloadedTraces(),
+      ...this.getNewOutputSimplifiedPcbTraces(),
+    ]
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
     return {
       ...this.originalSrj,
-      traces: this.getOutputSimplifiedPcbTraces(),
+      traces: [
+        ...this.getUpdatedPreloadedTraces(),
+        ...this.getNewOutputSimplifiedPcbTraces(),
+      ],
     }
   }
 }

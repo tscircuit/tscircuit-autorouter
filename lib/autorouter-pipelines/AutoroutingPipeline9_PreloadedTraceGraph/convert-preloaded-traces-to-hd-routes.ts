@@ -5,16 +5,21 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 const MIN_ROUTE_DIMENSION = 1e-9
 
+export type PreloadedHighDensityRoute = HighDensityRoute & {
+  preloadedTraceIndex: number
+  preloadedRouteIndex: number
+}
+
 export const convertPreloadedTraceToHdRoutes = (
   trace: SimplifiedPcbTrace,
   traceIndex: number,
   layerCount: number,
   defaultViaDiameter: number,
   connMap: ConnectivityMap,
-): HighDensityRoute[] => {
+): PreloadedHighDensityRoute[] => {
   const rootConnectionName =
     connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
-  const routes: HighDensityRoute[] = []
+  const routes: PreloadedHighDensityRoute[] = []
   const addRoute = (
     route: HighDensityRoute["route"],
     traceThickness: number,
@@ -25,6 +30,8 @@ export const convertPreloadedTraceToHdRoutes = (
     routes.push({
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,
+      preloadedTraceIndex: traceIndex,
+      preloadedRouteIndex: routes.length,
       traceThickness: Math.max(MIN_ROUTE_DIMENSION, traceThickness),
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
