@@ -19,7 +19,8 @@ type Pcb3dViewerProps = {
 type ViewerSnapshot = "input" | "final"
 type VisibilityCategory =
   | "board"
-  | "components"
+  | "inferredBodies"
+  | "jumpers"
   | "pads"
   | "traces"
   | "vias"
@@ -35,12 +36,16 @@ type HoverDetails = {
 
 type RenderSummary = {
   boards: number
-  components: number
   holes: number
+  inferredBodies: number
   jumpers: number
   pads: number
   traceSegments: number
   vias: number
+}
+
+type RenderSummaryOptions = {
+  includeInferredBodies?: boolean
 }
 
 type SceneBuildResult = {
@@ -65,8 +70,9 @@ type CameraState = {
 
 const DEFAULT_VISIBILITY: ViewerVisibility = {
   board: true,
-  components: true,
   holes: true,
+  inferredBodies: false,
+  jumpers: true,
   pads: true,
   traces: true,
   vias: true,
@@ -77,11 +83,11 @@ const VISIBILITY_OPTIONS: Array<{
   label: string
 }> = [
   { id: "board", label: "Board" },
-  { id: "components", label: "Components" },
   { id: "pads", label: "Pads" },
   { id: "traces", label: "Traces" },
   { id: "vias", label: "Vias" },
   { id: "holes", label: "Holes" },
+  { id: "inferredBodies", label: "Inferred bodies" },
 ]
 
 const getLayerNames = (layerCount: number): string[] => {
@@ -586,7 +592,7 @@ const addJumper = (
   body.rotation.z = angle
   body.castShadow = true
   tagDebugObject(body, {
-    category: "components",
+    category: "jumpers",
     label: `${net} · jumper`,
     layer: routePoint.layer,
     net,
@@ -708,12 +714,12 @@ const addGroupedComponents = (
     )
     body.castShadow = true
     tagDebugObject(body, {
-      category: "components",
-      label: componentId,
+      category: "inferredBodies",
+      label: `${componentId} · inferred body`,
       layer: "top",
     })
     root.add(body)
-    summary.components += 1
+    summary.inferredBodies += 1
   }
 }
 
@@ -725,8 +731,8 @@ const buildScene = (
   const metrics = getBoardMetrics(srj)
   const summary: RenderSummary = {
     boards: 1,
-    components: 0,
     holes: 0,
+    inferredBodies: 0,
     jumpers: 0,
     pads: 0,
     traceSegments: 0,
@@ -838,7 +844,7 @@ const applyAppearance = (
     for (const material of getObjectMaterials(object)) {
       if (category === "board") {
         setMaterialOpacity(material, boardOpacity, boardOpacity >= 0.9)
-      } else if (category === "components") {
+      } else if (category === "inferredBodies") {
         setMaterialOpacity(material, 0.78, true)
       } else if (category === "traces" || category === "vias") {
         const opacity = focusedNet && net !== focusedNet ? 0.1 : 1
@@ -921,6 +927,7 @@ const frameBoard = ({
 export const getPcb3dRenderSummary = (
   srj: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],
+  options: RenderSummaryOptions = {},
 ): RenderSummary => {
   const groupedComponentCounts = new Map<string, number>()
   for (const obstacle of srj.obstacles) {
@@ -932,10 +939,11 @@ export const getPcb3dRenderSummary = (
   }
   const summary: RenderSummary = {
     boards: 1,
-    components: [...groupedComponentCounts.values()].filter(
-      (count) => count >= 2,
-    ).length,
     holes: srj.obstacles.filter(isThroughHole).length,
+    inferredBodies: options.includeInferredBodies
+      ? [...groupedComponentCounts.values()].filter((count) => count >= 2)
+          .length
+      : 0,
     jumpers: 0,
     pads: srj.obstacles.reduce(
       (count, obstacle) => count + new Set(obstacle.layers).size,
@@ -986,8 +994,11 @@ export const Pcb3dViewer = ({
   const traces =
     snapshot === "final" && finalTraces ? finalTraces : inputTraces
   const renderSummary = useMemo(
-    () => getPcb3dRenderSummary(srj, traces),
-    [srj, traces],
+    () =>
+      getPcb3dRenderSummary(srj, traces, {
+        includeInferredBodies: visibility.inferredBodies,
+      }),
+    [srj, traces, visibility.inferredBodies],
   )
 
   useEffect(() => {
@@ -1246,8 +1257,8 @@ export const Pcb3dViewer = ({
         aria-label="Interactive 3D circuit view. Drag to orbit, right-drag to pan, scroll to zoom, and click routed copper to focus its net."
         className="block h-full w-full touch-none"
         data-boards={renderSummary.boards}
-        data-components={renderSummary.components}
         data-holes={renderSummary.holes}
+        data-inferred-bodies={renderSummary.inferredBodies}
         data-jumpers={renderSummary.jumpers}
         data-pads={renderSummary.pads}
         data-trace-segments={renderSummary.traceSegments}
@@ -1379,7 +1390,7 @@ export const Pcb3dViewer = ({
                     setVisibleLayers(new Set(layerNames))
                   }}
                 >
-                  All
+                  Reset
                 </button>
               </div>
               {VISIBILITY_OPTIONS.map((option) => (

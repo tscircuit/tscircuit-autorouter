@@ -77,15 +77,21 @@ test("counts every SRJ geometry rendered by the 3D viewer", () => {
     },
   ]
 
-  expect(getPcb3dRenderSummary(srj, traces)).toEqual({
+  const authoredGeometry = getPcb3dRenderSummary(srj, traces)
+  expect(authoredGeometry).toEqual({
     boards: 1,
-    components: 1,
     holes: 1,
+    inferredBodies: 0,
     jumpers: 1,
     pads: 6,
     traceSegments: 3,
     vias: 1,
   })
+  expect(
+    getPcb3dRenderSummary(srj, traces, {
+      includeInferredBodies: true,
+    }),
+  ).toEqual({ ...authoredGeometry, inferredBodies: 1 })
   expect(getPcb3dExplodedLayerZ("top", 4, 2)).toBeCloseTo(3.8025)
   expect(getPcb3dExplodedLayerZ("bottom", 4, 2)).toBeCloseTo(-3.8025)
 })
