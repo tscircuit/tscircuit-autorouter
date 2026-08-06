@@ -1073,6 +1073,24 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
+    if (
+      this.params.connections.length >= 800 &&
+      this.iterations % 500_000 === 0 &&
+      currentTinySolver
+    ) {
+      console.log(
+        "[tiny-search-checkpoint]",
+        JSON.stringify({
+          solverIterations: currentTinySolver.iterations,
+          maxIterations: currentTinySolver.MAX_ITERATIONS,
+          remainingRouteCount:
+            currentTinySolver.state.unroutedRoutes.length +
+            (currentTinySolver.state.currentRouteId === undefined ? 0 : 1),
+          ripCount: currentTinySolver.state.ripCount,
+          stats: currentTinySolver.stats,
+        }),
+      )
+    }
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 
