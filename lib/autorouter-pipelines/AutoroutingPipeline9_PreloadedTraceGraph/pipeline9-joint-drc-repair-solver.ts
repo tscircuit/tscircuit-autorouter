@@ -23,6 +23,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
 import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01-repairs"
+import { applyPipeline9TerminalEscapeRelocations } from "./apply-pipeline9-terminal-escape-relocations"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
@@ -635,9 +636,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+    const terminalEscapeResult = applyPipeline9TerminalEscapeRelocations({
       srj: this.params.srj,
       routes: this.exactRepairSolver.getOutput(),
+      newConnections: this.params.newConnections,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      drcEvaluator: this.drcEvaluator!,
+    })
+    const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+      srj: this.params.srj,
+      routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
@@ -662,6 +670,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.acceptedCandidateCount,
       regionalB01RepairFallbackCandidateCount:
         regionalB01RepairResult.fallbackCandidateCount,
+      terminalEscapeCandidateCount:
+        terminalEscapeResult.attemptedCandidateCount,
+      terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
     this.solved = true
   }
