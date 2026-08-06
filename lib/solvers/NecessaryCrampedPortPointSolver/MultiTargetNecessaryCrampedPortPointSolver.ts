@@ -14,6 +14,7 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import { restoreCrampedPortPointConnectivity } from "./restoreCrampedPortPointConnectivity"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 
@@ -236,7 +237,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return this.filteredOutput
     }
 
-    this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
+    const filteredSegments = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.flatMap((portPoint) => {
         if (!portPoint.cramped || this.crampedPortPointsToKeep.has(portPoint)) {
@@ -258,6 +259,13 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         return []
       }),
     }))
+    this.filteredOutput =
+      this.input.preserveNonNecessaryMultilayerPorts === false
+        ? restoreCrampedPortPointConnectivity({
+            originalSegments: this.input.sharedEdgeSegments,
+            filteredSegments,
+          })
+        : filteredSegments
     return this.filteredOutput
   }
 
