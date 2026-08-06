@@ -83,6 +83,13 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         unroutedRouteCount: this.state.unroutedRoutes.length,
         neverRoutedRouteCount,
         ripCount: this.state.ripCount,
+        regionPathGuidedRouteCount:
+          this.stats.regionPathGuidedRouteCount,
+        regionPathFallbackRouteCount:
+          this.stats.regionPathFallbackRouteCount,
+        regionPathPlanningIterations:
+          this.stats.regionPathPlanningIterations,
+        regionPathPlanningSolved: this.stats.regionPathPlanningSolved,
       }),
     )
   }
