@@ -151,13 +151,15 @@ function getNonComponentSharedEdgeSegments({
 }
 
 /**
- * Restores untouched component-region segments after the necessary cramped port
- * point solver filters the non-component mesh.
+ * Restores component-region segments after the necessary cramped port point
+ * solver filters the non-component mesh. Component topology owns these narrow
+ * corridors, so their restored points are valid routing ports rather than
+ * generic cramped fallbacks.
  *
  * @param params.originalSharedEdgeSegments Original shared edge segments from AvailableSegmentPointSolver.
  * @param params.filteredSharedEdgeSegments Solver-filtered shared edge segments for non-component regions.
  * @param params.componentCapacityMeshNodeIds Component-local capacity mesh node ids.
- * @returns Shared edge segments where component regions are untouched and other regions use solver output.
+ * @returns Shared edge segments where component points are usable and other regions use solver output.
  */
 function mergeComponentSharedEdgeSegments({
   originalSharedEdgeSegments,
@@ -173,10 +175,14 @@ function mergeComponentSharedEdgeSegments({
   )
 
   return originalSharedEdgeSegments.map((segment) => {
-    // Component-local cramped points are intentionally preserved even if they
-    // would otherwise be filtered by the necessary cramped port point solver.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
-      return segment
+      return {
+        ...segment,
+        portPoints: segment.portPoints.map((portPoint) => ({
+          ...portPoint,
+          cramped: false,
+        })),
+      }
     }
 
     return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
