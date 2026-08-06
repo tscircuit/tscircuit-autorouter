@@ -28,6 +28,7 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
    * Higher values may be beneficial, but can lead to more DRC errors.
    */
   numberOfCrampedPortPointsToKeep: number
+  preserveNonNecessaryMultilayerPorts?: boolean
 }
 
 /**
@@ -242,7 +243,10 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        if (
+          this.input.preserveNonNecessaryMultilayerPorts !== false &&
+          this.isMultilayerEscapePort(portPoint)
+        ) {
           return [
             {
               ...portPoint,
