@@ -75,6 +75,7 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       (count, successCount) => count + (successCount === 0 ? 1 : 0),
       0,
     )
+    const selectiveReripStats = this.getSelectiveReripStats()
     console.error(
       "[tiny-large-graph-progress]",
       JSON.stringify({
@@ -83,6 +84,21 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         unroutedRouteCount: this.state.unroutedRoutes.length,
         neverRoutedRouteCount,
         ripCount: this.state.ripCount,
+        selectiveRipCount: selectiveReripStats.selectiveRipCount,
+        selectivelyRippedRouteCount:
+          selectiveReripStats.selectivelyRippedRouteCount,
+        alternateBlockerSearchCount:
+          selectiveReripStats.alternateBlockerSearchCount,
+        maxFailedOwnerPairCount:
+          selectiveReripStats.maxFailedOwnerPairCount,
+        lastFailedRouteId: selectiveReripStats.lastFailedRouteId,
+        lastDirectOwnerRouteIds:
+          selectiveReripStats.lastDirectOwnerRouteIds,
+        lastRepeatedOwnerRouteIds:
+          selectiveReripStats.lastRepeatedOwnerRouteIds,
+        lastAlternateOwnerRouteIds:
+          selectiveReripStats.lastAlternateOwnerRouteIds,
+        lastRippedRouteIds: selectiveReripStats.lastRippedRouteIds,
       }),
     )
   }
