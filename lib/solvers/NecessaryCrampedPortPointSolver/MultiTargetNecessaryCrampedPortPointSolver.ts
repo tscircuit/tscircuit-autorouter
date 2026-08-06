@@ -15,6 +15,7 @@ import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 import { restoreCrampedPortPointConnectivity } from "./restoreCrampedPortPointConnectivity"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 
@@ -30,6 +31,7 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
    */
   numberOfCrampedPortPointsToKeep: number
   preserveNonNecessaryMultilayerPorts?: boolean
+  connectivityMap?: ConnectivityMap
 }
 
 /**
@@ -262,11 +264,24 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     this.filteredOutput =
       this.input.preserveNonNecessaryMultilayerPorts === false
         ? restoreCrampedPortPointConnectivity({
+            capacityMeshNodes: this.input.capacityMeshNodes,
+            connectivityMap: this.getConnectivityMap(),
             originalSegments: this.input.sharedEdgeSegments,
             filteredSegments,
+            simpleRouteJsonConnections:
+              this.input.simpleRouteJson.connections,
           })
         : filteredSegments
     return this.filteredOutput
+  }
+
+  private getConnectivityMap(): ConnectivityMap {
+    if (!this.input.connectivityMap) {
+      throw new Error(
+        "A connectivity map is required when non-necessary multilayer ports are pruned",
+      )
+    }
+    return this.input.connectivityMap
   }
 
   private isMultilayerEscapePort(portPoint: SegmentPortPoint): boolean {
