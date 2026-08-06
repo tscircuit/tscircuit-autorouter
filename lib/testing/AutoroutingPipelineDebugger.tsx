@@ -28,7 +28,7 @@ import { CacheProvider } from "lib/cache/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { getNodesNearNode } from "lib/solvers/UnravelSolver/getNodesNearNode"
-import { SimpleRouteJson } from "lib/types"
+import { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { limitVisualizations } from "lib/utils/limitVisualizations"
@@ -41,6 +41,7 @@ import {
   type LayerOverride,
   PIPELINE_OPTIONS,
   type PipelineId,
+  type RendererMode,
 } from "./AutoroutingPipelineMenuBar"
 import { CacheDebugger } from "./CacheDebugger"
 import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
@@ -52,6 +53,7 @@ import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectio
 import { getHighDensityNodeDownloadData } from "./utils/getHighDensityNodeDownloadData"
 import { prepareParamsForDownload } from "./utils/prepareParamsForDownload"
 import { KrtAutoroutingPipelineSolver } from "./KrtAutoroutingPipelineSolver"
+import { Pcb3dViewer } from "./Pcb3dViewer"
 
 const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -453,11 +455,14 @@ export const AutoroutingPipelineDebugger = ({
         })
   })
   const [previewMode, setPreviewMode] = useState(false)
-  const [renderer, setRenderer] = useState<"canvas" | "vector">(
-    (window.localStorage.getItem("lastSelectedRenderer") as
-      | "canvas"
-      | "vector") ?? "vector",
-  )
+  const [renderer, setRenderer] = useState<RendererMode>(() => {
+    const storedRenderer = window.localStorage.getItem("lastSelectedRenderer")
+    return storedRenderer === "canvas" ||
+      storedRenderer === "vector" ||
+      storedRenderer === "3d"
+      ? storedRenderer
+      : "vector"
+  })
   const [canSelectObjects, setCanSelectObjects] = useState(false)
   const [, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -1123,6 +1128,17 @@ export const AutoroutingPipelineDebugger = ({
     () => getOutputViaCount(solver as PipelineDebuggerSolver),
     [solver, solver.iterations, solver.solved, solver.failed],
   )
+  const finalPcb3dTraces = useMemo<SimplifiedPcbTrace[] | null>(() => {
+    if (!solver.solved || solver.failed) return null
+
+    try {
+      const output = solver.getOutputSimplifiedPcbTraces?.()
+      if (!Array.isArray(output)) return null
+      return [...(srj.traces ?? []), ...output]
+    } catch {
+      return null
+    }
+  }, [srj, solver, solver.solved, solver.failed])
 
   return (
     <div className="p-4">
@@ -1130,6 +1146,7 @@ export const AutoroutingPipelineDebugger = ({
         renderer={renderer}
         onSetRenderer={(newRenderer) => {
           setRenderer(newRenderer)
+          setPcbSvgMarkup(null)
           window.localStorage.setItem("lastSelectedRenderer", newRenderer)
         }}
         canSelectObjects={canSelectObjects}
@@ -1342,6 +1359,12 @@ export const AutoroutingPipelineDebugger = ({
           <div className="overflow-auto">
             <div dangerouslySetInnerHTML={{ __html: pcbSvgMarkup }} />
           </div>
+        ) : renderer === "3d" ? (
+          <Pcb3dViewer
+            srj={srj}
+            inputTraces={srj.traces ?? []}
+            finalTraces={finalPcb3dTraces}
+          />
         ) : (
           <>
             {canSelectObjects || renderer === "vector" ? (

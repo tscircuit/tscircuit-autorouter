@@ -84,10 +84,11 @@ export const PIPELINE_OPTIONS = [
 ] as const
 
 export type PipelineId = (typeof PIPELINE_OPTIONS)[number]["id"]
+export type RendererMode = "canvas" | "vector" | "3d"
 
 interface AutoroutingPipelineMenuBarProps {
-  renderer: "canvas" | "vector"
-  onSetRenderer: (renderer: "canvas" | "vector") => void
+  renderer: RendererMode
+  onSetRenderer: (renderer: RendererMode) => void
   canSelectObjects: boolean
   onSetCanSelectObjects: (canSelect: boolean) => void
   onRunDrcChecks: () => void
@@ -223,6 +224,13 @@ export const AutoroutingPipelineMenuBar = ({
           >
             Vector{" "}
             {renderer === "vector" && <MenubarShortcut>✓</MenubarShortcut>}
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => onSetRenderer("3d")}
+            disabled={renderer === "3d"}
+          >
+            3D Debug
+            {renderer === "3d" && <MenubarShortcut>✓</MenubarShortcut>}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
