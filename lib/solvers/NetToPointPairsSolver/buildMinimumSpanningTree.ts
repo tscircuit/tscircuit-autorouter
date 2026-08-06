@@ -177,35 +177,31 @@ class KDTree {
 
 // Disjoint Set (Union-Find) data structure for Kruskal's algorithm
 export class DisjointSet {
-  private parent: Map<string, string> = new Map()
-  private rank: Map<string, number> = new Map()
+  private parent: Map<Point, Point> = new Map()
+  private rank: Map<Point, number> = new Map()
 
   constructor(points: Point[]) {
     // Initialize each point as a separate set
     for (const point of points) {
-      const key = this.pointToKey(point)
-      this.parent.set(key, key)
-      this.rank.set(key, 0)
+      this.parent.set(point, point)
+      this.rank.set(point, 0)
     }
   }
 
-  private pointToKey(point: Point): string {
-    return `${point.x},${point.y}`
-  }
-
-  find(point: Point): string {
-    const key = this.pointToKey(point)
-    if (!this.parent.has(key)) {
-      throw new Error(`Point ${key} not found in DisjointSet`)
+  find(point: Point): Point {
+    if (!this.parent.has(point)) {
+      throw new Error(
+        `Point (${point.x}, ${point.y}) not found in DisjointSet`,
+      )
     }
 
-    let root = key
+    let root = point
     while (root !== this.parent.get(root)) {
       root = this.parent.get(root)!
     }
 
     // Path compression
-    let current = key
+    let current = point
     while (current !== root) {
       const next = this.parent.get(current)!
       this.parent.set(current, root)
@@ -241,7 +237,7 @@ export class DisjointSet {
 }
 
 // Edge representation for Kruskal's algorithm
-interface Edge<T extends Point> {
+export interface Edge<T extends Point> {
   from: T
   to: T
   weight: number
@@ -280,8 +276,8 @@ export function buildMinimumSpanningTree<T extends Point>(
     const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
 
     for (const neighbor of neighbors) {
-      // Skip self
-      if (point.x === neighbor.x && point.y === neighbor.y) {
+      // Distinct terminals can occupy the same x/y on different layers.
+      if (point === neighbor) {
         continue
       }
 

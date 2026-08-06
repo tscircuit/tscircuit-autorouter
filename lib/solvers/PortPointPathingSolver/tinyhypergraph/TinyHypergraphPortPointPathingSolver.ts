@@ -891,6 +891,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private diagnosticTinySolver?: TinyHyperGraphSolver
+  private diagnosticRouteId?: number
+  private diagnosticRouteStartIteration = 0
+  private didLogFinalRouteSearch = false
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1018,6 +1022,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
 
+    this.logLargeProblemRouteSearch(currentTinySolver)
+
     this.solved = this.tinyPipelineSolver.solved
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
@@ -1052,6 +1058,75 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+  }
+
+  private logLargeProblemRouteSearch(
+    currentTinySolver: TinyHyperGraphSolver | undefined,
+  ): void {
+    if (this.params.connections.length < 800 || !currentTinySolver) return
+
+    if (this.diagnosticTinySolver !== currentTinySolver) {
+      this.diagnosticTinySolver = currentTinySolver
+      this.diagnosticRouteId = undefined
+      this.diagnosticRouteStartIteration = currentTinySolver.iterations
+      this.didLogFinalRouteSearch = false
+    }
+
+    const currentRouteId = currentTinySolver.state.currentRouteId
+    if (currentRouteId !== this.diagnosticRouteId) {
+      this.logCompletedLargeProblemRouteSearch(currentTinySolver)
+      this.diagnosticRouteId = currentRouteId
+      this.diagnosticRouteStartIteration = currentTinySolver.iterations
+    }
+
+    if (currentTinySolver.failed && !this.didLogFinalRouteSearch) {
+      this.didLogFinalRouteSearch = true
+      console.error(
+        "[tiny-final-search]",
+        JSON.stringify({
+          solverIterations: currentTinySolver.iterations,
+          remainingRouteCount:
+            currentTinySolver.state.unroutedRoutes.length +
+            (currentRouteId === undefined ? 0 : 1),
+          currentRouteId,
+          currentConnectionId:
+            currentRouteId === undefined
+              ? undefined
+              : currentTinySolver.problem.routeMetadata?.[currentRouteId]
+                  ?.connectionId,
+          routeSearchIterations:
+            currentTinySolver.iterations - this.diagnosticRouteStartIteration,
+          candidateQueueLength: currentTinySolver.state.candidateQueue.length,
+          ripCount: currentTinySolver.state.ripCount,
+        }),
+      )
+    }
+  }
+
+  private logCompletedLargeProblemRouteSearch(
+    currentTinySolver: TinyHyperGraphSolver,
+  ): void {
+    if (this.diagnosticRouteId === undefined) return
+
+    const routeSearchIterations =
+      currentTinySolver.iterations - this.diagnosticRouteStartIteration
+    if (routeSearchIterations < 25_000) return
+
+    console.error(
+      "[tiny-route-search]",
+      JSON.stringify({
+        routeId: this.diagnosticRouteId,
+        connectionId:
+          currentTinySolver.problem.routeMetadata?.[this.diagnosticRouteId]
+            ?.connectionId,
+        routeSearchIterations,
+        solverIterations: currentTinySolver.iterations,
+        remainingRouteCount:
+          currentTinySolver.state.unroutedRoutes.length +
+          (currentTinySolver.state.currentRouteId === undefined ? 0 : 1),
+        ripCount: currentTinySolver.state.ripCount,
+      }),
+    )
   }
 
   preview(): GraphicsObject {

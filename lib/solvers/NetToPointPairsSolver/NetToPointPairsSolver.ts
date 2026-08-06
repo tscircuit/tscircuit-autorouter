@@ -1,30 +1,13 @@
 import {
   ConnectionPoint,
-  getConnectionPointLayers,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { buildLayerAwareMinimumSpanningTree } from "./buildLayerAwareMinimumSpanningTree"
 import { GraphicsObject } from "graphics-debug"
 import { mergeConnections } from "./mergeConnections"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
-
-const doPointsShareLayer = (
-  firstPoint: ConnectionPoint,
-  secondPoint: ConnectionPoint,
-): boolean => {
-  const secondPointLayers = new Set(getConnectionPointLayers(secondPoint))
-  return getConnectionPointLayers(firstPoint).some((layer) =>
-    secondPointLayers.has(layer),
-  )
-}
-
-const getLayerChangePenalty = (srj: SimpleRouteJson): number =>
-  Math.hypot(
-    srj.bounds.maxX - srj.bounds.minX,
-    srj.bounds.maxY - srj.bounds.minY,
-  )
 
 export const getExternalConnectionState = (
   connection: SimpleRouteConnection,
@@ -189,25 +172,10 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const layerChangePenalty = getLayerChangePenalty(this.ogSrj)
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
-      getEdgeWeight: ({ from, to, distance }) =>
-        distance + (doPointsShareLayer(from, to) ? 0 : layerChangePenalty),
-    })
-    if (connection.pointsToConnect.length >= 100) {
-      console.error(
-        "[mst-layer-topology]",
-        JSON.stringify({
-          connectionName: connection.name,
-          pointCount: connection.pointsToConnect.length,
-          edgeCount: edges.length,
-          layerChangingEdgeCount: edges.filter(
-            ({ from, to }) => !doPointsShareLayer(from, to),
-          ).length,
-        }),
-      )
-    }
+    const edges = buildLayerAwareMinimumSpanningTree(
+      connection.pointsToConnect,
+      zeroWeightEdges,
+    )
 
     let mstIdx = 0
     for (const edge of edges) {

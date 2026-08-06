@@ -9,7 +9,18 @@ import {
   getExternalConnectionState,
   NetToPointPairsSolver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
-import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import {
+  buildLayerAwareMinimumSpanningTree,
+  connectionPointsShareLayer,
+  getLayerAwareConnectionPointWeight,
+  getLayerChangePenalty,
+} from "../NetToPointPairsSolver/buildLayerAwareMinimumSpanningTree"
+
+type FindBestConnectionPointsParams = {
+  sourcePoint: ConnectionPoint
+  targetPoint: ConnectionPoint
+  layerChangePenalty: number
+}
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -80,10 +91,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     this.ogSrj = ogSrj // Ensure the original SRJ is stored for the final output
   }
 
-  _findBestConnectionPointsFromDisjointSets(
-    sourcePoint: ConnectionPoint,
-    targetPoint: ConnectionPoint,
-  ): {
+  _findBestConnectionPointsFromDisjointSets({
+    sourcePoint,
+    targetPoint,
+    layerChangePenalty,
+  }: FindBestConnectionPointsParams): {
     pointsToConnect: [ConnectionPoint, ConnectionPoint]
   } {
     if (!sourcePoint.pointId || !targetPoint.pointId)
@@ -102,10 +114,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     for (const currentSourceCandidate of sourcePointEquivalenceGroup) {
       for (const currentTargetCandidate of targetPointEquivalenceGroup) {
-        const distance = Math.sqrt(
-          Math.pow(currentSourceCandidate.x - currentTargetCandidate.x, 2) +
-            Math.pow(currentSourceCandidate.y - currentTargetCandidate.y, 2),
-        )
+        const distance = getLayerAwareConnectionPointWeight({
+          firstPoint: currentSourceCandidate,
+          secondPoint: currentTargetCandidate,
+          layerChangePenalty,
+        })
         if (distance < minimumDistance) {
           minimumDistance = distance
           bestSourcePoint = currentSourceCandidate
@@ -122,6 +135,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
     const currentConnection = this.unprocessedConnections.pop()!
+    const layerChangePenalty = getLayerChangePenalty(
+      currentConnection.pointsToConnect,
+    )
 
     // This logic is copied from the parent class
     const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
@@ -140,10 +156,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         return
       }
       const optimizedConnection =
-        this._findBestConnectionPointsFromDisjointSets(
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
-        )
+        this._findBestConnectionPointsFromDisjointSets({
+          sourcePoint: currentConnection.pointsToConnect[0],
+          targetPoint: currentConnection.pointsToConnect[1],
+          layerChangePenalty,
+        })
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
@@ -154,10 +171,23 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const minimumSpanningTreeEdges = buildMinimumSpanningTree(
+    const minimumSpanningTreeEdges = buildLayerAwareMinimumSpanningTree(
       currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+      zeroWeightEdges,
     )
+    if (currentConnection.pointsToConnect.length >= 100) {
+      console.error(
+        "[mst-layer-topology]",
+        JSON.stringify({
+          connectionName: currentConnection.name,
+          pointCount: currentConnection.pointsToConnect.length,
+          edgeCount: minimumSpanningTreeEdges.length,
+          layerChangingEdgeCount: minimumSpanningTreeEdges.filter(
+            ({ from, to }) => !connectionPointsShareLayer(from, to),
+          ).length,
+        }),
+      )
+    }
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
@@ -165,10 +195,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         continue
       }
 
-      const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
-        mstEdge.from,
-        mstEdge.to,
-      )
+      const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets({
+        sourcePoint: mstEdge.from,
+        targetPoint: mstEdge.to,
+        layerChangePenalty,
+      })
 
       this.newConnections.push({
         pointsToConnect: optimizedMstEdge.pointsToConnect,
