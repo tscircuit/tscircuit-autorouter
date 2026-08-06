@@ -32,6 +32,7 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { getTinyRegionComplexityDiagnostics } from "./getTinyRegionComplexityDiagnostics"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -929,6 +930,42 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    if (connections.length >= 800) {
+      console.error(
+        "[tiny-region-complexity]",
+        JSON.stringify(
+          getTinyRegionComplexityDiagnostics({
+            graph: params.graph,
+            routeCount: connections.length,
+            routeEndpoints: connections.flatMap((connection) =>
+              ([0, 1] as const).map((endpointIndex) => {
+                const point =
+                  connection.simpleRouteConnection.pointsToConnect[
+                    endpointIndex
+                  ]
+                const region =
+                  endpointIndex === 0
+                    ? connection.startRegion
+                    : connection.endRegion
+                const pointIdentity = point.pcb_port_id
+                  ? `pcb:${point.pcb_port_id}`
+                  : `xy:${point.x},${point.y}`
+                const terminalKey = [
+                  connection.mutuallyConnectedNetworkId,
+                  region.regionId,
+                  getConnectionPointLayers(point).join(","),
+                  pointIdentity,
+                ].join("|")
+                return {
+                  regionId: region.regionId,
+                  terminalKey,
+                }
+              }),
+            ),
+          }),
+        ),
+      )
+    }
     const preloadedTraceStats =
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
