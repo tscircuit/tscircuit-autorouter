@@ -165,13 +165,13 @@ export const getTinyHyperGraphSolveGraphMaxIterations = ({
 }: {
   effort: number
   connectionCount: number
-}): number =>
-  Math.ceil(
-    Math.max(
-      MIN_SOLVE_GRAPH_ITERATIONS,
-      connectionCount * SOLVE_GRAPH_ITERATIONS_PER_CONNECTION,
-    ) * getEffortScale(effort),
-  )
+}): number => {
+  const baseIterations =
+    connectionCount > MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
+      ? connectionCount * SOLVE_GRAPH_ITERATIONS_PER_CONNECTION
+      : MIN_SOLVE_GRAPH_ITERATIONS
+  return Math.ceil(baseIterations * getEffortScale(effort))
+}
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
