@@ -398,10 +398,7 @@ const makeBoardGeometry = (
   for (const trace of traces) {
     for (const routePoint of trace.route) {
       if (routePoint.route_type !== "via") continue
-      const radius = Math.max(
-        (routePoint.via_hole_diameter ?? 0.28) / 2,
-        0.07,
-      )
+      const radius = Math.max((routePoint.via_hole_diameter ?? 0.28) / 2, 0.07)
       const hole = new THREE.Path()
       hole.absellipse(
         routePoint.x,
@@ -456,15 +453,7 @@ const createPad = (
     shape.closePath()
     const hole = new THREE.Path()
     const holeRadii = getHoleRadii(obstacle)
-    hole.absellipse(
-      0,
-      0,
-      holeRadii.x,
-      holeRadii.y,
-      0,
-      Math.PI * 2,
-      true,
-    )
+    hole.absellipse(0, 0, holeRadii.x, holeRadii.y, 0, Math.PI * 2, true)
     shape.holes.push(hole)
     geometry = new THREE.ExtrudeGeometry(shape, {
       bevelEnabled: false,
@@ -583,10 +572,7 @@ const addVia = (input: ViaInput): void => {
   const holeRadius = Math.max((input.holeDiameter ?? radius) / 2, 0.07)
   const fromLayerZ = getLayerZ(input.fromLayer, input.layerCount)
   const toLayerZ = getLayerZ(input.toLayer, input.layerCount)
-  const height = Math.max(
-    Math.abs(toLayerZ - fromLayerZ),
-    COPPER_THICKNESS,
-  )
+  const height = Math.max(Math.abs(toLayerZ - fromLayerZ), COPPER_THICKNESS)
   const centerZ = (fromLayerZ + toLayerZ) / 2
 
   const barrel = new THREE.Mesh(
@@ -605,11 +591,7 @@ const addVia = (input: ViaInput): void => {
   tagDebugObject(barrel, {
     category: "vias",
     label: `${input.net} · via ${input.fromLayer} → ${input.toLayer}`,
-    layers: getLayersInSpan(
-      input.fromLayer,
-      input.toLayer,
-      input.layerCount,
-    ),
+    layers: getLayersInSpan(input.fromLayer, input.toLayer, input.layerCount),
     net: input.net,
     span: {
       fromLayer: input.fromLayer,
@@ -696,11 +678,7 @@ const addJumper = (
       roughness: 0.52,
     }),
   )
-  body.position.set(
-    center.x,
-    center.y,
-    getLayerZ(routePoint.layer, 2) + 0.23,
-  )
+  body.position.set(center.x, center.y, getLayerZ(routePoint.layer, 2) + 0.23)
   body.rotation.z = angle
   body.castShadow = true
   tagDebugObject(body, {
@@ -788,10 +766,7 @@ const addTraces = (
   }
 }
 
-const addInferredBodies = (
-  obstacles: Obstacle[],
-  root: THREE.Group,
-): void => {
+const addInferredBodies = (obstacles: Obstacle[], root: THREE.Group): void => {
   for (const group of getInferredBodyGroups(obstacles)) {
     const componentId = group.componentId
     const pads = group.pads
@@ -1367,7 +1342,10 @@ export const Pcb3dViewer = (props: Pcb3dViewerProps): ReactElement => {
   const [visibility, setVisibility] = useState<ViewerVisibility>(() =>
     createViewerVisibility(),
   )
-  const layerNames = useMemo(() => getLayerNames(srj.layerCount), [srj.layerCount])
+  const layerNames = useMemo(
+    () => getLayerNames(srj.layerCount),
+    [srj.layerCount],
+  )
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(
     () => new Set(layerNames),
   )
@@ -1603,7 +1581,9 @@ export const Pcb3dViewer = (props: Pcb3dViewerProps): ReactElement => {
           {visibilityOpen && (
             <div className="absolute bottom-[calc(100%+8px)] right-0 grid min-w-48 grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-black/10 bg-white/95 p-3 shadow-lg backdrop-blur-md sm:right-auto">
               <div className="col-span-2 mb-1 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Visible geometry</span>
+                <span className="font-semibold text-slate-800">
+                  Visible geometry
+                </span>
                 <button
                   type="button"
                   className="text-slate-400 hover:text-slate-700"
@@ -1632,7 +1612,10 @@ export const Pcb3dViewer = (props: Pcb3dViewerProps): ReactElement => {
               ))}
               <div className="col-span-2 my-1 h-px bg-slate-200" />
               {layerNames.map((layer) => (
-                <label key={layer} className="flex items-center gap-1.5 capitalize">
+                <label
+                  key={layer}
+                  className="flex items-center gap-1.5 capitalize"
+                >
                   <input
                     type="checkbox"
                     checked={visibleLayers.has(layer)}

@@ -1400,9 +1400,7 @@ export const AutoroutingPipelineDebugger = ({
         initialNodeId={breakpointNodeId}
       />
 
-      <div className="border rounded-md p-4 mb-4">
-        {circuitRenderer}
-      </div>
+      <div className="border rounded-md p-4 mb-4">{circuitRenderer}</div>
 
       {dialogObject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
