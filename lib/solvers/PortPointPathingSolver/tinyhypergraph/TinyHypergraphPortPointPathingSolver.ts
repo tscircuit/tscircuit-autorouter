@@ -125,6 +125,19 @@ type LoadedTinyGraph = {
   }
 }
 
+type DiagnosticRouteContext = {
+  routeId: number
+  netId: number
+  startPortId: number
+  endPortId: number
+  startAlreadyAssigned: boolean
+  endAlreadyAssigned: boolean
+  assignedNetPortCount: number
+  endpointDistance: number
+  startIncidentRegionIds: number[]
+  endIncidentRegionIds: number[]
+}
+
 const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
   typeof metadata === "object" && metadata !== null
     ? (metadata as TinyRegionMetadata)
@@ -916,6 +929,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private diagnosticTinySolver?: TinyHyperGraphSolver
   private diagnosticRouteId?: number
   private diagnosticRouteStartIteration = 0
+  private diagnosticRouteContext?: DiagnosticRouteContext
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1195,6 +1209,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.diagnosticTinySolver = currentTinySolver
       this.diagnosticRouteId = undefined
       this.diagnosticRouteStartIteration = currentTinySolver.iterations
+      this.diagnosticRouteContext = undefined
     }
 
     const currentRouteId = currentTinySolver.state.currentRouteId
@@ -1218,6 +1233,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
               currentTinySolver.state.unroutedRoutes.length +
               (currentRouteId === undefined ? 0 : 1),
             ripCount: currentTinySolver.state.ripCount,
+            routeContext: this.diagnosticRouteContext,
+            solvedPath: this.getDiagnosticSolvedPath(
+              currentTinySolver,
+              this.diagnosticRouteId,
+            ),
           }),
         )
       }
@@ -1225,6 +1245,88 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     this.diagnosticRouteId = currentRouteId
     this.diagnosticRouteStartIteration = currentTinySolver.iterations
+    this.diagnosticRouteContext =
+      currentRouteId === undefined
+        ? undefined
+        : this.getDiagnosticRouteContext(currentTinySolver, currentRouteId)
+  }
+
+  private getDiagnosticRouteContext(
+    solver: TinyHyperGraphSolver,
+    routeId: number,
+  ): DiagnosticRouteContext {
+    const netId = solver.problem.routeNet[routeId]!
+    const startPortId = solver.problem.routeStartPort[routeId]!
+    const endPortId = solver.problem.routeEndPort[routeId]!
+    const dx =
+      solver.topology.portX[endPortId]! -
+      solver.topology.portX[startPortId]!
+    const dy =
+      solver.topology.portY[endPortId]! -
+      solver.topology.portY[startPortId]!
+    let assignedNetPortCount = 0
+    for (const assignedNetId of solver.state.portAssignment) {
+      if (assignedNetId === netId) assignedNetPortCount += 1
+    }
+
+    return {
+      routeId,
+      netId,
+      startPortId,
+      endPortId,
+      startAlreadyAssigned: solver.state.portAssignment[startPortId] === netId,
+      endAlreadyAssigned: solver.state.portAssignment[endPortId] === netId,
+      assignedNetPortCount,
+      endpointDistance: Math.hypot(dx, dy),
+      startIncidentRegionIds: [
+        ...(solver.topology.incidentPortRegion[startPortId] ?? []),
+      ],
+      endIncidentRegionIds: [
+        ...(solver.topology.incidentPortRegion[endPortId] ?? []),
+      ],
+    }
+  }
+
+  private getDiagnosticSolvedPath(
+    solver: TinyHyperGraphSolver,
+    routeId: number,
+  ): {
+    segmentCount: number
+    regionCount: number
+    totalDistance: number
+    layerChangeCount: number
+  } {
+    const solvedSegments = solver.state.regionSegments.flatMap(
+      (segments, regionId) =>
+        segments
+          .filter(([segmentRouteId]) => segmentRouteId === routeId)
+          .map(([, fromPortId, toPortId]) => ({
+            regionId,
+            fromPortId,
+            toPortId,
+          })),
+    )
+    let totalDistance = 0
+    let layerChangeCount = 0
+    for (const { fromPortId, toPortId } of solvedSegments) {
+      const dx =
+        solver.topology.portX[toPortId]! -
+        solver.topology.portX[fromPortId]!
+      const dy =
+        solver.topology.portY[toPortId]! -
+        solver.topology.portY[fromPortId]!
+      totalDistance += Math.hypot(dx, dy)
+      if (solver.topology.portZ[fromPortId] !== solver.topology.portZ[toPortId]) {
+        layerChangeCount += 1
+      }
+    }
+
+    return {
+      segmentCount: solvedSegments.length,
+      regionCount: new Set(solvedSegments.map(({ regionId }) => regionId)).size,
+      totalDistance,
+      layerChangeCount,
+    }
   }
 
   preview(): GraphicsObject {
