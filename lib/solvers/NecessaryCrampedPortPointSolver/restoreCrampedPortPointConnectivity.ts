@@ -38,6 +38,10 @@ type RemovedPortPoint = {
   portPoint: SegmentPortPoint
 }
 
+type SelectedRemovedPortPoint = RemovedPortPoint & {
+  componentIds: [string, string]
+}
+
 type ConnectivityInput = {
   capacityMeshNodes: CapacityMeshNode[]
   connectivityMap: ConnectivityMap
@@ -89,45 +93,191 @@ const getAllowedNodeIds = ({
     }),
   )
 
-const addRequiredPortsForNet = ({
+const getRequiredTargetNodeIds = ({
+  allowedNodeIds,
+  capacityMeshNodes,
+  connectivityMap,
+  netId,
+}: {
+  allowedNodeIds: ReadonlySet<string>
+  capacityMeshNodes: CapacityMeshNode[]
+  connectivityMap: ConnectivityMap
+  netId: string
+}): Set<string> => {
+  const targetNodeIds = new Set<string>()
+
+  for (const node of capacityMeshNodes) {
+    if (!allowedNodeIds.has(node.capacityMeshNodeId) || !node._containsTarget) {
+      continue
+    }
+    const connectionIds = new Set([
+      ...(node._connectedTo ?? []),
+      ...(node._targetConnectionName ? [node._targetConnectionName] : []),
+    ])
+    const belongsToNet = [...connectionIds].some(
+      (connectionId) =>
+        connectivityMap.getNetConnectedToId(connectionId) === netId,
+    )
+    if (belongsToNet) targetNodeIds.add(node.capacityMeshNodeId)
+  }
+
+  return targetNodeIds.size >= 2
+    ? targetNodeIds
+    : new Set(allowedNodeIds)
+}
+
+const getSelectedRemovedPortPoints = ({
   allowedNodeIds,
   filteredSegments,
   removedPortPoints,
-  restoredPortPointIds,
 }: {
-  allowedNodeIds: Set<string>
+  allowedNodeIds: ReadonlySet<string>
   filteredSegments: SharedEdgeSegment[]
   removedPortPoints: RemovedPortPoint[]
-  restoredPortPointIds: Set<string>
-}): void => {
-  const connectivity = new NodeDisjointSet()
+}): {
+  keptConnectivity: NodeDisjointSet
+  selectedRemovedPortPoints: SelectedRemovedPortPoint[]
+} => {
+  const keptConnectivity = new NodeDisjointSet()
 
   for (const segment of filteredSegments) {
     const [firstNodeId, secondNodeId] = segment.nodeIds
     if (!allowedNodeIds.has(firstNodeId) || !allowedNodeIds.has(secondNodeId)) {
       continue
     }
-    connectivity.add(firstNodeId)
-    connectivity.add(secondNodeId)
+    keptConnectivity.add(firstNodeId)
+    keptConnectivity.add(secondNodeId)
     if (segment.portPoints.length > 0) {
-      connectivity.union(firstNodeId, secondNodeId)
+      keptConnectivity.union(firstNodeId, secondNodeId)
     }
   }
 
+  const restorationConnectivity = new NodeDisjointSet()
+  const selectedRemovedPortPoints: SelectedRemovedPortPoint[] = []
   for (const { segment, portPoint } of removedPortPoints) {
     const [firstNodeId, secondNodeId] = segment.nodeIds
     if (!allowedNodeIds.has(firstNodeId) || !allowedNodeIds.has(secondNodeId)) {
       continue
     }
-    if (!connectivity.union(firstNodeId, secondNodeId)) continue
-    restoredPortPointIds.add(portPoint.segmentPortPointId)
+    const componentIds: [string, string] = [
+      keptConnectivity.find(firstNodeId),
+      keptConnectivity.find(secondNodeId),
+    ]
+    if (componentIds[0] === componentIds[1]) continue
+    if (!restorationConnectivity.union(componentIds[0], componentIds[1])) {
+      continue
+    }
+    selectedRemovedPortPoints.push({ segment, portPoint, componentIds })
+  }
+
+  return { keptConnectivity, selectedRemovedPortPoints }
+}
+
+const getTerminalSubtreePortPointIds = ({
+  keptConnectivity,
+  requiredNodeIds,
+  selectedRemovedPortPoints,
+}: {
+  keptConnectivity: NodeDisjointSet
+  requiredNodeIds: ReadonlySet<string>
+  selectedRemovedPortPoints: SelectedRemovedPortPoint[]
+}): Set<string> => {
+  const requiredComponentIds = new Set(
+    [...requiredNodeIds].map((nodeId) => keptConnectivity.find(nodeId)),
+  )
+  const edgeIndexesByComponentId = new Map<string, number[]>()
+
+  for (const [edgeIndex, selectedPortPoint] of
+    selectedRemovedPortPoints.entries()) {
+    for (const componentId of selectedPortPoint.componentIds) {
+      const edgeIndexes = edgeIndexesByComponentId.get(componentId) ?? []
+      edgeIndexes.push(edgeIndex)
+      edgeIndexesByComponentId.set(componentId, edgeIndexes)
+    }
+  }
+
+  const activeEdges = selectedRemovedPortPoints.map(() => true)
+  const degreeByComponentId = new Map(
+    [...edgeIndexesByComponentId].map(([componentId, edgeIndexes]) => [
+      componentId,
+      edgeIndexes.length,
+    ]),
+  )
+  const removableComponentIds = [...degreeByComponentId]
+    .filter(
+      ([componentId, degree]) =>
+        degree <= 1 && !requiredComponentIds.has(componentId),
+    )
+    .map(([componentId]) => componentId)
+  const removedComponentIds = new Set<string>()
+
+  while (removableComponentIds.length > 0) {
+    const componentId = removableComponentIds.pop()!
+    if (removedComponentIds.has(componentId)) continue
+    removedComponentIds.add(componentId)
+    const edgeIndex = (edgeIndexesByComponentId.get(componentId) ?? []).find(
+      (candidateEdgeIndex) => activeEdges[candidateEdgeIndex],
+    )
+    if (edgeIndex === undefined) continue
+
+    activeEdges[edgeIndex] = false
+    const selectedPortPoint = selectedRemovedPortPoints[edgeIndex]!
+    const adjacentComponentId =
+      selectedPortPoint.componentIds[0] === componentId
+        ? selectedPortPoint.componentIds[1]
+        : selectedPortPoint.componentIds[0]
+    const adjacentDegree =
+      (degreeByComponentId.get(adjacentComponentId) ?? 1) - 1
+    degreeByComponentId.set(adjacentComponentId, adjacentDegree)
+    if (
+      adjacentDegree <= 1 &&
+      !requiredComponentIds.has(adjacentComponentId)
+    ) {
+      removableComponentIds.push(adjacentComponentId)
+    }
+  }
+
+  return new Set(
+    selectedRemovedPortPoints.flatMap((selectedPortPoint, edgeIndex) =>
+      activeEdges[edgeIndex]
+        ? [selectedPortPoint.portPoint.segmentPortPointId]
+        : [],
+    ),
+  )
+}
+
+const addRequiredPortsForNet = ({
+  allowedNodeIds,
+  filteredSegments,
+  removedPortPoints,
+  requiredNodeIds,
+  restoredPortPointIds,
+}: {
+  allowedNodeIds: ReadonlySet<string>
+  filteredSegments: SharedEdgeSegment[]
+  removedPortPoints: RemovedPortPoint[]
+  requiredNodeIds: ReadonlySet<string>
+  restoredPortPointIds: Set<string>
+}): void => {
+  const { keptConnectivity, selectedRemovedPortPoints } =
+    getSelectedRemovedPortPoints({
+      allowedNodeIds,
+      filteredSegments,
+      removedPortPoints,
+    })
+  const terminalSubtreePortPointIds = getTerminalSubtreePortPointIds({
+    keptConnectivity,
+    requiredNodeIds,
+    selectedRemovedPortPoints,
+  })
+  for (const portPointId of terminalSubtreePortPointIds) {
+    restoredPortPointIds.add(portPointId)
   }
 }
 
 /**
- * Restores a minimum spanning set of removed ports for each net. A net's
- * spanning set only uses regions that the net may legally enter, so pruning
- * cannot disconnect paths that existed before filtering.
+ * Restores the part of a minimum spanning forest needed to connect each net's
+ * target regions. The forest only uses regions that the net may legally enter.
  */
 export const restoreCrampedPortPointConnectivity = ({
   capacityMeshNodes,
@@ -161,8 +311,15 @@ export const restoreCrampedPortPointConnectivity = ({
   const restoredPortPointIds = new Set<string>()
 
   for (const netId of netIds) {
+    const allowedNodeIds = getAllowedNodeIds({
+      capacityMeshNodes,
+      connectivityMap,
+      netId,
+    })
     addRequiredPortsForNet({
-      allowedNodeIds: getAllowedNodeIds({
+      allowedNodeIds,
+      requiredNodeIds: getRequiredTargetNodeIds({
+        allowedNodeIds,
         capacityMeshNodes,
         connectivityMap,
         netId,
