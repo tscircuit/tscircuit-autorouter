@@ -244,6 +244,31 @@ const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
 const getTinyRouteConnectionNetId = (connection: TinyRouteConnection): string =>
   connection.mutuallyConnectedNetworkId
 
+const getTinyRouteConnectionSpan = (connection: TinyRouteConnection): number => {
+  const points = connection.simpleRouteConnection.pointsToConnect
+  const start = points[0]!
+  const end = points[points.length - 1]!
+  return Math.hypot(start.x - end.x, start.y - end.y)
+}
+
+const orderTinyRouteConnectionsForPathing = (
+  connections: TinyRouteConnection[],
+): TinyRouteConnection[] => {
+  const longestFirst = connections
+    .map((connection, index) => ({ connection, index }))
+    .sort(
+      (left, right) =>
+        getTinyRouteConnectionSpan(right.connection) -
+          getTinyRouteConnectionSpan(left.connection) ||
+        left.index - right.index,
+    )
+    .map(({ connection }) => connection)
+  return orderConnectionsByNetCardinality(
+    longestFirst,
+    getTinyRouteConnectionNetId,
+  )
+}
+
 const getRoutePoint = (routeMetadata: RouteMetadata, endpointIndex: 0 | 1) =>
   routeMetadata.simpleRouteConnection?.pointsToConnect[endpointIndex]
 
@@ -931,10 +956,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.connections,
     )
     const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
-          tinyRouteConnections,
-          getTinyRouteConnectionNetId,
-        )
+      ? orderTinyRouteConnectionsForPathing(tinyRouteConnections)
       : tinyRouteConnections
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
