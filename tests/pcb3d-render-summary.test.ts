@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import {
   getPcb3dExplodedLayerZ,
   getPcb3dRenderSummary,
+  getPcb3dSceneObjectStates,
 } from "lib/testing/Pcb3dViewer"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -94,4 +95,25 @@ test("counts every SRJ geometry rendered by the 3D viewer", () => {
   ).toEqual({ ...authoredGeometry, inferredBodies: 1 })
   expect(getPcb3dExplodedLayerZ("top", 4, 2)).toBeCloseTo(3.8025)
   expect(getPcb3dExplodedLayerZ("bottom", 4, 2)).toBeCloseTo(-3.8025)
+
+  const defaultScene = getPcb3dSceneObjectStates(srj, traces)
+  expect(
+    defaultScene.filter(
+      (object) => object.category === "inferredBodies" && object.visible,
+    ),
+  ).toHaveLength(0)
+  expect(
+    defaultScene.filter(
+      (object) => object.category === "jumpers" && object.visible,
+    ),
+  ).toHaveLength(1)
+
+  const sceneWithInferredBodies = getPcb3dSceneObjectStates(srj, traces, {
+    includeInferredBodies: true,
+  })
+  expect(
+    sceneWithInferredBodies.filter(
+      (object) => object.category === "inferredBodies" && object.visible,
+    ),
+  ).toHaveLength(1)
 })

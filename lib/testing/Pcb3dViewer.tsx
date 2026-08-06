@@ -1,5 +1,6 @@
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { useEffect, useMemo, useRef, useState } from "react"
+import clsx from "clsx"
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js"
@@ -9,6 +10,11 @@ const COPPER_THICKNESS = 0.055
 const TOP_COPPER = 0xe3a43d
 const BOTTOM_COPPER = 0xc87855
 const INNER_COPPER_COLORS = [0x5b8fb4, 0x8b73b5, 0x4d9b84, 0xc17b59]
+const MINIMUM_TRACE_SEGMENT_LENGTH = 0.0001
+const CAMERA_REFRAME_ASPECT_THRESHOLD = 0.18
+const POINTER_CLICK_TOLERANCE = 5
+const TOOLTIP_WIDTH = 260
+const DEFAULT_VIEWPORT_WIDTH = 600
 
 type Pcb3dViewerProps = {
   srj: SimpleRouteJson
@@ -44,15 +50,75 @@ type RenderSummary = {
   vias: number
 }
 
-type RenderSummaryOptions = {
+type Pcb3dSceneObjectState = {
+  category: VisibilityCategory
+  label: string | undefined
+  visible: boolean
+}
+
+type InferredBodyVisibilityOptions = {
   includeInferredBodies?: boolean
+}
+
+type DebugLayerSpan = {
+  fromLayer: string
+  height: number
+  toLayer: string
+}
+
+type DebugObjectMetadata = {
+  category: VisibilityCategory
+  label?: string
+  layer?: string
+  layers?: string[]
+  net?: string
+  span?: DebugLayerSpan
+}
+
+type Pcb3dDebugMetadata = DebugObjectMetadata & {
+  baseZ: number
+  layers: string[]
+}
+
+type InferredBodyGroup = {
+  componentId: string
+  pads: Obstacle[]
+}
+
+type TraceSegmentInput = {
+  end: { x: number; y: number }
+  layer: string
+  layerCount: number
+  material: THREE.Material
+  net: string
+  root: THREE.Group
+  start: { x: number; y: number }
+  width: number
+}
+
+type ViaInput = {
+  fromLayer: string
+  holeDiameter?: number
+  layerCount: number
+  material: THREE.Material
+  net: string
+  outerDiameter?: number
+  root: THREE.Group
+  toLayer: string
+  x: number
+  y: number
 }
 
 type SceneBuildResult = {
   boardCenter: THREE.Vector3
   boardSize: { width: number; height: number }
   root: THREE.Group
-  summary: RenderSummary
+}
+
+type BoardMetrics = {
+  center: THREE.Vector3
+  height: number
+  width: number
 }
 
 type ViewerRuntime = {
@@ -63,9 +129,39 @@ type ViewerRuntime = {
   fit: (layerGap: number) => void
 }
 
+type ViewerInitializationInput = {
+  boardOpacity: number
+  canvas: HTMLCanvasElement
+  container: HTMLDivElement
+  focusedNet: string | null
+  layerGap: number
+  onCameraStateChange: (cameraState: CameraState) => void
+  onFocusedNetToggle: (net: string) => void
+  onHoverDetailsChange: (details: HoverDetails | null) => void
+  preservedCamera: CameraState | null
+  srj: SimpleRouteJson
+  traces: SimplifiedPcbTrace[]
+  visibility: ViewerVisibility
+  visibleLayers: Set<string>
+}
+
+type ViewerInitialization = {
+  dispose: () => void
+  runtime: ViewerRuntime
+}
+
 type CameraState = {
   position: THREE.Vector3
   target: THREE.Vector3
+}
+
+type FrameBoardInput = {
+  boardCenter: THREE.Vector3
+  boardSize: { width: number; height: number }
+  camera: THREE.PerspectiveCamera
+  controls: OrbitControls
+  depth: number
+  viewport: { width: number; height: number }
 }
 
 const DEFAULT_VISIBILITY: ViewerVisibility = {
@@ -78,6 +174,15 @@ const DEFAULT_VISIBILITY: ViewerVisibility = {
   vias: true,
 }
 
+const createViewerVisibility = (
+  includeInferredBodies = false,
+): ViewerVisibility => {
+  return {
+    ...DEFAULT_VISIBILITY,
+    inferredBodies: includeInferredBodies,
+  }
+}
+
 const VISIBILITY_OPTIONS: Array<{
   id: VisibilityCategory
   label: string
@@ -88,6 +193,11 @@ const VISIBILITY_OPTIONS: Array<{
   { id: "vias", label: "Vias" },
   { id: "holes", label: "Holes" },
   { id: "inferredBodies", label: "Inferred bodies" },
+]
+
+const SNAPSHOT_OPTIONS: Array<{ id: ViewerSnapshot; label: string }> = [
+  { id: "input", label: "Start" },
+  { id: "final", label: "Final" },
 ]
 
 const getLayerNames = (layerCount: number): string[] => {
@@ -106,9 +216,15 @@ const getLayerIndex = (layer: string, layerCount: number): number => {
   if (layer === "top") return 0
   if (layer === "bottom") return Math.max(layerCount - 1, 0)
   const match = layer.match(/inner(\d+)/)
-  return Math.min(Math.max(Number(match?.[1] ?? 1), 1), layerCount - 2)
+  let innerIndex = 1
+  if (match) innerIndex = Number(match[1])
+  return Math.min(Math.max(innerIndex, 1), layerCount - 2)
 }
 
+/**
+ * Returns a copper layer's Z position after applying the viewer's exploded
+ * layer spacing. Positive gaps spread every layer away from the board center.
+ */
 export const getPcb3dExplodedLayerZ = (
   layer: string,
   layerCount: number,
@@ -119,17 +235,19 @@ export const getPcb3dExplodedLayerZ = (
   return getLayerZ(layer, layerCount) + offset
 }
 
-const getBoardPoints = (srj: SimpleRouteJson): Array<{ x: number; y: number }> =>
-  srj.outline && srj.outline.length >= 3
-    ? srj.outline
-    : [
-        { x: srj.bounds.minX, y: srj.bounds.minY },
-        { x: srj.bounds.maxX, y: srj.bounds.minY },
-        { x: srj.bounds.maxX, y: srj.bounds.maxY },
-        { x: srj.bounds.minX, y: srj.bounds.maxY },
-      ]
+const getBoardPoints = (
+  srj: SimpleRouteJson,
+): Array<{ x: number; y: number }> => {
+  if (srj.outline && srj.outline.length >= 3) return srj.outline
+  return [
+    { x: srj.bounds.minX, y: srj.bounds.minY },
+    { x: srj.bounds.maxX, y: srj.bounds.minY },
+    { x: srj.bounds.maxX, y: srj.bounds.maxY },
+    { x: srj.bounds.minX, y: srj.bounds.maxY },
+  ]
+}
 
-const getBoardMetrics = (srj: SimpleRouteJson) => {
+const getBoardMetrics = (srj: SimpleRouteJson): BoardMetrics => {
   const points = getBoardPoints(srj)
   const xs = points.map((point) => point.x)
   const ys = points.map((point) => point.y)
@@ -150,7 +268,8 @@ const getLayerZ = (layer: string, layerCount: number): number => {
   if (layer === "bottom") return -BOARD_THICKNESS / 2 - COPPER_THICKNESS / 2
 
   const match = layer.match(/inner(\d+)/)
-  const innerIndex = match ? Number(match[1]) : 1
+  let innerIndex = 1
+  if (match) innerIndex = Number(match[1])
   const layerIndex = Math.min(Math.max(innerIndex, 1), layerCount - 2)
   return BOARD_THICKNESS / 2 - (BOARD_THICKNESS * layerIndex) / (layerCount - 1)
 }
@@ -158,7 +277,10 @@ const getLayerZ = (layer: string, layerCount: number): number => {
 const getCopperColor = (layer: string): number => {
   if (layer === "top") return TOP_COPPER
   if (layer === "bottom") return BOTTOM_COPPER
-  const innerIndex = Math.max(Number(layer.match(/inner(\d+)/)?.[1] ?? 1) - 1, 0)
+  const match = layer.match(/inner(\d+)/)
+  let layerNumber = 1
+  if (match) layerNumber = Number(match[1])
+  const innerIndex = Math.max(layerNumber - 1, 0)
   return INNER_COPPER_COLORS[innerIndex % INNER_COPPER_COLORS.length]
 }
 
@@ -175,30 +297,36 @@ const getLayersInSpan = (
   return layers.slice(start, end + 1)
 }
 
+/**
+ * Attaches the metadata used by visibility, exploded layers, hover details,
+ * and net focusing. Keeping it as one typed value avoids scattered userData
+ * keys and makes inferred geometry explicit at every call site.
+ */
 const tagDebugObject = (
   object: THREE.Object3D,
-  metadata: {
-    category: VisibilityCategory
-    label?: string
-    layer?: string
-    layers?: string[]
-    net?: string
-    span?: { fromLayer: string; height: number; toLayer: string }
-  },
+  metadata: DebugObjectMetadata,
 ): void => {
-  object.userData.debugCategory = metadata.category
-  object.userData.debugLabel = metadata.label
-  object.userData.debugLayer = metadata.layer
-  object.userData.debugLayers = metadata.layers ??
-    (metadata.layer ? [metadata.layer] : [])
-  object.userData.debugNet = metadata.net
-  object.userData.debugBaseZ = object.position.z
-  object.userData.debugSpan = metadata.span
+  let debugLayers: string[] = []
+  if (metadata.layers) debugLayers = metadata.layers
+  else if (metadata.layer) debugLayers = [metadata.layer]
+  const debugMetadata: Pcb3dDebugMetadata = {
+    ...metadata,
+    baseZ: object.position.z,
+    layers: debugLayers,
+  }
+  object.userData.pcb3dDebug = debugMetadata
+}
+
+const getDebugMetadata = (
+  object: THREE.Object3D,
+): Pcb3dDebugMetadata | undefined => {
+  return object.userData.pcb3dDebug as Pcb3dDebugMetadata | undefined
 }
 
 const getObjectMaterials = (object: THREE.Object3D): THREE.Material[] => {
   if (!(object instanceof THREE.Mesh)) return []
-  return Array.isArray(object.material) ? object.material : [object.material]
+  if (Array.isArray(object.material)) return object.material
+  return [object.material]
 }
 
 const setMaterialOpacity = (
@@ -217,7 +345,9 @@ const getHoleRadius = (obstacle: Obstacle): number => {
   const hasPlatedHoleId = obstacle.connectedTo.some((id) =>
     id.startsWith("pcb_plated_hole_"),
   )
-  return Math.max(minimumDimension * (hasPlatedHoleId ? 0.25 : 0.42), 0.08)
+  let radiusRatio = 0.42
+  if (hasPlatedHoleId) radiusRatio = 0.25
+  return Math.max(minimumDimension * radiusRatio, 0.08)
 }
 
 const getHoleRadii = (obstacle: Obstacle): { x: number; y: number } => {
@@ -393,98 +523,71 @@ const createViaBarrel = (
   return barrel
 }
 
-const addTraceSegment = ({
-  end,
-  layer,
-  layerCount,
-  material,
-  net,
-  root,
-  start,
-  width,
-}: {
-  end: { x: number; y: number }
-  layer: string
-  layerCount: number
-  material: THREE.Material
-  net: string
-  root: THREE.Group
-  start: { x: number; y: number }
-  width: number
-}): boolean => {
+const addTraceSegment = (input: TraceSegmentInput): boolean => {
+  const end = input.end
+  const start = input.start
   const length = Math.hypot(end.x - start.x, end.y - start.y)
-  if (length < 0.0001) return false
+  if (length < MINIMUM_TRACE_SEGMENT_LENGTH) return false
 
   const segment = new THREE.Mesh(
-    new THREE.BoxGeometry(length, Math.max(width, 0.06), COPPER_THICKNESS),
-    material,
+    new THREE.BoxGeometry(
+      length,
+      Math.max(input.width, 0.06),
+      COPPER_THICKNESS,
+    ),
+    input.material,
   )
   segment.position.set(
     (start.x + end.x) / 2,
     (start.y + end.y) / 2,
-    getLayerZ(layer, layerCount),
+    getLayerZ(input.layer, input.layerCount),
   )
   segment.rotation.z = Math.atan2(end.y - start.y, end.x - start.x)
   tagDebugObject(segment, {
     category: "traces",
-    label: `${net} · ${layer}`,
-    layer,
-    net,
+    label: `${input.net} · ${input.layer}`,
+    layer: input.layer,
+    net: input.net,
   })
-  root.add(segment)
+  input.root.add(segment)
 
   for (const point of [start, end]) {
     const joint = new THREE.Mesh(
       new THREE.CylinderGeometry(
-        Math.max(width, 0.06) / 2,
-        Math.max(width, 0.06) / 2,
+        Math.max(input.width, 0.06) / 2,
+        Math.max(input.width, 0.06) / 2,
         COPPER_THICKNESS,
         18,
       ),
-      material,
+      input.material,
     )
     joint.rotation.x = Math.PI / 2
-    joint.position.set(point.x, point.y, getLayerZ(layer, layerCount))
+    joint.position.set(
+      point.x,
+      point.y,
+      getLayerZ(input.layer, input.layerCount),
+    )
     tagDebugObject(joint, {
       category: "traces",
-      label: `${net} · ${layer}`,
-      layer,
-      net,
+      label: `${input.net} · ${input.layer}`,
+      layer: input.layer,
+      net: input.net,
     })
-    root.add(joint)
+    input.root.add(joint)
   }
   return true
 }
 
-const addVia = ({
-  fromLayer,
-  holeDiameter,
-  layerCount,
-  material,
-  net,
-  outerDiameter,
-  root,
-  toLayer,
-  x,
-  y,
-}: {
-  fromLayer: string
-  holeDiameter?: number
-  layerCount: number
-  material: THREE.Material
-  net: string
-  outerDiameter?: number
-  root: THREE.Group
-  toLayer: string
-  x: number
-  y: number
-}): void => {
-  const radius = Math.max((outerDiameter ?? 0.55) / 2, 0.15)
-  const holeRadius = Math.max((holeDiameter ?? radius) / 2, 0.07)
-  const z1 = getLayerZ(fromLayer, layerCount)
-  const z2 = getLayerZ(toLayer, layerCount)
-  const height = Math.max(Math.abs(z2 - z1), COPPER_THICKNESS)
-  const centerZ = (z1 + z2) / 2
+const addVia = (input: ViaInput): void => {
+  const radius = Math.max((input.outerDiameter ?? 0.55) / 2, 0.15)
+  const holeRadius = Math.max((input.holeDiameter ?? radius) / 2, 0.07)
+  const fromLayerZ = getLayerZ(input.fromLayer, input.layerCount)
+  const toLayerZ = getLayerZ(input.toLayer, input.layerCount)
+  const height = Math.max(
+    Math.abs(toLayerZ - fromLayerZ),
+    COPPER_THICKNESS,
+  )
+  const centerZ = (fromLayerZ + toLayerZ) / 2
 
   const barrel = new THREE.Mesh(
     new THREE.CylinderGeometry(
@@ -495,44 +598,52 @@ const addVia = ({
       1,
       true,
     ),
-    material,
+    input.material,
   )
   barrel.rotation.x = Math.PI / 2
-  barrel.position.set(x, y, centerZ)
+  barrel.position.set(input.x, input.y, centerZ)
   tagDebugObject(barrel, {
     category: "vias",
-    label: `${net} · via ${fromLayer} → ${toLayer}`,
-    layers: getLayersInSpan(fromLayer, toLayer, layerCount),
-    net,
-    span: { fromLayer, height, toLayer },
+    label: `${input.net} · via ${input.fromLayer} → ${input.toLayer}`,
+    layers: getLayersInSpan(
+      input.fromLayer,
+      input.toLayer,
+      input.layerCount,
+    ),
+    net: input.net,
+    span: {
+      fromLayer: input.fromLayer,
+      height,
+      toLayer: input.toLayer,
+    },
   })
-  root.add(barrel)
+  input.root.add(barrel)
 
   for (const [layer, z] of [
-    [fromLayer, z1],
-    [toLayer, z2],
+    [input.fromLayer, fromLayerZ],
+    [input.toLayer, toLayerZ],
   ] as const) {
     const annulus = new THREE.Mesh(
       new THREE.RingGeometry(holeRadius, radius, 28),
-      material,
+      input.material,
     )
-    annulus.position.set(x, y, z + Math.sign(z || 1) * 0.003)
+    annulus.position.set(input.x, input.y, z + Math.sign(z || 1) * 0.003)
     tagDebugObject(annulus, {
       category: "vias",
-      label: `${net} · via ${layer}`,
+      label: `${input.net} · via ${layer}`,
       layer,
-      net,
+      net: input.net,
     })
-    root.add(annulus)
+    input.root.add(annulus)
   }
 }
 
 const getRoutePosition = (
   routePoint: SimplifiedPcbTrace["route"][number],
-): { x: number; y: number } | null =>
-  "x" in routePoint && "y" in routePoint
-    ? { x: routePoint.x, y: routePoint.y }
-    : null
+): { x: number; y: number } | null => {
+  if (!("x" in routePoint) || !("y" in routePoint)) return null
+  return { x: routePoint.x, y: routePoint.y }
+}
 
 const getSegmentLayer = (
   start: SimplifiedPcbTrace["route"][number],
@@ -575,7 +686,8 @@ const addJumper = (
     routePoint.end.y - routePoint.start.y,
     routePoint.end.x - routePoint.start.x,
   )
-  const width = routePoint.footprint === "1206x4_pair" ? 1.6 : 0.8
+  let width = 0.8
+  if (routePoint.footprint === "1206x4_pair") width = 1.6
   const body = new THREE.Mesh(
     new RoundedBoxGeometry(Math.max(length * 0.48, 1), width, 0.38, 3, 0.08),
     new THREE.MeshPhysicalMaterial({
@@ -604,10 +716,12 @@ const addTraces = (
   srj: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],
   root: THREE.Group,
-  summary: RenderSummary,
 ): void => {
   const materials = new Map<string, THREE.MeshPhysicalMaterial>()
-  const materialForLayer = (layer: string, net: string) => {
+  const materialForLayer = (
+    layer: string,
+    net: string,
+  ): THREE.MeshPhysicalMaterial => {
     const materialKey = `${layer}:${net}`
     const existing = materials.get(materialKey)
     if (existing) return existing
@@ -625,7 +739,7 @@ const addTraces = (
       const layer = getSegmentLayer(startRoutePoint, endRoutePoint)
       if (!start || !end || !layer) continue
 
-      const added = addTraceSegment({
+      addTraceSegment({
         end,
         layer,
         layerCount: srj.layerCount,
@@ -639,7 +753,6 @@ const addTraces = (
           srj.nominalTraceWidth ?? srj.minTraceWidth,
         ),
       })
-      if (added) summary.traceSegments += 1
     }
 
     for (const routePoint of trace.route) {
@@ -656,13 +769,11 @@ const addTraces = (
           x: routePoint.x,
           y: routePoint.y,
         })
-        summary.vias += 1
       } else if (routePoint.route_type === "jumper") {
         addJumper(routePoint, trace.connection_name, root)
-        summary.jumpers += 1
       } else if (routePoint.route_type === "through_obstacle") {
         const layer = routePoint.from_layer
-        const added = addTraceSegment({
+        addTraceSegment({
           end: routePoint.end,
           layer,
           layerCount: srj.layerCount,
@@ -672,38 +783,31 @@ const addTraces = (
           start: routePoint.start,
           width: routePoint.width,
         })
-        if (added) summary.traceSegments += 1
       }
     }
   }
 }
 
-const addGroupedComponents = (
+const addInferredBodies = (
   obstacles: Obstacle[],
   root: THREE.Group,
-  summary: RenderSummary,
 ): void => {
-  const groups = new Map<string, Obstacle[]>()
-  for (const obstacle of obstacles) {
-    if (!obstacle.componentId) continue
-    const group = groups.get(obstacle.componentId) ?? []
-    group.push(obstacle)
-    groups.set(obstacle.componentId, group)
-  }
-
-  for (const [componentId, pads] of groups) {
-    if (pads.length < 2) continue
+  for (const group of getInferredBodyGroups(obstacles)) {
+    const componentId = group.componentId
+    const pads = group.pads
     const minX = Math.min(...pads.map((pad) => pad.center.x - pad.width / 2))
     const maxX = Math.max(...pads.map((pad) => pad.center.x + pad.width / 2))
     const minY = Math.min(...pads.map((pad) => pad.center.y - pad.height / 2))
     const maxY = Math.max(...pads.map((pad) => pad.center.y + pad.height / 2))
     const width = Math.max((maxX - minX) * 0.54, 0.55)
     const height = Math.max((maxY - minY) * 0.54, 0.55)
+    let bodyColor = 0xeeeae0
+    if (pads.length > 3) bodyColor = 0x34383b
     const body = new THREE.Mesh(
       new RoundedBoxGeometry(width, height, 0.62, 4, 0.1),
       new THREE.MeshPhysicalMaterial({
         clearcoat: 0.12,
-        color: pads.length > 3 ? 0x34383b : 0xeeeae0,
+        color: bodyColor,
         roughness: 0.5,
       }),
     )
@@ -719,25 +823,37 @@ const addGroupedComponents = (
       layer: "top",
     })
     root.add(body)
-    summary.inferredBodies += 1
   }
 }
 
+/**
+ * Groups pads that share a componentId. These groups are only candidates for
+ * synthetic debug bodies; they are never treated as authored SRJ geometry.
+ */
+const getInferredBodyGroups = (obstacles: Obstacle[]): InferredBodyGroup[] => {
+  const groups = new Map<string, Obstacle[]>()
+  for (const obstacle of obstacles) {
+    if (!obstacle.componentId) continue
+    const group = groups.get(obstacle.componentId) ?? []
+    group.push(obstacle)
+    groups.set(obstacle.componentId, group)
+  }
+
+  const inferredBodyGroups: InferredBodyGroup[] = []
+  for (const [componentId, pads] of groups) {
+    if (pads.length < 2) continue
+    inferredBodyGroups.push({ componentId, pads })
+  }
+  return inferredBodyGroups
+}
+
+/** Builds one scene graph for the selected Start or Final trace snapshot. */
 const buildScene = (
   srj: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],
 ): SceneBuildResult => {
   const root = new THREE.Group()
   const metrics = getBoardMetrics(srj)
-  const summary: RenderSummary = {
-    boards: 1,
-    holes: 0,
-    inferredBodies: 0,
-    jumpers: 0,
-    pads: 0,
-    traceSegments: 0,
-    vias: 0,
-  }
   const board = new THREE.Mesh(
     makeBoardGeometry(srj, traces),
     new THREE.MeshPhysicalMaterial({
@@ -759,23 +875,26 @@ const buildScene = (
       const material = materials.get(layer) ?? createCopperMaterial(layer)
       materials.set(layer, material)
       root.add(createPad(obstacle, layer, srj.layerCount, material))
-      summary.pads += 1
     }
 
     if (isThroughHole(obstacle)) {
-      root.add(createViaBarrel(obstacle, materials.get("top")!))
-      summary.holes += 1
+      const barrelMaterial = materials.get("top")
+      if (!barrelMaterial) {
+        throw new Error(
+          `Cannot render plated hole without a top copper layer: ${obstacle.componentId ?? "unknown component"}`,
+        )
+      }
+      root.add(createViaBarrel(obstacle, barrelMaterial))
     }
   }
 
-  addGroupedComponents(srj.obstacles, root, summary)
-  addTraces(srj, traces, root, summary)
+  addInferredBodies(srj.obstacles, root)
+  addTraces(srj, traces, root)
 
   return {
     boardCenter: metrics.center,
     boardSize: { height: metrics.height, width: metrics.width },
     root,
-    summary,
   }
 }
 
@@ -787,19 +906,23 @@ const getLayerOffset = (
   getPcb3dExplodedLayerZ(layer, layerCount, layerGap) -
   getLayerZ(layer, layerCount)
 
+/**
+ * Moves single-layer objects to their exploded copper plane. Spanning objects
+ * remain centered between their endpoint layers and stretch to connect them.
+ */
 const applyLayerGap = (
   root: THREE.Group,
   layerCount: number,
   layerGap: number,
 ): void => {
   root.traverse((object) => {
-    const layer = object.userData.debugLayer as string | undefined
-    const baseZ = object.userData.debugBaseZ as number | undefined
-    const span = object.userData.debugSpan as
-      | { fromLayer: string; height: number; toLayer: string }
-      | undefined
+    const metadata = getDebugMetadata(object)
+    if (!metadata) return
+    const layer = metadata.layer
+    const baseZ = metadata.baseZ
+    const span = metadata.span
 
-    if (span && baseZ !== undefined) {
+    if (span) {
       const fromOffset = getLayerOffset(span.fromLayer, layerCount, layerGap)
       const toOffset = getLayerOffset(span.toLayer, layerCount, layerGap)
       object.position.z = baseZ + (fromOffset + toOffset) / 2
@@ -808,27 +931,55 @@ const applyLayerGap = (
       return
     }
 
-    if (layer && baseZ !== undefined) {
+    if (layer) {
       object.position.z = baseZ + getLayerOffset(layer, layerCount, layerGap)
     }
   })
 }
 
+/** Applies category and copper-layer visibility to every tagged scene object. */
 const applyVisibility = (
   root: THREE.Group,
   visibility: ViewerVisibility,
   visibleLayers: Set<string>,
 ): void => {
   root.traverse((object) => {
-    const category = object.userData.debugCategory as
-      | VisibilityCategory
-      | undefined
-    if (!category) return
-    const layers = object.userData.debugLayers as string[]
+    const metadata = getDebugMetadata(object)
+    if (!metadata) return
     const layerVisible =
-      layers.length === 0 || layers.some((layer) => visibleLayers.has(layer))
-    object.visible = visibility[category] && layerVisible
+      metadata.layers.length === 0 ||
+      metadata.layers.some((layer) => visibleLayers.has(layer))
+    object.visible = visibility[metadata.category] && layerVisible
   })
+}
+
+/**
+ * Builds the real Three.js scene and reports each debug object's visibility.
+ * This is intentionally exported for focused tests of the authored-versus-
+ * inferred geometry policy without requiring a WebGL browser environment.
+ */
+export const getPcb3dSceneObjectStates = (
+  srj: SimpleRouteJson,
+  traces: SimplifiedPcbTrace[],
+  options: InferredBodyVisibilityOptions = {},
+): Pcb3dSceneObjectState[] => {
+  const sceneBuild = buildScene(srj, traces)
+  const visibility = createViewerVisibility(options.includeInferredBodies)
+  const visibleLayers = new Set(getLayerNames(srj.layerCount))
+  applyVisibility(sceneBuild.root, visibility, visibleLayers)
+
+  const objectStates: Pcb3dSceneObjectState[] = []
+  sceneBuild.root.traverse((object) => {
+    const metadata = getDebugMetadata(object)
+    if (!metadata) return
+    objectStates.push({
+      category: metadata.category,
+      label: metadata.label,
+      visible: object.visible,
+    })
+  })
+  disposeObject(sceneBuild.root)
+  return objectStates
 }
 
 const applyAppearance = (
@@ -837,17 +988,19 @@ const applyAppearance = (
   focusedNet: string | null,
 ): void => {
   root.traverse((object) => {
-    const category = object.userData.debugCategory as
-      | VisibilityCategory
-      | undefined
-    const net = object.userData.debugNet as string | undefined
+    const metadata = getDebugMetadata(object)
+    if (!metadata) return
     for (const material of getObjectMaterials(object)) {
-      if (category === "board") {
+      if (metadata.category === "board") {
         setMaterialOpacity(material, boardOpacity, boardOpacity >= 0.9)
-      } else if (category === "inferredBodies") {
+      } else if (metadata.category === "inferredBodies") {
         setMaterialOpacity(material, 0.78, true)
-      } else if (category === "traces" || category === "vias") {
-        const opacity = focusedNet && net !== focusedNet ? 0.1 : 1
+      } else if (
+        metadata.category === "traces" ||
+        metadata.category === "vias"
+      ) {
+        let opacity = 1
+        if (focusedNet && metadata.net !== focusedNet) opacity = 0.1
         setMaterialOpacity(material, opacity, opacity >= 0.9)
       }
     }
@@ -858,41 +1011,30 @@ const disposeObject = (object: THREE.Object3D): void => {
   object.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return
     child.geometry.dispose()
-    const materials = Array.isArray(child.material)
-      ? child.material
-      : [child.material]
+    let materials: THREE.Material[] = [child.material]
+    if (Array.isArray(child.material)) materials = child.material
     for (const material of materials) material.dispose()
   })
 }
 
-const frameBoard = ({
-  boardCenter,
-  boardSize,
-  camera,
-  controls,
-  depth,
-  viewport,
-}: {
-  boardCenter: THREE.Vector3
-  boardSize: { width: number; height: number }
-  camera: THREE.PerspectiveCamera
-  controls: OrbitControls
-  depth: number
-  viewport: { width: number; height: number }
-}): void => {
-  const aspect = Math.max(viewport.width / Math.max(viewport.height, 1), 0.1)
-  const verticalFov = THREE.MathUtils.degToRad(camera.fov)
+/** Fits the complete exploded board by projecting its extents into camera space. */
+const frameBoard = (input: FrameBoardInput): void => {
+  const aspect = Math.max(
+    input.viewport.width / Math.max(input.viewport.height, 1),
+    0.1,
+  )
+  const verticalFov = THREE.MathUtils.degToRad(input.camera.fov)
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect)
   const viewingDirection = new THREE.Vector3(0.28, -0.46, 0.84).normalize()
   const screenRight = new THREE.Vector3()
-    .crossVectors(camera.up, viewingDirection)
+    .crossVectors(input.camera.up, viewingDirection)
     .normalize()
   const screenUp = new THREE.Vector3()
     .crossVectors(viewingDirection, screenRight)
     .normalize()
-  const halfWidth = boardSize.width / 2
-  const halfHeight = boardSize.height / 2
-  const halfThickness = depth / 2 + 0.7
+  const halfWidth = input.boardSize.width / 2
+  const halfHeight = input.boardSize.height / 2
+  const halfThickness = input.depth / 2 + 0.7
   const projectedHalfWidth =
     Math.abs(screenRight.x) * halfWidth +
     Math.abs(screenRight.y) * halfHeight +
@@ -914,36 +1056,267 @@ const frameBoard = ({
       1.12 +
     projectedHalfDepth
 
-  controls.target.copy(boardCenter)
-  camera.position.copy(boardCenter).addScaledVector(viewingDirection, distance)
-  camera.near = Math.max(distance / 1000, 0.02)
-  camera.far = Math.max(distance * 30, 1000)
-  camera.updateProjectionMatrix()
-  controls.minDistance = Math.max(Math.min(boardSize.width, boardSize.height) * 0.06, 0.5)
-  controls.maxDistance = distance * 12
-  controls.update()
+  input.controls.target.copy(input.boardCenter)
+  input.camera.position
+    .copy(input.boardCenter)
+    .addScaledVector(viewingDirection, distance)
+  input.camera.near = Math.max(distance / 1000, 0.02)
+  input.camera.far = Math.max(distance * 30, 1000)
+  input.camera.updateProjectionMatrix()
+  input.controls.minDistance = Math.max(
+    Math.min(input.boardSize.width, input.boardSize.height) * 0.06,
+    0.5,
+  )
+  input.controls.maxDistance = distance * 12
+  input.controls.update()
 }
 
+/**
+ * Owns the Three.js lifecycle for one SRJ and trace snapshot. React keeps this
+ * initializer isolated from lightweight visibility, appearance, and layer-gap
+ * updates so those controls never rebuild WebGL or reset the camera.
+ */
+const initializePcb3dViewer = (
+  input: ViewerInitializationInput,
+): ViewerInitialization => {
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color(0xfafafa)
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.02, 1000)
+  const renderer = new THREE.WebGLRenderer({
+    alpha: false,
+    antialias: true,
+    canvas: input.canvas,
+    powerPreference: "high-performance",
+  })
+  renderer.outputColorSpace = THREE.SRGBColorSpace
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.toneMappingExposure = 1.04
+
+  const controls = new OrbitControls(camera, input.canvas)
+  controls.enableDamping = true
+  controls.dampingFactor = 0.075
+  controls.rotateSpeed = 0.62
+  controls.panSpeed = 0.72
+  controls.zoomSpeed = 0.82
+  controls.screenSpacePanning = true
+
+  const sceneBuild = buildScene(input.srj, input.traces)
+  scene.add(sceneBuild.root)
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xb7b3aa, 2.25))
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 4.2)
+  keyLight.position.set(
+    sceneBuild.boardCenter.x - sceneBuild.boardSize.width * 0.5,
+    sceneBuild.boardCenter.y - sceneBuild.boardSize.height * 0.65,
+    Math.max(sceneBuild.boardSize.width, sceneBuild.boardSize.height) * 0.9,
+  )
+  keyLight.castShadow = true
+  keyLight.shadow.mapSize.set(2048, 2048)
+  keyLight.shadow.bias = -0.00015
+  const shadowExtent = Math.max(
+    sceneBuild.boardSize.width,
+    sceneBuild.boardSize.height,
+  )
+  keyLight.shadow.camera.left = -shadowExtent
+  keyLight.shadow.camera.right = shadowExtent
+  keyLight.shadow.camera.top = shadowExtent
+  keyLight.shadow.camera.bottom = -shadowExtent
+  scene.add(keyLight)
+
+  const fillLight = new THREE.DirectionalLight(0xdde9ff, 1.5)
+  fillLight.position.set(
+    sceneBuild.boardCenter.x + sceneBuild.boardSize.width,
+    sceneBuild.boardCenter.y + sceneBuild.boardSize.height,
+    sceneBuild.boardSize.width * 0.35,
+  )
+  scene.add(fillLight)
+
+  const shadowPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(
+      sceneBuild.boardSize.width * 2.4,
+      sceneBuild.boardSize.height * 2.4,
+    ),
+    new THREE.ShadowMaterial({ color: 0x53605d, opacity: 0.09 }),
+  )
+  shadowPlane.position.set(
+    sceneBuild.boardCenter.x,
+    sceneBuild.boardCenter.y,
+    -BOARD_THICKNESS / 2 - 1.4,
+  )
+  shadowPlane.receiveShadow = true
+  scene.add(shadowPlane)
+
+  const fit = (explodedLayerGap: number): void => {
+    const containerBounds = input.container.getBoundingClientRect()
+    const height = containerBounds.height
+    const width = containerBounds.width
+    if (width <= 0 || height <= 0) return
+    frameBoard({
+      boardCenter: sceneBuild.boardCenter,
+      boardSize: sceneBuild.boardSize,
+      camera,
+      controls,
+      depth:
+        BOARD_THICKNESS +
+        explodedLayerGap * Math.max(input.srj.layerCount - 1, 0),
+      viewport: { height, width },
+    })
+    input.onCameraStateChange({
+      position: camera.position.clone(),
+      target: controls.target.clone(),
+    })
+  }
+
+  const runtime: ViewerRuntime = {
+    camera,
+    controls,
+    fit,
+    sceneBuild,
+    shadowPlane,
+  }
+  applyLayerGap(sceneBuild.root, input.srj.layerCount, input.layerGap)
+  applyVisibility(sceneBuild.root, input.visibility, input.visibleLayers)
+  applyAppearance(sceneBuild.root, input.boardOpacity, input.focusedNet)
+
+  let animationFrame = 0
+  let hasFramed = false
+  let framedAspect: number | null = null
+  const resize = (): void => {
+    const containerBounds = input.container.getBoundingClientRect()
+    const height = containerBounds.height
+    const width = containerBounds.width
+    if (width <= 0 || height <= 0) return
+    const nextAspect = width / height
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    renderer.setSize(width, height, false)
+    camera.aspect = nextAspect
+    camera.updateProjectionMatrix()
+    const aspectChangedMaterially =
+      framedAspect !== null &&
+      Math.abs(Math.log(nextAspect / framedAspect)) >
+        CAMERA_REFRAME_ASPECT_THRESHOLD
+
+    if (!hasFramed && input.preservedCamera) {
+      camera.position.copy(input.preservedCamera.position)
+      controls.target.copy(input.preservedCamera.target)
+      controls.update()
+      hasFramed = true
+    } else if (!hasFramed || aspectChangedMaterially) {
+      fit(input.layerGap)
+      hasFramed = true
+    }
+    framedAspect = nextAspect
+  }
+
+  const raycaster = new THREE.Raycaster()
+  const pointer = new THREE.Vector2()
+  let pointerDown = { x: 0, y: 0 }
+  const getDebugIntersection = (event: PointerEvent): THREE.Object3D | null => {
+    const bounds = input.canvas.getBoundingClientRect()
+    pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1
+    pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1
+    raycaster.setFromCamera(pointer, camera)
+    const intersections = raycaster.intersectObject(sceneBuild.root, true)
+    const intersection = intersections.find((candidate) => {
+      const metadata = getDebugMetadata(candidate.object)
+      return candidate.object.visible && Boolean(metadata?.label)
+    })
+    if (!intersection) return null
+    return intersection.object
+  }
+  const handlePointerMove = (event: PointerEvent): void => {
+    const object = getDebugIntersection(event)
+    const bounds = input.container.getBoundingClientRect()
+    if (!object) {
+      input.canvas.style.cursor = "grab"
+      input.onHoverDetailsChange(null)
+      return
+    }
+
+    const metadata = getDebugMetadata(object)
+    if (!metadata?.label) return
+    input.canvas.style.cursor = "pointer"
+    input.onHoverDetailsChange({
+      label: metadata.label,
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    })
+  }
+  const handlePointerUp = (event: PointerEvent): void => {
+    const distance = Math.hypot(
+      event.clientX - pointerDown.x,
+      event.clientY - pointerDown.y,
+    )
+    if (distance > POINTER_CLICK_TOLERANCE) return
+    const object = getDebugIntersection(event)
+    if (!object) return
+    const metadata = getDebugMetadata(object)
+    const net = metadata?.net
+    if (!net) return
+    input.onFocusedNetToggle(net)
+  }
+  const handlePointerDown = (event: PointerEvent): void => {
+    pointerDown = { x: event.clientX, y: event.clientY }
+    input.onHoverDetailsChange(null)
+  }
+  const handlePointerLeave = (): void => {
+    input.canvas.style.cursor = "grab"
+    input.onHoverDetailsChange(null)
+  }
+
+  input.canvas.addEventListener("pointerdown", handlePointerDown)
+  input.canvas.addEventListener("pointermove", handlePointerMove)
+  input.canvas.addEventListener("pointerup", handlePointerUp)
+  input.canvas.addEventListener("pointerleave", handlePointerLeave)
+  const resizeObserver = new ResizeObserver(resize)
+  resizeObserver.observe(input.container)
+  resize()
+
+  const render = (): void => {
+    controls.update()
+    renderer.render(scene, camera)
+    animationFrame = window.requestAnimationFrame(render)
+  }
+  render()
+
+  const dispose = (): void => {
+    input.onCameraStateChange({
+      position: camera.position.clone(),
+      target: controls.target.clone(),
+    })
+    window.cancelAnimationFrame(animationFrame)
+    resizeObserver.disconnect()
+    input.canvas.removeEventListener("pointerdown", handlePointerDown)
+    input.canvas.removeEventListener("pointermove", handlePointerMove)
+    input.canvas.removeEventListener("pointerup", handlePointerUp)
+    input.canvas.removeEventListener("pointerleave", handlePointerLeave)
+    controls.dispose()
+    disposeObject(scene)
+    renderer.dispose()
+  }
+
+  return { dispose, runtime }
+}
+
+/**
+ * Counts authored SRJ geometry represented by the viewer. Synthetic bodies
+ * are excluded unless the caller explicitly opts in, matching the UI default.
+ */
 export const getPcb3dRenderSummary = (
   srj: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],
-  options: RenderSummaryOptions = {},
+  options: InferredBodyVisibilityOptions = {},
 ): RenderSummary => {
-  const groupedComponentCounts = new Map<string, number>()
-  for (const obstacle of srj.obstacles) {
-    if (!obstacle.componentId) continue
-    groupedComponentCounts.set(
-      obstacle.componentId,
-      (groupedComponentCounts.get(obstacle.componentId) ?? 0) + 1,
-    )
+  let inferredBodyCount = 0
+  if (options.includeInferredBodies) {
+    inferredBodyCount = getInferredBodyGroups(srj.obstacles).length
   }
   const summary: RenderSummary = {
     boards: 1,
     holes: srj.obstacles.filter(isThroughHole).length,
-    inferredBodies: options.includeInferredBodies
-      ? [...groupedComponentCounts.values()].filter((count) => count >= 2)
-          .length
-      : 0,
+    inferredBodies: inferredBodyCount,
     jumpers: 0,
     pads: srj.obstacles.reduce(
       (count, obstacle) => count + new Set(obstacle.layers).size,
@@ -957,7 +1330,12 @@ export const getPcb3dRenderSummary = (
     for (let index = 1; index < trace.route.length; index++) {
       const start = getRoutePosition(trace.route[index - 1])
       const end = getRoutePosition(trace.route[index])
-      if (start && end && Math.hypot(end.x - start.x, end.y - start.y) > 0.0001) {
+      if (
+        start &&
+        end &&
+        Math.hypot(end.x - start.x, end.y - start.y) >
+          MINIMUM_TRACE_SEGMENT_LENGTH
+      ) {
         summary.traceSegments += 1
       }
     }
@@ -970,11 +1348,15 @@ export const getPcb3dRenderSummary = (
   return summary
 }
 
-export const Pcb3dViewer = ({
-  srj,
-  inputTraces,
-  finalTraces,
-}: Pcb3dViewerProps) => {
+/**
+ * Renders authored SRJ geometry for Start and Final solver states in an
+ * interactive Three.js view. Pad-derived bodies are synthetic debug aids and
+ * remain hidden until the user explicitly enables Inferred bodies.
+ */
+export const Pcb3dViewer = (props: Pcb3dViewerProps): ReactElement => {
+  const srj = props.srj
+  const inputTraces = props.inputTraces
+  const finalTraces = props.finalTraces
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const runtimeRef = useRef<ViewerRuntime | null>(null)
@@ -982,17 +1364,18 @@ export const Pcb3dViewer = ({
   const [snapshot, setSnapshot] = useState<ViewerSnapshot>("input")
   const [layerGap, setLayerGap] = useState(0)
   const [boardOpacity, setBoardOpacity] = useState(0.42)
-  const [visibility, setVisibility] =
-    useState<ViewerVisibility>(DEFAULT_VISIBILITY)
+  const [visibility, setVisibility] = useState<ViewerVisibility>(() =>
+    createViewerVisibility(),
+  )
   const layerNames = useMemo(() => getLayerNames(srj.layerCount), [srj.layerCount])
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(
     () => new Set(layerNames),
   )
-  const [layersOpen, setLayersOpen] = useState(false)
+  const [visibilityOpen, setVisibilityOpen] = useState(false)
   const [hoverDetails, setHoverDetails] = useState<HoverDetails | null>(null)
   const [focusedNet, setFocusedNet] = useState<string | null>(null)
-  const traces =
-    snapshot === "final" && finalTraces ? finalTraces : inputTraces
+  let traces = inputTraces
+  if (snapshot === "final" && finalTraces) traces = finalTraces
   const renderSummary = useMemo(
     () =>
       getPcb3dRenderSummary(srj, traces, {
@@ -1015,207 +1398,35 @@ export const Pcb3dViewer = ({
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
-
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xfafafa)
-    const camera = new THREE.PerspectiveCamera(32, 1, 0.02, 1000)
-    const renderer = new THREE.WebGLRenderer({
-      alpha: false,
-      antialias: true,
+    const initialization = initializePcb3dViewer({
+      boardOpacity,
       canvas,
-      powerPreference: "high-performance",
+      container,
+      focusedNet,
+      layerGap,
+      onCameraStateChange: (cameraState) => {
+        cameraStateRef.current = cameraState
+      },
+      onFocusedNetToggle: (net) => {
+        setFocusedNet((current) => {
+          if (current === net) return null
+          return net
+        })
+      },
+      onHoverDetailsChange: setHoverDetails,
+      preservedCamera: cameraStateRef.current,
+      srj,
+      traces,
+      visibility,
+      visibleLayers,
     })
-    renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.04
-
-    const controls = new OrbitControls(camera, canvas)
-    controls.enableDamping = true
-    controls.dampingFactor = 0.075
-    controls.rotateSpeed = 0.62
-    controls.panSpeed = 0.72
-    controls.zoomSpeed = 0.82
-    controls.screenSpacePanning = true
-
-    const sceneBuild = buildScene(srj, traces)
-    scene.add(sceneBuild.root)
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xb7b3aa, 2.25))
-
-    const keyLight = new THREE.DirectionalLight(0xffffff, 4.2)
-    keyLight.position.set(
-      sceneBuild.boardCenter.x - sceneBuild.boardSize.width * 0.5,
-      sceneBuild.boardCenter.y - sceneBuild.boardSize.height * 0.65,
-      Math.max(sceneBuild.boardSize.width, sceneBuild.boardSize.height) * 0.9,
-    )
-    keyLight.castShadow = true
-    keyLight.shadow.mapSize.set(2048, 2048)
-    keyLight.shadow.bias = -0.00015
-    const shadowExtent = Math.max(
-      sceneBuild.boardSize.width,
-      sceneBuild.boardSize.height,
-    )
-    keyLight.shadow.camera.left = -shadowExtent
-    keyLight.shadow.camera.right = shadowExtent
-    keyLight.shadow.camera.top = shadowExtent
-    keyLight.shadow.camera.bottom = -shadowExtent
-    scene.add(keyLight)
-
-    const fillLight = new THREE.DirectionalLight(0xdde9ff, 1.5)
-    fillLight.position.set(
-      sceneBuild.boardCenter.x + sceneBuild.boardSize.width,
-      sceneBuild.boardCenter.y + sceneBuild.boardSize.height,
-      sceneBuild.boardSize.width * 0.35,
-    )
-    scene.add(fillLight)
-
-    const shadowPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(
-        sceneBuild.boardSize.width * 2.4,
-        sceneBuild.boardSize.height * 2.4,
-      ),
-      new THREE.ShadowMaterial({ color: 0x53605d, opacity: 0.09 }),
-    )
-    shadowPlane.position.set(
-      sceneBuild.boardCenter.x,
-      sceneBuild.boardCenter.y,
-      -BOARD_THICKNESS / 2 - 1.4,
-    )
-    shadowPlane.receiveShadow = true
-    scene.add(shadowPlane)
-
-    const fit = (explodedLayerGap: number): void => {
-      const { height, width } = container.getBoundingClientRect()
-      if (width <= 0 || height <= 0) return
-      frameBoard({
-        boardCenter: sceneBuild.boardCenter,
-        boardSize: sceneBuild.boardSize,
-        camera,
-        controls,
-        depth:
-          BOARD_THICKNESS +
-          explodedLayerGap * Math.max(srj.layerCount - 1, 0),
-        viewport: { height, width },
-      })
-      cameraStateRef.current = {
-        position: camera.position.clone(),
-        target: controls.target.clone(),
-      }
-    }
-
-    runtimeRef.current = { camera, controls, fit, sceneBuild, shadowPlane }
-    applyLayerGap(sceneBuild.root, srj.layerCount, layerGap)
-    applyVisibility(sceneBuild.root, visibility, visibleLayers)
-    applyAppearance(sceneBuild.root, boardOpacity, focusedNet)
-
-    let animationFrame = 0
-    let hasFramed = false
-    let framedAspect: number | null = null
-    const preservedCamera = cameraStateRef.current
-    const resize = (): void => {
-      const { height, width } = container.getBoundingClientRect()
-      if (width <= 0 || height <= 0) return
-      const nextAspect = width / height
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-      renderer.setSize(width, height, false)
-      camera.aspect = nextAspect
-      camera.updateProjectionMatrix()
-      const aspectChangedMaterially =
-        framedAspect !== null &&
-        Math.abs(Math.log(nextAspect / framedAspect)) > 0.18
-
-      if (!hasFramed && preservedCamera) {
-        camera.position.copy(preservedCamera.position)
-        controls.target.copy(preservedCamera.target)
-        controls.update()
-        hasFramed = true
-      } else if (!hasFramed || aspectChangedMaterially) {
-        fit(layerGap)
-        hasFramed = true
-      }
-      framedAspect = nextAspect
-    }
-
-    const raycaster = new THREE.Raycaster()
-    const pointer = new THREE.Vector2()
-    let pointerDown = { x: 0, y: 0 }
-    const getDebugIntersection = (event: PointerEvent): THREE.Object3D | null => {
-      const bounds = canvas.getBoundingClientRect()
-      pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1
-      pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1
-      raycaster.setFromCamera(pointer, camera)
-      const intersections = raycaster.intersectObject(sceneBuild.root, true)
-      return (
-        intersections.find(
-          ({ object }) => object.visible && object.userData.debugLabel,
-        )?.object ?? null
-      )
-    }
-    const handlePointerMove = (event: PointerEvent): void => {
-      const object = getDebugIntersection(event)
-      const bounds = container.getBoundingClientRect()
-      canvas.style.cursor = object ? "pointer" : "grab"
-      setHoverDetails(
-        object
-          ? {
-              label: object.userData.debugLabel as string,
-              x: event.clientX - bounds.left,
-              y: event.clientY - bounds.top,
-            }
-          : null,
-      )
-    }
-    const handlePointerUp = (event: PointerEvent): void => {
-      const distance = Math.hypot(
-        event.clientX - pointerDown.x,
-        event.clientY - pointerDown.y,
-      )
-      if (distance > 5) return
-      const net = getDebugIntersection(event)?.userData.debugNet as
-        | string
-        | undefined
-      if (net) setFocusedNet((current) => (current === net ? null : net))
-    }
-    const handlePointerDown = (event: PointerEvent): void => {
-      pointerDown = { x: event.clientX, y: event.clientY }
-      setHoverDetails(null)
-    }
-    const handlePointerLeave = (): void => {
-      canvas.style.cursor = "grab"
-      setHoverDetails(null)
-    }
-
-    canvas.addEventListener("pointerdown", handlePointerDown)
-    canvas.addEventListener("pointermove", handlePointerMove)
-    canvas.addEventListener("pointerup", handlePointerUp)
-    canvas.addEventListener("pointerleave", handlePointerLeave)
-    const resizeObserver = new ResizeObserver(resize)
-    resizeObserver.observe(container)
-    resize()
-
-    const render = (): void => {
-      controls.update()
-      renderer.render(scene, camera)
-      animationFrame = window.requestAnimationFrame(render)
-    }
-    render()
-
+    runtimeRef.current = initialization.runtime
     return () => {
-      cameraStateRef.current = {
-        position: camera.position.clone(),
-        target: controls.target.clone(),
+      const currentRuntime = runtimeRef.current
+      if (currentRuntime?.camera === initialization.runtime.camera) {
+        runtimeRef.current = null
       }
-      if (runtimeRef.current?.camera === camera) runtimeRef.current = null
-      window.cancelAnimationFrame(animationFrame)
-      resizeObserver.disconnect()
-      canvas.removeEventListener("pointerdown", handlePointerDown)
-      canvas.removeEventListener("pointermove", handlePointerMove)
-      canvas.removeEventListener("pointerup", handlePointerUp)
-      canvas.removeEventListener("pointerleave", handlePointerLeave)
-      controls.dispose()
-      disposeObject(scene)
-      renderer.dispose()
+      initialization.dispose()
     }
   }, [srj, traces])
 
@@ -1242,6 +1453,21 @@ export const Pcb3dViewer = ({
     applyAppearance(runtime.sceneBuild.root, boardOpacity, focusedNet)
   }, [boardOpacity, focusedNet])
 
+  let tooltipTransform = "translateX(12px)"
+  if (hoverDetails) {
+    const containerWidth =
+      containerRef.current?.clientWidth ?? DEFAULT_VIEWPORT_WIDTH
+    if (hoverDetails.x > containerWidth - TOOLTIP_WIDTH) {
+      tooltipTransform = "translateX(-100%)"
+    }
+  }
+
+  const visibilityButtonClassName = clsx(
+    "rounded-md px-2 py-1 font-medium",
+    visibilityOpen && "bg-slate-900 text-white",
+    !visibilityOpen && "hover:bg-slate-100",
+  )
+
   return (
     <div
       ref={containerRef}
@@ -1267,27 +1493,29 @@ export const Pcb3dViewer = ({
 
       <div className="pointer-events-none absolute inset-x-0 top-3 flex items-start justify-between px-3">
         <div className="pointer-events-auto flex rounded-lg border border-black/10 bg-white/90 p-0.5 shadow-sm backdrop-blur-md">
-          {(["input", "final"] as const).map((option) => {
-            const disabled = option === "final" && !finalTraces
+          {SNAPSHOT_OPTIONS.map((option) => {
+            const disabled = option.id === "final" && !finalTraces
+            let title = ""
+            if (disabled) title = "Final is available after a successful solve"
+            const buttonClassName = clsx(
+              "rounded-md px-3 py-1.5 font-medium capitalize transition-colors",
+              snapshot === option.id && "bg-slate-900 text-white shadow-sm",
+              snapshot !== option.id &&
+                "text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent",
+            )
             return (
               <button
-                key={option}
+                key={option.id}
                 type="button"
-                className={`rounded-md px-3 py-1.5 font-medium capitalize transition-colors ${
-                  snapshot === option
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
-                }`}
+                className={buttonClassName}
                 disabled={disabled}
                 onClick={() => {
-                  setSnapshot(option)
+                  setSnapshot(option.id)
                   setFocusedNet(null)
                 }}
-                title={
-                  disabled ? "Final is available after a successful solve" : ""
-                }
+                title={title}
               >
-                {option === "input" ? "Start" : "Final"}
+                {option.label}
               </button>
             )
           })}
@@ -1320,11 +1548,7 @@ export const Pcb3dViewer = ({
           style={{
             left: hoverDetails.x,
             top: Math.max(hoverDetails.y - 28, 48),
-            transform:
-              hoverDetails.x >
-              (containerRef.current?.clientWidth ?? 600) - 260
-                ? "translateX(-100%)"
-                : "translateX(12px)",
+            transform: tooltipTransform,
           }}
         >
           {hoverDetails.label}
@@ -1369,16 +1593,14 @@ export const Pcb3dViewer = ({
           <span className="hidden h-4 w-px bg-slate-200 sm:block" />
           <button
             type="button"
-            className={`rounded-md px-2 py-1 font-medium ${
-              layersOpen ? "bg-slate-900 text-white" : "hover:bg-slate-100"
-            }`}
-            onClick={() => setLayersOpen((open) => !open)}
-            aria-expanded={layersOpen}
+            className={visibilityButtonClassName}
+            onClick={() => setVisibilityOpen((open) => !open)}
+            aria-expanded={visibilityOpen}
           >
             Visibility
           </button>
 
-          {layersOpen && (
+          {visibilityOpen && (
             <div className="absolute bottom-[calc(100%+8px)] right-0 grid min-w-48 grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-black/10 bg-white/95 p-3 shadow-lg backdrop-blur-md sm:right-auto">
               <div className="col-span-2 mb-1 flex items-center justify-between">
                 <span className="font-semibold text-slate-800">Visible geometry</span>
@@ -1386,7 +1608,7 @@ export const Pcb3dViewer = ({
                   type="button"
                   className="text-slate-400 hover:text-slate-700"
                   onClick={() => {
-                    setVisibility(DEFAULT_VISIBILITY)
+                    setVisibility(createViewerVisibility())
                     setVisibleLayers(new Set(layerNames))
                   }}
                 >

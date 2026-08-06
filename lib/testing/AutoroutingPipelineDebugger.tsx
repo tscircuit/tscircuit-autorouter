@@ -32,7 +32,7 @@ import { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { addVisualizationToLastStep } from "lib/utils/addVisualizationToLastStep"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { limitVisualizations } from "lib/utils/limitVisualizations"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import {
   AutoroutingPipelineMenuBar,
   EFFORT_LEVELS,
@@ -84,6 +84,10 @@ const parseLayerOverride = (value: string | null): LayerOverride => {
   return LAYER_OVERRIDE_OPTIONS.includes(parsed as LayerOverride)
     ? (parsed as LayerOverride)
     : "auto"
+}
+
+const isRendererMode = (value: string | null): value is RendererMode => {
+  return value === "canvas" || value === "vector" || value === "3d"
 }
 
 const applyLayerOverrideToSrj = (
@@ -457,11 +461,8 @@ export const AutoroutingPipelineDebugger = ({
   const [previewMode, setPreviewMode] = useState(false)
   const [renderer, setRenderer] = useState<RendererMode>(() => {
     const storedRenderer = window.localStorage.getItem("lastSelectedRenderer")
-    return storedRenderer === "canvas" ||
-      storedRenderer === "vector" ||
-      storedRenderer === "3d"
-      ? storedRenderer
-      : "vector"
+    if (isRendererMode(storedRenderer)) return storedRenderer
+    return "vector"
   })
   const [canSelectObjects, setCanSelectObjects] = useState(false)
   const [, setForceUpdate] = useState(0)
@@ -1129,16 +1130,61 @@ export const AutoroutingPipelineDebugger = ({
     [solver, solver.iterations, solver.solved, solver.failed],
   )
   const finalPcb3dTraces = useMemo<SimplifiedPcbTrace[] | null>(() => {
+    if (renderer !== "3d" || pcbSvgMarkup) return null
     if (!solver.solved || solver.failed) return null
 
     try {
       const output = solver.getOutputSimplifiedPcbTraces?.()
       if (!Array.isArray(output)) return null
       return [...(srj.traces ?? []), ...output]
-    } catch {
+    } catch (error) {
+      console.error("Unable to read final traces for the 3D viewer", error)
       return null
     }
-  }, [srj, solver, solver.solved, solver.failed])
+  }, [pcbSvgMarkup, renderer, srj, solver, solver.solved, solver.failed])
+
+  let circuitRenderer: ReactNode
+  if (pcbSvgMarkup) {
+    circuitRenderer = (
+      <div className="overflow-auto">
+        <div dangerouslySetInnerHTML={{ __html: pcbSvgMarkup }} />
+      </div>
+    )
+  } else if (renderer === "3d") {
+    circuitRenderer = (
+      <Pcb3dViewer
+        srj={srj}
+        inputTraces={srj.traces ?? []}
+        finalTraces={finalPcb3dTraces}
+      />
+    )
+  } else if (canSelectObjects || renderer === "vector") {
+    circuitRenderer = (
+      <InteractiveGraphics
+        graphics={visualization}
+        onObjectClicked={(clickEvent) => {
+          if (!canSelectObjects) return
+          const object = clickEvent.object
+          const objectLabel = object.label ?? ""
+          if (
+            !objectLabel.includes("cn") &&
+            !objectLabel.includes("cmn") &&
+            !objectLabel.includes("hd_node_marker")
+          )
+            return
+          setDialogObject(object)
+        }}
+        objectLimit={20e3}
+      />
+    )
+  } else {
+    circuitRenderer = (
+      <InteractiveGraphicsCanvas
+        graphics={visualization}
+        showLabelsByDefault={false}
+      />
+    )
+  }
 
   return (
     <div className="p-4">
@@ -1146,7 +1192,7 @@ export const AutoroutingPipelineDebugger = ({
         renderer={renderer}
         onSetRenderer={(newRenderer) => {
           setRenderer(newRenderer)
-          setPcbSvgMarkup(null)
+          if (newRenderer === "3d") setPcbSvgMarkup(null)
           window.localStorage.setItem("lastSelectedRenderer", newRenderer)
         }}
         canSelectObjects={canSelectObjects}
@@ -1355,42 +1401,7 @@ export const AutoroutingPipelineDebugger = ({
       />
 
       <div className="border rounded-md p-4 mb-4">
-        {pcbSvgMarkup ? (
-          <div className="overflow-auto">
-            <div dangerouslySetInnerHTML={{ __html: pcbSvgMarkup }} />
-          </div>
-        ) : renderer === "3d" ? (
-          <Pcb3dViewer
-            srj={srj}
-            inputTraces={srj.traces ?? []}
-            finalTraces={finalPcb3dTraces}
-          />
-        ) : (
-          <>
-            {canSelectObjects || renderer === "vector" ? (
-              <InteractiveGraphics
-                graphics={visualization}
-                onObjectClicked={({ object }) => {
-                  if (!canSelectObjects) return
-                  const objectLabel = object.label ?? ""
-                  if (
-                    !objectLabel.includes("cn") &&
-                    !objectLabel.includes("cmn") &&
-                    !objectLabel.includes("hd_node_marker")
-                  )
-                    return
-                  setDialogObject(object)
-                }}
-                objectLimit={20e3}
-              />
-            ) : (
-              <InteractiveGraphicsCanvas
-                graphics={visualization}
-                showLabelsByDefault={false}
-              />
-            )}
-          </>
-        )}
+        {circuitRenderer}
       </div>
 
       {dialogObject && (

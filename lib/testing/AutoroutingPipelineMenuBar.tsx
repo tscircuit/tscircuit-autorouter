@@ -84,6 +84,11 @@ export const PIPELINE_OPTIONS = [
 ] as const
 
 export type PipelineId = (typeof PIPELINE_OPTIONS)[number]["id"]
+
+/**
+ * Selects the GraphicsObject Canvas/Vector surfaces or the authored-geometry
+ * 3D debug viewer rendered directly from SRJ data.
+ */
 export type RendererMode = "canvas" | "vector" | "3d"
 
 interface AutoroutingPipelineMenuBarProps {
