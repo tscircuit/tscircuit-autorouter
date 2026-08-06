@@ -33,6 +33,7 @@ export const getTinyHyperGraphSolveGraphContinuationMaxIterations = ({
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
   private readonly initialMaxIterations: number
   private continuationBudgetGranted = false
+  private lastLoggedMillionIterations = 0
 
   constructor(
     topology: TinyHyperGraphTopology,
@@ -61,6 +62,29 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       initialMaxIterations: this.initialMaxIterations,
       continuationMaxIterations,
     }
+  }
+
+  override _step() {
+    super._step()
+    if (this.problem.routeCount < 800) return
+
+    const millionIterations = Math.floor(this.iterations / 1_000_000)
+    if (millionIterations <= this.lastLoggedMillionIterations) return
+    this.lastLoggedMillionIterations = millionIterations
+    const neverRoutedRouteCount = this.routeSuccessCountByRouteId.reduce(
+      (count, successCount) => count + (successCount === 0 ? 1 : 0),
+      0,
+    )
+    console.error(
+      "[tiny-large-graph-progress]",
+      JSON.stringify({
+        iterations: this.iterations,
+        maxIterations: this.MAX_ITERATIONS,
+        unroutedRouteCount: this.state.unroutedRoutes.length,
+        neverRoutedRouteCount,
+        ripCount: this.state.ripCount,
+      }),
+    )
   }
 
   override resetRoutingStateForRerip() {
