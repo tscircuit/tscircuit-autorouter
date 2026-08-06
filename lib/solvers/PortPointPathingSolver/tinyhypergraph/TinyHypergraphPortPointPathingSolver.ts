@@ -1078,7 +1078,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.iterations % 500_000 === 0 &&
       currentTinySolver
     ) {
-      console.log(
+      console.error(
         "[tiny-search-checkpoint]",
         JSON.stringify({
           solverIterations: currentTinySolver.iterations,
