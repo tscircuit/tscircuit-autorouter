@@ -3,10 +3,7 @@ import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import {
-  GlobalDrcBranchPortfolioSolver,
-  GlobalDrcForceImproveSolver,
-} from "high-density-repair03/lib"
+import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -67,12 +64,13 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
-import { createPipeline9RelaxedDrcEvaluator } from "./create-pipeline9-relaxed-drc-evaluator"
+import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solver"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -233,7 +231,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
-  exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -646,10 +644,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
           )
+        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes
+        const netByConnectionName = getPipeline9NetByConnectionName(
+          [...newHdRoutes, ...preloadedHdRoutes],
+          cms.connMap,
+        )
 
         return [
           {
-            hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
+            hdRoutes: newHdRoutes,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
@@ -658,6 +661,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
+            netByConnectionName,
             iterations: 2,
           },
         ]
@@ -699,39 +703,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "exactGeometryDrcForceImproveSolver",
-      GlobalDrcBranchPortfolioSolver,
+      "pipeline9JointDrcRepairSolver",
+      Pipeline9JointDrcRepairSolver,
       (cms) => {
-        const relaxedDrcEvaluator = createPipeline9RelaxedDrcEvaluator({
-          connections: cms.netToPointPairsSolver?.newConnections ?? [],
-          originalConnections: cms.originalSrj.connections,
-          layerCount: cms.srj.layerCount,
-          obstacles: cms.srj.obstacles,
-          defaultViaHoleDiameter: cms.viaHoleDiameter,
-          connMap: cms.connMap,
-          srjWithPointPairs: cms.srjWithPointPairs!,
-          originalSrj: cms.originalSrj,
-          mutatedPreloadedTraces: cms.getMutatedPreloadedTraces(),
-        })
-
+        const regionalPreloadedTraceUpdates =
+          cms.getRegionalPreloadedTraceUpdates()
         return [
           {
-            srj: cms.srjWithPointPairs! as any,
-            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            srj: cms.srjWithPointPairs!,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
+            newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            updatedPreloadedTraces:
+              regionalPreloadedTraceUpdates.updatedPreloadedTraces,
+            mutatedPreloadedTraceIds: new Set(
+              regionalPreloadedTraceUpdates.mutatedPreloadedTraces.map(
+                (trace) => trace.pcb_trace_id,
+              ),
+            ),
             connMap: cms.connMap,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            defaultViaDiameter: cms.viaDiameter,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: cms.effort,
-            viaHoleDiameter: cms.viaHoleDiameter,
-            drcEvaluator: relaxedDrcEvaluator,
-            viaInPadDrcEvaluator: relaxedDrcEvaluator,
-            maxIterations: 32,
-            enableLargeBoardBroadFallback: false,
-            enableTargetedErrorSweep: true,
-            enablePostSolveClearanceRelaxation: false,
-            enableSafeTraceLayerMoves: true,
-            enableViaInPadLayerMoves: true,
-            viaInPadMaxIterations: 32,
-            broadMaxIterations: 8,
-            broadPassMultiplier: 3,
+            colorMap: cms.colorMap,
           },
         ]
       },
@@ -788,7 +785,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: lockHdRouteTerminals(
-              cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+              structuredClone(cms.pipeline9JointDrcRepairSolver!.getOutput()),
               connections,
               new Map(
                 (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
@@ -1037,8 +1034,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.preprocessSimpleRouteJsonSolver?.visualize()
     const globalDrcForceImproveViz =
       this.globalDrcForceImproveSolver?.visualize()
-    const exactGeometryDrcForceImproveViz =
-      this.exactGeometryDrcForceImproveSolver?.visualize()
+    const pipeline9JointDrcRepairViz =
+      this.pipeline9JointDrcRepairSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1068,7 +1065,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       traceSimplificationViz,
       traceWidthViz,
       globalDrcForceImproveViz,
-      exactGeometryDrcForceImproveViz,
+      pipeline9JointDrcRepairViz,
       lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
@@ -1146,9 +1143,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    const postProcessedRoutes =
+      (this.originalSrj.differentialPairs?.length ?? 0) > 0
+        ? this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes
+        : undefined
     return (
-      this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
-      this.exactGeometryDrcForceImproveSolver?.getOutput() ??
+      postProcessedRoutes ??
+      this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
@@ -1187,11 +1188,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
-    return this.getRegionalPreloadedTraceUpdates().updatedPreloadedTraces
+    return (
+      this.pipeline9JointDrcRepairSolver?.getUpdatedPreloadedTraces() ??
+      this.getRegionalPreloadedTraceUpdates().updatedPreloadedTraces
+    )
   }
 
   getMutatedPreloadedTraces(): SimplifiedPcbTraces {
-    return this.getRegionalPreloadedTraceUpdates().mutatedPreloadedTraces
+    return (
+      this.pipeline9JointDrcRepairSolver?.getMutatedPreloadedTraces() ??
+      this.getRegionalPreloadedTraceUpdates().mutatedPreloadedTraces
+    )
   }
 
   private getNewOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {

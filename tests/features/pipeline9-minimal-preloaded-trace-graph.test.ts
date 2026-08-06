@@ -72,15 +72,16 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     pipeline7.pipelineDef.map((step) => [step.solverName, step.solverClass]),
   )
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
-    (step) => step.solverName !== "powerTraceExpansionSolver",
+    (step) =>
+      step.solverName !== "powerTraceExpansionSolver" &&
+      step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 1)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 2)
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
     "highDensityStitchSolver",
     "globalDrcForceImproveSolver",
-    "exactGeometryDrcForceImproveSolver",
   ]) {
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)
@@ -92,6 +93,12 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       (step) => step.solverName === "highDensityRouteSolver",
     )?.solverClass,
   ).toBe(Pipeline9HighDensitySolver)
+  expect(
+    solver.pipelineDef.some(
+      (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
+    ),
+  ).toBeFalse()
+
   solver.solve()
 
   expect(solver.solved).toBe(true)
@@ -118,4 +125,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       ),
     ),
   ).toBe(false)
+  const outputTraceIds = solver
+    .getOutputSimplifiedPcbTraces()
+    .map((trace) => trace.pcb_trace_id)
+  expect(new Set(outputTraceIds).size).toBe(outputTraceIds.length)
 })
