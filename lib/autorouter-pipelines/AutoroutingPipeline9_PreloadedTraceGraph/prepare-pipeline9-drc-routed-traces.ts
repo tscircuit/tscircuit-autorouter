@@ -1,10 +1,15 @@
 import type { SimplifiedPcbTrace } from "lib/types"
 
+export type PreparedPipeline9DrcRoutedTraces = {
+  routedTraces: SimplifiedPcbTrace[]
+  originalPreloadedTraceIdByPreparedTraceId: Map<string, string>
+}
+
 /**
  * Keeps candidate trace ids aligned with the DRC repair solver while retaining
  * preloaded copper whose id collides with a new point-pair trace.
  */
-export const preparePipeline9DrcRoutedTraces = ({
+export const preparePipeline9DrcRoutedTracesWithMetadata = ({
   originalPreloadedTraces,
   mutatedPreloadedTraces,
   newTraces,
@@ -12,7 +17,7 @@ export const preparePipeline9DrcRoutedTraces = ({
   originalPreloadedTraces: readonly SimplifiedPcbTrace[]
   mutatedPreloadedTraces: readonly SimplifiedPcbTrace[]
   newTraces: SimplifiedPcbTrace[]
-}): SimplifiedPcbTrace[] => {
+}): PreparedPipeline9DrcRoutedTraces => {
   const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
   const mutatedPreloadedTraceById = new Map(
     mutatedPreloadedTraces.map((trace) => [trace.pcb_trace_id, trace]),
@@ -21,6 +26,7 @@ export const preparePipeline9DrcRoutedTraces = ({
     ...originalPreloadedTraces.map((trace) => trace.pcb_trace_id),
     ...newTraceIds,
   ])
+  const originalPreloadedTraceIdByPreparedTraceId = new Map<string, string>()
   const preloadedCollisionCopies = originalPreloadedTraces
     .filter((trace) => newTraceIds.has(trace.pcb_trace_id))
     .map((trace) => {
@@ -34,15 +40,31 @@ export const preparePipeline9DrcRoutedTraces = ({
         suffix += 1
       }
       usedTraceIds.add(pcbTraceId)
-      return { ...currentTrace, pcb_trace_id: pcbTraceId }
+      originalPreloadedTraceIdByPreparedTraceId.set(
+        pcbTraceId,
+        trace.pcb_trace_id,
+      )
+      return {
+        ...currentTrace,
+        pcb_trace_id: pcbTraceId,
+        __replaces_pcb_trace_id: trace.pcb_trace_id,
+      }
     })
   const nonCollidingMutatedPreloadedTraces = mutatedPreloadedTraces.filter(
     (trace) => !newTraceIds.has(trace.pcb_trace_id),
   )
 
-  return [
-    ...preloadedCollisionCopies,
-    ...nonCollidingMutatedPreloadedTraces,
-    ...newTraces,
-  ]
+  return {
+    routedTraces: [
+      ...preloadedCollisionCopies,
+      ...nonCollidingMutatedPreloadedTraces,
+      ...newTraces,
+    ],
+    originalPreloadedTraceIdByPreparedTraceId,
+  }
 }
+
+export const preparePipeline9DrcRoutedTraces = (
+  options: Parameters<typeof preparePipeline9DrcRoutedTracesWithMetadata>[0],
+): SimplifiedPcbTrace[] =>
+  preparePipeline9DrcRoutedTracesWithMetadata(options).routedTraces
