@@ -1120,21 +1120,62 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     solver: TinyHyperGraphSolver,
   ): {
     directedTransitionCount: number
+    groupedTransitionCount: number
     maxRegionPortCount: number
+    maxRegionPortFamilyCount: number
+    maxPortsPerFamily: number
     regionsWithAtLeast64Ports: number
-    largestRegions: Array<{ regionId: number; portCount: number }>
+    largestRegions: Array<{
+      regionId: number
+      portCount: number
+      portFamilyCount: number
+      maxPortsPerFamily: number
+    }>
   } {
     const regionPortCounts = solver.topology.regionIncidentPorts.map(
-      (portIds, regionId) => ({ regionId, portCount: portIds.length }),
+      (portIds, regionId) => {
+        const portCountByFamily = new Map<string, number>()
+        for (const portId of portIds) {
+          const incidentRegionIds = solver.topology.incidentPortRegion[portId]
+          const neighboringRegionId =
+            incidentRegionIds?.[0] === regionId
+              ? incidentRegionIds[1]
+              : incidentRegionIds?.[0]
+          const portFamilyKey = `${neighboringRegionId}:${solver.topology.portZ[portId]}`
+          portCountByFamily.set(
+            portFamilyKey,
+            (portCountByFamily.get(portFamilyKey) ?? 0) + 1,
+          )
+        }
+        return {
+          regionId,
+          portCount: portIds.length,
+          portFamilyCount: portCountByFamily.size,
+          maxPortsPerFamily: Math.max(0, ...portCountByFamily.values()),
+        }
+      },
     )
     return {
       directedTransitionCount: regionPortCounts.reduce(
         (sum, { portCount }) => sum + portCount * (portCount - 1),
         0,
       ),
+      groupedTransitionCount: regionPortCounts.reduce(
+        (sum, { portCount, portFamilyCount }) =>
+          sum + portCount * portFamilyCount,
+        0,
+      ),
       maxRegionPortCount: Math.max(
         0,
         ...regionPortCounts.map(({ portCount }) => portCount),
+      ),
+      maxRegionPortFamilyCount: Math.max(
+        0,
+        ...regionPortCounts.map(({ portFamilyCount }) => portFamilyCount),
+      ),
+      maxPortsPerFamily: Math.max(
+        0,
+        ...regionPortCounts.map(({ maxPortsPerFamily }) => maxPortsPerFamily),
       ),
       regionsWithAtLeast64Ports: regionPortCounts.filter(
         ({ portCount }) => portCount >= 64,
