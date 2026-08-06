@@ -32,7 +32,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import {
+  getTinyHyperGraphSolveGraphContinuationMaxIterations,
+  SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments,
+} from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
   isPreloadedTraceConnectionId,
@@ -220,10 +223,20 @@ const getTinyHyperGraphPipelineInput = (
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,
-) =>
-  (inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 1_000_000) +
-  (inputProblem.sectionSolverOptions?.MAX_ITERATIONS ?? 1_000_000) +
-  1_000_000
+) => {
+  const initialMaxIterations =
+    inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 1_000_000
+  const solveGraphMaxIterations =
+    getTinyHyperGraphSolveGraphContinuationMaxIterations({
+      initialMaxIterations,
+      connectionCount: inputProblem.serializedHyperGraph.connections.length,
+    })
+  return (
+    solveGraphMaxIterations +
+    (inputProblem.sectionSolverOptions?.MAX_ITERATIONS ?? 1_000_000) +
+    1_000_000
+  )
+}
 
 const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
