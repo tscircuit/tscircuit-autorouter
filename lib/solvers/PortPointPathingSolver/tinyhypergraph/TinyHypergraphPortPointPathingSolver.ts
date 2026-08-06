@@ -158,11 +158,10 @@ const MIN_SOLVE_GRAPH_ITERATIONS = 2_000_000
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
-export const getTinyHyperGraphSolveGraphMaxIterations = ({
+export const getTinyHyperGraphSolveGraphInitialMaxIterations = ({
   effort,
 }: {
   effort: number
-  connectionCount: number
 }): number => Math.ceil(MIN_SOLVE_GRAPH_ITERATIONS * getEffortScale(effort))
 
 const getTinyViaSizeOptions = (
@@ -174,7 +173,6 @@ const getTinyViaSizeOptions = (
 
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
-  connectionCount: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
@@ -183,9 +181,8 @@ const getTinyHyperGraphSolveGraphOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: getTinyHyperGraphSolveGraphMaxIterations({
+    MAX_ITERATIONS: getTinyHyperGraphSolveGraphInitialMaxIterations({
       effort,
-      connectionCount,
     }),
   }
 }
@@ -213,7 +210,6 @@ const getTinyHyperGraphPipelineInput = (
   createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
   solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
     effort,
-    serializedHyperGraph.connections.length,
     minViaPadDiameter,
   ),
   sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(

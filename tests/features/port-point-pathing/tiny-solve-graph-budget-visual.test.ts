@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import type { GraphicsObject } from "graphics-debug"
 import {
-  getTinyHyperGraphSolveGraphMaxIterations,
+  getTinyHyperGraphSolveGraphContinuationMaxIterations,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import {
+  getTinyHyperGraphSolveGraphInitialMaxIterations,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
 
@@ -11,15 +14,16 @@ const MAX_DISPLAY_ITERATIONS = 32_000_000
 const CHART_HEIGHT = 4
 const ITERATIONS_TO_CHART_HEIGHT = CHART_HEIGHT / MAX_DISPLAY_ITERATIONS
 
-test("visualizes the Tiny solveGraph budget by route count", async () => {
-  const smallGraphBudget = getTinyHyperGraphSolveGraphMaxIterations({
+test("visualizes the Tiny solveGraph continuation budget", async () => {
+  const initialBudget = getTinyHyperGraphSolveGraphInitialMaxIterations({
     effort: 1,
-    connectionCount: SMALL_GRAPH_ROUTE_COUNT,
   })
-  const sample4Budget = getTinyHyperGraphSolveGraphMaxIterations({
-    effort: 1,
-    connectionCount: SAMPLE4_ROUTE_COUNT,
-  })
+  const smallGraphBudget = initialBudget
+  const sample4Budget =
+    getTinyHyperGraphSolveGraphContinuationMaxIterations({
+      initialMaxIterations: initialBudget,
+      connectionCount: SAMPLE4_ROUTE_COUNT,
+    })
   const budgetGrowsWithGraph = sample4Budget > smallGraphBudget
   const bars = [
     {
@@ -82,8 +86,8 @@ test("visualizes the Tiny solveGraph budget by route count", async () => {
             y: -0.18,
             text:
               bar.routeCount === SAMPLE4_ROUTE_COUNT
-                ? "srj24 sample 4 · 841 routes"
-                : "ordinary graph · 100 routes",
+                ? "sample 4 · still unresolved after 2M"
+                : "ordinary graph · accepted by 2M",
             anchorSide: "top_center" as const,
             fontSize: 0.13,
           },
@@ -120,7 +124,7 @@ test("visualizes the Tiny solveGraph budget by route count", async () => {
       {
         x: 0.85,
         y: 4.52,
-        text: "Production Tiny solveGraph MAX_ITERATIONS at effort 1",
+        text: "Tiny solveGraph final search limit at effort 1",
         anchorSide: "bottom_left",
         fontSize: 0.14,
       },
@@ -128,8 +132,8 @@ test("visualizes the Tiny solveGraph budget by route count", async () => {
         x: 0.85,
         y: 4.23,
         text: budgetGrowsWithGraph
-          ? "Green: the 841-route graph receives a graph-sized budget"
-          : "Red: 100 and 841 routes both stop at the fixed 2M budget",
+          ? "Green: only the unresolved search receives more time"
+          : "Red: the unresolved search still fails at the initial 2M limit",
         anchorSide: "bottom_left",
         fontSize: 0.14,
       },
@@ -139,7 +143,7 @@ test("visualizes the Tiny solveGraph budget by route count", async () => {
   const svg = getGraphicsSvgFrames({
     frames: [
       {
-        name: "Tiny solveGraph search budget",
+        name: "Tiny solveGraph continuation budget",
         step: 1,
         graphics,
       },
