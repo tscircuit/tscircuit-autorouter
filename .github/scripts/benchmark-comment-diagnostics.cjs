@@ -160,22 +160,13 @@ const renderPairedComparison = ({
     (test) => test.highDensityViaCount,
   )
   const acceptedCandidateCount = sumValues(
-    getFiniteValues(
-      pairedSolved.map(({ prTest }) => prTest),
-      "acceptedCandidateCount",
-    ),
+    getFiniteValues(prReport.tests, "acceptedCandidateCount"),
   )
   const predictedBefore = sumValues(
-    getFiniteValues(
-      pairedSolved.map(({ prTest }) => prTest),
-      "predictedViaDemandBefore",
-    ),
+    getFiniteValues(prReport.tests, "predictedViaDemandBefore"),
   )
   const predictedAfter = sumValues(
-    getFiniteValues(
-      pairedSolved.map(({ prTest }) => prTest),
-      "predictedViaDemandAfter",
-    ),
+    getFiniteValues(prReport.tests, "predictedViaDemandAfter"),
   )
   const formatDelta = (value) =>
     typeof value === "number" && Number.isFinite(value)
