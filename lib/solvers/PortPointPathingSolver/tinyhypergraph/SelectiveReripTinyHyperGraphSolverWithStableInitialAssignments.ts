@@ -82,6 +82,10 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         iterations: this.iterations,
         maxIterations: this.MAX_ITERATIONS,
         unroutedRouteCount: this.state.unroutedRoutes.length,
+        unroutedRouteIds:
+          neverRoutedRouteCount === 0
+            ? [...this.state.unroutedRoutes]
+            : undefined,
         neverRoutedRouteCount,
         ripCount: this.state.ripCount,
         selectiveRipCount: selectiveReripStats.selectiveRipCount,
@@ -95,6 +99,13 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         lastAlternateOwnerCount:
           selectiveReripStats.lastAlternateOwnerRouteIds.length,
         lastRippedRouteCount: selectiveReripStats.lastRippedRouteIds.length,
+        lastDirectOwnerRouteIds:
+          selectiveReripStats.lastDirectOwnerRouteIds,
+        lastRepeatedOwnerRouteIds:
+          selectiveReripStats.lastRepeatedOwnerRouteIds,
+        lastAlternateOwnerRouteIds:
+          selectiveReripStats.lastAlternateOwnerRouteIds,
+        lastRippedRouteIds: selectiveReripStats.lastRippedRouteIds,
         lastRelaxedSearchExpandedLabelCount:
           selectiveReripStats.lastRelaxedSearchExpandedLabelCount,
         lastAlternateSearchExpandedLabelCount:
