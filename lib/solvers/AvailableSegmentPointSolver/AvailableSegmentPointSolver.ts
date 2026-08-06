@@ -7,6 +7,7 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import { limitCrampedPortPointsByBoundaryCapacity } from "./limitCrampedPortPointsByBoundaryCapacity"
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -125,6 +126,26 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   _step() {
     this.computeAllSharedEdgeSegments()
+    this.sharedEdgeSegments = limitCrampedPortPointsByBoundaryCapacity({
+      sharedEdgeSegments: this.sharedEdgeSegments,
+      nodeById: this.nodeMap,
+      minPortSpacing: this.minPortSpacing,
+    })
+    this.edgeSegmentMap = new Map<string, SharedEdgeSegment>(
+      this.sharedEdgeSegments.map(
+        (segment): [string, SharedEdgeSegment] => [segment.edgeId, segment],
+      ),
+    )
+    this.portPointMap = new Map<string, SegmentPortPoint>(
+      this.sharedEdgeSegments.flatMap((segment) =>
+        segment.portPoints.map(
+          (portPoint): [string, SegmentPortPoint] => [
+            portPoint.segmentPortPointId,
+            portPoint,
+          ],
+        ),
+      ),
+    )
     this.solved = true
   }
 
