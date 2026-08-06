@@ -1101,6 +1101,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           candidateQueueLength: currentTinySolver.state.candidateQueue.length,
           topologyPortCount: currentTinySolver.topology.portCount,
           topologyRegionCount: currentTinySolver.topology.regionCount,
+          topologyBranchingStats:
+            this.getDiagnosticTopologyBranchingStats(currentTinySolver),
           candidateCostStats:
             currentTinySolver instanceof
             SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
@@ -1112,6 +1114,35 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     }
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+  }
+
+  private getDiagnosticTopologyBranchingStats(
+    solver: TinyHyperGraphSolver,
+  ): {
+    directedTransitionCount: number
+    maxRegionPortCount: number
+    regionsWithAtLeast64Ports: number
+    largestRegions: Array<{ regionId: number; portCount: number }>
+  } {
+    const regionPortCounts = solver.topology.regionIncidentPorts.map(
+      (portIds, regionId) => ({ regionId, portCount: portIds.length }),
+    )
+    return {
+      directedTransitionCount: regionPortCounts.reduce(
+        (sum, { portCount }) => sum + portCount * (portCount - 1),
+        0,
+      ),
+      maxRegionPortCount: Math.max(
+        0,
+        ...regionPortCounts.map(({ portCount }) => portCount),
+      ),
+      regionsWithAtLeast64Ports: regionPortCounts.filter(
+        ({ portCount }) => portCount >= 64,
+      ).length,
+      largestRegions: regionPortCounts
+        .sort((left, right) => right.portCount - left.portCount)
+        .slice(0, 8),
+    }
   }
 
   private logLargeProblemRouteSearch(
