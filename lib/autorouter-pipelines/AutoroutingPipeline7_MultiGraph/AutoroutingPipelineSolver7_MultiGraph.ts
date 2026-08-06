@@ -331,6 +331,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           sharedEdgeSegments:
             cms.availableSegmentPointSolver!.getOutput(),
           simpleRouteJson: cms.srjWithPointPairs!,
+          connectivityMap: cms.connMap,
           numberOfCrampedPortPointsToKeep: 5,
           preserveNonNecessaryMultilayerPorts: false,
         },
