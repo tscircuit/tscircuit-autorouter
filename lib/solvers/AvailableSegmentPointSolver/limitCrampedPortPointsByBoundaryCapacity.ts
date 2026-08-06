@@ -166,12 +166,24 @@ export const limitCrampedPortPointsByBoundaryCapacity = ({
     BoundaryGroupKey,
     BoundaryCandidate[]
   >()
+  const protectedPortPointIds = new Set<string>()
 
   for (const segment of sharedEdgeSegments) {
     const ownerNode = getBoundaryOwner({ nodeById, segment })
     const side = getBoundarySide({ ownerNode, segment })
+    const preservesSpecialPassage = segment.nodeIds.some((nodeId) => {
+      const node = nodeById.get(nodeId)
+      return Boolean(node?._isNarrowQfpPadGap || node?._offBoardConnectionId)
+    })
     for (const portPoint of segment.portPoints) {
       if (!portPoint.cramped) continue
+      if (
+        preservesSpecialPassage ||
+        portPoint._preloadedTracePortAssignments?.length
+      ) {
+        protectedPortPointIds.add(portPoint.segmentPortPointId)
+        continue
+      }
       const z = portPoint.availableZ[0]!
       const key: BoundaryGroupKey = `${ownerNode.capacityMeshNodeId}:${side}:z${z}`
       const candidates = candidatesByBoundary.get(key) ?? []
@@ -219,6 +231,9 @@ export const limitCrampedPortPointsByBoundaryCapacity = ({
     ...segment,
     portPoints: segment.portPoints.flatMap((portPoint) => {
       if (!portPoint.cramped) return [portPoint]
+      if (protectedPortPointIds.has(portPoint.segmentPortPointId)) {
+        return [portPoint]
+      }
       if (physicallySupportedPortPointIds.has(portPoint.segmentPortPointId)) {
         return [{ ...portPoint, cramped: false }]
       }
