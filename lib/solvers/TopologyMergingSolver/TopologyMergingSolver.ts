@@ -9,7 +9,6 @@ import {
   validateTopologyMergingOutput,
 } from "./topology-merging-output"
 import {
-  compactTopologyMergingRegions,
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
@@ -89,8 +88,7 @@ export class TopologyMergingSolver extends BaseSolver {
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
-    const compactedAlignedRegions =
-      compactTopologyMergingRegions(topologyRegions)
+    const compactedAlignedRegions = topologyRegions
     const localLayerAccessRegions = compactedAlignedRegions.flatMap((region) =>
       this.isRegionLargeEnoughForVia(region)
         ? [region]
@@ -99,9 +97,7 @@ export class TopologyMergingSolver extends BaseSolver {
             preparedNodeBySourceKey: this.preparedNodeBySourceKey,
           }),
     )
-    const compactedRegions = compactTopologyMergingRegions(
-      localLayerAccessRegions,
-    )
+    const compactedRegions = localLayerAccessRegions
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
