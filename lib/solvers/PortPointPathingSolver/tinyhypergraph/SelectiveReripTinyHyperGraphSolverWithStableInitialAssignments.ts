@@ -1,7 +1,9 @@
-import type {
-  TinyHyperGraphProblem,
-  TinyHyperGraphSolverOptions,
-  TinyHyperGraphTopology,
+import {
+  type Candidate,
+  TinyHyperGraphSolver,
+  type TinyHyperGraphProblem,
+  type TinyHyperGraphSolverOptions,
+  type TinyHyperGraphTopology,
 } from "tiny-hypergraph/lib/core"
 import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
@@ -61,6 +63,27 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       initialMaxIterations: this.initialMaxIterations,
       continuationMaxIterations,
     }
+  }
+
+  override onPathFound(finalCandidate: Candidate): void {
+    const goalPortId = this.state.goalPortId
+    if (finalCandidate.portId === goalPortId) {
+      TinyHyperGraphSolver.prototype.onPathFound.call(this, finalCandidate)
+      return
+    }
+
+    const g = this.computeG(finalCandidate, goalPortId)
+    if (!Number.isFinite(g)) return
+
+    TinyHyperGraphSolver.prototype.onPathFound.call(this, {
+      prevRegionId: finalCandidate.nextRegionId,
+      nextRegionId: finalCandidate.nextRegionId,
+      portId: goalPortId,
+      g,
+      h: 0,
+      f: g,
+      prevCandidate: finalCandidate,
+    })
   }
 
   override resetRoutingStateForRerip() {
