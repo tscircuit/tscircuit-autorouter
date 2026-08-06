@@ -1089,6 +1089,8 @@ const createFailedResult = (
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
+  highDensityViaCount: latestProgress?.highDensityViaCount,
+  benchmarkStats: latestProgress?.benchmarkStats,
   errorPhaseName: latestProgress?.phaseName,
   errorSolverName: latestProgress?.phaseSolverName,
   error,

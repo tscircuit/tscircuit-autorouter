@@ -8,6 +8,39 @@ export type BenchmarkTask = {
   scenario: SimpleRouteJson
 }
 
+export type PortalLayerRefinementBenchmarkStats = {
+  physicalPortalGroupCount: number
+  eligibleRouteCount: number
+  routesConsidered: number
+  candidateCount: number
+  acceptedCandidateCount: number
+  routesImproved: number
+  predictedViaDemandBefore: number
+  predictedViaDemandAfter: number
+  entryExitLayerChangesBefore: number
+  entryExitLayerChangesAfter: number
+  rejectedForRegionCostCount: number
+  rejectedForIntersectionRegressionCount: number
+  rejectedForPortConflictCount: number
+  rejectedForLockedAssignmentCount: number
+  rejectedForNoViaDemandImprovementCount: number
+  rejectedForNoEntryExitImprovementCount: number
+  touchedRegionCount: number
+  portalLayerRefinementMs: number
+  tinyHypergraphSolveMs: number
+  tinyHypergraphSectionOptimizationMs: number
+  uniformPortDistributionMs: number
+  highDensityRouteMs: number
+  highDensityForceImproveMs: number
+  highDensityRepairMs: number
+  stitchingMs: number
+  traceSimplificationMs: number
+  traceWidthMs: number
+  globalDrcMs: number
+  exactDrcMs: number
+  totalMs: number
+}
+
 export type BenchmarkSnapshot = {
   datasetName: string
   solverName: string
@@ -19,6 +52,8 @@ export type BenchmarkSnapshot = {
   viaCount: number
   relaxedDrcPassed: boolean
   drcErrorCount?: number
+  highDensityViaCount?: number
+  benchmarkStats?: PortalLayerRefinementBenchmarkStats
 }
 
 export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
@@ -35,6 +70,8 @@ export type WorkerProgress = {
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  highDensityViaCount?: number
+  benchmarkStats: PortalLayerRefinementBenchmarkStats
   phaseName?: string
   phaseSolverName?: string
   solverProgress?: number
@@ -54,6 +91,8 @@ export type WorkerResult<
   didTimeout: boolean
   relaxedDrcPassed: boolean
   viaCount?: number
+  highDensityViaCount?: number
+  benchmarkStats?: PortalLayerRefinementBenchmarkStats
   drcErrorCount?: number
   drcErrorTypes?: Record<string, number>
   drcErrorMessages?: Array<{

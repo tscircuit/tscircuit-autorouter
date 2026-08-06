@@ -10,6 +10,7 @@ import type {
 import type {
   BenchmarkSnapshotWithImage,
   BenchmarkTask,
+  PortalLayerRefinementBenchmarkStats,
   WorkerProgress,
   WorkerResultWithImage,
 } from "./benchmark-types"
@@ -20,6 +21,7 @@ type SolverInstance = {
   progress?: number
   iterations?: number
   error?: string | null
+  stats?: Record<string, unknown>
   activeSubSolver?: SolverInstance | null
   currentPipelineStepIndex?: number
   pipelineDef?: Array<{
@@ -35,6 +37,11 @@ type SolverInstance = {
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
+  highDensityRouteSolver?: {
+    routes?: Array<{
+      vias?: unknown[]
+    }>
+  }
 }
 
 type SolverOptions = {
@@ -75,6 +82,61 @@ const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
       trace.route.filter((segment) => segment.route_type === "via").length,
     0,
   )
+
+const benchmarkStatNames: Array<keyof PortalLayerRefinementBenchmarkStats> = [
+  "physicalPortalGroupCount",
+  "eligibleRouteCount",
+  "routesConsidered",
+  "candidateCount",
+  "acceptedCandidateCount",
+  "routesImproved",
+  "predictedViaDemandBefore",
+  "predictedViaDemandAfter",
+  "entryExitLayerChangesBefore",
+  "entryExitLayerChangesAfter",
+  "rejectedForRegionCostCount",
+  "rejectedForIntersectionRegressionCount",
+  "rejectedForPortConflictCount",
+  "rejectedForLockedAssignmentCount",
+  "rejectedForNoViaDemandImprovementCount",
+  "rejectedForNoEntryExitImprovementCount",
+  "touchedRegionCount",
+  "portalLayerRefinementMs",
+  "tinyHypergraphSolveMs",
+  "tinyHypergraphSectionOptimizationMs",
+  "uniformPortDistributionMs",
+  "highDensityRouteMs",
+  "highDensityForceImproveMs",
+  "highDensityRepairMs",
+  "stitchingMs",
+  "traceSimplificationMs",
+  "traceWidthMs",
+  "globalDrcMs",
+  "exactDrcMs",
+  "totalMs",
+]
+
+const getBenchmarkStats = (
+  solver: SolverInstance,
+): PortalLayerRefinementBenchmarkStats =>
+  Object.fromEntries(
+    benchmarkStatNames.map((statName) => {
+      const value = solver.stats?.[statName]
+      return [
+        statName,
+        typeof value === "number" && Number.isFinite(value) ? value : 0,
+      ]
+    }),
+  ) as PortalLayerRefinementBenchmarkStats
+
+const countHighDensityVias = (solver: SolverInstance): number | undefined => {
+  const routes = solver.highDensityRouteSolver?.routes
+  if (!Array.isArray(routes)) return undefined
+  return routes.reduce(
+    (total, route) => total + (Array.isArray(route.vias) ? route.vias.length : 0),
+    0,
+  )
+}
 
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
@@ -255,6 +317,8 @@ const getProgressInfo = (
     scenarioName: task.scenarioName,
     sampleNumber: task.sampleNumber,
     elapsedTimeMs,
+    highDensityViaCount: countHighDensityVias(solver),
+    benchmarkStats: getBenchmarkStats(solver),
     phaseName: pipelineStep?.solverName,
     phaseSolverName:
       pipelineStep?.solverClass?.name ?? getSolverInstanceName(activeSubSolver),
@@ -344,6 +408,8 @@ const createBenchmarkSnapshot = async ({
   viaCount,
   relaxedDrcPassed,
   drcErrorCount,
+  highDensityViaCount,
+  benchmarkStats,
 }: {
   task: BenchmarkTask
   solver: SolverInstance
@@ -352,6 +418,8 @@ const createBenchmarkSnapshot = async ({
   viaCount: number
   relaxedDrcPassed: boolean
   drcErrorCount?: number
+  highDensityViaCount?: number
+  benchmarkStats: PortalLayerRefinementBenchmarkStats
 }): Promise<BenchmarkSnapshotWithImage> => {
   const finalSrj: SimpleRouteJson = solver.getOutputSimpleRouteJson?.() ?? {
     ...(solver.srjWithPointPairs ?? task.scenario),
@@ -374,6 +442,8 @@ const createBenchmarkSnapshot = async ({
     viaCount,
     relaxedDrcPassed,
     drcErrorCount,
+    highDensityViaCount,
+    benchmarkStats,
     imageSvg,
   }
 }
@@ -395,6 +465,8 @@ export const runTask = async (
 
   const elapsedTimeMs = performance.now() - start
   const didSolve = Boolean(solver.solved)
+  const benchmarkStats = getBenchmarkStats(solver)
+  const highDensityViaCount = countHighDensityVias(solver)
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
@@ -406,6 +478,8 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      highDensityViaCount,
+      benchmarkStats,
       ...failureInfo,
     }
   }
@@ -433,6 +507,8 @@ export const runTask = async (
         viaCount,
         relaxedDrcPassed,
         drcErrorCount: drcSummary.drcErrorCount,
+        highDensityViaCount,
+        benchmarkStats,
       })
     } catch (error) {
       console.error(
@@ -449,6 +525,8 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      highDensityViaCount,
+      benchmarkStats,
       benchmarkSnapshot,
       ...drcSummary,
     }
@@ -461,6 +539,8 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      highDensityViaCount,
+      benchmarkStats,
       error: error instanceof Error ? error.message : String(error),
     }
   }

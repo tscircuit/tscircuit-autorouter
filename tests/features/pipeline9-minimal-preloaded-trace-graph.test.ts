@@ -107,13 +107,19 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     )?.refinePortalLayers?.completed,
   ).toBe(true)
   for (const statName of [
-    "tinyHypergraphMs",
-    "highDensityMs",
+    "tinyHypergraphSolveMs",
+    "tinyHypergraphSectionOptimizationMs",
+    "portalLayerRefinementMs",
+    "uniformPortDistributionMs",
+    "highDensityRouteMs",
+    "highDensityForceImproveMs",
+    "highDensityRepairMs",
     "stitchingMs",
-    "simplificationMs",
+    "traceSimplificationMs",
+    "traceWidthMs",
     "globalDrcMs",
     "exactDrcMs",
-    "totalRuntimeMs",
+    "totalMs",
   ]) {
     expect(Number(solver.stats[statName])).toBeGreaterThanOrEqual(0)
   }

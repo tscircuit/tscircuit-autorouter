@@ -3,6 +3,20 @@ const getPhaseMs = (
   phaseName: string,
 ) => timeSpentOnPhase[phaseName] ?? 0
 
+const getTinyStageMs = (
+  portalLayerRefinementStats: Record<string, unknown> | undefined,
+  stageName: string,
+): number => {
+  const stageStats = portalLayerRefinementStats?.stageStats
+  if (typeof stageStats !== "object" || stageStats === null) return 0
+  const stage = (stageStats as Record<string, unknown>)[stageName]
+  if (typeof stage !== "object" || stage === null) return 0
+  const timeSpent = (stage as Record<string, unknown>).timeSpent
+  return typeof timeSpent === "number" && Number.isFinite(timeSpent)
+    ? timeSpent
+    : 0
+}
+
 export const getAutoroutingPipelineBenchmarkStats = ({
   timeSpentOnPhase,
   portalLayerRefinementStats,
@@ -11,19 +25,46 @@ export const getAutoroutingPipelineBenchmarkStats = ({
   portalLayerRefinementStats?: Record<string, unknown>
 }) => ({
   ...(portalLayerRefinementStats ?? {}),
-  tinyHypergraphMs: getPhaseMs(timeSpentOnPhase, "portPointPathingSolver"),
-  highDensityMs:
-    getPhaseMs(timeSpentOnPhase, "highDensityRouteSolver") +
-    getPhaseMs(timeSpentOnPhase, "highDensityForceImproveSolver") +
-    getPhaseMs(timeSpentOnPhase, "highDensityRepairSolver"),
+  tinyHypergraphSolveMs: getTinyStageMs(
+    portalLayerRefinementStats,
+    "solveGraph",
+  ),
+  tinyHypergraphSectionOptimizationMs: getTinyStageMs(
+    portalLayerRefinementStats,
+    "optimizeSection",
+  ),
+  portalLayerRefinementMs:
+    typeof portalLayerRefinementStats?.portalLayerRefinementMs === "number"
+      ? portalLayerRefinementStats.portalLayerRefinementMs
+      : getTinyStageMs(portalLayerRefinementStats, "refinePortalLayers"),
+  uniformPortDistributionMs: getPhaseMs(
+    timeSpentOnPhase,
+    "uniformPortDistributionSolver",
+  ),
+  highDensityRouteMs: getPhaseMs(
+    timeSpentOnPhase,
+    "highDensityRouteSolver",
+  ),
+  highDensityForceImproveMs: getPhaseMs(
+    timeSpentOnPhase,
+    "highDensityForceImproveSolver",
+  ),
+  highDensityRepairMs: getPhaseMs(
+    timeSpentOnPhase,
+    "highDensityRepairSolver",
+  ),
   stitchingMs: getPhaseMs(timeSpentOnPhase, "highDensityStitchSolver"),
-  simplificationMs: getPhaseMs(timeSpentOnPhase, "traceSimplificationSolver"),
+  traceSimplificationMs: getPhaseMs(
+    timeSpentOnPhase,
+    "traceSimplificationSolver",
+  ),
+  traceWidthMs: getPhaseMs(timeSpentOnPhase, "traceWidthSolver"),
   globalDrcMs: getPhaseMs(timeSpentOnPhase, "globalDrcForceImproveSolver"),
   exactDrcMs: getPhaseMs(
     timeSpentOnPhase,
     "exactGeometryDrcForceImproveSolver",
   ),
-  totalRuntimeMs: Object.values(timeSpentOnPhase).reduce(
+  totalMs: Object.values(timeSpentOnPhase).reduce(
     (total, phaseMs) => total + phaseMs,
     0,
   ),
