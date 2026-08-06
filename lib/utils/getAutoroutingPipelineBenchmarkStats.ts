@@ -41,18 +41,12 @@ export const getAutoroutingPipelineBenchmarkStats = ({
     timeSpentOnPhase,
     "uniformPortDistributionSolver",
   ),
-  highDensityRouteMs: getPhaseMs(
-    timeSpentOnPhase,
-    "highDensityRouteSolver",
-  ),
+  highDensityRouteMs: getPhaseMs(timeSpentOnPhase, "highDensityRouteSolver"),
   highDensityForceImproveMs: getPhaseMs(
     timeSpentOnPhase,
     "highDensityForceImproveSolver",
   ),
-  highDensityRepairMs: getPhaseMs(
-    timeSpentOnPhase,
-    "highDensityRepairSolver",
-  ),
+  highDensityRepairMs: getPhaseMs(timeSpentOnPhase, "highDensityRepairSolver"),
   stitchingMs: getPhaseMs(timeSpentOnPhase, "highDensityStitchSolver"),
   traceSimplificationMs: getPhaseMs(
     timeSpentOnPhase,

@@ -133,7 +133,8 @@ const countHighDensityVias = (solver: SolverInstance): number | undefined => {
   const routes = solver.highDensityRouteSolver?.routes
   if (!Array.isArray(routes)) return undefined
   return routes.reduce(
-    (total, route) => total + (Array.isArray(route.vias) ? route.vias.length : 0),
+    (total, route) =>
+      total + (Array.isArray(route.vias) ? route.vias.length : 0),
     0,
   )
 }
