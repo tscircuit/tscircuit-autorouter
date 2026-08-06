@@ -12,6 +12,7 @@ import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
+import { PortLoadSubdivisionSolver } from "lib/solvers/PortLoadSubdivisionSolver/PortLoadSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
@@ -217,6 +218,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   topologyMergingSolver?: TopologyMergingSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
+  portLoadSubdivisionSolver?: PortLoadSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
@@ -383,6 +385,22 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+        },
+      },
+    ),
+    definePipelineStep(
+      "portLoadSubdivisionSolver",
+      PortLoadSubdivisionSolver,
+      (cms) => [
+        {
+          nodes: cms.capacityNodes!,
+          // AvailableSegmentPointSolver currently uses its 0.15 mm default.
+          minPortSpacing: cms.minTraceWidth + 0.15,
+        },
+      ],
+      {
+        onSolved: (cms) => {
+          cms.capacityNodes = cms.portLoadSubdivisionSolver!.outputNodes
         },
       },
     ),
