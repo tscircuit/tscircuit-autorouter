@@ -1,4 +1,5 @@
 import type {
+  Candidate,
   TinyHyperGraphProblem,
   TinyHyperGraphSolverOptions,
   TinyHyperGraphTopology,
@@ -33,6 +34,8 @@ export const getTinyHyperGraphSolveGraphContinuationMaxIterations = ({
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
   private readonly initialMaxIterations: number
   private continuationBudgetGranted = false
+  private diagnosticComputeGCallCount = 0
+  private diagnosticIntersectionPairCheckCount = 0
 
   constructor(
     topology: TinyHyperGraphTopology,
@@ -41,6 +44,27 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
   ) {
     super(topology, problem, options)
     this.initialMaxIterations = this.MAX_ITERATIONS
+  }
+
+  override computeG(
+    currentCandidate: Candidate,
+    neighborPortId: number,
+  ): number {
+    this.diagnosticComputeGCallCount += 1
+    this.diagnosticIntersectionPairCheckCount +=
+      this.state.regionIntersectionCaches[currentCandidate.nextRegionId]
+        ?.existingSegmentCount ?? 0
+    return super.computeG(currentCandidate, neighborPortId)
+  }
+
+  getDiagnosticCandidateCostStats(): {
+    computeGCallCount: number
+    intersectionPairCheckCount: number
+  } {
+    return {
+      computeGCallCount: this.diagnosticComputeGCallCount,
+      intersectionPairCheckCount: this.diagnosticIntersectionPairCheckCount,
+    }
   }
 
   override tryFinalAcceptance() {

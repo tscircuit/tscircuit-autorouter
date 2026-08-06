@@ -1101,6 +1101,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           candidateQueueLength: currentTinySolver.state.candidateQueue.length,
           topologyPortCount: currentTinySolver.topology.portCount,
           topologyRegionCount: currentTinySolver.topology.regionCount,
+          candidateCostStats:
+            currentTinySolver instanceof
+            SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+              ? currentTinySolver.getDiagnosticCandidateCostStats()
+              : undefined,
           ripCount: currentTinySolver.state.ripCount,
           stats: currentTinySolver.stats,
         }),
