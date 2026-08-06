@@ -187,7 +187,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
   private getComponentNoConnectionSrjs(): SimpleRouteJson[] {
     return this.normalizedInput.components.map((component) =>
       createComponentSrj({
-        inputSrj: this.inputProblem.inputSrj,
+        inputSrj: this.normalizedInput.inputSrj,
         component,
       }),
     )

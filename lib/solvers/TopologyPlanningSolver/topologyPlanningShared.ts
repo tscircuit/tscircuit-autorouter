@@ -24,12 +24,14 @@ import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
 import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
 import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
 import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
+import { dropDegenerateObstacles } from "./capacity-node-geometry"
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
 } from "./MultiGraphTopologyPlannerSolver"
 
 export interface NormalizedTopologyPlannerInput {
+  inputSrj: SimpleRouteJson
   globalNoConnectionSrj: SimpleRouteJson
   components: SerializedTopologyComponentInput[]
 }
@@ -119,19 +121,20 @@ export function createComponentSrj({
 export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
+  const inputSrj = withoutDegenerateObstacles(input.inputSrj)
   const detectedComponents = input.componentDetectionOutput ?? []
   const serializedDetectedComponents = serializeDetectedComponents({
     detectedComponents,
-    inputSrj: input.inputSrj,
+    inputSrj,
   })
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
     (detectedComponents.length > 0
       ? createComponentObstacleSrj({
           detectedComponents,
-          inputSrj: input.inputSrj,
+          inputSrj,
         })
-      : input.inputSrj) ??
+      : inputSrj) ??
     input.brokenSrj?.componentsAsObstaclesSrj
   const components =
     input.components ??
@@ -146,8 +149,20 @@ export function normalizeInput(
   }
 
   return {
-    globalNoConnectionSrj,
+    inputSrj,
+    globalNoConnectionSrj: withoutDegenerateObstacles(globalNoConnectionSrj),
     components,
+  }
+}
+
+/**
+ * Applies the shared degenerate geometry policy to an SRJ handed to topology
+ * planning. See dropDegenerateObstacles for why sub-epsilon rects are dropped.
+ */
+function withoutDegenerateObstacles(srj: SimpleRouteJson): SimpleRouteJson {
+  return {
+    ...srj,
+    obstacles: dropDegenerateObstacles(srj.obstacles),
   }
 }
 

@@ -40,6 +40,28 @@ export function isValidCapacityBounds(bounds: Bounds): boolean {
   return hasValidWidth && hasValidHeight
 }
 
+/**
+ * Removes obstacles that are thinner than GEOMETRY_EPSILON in either dimension.
+ *
+ * Topology generation turns every obstacle rect into capacity mesh nodes, and a
+ * rect below GEOMETRY_EPSILON produces a node that `isValidCapacityBounds`
+ * rejects, so it aborts TopologyMergingSolver input validation. Such a rect also
+ * carries no routable or blocking area: it cannot hold a port point and no trace
+ * can collide with it. Topology planning drops it at its input so every stage
+ * uses one definition of real geometry.
+ */
+export function dropDegenerateObstacles(obstacles: Obstacle[]): Obstacle[] {
+  return obstacles.filter((obstacle) => {
+    const obstacleBounds = getBoundFromCenteredRect({
+      center: obstacle.center,
+      width: obstacle.width,
+      height: obstacle.height,
+    })
+
+    return isValidCapacityBounds(obstacleBounds)
+  })
+}
+
 export function isNodeInsideOrOverlappingObstacle({
   node,
   obstacle,
