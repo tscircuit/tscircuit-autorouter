@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { stackSvgsHorizontally } from "stack-svgs"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import {
+  combinePreloadedAndRoutedTraces,
+  evaluateRelaxedDrc,
+} from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { loadScenarios } from "../../scripts/benchmark/scenarios"
 
@@ -56,10 +59,23 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     const preExpansionOutput =
       solver.getPrePowerTraceOutputSimplifiedPcbTraces()
     const output = solver.getOutputSimplifiedPcbTraces()
-    const preExpansionViaCount = preExpansionOutput
+    const preExpansionTraces = combinePreloadedAndRoutedTraces(
+      input.traces ?? [],
+      preExpansionOutput,
+    )
+    const postExpansionTraces = combinePreloadedAndRoutedTraces(
+      input.traces ?? [],
+      output,
+    )
+    expect(preExpansionTraces.length).toBeGreaterThan(0)
+    expect(postExpansionTraces.length).toBeGreaterThan(0)
+    expect(
+      solver.powerTraceExpansionSolver?.stats.selectedTraceCount,
+    ).toBeGreaterThan(0)
+    const preExpansionViaCount = preExpansionTraces
       .flatMap((trace) => trace.route)
       .filter((point) => point.route_type === "via").length
-    const postExpansionViaCount = output
+    const postExpansionViaCount = postExpansionTraces
       .flatMap((trace) => trace.route)
       .filter((point) => point.route_type === "via").length
     expect(postExpansionViaCount).toBeLessThanOrEqual(preExpansionViaCount)
@@ -92,14 +108,14 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     )
     const preExpansionSvg = getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(
-        { ...input, traces: preExpansionOutput },
+        { ...input, traces: preExpansionTraces },
         { traceColorMode: "layer" },
       ),
       renderOptions,
     )
     const outputSvg = getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(
-        { ...input, traces: output },
+        { ...input, traces: postExpansionTraces },
         { traceColorMode: "layer" },
       ),
       renderOptions,
@@ -127,12 +143,21 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
   }
 
   expect(failedScenarios).toEqual([])
-  expect(preExpansionDrcPasses).toEqual(["sample005"])
-  expect(postExpansionDrcPasses).toEqual([
+  expect(preExpansionDrcPasses).toEqual([
     "sample001",
+    "sample002",
     "sample003",
     "sample004",
     "sample005",
+    "sample006",
+  ])
+  expect(postExpansionDrcPasses).toEqual([
+    "sample001",
+    "sample002",
+    "sample003",
+    "sample004",
+    "sample005",
+    "sample006",
   ])
   expect(
     preExpansionDrcPasses.every((scenarioName) =>

@@ -29,6 +29,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -125,7 +126,11 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => [cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srj,
+        cms.colorMap,
+        getInitiallyConnectedMapFromSimpleRouteJson(cms.srj),
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =

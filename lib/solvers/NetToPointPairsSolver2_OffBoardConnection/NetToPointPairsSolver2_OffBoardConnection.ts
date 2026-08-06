@@ -3,13 +3,11 @@ import {
   SimpleRouteJson,
   ConnectionPoint,
 } from "lib/types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
-import {
-  areExternallyConnected,
-  getExternalConnectionState,
-  NetToPointPairsSolver,
-} from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -38,6 +36,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
+    initiallyConnectedMap: ConnectivityMap,
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -73,7 +72,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     }
 
     // Call super with a modified SRJ that only contains on-board connections
-    super({ ...ogSrj, connections: onBoardConnections }, colorMap)
+    super(
+      { ...ogSrj, connections: onBoardConnections },
+      colorMap,
+      initiallyConnectedMap,
+    )
 
     this.connectionPointDsu = connectionPointDsu
     this.connectionPointMap = connectionPointMap
@@ -124,19 +127,15 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const { pointIdToGroup, zeroWeightEdges } = getExternalConnectionState(
-      currentConnection,
-      this.ogSrj,
-    )
+    const { zeroWeightEdges, arePointsConnected } =
+      getInitiallyConnectedStateForConnection(
+        currentConnection,
+        this.initiallyConnectedMap,
+      )
 
     if (currentConnection.pointsToConnect.length === 2) {
-      if (
-        areExternallyConnected(
-          pointIdToGroup,
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
-        )
-      ) {
+      const [startPoint, endPoint] = currentConnection.pointsToConnect
+      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
       const optimizedConnection =
@@ -161,7 +160,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
-      if (areExternallyConnected(pointIdToGroup, mstEdge.from, mstEdge.to)) {
+      if (arePointsConnected(mstEdge.from, mstEdge.to)) {
         continue
       }
 

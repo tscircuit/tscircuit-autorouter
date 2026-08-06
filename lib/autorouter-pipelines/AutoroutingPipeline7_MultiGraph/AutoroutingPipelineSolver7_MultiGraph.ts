@@ -38,6 +38,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -73,6 +74,7 @@ import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autor
 import { DifferentialPairPostProcessingSolver } from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
+import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -306,7 +308,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => [cms.srjWithEscapeViaLocations ?? cms.srj, cms.colorMap],
+      (cms) => {
+        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
+        return [
+          inputSrj,
+          cms.colorMap,
+          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+        ]
+      },
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
@@ -787,11 +796,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           configuredOptions.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
-          {
-            ...cms.originalSrj,
-            traces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
-            fixedTraces: cms.originalSrj.traces ?? [],
-          },
+          preparePipeline7PowerTraceExpansionInput({
+            originalSrj: cms.originalSrj,
+            newlyRoutedTraces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
+            expandedConnectionNames: onlyConnectionNames,
+          }),
           {
             allowNewVias: false,
             ...configuredOptions,
