@@ -133,7 +133,11 @@ type DiagnosticRouteContext = {
   startAlreadyAssigned: boolean
   endAlreadyAssigned: boolean
   assignedNetPortCount: number
+  assignedNetPortCountAtStartPosition: number
+  assignedNetPortCountAtEndPosition: number
   endpointDistance: number
+  startZ: number
+  endZ: number
   startIncidentRegionIds: number[]
   endIncidentRegionIds: number[]
 }
@@ -1277,7 +1281,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       startAlreadyAssigned: solver.state.portAssignment[startPortId] === netId,
       endAlreadyAssigned: solver.state.portAssignment[endPortId] === netId,
       assignedNetPortCount,
+      assignedNetPortCountAtStartPosition:
+        this.countAssignedNetPortsAtPosition(solver, netId, startPortId),
+      assignedNetPortCountAtEndPosition:
+        this.countAssignedNetPortsAtPosition(solver, netId, endPortId),
       endpointDistance: Math.hypot(dx, dy),
+      startZ: solver.topology.portZ[startPortId]!,
+      endZ: solver.topology.portZ[endPortId]!,
       startIncidentRegionIds: [
         ...(solver.topology.incidentPortRegion[startPortId] ?? []),
       ],
@@ -1285,6 +1295,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ...(solver.topology.incidentPortRegion[endPortId] ?? []),
       ],
     }
+  }
+
+  private countAssignedNetPortsAtPosition(
+    solver: TinyHyperGraphSolver,
+    netId: number,
+    endpointPortId: number,
+  ): number {
+    let count = 0
+    for (let portId = 0; portId < solver.topology.portCount; portId += 1) {
+      if (solver.state.portAssignment[portId] !== netId) continue
+      if (
+        solver.topology.portX[portId] ===
+          solver.topology.portX[endpointPortId] &&
+        solver.topology.portY[portId] ===
+          solver.topology.portY[endpointPortId] &&
+        solver.topology.portZ[portId] === solver.topology.portZ[endpointPortId]
+      ) {
+        count += 1
+      }
+    }
+    return count
   }
 
   private getDiagnosticSolvedPath(
