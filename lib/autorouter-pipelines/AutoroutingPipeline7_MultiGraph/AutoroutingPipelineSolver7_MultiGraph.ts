@@ -685,7 +685,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             enableSafeTraceLayerMoves: true,
             enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
             viaInPadMaxIterations: 32,
-            broadMaxIterations: 8,
+            broadMaxIterations: 12,
             broadPassMultiplier: 3,
           },
         ]
