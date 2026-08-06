@@ -90,6 +90,8 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         regionPathPlanningIterations:
           this.stats.regionPathPlanningIterations,
         regionPathPlanningSolved: this.stats.regionPathPlanningSolved,
+        regionPathPlanningSolvedRouteCount:
+          this.stats.regionPathPlanningSolvedRouteCount,
       }),
     )
   }
