@@ -1,5 +1,6 @@
 import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { makeCrossingSingleLayerNode } from "./test-helpers"
 
@@ -23,4 +24,7 @@ test("GrowShrinkHighDensityIntraNodeSolver immediately returns invalid geometry 
     true,
   )
   expect(solver.visualize().lines).toHaveLength(2)
+  expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
