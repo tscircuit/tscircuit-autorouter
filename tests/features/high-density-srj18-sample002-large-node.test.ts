@@ -102,7 +102,6 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     ...solverParams,
     maxGrowthAttempts: 3,
-    fallbackToInvalidGeometryOnFailure: false,
   })
 
   solver.solve()
@@ -112,7 +111,7 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.growthAttempts).toBe(0)
   expect(solver.scaleFactor).toBe(1)
   expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(true)
-  expect(solver.stats.invalidGeometryFallback).not.toBe(true)
+  expect(solver.nodeRoutingFailure).toBeUndefined()
   expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
     solver.winningSolver!.MAX_ITERATIONS,
   )

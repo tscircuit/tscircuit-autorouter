@@ -552,7 +552,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
           preserveTerminalPcbPortIds: true,
-          growShrinkFallbackToInvalidGeometryOnFailure: true,
         },
       ]
     }),

@@ -13,6 +13,7 @@ import { BaseSolver } from "../BaseSolver"
 import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
   GrowShrinkHighDensityIntraNodeSolver,
+  type HighDensityNodeRoutingFailure,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
@@ -23,6 +24,17 @@ type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
   | PortfolioSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
+
+export type HighDensityNodeSolveMetadata = {
+  node: NodeWithPortPoints
+  status: "solved" | "failed"
+  solverType: string
+  iterations: number
+  routeCount: number
+  nodePf: number | null
+  error?: string
+  nodeRoutingFailure?: HighDensityNodeRoutingFailure
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -60,24 +72,12 @@ export class HighDensitySolver extends BaseSolver {
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-  growShrinkFallbackToInvalidGeometryOnFailure: boolean
-
   failedSolvers: HighDensityIntraNodeSolver[]
+  nodeRoutingFailures: HighDensityNodeRoutingFailure[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
   connMap?: ConnectivityMap
   nodePfById: Map<CapacityMeshNodeId, number | null>
-  nodeSolveMetadataById: Map<
-    CapacityMeshNodeId,
-    {
-      node: NodeWithPortPoints
-      status: "solved" | "failed"
-      solverType: string
-      iterations: number
-      routeCount: number
-      nodePf: number | null
-      error?: string
-    }
-  >
+  nodeSolveMetadataById: Map<CapacityMeshNodeId, HighDensityNodeSolveMetadata>
 
   constructor({
     nodePortPoints,
@@ -93,7 +93,6 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
-    growShrinkFallbackToInvalidGeometryOnFailure,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -107,7 +106,6 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-    growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -118,6 +116,7 @@ export class HighDensitySolver extends BaseSolver {
     this.connMap = connMap
     this.routes = []
     this.failedSolvers = []
+    this.nodeRoutingFailures = []
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
@@ -129,8 +128,6 @@ export class HighDensitySolver extends BaseSolver {
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
-    this.growShrinkFallbackToInvalidGeometryOnFailure =
-      growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -171,6 +168,11 @@ export class HighDensitySolver extends BaseSolver {
   ) {
     const node = solver.nodeWithPortPoints
     const nodePf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
+    const nodeRoutingFailure =
+      solver instanceof GrowShrinkHighDensityIntraNodeSolver
+        ? solver.nodeRoutingFailure
+        : undefined
+    if (nodeRoutingFailure) this.nodeRoutingFailures.push(nodeRoutingFailure)
     this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
       node,
       status,
@@ -179,20 +181,13 @@ export class HighDensitySolver extends BaseSolver {
       routeCount: solver.solvedRoutes.length,
       nodePf,
       error: solver.error ?? undefined,
+      nodeRoutingFailure,
     })
   }
 
   private createNodeMarkerLabel(
     capacityMeshNodeId: CapacityMeshNodeId,
-    metadata: {
-      status: "solved" | "failed"
-      solverType: string
-      iterations: number
-      routeCount: number
-      nodePf: number | null
-      node: NodeWithPortPoints
-      error?: string
-    },
+    metadata: HighDensityNodeSolveMetadata,
   ): string {
     return [
       "hd_node_marker",
@@ -203,6 +198,9 @@ export class HighDensitySolver extends BaseSolver {
       `routes: ${metadata.routeCount}`,
       `nodePf: ${metadata.nodePf ?? "n/a"}`,
       `portPoints: ${metadata.node.portPoints.length}`,
+      ...(metadata.nodeRoutingFailure
+        ? [`failure: ${metadata.nodeRoutingFailure.reason}`]
+        : []),
       ...(metadata.error ? [`error: ${metadata.error}`] : []),
     ].join("\n")
   }
@@ -373,8 +371,6 @@ export class HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
-      fallbackToInvalidGeometryOnFailure:
-        this.growShrinkFallbackToInvalidGeometryOnFailure,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

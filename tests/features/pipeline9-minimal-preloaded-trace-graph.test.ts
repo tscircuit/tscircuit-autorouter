@@ -94,6 +94,13 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     Number(solver.portPointPathingSolver?.stats.preloadedFixedSegmentCount),
   ).toBeGreaterThan(0)
+  const highDensityStep = solver.pipelineDef.find(
+    (step) => step.solverName === "highDensityRouteSolver",
+  )
+  const [highDensityParams] = highDensityStep!.getConstructorParams(solver)
+  expect(
+    "growShrinkFallbackToInvalidGeometryOnFailure" in highDensityParams,
+  ).toBe(false)
   const traceSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "traceSimplificationSolver",
   )
