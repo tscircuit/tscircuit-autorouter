@@ -102,6 +102,7 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
+    USE_REGION_PATH_CORRIDORS?: boolean
   }
   weights: {
     /** Seed used for deterministic shuffling in rip-selection ordering. */

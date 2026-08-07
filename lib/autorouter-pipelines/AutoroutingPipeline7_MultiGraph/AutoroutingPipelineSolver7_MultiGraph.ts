@@ -13,7 +13,10 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import {
+  MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS,
+  TinyHypergraphPortPointPathingSolver,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -370,6 +373,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_REGION_PATH_CORRIDORS:
+                connections.length >
+                MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS,
             },
             weights: {
               SHUFFLE_SEED: 0,

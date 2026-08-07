@@ -140,7 +140,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+export const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -154,13 +154,14 @@ const getTinyViaSizeOptions = (
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  useRegionPathCorridors = false,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: true,
-    USE_REGION_PATH_CORRIDORS: true,
+    USE_REGION_PATH_CORRIDORS: useRegionPathCorridors,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
@@ -184,12 +185,14 @@ const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
   minViaPadDiameter?: number,
+  useRegionPathCorridors = false,
 ): TinyHyperGraphSectionPipelineInput => ({
   serializedHyperGraph,
   createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
   solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
     effort,
     minViaPadDiameter,
+    useRegionPathCorridors,
   ),
   sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
     effort,
@@ -956,6 +959,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
+      params.flags.USE_REGION_PATH_CORRIDORS === true,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
