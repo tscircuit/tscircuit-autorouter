@@ -91,6 +91,82 @@ test("addApproximatingRectsToSrj slices slender rotated obstacles into compact r
   ).toBe(true)
 })
 
+test("sparse rotated-pad approximations conservatively cover the original pad", () => {
+  const padWidth = 1.125
+  const padHeight = 1.75
+  const padRotation = 233
+  const padCenter = { x: 0, y: 0 }
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    minViaDiameter: 0.3,
+    bounds: { minX: -50, minY: -50, maxX: 50, maxY: 50 },
+    obstacles: Array.from({ length: 21 }, (_, index) => ({
+      obstacleId: `rotated_pad_${index}`,
+      type: "rect" as const,
+      layers: ["top"],
+      center: index === 0 ? padCenter : { x: index * 3, y: 0 },
+      width: padWidth,
+      height: padHeight,
+      ccwRotationDegrees: padRotation,
+      connectedTo: [`net_${index}`],
+    })),
+    connections: [],
+  }
+
+  const converted = addApproximatingRectsToSrj(srj)
+  const firstPadApproximations = converted.obstacles.filter(
+    (obstacle) =>
+      obstacle.obstacleId === "rotated_pad_0" ||
+      obstacle.obstacleId?.startsWith("rotated_pad_0_approx_"),
+  )
+  const angleRadians = (padRotation * Math.PI) / 180
+  const cosAngle = Math.cos(angleRadians)
+  const sinAngle = Math.sin(angleRadians)
+  const corners = [-1, 1].flatMap((xSign) =>
+    [-1, 1].map((ySign) => {
+      const localX = xSign * (padWidth / 2)
+      const localY = ySign * (padHeight / 2)
+      return {
+        x: padCenter.x + localX * cosAngle - localY * sinAngle,
+        y: padCenter.y + localX * sinAngle + localY * cosAngle,
+      }
+    }),
+  )
+
+  expect(firstPadApproximations.length).toBeGreaterThan(0)
+  expect(firstPadApproximations.length).toBeLessThanOrEqual(6)
+  for (const corner of corners) {
+    expect(
+      firstPadApproximations.some(
+        (obstacle) =>
+          Math.abs(corner.x - obstacle.center.x) <= obstacle.width / 2 + 1e-9 &&
+          Math.abs(corner.y - obstacle.center.y) <= obstacle.height / 2 + 1e-9,
+      ),
+    ).toBe(true)
+  }
+
+  for (let xStep = 0; xStep <= 10; xStep++) {
+    for (let yStep = 0; yStep <= 10; yStep++) {
+      const localX = (xStep / 10 - 0.5) * padWidth
+      const localY = (yStep / 10 - 0.5) * padHeight
+      const point = {
+        x: padCenter.x + localX * cosAngle - localY * sinAngle,
+        y: padCenter.y + localX * sinAngle + localY * cosAngle,
+      }
+
+      expect(
+        firstPadApproximations.some(
+          (obstacle) =>
+            Math.abs(point.x - obstacle.center.x) <=
+              obstacle.width / 2 + 1e-9 &&
+            Math.abs(point.y - obstacle.center.y) <= obstacle.height / 2 + 1e-9,
+        ),
+      ).toBe(true)
+    }
+  }
+})
+
 /**
  * All the approximating rects should
  * have the same obstacleId as the connected rect

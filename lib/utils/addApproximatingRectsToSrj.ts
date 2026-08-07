@@ -1,10 +1,10 @@
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
-import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import {
-  getBoundFromCenteredRect,
   distance as calculateDistance,
+  getBoundFromCenteredRect,
   isPointInsideBounds,
 } from "@tscircuit/math-utils"
+import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
 
 const normalizeRotation = (rotationDegrees: number) =>
@@ -18,7 +18,6 @@ const SLENDER_OBSTACLE_ASPECT_RATIO = 2
 const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
 const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
 const MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD = 20
-const SPARSE_CENTERLINE_STEP_FACTOR = 2
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
   const normalizedRotation = normalizeRotation(rotationDegrees)
@@ -216,6 +215,101 @@ const generateGridApproximatingRects = (
   return rects
 }
 
+const generateSparseConservativeApproximatingRects = (
+  rotatedRect: RotatedRect,
+): Rect[] => {
+  // Slice along the shorter world-space axis, clip the rotated polygon into
+  // each band, and bound the clipped polygon. Unlike centerline squares, these
+  // rects cover the complete pad without using a costly two-dimensional grid.
+  const angleRad = (rotatedRect.rotation * Math.PI) / 180
+  const cosAngle = Math.cos(angleRad)
+  const sinAngle = Math.sin(angleRad)
+  const corners: Point[] = [-1, 1].flatMap((xSign) =>
+    [-1, 1].map((ySign) => {
+      const localX = xSign * (rotatedRect.width / 2)
+      const localY = ySign * (rotatedRect.height / 2)
+      return {
+        x: rotatedRect.center.x + localX * cosAngle - localY * sinAngle,
+        y: rotatedRect.center.y + localX * sinAngle + localY * cosAngle,
+      }
+    }),
+  )
+  const orderedCorners = [corners[0]!, corners[2]!, corners[3]!, corners[1]!]
+  const minX = Math.min(...orderedCorners.map((point) => point.x))
+  const maxX = Math.max(...orderedCorners.map((point) => point.x))
+  const minY = Math.min(...orderedCorners.map((point) => point.y))
+  const maxY = Math.max(...orderedCorners.map((point) => point.y))
+  const sliceAxis = maxX - minX <= maxY - minY ? "x" : "y"
+  const min = sliceAxis === "x" ? minX : minY
+  const max = sliceAxis === "x" ? maxX : maxY
+  const sliceCount = Math.max(
+    1,
+    Math.ceil((max - min) / ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH),
+  )
+  const sliceSize = (max - min) / sliceCount
+
+  const clipAt = (
+    polygon: Point[],
+    boundary: number,
+    keepGreater: boolean,
+  ): Point[] => {
+    const clipped: Point[] = []
+    const getCoordinate = (point: Point) => point[sliceAxis]
+
+    for (let index = 0; index < polygon.length; index++) {
+      const start = polygon[index]!
+      const end = polygon[(index + 1) % polygon.length]!
+      const startCoordinate = getCoordinate(start)
+      const endCoordinate = getCoordinate(end)
+      const startInside = keepGreater
+        ? startCoordinate >= boundary
+        : startCoordinate <= boundary
+      const endInside = keepGreater
+        ? endCoordinate >= boundary
+        : endCoordinate <= boundary
+
+      if (startInside) clipped.push(start)
+      if (startInside === endInside) continue
+
+      const fraction =
+        (boundary - startCoordinate) / (endCoordinate - startCoordinate)
+      clipped.push({
+        x: start.x + (end.x - start.x) * fraction,
+        y: start.y + (end.y - start.y) * fraction,
+      })
+    }
+
+    return clipped
+  }
+
+  const rects: Rect[] = []
+  for (let index = 0; index < sliceCount; index++) {
+    const sliceMin = min + index * sliceSize
+    const sliceMax = index === sliceCount - 1 ? max : sliceMin + sliceSize
+    const clipped = clipAt(
+      clipAt(orderedCorners, sliceMin, true),
+      sliceMax,
+      false,
+    )
+    if (clipped.length === 0) continue
+
+    const clippedMinX = Math.min(...clipped.map((point) => point.x))
+    const clippedMaxX = Math.max(...clipped.map((point) => point.x))
+    const clippedMinY = Math.min(...clipped.map((point) => point.y))
+    const clippedMaxY = Math.max(...clipped.map((point) => point.y))
+    rects.push({
+      center: {
+        x: (clippedMinX + clippedMaxX) / 2,
+        y: (clippedMinY + clippedMaxY) / 2,
+      },
+      width: clippedMaxX - clippedMinX,
+      height: clippedMaxY - clippedMinY,
+    })
+  }
+
+  return rects
+}
+
 const generateCenterlineApproximatingRects = (
   rotatedRect: RotatedRect,
   rectCount: number,
@@ -248,42 +342,6 @@ const generateCenterlineApproximatingRects = (
       },
       width: rectSize,
       height: rectSize,
-    })
-  }
-
-  return rects
-}
-
-const generateSparseCenterlineApproximatingRects = (
-  rotatedRect: RotatedRect,
-): Rect[] => {
-  const { center, width, height, rotation } = rotatedRect
-  const longSide = Math.max(width, height)
-  const shortSide = Math.min(width, height)
-  const rectCount = Math.max(
-    1,
-    Math.ceil(longSide / (shortSide * SPARSE_CENTERLINE_STEP_FACTOR)),
-  )
-  const stepLength = longSide / rectCount
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
-  const rects: Rect[] = []
-
-  for (let i = 0; i < rectCount; i++) {
-    const localOffset = (i - rectCount / 2 + 0.5) * stepLength
-    const rotatedX =
-      width >= height ? localOffset * cosAngle : -localOffset * sinAngle
-    const rotatedY =
-      width >= height ? localOffset * sinAngle : localOffset * cosAngle
-
-    rects.push({
-      center: {
-        x: center.x + rotatedX,
-        y: center.y + rotatedY,
-      },
-      width: shortSide,
-      height: shortSide,
     })
   }
 
@@ -328,7 +386,7 @@ const getRotatedObstacleApproximationRectCount = (
 
 const convertObstacleToOldFormat = (
   obstacle: Obstacle,
-  opts: { useSparseCenterlineApproximation?: boolean } = {},
+  opts: { useSparseConservativeApproximation?: boolean } = {},
 ): Obstacle[] => {
   const rotationDegrees = obstacle.ccwRotationDegrees
 
@@ -355,8 +413,8 @@ const convertObstacleToOldFormat = (
     rotation: rotationDegrees,
   }
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
-  const rects = opts.useSparseCenterlineApproximation
-    ? generateSparseCenterlineApproximatingRects(rotatedRect)
+  const rects = opts.useSparseConservativeApproximation
+    ? generateSparseConservativeApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
           rotatedRect,
@@ -408,13 +466,13 @@ export const addApproximatingRectsToSrj = (
       Number.isFinite(obstacle.ccwRotationDegrees) &&
       !isAxisAlignedRotation(obstacle.ccwRotationDegrees),
   ).length
-  const useSparseCenterlineApproximation =
+  const useSparseConservativeApproximation =
     connectedRotatedObstacleCount > MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
     const convertedObstacle = convertObstacleToOldFormat(obstacle, {
-      useSparseCenterlineApproximation:
-        useSparseCenterlineApproximation &&
+      useSparseConservativeApproximation:
+        useSparseConservativeApproximation &&
         obstacle.connectedTo.length > 0 &&
         !obstacle.obstacleId?.startsWith("trace_obstacle_"),
     })
