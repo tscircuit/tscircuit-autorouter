@@ -72,21 +72,34 @@ function areCoincident(t1: number, t2: number, eps: number = 1e-6): boolean {
  *
  * Uses O(n^2) algorithm to correctly handle coincident endpoints.
  */
-function countChordCrossings(chords: Array<[number, number]>): number {
+type ConnectionChord = {
+  networkName: string
+  start: number
+  end: number
+}
+
+function countChordCrossings(chords: ConnectionChord[]): number {
   if (chords.length < 2) return 0
 
   // Normalize each chord so first endpoint is smaller
-  const normalizedChords = chords.map(([t1, t2]) =>
-    t1 < t2 ? ([t1, t2] as [number, number]) : ([t2, t1] as [number, number]),
-  )
+  const normalizedChords = chords.map(({ networkName, start, end }) => ({
+    networkName,
+    start: Math.min(start, end),
+    end: Math.max(start, end),
+  }))
 
   let crossings = 0
 
   // Check all pairs of chords
   for (let i = 0; i < normalizedChords.length; i++) {
-    const [a, b] = normalizedChords[i]
+    const firstChord = normalizedChords[i]
     for (let j = i + 1; j < normalizedChords.length; j++) {
-      const [c, d] = normalizedChords[j]
+      const secondChord = normalizedChords[j]
+
+      if (firstChord.networkName === secondChord.networkName) continue
+
+      const { start: a, end: b } = firstChord
+      const { start: c, end: d } = secondChord
 
       // Skip if chords share a coincident endpoint
       if (
@@ -126,24 +139,34 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
   // Group port points by connectionName
   const connectionPointsMap = new Map<
     string,
-    Array<{ x: number; y: number; z: number }>
+    {
+      networkName: string
+      points: Array<{ x: number; y: number; z: number }>
+    }
   >()
 
   for (const pp of node.portPoints) {
-    const points = connectionPointsMap.get(pp.connectionName) ?? []
-    // Avoid duplicate points
-    if (!points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)) {
-      points.push({ x: pp.x, y: pp.y, z: pp.z })
+    const connection = connectionPointsMap.get(pp.connectionName) ?? {
+      networkName: pp.rootConnectionName ?? pp.connectionName,
+      points: [],
     }
-    connectionPointsMap.set(pp.connectionName, points)
+    // Avoid duplicate points
+    if (
+      !connection.points.some(
+        (p) => p.x === pp.x && p.y === pp.y && p.z === pp.z,
+      )
+    ) {
+      connection.points.push({ x: pp.x, y: pp.y, z: pp.z })
+    }
+    connectionPointsMap.set(pp.connectionName, connection)
   }
 
   // Separate same-layer pairs from transition pairs
-  const sameLayerPairsByZ = new Map<number, Array<[number, number]>>()
-  const transitionPairs: Array<[number, number]> = []
+  const sameLayerPairsByZ = new Map<number, ConnectionChord[]>()
+  const transitionPairs: ConnectionChord[] = []
   let numEntryExitLayerChanges = 0
 
-  for (const [connectionName, points] of connectionPointsMap) {
+  for (const { networkName, points } of connectionPointsMap.values()) {
     if (points.length < 2) continue
 
     // Get the two endpoints for this connection
@@ -158,12 +181,12 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
       // Same layer - add to the layer's chord list
       const z = p1.z
       const chords = sameLayerPairsByZ.get(z) ?? []
-      chords.push([t1, t2])
+      chords.push({ networkName, start: t1, end: t2 })
       sameLayerPairsByZ.set(z, chords)
     } else {
       // Transition pair - different layers
       numEntryExitLayerChanges++
-      transitionPairs.push([t1, t2])
+      transitionPairs.push({ networkName, start: t1, end: t2 })
     }
   }
 
