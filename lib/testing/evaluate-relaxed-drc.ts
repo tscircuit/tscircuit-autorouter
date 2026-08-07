@@ -29,7 +29,7 @@ export const evaluateRelaxedDrc = ({
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
     originalSrj: inputSrj,
-    includeOriginalConnections: preloadedTraces.length > 0,
+    includeOriginalConnections: true,
   })
 
   return {
