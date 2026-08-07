@@ -31,4 +31,7 @@ test("benchmark dataset aliases resolve to canonical dataset names", () => {
   expect(parseDatasetName("27")).toBe("srj27")
   expect(parseDatasetName("dataset27")).toBe("srj27")
   expect(parseDatasetName("dataset-srj27-power-traces")).toBe("srj27")
+  expect(parseDatasetName("28")).toBe("srj28")
+  expect(parseDatasetName("dataset28")).toBe("srj28")
+  expect(parseDatasetName("dataset-srj28-partially-prerouted")).toBe("srj28")
 })
