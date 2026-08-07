@@ -20,6 +20,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -154,7 +155,11 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver,
-      (cms) => [cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srj,
+        cms.colorMap,
+        getInitiallyConnectedMapFromSimpleRouteJson(cms.srj),
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =

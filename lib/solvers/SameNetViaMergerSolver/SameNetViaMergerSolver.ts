@@ -16,6 +16,8 @@ export interface SameNetViaMergerSolverInput {
   inputHdRoutes: HighDensityRoute[]
   /** Routed copper that participates in collision checks but is never changed. */
   otherHdRoutes?: ReadonlyArray<HighDensityRoute>
+  /** Explicit connection metadata for routes whose names are not in connMap. */
+  netByConnectionName?: ReadonlyMap<string, string>
   obstacles: Obstacle[]
   colorMap: Record<string, string>
   layerCount: number
@@ -30,6 +32,7 @@ type Via = {
   net: string
   routeIndex: number
   layers: number[]
+  mutable: boolean
 }
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
@@ -38,7 +41,9 @@ const OBSTACLE_MARGIN = 0.1
 const tryGetNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
+  netByConnectionName?: ReadonlyMap<string, string>,
 ): string | undefined =>
+  netByConnectionName?.get(route.connectionName) ??
   connMap.idToNetMap[route.connectionName] ??
   (route.rootConnectionName
     ? connMap.idToNetMap[route.rootConnectionName]
@@ -47,8 +52,9 @@ const tryGetNetForRoute = (
 const getNetForRoute = (
   connMap: ConnectivityMap,
   route: HighDensityRoute,
+  netByConnectionName?: ReadonlyMap<string, string>,
 ): string => {
-  const net = tryGetNetForRoute(connMap, route)
+  const net = tryGetNetForRoute(connMap, route, netByConnectionName)
   if (!net) {
     throw new Error(
       `SameNetViaMergerSolver could not find net for route "${route.connectionName}"`,
@@ -80,6 +86,7 @@ const canMoveViaTo = (
     mergedViaHdRoutes: HighDensityRoute[]
     hdRouteSHI: HighDensityRouteSpatialIndex
     obstacleSHI: ObstacleSpatialHashIndex
+    netByConnectionName?: ReadonlyMap<string, string>
   },
 ): boolean => {
   const route = context.mergedViaHdRoutes[viaToRemove.routeIndex]
@@ -123,7 +130,11 @@ const canMoveViaTo = (
     for (const { conflictingRoute, distance } of conflictingRoutes) {
       if (conflictingRoute.connectionName === route.connectionName) continue
       if (
-        tryGetNetForRoute(context.connMap, conflictingRoute) === viaToRemove.net
+        tryGetNetForRoute(
+          context.connMap,
+          conflictingRoute,
+          context.netByConnectionName,
+        ) === viaToRemove.net
       )
         continue
 
@@ -179,6 +190,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
   outline?: Array<{ x: number; y: number }>
   obstacles: Obstacle[]
   viasByNet: Map<string, Via[]>
+  netByConnectionName?: ReadonlyMap<string, string>
 
   obstacleSHI: ObstacleSpatialHashIndex
   hdRouteSHI: HighDensityRouteSpatialIndex
@@ -216,6 +228,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.vias = []
     this.offendingVias = []
     this.connMap = input.connMap
+    this.netByConnectionName = input.netByConnectionName
 
     this.viasByNet = new Map<string, Via[]>()
 
@@ -226,8 +239,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.vias = []
     this.viasByNet = new Map<string, Via[]>()
 
-    for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
-      const route = this.mergedViaHdRoutes[i]
+    const addRouteVias = (
+      route: HighDensityRoute,
+      routeIndex: number,
+      mutable: boolean,
+    ) => {
+      if (route.vias.length === 0) return
+      const net = mutable
+        ? getNetForRoute(this.connMap, route, this.netByConnectionName)
+        : tryGetNetForRoute(this.connMap, route, this.netByConnectionName)
+      if (!net) return
+
       for (let j = 0; j < route.vias.length; j++) {
         const viaPoint = route.vias[j]
         const layers = [...new Set(route.route.map((p) => p.z))]
@@ -241,9 +263,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
           x: viaPoint.x,
           y: viaPoint.y,
           diameter: route.viaDiameter,
-          net: getNetForRoute(this.connMap, route),
+          net,
           layers,
-          routeIndex: i,
+          routeIndex,
+          mutable,
         }
         this.vias.push(via)
         const list = this.viasByNet.get(via.net)
@@ -251,12 +274,28 @@ export class SameNetViaMergerSolver extends BaseSolver {
         else this.viasByNet.set(via.net, [via])
       }
     }
+
+    for (let i = 0; i < this.mergedViaHdRoutes.length; i++) {
+      addRouteVias(this.mergedViaHdRoutes[i]!, i, true)
+    }
+    for (let i = 0; i < (this.input.otherHdRoutes?.length ?? 0); i++) {
+      addRouteVias(
+        this.input.otherHdRoutes![i]!,
+        this.mergedViaHdRoutes.length + i,
+        false,
+      )
+    }
   }
 
   private getViaKey(via: Via): string {
-    return [via.routeIndex, via.x, via.y, via.layers.join(","), via.net].join(
-      ":",
-    )
+    return [
+      via.mutable ? "mutable" : "immutable",
+      via.routeIndex,
+      via.x,
+      via.y,
+      via.layers.join(","),
+      via.net,
+    ].join(":")
   }
 
   private dedupeRouteVias(route: HighDensityRoute): void {
@@ -312,6 +351,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
               if (candidateIndex === viaIndex) continue
 
               const candidate = viasInNet[candidateIndex]
+              if (!candidate.mutable) continue
 
               const pairDx = keep.x - candidate.x
               const pairDy = keep.y - candidate.y
@@ -321,7 +361,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const nearMergeDistance =
                 directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
 
-              if (squaredDistance === 0) continue
+              if (squaredDistance === 0) {
+                if (!keep.mutable) remove.push(candidate)
+                continue
+              }
 
               if (
                 squaredDistance <=
@@ -338,6 +381,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
                   mergedViaHdRoutes: this.mergedViaHdRoutes,
                   hdRouteSHI: this.hdRouteSHI,
                   obstacleSHI: this.obstacleSHI,
+                  netByConnectionName: this.netByConnectionName,
                 })
               ) {
                 remove.push(candidate)
@@ -353,6 +397,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
     candidateGroups.sort((a, b) => {
       if (b.remove.length !== a.remove.length) {
         return b.remove.length - a.remove.length
+      }
+      if (a.keep.mutable !== b.keep.mutable) {
+        return a.keep.mutable ? 1 : -1
       }
       if (b.keep.layers.length !== a.keep.layers.length) {
         return b.keep.layers.length - a.keep.layers.length
@@ -381,6 +428,11 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true): void {
+    if (!viaToRemove.mutable) {
+      throw new Error(
+        "SameNetViaMergerSolver cannot mutate an immutable via anchor",
+      )
+    }
     const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
     if (!routeToUpdate) {
       throw new Error(
@@ -433,10 +485,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
       route[routePointIndex] = { ...point, x: viaKeep.x, y: viaKeep.y }
     }
 
-    routeToUpdate.vias = routeToUpdate.vias.map((vx) => {
+    routeToUpdate.vias = routeToUpdate.vias.flatMap((vx) => {
       if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
       replacedVia = true
-      return { x: viaKeep.x, y: viaKeep.y }
+      return viaKeep.mutable ? [{ x: viaKeep.x, y: viaKeep.y }] : []
     })
     if (!replacedVia) {
       throw new Error(

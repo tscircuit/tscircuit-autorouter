@@ -135,6 +135,8 @@ export interface SimpleRouteConnection {
 export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
+  /** Preloaded trace intentionally replaced by this routed output. */
+  __replaces_pcb_trace_id?: TraceId
   connection_name: string
   connectsTo?: Array<TraceId | NetId | PointId>
   route: Array<
