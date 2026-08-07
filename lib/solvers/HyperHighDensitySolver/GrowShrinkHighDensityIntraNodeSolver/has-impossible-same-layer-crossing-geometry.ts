@@ -1,3 +1,4 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 
@@ -12,6 +13,7 @@ const getAvailableZ = (node: NodeWithPortPoints): number[] => {
 
 export const hasImpossibleSameLayerCrossingGeometry = (
   node: NodeWithPortPoints,
+  connMap?: ConnectivityMap,
 ): boolean =>
   getAvailableZ(node).length === 1 &&
-  getIntraNodeCrossingsUsingCircle(node).numSameLayerCrossings > 0
+  getIntraNodeCrossingsUsingCircle(node, connMap).numSameLayerCrossings > 0

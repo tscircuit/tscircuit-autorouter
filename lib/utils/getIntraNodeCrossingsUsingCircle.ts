@@ -1,4 +1,8 @@
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 /**
  * Maps a boundary point to a 1D perimeter coordinate.
@@ -78,6 +82,20 @@ type ConnectionChord = {
   end: number
 }
 
+const getElectricalNetworkName = (
+  portPoint: PortPoint,
+  connMap?: ConnectivityMap,
+): string => {
+  const rootConnectionName =
+    portPoint.rootConnectionName ?? portPoint.connectionName
+
+  return (
+    connMap?.getNetConnectedToId(rootConnectionName) ??
+    connMap?.getNetConnectedToId(portPoint.connectionName) ??
+    rootConnectionName
+  )
+}
+
 function countChordCrossings(chords: ConnectionChord[]): number {
   if (chords.length < 2) return 0
 
@@ -130,7 +148,10 @@ function countChordCrossings(chords: ConnectionChord[]): number {
  *
  * Returns the same output structure as getIntraNodeCrossings.
  */
-export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
+export const getIntraNodeCrossingsUsingCircle = (
+  node: NodeWithPortPoints,
+  connMap?: ConnectivityMap,
+) => {
   const xmin = node.center.x - node.width / 2
   const xmax = node.center.x + node.width / 2
   const ymin = node.center.y - node.height / 2
@@ -147,7 +168,7 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
 
   for (const pp of node.portPoints) {
     const connection = connectionPointsMap.get(pp.connectionName) ?? {
-      networkName: pp.rootConnectionName ?? pp.connectionName,
+      networkName: getElectricalNetworkName(pp, connMap),
       points: [],
     }
     // Avoid duplicate points
