@@ -38,6 +38,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -308,7 +309,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => [cms.srjWithEscapeViaLocations ?? cms.srj, cms.colorMap],
+      (cms) => {
+        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
+        return [
+          inputSrj,
+          cms.colorMap,
+          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+        ]
+      },
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =

@@ -18,6 +18,7 @@ import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolv
 import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
@@ -130,7 +131,11 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     definePipelineStep(
       "netToPointPairsSolver",
       NetToPointPairsSolver,
-      (cms) => [cms.srj, cms.colorMap],
+      (cms) => [
+        cms.srj,
+        cms.colorMap,
+        getInitiallyConnectedMapFromSimpleRouteJson(cms.srj),
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
