@@ -22,6 +22,7 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
+import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01-repairs"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
@@ -634,10 +635,33 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    this.combinedOutput = this.exactRepairSolver.getOutput()
+    const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+      srj: this.params.srj,
+      routes: this.exactRepairSolver.getOutput(),
+      fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+      newConnections: this.params.newConnections,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      drcEvaluator: this.drcEvaluator!,
+      connMap: this.params.connMap,
+      colorMap: this.params.colorMap,
+      viaDiameter: this.params.defaultViaDiameter,
+      traceWidth: this.params.srj.minTraceWidth,
+      obstacleMargin:
+        this.params.srj.defaultObstacleMargin ??
+        this.params.srj.minTraceToPadEdgeClearance ??
+        0.15,
+      effort: this.params.effort,
+    })
+    this.combinedOutput = regionalB01RepairResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
+      regionalB01RepairCandidateCount:
+        regionalB01RepairResult.attemptedCandidateCount,
+      regionalB01RepairAcceptedCount:
+        regionalB01RepairResult.acceptedCandidateCount,
+      regionalB01RepairFallbackCandidateCount:
+        regionalB01RepairResult.fallbackCandidateCount,
     }
     this.solved = true
   }
