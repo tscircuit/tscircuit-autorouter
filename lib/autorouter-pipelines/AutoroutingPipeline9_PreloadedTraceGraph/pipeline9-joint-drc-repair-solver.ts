@@ -30,6 +30,12 @@ import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
 
+// This generic portfolio is only the preliminary repair. Each candidate runs
+// joint DRC over all copper; unresolved errors continue into Pipeline9's
+// regional B01 pass, where the search is local and obstacle-aware.
+const PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS = 8
+const PRELIMINARY_EXACT_REPAIR_BROAD_MAX_ITERATIONS = 4
+
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
@@ -604,15 +610,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
-      viaInPadDrcEvaluator: drcEvaluator,
-      maxIterations: 64,
+      maxIterations: PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
       enablePostSolveClearanceRelaxation: false,
-      enableSafeTraceLayerMoves: true,
-      enableViaInPadLayerMoves: true,
-      viaInPadMaxIterations: 64,
-      broadMaxIterations: 16,
+      enableSafeTraceLayerMoves: false,
+      enableViaInPadLayerMoves: false,
+      broadMaxIterations: PRELIMINARY_EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
     })
     this.activeSubSolver = this.exactRepairSolver
