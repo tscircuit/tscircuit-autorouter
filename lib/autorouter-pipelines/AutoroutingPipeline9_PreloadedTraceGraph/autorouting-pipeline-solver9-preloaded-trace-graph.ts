@@ -562,6 +562,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
           preserveTerminalPcbPortIds: true,
+          growShrinkFallbackToInvalidGeometryOnFailure: true,
         },
       ]
     }),

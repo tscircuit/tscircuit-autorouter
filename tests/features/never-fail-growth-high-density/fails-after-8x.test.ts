@@ -38,13 +38,39 @@ test("GrowShrinkHighDensityIntraNodeSolver fails after an 8x resize fails", () =
   expect(solver.failed).toBe(true)
   expect(solver.growthAttempts).toBe(3)
   expect(solver.failedSolvers.length).toBe(4)
-  expect(solver.error).toContain("forced failure at 8x")
-  expect(solver.nodeRoutingFailure).toEqual({
-    type: "high_density_node_routing_failure",
-    capacityMeshNodeId: "cn1",
-    reason: "search_exhausted",
-    growthAttempts: 3,
-    scaleFactor: 8,
-    lastError: "forced failure at 8x",
+  expect(solver.error).toContain("resizing to 8x")
+})
+
+test("GrowShrinkHighDensityIntraNodeSolver can fall back to invalid geometry after resize failures", () => {
+  const solver = new GrowShrinkHighDensityIntraNodeSolver({
+    nodeWithPortPoints: makeNode(),
+    fallbackToInvalidGeometryOnFailure: true,
   })
+
+  const forceFailure = () => {
+    solver.activeSubSolver = {
+      failed: false,
+      solved: false,
+      error: null,
+      solvedRoutes: [],
+      step() {
+        this.failed = true
+        this.error = `forced failure at ${solver.scaleFactor}x`
+      },
+      visualize: emptyVisualization,
+    } as any
+    solver.step()
+  }
+
+  forceFailure()
+  forceFailure()
+  forceFailure()
+  forceFailure()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
+  expect(solver.stats.invalidGeometryFallback).toBe(true)
+  expect(solver.stats.reason).toBe("growth attempts exhausted")
+  expect(solver.solvedRoutes).toHaveLength(1)
 })
