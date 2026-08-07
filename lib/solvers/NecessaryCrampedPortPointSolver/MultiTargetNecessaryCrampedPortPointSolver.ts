@@ -28,6 +28,8 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
    * Higher values may be beneficial, but can lead to more DRC errors.
    */
   numberOfCrampedPortPointsToKeep: number
+  /** Set to false to prune unused multilayer ports while retaining each boundary. */
+  preserveNonNecessaryMultilayerPorts?: boolean
 }
 
 /**
@@ -235,14 +237,16 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return this.filteredOutput
     }
 
-    this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
-      ...segment,
-      portPoints: segment.portPoints.flatMap((portPoint) => {
+    this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => {
+      const portPoints = segment.portPoints.flatMap((portPoint) => {
         if (!portPoint.cramped || this.crampedPortPointsToKeep.has(portPoint)) {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        if (
+          this.input.preserveNonNecessaryMultilayerPorts !== false &&
+          this.isMultilayerEscapePort(portPoint)
+        ) {
           return [
             {
               ...portPoint,
@@ -252,8 +256,28 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         }
 
         return []
-      }),
-    }))
+      })
+      if (portPoints.length > 0 || segment.portPoints.length === 0) {
+        return { ...segment, portPoints }
+      }
+
+      // An empty segment would erase a real region adjacency. Keep the
+      // centermost physical point, but retain the cramped traversal penalty.
+      const closestPortPoint = segment.portPoints.reduce((closest, current) =>
+        current.distToCentermostPortOnZ < closest.distToCentermostPortOnZ
+          ? current
+          : closest,
+      )
+      return {
+        ...segment,
+        portPoints: [
+          {
+            ...closestPortPoint,
+            tinyHypergraphPortPenalty: CRAMPED_NON_NECESSARY_PORT_PENALTY,
+          },
+        ],
+      }
+    })
     return this.filteredOutput
   }
 
