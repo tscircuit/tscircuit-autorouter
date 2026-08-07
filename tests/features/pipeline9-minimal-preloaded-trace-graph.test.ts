@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
   type: "json",
@@ -71,21 +72,32 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     pipeline7.pipelineDef.map((step) => [step.solverName, step.solverClass]),
   )
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
-    (step) => step.solverName !== "powerTraceExpansionSolver",
+    (step) =>
+      step.solverName !== "powerTraceExpansionSolver" &&
+      step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 1)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 2)
   for (const stageName of [
-    "highDensityRouteSolver",
+    "highDensityForceImproveSolver",
     "highDensityRepairSolver",
     "highDensityStitchSolver",
     "globalDrcForceImproveSolver",
-    "exactGeometryDrcForceImproveSolver",
   ]) {
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)
         ?.solverClass as unknown,
     ).toBe(pipeline7Stages.get(stageName))
   }
+  expect(
+    solver.pipelineDef.find(
+      (step) => step.solverName === "highDensityRouteSolver",
+    )?.solverClass,
+  ).toBe(Pipeline9HighDensitySolver)
+  expect(
+    solver.pipelineDef.some(
+      (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
+    ),
+  ).toBeFalse()
 
   solver.solve()
 
@@ -113,4 +125,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       ),
     ),
   ).toBe(false)
+  const outputTraceIds = solver
+    .getOutputSimplifiedPcbTraces()
+    .map((trace) => trace.pcb_trace_id)
+  expect(new Set(outputTraceIds).size).toBe(outputTraceIds.length)
 })
