@@ -28,9 +28,8 @@ export const evaluateRelaxedDrc = ({
   const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
-    ...(preloadedTraces.length > 0
-      ? { originalSrj: inputSrj, includeOriginalConnections: true }
-      : {}),
+    originalSrj: inputSrj,
+    includeOriginalConnections: true,
   })
 
   return {
