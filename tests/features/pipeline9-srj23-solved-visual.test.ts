@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-const SAMPLE_NUMBERS = [1, 10, 23]
+const SAMPLE_NUMBERS = [1, 6, 7]
 
 test("Pipeline9 visually solves representative SRJ23 samples", async () => {
   for (const sampleNumber of SAMPLE_NUMBERS) {
