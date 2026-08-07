@@ -3,7 +3,7 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("reproduces relaxed DRC rebuilding rotated pads from routing fragments", () => {
+test("relaxed DRC evaluates routed terminals against original pad geometry", () => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -91,13 +91,14 @@ test("reproduces relaxed DRC rebuilding rotated pads from routing fragments", ()
   )
 
   expect(startPad).toMatchObject({
-    shape: "rect",
-    x: 0.24,
-    y: 0.24,
+    shape: "rotated_rect",
+    x: 0,
+    y: 0,
     width: 0.25,
-    height: 0.25,
+    height: 1.025,
+    ccw_rotation: 45,
   })
-  expect(missingConnectionErrors.length).toBeGreaterThan(0)
+  expect(missingConnectionErrors).toHaveLength(0)
   expect(
     convertCircuitJsonToPcbSvg([...circuitJson, ...errors], {
       backgroundColor: "white",

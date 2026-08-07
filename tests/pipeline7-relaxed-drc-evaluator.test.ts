@@ -88,7 +88,7 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
     benchmarkResult.errors.some(
       (error) => error.type === "pcb_pad_trace_clearance_error",
     ),
-  ).toBe(false)
+  ).toBe(true)
   expect(
     benchmarkResult.errors.some(
       (error) =>
