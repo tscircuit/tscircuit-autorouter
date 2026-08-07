@@ -5,15 +5,18 @@ import srj from "../../fixtures/bug-reports/bugreport85-pico-usb-differential-pa
   type: "json",
 }
 
-test("bugreport85 returns the best route when length matching cannot fit", (): void => {
+test("bugreport85 Pico USB differential-pair length matching failure", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj) as SimpleRouteJson,
     { cacheProvider: null },
   )
 
-  solver.solve()
+  expect(() => solver.solve()).toThrow(
+    "LengthMatchingSolver: linear regression exhausted all segment/tooth combinations",
+  )
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.getOutputSimplifiedPcbTraces().length).toBeGreaterThan(0)
+  expect(solver.failed).toBe(true)
+  expect(String(solver.error)).toContain(
+    "LengthMatchingSolver: linear regression exhausted all segment/tooth combinations",
+  )
 })

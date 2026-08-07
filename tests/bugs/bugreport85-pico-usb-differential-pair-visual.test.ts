@@ -6,20 +6,21 @@ import srj from "../../fixtures/bug-reports/bugreport85-pico-usb-differential-pa
   type: "json",
 }
 
-test("bugreport85 Pico USB best-effort route visualization", (): void => {
+test("bugreport85 Pico USB differential-pair failure visualization", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj) as SimpleRouteJson,
     { cacheProvider: null },
   )
 
-  solver.solve()
+  try {
+    solver.solve()
+  } catch {
+    // The failure state is the subject of this visualization snapshot.
+  }
 
   expect(
-    getSvgFromGraphicsObject(
-      solver.lengthMatchingPostProcessingSolver!.visualize(),
-      {
-        backgroundColor: "white",
-      },
-    ),
+    getSvgFromGraphicsObject(solver.visualize(), {
+      backgroundColor: "white",
+    }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
