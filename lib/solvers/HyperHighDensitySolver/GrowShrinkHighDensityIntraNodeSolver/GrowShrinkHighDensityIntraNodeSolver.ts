@@ -125,12 +125,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
-    if (
-      hasImpossibleSameLayerCrossingGeometry(
-        this.nodeWithPortPoints,
-        params.connMap,
-      )
-    ) {
+    if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       this.failNodeRouting({
         reason: "single_layer_crossing",
         lastError: "single-layer port order requires routes to cross",
