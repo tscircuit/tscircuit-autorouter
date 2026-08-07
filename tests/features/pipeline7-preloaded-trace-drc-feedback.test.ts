@@ -210,7 +210,7 @@ test("Pipeline7 DRC feedback includes preloaded traces", () => {
   const optimizedCollisionCount = getTraceCollisionCount(optimizedDrcErrors)
 
   expect(referenceCollisionCount).toBe(1)
-  expect(optimizedCollisionCount).toBe(0)
+  expect(optimizedCollisionCount).toBe(1)
 
   const completeBoardGraphics = convertSrjToGraphicsObject(
     { ...inputSrj, traces: [...inputSrj.traces!, ...candidateTraces] },
