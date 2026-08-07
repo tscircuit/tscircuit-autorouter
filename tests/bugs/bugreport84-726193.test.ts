@@ -43,15 +43,13 @@ test("bugreport84-726193 records strict DRC errors", async () => {
     outline: srj.outline,
     shape: "polygon",
     material: "fr4",
-    min_board_edge_clearance:
-      bugReport.simple_route_json.minBoardEdgeClearance,
+    min_board_edge_clearance: bugReport.simple_route_json.minBoardEdgeClearance,
   } satisfies PcbBoard
 
   const strictDrcErrors = await runAllChecks([...circuitJson, board])
   const sourceTrace26Errors = strictDrcErrors.filter(
     (error) =>
-      "pcb_trace_id" in error &&
-      error.pcb_trace_id.includes("source_trace_26"),
+      "pcb_trace_id" in error && error.pcb_trace_id.includes("source_trace_26"),
   )
 
   expect(strictDrcErrors).toHaveLength(3)
