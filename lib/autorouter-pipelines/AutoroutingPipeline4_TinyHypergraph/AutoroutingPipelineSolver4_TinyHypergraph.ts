@@ -235,6 +235,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
           traceWidth: cms.minTraceWidth,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
         },
