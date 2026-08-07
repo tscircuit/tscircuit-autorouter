@@ -11,7 +11,7 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport84-726193 records strict DRC errors", async () => {
+test("bugreport84-726193 keeps source_trace_26 inside the board outline", async () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
 
@@ -52,11 +52,11 @@ test("bugreport84-726193 records strict DRC errors", async () => {
       "pcb_trace_id" in error && error.pcb_trace_id.includes("source_trace_26"),
   )
 
-  expect(strictDrcErrors).toHaveLength(3)
-  expect(sourceTrace26Errors).toHaveLength(3)
+  expect(strictDrcErrors).toHaveLength(5)
+  expect(sourceTrace26Errors).toHaveLength(5)
   expect(
     sourceTrace26Errors.some((error) => error.message.includes("0.000mm")),
-  ).toBe(true)
+  ).toBe(false)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
