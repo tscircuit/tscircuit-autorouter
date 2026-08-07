@@ -885,6 +885,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
+  private solvedNodeWithPortPointsById?: Map<string, NodeWithPortPoints>
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1176,8 +1177,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number | null {
-    const solvedNode = this.getOutput().nodesWithPortPoints.find(
-      (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
+    if (!this.solvedNodeWithPortPointsById) {
+      this.solvedNodeWithPortPointsById = new Map(
+        this.getOutput().nodesWithPortPoints.map((candidate) => [
+          candidate.capacityMeshNodeId,
+          candidate,
+        ]),
+      )
+    }
+    const solvedNode = this.solvedNodeWithPortPointsById.get(
+      node.capacityMeshNodeId,
     )
     const originalRegion = this.originalRegionById.get(node.capacityMeshNodeId)
 
