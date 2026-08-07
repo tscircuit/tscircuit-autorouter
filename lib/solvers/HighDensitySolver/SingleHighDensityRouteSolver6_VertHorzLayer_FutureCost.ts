@@ -2,6 +2,12 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
+type FutureConnectionSegment = {
+  connectionName: string
+  start: { x: number; y: number; z: number }
+  end: { x: number; y: number; z: number }
+}
+
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -10,6 +16,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
+  private futureConnectionSegments?: FutureConnectionSegment[]
+  private futureConnectionPoints?: { x: number; y: number; z: number }[]
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -37,15 +45,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     let minDist = Infinity
     let closestPoint = null
 
-    for (const futureConnection of this.futureConnections) {
-      for (const point of futureConnection.points) {
-        const dist =
-          distance(node, point) +
-          (node.z !== point.z ? this.viaPenaltyDistance : 0)
-        if (dist < minDist) {
-          minDist = dist
-          closestPoint = point
-        }
+    for (const point of this.getFutureConnectionPoints()) {
+      const dist =
+        distance(node, point) +
+        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      if (dist < minDist) {
+        minDist = dist
+        closestPoint = point
       }
     }
 
@@ -53,11 +59,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionSegments() {
-    const segments: Array<{
-      connectionName: string
-      start: { x: number; y: number; z: number }
-      end: { x: number; y: number; z: number }
-    }> = []
+    if (this.futureConnectionSegments) {
+      return this.futureConnectionSegments
+    }
+
+    const segments: FutureConnectionSegment[] = []
 
     for (const futureConnection of this.futureConnections) {
       const isConnected =
@@ -87,7 +93,19 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       }
     }
 
+    this.futureConnectionSegments = segments
     return segments
+  }
+
+  private getFutureConnectionPoints() {
+    if (this.futureConnectionPoints) {
+      return this.futureConnectionPoints
+    }
+
+    this.futureConnectionPoints = this.futureConnections.flatMap(
+      (futureConnection) => futureConnection.points,
+    )
+    return this.futureConnectionPoints
   }
 
   isViaTooCloseToFutureConnectionTrace(node: Node) {
