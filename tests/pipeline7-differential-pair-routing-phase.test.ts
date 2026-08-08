@@ -169,10 +169,10 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(
-    solver.lengthMatchingPostProcessingSolver?.postProcessingSolver,
+    solver.differentialPairPostProcessingSolver?.postProcessingSolver,
   ).toBeDefined()
   expect(
-    solver.lengthMatchingPostProcessingSolver?.lengthMatchingSolver,
+    solver.differentialPairPostProcessingSolver?.lengthMatchingSolver,
   ).toBeUndefined()
   expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(2)
 })
