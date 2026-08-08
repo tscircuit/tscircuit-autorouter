@@ -1,8 +1,10 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
@@ -213,26 +215,62 @@ function convertHdRouteToCircuitJsonTraces(
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
   Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
-const createConnectionNameMap = (
+declare const connectivityNetIdBrand: unique symbol
+type ConnectivityNetId = string & {
+  readonly [connectivityNetIdBrand]: "ConnectivityNetId"
+}
+
+declare const circuitJsonSourceTraceIdBrand: unique symbol
+type CircuitJsonSourceTraceId = string & {
+  readonly [circuitJsonSourceTraceIdBrand]: "CircuitJsonSourceTraceId"
+}
+
+type CircuitJsonSourceTraceIdByConnectivityNetId = ReadonlyMap<
+  ConnectivityNetId,
+  CircuitJsonSourceTraceId
+>
+
+type CircuitJsonSourceTraceIdResolver = {
+  connMap: ConnectivityMap
+  circuitJsonSourceTraceIdByConnectivityNetId: CircuitJsonSourceTraceIdByConnectivityNetId
+}
+
+const getCircuitJsonSourceTraceId = (
+  connection: SimpleRouteJson["connections"][number],
+): CircuitJsonSourceTraceId =>
+  (connection.__netConnectionName ??
+    connection.__rootConnectionNames?.[0] ??
+    connection.name) as CircuitJsonSourceTraceId
+
+const createCircuitJsonSourceTraceIdResolver = (
   connections: SimpleRouteJson["connections"],
-) => {
-  const connectionNameMap = new Map<string, string>()
+  connMap: ConnectivityMap,
+): CircuitJsonSourceTraceIdResolver => {
+  const circuitJsonSourceTraceIdByConnectivityNetId = new Map<
+    ConnectivityNetId,
+    CircuitJsonSourceTraceId
+  >()
   for (const connection of connections) {
-    const canonicalConnectionName =
-      connection.__netConnectionName ??
-      connection.__rootConnectionNames?.[0] ??
-      connection.name
-    connectionNameMap.set(connection.name, canonicalConnectionName)
-    for (const point of connection.pointsToConnect) {
-      if (point.pointId) {
-        connectionNameMap.set(point.pointId, canonicalConnectionName)
-      }
-      if (point.pcb_port_id) {
-        connectionNameMap.set(point.pcb_port_id, canonicalConnectionName)
-      }
-    }
+    const connectivityNetId = connMap.getNetConnectedToId(connection.name)
+    if (!connectivityNetId) continue
+    circuitJsonSourceTraceIdByConnectivityNetId.set(
+      connectivityNetId as ConnectivityNetId,
+      getCircuitJsonSourceTraceId(connection),
+    )
   }
-  return connectionNameMap
+  return { connMap, circuitJsonSourceTraceIdByConnectivityNetId }
+}
+
+const resolveCircuitJsonSourceTraceId = (
+  resolver: CircuitJsonSourceTraceIdResolver,
+  srjConnectivityId: string,
+): CircuitJsonSourceTraceId | undefined => {
+  const connectivityNetId =
+    resolver.connMap.getNetConnectedToId(srjConnectivityId)
+  if (!connectivityNetId) return undefined
+  return resolver.circuitJsonSourceTraceIdByConnectivityNetId.get(
+    connectivityNetId as ConnectivityNetId,
+  )
 }
 
 /**
@@ -250,7 +288,13 @@ function createSourceTraces(
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
-  const connectionNameMap = createConnectionNameMap(connections)
+  const circuitJsonSourceTraceIdResolver =
+    createCircuitJsonSourceTraceIdResolver(
+      connections,
+      getConnectivityMapFromSimpleRouteJson(
+        sourceSrj === srj ? srj : { ...sourceSrj, connections },
+      ),
+    )
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
@@ -264,7 +308,10 @@ function createSourceTraces(
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
     const netConnectionName =
-      connectionNameMap.get(connection.name) ?? connection.name
+      resolveCircuitJsonSourceTraceId(
+        circuitJsonSourceTraceIdResolver,
+        connection.name,
+      ) ?? getCircuitJsonSourceTraceId(connection)
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
@@ -356,13 +403,21 @@ function createSourceTraces(
 
       const connection = connectionByName.get(trace.connection_name)
       const sourceTraceId =
-        connectionNameMap.get(trace.connection_name) ??
+        resolveCircuitJsonSourceTraceId(
+          circuitJsonSourceTraceIdResolver,
+          trace.connection_name,
+        ) ??
         trace.connectsTo
-          ?.map((connectionId) => connectionNameMap.get(connectionId))
+          ?.map((connectionId) =>
+            resolveCircuitJsonSourceTraceId(
+              circuitJsonSourceTraceIdResolver,
+              connectionId,
+            ),
+          )
           .find((connectionName) => connectionName !== undefined) ??
-        connection?.__netConnectionName ??
-        connection?.__rootConnectionNames?.[0] ??
-        trace.connection_name
+        (connection
+          ? getCircuitJsonSourceTraceId(connection)
+          : (trace.connection_name as CircuitJsonSourceTraceId))
       const existingSourceTrace = sourceTraces.find(
         (sourceTrace) =>
           sourceTrace.type === "source_trace" &&
@@ -783,8 +838,11 @@ export function convertToCircuitJson(
     ),
   )
 
-  // Build a map of connection names to simplify lookups
-  const connectionMap = createConnectionNameMap(srjWithPointPairs.connections)
+  const routeCircuitJsonSourceTraceIdResolver =
+    createCircuitJsonSourceTraceIdResolver(
+      srjWithPointPairs.connections,
+      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+    )
 
   // Process routes based on their type
   if (routes.length > 0) {
@@ -792,11 +850,19 @@ export function convertToCircuitJson(
       // Handle SimplifiedPcbTraces
       ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
         const connectionName =
-          connectionMap.get(trace.connection_name) ??
+          resolveCircuitJsonSourceTraceId(
+            routeCircuitJsonSourceTraceIdResolver,
+            trace.connection_name,
+          ) ??
           trace.connectsTo
-            ?.map((connectionId) => connectionMap.get(connectionId))
+            ?.map((connectionId) =>
+              resolveCircuitJsonSourceTraceId(
+                routeCircuitJsonSourceTraceIdResolver,
+                connectionId,
+              ),
+            )
             .find((mappedConnectionName) => Boolean(mappedConnectionName)) ??
-          trace.connection_name
+          (trace.connection_name as CircuitJsonSourceTraceId)
         circuitJson.push(
           convertSimplifiedPcbTraceToCircuitJson(
             trace,
@@ -807,11 +873,15 @@ export function convertToCircuitJson(
     } else {
       // Handle HighDensityRoutes - may produce multiple traces per route if jumpers exist
       ;(routes as HighDensityRoute[]).forEach((route, index) => {
-        const connectionName = route.connectionName
+        const connectionName =
+          resolveCircuitJsonSourceTraceId(
+            routeCircuitJsonSourceTraceIdResolver,
+            route.connectionName,
+          ) ?? (route.connectionName as CircuitJsonSourceTraceId)
         const traces = convertHdRouteToCircuitJsonTraces(
           route,
           `trace_${index}`,
-          connectionMap.get(connectionName) || connectionName,
+          connectionName,
           srjWithPointPairs.layerCount,
           minTraceWidth,
         )
