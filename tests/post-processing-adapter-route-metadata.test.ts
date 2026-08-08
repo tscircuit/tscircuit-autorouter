@@ -23,9 +23,7 @@ test("rebuilds vias and removes stale same-layer through markers", () => {
     obstacles: [],
   })
 
-  expect(adapted.hdRoutes[0]!.vias).toEqual([
-    { x: 1, y: 1, zLayers: [0, 1] },
-  ])
+  expect(adapted.hdRoutes[0]!.vias).toEqual([{ x: 1, y: 1, zLayers: [0, 1] }])
   expect(adapted.hdRoutes[0]!.route[0]!.toNextSegmentType).toBeUndefined()
   expect(adapted.hdRoutes[0]!.route[2]!.toNextSegmentType).toBe(
     "through_obstacle",

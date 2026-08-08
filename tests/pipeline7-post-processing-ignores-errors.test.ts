@@ -52,8 +52,8 @@ test("returns routes without consuming post-processing errors", () => {
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.postProcessingSolver?.getOutput().postProcessingErrors).toHaveLength(
-    1,
-  )
+  expect(
+    solver.postProcessingSolver?.getOutput().postProcessingErrors,
+  ).toHaveLength(1)
   expect(solver.getOutput()).toEqual({ hdRoutes })
 })
