@@ -13,7 +13,10 @@ test("bugreport80-75ab58.json", () => {
   solver.solve()
 
   expect(solver.failed).toBe(false)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
-}, 100_000)
+
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+})
