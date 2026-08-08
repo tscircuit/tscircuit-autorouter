@@ -19,6 +19,7 @@ import { safeTransparentize } from "../colors"
 type RepairSampleEntry = {
   node: NodeWithPortPoints
   routeIndexes: number[]
+  fixedHdRoutes: RepairHdRoute[]
   sample: DatasetSample
 }
 
@@ -33,10 +34,7 @@ const selectHighestViolationRepairEntries = ({
   maxSampleEntries: number | undefined
   repairMargin: number
 }): RepairSampleEntry[] => {
-  if (
-    maxSampleEntries === undefined ||
-    sampleEntries.length <= maxSampleEntries
-  ) {
+  if (maxSampleEntries === undefined) {
     return sampleEntries
   }
 
@@ -47,9 +45,11 @@ const selectHighestViolationRepairEntries = ({
       totalViolationCount: getHighDensityRepairViolationCounts({
         nodeWithPortPoints: sampleEntry.sample.nodeWithPortPoints,
         nodeHdRoutes: sampleEntry.sample.nodeHdRoutes ?? [],
+        fixedHdRoutes: sampleEntry.fixedHdRoutes,
         margin: repairMargin,
       }).totalViolationCount,
     }))
+    .filter(({ totalViolationCount }) => totalViolationCount > 0)
     .sort(
       (firstEntry, secondEntry) =>
         secondEntry.totalViolationCount - firstEntry.totalViolationCount ||
@@ -284,12 +284,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
+    const repairHdRoutes = params.hdRoutes.map(toRepairRoute)
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
+        const routeIndexSet = new Set(routeIndexes)
         return {
           node,
           routeIndexes,
+          fixedHdRoutes: repairHdRoutes.filter(
+            (_, routeIndex) => !routeIndexSet.has(routeIndex),
+          ),
           sample: {
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
@@ -306,8 +311,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 nextPortPointId: portPoint.nextPortPointId,
               })),
             },
-            nodeHdRoutes: routeIndexes.map((routeIndex) =>
-              toRepairRoute(params.hdRoutes[routeIndex]),
+            nodeHdRoutes: routeIndexes.map(
+              (routeIndex) => repairHdRoutes[routeIndex],
             ),
             adjacentObstacles: getAdjacentObstacles(
               node,

@@ -78,6 +78,34 @@ test("Pipeline4HighDensityRepairSolver preserves simple no-op routes", () => {
   expect(solver.getOutput()).toEqual([hdRoute])
 })
 
+test("Pipeline4HighDensityRepairSolver skips capped regions without violations", () => {
+  const solver = new Pipeline4HighDensityRepairSolver({
+    nodeWithPortPoints: [
+      {
+        ...nodeWithPortPoints,
+        width: 4,
+        height: 4,
+      },
+    ],
+    hdRoutes: [hdRoute],
+    obstacles: [],
+    repairMargin: 0.2,
+    maxSampleEntries: 80,
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.getOutput()).toEqual([hdRoute])
+  expect(solver.stats).toMatchObject({
+    sampleCount: 0,
+    skippedSampleCount: 1,
+    repairedNodeCount: 0,
+    repairedRouteCount: 0,
+  })
+})
+
 test("Pipeline4HighDensityForceImproveSolver preserves simple no-op routes", () => {
   const solver = new HighDensityForceImproveSolver({
     nodeWithPortPoints: [nodeWithPortPoints],
