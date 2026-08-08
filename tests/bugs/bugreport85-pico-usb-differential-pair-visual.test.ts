@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
 import srj from "../../fixtures/bug-reports/bugreport85-pico-usb-differential-pair/bugreport85-pico-usb-differential-pair.srj.json" with {
   type: "json",
 }
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 test("bugreport85 Pico USB differential-pair best-effort visualization", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
@@ -14,9 +14,7 @@ test("bugreport85 Pico USB differential-pair best-effort visualization", (): voi
 
   solver.solve()
 
-  expect(
-    getSvgFromGraphicsObject(solver.visualize(), {
-      backgroundColor: "white",
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
