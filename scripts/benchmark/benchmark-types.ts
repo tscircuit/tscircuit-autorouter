@@ -11,6 +11,7 @@ export type BenchmarkTask = {
     approximateMaxPortsPerLayerPerEdge?: number
     approximateRefinementDepth?: number
     approximateExactHighDensityPfThreshold?: number
+    approximateObstacleOccupancyCost?: number
   }
 }
 

@@ -40,6 +40,7 @@ Benchmark controls are available through `benchmark.sh`:
 --approximate-max-ports N
 --approximate-refinement-depth N
 --approximate-exact-pf-threshold N
+--approximate-obstacle-occupancy-cost N
 ```
 
 The exact-Pf threshold defaults to `0.3`. Lower values route more approximate

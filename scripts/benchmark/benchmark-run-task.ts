@@ -43,6 +43,7 @@ type SolverOptions = {
   approximateMaxPortsPerLayerPerEdge?: number
   approximateRefinementDepth?: number
   approximateExactHighDensityPfThreshold?: number
+  approximateObstacleOccupancyCost?: number
 }
 
 type SolverConstructor = new (

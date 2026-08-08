@@ -36,6 +36,7 @@ type BenchmarkOptions = {
   approximateMaxPortsPerLayerPerEdge?: number
   approximateRefinementDepth?: number
   approximateExactHighDensityPfThreshold?: number
+  approximateObstacleOccupancyCost?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -766,6 +767,13 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--approximate-obstacle-occupancy-cost") {
+      options.approximateObstacleOccupancyCost = Number.parseFloat(
+        args[i + 1] ?? "",
+      )
+      i += 1
+      continue
+    }
     if (arg === "--exclude-assignable") {
       options.excludeAssignable = true
       continue
@@ -797,6 +805,15 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.scenarioLimit) || options.scenarioLimit < 1)
   ) {
     throw new Error("--scenario-limit must be a positive integer")
+  }
+  if (
+    options.approximateObstacleOccupancyCost !== undefined &&
+    (!Number.isFinite(options.approximateObstacleOccupancyCost) ||
+      options.approximateObstacleOccupancyCost < 0)
+  ) {
+    throw new Error(
+      "--approximate-obstacle-occupancy-cost must be zero or greater",
+    )
   }
   if (
     options.approximateExactHighDensityPfThreshold !== undefined &&
@@ -1547,6 +1564,7 @@ const main = async () => {
     approximateMaxPortsPerLayerPerEdge,
     approximateRefinementDepth,
     approximateExactHighDensityPfThreshold,
+    approximateObstacleOccupancyCost,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1610,6 +1628,7 @@ const main = async () => {
             approximateMaxPortsPerLayerPerEdge,
             approximateRefinementDepth,
             approximateExactHighDensityPfThreshold,
+            approximateObstacleOccupancyCost,
           },
         }) satisfies BenchmarkTask,
     ),
