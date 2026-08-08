@@ -18,6 +18,7 @@ export interface ApproximateMultiGraphTopologyPlannerSolverParams
   extends MultiGraphTopologyPlannerSolverParams {
   targetCellSize?: number
   obstacleSamplingMargin?: number
+  localRefinementDepth?: number
 }
 
 /**
@@ -41,6 +42,8 @@ export class ApproximateMultiGraphTopologyPlannerSolver extends MultiGraphTopolo
           obstacleSamplingMargin:
             instance.approximateParams.obstacleSamplingMargin,
           generatePortsAndEdges: false,
+          localRefinementDepth:
+            instance.approximateParams.localRefinementDepth ?? 2,
         },
       ],
     ),

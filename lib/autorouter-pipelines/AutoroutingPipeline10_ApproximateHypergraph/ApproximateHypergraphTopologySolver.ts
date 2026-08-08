@@ -19,6 +19,7 @@ export interface ApproximateHypergraphTopologySolverParams {
   maxPortsPerLayerPerEdge?: number
   obstacleSamplingMargin?: number
   generatePortsAndEdges?: boolean
+  localRefinementDepth?: number
 }
 
 export interface ApproximateHypergraphTopologyStats {
@@ -30,6 +31,7 @@ export interface ApproximateHypergraphTopologyStats {
   rejectedPortCount: number
   targetCellSize: number
   maxPortsPerLayerPerEdge: number
+  localRefinementDepth: number
 }
 
 export interface ApproximateHypergraphTopologyOutput {
@@ -71,6 +73,7 @@ const pointIsInsideNode = (
 const obstacleOverlapsNode = (
   obstacle: Obstacle,
   node: CapacityMeshNode,
+  margin = 0,
 ): boolean => {
   const obstacleHalfWidth = obstacle.width / 2
   const obstacleHalfHeight = obstacle.height / 2
@@ -78,13 +81,13 @@ const obstacleOverlapsNode = (
   const nodeHalfHeight = node.height / 2
   return (
     Math.abs(obstacle.center.x - node.center.x) <=
-      obstacleHalfWidth + nodeHalfWidth &&
+      obstacleHalfWidth + nodeHalfWidth + margin &&
     Math.abs(obstacle.center.y - node.center.y) <=
-      obstacleHalfHeight + nodeHalfHeight
+      obstacleHalfHeight + nodeHalfHeight + margin
   )
 }
 
-const getObstacleZLayers = (
+export const getObstacleZLayers = (
   obstacle: Obstacle,
   layerCount: number,
 ): number[] => {
@@ -97,7 +100,7 @@ const getObstacleZLayers = (
   ].sort((a, b) => a - b)
 }
 
-const pointIsBlockedByObstacle = (params: {
+export const pointIsBlockedByObstacle = (params: {
   point: { x: number; y: number }
   z: number
   obstacles: Obstacle[]
@@ -149,6 +152,8 @@ const getConnectionPoints = (
 const getGridNodes = (params: {
   simpleRouteJson: SimpleRouteJson
   dimensions: GridDimensions
+  localRefinementDepth: number
+  refinementMargin: number
 }): CapacityMeshNode[] => {
   const { simpleRouteJson, dimensions } = params
   const allZ = Array.from(
@@ -157,6 +162,63 @@ const getGridNodes = (params: {
   )
   const connectionPoints = getConnectionPoints(simpleRouteJson)
   const nodes: CapacityMeshNode[] = []
+
+  const finalizeNode = (node: CapacityMeshNode): CapacityMeshNode => {
+    node._containsTarget = connectionPoints.some((point) =>
+      pointIsInsideNode(point, node),
+    )
+    node._containsObstacle = simpleRouteJson.obstacles.some((obstacle) =>
+      obstacleOverlapsNode(obstacle, node),
+    )
+    node._completelyInsideObstacle = false
+    // Terminal-adjacent leaves are local precision regions. Preserve their
+    // cramped boundary candidates just like generated component topology so
+    // the approximate graph cannot isolate a pad before repair gets a chance.
+    node._isComponentTopologyNode = node._containsTarget || undefined
+    node._isApproximateTerminalRefinement = node._containsTarget || undefined
+    return node
+  }
+
+  const shouldRefineNode = (node: CapacityMeshNode): boolean => {
+    return (
+      connectionPoints.some((point) => pointIsInsideNode(point, node)) ||
+      simpleRouteJson.obstacles.some((obstacle) =>
+        obstacleOverlapsNode(obstacle, node, params.refinementMargin),
+      )
+    )
+  }
+
+  const refineNode = (
+    node: CapacityMeshNode,
+    depth: number,
+  ): CapacityMeshNode[] => {
+    if (depth >= params.localRefinementDepth || !shouldRefineNode(node)) {
+      return [finalizeNode(node)]
+    }
+
+    const childWidth = node.width / 2
+    const childHeight = node.height / 2
+    return [
+      { xDirection: -1, yDirection: -1, label: "sw" },
+      { xDirection: 1, yDirection: -1, label: "se" },
+      { xDirection: -1, yDirection: 1, label: "nw" },
+      { xDirection: 1, yDirection: 1, label: "ne" },
+    ].flatMap(({ xDirection, yDirection, label }) =>
+      refineNode(
+        {
+          ...node,
+          capacityMeshNodeId: `${node.capacityMeshNodeId}:${label}`,
+          center: {
+            x: node.center.x + (xDirection * childWidth) / 2,
+            y: node.center.y + (yDirection * childHeight) / 2,
+          },
+          width: childWidth,
+          height: childHeight,
+        },
+        depth + 1,
+      ),
+    )
+  }
 
   for (let row = 0; row < dimensions.rowCount; row++) {
     for (let column = 0; column < dimensions.columnCount; column++) {
@@ -176,14 +238,7 @@ const getGridNodes = (params: {
         availableZ: [...allZ],
         _skipEndpointNetReservation: true,
       }
-      node._containsTarget = connectionPoints.some((point) =>
-        pointIsInsideNode(point, node),
-      )
-      node._containsObstacle = simpleRouteJson.obstacles.some((obstacle) =>
-        obstacleOverlapsNode(obstacle, node),
-      )
-      node._completelyInsideObstacle = false
-      nodes.push(node)
+      nodes.push(...refineNode(node, 0))
     }
   }
   return nodes
@@ -392,12 +447,30 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
     const maxPorts =
       params.maxPortsPerLayerPerEdge ??
       DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE
+    const localRefinementDepth = params.localRefinementDepth ?? 0
     if (!Number.isFinite(targetCellSize) || targetCellSize <= 0) {
       throw new Error("Pipeline10 targetCellSize must be greater than zero")
     }
     if (!Number.isInteger(maxPorts) || maxPorts <= 0) {
       throw new Error(
         "Pipeline10 maxPortsPerLayerPerEdge must be a positive integer",
+      )
+    }
+    if (
+      !Number.isInteger(localRefinementDepth) ||
+      localRefinementDepth < 0 ||
+      localRefinementDepth > 6
+    ) {
+      throw new Error(
+        "Pipeline10 localRefinementDepth must be an integer between 0 and 6",
+      )
+    }
+    if (
+      localRefinementDepth > 0 &&
+      params.generatePortsAndEdges !== false
+    ) {
+      throw new Error(
+        "Pipeline10 adaptive refinement requires downstream edge generation",
       )
     }
   }
@@ -416,6 +489,7 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
     const maxPortsPerLayerPerEdge =
       this.params.maxPortsPerLayerPerEdge ??
       DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE
+    const localRefinementDepth = this.params.localRefinementDepth ?? 0
     const dimensions = getGridDimensions(
       this.params.simpleRouteJson,
       targetCellSize,
@@ -423,6 +497,13 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
     const capacityMeshNodes = getGridNodes({
       simpleRouteJson: this.params.simpleRouteJson,
       dimensions,
+      localRefinementDepth,
+      refinementMargin:
+        this.params.obstacleSamplingMargin ??
+        Math.max(
+          this.params.simpleRouteJson.defaultObstacleMargin ?? 0.15,
+          this.params.simpleRouteJson.minTraceWidth,
+        ),
     })
     const topology =
       this.params.generatePortsAndEdges === false
@@ -453,6 +534,7 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
       rejectedPortCount: topology.rejectedPortCount,
       targetCellSize,
       maxPortsPerLayerPerEdge,
+      localRefinementDepth,
     }
     this.output = {
       capacityMeshNodes,

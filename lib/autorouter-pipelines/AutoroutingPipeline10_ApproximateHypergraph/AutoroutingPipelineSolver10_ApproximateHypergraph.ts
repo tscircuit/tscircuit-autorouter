@@ -5,15 +5,19 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { ApproximateLayerTransitionSolver } from "./ApproximateLayerTransitionSolver"
 import { ApproximateMultiGraphTopologyPlannerSolver } from "./ApproximateMultiGraphTopologyPlannerSolver"
+import { ApproximatePortPointLimiterSolver } from "./ApproximatePortPointLimiterSolver"
+import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 
 export interface AutoroutingPipelineSolver10Options extends Pipeline7Options {
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
   approximateObstacleSamplingMargin?: number
+  approximateRefinementDepth?: number
 }
 
 export class AutoroutingPipelineSolver10_ApproximateHypergraph extends AutoroutingPipelineSolver7_MultiGraph {
   approximateLayerTransitionSolver?: ApproximateLayerTransitionSolver
+  approximatePortPointLimiterSolver?: ApproximatePortPointLimiterSolver
   readonly pipeline10Opts: AutoroutingPipelineSolver10Options
 
   constructor(
@@ -60,6 +64,8 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
             targetCellSize: pipeline10.pipeline10Opts.approximateCellSize,
             obstacleSamplingMargin:
               pipeline10.pipeline10Opts.approximateObstacleSamplingMargin,
+            localRefinementDepth:
+              pipeline10.pipeline10Opts.approximateRefinementDepth,
           },
         ] as const
       },
@@ -86,21 +92,64 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
         "Pipeline10 requires Pipeline7 necessaryCrampedPortPointSolver",
       )
     }
-    const baseNecessaryCrampedStep = this.pipelineDef[necessaryCrampedIndex]!
-    const cappedNecessaryCrampedStep = {
-      ...baseNecessaryCrampedStep,
+    const approximatePortPointLimiterStep = {
+      solverName: "approximatePortPointLimiterSolver",
+      solverClass: ApproximatePortPointLimiterSolver,
       getConstructorParams: (
         instance: AutoroutingPipelineSolver7_MultiGraph,
       ) => {
-        const [params] = baseNecessaryCrampedStep.getConstructorParams(instance)
         const pipeline10 =
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
         return [
           {
-            ...params,
-            numberOfCrampedPortPointsToKeep:
+            sharedEdgeSegments:
+              pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
+              [],
+            capacityMeshNodes: pipeline10.capacityNodes ?? [],
+            maxPortsPerLayerPerEdge:
               pipeline10.pipeline10Opts
                 .approximateMaxPortsPerLayerPerEdge ?? 6,
+            obstacles: pipeline10.srj.obstacles,
+            layerCount: pipeline10.srj.layerCount,
+            obstacleSamplingMargin:
+              pipeline10.pipeline10Opts.approximateObstacleSamplingMargin ??
+              pipeline10.minTraceWidth / 2,
+          },
+        ] as const
+      },
+      onSolved: (instance: AutoroutingPipelineSolver7_MultiGraph): void => {
+        const pipeline10 =
+          instance as AutoroutingPipelineSolver10_ApproximateHypergraph
+        pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
+          pipeline10.approximatePortPointLimiterSolver!.getOutput()
+      },
+    } as unknown as (typeof this.pipelineDef)[number]
+
+    const portPathingIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "portPointPathingSolver",
+    )
+    if (portPathingIndex !== necessaryCrampedIndex + 1) {
+      throw new Error(
+        "Pipeline10 requires portPointPathingSolver after necessaryCrampedPortPointSolver",
+      )
+    }
+    const basePortPathingStep = this.pipelineDef[portPathingIndex]!
+    const approximatePortPathingStep = {
+      ...basePortPathingStep,
+      getConstructorParams: (
+        instance: AutoroutingPipelineSolver7_MultiGraph,
+      ) => {
+        const [rawParams] =
+          basePortPathingStep.getConstructorParams(instance)
+        const params = rawParams as HgPortPointPathingSolverParams
+        return [
+          {
+            ...params,
+            flags: {
+              ...params.flags,
+              USE_DUPLICATE_CONGESTED_PORT_PREPASS: false,
+              USE_SYNTHETIC_TERMINAL_REGION_RESERVATIONS: true,
+            },
           },
         ]
       },
@@ -136,9 +185,14 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
     } as unknown as (typeof this.pipelineDef)[number]
 
     this.pipelineDef[topologyPlanningIndex] = approximateTopologyPlanningStep
-    this.pipelineDef[necessaryCrampedIndex] = cappedNecessaryCrampedStep
+    this.pipelineDef[portPathingIndex] = approximatePortPathingStep
     this.pipelineDef.splice(
-      highDensityStitchIndex + 1,
+      portPathingIndex,
+      0,
+      approximatePortPointLimiterStep,
+    )
+    this.pipelineDef.splice(
+      highDensityStitchIndex + 2,
       0,
       approximateLayerTransitionStep,
     )

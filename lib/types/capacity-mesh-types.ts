@@ -35,6 +35,7 @@ export interface CapacityMeshNode {
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
   _skipEndpointNetReservation?: boolean
+  _isApproximateTerminalRefinement?: boolean
 
   _parent?: CapacityMeshNode
 }

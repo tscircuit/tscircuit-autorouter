@@ -241,6 +241,8 @@ function getOutputNodeMetadata({
       _skipEndpointNetReservation: isComponentTopologyNode
         ? undefined
         : sourceNodes[0]!._skipEndpointNetReservation,
+      _isApproximateTerminalRefinement:
+        sourceNodes[0]!._isApproximateTerminalRefinement,
     }
   }
 
@@ -302,6 +304,9 @@ function getOutputNodeMetadata({
       sourceNodes.every((node) => node._skipEndpointNetReservation)
         ? true
         : undefined,
+    _isApproximateTerminalRefinement:
+      sourceNodes.some((node) => node._isApproximateTerminalRefinement) ||
+      undefined,
   }
 }
 

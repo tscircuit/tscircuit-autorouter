@@ -30,6 +30,7 @@ test("Pipeline10 approximates global topology and keeps exact local topology and
   expect(stageNames).toContain("topologyMergingSolver")
   expect(stageNames).toContain("nodeDimensionSubdivisionSolver")
   expect(stageNames).toContain("approximateLayerTransitionSolver")
+  expect(stageNames).toContain("approximatePortPointLimiterSolver")
   expect(stageNames).toContain("exactGeometryDrcForceImproveSolver")
   expect(
     solver.pipelineDef.find(
@@ -38,5 +39,8 @@ test("Pipeline10 approximates global topology and keeps exact local topology and
   ).toBe(ApproximateMultiGraphTopologyPlannerSolver)
   expect(stageNames.indexOf("approximateLayerTransitionSolver")).toBe(
     stageNames.indexOf("highDensityStitchSolver") + 1,
+  )
+  expect(stageNames.indexOf("approximatePortPointLimiterSolver")).toBe(
+    stageNames.indexOf("necessaryCrampedPortPointSolver") + 1,
   )
 })

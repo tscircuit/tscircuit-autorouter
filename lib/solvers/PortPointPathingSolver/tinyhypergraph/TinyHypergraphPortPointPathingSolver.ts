@@ -120,6 +120,10 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
     : {}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const getTinyTerminalRegionId = (
+  connectionId: string,
+  endpoint: "start" | "end",
+) => `tiny-terminal:${endpoint}-region:${connectionId}`
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
@@ -343,13 +347,21 @@ const buildSerializedTinyGraph = (
   )
 
   const connections: SerializedTinyConnection[] = params.connections.map(
-    (connection) => ({
-      connectionId: connection.connectionId,
-      mutuallyConnectedNetworkId: connection.mutuallyConnectedNetworkId,
-      startRegionId: connection.startRegion.regionId,
-      endRegionId: connection.endRegion.regionId,
-      simpleRouteConnection: connection.simpleRouteConnection,
-    }),
+    (connection) => {
+      const useSyntheticTerminalReservations =
+        params.flags.USE_SYNTHETIC_TERMINAL_REGION_RESERVATIONS === true
+      return {
+        connectionId: connection.connectionId,
+        mutuallyConnectedNetworkId: connection.mutuallyConnectedNetworkId,
+        startRegionId: useSyntheticTerminalReservations
+          ? getTinyTerminalRegionId(connection.connectionId, "start")
+          : connection.startRegion.regionId,
+        endRegionId: useSyntheticTerminalReservations
+          ? getTinyTerminalRegionId(connection.connectionId, "end")
+          : connection.endRegion.regionId,
+        simpleRouteConnection: connection.simpleRouteConnection,
+      }
+    },
   )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
@@ -379,8 +391,14 @@ const buildSerializedTinyGraph = (
       layerCount: params.layerCount,
     })
 
-    const startTerminalRegionId = `tiny-terminal:start-region:${connection.connectionId}`
-    const endTerminalRegionId = `tiny-terminal:end-region:${connection.connectionId}`
+    const startTerminalRegionId = getTinyTerminalRegionId(
+      connection.connectionId,
+      "start",
+    )
+    const endTerminalRegionId = getTinyTerminalRegionId(
+      connection.connectionId,
+      "end",
+    )
     const startTerminalPortId = `tiny-terminal:start-port:${connection.connectionId}`
     const endTerminalPortId = `tiny-terminal:end-port:${connection.connectionId}`
 
@@ -909,6 +927,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
     const shouldRunDuplicateCongestedPortPrepass =
+      params.flags.USE_DUPLICATE_CONGESTED_PORT_PREPASS !== false &&
       !hasPreloadedTraceOccupancy &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
@@ -939,9 +958,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         graphForTiny = duplicateCongestedPortSolver.getOutput()
       }
     } else {
-      this.duplicateCongestedPortError = hasPreloadedTraceOccupancy
-        ? "Skipped to preserve preloaded port topology"
-        : `Skipped for ${connections.length} connections`
+      this.duplicateCongestedPortError =
+        params.flags.USE_DUPLICATE_CONGESTED_PORT_PREPASS === false
+          ? "Disabled by solver configuration"
+          : hasPreloadedTraceOccupancy
+            ? "Skipped to preserve preloaded port topology"
+            : `Skipped for ${connections.length} connections`
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(

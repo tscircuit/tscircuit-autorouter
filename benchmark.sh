@@ -8,6 +8,7 @@ SAMPLE_TIMEOUT=""
 SAMPLE_NUMBERS=""
 APPROXIMATE_CELL_SIZE=""
 APPROXIMATE_MAX_PORTS=""
+APPROXIMATE_REFINEMENT_DEPTH=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver7_MultiGraph"
@@ -79,8 +80,8 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
@@ -93,6 +94,7 @@ Options:
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, or 28/srj28
   --approximate-cell-size N  Pipeline10 target grid-cell size in millimeters
   --approximate-max-ports N  Pipeline10 maximum ports per layer on each grid edge
+  --approximate-refinement-depth N  Pipeline10 local quadtree refinement depth (0-6)
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
 
@@ -206,6 +208,10 @@ while [ "$#" -gt 0 ]; do
       APPROXIMATE_MAX_PORTS="${2:-}"
       shift 2
       ;;
+    --approximate-refinement-depth)
+      APPROXIMATE_REFINEMENT_DEPTH="${2:-}"
+      shift 2
+      ;;
     --include-assignable)
       INCLUDE_ASSIGNABLE=true
       shift
@@ -264,6 +270,10 @@ fi
 
 if [ -n "$APPROXIMATE_MAX_PORTS" ]; then
   CMD+=("--approximate-max-ports" "$APPROXIMATE_MAX_PORTS")
+fi
+
+if [ -n "$APPROXIMATE_REFINEMENT_DEPTH" ]; then
+  CMD+=("--approximate-refinement-depth" "$APPROXIMATE_REFINEMENT_DEPTH")
 fi
 
 if [ -n "$DATASET" ]; then

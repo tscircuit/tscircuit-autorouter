@@ -34,6 +34,7 @@ type BenchmarkOptions = {
   effort?: number
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
+  approximateRefinementDepth?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -749,6 +750,14 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--approximate-refinement-depth") {
+      options.approximateRefinementDepth = Number.parseInt(
+        args[i + 1] ?? "",
+        10,
+      )
+      i += 1
+      continue
+    }
     if (arg === "--exclude-assignable") {
       options.excludeAssignable = true
       continue
@@ -801,6 +810,16 @@ const parseArgs = (): BenchmarkOptions => {
       options.approximateMaxPortsPerLayerPerEdge <= 0)
   ) {
     throw new Error("--approximate-max-ports must be a positive integer")
+  }
+  if (
+    options.approximateRefinementDepth !== undefined &&
+    (!Number.isInteger(options.approximateRefinementDepth) ||
+      options.approximateRefinementDepth < 0 ||
+      options.approximateRefinementDepth > 6)
+  ) {
+    throw new Error(
+      "--approximate-refinement-depth must be an integer between 0 and 6",
+    )
   }
 
   return options
@@ -1509,6 +1528,7 @@ const main = async () => {
     effort,
     approximateCellSize,
     approximateMaxPortsPerLayerPerEdge,
+    approximateRefinementDepth,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1570,6 +1590,7 @@ const main = async () => {
           solverOptions: {
             approximateCellSize,
             approximateMaxPortsPerLayerPerEdge,
+            approximateRefinementDepth,
           },
         }) satisfies BenchmarkTask,
     ),

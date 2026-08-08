@@ -59,4 +59,5 @@ export type TopologyMergingRegionMetadata = Pick<
   | "_isComponentTopologyNode"
   | "_connectedTo"
   | "_skipEndpointNetReservation"
+  | "_isApproximateTerminalRefinement"
 >

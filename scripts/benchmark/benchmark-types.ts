@@ -9,6 +9,7 @@ export type BenchmarkTask = {
   solverOptions?: {
     approximateCellSize?: number
     approximateMaxPortsPerLayerPerEdge?: number
+    approximateRefinementDepth?: number
   }
 }
 

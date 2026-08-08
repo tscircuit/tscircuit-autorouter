@@ -41,6 +41,7 @@ type SolverOptions = {
   effort?: number
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
+  approximateRefinementDepth?: number
 }
 
 type SolverConstructor = new (

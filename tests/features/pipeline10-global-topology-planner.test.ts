@@ -7,7 +7,16 @@ test("Pipeline10 bounds the global topology without constructing discarded grid 
     layerCount: 2,
     minTraceWidth: 0.15,
     bounds: { minX: 0, minY: 0, maxX: 10, maxY: 10 },
-    obstacles: [],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 1, y: 1 },
+        width: 0.5,
+        height: 0.5,
+        layers: ["top"],
+        connectedTo: [],
+      },
+    ],
     connections: [],
   }
   const solver = new ApproximateMultiGraphTopologyPlannerSolver({
@@ -25,7 +34,8 @@ test("Pipeline10 bounds the global topology without constructing discarded grid 
     "approximateGlobalTopologySolver",
     "componentTopologyBatchSolver",
   ])
-  expect(output.globalMeshNodes).toHaveLength(4)
+  expect(output.globalMeshNodes.length).toBeGreaterThan(4)
+  expect(output.globalMeshNodes.length).toBeLessThan(16)
   expect(output.componentMeshNodes).toEqual([])
   expect(approximateOutput?.capacityMeshEdges).toEqual([])
   expect(approximateOutput?.sharedEdgeSegments).toEqual([])

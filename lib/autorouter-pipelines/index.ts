@@ -26,3 +26,4 @@ export { AutoroutingPipelineSolver10_ApproximateHypergraph } from "./Autorouting
 export { ApproximateHypergraphTopologySolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximateHypergraphTopologySolver"
 export { ApproximateLayerTransitionSolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximateLayerTransitionSolver"
 export { ApproximateMultiGraphTopologyPlannerSolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximateMultiGraphTopologyPlannerSolver"
+export { ApproximatePortPointLimiterSolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximatePortPointLimiterSolver"

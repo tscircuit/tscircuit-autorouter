@@ -32,6 +32,7 @@ test("Pipeline10 creates a bounded obstacle-sampled approximate topology", () =>
     targetCellSize: 6,
     maxPortsPerLayerPerEdge: 5,
     obstacleSamplingMargin: 0,
+    localRefinementDepth: 0,
   })
 
   solver.solve()
@@ -43,6 +44,7 @@ test("Pipeline10 creates a bounded obstacle-sampled approximate topology", () =>
     regionCount: 2,
     edgeCount: 1,
     maxPortsPerLayerPerEdge: 5,
+    localRefinementDepth: 0,
   })
   expect(output.stats.portCount).toBeLessThan(10)
   expect(output.stats.rejectedPortCount).toBeGreaterThan(0)
