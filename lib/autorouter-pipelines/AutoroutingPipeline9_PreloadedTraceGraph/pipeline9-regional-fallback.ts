@@ -355,6 +355,12 @@ export const spliceFixedRouteSection = (
       ...lastSourceRoute.route.slice(section.end.segmentIndex + 1),
     ]),
   )
+  const finalizedRoute = route.map((point, pointIndex) => {
+    if (pointIndex === 0 || pointIndex === route.length - 1) return point
+    const finalizedPoint = { ...point }
+    delete finalizedPoint.pcb_port_id
+    return finalizedPoint
+  })
 
   return {
     ...firstSourceRoute,
@@ -364,7 +370,7 @@ export const spliceFixedRouteSection = (
     viaDiameter: Math.max(
       ...section.sourceRoutes.map((sourceRoute) => sourceRoute.viaDiameter),
     ),
-    route,
-    vias: getViasFromRoutePoints(route),
+    route: finalizedRoute,
+    vias: getViasFromRoutePoints(finalizedRoute),
   }
 }
