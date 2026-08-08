@@ -591,7 +591,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           maxSampleEntries: 80,
-          maxRoutePointCountPerSample: 800,
+          maxRoutePointCountPerSample: 200,
         },
       ],
     ),
