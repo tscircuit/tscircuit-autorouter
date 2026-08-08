@@ -247,13 +247,11 @@ jobs:
             core.setOutput('source_run_url', '')
             core.setOutput('test_plan_nodes', '')
 
-      - name: Install bun-test-plan
+      - name: Generate balanced test plans
         if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
-        run: npm install -g @tscircuit/bun-test-plan
-
-      - name: Generate test plans
-        if: steps.parse.outputs.can_push == 'true' && steps.failed_tests.outputs.test_plan_nodes != ''
-        run: bun-test-plan
+        run: bun scripts/generate-balanced-test-plan.ts
+        env:
+          NODE_COUNT: 8
 
       - name: Update snapshots
         if: steps.parse.outputs.can_push == 'true'
