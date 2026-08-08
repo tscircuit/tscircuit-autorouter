@@ -33,6 +33,7 @@ import {
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { adaptAutorouterPostProcessingInput } from "lib/utils/adapt-autorouter-post-processing-input"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -783,7 +784,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         )
         return [
-          {
+          adaptAutorouterPostProcessingInput({
             hdRoutes: lockHdRouteTerminals(
               structuredClone(cms.pipeline9JointDrcRepairSolver!.getOutput()),
               connections,
@@ -798,7 +799,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
             allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
-          },
+          }),
         ]
       },
     ),

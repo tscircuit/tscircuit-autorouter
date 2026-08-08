@@ -36,6 +36,7 @@ import {
   convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { adaptAutorouterPostProcessingInput } from "lib/utils/adapt-autorouter-post-processing-input"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -775,7 +776,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           },
         )
         return [
-          {
+          adaptAutorouterPostProcessingInput({
             hdRoutes,
             differentialPairs,
             obstacles: cms.srj.obstacles,
@@ -783,7 +784,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
             allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
-          },
+          }),
         ]
       },
     ),

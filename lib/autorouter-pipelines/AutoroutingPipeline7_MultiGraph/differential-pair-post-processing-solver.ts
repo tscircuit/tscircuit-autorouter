@@ -11,6 +11,11 @@ type DifferentialPairPostProcessingSolverParams = PostProcessingSolverParams & {
   obstacleMargin?: number
 }
 
+type AutorouterPostProcessingOutput = Pick<
+  PostProcessingSolverOutput,
+  "hdRoutes"
+>
+
 /** Applies the post-processing algorithm implied by each pair's constraints. */
 export class DifferentialPairPostProcessingSolver extends BaseSolver {
   readonly lengthMatchingSolver?: LengthMatchingSolver
@@ -134,7 +139,7 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
     return [this.inputProblem]
   }
 
-  getOutput(): PostProcessingSolverOutput {
+  getOutput(): AutorouterPostProcessingOutput {
     if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "DifferentialPairPostProcessingSolver: getOutput() called before completion",
