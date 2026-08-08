@@ -134,11 +134,24 @@ export class TraceSimplificationSolver extends BaseSolver {
     )
   }
 
+  private isViaInsideSameNetObstacle(
+    route: HighDensityRoute,
+    via: { x: number; y: number },
+  ) {
+    return this.simplificationConfig.obstacles.some(
+      (obstacle) =>
+        isMultilayerObstacle(obstacle) &&
+        this.isSameNetObstacle(route, obstacle) &&
+        pointInsideObstacle(via, obstacle),
+    )
+  }
+
   markThroughObstacleSegments(
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
-    return routes.map((route) => {
-      const finalizedRoute = route.route.map((point, index, points) => {
+    return routes.map((route) => ({
+      ...route,
+      route: route.route.map((point, index, points) => {
         const nextPoint = points[index + 1]
         if (
           nextPoint &&
@@ -151,22 +164,12 @@ export class TraceSimplificationSolver extends BaseSolver {
           }
         }
 
-        const finalizedPoint = { ...point }
-        if (!nextPoint || point.z === nextPoint.z) {
-          delete finalizedPoint.toNextSegmentType
-        }
-        return finalizedPoint
-      })
-      const vias: HighDensityRoute["vias"] = []
-      for (let index = 0; index < finalizedRoute.length - 1; index++) {
-        const point = finalizedRoute[index]!
-        const nextPoint = finalizedRoute[index + 1]!
-        if (point.z === nextPoint.z) continue
-        if (point.toNextSegmentType === "through_obstacle") continue
-        vias.push({ x: point.x, y: point.y })
-      }
-      return { ...route, route: finalizedRoute, vias }
-    })
+        return { ...point }
+      }),
+      vias: route.vias.filter(
+        (via) => !this.isViaInsideSameNetObstacle(route, via),
+      ),
+    }))
   }
 
   _step() {

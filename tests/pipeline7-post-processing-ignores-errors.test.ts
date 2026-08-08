@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { DifferentialPairPostProcessingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import type { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 
 test("returns routes without consuming post-processing errors", () => {
   const hdRoutes = [
@@ -24,36 +25,30 @@ test("returns routes without consuming post-processing errors", () => {
       vias: [],
     },
   ]
-  const solver = new DifferentialPairPostProcessingSolver({
-    hdRoutes,
-    differentialPairs: [
-      {
-        connectionNames: ["P", "N"],
-        lengthTolerance: 0.01,
-        minimumCenterlineDistance: 0.4,
-        maximumCenterlineDistance: 0.6,
-      },
-    ],
-    obstacles: [
-      {
-        type: "rect",
-        layers: ["top", "bottom"],
-        center: { x: 5, y: 0 },
-        width: 12,
-        height: 9,
-        connectedTo: [],
-      },
-    ],
+  const solver = new AutoroutingPipelineSolver7_MultiGraph({
     bounds: { minX: -2, maxX: 12, minY: -5, maxY: 5 },
+    obstacles: [],
+    connections: [],
     layerCount: 2,
+    minTraceWidth: 0.2,
+    minViaDiameter: 0.2,
+    minViaHoleDiameter: 0.1,
+    minViaPadDiameter: 0.2,
   })
+  solver.lengthMatchingPostProcessingSolver = {
+    getOutput: () => ({
+      hdRoutes,
+      postProcessingErrors: [
+        {
+          type: "post_processing_error",
+          stage: "lengthMatchingSolver",
+          message: "could not improve route",
+          reason: "no-meander-candidate",
+          returnedRouteSource: "input-hd-routes",
+        },
+      ],
+    }),
+  } as PostProcessingSolver
 
-  solver.solve()
-
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(
-    solver.postProcessingSolver?.getOutput().postProcessingErrors,
-  ).toHaveLength(1)
-  expect(solver.getOutput()).toEqual({ hdRoutes })
+  expect(solver._getOutputHdRoutes()).toBe(hdRoutes)
 })

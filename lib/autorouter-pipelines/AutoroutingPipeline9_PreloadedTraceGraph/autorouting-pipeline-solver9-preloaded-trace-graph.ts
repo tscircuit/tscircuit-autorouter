@@ -75,7 +75,6 @@ import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -685,15 +684,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockHdRouteTerminals(
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-            cms.netToPointPairsSolver?.newConnections ?? [],
-            new Map(
-              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                (route) => [route.connectionName, route],
-              ),
-            ),
-          ),
+          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,
@@ -782,27 +773,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             return { ...pair, connectionNames }
           },
         )
-        const obstacles = cms.srj.obstacles.map((obstacle) => {
-          const obstacleType = (obstacle as { type: string }).type
-          if (obstacleType !== "oval") return obstacle
-          return { ...obstacle, type: "rect" as const }
-        })
         return [
           {
-            hdRoutes: lockHdRouteTerminals(
-              structuredClone(cms.pipeline9JointDrcRepairSolver!.getOutput()),
-              connections,
-              new Map(
-                (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                  (route) => [route.connectionName, route],
-                ),
-              ),
-            ),
+            hdRoutes: cms.pipeline9JointDrcRepairSolver!.getOutput(),
             differentialPairs,
-            obstacles,
+            obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
-            allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -1148,12 +1125,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    const postProcessedRoutes =
-      (this.originalSrj.differentialPairs?.length ?? 0) > 0
-        ? this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes
-        : undefined
+    if (
+      (this.originalSrj.differentialPairs?.length ?? 0) > 0 &&
+      this.lengthMatchingPostProcessingSolver
+    ) {
+      const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
+      return hdRoutes
+    }
     return (
-      postProcessedRoutes ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
