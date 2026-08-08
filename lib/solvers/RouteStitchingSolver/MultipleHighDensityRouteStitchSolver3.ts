@@ -19,14 +19,34 @@ import {
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
+  DISTANCE_TIE_TOLERANCE,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
+
+type StitchTerminal = Point3 & { pcb_port_id?: string }
 
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
+}
+
+const keepOnlyExpectedTerminalIds = (
+  route: HighDensityIntraNodeRoute,
+  expectedPcbPortIds: Set<string>,
+): HighDensityIntraNodeRoute => {
+  return {
+    ...route,
+    startPcbPortId:
+      route.startPcbPortId && expectedPcbPortIds.has(route.startPcbPortId)
+        ? route.startPcbPortId
+        : undefined,
+    endPcbPortId:
+      route.endPcbPortId && expectedPcbPortIds.has(route.endPcbPortId)
+        ? route.endPcbPortId
+        : undefined,
+  }
 }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -48,8 +68,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   private canStitchBetweenTerminals(params: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: StitchTerminal
+    end: StitchTerminal
   }) {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
@@ -98,8 +118,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     rootConnectionName?: string
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: StitchTerminal
+    end: StitchTerminal
   }) {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
@@ -115,9 +135,27 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       return null
     }
 
+    const expectedPcbPortIds = new Set(
+      [params.start.pcb_port_id, params.end.pcb_port_id].filter(
+        (pcbPortId): pcbPortId is string => pcbPortId !== undefined,
+      ),
+    )
+    const originalRouteByNormalizedRoute = new Map<
+      HighDensityIntraNodeRoute,
+      HighDensityIntraNodeRoute
+    >()
+    const normalizedSameRootRoutes = sameRootRoutes.map((route) => {
+      const normalizedRoute = keepOnlyExpectedTerminalIds(
+        route,
+        expectedPcbPortIds,
+      )
+      originalRouteByNormalizedRoute.set(normalizedRoute, route)
+      return normalizedRoute
+    })
+
     const pathRoutes = selectRoutesAlongEndpointPath({
       connectionName: params.connectionName,
-      hdRoutes: sameRootRoutes,
+      hdRoutes: normalizedSameRootRoutes,
       start: params.start,
       end: params.end,
       endpointIndex: this.endpointIndex,
@@ -126,7 +164,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     })
 
     const includesSharedRootBridge = pathRoutes.some(
-      (route) => !currentRouteSet.has(route),
+      (route) =>
+        !currentRouteSet.has(originalRouteByNormalizedRoute.get(route)!),
     )
     // The endpoint path helper returns all candidate routes as a fallback when
     // no path is found, so only accept a strict same-root subset.
@@ -236,8 +275,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         continue
       }
 
-      let start: Point3
-      let end: Point3
+      let start: StitchTerminal
+      let end: StitchTerminal
 
       if (candidateEndpoints.length >= 2) {
         const globalStart = {
@@ -260,20 +299,24 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           globalEnd,
         }))
 
+        const directTerminalDistance =
+          distance(start, globalStart) + distance(end, globalEnd)
+        const swappedTerminalDistance =
+          distance(start, globalEnd) + distance(end, globalStart)
         if (
-          distance(start, connection.pointsToConnect[1]) <
-          distance(end, connection.pointsToConnect[0])
+          swappedTerminalDistance <
+          directTerminalDistance - DISTANCE_TIE_TOLERANCE
         ) {
           ;[start, end] = [end, start]
         }
 
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminals: [globalStart],
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminals: [globalEnd],
         })
       } else {
         start = {
