@@ -243,6 +243,9 @@ function getOutputNodeMetadata({
         : sourceNodes[0]!._skipEndpointNetReservation,
       _isApproximateTerminalRefinement:
         sourceNodes[0]!._isApproximateTerminalRefinement,
+      _obstacleOccupancyFraction: isComponentTopologyNode
+        ? undefined
+        : sourceNodes[0]!._obstacleOccupancyFraction,
     }
   }
 
@@ -307,6 +310,14 @@ function getOutputNodeMetadata({
     _isApproximateTerminalRefinement:
       sourceNodes.some((node) => node._isApproximateTerminalRefinement) ||
       undefined,
+    _obstacleOccupancyFraction: isComponentTopologyNode
+      ? undefined
+      : Math.max(
+          0,
+          ...sourceNodes.map(
+            (node) => node._obstacleOccupancyFraction ?? 0,
+          ),
+        ),
   }
 }
 

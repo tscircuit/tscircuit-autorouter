@@ -17,6 +17,9 @@ approximate hypergraph topologies. It is not the default autorouter.
   tiny-hypergraph's `RegionPathSolver`. Coarse cells remain shareable between
   nets, while synthetic terminal regions and exact component regions retain
   net ownership.
+- Add a linear region-entry penalty based on the fraction of each approximate
+  cell's layer-area occupied by obstacles. Exact component-topology cells do
+  not receive this approximate penalty.
 - Assign real boundary ports with a greedy layer, reuse, and local-crossing
   penalty. This avoids tiny-hypergraph's expensive exact port assignment and
   rip-up loop.
@@ -44,6 +47,12 @@ cells exactly, increasing runtime in exchange for fewer rough intra-node
 segments. Detected component-topology cells are always exact regardless of the
 threshold.
 
+Obstacle occupancy includes the configured sampling margin and is weighted by
+layer: an obstacle covering half a cell on one of two available layers yields
+an occupancy fraction of `0.25`. The default full-occupancy entry cost is
+`200`, configurable with `approximateObstacleOccupancyCost` when constructing
+Pipeline10.
+
 ## Region-path prototype result
 
 On a local dataset18 sample 3 run, the region-only solver reduced the
@@ -55,6 +64,13 @@ speed prototype rather than a release candidate.
 Dataset18 sample 1 verifies the component boundary: one component was
 detected, 112 component-topology cells survived topology merging, 12 were used
 by routed paths, and the region-only path solve took about `52ms`.
+
+After adding obstacle-occupancy region costs, a local sample 3 rerun completed
+in `11.2s` with 59 relaxed DRC errors and 118 vias. The earlier local
+region-only prototype completed in `8.7s` with 107 errors and 130 vias. This is
+a 45% reduction in reported errors for a 2.5-second end-to-end cost on that
+sample; multi-sample Blacksmith validation is still required before treating
+that tradeoff as representative.
 
 ## Dataset18 result
 

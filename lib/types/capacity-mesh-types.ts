@@ -36,6 +36,7 @@ export interface CapacityMeshNode {
   _connectedTo?: string[]
   _skipEndpointNetReservation?: boolean
   _isApproximateTerminalRefinement?: boolean
+  _obstacleOccupancyFraction?: number
 
   _parent?: CapacityMeshNode
 }

@@ -32,6 +32,9 @@ export interface ApproximateHypergraphTopologyStats {
   targetCellSize: number
   maxPortsPerLayerPerEdge: number
   localRefinementDepth: number
+  obstacleOccupiedRegionCount: number
+  meanObstacleOccupancyFraction: number
+  maxObstacleOccupancyFraction: number
 }
 
 export interface ApproximateHypergraphTopologyOutput {
@@ -53,8 +56,158 @@ type SharedBoundary = {
   end: { x: number; y: number }
 }
 
+type Point = { x: number; y: number }
+
+type PreparedObstacleGeometry = {
+  polygon: Point[]
+  bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  zLayers: number[]
+}
+
+type PolygonClipBoundary = {
+  axis: "x" | "y"
+  value: number
+  keepGreater: boolean
+}
+
 const DEFAULT_TARGET_CELL_SIZE = 6
 const DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE = 6
+
+const getObstaclePolygon = (obstacle: Obstacle, margin: number): Point[] => {
+  const halfWidth = obstacle.width / 2 + margin
+  const halfHeight = obstacle.height / 2 + margin
+  const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  return [
+    { x: -halfWidth, y: -halfHeight },
+    { x: halfWidth, y: -halfHeight },
+    { x: halfWidth, y: halfHeight },
+    { x: -halfWidth, y: halfHeight },
+  ].map((point) => ({
+    x: obstacle.center.x + point.x * cos - point.y * sin,
+    y: obstacle.center.y + point.x * sin + point.y * cos,
+  }))
+}
+
+const clipPolygonToBoundary = (
+  polygon: Point[],
+  boundary: PolygonClipBoundary,
+): Point[] => {
+  if (polygon.length === 0) return []
+  const output: Point[] = []
+  for (let index = 0; index < polygon.length; index++) {
+    const current = polygon[index]!
+    const previous = polygon[(index + polygon.length - 1) % polygon.length]!
+    const currentCoordinate = current[boundary.axis]
+    const previousCoordinate = previous[boundary.axis]
+    const currentInside = boundary.keepGreater
+      ? currentCoordinate >= boundary.value
+      : currentCoordinate <= boundary.value
+    const previousInside = boundary.keepGreater
+      ? previousCoordinate >= boundary.value
+      : previousCoordinate <= boundary.value
+
+    if (currentInside !== previousInside) {
+      const fraction =
+        (boundary.value - previousCoordinate) /
+        (currentCoordinate - previousCoordinate)
+      output.push({
+        x:
+          boundary.axis === "x"
+            ? boundary.value
+            : previous.x + (current.x - previous.x) * fraction,
+        y:
+          boundary.axis === "y"
+            ? boundary.value
+            : previous.y + (current.y - previous.y) * fraction,
+      })
+    }
+    if (currentInside) output.push(current)
+  }
+  return output
+}
+
+const getPolygonArea = (polygon: Point[]): number => {
+  let doubleArea = 0
+  for (let index = 0; index < polygon.length; index++) {
+    const current = polygon[index]!
+    const next = polygon[(index + 1) % polygon.length]!
+    doubleArea += current.x * next.y - next.x * current.y
+  }
+  return Math.abs(doubleArea) / 2
+}
+
+const getObstacleIntersectionArea = (
+  node: CapacityMeshNode,
+  obstacle: PreparedObstacleGeometry,
+): number => {
+  const minX = node.center.x - node.width / 2
+  const maxX = node.center.x + node.width / 2
+  const minY = node.center.y - node.height / 2
+  const maxY = node.center.y + node.height / 2
+  if (
+    obstacle.bounds.maxX <= minX ||
+    obstacle.bounds.minX >= maxX ||
+    obstacle.bounds.maxY <= minY ||
+    obstacle.bounds.minY >= maxY
+  ) {
+    return 0
+  }
+
+  let intersection = obstacle.polygon
+  for (const boundary of [
+    { axis: "x", value: minX, keepGreater: true },
+    { axis: "x", value: maxX, keepGreater: false },
+    { axis: "y", value: minY, keepGreater: true },
+    { axis: "y", value: maxY, keepGreater: false },
+  ] satisfies PolygonClipBoundary[]) {
+    intersection = clipPolygonToBoundary(intersection, boundary)
+  }
+  return getPolygonArea(intersection)
+}
+
+const prepareObstacleGeometry = (params: {
+  obstacles: Obstacle[]
+  layerCount: number
+  margin: number
+}): PreparedObstacleGeometry[] => {
+  return params.obstacles.map((obstacle) => {
+    const polygon = getObstaclePolygon(obstacle, params.margin)
+    const xCoordinates = polygon.map((point) => point.x)
+    const yCoordinates = polygon.map((point) => point.y)
+    return {
+      polygon,
+      bounds: {
+        minX: Math.min(...xCoordinates),
+        maxX: Math.max(...xCoordinates),
+        minY: Math.min(...yCoordinates),
+        maxY: Math.max(...yCoordinates),
+      },
+      zLayers: getObstacleZLayers(obstacle, params.layerCount),
+    }
+  })
+}
+
+const getObstacleOccupancyFraction = (params: {
+  node: CapacityMeshNode
+  obstacles: PreparedObstacleGeometry[]
+}): number => {
+  const nodeLayerArea =
+    params.node.width * params.node.height * params.node.availableZ.length
+  if (nodeLayerArea <= 0) return 0
+
+  let occupiedLayerArea = 0
+  for (const obstacle of params.obstacles) {
+    const sharedLayerCount = params.node.availableZ.filter((z) =>
+      obstacle.zLayers.includes(z),
+    ).length
+    if (sharedLayerCount === 0) continue
+    occupiedLayerArea +=
+      getObstacleIntersectionArea(params.node, obstacle) * sharedLayerCount
+  }
+  return Math.min(1, occupiedLayerArea / nodeLayerArea)
+}
 
 const pointIsInsideNode = (
   point: { x: number; y: number },
@@ -154,6 +307,7 @@ const getGridNodes = (params: {
   dimensions: GridDimensions
   localRefinementDepth: number
   refinementMargin: number
+  obstacleGeometry: PreparedObstacleGeometry[]
 }): CapacityMeshNode[] => {
   const { simpleRouteJson, dimensions } = params
   const allZ = Array.from(
@@ -171,6 +325,10 @@ const getGridNodes = (params: {
       obstacleOverlapsNode(obstacle, node),
     )
     node._completelyInsideObstacle = false
+    node._obstacleOccupancyFraction = getObstacleOccupancyFraction({
+      node,
+      obstacles: params.obstacleGeometry,
+    })
     // Terminal-adjacent leaves are local precision regions, but they are not
     // component topology. Keeping the markers distinct lets Pipeline10 retain
     // exact component routing without sending every refined terminal cell
@@ -504,6 +662,13 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
           this.params.simpleRouteJson.defaultObstacleMargin ?? 0.15,
           this.params.simpleRouteJson.minTraceWidth,
         ),
+      obstacleGeometry: prepareObstacleGeometry({
+        obstacles: this.params.simpleRouteJson.obstacles,
+        layerCount: this.params.simpleRouteJson.layerCount,
+        margin:
+          this.params.obstacleSamplingMargin ??
+          this.params.simpleRouteJson.minTraceWidth / 2,
+      }),
     })
     const topology =
       this.params.generatePortsAndEdges === false
@@ -525,6 +690,9 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
       (total, segment) => total + segment.portPoints.length,
       0,
     )
+    const obstacleOccupancies = capacityMeshNodes.map(
+      (node) => node._obstacleOccupancyFraction ?? 0,
+    )
     const stats: ApproximateHypergraphTopologyStats = {
       columnCount: dimensions.columnCount,
       rowCount: dimensions.rowCount,
@@ -535,6 +703,16 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
       targetCellSize,
       maxPortsPerLayerPerEdge,
       localRefinementDepth,
+      obstacleOccupiedRegionCount: obstacleOccupancies.filter(
+        (occupancy) => occupancy > 0,
+      ).length,
+      meanObstacleOccupancyFraction:
+        obstacleOccupancies.reduce((sum, occupancy) => sum + occupancy, 0) /
+        Math.max(1, obstacleOccupancies.length),
+      maxObstacleOccupancyFraction: obstacleOccupancies.reduce(
+        (maximum, occupancy) => Math.max(maximum, occupancy),
+        0,
+      ),
     }
     this.output = {
       capacityMeshNodes,

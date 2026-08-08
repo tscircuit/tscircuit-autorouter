@@ -31,6 +31,7 @@ export interface TinyHypergraphRegionPathingSolverParams
   extends HgPortPointPathingSolverParams {
   approximateLayerChangeCost?: number
   approximateRegionCapacityCost?: number
+  approximateObstacleOccupancyCost?: number
 }
 
 type BoundaryPortChoice = {
@@ -46,6 +47,7 @@ type MaterializedOutput = {
 
 const DEFAULT_LAYER_CHANGE_COST = 4
 const DEFAULT_REGION_CAPACITY_COST = 20
+const DEFAULT_OBSTACLE_OCCUPANCY_COST = 200
 
 class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
   private readonly maxEdgeCenterDistance: number
@@ -55,6 +57,7 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
     problem: TinyHyperGraphProblem,
     private readonly routingPitch: number,
     regionCapacityCost: number,
+    private readonly obstacleOccupancyCost: number,
   ) {
     super(topology, problem, {
       MM_COST_FOR_FULL_REGION: regionCapacityCost,
@@ -219,6 +222,19 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
     const metadata = this.topology.regionMetadata?.[regionId]
     if (metadata?._tinyTerminal) return 0
 
+    const obstacleOccupancyFraction = Number(
+      metadata?._obstacleOccupancyFraction ?? 0,
+    )
+    if (
+      !Number.isFinite(obstacleOccupancyFraction) ||
+      obstacleOccupancyFraction < 0 ||
+      obstacleOccupancyFraction > 1
+    ) {
+      throw new Error(
+        `Pipeline10 region ${regionId} has invalid obstacle occupancy ${obstacleOccupancyFraction}`,
+      )
+    }
+
     const narrowDimension = Math.min(
       this.regionGraph.regionWidth[regionId],
       this.regionGraph.regionHeight[regionId],
@@ -230,7 +246,11 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
     const nextUsage = this.state.regionUsage[regionId] + 1
     const utilization = nextUsage / approximateTraceCapacity
 
-    return 1 + utilization ** 4 * this.MM_COST_FOR_FULL_REGION
+    return (
+      1 +
+      obstacleOccupancyFraction * this.obstacleOccupancyCost +
+      utilization ** 4 * this.MM_COST_FOR_FULL_REGION
+    )
   }
 }
 
@@ -427,11 +447,20 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
     this.terminalEscapeBridgeCount = addIsolatedTerminalEscapeBridges(params)
     const serializedGraph = buildSerializedTinyGraphForRegionPathing(params)
     const { topology, problem } = loadSerializedHyperGraph(serializedGraph)
+    const obstacleOccupancyCost =
+      params.approximateObstacleOccupancyCost ??
+      DEFAULT_OBSTACLE_OCCUPANCY_COST
+    if (!Number.isFinite(obstacleOccupancyCost) || obstacleOccupancyCost < 0) {
+      throw new Error(
+        "Pipeline10 approximateObstacleOccupancyCost must be zero or greater",
+      )
+    }
     this.regionPathSolver = new ApproximateCapacityRegionPathSolver(
       topology,
       problem,
       Math.max(params.minViaPadDiameter ?? 0.6, 0.2),
       params.approximateRegionCapacityCost ?? DEFAULT_REGION_CAPACITY_COST,
+      obstacleOccupancyCost,
     )
     this.regionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),

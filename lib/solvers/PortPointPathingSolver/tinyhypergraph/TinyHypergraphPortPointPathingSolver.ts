@@ -76,6 +76,7 @@ type TinyRegionMetadata = {
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
+  _obstacleOccupancyFraction?: number
 }
 
 type TinyPortMetadata = {
@@ -270,6 +271,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    _obstacleOccupancyFraction: region.d._obstacleOccupancyFraction,
     ...(netId !== undefined ? { netId } : {}),
   }
 }
