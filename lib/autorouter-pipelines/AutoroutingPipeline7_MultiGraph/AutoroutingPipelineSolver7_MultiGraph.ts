@@ -336,6 +336,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          cacheProvider: cms.cacheProvider,
         },
       ],
       {

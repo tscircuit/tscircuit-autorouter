@@ -2,6 +2,8 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
+import objectHash from "object-hash"
+import type { CachableSolver, CacheProvider } from "lib/cache/types"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
 import { safeTransparentize } from "lib/solvers/colors"
@@ -32,6 +34,7 @@ export interface MultiGraphTopologyPlannerSolverParams {
   componentDetectionOutput?: DetectedComponent[]
   viaDiameter?: number
   obstacleMargin?: number
+  cacheProvider?: CacheProvider | null
   brokenSrj?: {
     componentsAsObstaclesSrj: SimpleRouteJson
     components: SerializedTopologyComponentInput[]
@@ -45,15 +48,62 @@ export interface MultiGraphTopologyPlannerSolverOutput {
   componentMeshNodes: CapacityMeshNode[][]
 }
 
+type CachedMultiGraphTopology = Pick<
+  MultiGraphTopologyPlannerSolverOutput,
+  "globalMeshNodes" | "componentMeshNodes"
+>
+
+type MultiGraphTopologyCacheTransform = Record<string, never>
+
+type TopologySrjCacheInput = Omit<
+  SimpleRouteJson,
+  "connections" | "traces" | "differentialPairs" | "buses"
+>
+
+const MULTI_GRAPH_TOPOLOGY_CACHE_SCHEMA_VERSION = 1
+
+/**
+ * Keeps only geometry that can change the generated mesh. Connections and
+ * traces vary between routing phases; connection-expanded component bounds are
+ * retained because component SRJs are derived before this projection.
+ */
+const getTopologySrjCacheInput = (
+  srj: SimpleRouteJson,
+): TopologySrjCacheInput => {
+  const {
+    connections: _connections,
+    traces: _traces,
+    differentialPairs: _differentialPairs,
+    buses: _buses,
+    ...topologySrj
+  } = srj
+
+  return topologySrj
+}
+
 /**
  * Produces the global and component-local topology groups consumed by the
  * Pipeline 7 topology merging stage.
  */
-export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams> {
+export class MultiGraphTopologyPlannerSolver
+  extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams>
+  implements
+    CachableSolver<
+      MultiGraphTopologyCacheTransform,
+      CachedMultiGraphTopology
+    >
+{
   globalTopologySolver?: RectDiffPipeline
   componentTopologyBatchSolver?: ComponentTopologyBatchSolver
 
   private normalizedInput: NormalizedTopologyPlannerInput
+  private cachedTopology?: CachedMultiGraphTopology
+
+  cacheProvider: CacheProvider | null
+  cacheHit = false
+  hasAttemptedToUseCache = false
+  declare cacheKey?: string | undefined
+  cacheToSolveSpaceTransform?: MultiGraphTopologyCacheTransform
 
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
@@ -85,6 +135,20 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
   constructor(params: MultiGraphTopologyPlannerSolverParams) {
     super(params)
     this.normalizedInput = normalizeInput(params)
+    this.cacheProvider = params.cacheProvider ?? null
+  }
+
+  override _step(): void {
+    if (!this.hasAttemptedToUseCache && this.cacheProvider) {
+      if (this.attemptToUseCacheSync()) return
+    }
+
+    const wasSolved = this.solved
+    super._step()
+
+    if (this.solved && !wasSolved && !this.cacheHit) {
+      this.saveToCacheSync()
+    }
   }
 
   override getConstructorParams() {
@@ -96,18 +160,21 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
    * topology groups.
    */
   override getOutput(): MultiGraphTopologyPlannerSolverOutput {
-    const rawGlobalMeshNodes =
-      this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
-        "globalTopologySolver",
-      )?.meshNodes ?? []
-    const globalMeshNodes = getGlobalMeshNodesForTopologyMerging({
-      meshNodes: rawGlobalMeshNodes,
-      components: this.normalizedInput.components,
-    })
+    const globalMeshNodes =
+      this.cachedTopology?.globalMeshNodes ??
+      getGlobalMeshNodesForTopologyMerging({
+        meshNodes:
+          this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
+            "globalTopologySolver",
+          )?.meshNodes ?? [],
+        components: this.normalizedInput.components,
+      })
     const componentMeshNodes =
+      this.cachedTopology?.componentMeshNodes ??
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
-      )?.componentMeshNodes ?? []
+      )?.componentMeshNodes ??
+      []
     const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
 
     return {
@@ -115,6 +182,90 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       componentNoConnectionSrjs,
       globalMeshNodes,
       componentMeshNodes,
+    }
+  }
+
+  computeCacheKeyAndTransform(): {
+    cacheKey: string
+    cacheToSolveSpaceTransform: MultiGraphTopologyCacheTransform
+  } {
+    const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
+    const cacheKeyContent = {
+      cacheSchemaVersion: MULTI_GRAPH_TOPOLOGY_CACHE_SCHEMA_VERSION,
+      globalSrj: getTopologySrjCacheInput(
+        this.normalizedInput.globalNoConnectionSrj,
+      ),
+      components: this.normalizedInput.components.map((component, index) => ({
+        componentId: component.componentId,
+        componentKind: component.componentKind,
+        srj: getTopologySrjCacheInput(componentNoConnectionSrjs[index]!),
+      })),
+      viaDiameter: this.inputProblem.viaDiameter,
+      obstacleMargin: this.inputProblem.obstacleMargin,
+    }
+    const cacheKey = `multigraph-topology:${objectHash(cacheKeyContent)}`
+    const cacheToSolveSpaceTransform: MultiGraphTopologyCacheTransform = {}
+
+    this.cacheKey = cacheKey
+    this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
+
+    return { cacheKey, cacheToSolveSpaceTransform }
+  }
+
+  applyCachedSolution(cachedTopology: CachedMultiGraphTopology): void {
+    this.cachedTopology = structuredClone(cachedTopology)
+    this.cacheHit = true
+    this.solved = true
+    this.failed = false
+    this.progress = 1
+    this.stats = {
+      ...this.stats,
+      cacheHit: true,
+      globalMeshNodeCount: cachedTopology.globalMeshNodes.length,
+      componentMeshNodeCount: cachedTopology.componentMeshNodes.reduce(
+        (count, nodes) => count + nodes.length,
+        0,
+      ),
+    }
+  }
+
+  attemptToUseCacheSync(): boolean {
+    this.hasAttemptedToUseCache = true
+    if (!this.cacheProvider?.isSyncCache) return false
+
+    try {
+      const { cacheKey } = this.computeCacheKeyAndTransform()
+      const cachedTopology = this.cacheProvider.getCachedSolutionSync(cacheKey)
+      if (
+        !cachedTopology ||
+        !Array.isArray(cachedTopology.globalMeshNodes) ||
+        !Array.isArray(cachedTopology.componentMeshNodes) ||
+        !cachedTopology.componentMeshNodes.every(Array.isArray)
+      ) {
+        return false
+      }
+
+      this.applyCachedSolution(cachedTopology)
+      return true
+    } catch (error) {
+      console.error("Error loading cached multi-graph topology:", error)
+      return false
+    }
+  }
+
+  saveToCacheSync(): void {
+    if (!this.cacheProvider?.isSyncCache || !this.solved || this.failed) return
+
+    const cacheKey =
+      this.cacheKey ?? this.computeCacheKeyAndTransform().cacheKey
+    const output = this.getOutput()
+    try {
+      this.cacheProvider.setCachedSolutionSync(cacheKey, {
+        globalMeshNodes: output.globalMeshNodes,
+        componentMeshNodes: output.componentMeshNodes,
+      } satisfies CachedMultiGraphTopology)
+    } catch (error) {
+      console.error("Error caching multi-graph topology:", error)
     }
   }
 
