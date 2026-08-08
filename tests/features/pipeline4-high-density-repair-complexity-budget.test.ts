@@ -56,7 +56,7 @@ test("bounded high-density repair selects a tractable violating region", (): voi
     obstacles: [],
     repairMargin: 0.2,
     maxSampleEntries: 1,
-    maxRoutePointCountPerSample: 10,
+    maxEstimatedRepairWorkPerSample: 10,
   })
 
   expect(
@@ -65,6 +65,6 @@ test("bounded high-density repair selects a tractable violating region", (): voi
   expect(solver.stats).toMatchObject({
     sampleCount: 1,
     skippedSampleCount: 1,
-    skippedOversizedSampleCount: 1,
+    skippedOverBudgetSampleCount: 1,
   })
 })
