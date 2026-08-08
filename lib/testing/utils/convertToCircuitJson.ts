@@ -213,6 +213,28 @@ function convertHdRouteToCircuitJsonTraces(
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
   Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
+const createConnectionNameMap = (
+  connections: SimpleRouteJson["connections"],
+) => {
+  const connectionNameMap = new Map<string, string>()
+  for (const connection of connections) {
+    const canonicalConnectionName =
+      connection.__netConnectionName ??
+      connection.__rootConnectionNames?.[0] ??
+      connection.name
+    connectionNameMap.set(connection.name, canonicalConnectionName)
+    for (const point of connection.pointsToConnect) {
+      if (point.pointId) {
+        connectionNameMap.set(point.pointId, canonicalConnectionName)
+      }
+      if (point.pcb_port_id) {
+        connectionNameMap.set(point.pcb_port_id, canonicalConnectionName)
+      }
+    }
+  }
+  return connectionNameMap
+}
+
 /**
  * Create source_trace elements from the SimpleRouteJson connections
  * These represent the logical connections between points
@@ -228,20 +250,21 @@ function createSourceTraces(
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
+  const connectionNameMap = createConnectionNameMap(connections)
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
     // Extract port IDs from the connection points
     const connectedPortIds = connection.pointsToConnect
-      .filter((point) => point.pcb_port_id)
-      .map((point) => point.pcb_port_id!)
-      .filter(Boolean)
+      .map((point) => point.pcb_port_id)
+      .filter((pointId): pointId is string => Boolean(pointId))
+    const connectedPointIds = connection.pointsToConnect
+      .map((point) => point.pointId)
+      .filter((pointId): pointId is string => Boolean(pointId))
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
     const netConnectionName =
-      connection.__netConnectionName ||
-      connection.__rootConnectionNames?.[0] ||
-      connection.name
+      connectionNameMap.get(connection.name) ?? connection.name
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
@@ -293,6 +316,7 @@ function createSourceTraces(
       sourceTrace.connected_source_net_ids = [
         ...new Set([
           ...(sourceTrace.connected_source_net_ids ?? []),
+          ...connectedPointIds,
           ...getObstacleConnectivityIds(obstaclesContainingEndpoints),
         ]),
       ]
@@ -304,10 +328,69 @@ function createSourceTraces(
         connected_source_port_ids: connectedPortIds,
         connected_source_net_ids: getObstacleConnectivityIds(
           obstaclesContainingEndpoints,
-        ),
+        ).concat(connectedPointIds),
       })
     }
   })
+
+  if (hdRoutes[0] && "type" in hdRoutes[0]) {
+    const connectionByName = new Map(
+      connections.map((connection) => [connection.name, connection]),
+    )
+    for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
+      const connectedSourcePortIds = [
+        ...new Set(
+          (trace.connectsTo ?? []).filter((id) => id.startsWith("pcb_port_")),
+        ),
+      ]
+      const connectedSourceNetIds = [
+        ...new Set(
+          (trace.connectsTo ?? []).filter((id) => !id.startsWith("pcb_port_")),
+        ),
+      ]
+      if (
+        connectedSourcePortIds.length === 0 &&
+        connectedSourceNetIds.length === 0
+      )
+        continue
+
+      const connection = connectionByName.get(trace.connection_name)
+      const sourceTraceId =
+        connectionNameMap.get(trace.connection_name) ??
+        trace.connectsTo
+          ?.map((connectionId) => connectionNameMap.get(connectionId))
+          .find((connectionName) => connectionName !== undefined) ??
+        connection?.__netConnectionName ??
+        connection?.__rootConnectionNames?.[0] ??
+        trace.connection_name
+      const existingSourceTrace = sourceTraces.find(
+        (sourceTrace) =>
+          sourceTrace.type === "source_trace" &&
+          sourceTrace.source_trace_id === sourceTraceId,
+      )
+      if (existingSourceTrace?.type === "source_trace") {
+        existingSourceTrace.connected_source_port_ids = [
+          ...new Set([
+            ...existingSourceTrace.connected_source_port_ids,
+            ...connectedSourcePortIds,
+          ]),
+        ]
+        existingSourceTrace.connected_source_net_ids = [
+          ...new Set([
+            ...(existingSourceTrace.connected_source_net_ids ?? []),
+            ...connectedSourceNetIds,
+          ]),
+        ]
+        continue
+      }
+      sourceTraces.push({
+        type: "source_trace",
+        source_trace_id: sourceTraceId,
+        connected_source_port_ids: connectedSourcePortIds,
+        connected_source_net_ids: connectedSourceNetIds,
+      })
+    }
+  }
 
   return sourceTraces
 }
@@ -701,24 +784,23 @@ export function convertToCircuitJson(
   )
 
   // Build a map of connection names to simplify lookups
-  const connectionMap = new Map<string, string>()
-  srjWithPointPairs.connections.forEach((conn) => {
-    connectionMap.set(
-      conn.name,
-      conn.__netConnectionName || conn.__rootConnectionNames?.[0] || conn.name,
-    )
-  })
+  const connectionMap = createConnectionNameMap(srjWithPointPairs.connections)
 
   // Process routes based on their type
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       // Handle SimplifiedPcbTraces
       ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
-        const connectionName = trace.connection_name
+        const connectionName =
+          connectionMap.get(trace.connection_name) ??
+          trace.connectsTo
+            ?.map((connectionId) => connectionMap.get(connectionId))
+            .find((mappedConnectionName) => Boolean(mappedConnectionName)) ??
+          trace.connection_name
         circuitJson.push(
           convertSimplifiedPcbTraceToCircuitJson(
             trace,
-            connectionMap.get(connectionName) || connectionName,
+            connectionName,
           ) as AnyCircuitElement,
         )
       })

@@ -194,11 +194,30 @@ const fixedRouteSlicesAreContiguous = (
     next.sourceRoute.preloadedTraceIndex &&
   pointsAreEqual(previous.sourceRoute.route.at(-1)!, next.sourceRoute.route[0]!)
 
+const fixedRouteSliceTouchesTargetLayer = (
+  slice: FixedRouteSlice,
+  targetLayers: ReadonlySet<number>,
+): boolean => {
+  if (targetLayers.size === 0) return true
+  const routePointsInsideNode = [
+    slice.start.point,
+    ...slice.sourceRoute.route.slice(
+      slice.start.segmentIndex + 1,
+      slice.end.segmentIndex + 1,
+    ),
+    slice.end.point,
+  ]
+  return routePointsInsideNode.some((routePoint) =>
+    targetLayers.has(routePoint.z),
+  )
+}
+
 /**
  * Builds the regular high-density input used only after B01 fails. Fixed
- * each contiguous section of pre-routed copper crossing the node becomes one
- * ordinary port pair, which lets the portfolio reroute it together with the
- * new traces in that region.
+ * each contiguous section of pre-routed copper crossing the node on a target
+ * connection layer becomes one ordinary port pair, which lets the portfolio
+ * reroute it together with the new traces in that region. Repair-only callers
+ * with no target port points continue to make every crossing section movable.
  */
 export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
@@ -209,10 +228,12 @@ export const createRegionalFallbackProblem = (
     FixedRouteSection
   >()
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
+  const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
   const slices = fixedRoutes
     .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
     .filter((slice): slice is FixedRouteSlice => slice !== null)
+    .filter((slice) => fixedRouteSliceTouchesTargetLayer(slice, targetLayers))
     .sort(
       (a, b) =>
         a.sourceRoute.preloadedTraceIndex - b.sourceRoute.preloadedTraceIndex ||

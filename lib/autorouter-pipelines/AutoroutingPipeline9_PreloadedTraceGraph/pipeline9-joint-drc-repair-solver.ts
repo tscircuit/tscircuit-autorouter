@@ -29,6 +29,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
+import { filterPipeline9DrcErrorsAgainstBaseline } from "./filter-pipeline9-drc-errors-against-baseline"
 
 // This generic portfolio is only the preliminary repair. Each candidate runs
 // joint DRC over all copper; unresolved errors continue into Pipeline9's
@@ -335,11 +336,40 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const currentDrc = evaluateRelaxedDrc({
+    const baselineDrc = evaluateRelaxedDrc({
+      inputSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      routedTraces: [],
+    })
+    const currentDrcResult = evaluateRelaxedDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
     })
+    const currentDrc = {
+      ...currentDrcResult,
+      errors: filterPipeline9DrcErrorsAgainstBaseline({
+        errors: currentDrcResult.errors as unknown as Record<string, unknown>[],
+        baselineErrors: baselineDrc.errors as unknown as Record<
+          string,
+          unknown
+        >[],
+        originalTraceIdByPreparedTraceId:
+          preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+      }),
+      errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
+        errors: currentDrcResult.errorsWithCenters as unknown as Record<
+          string,
+          unknown
+        >[],
+        baselineErrors: baselineDrc.errors as unknown as Record<
+          string,
+          unknown
+        >[],
+        originalTraceIdByPreparedTraceId:
+          preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+      }),
+    }
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
       errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
@@ -457,6 +487,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
+      baselineJointDrcIssueCount: baselineDrc.errors.length,
+      initialJointDrcIssueCountByType: currentDrc.errors.reduce<
+        Record<string, number>
+      >((counts, error) => {
+        const errorType = String(error.type ?? error.error_type ?? "unknown")
+        counts[errorType] = (counts[errorType] ?? 0) + 1
+        return counts
+      }, {}),
       movablePreloadedTraceCount: this.movablePreloadedTraces.length,
     }
 
@@ -562,6 +600,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ...uniquelyNamedNewTraces,
         ],
       })
+      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+        errors: evaluatedDrc.errors as unknown as Array<
+          Record<string, unknown>
+        >,
+        baselineErrors: baselineDrc.errors as unknown as Array<
+          Record<string, unknown>
+        >,
+      })
+      const evaluatedNewErrorsWithCenters =
+        filterPipeline9DrcErrorsAgainstBaseline({
+          errors: evaluatedDrc.errorsWithCenters as unknown as Array<
+            Record<string, unknown>
+          >,
+          baselineErrors: baselineDrc.errors as unknown as Array<
+            Record<string, unknown>
+          >,
+        })
       const remappedCircuitJson = evaluatedDrc.circuitJson.map((element) => {
         if (
           !("pcb_trace_id" in element) ||
@@ -578,7 +633,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return {
         errors: normalizePipeline9DrcErrorsForRepair({
           errors: remapDrcTraceIds(
-            evaluatedDrc.errors as unknown as Array<Record<string, unknown>>,
+            evaluatedNewErrors,
             solverTraceIdByEvaluationTraceId,
           ),
           circuitJson: remappedCircuitJson,
@@ -586,9 +641,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         }),
         errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
           errors: remapDrcTraceIds(
-            evaluatedDrc.errorsWithCenters as unknown as Array<
-              Record<string, unknown>
-            >,
+            evaluatedNewErrorsWithCenters,
             solverTraceIdByEvaluationTraceId,
           ),
           circuitJson: remappedCircuitJson,
