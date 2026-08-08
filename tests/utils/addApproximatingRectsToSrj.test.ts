@@ -91,7 +91,7 @@ test("addApproximatingRectsToSrj slices slender rotated obstacles into compact r
   ).toBe(true)
 })
 
-test("sparse rotated-pad approximations conservatively cover the original pad", () => {
+test("rotated-pad approximations conservatively cover the original pad", () => {
   const padWidth = 1.125
   const padHeight = 1.75
   const padRotation = 233
