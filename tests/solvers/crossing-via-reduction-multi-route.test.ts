@@ -54,3 +54,37 @@ test("relocates multiple sections of one crossing route atomically", () => {
   expect(routes[0].vias).toHaveLength(0)
   expect(routes[1].vias).toHaveLength(3)
 })
+
+test("rejects a multi-crossing rewrite with a pre-existing route conflict", () => {
+  const routes = createMultiRouteCrossing()
+  routes.push({
+    connectionName: "existing-conflict",
+    traceThickness: 0.15,
+    viaDiameter: 0.4,
+    route: [
+      { x: 0.75, y: 0.5, z: 1 },
+      { x: 0.75, y: 1.5, z: 1 },
+    ],
+    vias: [],
+  })
+  const solver = new CrossingViaReductionSolver({
+    inputHdRoutes: routes,
+    obstacles: [],
+    connMap: new ConnectivityMap({
+      detour_net: ["detour"],
+      transition_a_net: ["transition-a"],
+      transition_b_net: ["transition-b"],
+      conflict_net: ["existing-conflict"],
+    }),
+    layerCount: 2,
+  })
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.stats.crossingViaReductions).toBeUndefined()
+  expect(solver.stats.multiCrossingPreexistingConflictRejections).toBe(1)
+  expect(
+    solver.getReducedHdRoutes().flatMap((route) => route.vias),
+  ).toHaveLength(4)
+})

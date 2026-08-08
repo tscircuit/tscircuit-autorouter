@@ -820,6 +820,62 @@ export class CrossingViaReductionSolver extends BaseSolver {
     )
   }
 
+  /**
+   * Multi-route changes feed another path-simplification pass. Avoid using a
+   * route that already has unresolved copper conflicts as one of its inputs:
+   * reshaping that route downstream can turn a pre-existing intermediate
+   * conflict into a final DRC regression far from the relocated via.
+   *
+   * This runs only after a multi-crossing candidate passes its delta checks,
+   * so the common rejected-candidate path stays fast.
+   */
+  private candidateRoutesHaveNoExternalCopperConflicts(
+    candidate: CrossingReductionCandidate,
+    baseIndexes: BaseClearanceIndexes,
+  ): boolean {
+    const candidateRoutes = [
+      candidate.detourRoute,
+      ...candidate.transitionUpdates.map(({ route }) => route),
+    ]
+    const candidateConnectionNames = new Set(
+      candidateRoutes.map(({ connectionName }) => connectionName),
+    )
+    const routeIndexes = [
+      baseIndexes.mutableRoutes,
+      ...(baseIndexes.immutableRoutes ? [baseIndexes.immutableRoutes] : []),
+    ]
+
+    for (const route of candidateRoutes) {
+      for (const section of breakRouteIntoSections(route)) {
+        for (let index = 1; index < section.points.length; index++) {
+          const start = section.points[index - 1]
+          const end = section.points[index]
+          for (const routeIndex of routeIndexes) {
+            const hasExternalConflict = routeIndex
+              .getConflictingRoutesForSegment(
+                start,
+                end,
+                route.traceThickness / 2 + this.traceMargin,
+              )
+              .some(
+                ({ conflictingRoute }) =>
+                  !candidateConnectionNames.has(
+                    conflictingRoute.connectionName,
+                  ) &&
+                  !routesAreSameNet(
+                    route,
+                    conflictingRoute,
+                    this.input.connMap,
+                  ),
+              )
+            if (hasExternalConflict) return false
+          }
+        }
+      }
+    }
+    return true
+  }
+
   private buildTransitionSegmentIndex(
     sectionsByRoute: RouteSection[][],
     relevantLayerTransitions: ReadonlySet<string>,
@@ -1132,6 +1188,16 @@ export class CrossingViaReductionSolver extends BaseSolver {
       transitionUpdates,
     }
     if (!this.candidateIsClear(candidate, baseClearanceIndexes)) return null
+    if (
+      !this.candidateRoutesHaveNoExternalCopperConflicts(
+        candidate,
+        baseClearanceIndexes,
+      )
+    ) {
+      this.stats.multiCrossingPreexistingConflictRejections =
+        (this.stats.multiCrossingPreexistingConflictRejections ?? 0) + 1
+      return null
+    }
     this.stats.multiCrossingReductions =
       (this.stats.multiCrossingReductions ?? 0) + 1
     this.stats.transitionRoutesMovedByMultiCrossingReductions =
