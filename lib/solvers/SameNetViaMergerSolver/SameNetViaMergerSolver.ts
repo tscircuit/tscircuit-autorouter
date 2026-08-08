@@ -316,6 +316,15 @@ export class SameNetViaMergerSolver extends BaseSolver {
     for (const viasInNet of this.viasByNet.values()) {
       if (viasInNet.length < 2) continue
 
+      const viaCountByPosition = new Map<string, number>()
+      for (const via of viasInNet) {
+        const positionKey = `${via.x}:${via.y}`
+        viaCountByPosition.set(
+          positionKey,
+          (viaCountByPosition.get(positionKey) ?? 0) + 1,
+        )
+      }
+
       const maxDiameter = Math.max(
         1e-6,
         ...viasInNet.map((via) => via.diameter),
@@ -352,6 +361,15 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
               const candidate = viasInNet[candidateIndex]
               if (!candidate.mutable) continue
+              // Coincident same-net vias already share one physical anchor.
+              // Moving one member independently can make it alternate between
+              // nearby anchors forever, so only unshared vias may be moved.
+              if (
+                (viaCountByPosition.get(`${candidate.x}:${candidate.y}`) ?? 0) >
+                1
+              ) {
+                continue
+              }
 
               const pairDx = keep.x - candidate.x
               const pairDy = keep.y - candidate.y
