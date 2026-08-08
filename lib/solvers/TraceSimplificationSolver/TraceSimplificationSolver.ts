@@ -8,8 +8,13 @@ import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameN
 import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
 
-type Phase = "via_removal" | "via_merging" | "path_simplification"
+type Phase =
+  | "via_removal"
+  | "crossing_via_reduction"
+  | "via_merging"
+  | "path_simplification"
 
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
 
@@ -27,13 +32,15 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
 
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
- * via removal, via merging, and path simplification phases. It reduces redundant vias
- * and simplifies routing paths through configurable iterations.
+ * via removal, crossing via reduction, via merging, and path simplification
+ * phases. It reduces redundant vias and simplifies routing paths through
+ * configurable iterations.
  *
- * The solver operates in three alternating phases per iteration:
+ * The solver operates in four alternating phases per iteration:
  * 1. "via_removal" - Removes unnecessary vias from routes using UselessViaRemovalSolver
- * 2. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
- * 3. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
+ * 2. "crossing_via_reduction" - Swaps layer ownership at crossings to remove via pairs
+ * 3. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
+ * 4. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
  *
  * Each iteration consists of all phases executed sequentially.
  */
@@ -48,7 +55,12 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
 
-  PHASE_ORDER: Phase[] = ["via_removal", "via_merging", "path_simplification"]
+  PHASE_ORDER: Phase[] = [
+    "via_removal",
+    "crossing_via_reduction",
+    "via_merging",
+    "path_simplification",
+  ]
 
   currentPhase: Phase = "via_removal"
 
@@ -73,6 +85,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
    *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - netByConnectionName: Explicit net metadata for synthetic route names
+   *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -87,6 +100,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly minTraceToPadEdgeClearance?: number
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
       readonly netByConnectionName?: ReadonlyMap<string, string>
+      readonly enableCrossingViaReduction?: boolean
     },
   ) {
     super()
@@ -202,6 +216,11 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         // Advance phase
         if (this.currentPhase === "via_removal") {
+          this.currentPhase = this.simplificationConfig
+            .enableCrossingViaReduction
+            ? "crossing_via_reduction"
+            : "via_merging"
+        } else if (this.currentPhase === "crossing_via_reduction") {
           this.currentPhase = "via_merging"
         } else if (this.currentPhase === "via_merging") {
           this.currentPhase = "path_simplification"
@@ -250,6 +269,24 @@ export class TraceSimplificationSolver extends BaseSolver {
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
+          break
+
+        case "crossing_via_reduction":
+          this.activeSubSolver = new CrossingViaReductionSolver({
+            inputHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
+            obstacles: [...this.simplificationConfig.obstacles],
+            connMap: this.simplificationConfig.connMap,
+            layerCount: this.simplificationConfig.layerCount,
+            outline: this.simplificationConfig.outline
+              ? [...this.simplificationConfig.outline]
+              : undefined,
+            traceMargin: 0.1,
+            obstacleMargin:
+              this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
+          })
+          this.extractResult = (s) =>
+            (s as CrossingViaReductionSolver).getReducedHdRoutes()
           break
 
         case "via_merging":
