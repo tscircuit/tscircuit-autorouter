@@ -268,7 +268,9 @@ export class TraceSimplificationSolver extends BaseSolver {
             // Delay the quadratic anchor search until the first path pass has
             // reduced the route point count.
             enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
-            enableObstacleDetourShortcuts: this.simplificationPipelineLoops > 0,
+            enableObstacleDetourShortcuts:
+              this.simplificationConfig.enableCrossingViaReduction === true &&
+              this.simplificationPipelineLoops > 0,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
