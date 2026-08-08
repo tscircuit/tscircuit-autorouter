@@ -1,3 +1,4 @@
+import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -71,7 +72,6 @@ import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
-import { DifferentialPairPostProcessingSolver } from "./differential-pair-post-processing-solver"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
@@ -781,8 +781,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
-            obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-            allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -1153,8 +1151,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    if (this.lengthMatchingPostProcessingSolver) {
+      const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
+      return hdRoutes
+    }
     return (
-      this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

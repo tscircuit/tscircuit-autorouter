@@ -164,7 +164,9 @@ export class TraceSimplificationSolver extends BaseSolver {
           }
         }
 
-        return { ...point }
+        const finalizedPoint = { ...point }
+        delete finalizedPoint.toNextSegmentType
+        return finalizedPoint
       }),
       vias: route.vias.filter(
         (via) => !this.isViaInsideSameNetObstacle(route, via),

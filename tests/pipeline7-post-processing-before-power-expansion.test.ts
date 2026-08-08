@@ -87,16 +87,13 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   const lengthMatchingPostProcessingParams = params as any
   expect(Object.keys(lengthMatchingPostProcessingParams).sort()).toEqual(
     [
-      "allowViaInPad",
       "bounds",
       "differentialPairs",
       "hdRoutes",
       "layerCount",
-      "obstacleMargin",
       "obstacles",
     ].sort(),
   )
-  expect(lengthMatchingPostProcessingParams.obstacleMargin).toBe(0.1)
   expect(lengthMatchingPostProcessingParams.differentialPairs).toEqual([
     {
       connectionNames: ["PAIR_P_mst0", "PAIR_N_mst0"],

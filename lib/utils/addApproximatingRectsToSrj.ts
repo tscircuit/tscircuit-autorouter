@@ -384,6 +384,13 @@ const getRotatedObstacleApproximationRectCount = (
 }
 
 const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
+  if ((obstacle as { type?: string }).type === "oval") {
+    return convertObstacleToOldFormat({
+      ...obstacle,
+      type: "rect",
+    } as Obstacle)
+  }
+
   const rotationDegrees = obstacle.ccwRotationDegrees
 
   if (

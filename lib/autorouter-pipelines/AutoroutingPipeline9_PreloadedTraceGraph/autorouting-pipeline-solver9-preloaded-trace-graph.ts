@@ -1,5 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
+import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -236,7 +236,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingPostProcessingSolver?: PostProcessingSolver
+  lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -735,7 +735,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
-      PostProcessingSolver,
+      DifferentialPairPostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
@@ -784,20 +784,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         )
         return [
           {
-            hdRoutes: lockHdRouteTerminals(
-              structuredClone(cms.pipeline9JointDrcRepairSolver!.getOutput()),
-              connections,
-              new Map(
-                (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                  (route) => [route.connectionName, route],
-                ),
-              ),
-            ),
+            hdRoutes: cms.pipeline9JointDrcRepairSolver!.getOutput(),
             differentialPairs,
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
-            allowViaInPad: cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -1143,12 +1134,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    const postProcessedRoutes =
-      (this.originalSrj.differentialPairs?.length ?? 0) > 0
-        ? this.lengthMatchingPostProcessingSolver?.getOutput().hdRoutes
-        : undefined
+    if (
+      (this.originalSrj.differentialPairs?.length ?? 0) > 0 &&
+      this.lengthMatchingPostProcessingSolver
+    ) {
+      const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
+      return hdRoutes
+    }
     return (
-      postProcessedRoutes ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
