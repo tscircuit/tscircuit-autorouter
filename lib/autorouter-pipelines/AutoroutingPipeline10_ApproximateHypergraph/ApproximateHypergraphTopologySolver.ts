@@ -437,10 +437,10 @@ const getGridNodes = (params: {
     for (let column = 0; column < dimensions.columnCount; column++) {
       const node: CapacityMeshNode = {
         capacityMeshNodeId: `approx-grid:r${row}:c${column}`,
-          center: {
-            x:
-              simpleRouteJson.bounds.minX + (column + 0.5) * dimensions.cellWidth,
-            y: simpleRouteJson.bounds.minY + (row + 0.5) * dimensions.cellHeight,
+        center: {
+          x:
+            simpleRouteJson.bounds.minX + (column + 0.5) * dimensions.cellWidth,
+          y: simpleRouteJson.bounds.minY + (row + 0.5) * dimensions.cellHeight,
         },
         width: dimensions.cellWidth,
         height: dimensions.cellHeight,

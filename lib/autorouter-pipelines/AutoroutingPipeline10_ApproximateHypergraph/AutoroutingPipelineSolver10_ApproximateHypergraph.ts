@@ -107,9 +107,11 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
         return [
           {
-            sharedEdgeSegments: pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ?? [],
+            sharedEdgeSegments:
+              pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ?? [],
             capacityMeshNodes: pipeline10.capacityNodes ?? [],
-            maxPortsPerLayerPerEdge: pipeline10.pipeline10Opts.approximateMaxPortsPerLayerPerEdge ?? 6,
+            maxPortsPerLayerPerEdge:
+              pipeline10.pipeline10Opts.approximateMaxPortsPerLayerPerEdge ?? 6,
             obstacles: pipeline10.srj.obstacles,
             layerCount: pipeline10.srj.layerCount,
             obstacleSamplingMargin:
@@ -213,7 +215,8 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
         return [
           {
             ...rawParams,
-            approximateExactPfThreshold: pipeline10.pipeline10Opts.approximateExactHighDensityPfThreshold,
+            approximateExactPfThreshold:
+              pipeline10.pipeline10Opts.approximateExactHighDensityPfThreshold,
           },
         ]
       },
