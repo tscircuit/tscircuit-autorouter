@@ -88,10 +88,7 @@ const getTopologySrjCacheInput = (
 export class MultiGraphTopologyPlannerSolver
   extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams>
   implements
-    CachableSolver<
-      MultiGraphTopologyCacheTransform,
-      CachedMultiGraphTopology
-    >
+    CachableSolver<MultiGraphTopologyCacheTransform, CachedMultiGraphTopology>
 {
   globalTopologySolver?: RectDiffPipeline
   componentTopologyBatchSolver?: ComponentTopologyBatchSolver

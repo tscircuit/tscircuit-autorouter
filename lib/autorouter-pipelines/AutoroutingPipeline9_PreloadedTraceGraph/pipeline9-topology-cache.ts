@@ -43,8 +43,7 @@ export function getPipeline9TopologyCacheKey(
     obstacleMargin: params.obstacleMargin,
     cacheProvider: null,
   })
-  const plannerCacheKey =
-    topologyPlanner.computeCacheKeyAndTransform().cacheKey
+  const plannerCacheKey = topologyPlanner.computeCacheKeyAndTransform().cacheKey
   const cacheKeyContent = {
     cacheSchemaVersion: PIPELINE9_TOPOLOGY_CACHE_SCHEMA_VERSION,
     plannerCacheKey,

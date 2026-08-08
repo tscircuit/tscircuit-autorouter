@@ -51,7 +51,5 @@ test("Pipeline9 reuses topology and raw port points across phased inputs", () =>
   expect(secondSolver.capacityEdges).toEqual(firstSolver.capacityEdges)
   expect(
     secondSolver.sharedEdgeSegmentsBeforeNecessaryCrampedPortPoints,
-  ).toEqual(
-    firstSolver.sharedEdgeSegmentsBeforeNecessaryCrampedPortPoints,
-  )
+  ).toEqual(firstSolver.sharedEdgeSegmentsBeforeNecessaryCrampedPortPoints)
 })
