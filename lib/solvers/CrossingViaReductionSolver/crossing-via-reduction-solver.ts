@@ -83,6 +83,24 @@ const EPSILON = 1e-6
 const DEFAULT_TRACE_MARGIN = 0.1
 const DEFAULT_OBSTACLE_MARGIN = 0.15
 
+const getSegmentKey = (start: RoutePoint, end: RoutePoint): string => {
+  const startKey = `${start.x}:${start.y}:${start.z}`
+  const endKey = `${end.x}:${end.y}:${end.z}`
+  return startKey < endKey ? `${startKey}|${endKey}` : `${endKey}|${startKey}`
+}
+
+const getRouteSegmentKeys = (route: HighDensityRoute): ReadonlySet<string> => {
+  const segmentKeys = new Set<string>()
+  for (let index = 1; index < route.route.length; index++) {
+    const start = route.route[index - 1]
+    const end = route.route[index]
+    if (start.z === end.z) {
+      segmentKeys.add(getSegmentKey(start, end))
+    }
+  }
+  return segmentKeys
+}
+
 const removeConsecutiveDuplicatePoints = (
   points: RoutePoint[],
 ): RoutePoint[] => {
@@ -320,29 +338,44 @@ const createCandidateClearanceIndex = ({
   baseIndexes,
   candidatePairRoute,
   ignoredConnectionNames,
+  originalRouteSegmentKeys,
 }: {
   baseIndexes: BaseClearanceIndexes
   candidatePairRoute: HighDensityRoute
   ignoredConnectionNames: ReadonlySet<string>
+  originalRouteSegmentKeys: ReadonlySet<string>
 }): RouteClearanceIndex => {
   const candidatePairIndex = new HighDensityRouteSpatialIndex([
     candidatePairRoute,
   ])
   return {
-    getConflictingRoutesForSegment: (start, end, margin) => [
-      ...baseIndexes.mutableRoutes
-        .getConflictingRoutesForSegment(start, end, margin)
-        .filter(
-          ({ conflictingRoute }) =>
-            !ignoredConnectionNames.has(conflictingRoute.connectionName),
+    getConflictingRoutesForSegment: (start, end, margin) => {
+      const segmentWasUnchanged = originalRouteSegmentKeys.has(
+        getSegmentKey(start, end),
+      )
+      return [
+        ...(segmentWasUnchanged
+          ? []
+          : baseIndexes.mutableRoutes
+              .getConflictingRoutesForSegment(start, end, margin)
+              .filter(
+                ({ conflictingRoute }) =>
+                  !ignoredConnectionNames.has(conflictingRoute.connectionName),
+              )),
+        ...(segmentWasUnchanged
+          ? []
+          : (baseIndexes.immutableRoutes?.getConflictingRoutesForSegment(
+              start,
+              end,
+              margin,
+            ) ?? [])),
+        ...candidatePairIndex.getConflictingRoutesForSegment(
+          start,
+          end,
+          margin,
         ),
-      ...(baseIndexes.immutableRoutes?.getConflictingRoutesForSegment(
-        start,
-        end,
-        margin,
-      ) ?? []),
-      ...candidatePairIndex.getConflictingRoutesForSegment(start, end, margin),
-    ],
+      ]
+    },
     getConflictingRoutesNearPoint: (point, margin) => [
       ...baseIndexes.mutableRoutes
         .getConflictingRoutesNearPoint(point, margin)
@@ -465,14 +498,18 @@ export class CrossingViaReductionSolver extends BaseSolver {
   private routeIsClear(
     route: HighDensityRoute,
     hdRouteSHI: RouteClearanceIndex,
+    originalRouteSegmentKeys: ReadonlySet<string>,
   ): boolean {
     for (const section of breakRouteIntoSections(route)) {
       for (let index = 1; index < section.points.length; index++) {
+        const start = section.points[index - 1]
+        const end = section.points[index]
         if (
+          !originalRouteSegmentKeys.has(getSegmentKey(start, end)) &&
           this.input.outline &&
           doesSegmentCrossPolygonBoundary({
-            start: section.points[index - 1],
-            end: section.points[index],
+            start,
+            end,
             polygon: [...this.input.outline],
             margin: route.traceThickness / 2,
           })
@@ -492,6 +529,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
           defaultTraceThickness: route.traceThickness,
           obstacleMargin: this.obstacleMargin,
           traceMargin: this.traceMargin,
+          shouldCheckStaticGeometryForSegment: (start, end) =>
+            !originalRouteSegmentKeys.has(getSegmentKey(start, end)),
         })
       ) {
         return false
@@ -562,21 +601,37 @@ export class CrossingViaReductionSolver extends BaseSolver {
       this.reducedHdRoutes[candidate.detourRouteIndex].connectionName,
       this.reducedHdRoutes[candidate.transitionRouteIndex].connectionName,
     ])
+    const originalDetourRouteSegmentKeys = getRouteSegmentKeys(
+      this.reducedHdRoutes[candidate.detourRouteIndex],
+    )
+    const originalTransitionRouteSegmentKeys = getRouteSegmentKeys(
+      this.reducedHdRoutes[candidate.transitionRouteIndex],
+    )
     const detourObstacleIndex = createCandidateClearanceIndex({
       baseIndexes,
       candidatePairRoute: candidate.transitionRoute,
       ignoredConnectionNames,
+      originalRouteSegmentKeys: originalDetourRouteSegmentKeys,
     })
     const transitionObstacleIndex = createCandidateClearanceIndex({
       baseIndexes,
       candidatePairRoute: candidate.detourRoute,
       ignoredConnectionNames,
+      originalRouteSegmentKeys: originalTransitionRouteSegmentKeys,
     })
     this.stats.candidateClearanceChecks =
       (this.stats.candidateClearanceChecks ?? 0) + 1
     return (
-      this.routeIsClear(candidate.detourRoute, detourObstacleIndex) &&
-      this.routeIsClear(candidate.transitionRoute, transitionObstacleIndex) &&
+      this.routeIsClear(
+        candidate.detourRoute,
+        detourObstacleIndex,
+        originalDetourRouteSegmentKeys,
+      ) &&
+      this.routeIsClear(
+        candidate.transitionRoute,
+        transitionObstacleIndex,
+        originalTransitionRouteSegmentKeys,
+      ) &&
       this.relocatedViaIsClear(
         candidate.transitionRoute,
         candidate.relocatedVia,
